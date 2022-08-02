@@ -75,6 +75,8 @@ public class KBStatement
     }
 
     /**
+     * @param aId
+     *            statement IRI
      * @param aInstance
      *            {@link KBHandle} for the statement instance
      * @param aProperty

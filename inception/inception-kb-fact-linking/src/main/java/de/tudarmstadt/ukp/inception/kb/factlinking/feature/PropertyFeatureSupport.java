@@ -134,6 +134,7 @@ public class PropertyFeatureSupport
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {

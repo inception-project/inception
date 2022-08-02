@@ -32,8 +32,17 @@ public interface EventRepository
     void create(LoggedEvent... aEvents);
 
     /**
-     * Get the aMaxSize amount of logged events of the given type, user name, project and
-     * recommender id from the db.
+     * @param aProject
+     *            the project to query the events from
+     * @param aUsername
+     *            the user who generated the events
+     * @param aEventType
+     *            the type of event
+     * @param aMaxSize
+     *            the maximum number of events to return
+     * @param aRecommenderId
+     *            the recommender to which the events relate
+     * @return logged events of the given type, user name, project and recommender id from the db.
      */
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
@@ -42,15 +51,33 @@ public interface EventRepository
             FailableConsumer<LoggedEvent, E> aConsumer);
 
     /**
-     * Get the aMaxSize amount of logged events of the given types, user name and project for every
-     * document from the db.
+     * @return logged events of the given types, user name and project for every document from the
+     *         db.
+     * @param aProject
+     *            the project to query the events from
+     * @param aUsername
+     *            the user who generated the events
+     * @param aEventType
+     *            the type of event
+     * @param aMaxSize
+     *            the maximum number of events to return
      */
     List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventType, int aMaxSize);
 
     /**
-     * Get the aMaxSize amount of logged events of the given type, user name, project and detail
-     * string from the db.
+     * @return logged events of the given type, user name, project and detail string from the db.
+     * @param aProject
+     *            the project to query the events from
+     * @param aUsername
+     *            the user who generated the events
+     * @param aEventType
+     *            the type of event
+     * @param aMaxSize
+     *            the maximum number of events to return
+     * @param aDetail
+     *            the detail pattern per SQL LIKE operator, e.g. {@code "%recommender%"} finds all
+     *            events containing the string {@code "recommender"} in their detail
      */
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
@@ -59,7 +86,7 @@ public interface EventRepository
             Collection<String> aEventTypes, int aMaxSize);
 
     /**
-     * List recently logged events.
+     * @return recently logged events.
      * 
      * @param aUsername
      *            the user to list events for.

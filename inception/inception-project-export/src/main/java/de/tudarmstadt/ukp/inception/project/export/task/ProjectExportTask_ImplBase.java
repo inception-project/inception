@@ -25,13 +25,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.File;
 import java.nio.channels.ClosedByInterruptException;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -39,7 +39,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -61,8 +61,8 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     private final R request;
 
     private @Autowired ServletContext servletContext;
-    private @Autowired DocumentService documentService;
     private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     public ProjectExportTask_ImplBase(Project aProject, R aRequest, String aUsername)
     {
@@ -93,7 +93,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(KEY_USERNAME, username);
             MDC.put(KEY_PROJECT_ID, String.valueOf(project.getId()));
-            MDC.put(KEY_REPOSITORY_PATH, documentService.getDir().toString());
+            MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             monitor.setState(RUNNING);
             monitor.setUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
@@ -113,7 +113,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             // Message needs to be aded before setting the state, otherwise the notification for the
             // message may be throttled and it may never be displayed
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
-                    ExceptionUtils.getRootCauseMessage(e)));
+                    getRootCauseMessage(e)));
             monitor.setStateAndProgress(FAILED, 100);
             log.error("Unexpected error during project export", e);
         }

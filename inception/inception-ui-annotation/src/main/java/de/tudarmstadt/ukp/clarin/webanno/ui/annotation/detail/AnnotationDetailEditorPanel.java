@@ -154,8 +154,8 @@ public abstract class AnnotationDetailEditorPanel
     private final ConfirmationDialog replaceAnnotationDialog;
     private final AnnotationPageBase editorPage;
 
-    private TextField<String> forwardAnnotationTextField;
-    private String forwardAnnotationKeySequence = "";
+    private @Deprecated TextField<String> forwardAnnotationTextField;
+    private @Deprecated String forwardAnnotationKeySequence = "";
 
     public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
             IModel<AnnotatorState> aModel)
@@ -250,6 +250,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    /**
+     * @deprecated to be removed without replacement
+     */
+    @Deprecated
     private Component createForwardAnnotationKeySequenceCapturingForm()
     {
         Form<Void> form = new Form<>("forwardForm");
@@ -351,7 +355,9 @@ public abstract class AnnotationDetailEditorPanel
      * returned by {@link #buildKeySequenceToTagMap()}.
      * 
      * @see #getTagForKeySequence(String, Map)
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     protected void setForwardAnnotationKeySequence(String aSelectedTag, String aReason)
     {
         LOG.trace("setForwardAnnotationKeySequence({}) - {}", aSelectedTag, aReason);
@@ -364,7 +370,9 @@ public abstract class AnnotationDetailEditorPanel
      * {@link #setForwardAnnotationKeySequence(String, String)}.
      * 
      * @see #setForwardAnnotationKeySequence(String, String)
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     protected String getForwardAnnotationKeySequence()
     {
         return forwardAnnotationKeySequence;
@@ -382,7 +390,9 @@ public abstract class AnnotationDetailEditorPanel
      * </ul>
      * 
      * @see #getTagForKeySequence(String, Map)
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     private Map<String, String> buildKeySequenceToTagMap()
     {
         AnnotationFeature f = annotationService
@@ -417,7 +427,9 @@ public abstract class AnnotationDetailEditorPanel
      * character.
      * 
      * @see #buildKeySequenceToTagMap()
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     private String getTagForKeySequence(String aSequence, Map<String, String> aBindTags)
     {
         // check if all the key pressed are the same character
@@ -585,6 +597,7 @@ public abstract class AnnotationDetailEditorPanel
         var slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
         var slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
         var slotHostAdapter = annotationService.getAdapter(slotHostLayer);
+        @SuppressWarnings("unchecked")
         var links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
         var link = links.get(state.getArmedSlot());
         link.targetAddr = slotFillerAddr;
@@ -808,11 +821,17 @@ public abstract class AnnotationDetailEditorPanel
         return Optional.empty();
     }
 
+    /**
+     * @deprecated to be removed without replacement
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public TextField<String> getForwardAnnotationTextField()
     {
         return forwardAnnotationTextField;
     }
 
+    @Deprecated
     @Override
     public void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
@@ -1531,6 +1550,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    /**
+     * @deprecated to be removed without replacement
+     */
+    @Deprecated
     protected void onAutoForward(AjaxRequestTarget aTarget)
     {
         // Overriden in CurationPanel
@@ -1677,6 +1700,8 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    // Used in commented-out code that we might want to comment back in again later
+    @SuppressWarnings("unused")
     private static Set<AnnotationFS> getAttachedSpans(AnnotationSchemaService aAS, AnnotationFS aFs,
             AnnotationLayer aLayer)
     {

@@ -73,6 +73,12 @@ public class RelationLayerTraitsEditor
         crossSentence.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
         aForm.add(crossSentence);
 
+        aForm.add(createJavaScriptActionField());
+    }
+
+    @Deprecated
+    private TextArea<String> createJavaScriptActionField()
+    {
         TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
         onClickJavascriptAction
                 .setVisible(annotationEditorProperties.isConfigurableJavaScriptActionEnabled());
@@ -81,6 +87,6 @@ public class RelationLayerTraitsEditor
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
                 "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                         + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
-        aForm.add(onClickJavascriptAction);
+        return onClickJavascriptAction;
     }
 }

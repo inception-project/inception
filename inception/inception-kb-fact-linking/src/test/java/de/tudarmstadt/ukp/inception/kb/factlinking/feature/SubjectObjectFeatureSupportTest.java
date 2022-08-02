@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
+import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -28,7 +29,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.FSUtil;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
+@Deprecated
 public class SubjectObjectFeatureSupportTest
 {
     @Test
@@ -60,12 +61,11 @@ public class SubjectObjectFeatureSupportTest
     @Test
     public void testWrapUnwrap() throws Exception
     {
-        CAS cas = JCasFactory
-                .createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml").getCas();
+        CAS cas = createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml").getCas();
 
         SubjectObjectFeatureSupport sut = new SubjectObjectFeatureSupport();
 
-        AnnotationFeature feat1 = new AnnotationFeature("slot", "webanno.custom.SimpleSpan");
+        var feat1 = new AnnotationFeature("slot", "webanno.custom.SimpleSpan");
         feat1.setLinkTypeName("webanno.custom.LinkType");
         feat1.setLinkMode(LinkMode.WITH_ROLE);
         feat1.setLinkTypeRoleFeatureName("role");
@@ -81,7 +81,8 @@ public class SubjectObjectFeatureSupportTest
 
         AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
 
-        ArrayFS array = cas.createArrayFS(1);
+        @SuppressWarnings("unchecked")
+        ArrayFS<FeatureStructure> array = cas.createArrayFS(1);
         FeatureStructure linkFS = cas.createFS(linkType);
         FSUtil.setFeature(linkFS, feat1.getLinkTypeRoleFeatureName(), "role");
         FSUtil.setFeature(linkFS, feat1.getLinkTypeTargetFeatureName(), targetFS);

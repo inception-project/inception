@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers.config;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -47,9 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitiali
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
-@AutoConfigureAfter(name = {
-        "de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration" })
-@ConditionalOnBean({ AnnotationSchemaService.class })
 public class ProjectInitializersAutoConfiguration
 {
     @Bean

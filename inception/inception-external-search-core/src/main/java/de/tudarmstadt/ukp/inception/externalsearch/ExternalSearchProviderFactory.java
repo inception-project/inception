@@ -31,7 +31,7 @@ public interface ExternalSearchProviderFactory<P>
 
     String getDisplayName();
 
-    ExternalSearchProvider getNewExternalSearchProvider();
+    ExternalSearchProvider<?> getNewExternalSearchProvider();
 
     Panel createTraitsEditor(String aId, IModel<DocumentRepository> aDocumentRepository);
 

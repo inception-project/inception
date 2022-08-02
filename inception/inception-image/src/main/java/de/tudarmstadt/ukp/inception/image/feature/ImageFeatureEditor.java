@@ -87,7 +87,7 @@ public class ImageFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<?> getFocusComponent()
     {
         return field;
     }

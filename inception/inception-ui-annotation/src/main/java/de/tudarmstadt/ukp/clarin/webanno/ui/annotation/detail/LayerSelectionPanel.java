@@ -108,6 +108,7 @@ public class LayerSelectionPanel
         return (AnnotationPageBase) getPage();
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<AnnotatorState> getModel()
     {
         return (IModel<AnnotatorState>) getDefaultModel();

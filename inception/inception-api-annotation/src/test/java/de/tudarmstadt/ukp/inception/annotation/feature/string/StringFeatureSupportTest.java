@@ -21,7 +21,6 @@ import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -29,7 +28,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class StringFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
@@ -51,8 +53,6 @@ public class StringFeatureSupportTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         sut = new StringFeatureSupport(new StringFeatureSupportPropertiesImpl(), schemaService);
 
         valueFeature = new AnnotationFeature("value", CAS.TYPE_NAME_STRING);

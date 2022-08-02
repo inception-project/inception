@@ -97,7 +97,7 @@ public class QualifierFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
 
     private WebMarkupContainer content;
-    private FormComponent focusComponent;
+    private FormComponent<?> focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
@@ -125,10 +125,11 @@ public class QualifierFeatureEditor
         {
             private static final long serialVersionUID = 5475284956525780698L;
 
+            @SuppressWarnings("unchecked")
             @Override
             protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
             {
-                return new ModelIteratorAdapter<LinkWithRoleModel>(
+                return new ModelIteratorAdapter<>(
                         (List<LinkWithRoleModel>) QualifierFeatureEditor.this
                                 .getModelObject().value)
                 {
@@ -456,7 +457,7 @@ public class QualifierFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<?> getFocusComponent()
     {
         return focusComponent;
     }
@@ -466,27 +467,25 @@ public class QualifierFeatureEditor
         if (selectedRole == null) {
             error("Must set slot label before adding!");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
-        else {
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-                    .getModelObject().value;
-            AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this.getModelObject().value;
 
-            LinkWithRoleModel m = new LinkWithRoleModel();
-            m.role = selectedRole.getUiLabel();
-            links.add(m);
+        LinkWithRoleModel m = new LinkWithRoleModel();
+        m.role = selectedRole.getUiLabel();
+        links.add(m);
 
-            // Need to re-render the whole form because a slot in another
-            // link editor might get unarmed
-            selectedRole = null;
-            aTarget.add(getOwner());
-        }
+        // Need to re-render the whole form because a slot in another
+        // link editor might get unarmed
+        selectedRole = null;
+        aTarget.add(getOwner());
     }
 
     private void actionSet(AjaxRequestTarget aTarget)
     {
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-                .getModelObject().value;
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this.getModelObject().value;
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         // Update the slot
@@ -512,8 +511,8 @@ public class QualifierFeatureEditor
 
     private void actionDel(AjaxRequestTarget aTarget)
     {
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
-                .getModelObject().value;
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this.getModelObject().value;
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
         links.remove(state.getArmedSlot());

@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE
 import static de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil.getUiLabelText;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,7 +96,7 @@ public class ChainRenderer
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return selectFS(aCas, chainType);
+        return aCas.select(chainType).map(a -> (AnnotationFS) a).collect(toList());
     }
 
     @Override

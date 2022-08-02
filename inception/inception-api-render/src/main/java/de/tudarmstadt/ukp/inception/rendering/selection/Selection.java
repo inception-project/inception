@@ -210,6 +210,7 @@ public class Selection
      * @deprecated Should no longer be used. Instead, text is set implicitly through
      *             {@link #selectSpan} and {@code #selectArc}.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public void setText(String aText)
     {

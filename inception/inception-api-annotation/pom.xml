@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>24.0-SNAPSHOT</version>
+    <version>25.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-api-annotation</artifactId>
   <name>INCEpTION - Core - Annotation API</name>
@@ -170,19 +170,11 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-select2</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-input-events</artifactId>
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-urlfragment</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.github.openjson</groupId>
-      <artifactId>openjson</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>

@@ -21,14 +21,21 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 
+import java.io.IOException;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
@@ -42,21 +49,29 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
 public class IndexAnnotationDocumentTask
     extends IndexingTask_ImplBase
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private @Autowired SearchService searchService;
+    private @Autowired DocumentService documentService;
 
     private int done = 0;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
-            byte[] aBinaryCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
-        super(aAnnotationDocument, aTrigger, aBinaryCas);
+        super(aAnnotationDocument, aTrigger);
     }
 
     @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
+            var aDoc = getAnnotationDocument();
+            var cas = documentService.readAnnotationCas(aDoc.getDocument(), aDoc.getUser(),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+            searchService.indexDocument(aDoc, casToByteArray(cas));
+        }
+        catch (IOException e) {
+            log.error("Error indexing annotation document {}", getSourceDocument(), e);
         }
 
         done++;

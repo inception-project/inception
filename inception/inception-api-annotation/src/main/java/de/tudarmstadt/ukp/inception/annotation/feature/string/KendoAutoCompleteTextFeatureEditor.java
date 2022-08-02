@@ -28,6 +28,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ReorderableTagAutoCompleteField;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -86,7 +87,7 @@ public class KendoAutoCompleteTextFeatureEditor
     }
 
     @Override
-    protected AbstractTextComponent createInputField()
+    protected AbstractTextComponent<ReorderableTag> createInputField()
     {
         return new ReorderableTagAutoCompleteField("value", getModel(),
                 properties.getAutoCompleteMaxResults());

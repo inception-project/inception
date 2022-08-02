@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +30,6 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDa
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardMenuItem;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.LegacyProjectExportMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExportMenuItem;
 
@@ -40,18 +38,9 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExp
 public class DashboardAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-settings", havingValue = "false", matchIfMissing = true)
     public ProjectSettingsDashboardMenuItem projectSettingsDashboardMenuItem()
     {
         return new ProjectSettingsDashboardMenuItem();
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-settings", havingValue = "true", matchIfMissing = false)
-    @Deprecated
-    public ProjectSettingsPageMenuItem projectSettingsPageMenuItem()
-    {
-        return new ProjectSettingsPageMenuItem();
     }
 
     @Bean

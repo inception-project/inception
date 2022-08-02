@@ -25,8 +25,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
-import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -88,6 +86,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
@@ -1196,11 +1195,13 @@ public class KnowledgeBaseServiceImpl
             List<GraphPattern> patterns = new ArrayList<>();
             if (aClassInstance) {
                 Iri pSubProperty = iri(aKB.getSubPropertyIri());
-                patterns.add(property.has(path(zeroOrMore(pSubProperty)), pLabel));
+                patterns.add(property.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                        pLabel));
             }
             if (aProperties) {
                 Iri pPropertyLabel = iri(aKB.getPropertyLabelIri());
-                patterns.add(property.has(path(zeroOrMore(pPropertyLabel)), pLabel));
+                patterns.add(property
+                        .has(PropertyPathBuilder.of(pPropertyLabel).zeroOrMore().build(), pLabel));
             }
 
             query.where(GraphPatterns.union(patterns.stream().toArray(GraphPattern[]::new)));

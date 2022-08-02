@@ -128,8 +128,9 @@ public class SpanAdapterTest
 
         // Validation fails
         neLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas.getCas())).extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
+        assertThat(sut.validate(jcas.getCas())) //
+                .extracting(Pair::getLeft)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
     }
 
@@ -190,15 +191,19 @@ public class SpanAdapterTest
 
         // Validation fails
         neLayer.setOverlapMode(OVERLAP_ONLY);
-        assertThat(sut.validate(jcas.getCas())).extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source")
-                .containsExactly(LogMessage.error(null, "Stacked annotation at [0-4]"),
+        assertThat(sut.validate(jcas.getCas())) //
+                .extracting(Pair::getLeft)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("source")
+                .containsExactly( //
+                        LogMessage.error(null, "Stacked annotation at [0-4]"),
                         LogMessage.error(null, "Stacked annotation at [0-4]"));
 
         neLayer.setOverlapMode(NO_OVERLAP);
-        assertThat(sut.validate(jcas.getCas())).extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source")
-                .containsExactly(LogMessage.error(null, "Stacked annotation at [0-4]"),
+        assertThat(sut.validate(jcas.getCas()))//
+                .extracting(Pair::getLeft)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("source")
+                .containsExactly( //
+                        LogMessage.error(null, "Stacked annotation at [0-4]"),
                         LogMessage.error(null, "Stacked annotation at [0-4]"));
     }
 

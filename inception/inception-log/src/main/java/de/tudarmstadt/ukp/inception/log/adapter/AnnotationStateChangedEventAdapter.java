@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import java.io.IOException;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
@@ -36,8 +34,6 @@ import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
 public class AnnotationStateChangedEventAdapter
     implements EventLoggingAdapter<AnnotationStateChangeEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {

@@ -33,6 +33,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -99,7 +100,7 @@ public class ElasticSearchProvider
 
             SearchRequest searchRequest = new SearchRequest(aTraits.getIndexName())
                     .source(searchSourceBuilder);
-            SearchResponse response = client.search(searchRequest);
+            SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
 
             for (SearchHit hit : response.getHits().getHits()) {
                 if (hit.getSourceAsMap() == null
@@ -140,7 +141,8 @@ public class ElasticSearchProvider
 
     private void fillResultWithMetadata(ExternalSearchResult result, Map<String, Object> aHitMap)
     {
-        Map<String, String> metadata = (Map) aHitMap.get(ELASTIC_HIT_METADATA_KEY);
+        @SuppressWarnings("unchecked")
+        var metadata = (Map<String, String>) aHitMap.get(ELASTIC_HIT_METADATA_KEY);
 
         // The title will be filled with the hit id, since there is no title in the
         // ElasticSearch hit
@@ -176,7 +178,8 @@ public class ElasticSearchProvider
                     aDocumentId);
 
             // Send get query
-            fillResultWithMetadata(result, client.get(getRequest).getSourceAsMap());
+            fillResultWithMetadata(result,
+                    client.get(getRequest, RequestOptions.DEFAULT).getSourceAsMap());
 
             return result;
         }
@@ -197,8 +200,10 @@ public class ElasticSearchProvider
 
         try (RestHighLevelClient client = makeClient(aTraits)) {
             // Send get query
-            Map<String, Object> result = client.get(getRequest).getSourceAsMap();
-            Map<String, String> document = (Map) result.get(ELASTIC_HIT_DOC_KEY);
+            Map<String, Object> result = client.get(getRequest, RequestOptions.DEFAULT)
+                    .getSourceAsMap();
+            @SuppressWarnings("unchecked")
+            var document = (Map<String, String>) result.get(ELASTIC_HIT_DOC_KEY);
             return (document.get(DOC_TEXT_KEY));
         }
     }

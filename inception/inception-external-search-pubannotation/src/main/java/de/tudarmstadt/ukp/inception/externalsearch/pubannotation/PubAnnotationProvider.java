@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -50,8 +48,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnot
 public class PubAnnotationProvider
     implements ExternalSearchProvider<PubAnnotationProviderTraits>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PubAnnotationProvider.class);
-
     public List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits,
             String aQuery)
     {

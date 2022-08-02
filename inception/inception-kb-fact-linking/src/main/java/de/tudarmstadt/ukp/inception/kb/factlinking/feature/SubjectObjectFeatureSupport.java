@@ -162,6 +162,7 @@ public class SubjectObjectFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
@@ -169,6 +170,7 @@ public class SubjectObjectFeatureSupport
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
@@ -193,7 +195,8 @@ public class SubjectObjectFeatureSupport
             Object aValue)
     {
         if (aValue instanceof ArrayFS) {
-            ArrayFS array = (ArrayFS) aValue;
+            @SuppressWarnings("unchecked")
+            var array = (ArrayFS<FeatureStructure>) aValue;
 
             Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
             Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
