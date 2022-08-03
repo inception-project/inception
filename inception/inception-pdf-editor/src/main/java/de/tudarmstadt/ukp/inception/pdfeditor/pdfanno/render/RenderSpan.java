@@ -25,7 +25,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 /**
  * Intermediate representation / wrapper for VSpan, Span and Offset. Used for converting
  * representations of INCEpTION and PDFAnno
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class RenderSpan
 {
 

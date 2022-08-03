@@ -67,6 +67,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfAnnotationEditor
     extends ExternalAnnotationEditorBase
 {
@@ -157,6 +161,7 @@ public class PdfAnnotationEditor
     /**
      * Renders the PdfAnnoModel. This includes the anno file and the color map.
      */
+    @SuppressWarnings("javadoc")
     public void renderPdfAnnoModel(AjaxRequestTarget aTarget)
     {
         if (getModelObject().getProject() == null) {

@@ -65,6 +65,7 @@ public class AnnotationEditorPropertiesImpl
         sentenceLayerEditable = aSentenceLayerEditable;
     }
 
+    @Deprecated
     @Override
     public boolean isForwardAnnotationEnabled()
     {
@@ -92,6 +93,7 @@ public class AnnotationEditorPropertiesImpl
         configurableJavaScriptActionEnabled = aConfigurableJavaScriptActionEnabled;
     }
 
+    @Deprecated
     @Override
     public boolean isConfigurableJavaScriptActionEnabled()
     {

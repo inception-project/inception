@@ -109,6 +109,7 @@ public class TagSetExporter
     /**
      * Import tagsets from projects prior to WebAnno 2.0.
      */
+    @Deprecated
     private void importTagSetsV0(Project aProject, ExportedProject aExProject) throws IOException
     {
         List<ExportedTagSet> importedTagSets = aExProject.getTagSets();

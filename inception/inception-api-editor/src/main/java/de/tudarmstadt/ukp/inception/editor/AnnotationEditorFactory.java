@@ -50,6 +50,9 @@ public interface AnnotationEditorFactory
     /**
      * Configure the state to be compatible with the editor produced by this factory. E.g. set the
      * paging strategy adequately.
+     * 
+     * @param aState
+     *            the annotator state
      */
-    void initState(AnnotatorState aModelObject);
+    void initState(AnnotatorState aState);
 }

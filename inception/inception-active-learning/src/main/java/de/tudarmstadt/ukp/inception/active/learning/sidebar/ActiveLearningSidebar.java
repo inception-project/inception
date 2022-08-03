@@ -1374,7 +1374,7 @@ public class ActiveLearningSidebar
 
         // We found a matching suggestion, but we look for its second-best. So for the moment we
         // assume that the second-best has not changed and we simply fake a delta
-        alState.setCurrentDifference(Optional.of(new Delta(updatedSuggestion.get(),
+        alState.setCurrentDifference(Optional.of(new Delta<>(updatedSuggestion.get(),
                 alState.getCurrentDifference().get().getSecond().orElse(null))));
     }
 

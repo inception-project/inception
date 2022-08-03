@@ -22,9 +22,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -44,7 +41,6 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 public class CompactSerializerImpl
     implements CompactSerializer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CompactSerializerImpl.class);
     public static final String ID = "compact";
 
     @Override

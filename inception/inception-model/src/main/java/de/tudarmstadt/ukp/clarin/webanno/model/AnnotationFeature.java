@@ -413,7 +413,10 @@ public class AnnotationFeature
     }
 
     /**
-     * Used to control if a feature can have multiple values and how these are represented.
+     * @param aMode
+     *            used to control if a feature can have multiple values and how these are
+     *            represented.
+     * 
      */
     public void setMode(MultiValueMode aMode)
     {
@@ -431,8 +434,10 @@ public class AnnotationFeature
     }
 
     /**
-     * If the feature is a link to another feature structure, this indicates what kind of relation
-     * is used, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE}, {@link LinkMode#WITH_ROLE}.
+     * @param aLinkMode
+     *            indicates what kind of relation if the feature is a link to another feature
+     *            structure, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE},
+     *            {@link LinkMode#WITH_ROLE}.
      */
     public void setLinkMode(LinkMode aLinkMode)
     {
@@ -445,8 +450,9 @@ public class AnnotationFeature
     }
 
     /**
-     * If a {@link LinkMode#WITH_ROLE} type is used, then the an additional UIMA type must be
-     * created that bears a role feature and points to the target type.
+     * @param aLinkTypeName
+     *            indicates the UIMA type that bears the role feature if a
+     *            {@link LinkMode#WITH_ROLE} type is used.
      */
     public void setLinkTypeName(String aLinkTypeName)
     {
@@ -459,7 +465,8 @@ public class AnnotationFeature
     }
 
     /**
-     * The name of the feature bearing the role.
+     * @param aLinkTypeRoleFeatureName
+     *            the name of the feature bearing the role.
      */
     public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
     {
@@ -472,7 +479,9 @@ public class AnnotationFeature
     }
 
     /**
-     * The name of the feature pointing to the target.
+     * @param aLinkTypeTargetFeatureName
+     *            the name of the feature pointing to the target.
+     * 
      */
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
@@ -485,9 +494,11 @@ public class AnnotationFeature
     }
 
     /**
-     * Whether the annotation detail editor should carry values of this feature over when creating a
-     * new annotation of the same type. This can be useful when creating many annotations of the
-     * same type in a row.
+     * @param aRemember
+     *            whether the annotation detail editor should carry values of this feature over when
+     *            creating a new annotation of the same type. This can be useful when creating many
+     *            annotations of the same type in a row.
+     * 
      */
     public void setRemember(boolean aRemember)
     {
@@ -500,8 +511,10 @@ public class AnnotationFeature
     }
 
     /**
-     * Whether the feature should be showed if constraints rules are enabled and based on the
-     * evaluation of constraint rules on a feature.
+     * @param aHideUnconstraintFeature
+     *            whether the feature should be showed if constraints rules are enabled and based on
+     *            the evaluation of constraint rules on a feature.
+     * 
      */
     public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
     {
@@ -519,12 +532,9 @@ public class AnnotationFeature
     }
 
     /**
-     * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
-     * must be mapped to a plain UIMA type (usually to String).
-     * 
-     * @deprecated This method should no longer be used. There is no direct replacement.
+     * @return {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
+     *         must be mapped to a plain UIMA type (usually to String).
      */
-    @Deprecated
     public boolean isVirtualFeature()
     {
         return getType().contains(":");
@@ -621,6 +631,7 @@ public class AnnotationFeature
         return new Builder();
     }
 
+    @SuppressWarnings("hiding")
     public static final class Builder
     {
         private Long id;

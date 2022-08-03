@@ -157,13 +157,16 @@ public class GlyphPositionUtils
 
     // source:
     // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1911
+    // The support for extracting the glyph order was added for INCEpTION
     /**
      * Normalize certain Unicode characters. For example, convert the single "fi" ligature to "f"
      * and "i". Also normalises Arabic and Hebrew presentation forms.
      *
      * @param word
      *            Word to normalize
-     * @return Normalized word
+     * @param glyphOrder
+     *            the order in which the glyphs appear in the word (output)
+     * @return normalized word
      */
     public static String normalizeWord(String word, List<Integer> glyphOrder)
     {
@@ -210,6 +213,7 @@ public class GlyphPositionUtils
 
     // source:
     // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1756
+    // The support for extracting the glyph order was added for INCEpTION
     /**
      * Handles the LTR and RTL direction of the given words. The whole implementation stands and
      * falls with the given word. If the word is a full line, the results will be the best. If the
@@ -221,6 +225,8 @@ public class GlyphPositionUtils
      * 
      * @param word
      *            The word that shall be processed
+     * @param glyphOrder
+     *            the order in which the glyphs appear in the word (output)
      * @return new word with the correct direction of the containing characters
      */
     static private String handleDirection(String word, List<Integer> glyphOrder)

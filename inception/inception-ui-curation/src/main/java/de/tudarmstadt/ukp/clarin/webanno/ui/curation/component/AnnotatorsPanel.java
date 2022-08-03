@@ -211,8 +211,7 @@ public class AnnotatorsPanel
             }
 
             // check if clicked on a span
-            CasMerge casMerge = new CasMerge(schemaService, annotationEditorProperties,
-                    applicationEventPublisher.get());
+            CasMerge casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
                 mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), layer);
@@ -258,8 +257,7 @@ public class AnnotatorsPanel
         int created = 0;
         Set<String> otherErrors = new LinkedHashSet<>();
 
-        CasMerge casMerge = new CasMerge(schemaService, annotationEditorProperties,
-                applicationEventPublisher.get());
+        CasMerge casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
         casMerge.setSilenceEvents(true);
 
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,

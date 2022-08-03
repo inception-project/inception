@@ -50,6 +50,10 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class ImageExtractor
     extends PDFStreamEngine
 {
@@ -79,9 +83,8 @@ public class ImageExtractor
 
     static void processFile(File inFile, int dpi, String outDir) throws IOException
     {
-        PDDocument doc = PDDocument.load(inFile);
         String baseName = inFile.getName().substring(0, inFile.getName().lastIndexOf("."));
-        try {
+        try (PDDocument doc = PDDocument.load(inFile)) {
             RegionExtractor regionExt = new RegionExtractor(doc, dpi);
             int count = 1;
             for (int pageIndex = 0; pageIndex < doc.getNumberOfPages(); pageIndex++) {
@@ -93,9 +96,6 @@ public class ImageExtractor
                     count++;
                 }
             }
-        }
-        finally {
-            doc.close();
         }
     }
 
@@ -127,7 +127,7 @@ public class ImageExtractor
             PDXObject xobject = getResources().getXObject(objectName);
 
             if (xobject instanceof PDImageXObject) {
-                PDImageXObject image = (PDImageXObject) xobject;
+                // PDImageXObject image = (PDImageXObject) xobject;
                 Matrix ctmNew = getGraphicsState().getCurrentTransformationMatrix();
                 PDRectangle pageRect = this.getCurrentPage().getCropBox();
                 float w = ctmNew.getScalingFactorX();

@@ -193,12 +193,12 @@ public class SettingsUtil
     }
 
     /**
-     * 
      * @deprecated To access setting properties, use Spring Boot
      *             {@link org.springframework.boot.context.properties.ConfigurationProperties}
      *             classes implementing a corresponding interface instead (e.g. @see
      *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public static synchronized Properties getSettings()
     {

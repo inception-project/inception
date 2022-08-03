@@ -88,7 +88,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
@@ -106,7 +105,6 @@ public class CasMerge
 
     private final AnnotationSchemaService schemaService;
     private final ApplicationEventPublisher eventPublisher;
-    private final AnnotationEditorProperties annotationEditorProperties;
 
     private MergeStrategy mergeStrategy = new DefaultMergeStrategy();
     private boolean silenceEvents = false;
@@ -114,11 +112,9 @@ public class CasMerge
     private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
 
     public CasMerge(AnnotationSchemaService aSchemaService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aEventPublisher)
     {
         schemaService = aSchemaService;
-        annotationEditorProperties = aAnnotationEditorProperties;
         eventPublisher = aEventPublisher;
 
         adapterCache = Caffeine.newBuilder().maximumSize(100).build(schemaService::getAdapter);
@@ -168,9 +164,17 @@ public class CasMerge
      *
      * @param aDiff
      *            the {@link DiffResult}
+     * @param aTargetDocument
+     *            the target document
+     * @param aTargetUsername
+     *            the annotator user owning the target annotation document
+     * @param aTargetCas
+     *            the target CAS for the annotation document
      * @param aCases
      *            a map of {@code CAS}s for each users and the random merge
+     * @return a list of messages representing the result of the merge operation
      * @throws UIMAException
+     *             if there was an UIMA-level exception
      */
     public Set<LogMessage> reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
             String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCases)
@@ -369,6 +373,8 @@ public class CasMerge
                 }
             }
         }
+
+        LOG.trace("Merge complete. Created:  {} Updated: {}", created, updated);
 
         if (eventPublisher != null) {
             eventPublisher
@@ -740,8 +746,13 @@ public class CasMerge
 
     /**
      * Do not check on agreement on Position and SOfa feature - already checked
+     * 
+     * @param aFeature
+     *            a feature
+     * 
+     * @return if a feature is a basic feature
      */
-    public static boolean isBasicFeature(Feature aFeature)
+    private static boolean isBasicFeature(Feature aFeature)
     {
         // FIXME The two parts of this OR statement seem to be redundant. Also the order
         // of the check should be changes such that equals is called on the constant.

@@ -573,6 +573,7 @@ public class AnnotationLayer
         return new Builder();
     }
 
+    @SuppressWarnings("hiding")
     public static final class Builder
     {
         private Long id;

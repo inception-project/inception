@@ -68,6 +68,11 @@ public class ImmutableTag
         return description;
     }
 
+    public Long getTagsetId()
+    {
+        return tagsetId;
+    }
+
     @Override
     public boolean equals(final Object other)
     {

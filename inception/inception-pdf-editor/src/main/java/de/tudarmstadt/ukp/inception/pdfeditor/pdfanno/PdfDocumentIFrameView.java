@@ -53,6 +53,10 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfDocumentIFrameView
     extends WebMarkupContainer
 {
@@ -172,6 +176,7 @@ public class PdfDocumentIFrameView
         return pdfExtractFile;
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<AnnotationDocument> getModel()
     {
         return (IModel<AnnotationDocument>) getDefaultModel();

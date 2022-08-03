@@ -24,7 +24,7 @@ public interface SearchServiceProperties
     boolean isEnabled();
 
     /**
-     * Time to keep an index open after it has last been used.
+     * @return time to keep an index open after it has last been used.
      */
     Duration getIndexKeepOpenTime();
 }

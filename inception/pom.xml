@@ -2231,6 +2231,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
           <notimestamp>true</notimestamp>
+          <doclint>all,-missing</doclint>
           <!-- Exclude UIMA types -->
           <sourceFileExcludes>
             <exclude>**/*_Type.java</exclude>
@@ -2367,6 +2368,11 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.14</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>

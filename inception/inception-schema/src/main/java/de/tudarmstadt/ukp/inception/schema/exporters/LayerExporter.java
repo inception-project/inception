@@ -121,20 +121,22 @@ public class LayerExporter
                 aRequest.getProject().getName());
     }
 
+    @SuppressWarnings("deprecation")
     private ExportedAnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, ExportedAnnotationLayer> aLayerToExLayer,
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
             AnnotationLayer aLayer)
     {
         ExportedAnnotationLayer exLayer = new ExportedAnnotationLayer();
+        // Allow limited backwards compatibility by exporting data that older versions used
         exLayer.setAllowStacking(aLayer.isAllowStacking());
+        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
+        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setBuiltIn(aLayer.isBuiltIn());
         exLayer.setReadonly(aLayer.isReadonly());
         exLayer.setCrossSentence(aLayer.isCrossSentence());
         exLayer.setDescription(aLayer.getDescription());
         exLayer.setEnabled(aLayer.isEnabled());
-        exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
-        exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setValidationMode(aLayer.getValidationMode());
@@ -262,6 +264,7 @@ public class LayerExporter
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void importLayer(AnnotationLayer aLayer, ExportedAnnotationLayer aExLayer,
             Project aProject)
         throws IOException

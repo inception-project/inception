@@ -85,7 +85,8 @@ public class LayerExporterTest
         ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchLayers();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(layers());
     }
 

@@ -512,6 +512,22 @@ public class DocumentImportExportServiceImpl
      * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
      * resulting CAS should be <b>only</b> used for export and never be persisted within the
      * repository.
+     * 
+     * @param aSourceCas
+     *            the source CAS
+     * @param aTargetCas
+     *            the target CAS
+     * @param aSourceDocument
+     *            the document the source CAS belongs to
+     * @param aFullProjectTypeSystem
+     *            the project's full type system ({@link #getTypeSystemForExport}). Used to speed up
+     *            bulk exports. If null, the type system is fetched from the project.
+     * @throws ResourceInitializationException
+     *             if there was a problem obtaining the type system
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     public void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
             TypeSystemDescription aFullProjectTypeSystem)

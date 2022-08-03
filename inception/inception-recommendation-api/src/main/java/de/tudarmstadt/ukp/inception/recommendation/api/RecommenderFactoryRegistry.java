@@ -29,10 +29,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 
 public interface RecommenderFactoryRegistry
 {
-    List<RecommendationEngineFactory> getAllFactories();
+    List<RecommendationEngineFactory<?>> getAllFactories();
 
-    List<RecommendationEngineFactory> getFactories(AnnotationLayer aLayer,
+    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
             AnnotationFeature aFeature);
 
-    RecommendationEngineFactory getFactory(String aId);
+    RecommendationEngineFactory<?> getFactory(String aId);
 }

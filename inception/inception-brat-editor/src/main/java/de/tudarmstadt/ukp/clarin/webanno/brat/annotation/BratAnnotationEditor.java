@@ -112,7 +112,7 @@ public class BratAnnotationEditor
         var diam = super.createDiamBehavior();
         diam.addPriorityHandler(new LoadConfHandler(vis, bratProperties));
         diam.addPriorityHandler(collectionInformationHandler);
-        diam.addPriorityHandler(new GetDocumentHandler(vis, diffRenderSupport));
+        diam.addPriorityHandler(new GetDocumentHandler(vis));
         return diam;
     }
 
@@ -208,12 +208,10 @@ public class BratAnnotationEditor
         private static final long serialVersionUID = 1601968431851817445L;
 
         private final Component vis;
-        private final DifferentialRenderingSupport diffRenderSupport;
 
-        public GetDocumentHandler(Component aVis, DifferentialRenderingSupport aDiffRenderSupport)
+        public GetDocumentHandler(Component aVis)
         {
             vis = aVis;
-            diffRenderSupport = aDiffRenderSupport;
         }
 
         @Override

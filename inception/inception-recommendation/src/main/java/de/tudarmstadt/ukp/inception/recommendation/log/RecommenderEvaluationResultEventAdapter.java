@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.log;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -39,8 +36,6 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationRe
 public class RecommenderEvaluationResultEventAdapter
     implements EventLoggingAdapter<RecommenderEvaluationResultEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {

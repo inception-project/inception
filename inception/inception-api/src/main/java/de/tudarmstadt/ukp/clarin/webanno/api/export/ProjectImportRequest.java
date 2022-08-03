@@ -42,6 +42,10 @@ public class ProjectImportRequest
     /**
      * Request the import of a project, optionally creating any users referenced in the project but
      * missing in the current instance.
+     * 
+     * @param aCreateMissingUsers
+     *            whether to create users that are referenced in the project but missing in the
+     *            system
      */
     public ProjectImportRequest(boolean aCreateMissingUsers)
     {

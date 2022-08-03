@@ -23,7 +23,7 @@ public interface ExternalSearchProviderRegistry
 {
     List<ExternalSearchProviderFactory<?>> getExternalSearchProviderFactories();
 
-    ExternalSearchProviderFactory getExternalSearchProviderFactory(String aId);
+    ExternalSearchProviderFactory<?> getExternalSearchProviderFactory(String aId);
 
-    ExternalSearchProviderFactory getDefaultExternalSearchProviderFactory();
+    ExternalSearchProviderFactory<?> getDefaultExternalSearchProviderFactory();
 }

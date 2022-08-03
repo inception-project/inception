@@ -132,10 +132,12 @@ public class SPARQLQueryBuilderAsserts
                 .forEachOrdered(l -> System.out.printf("          %s%n", l));
     }
 
+    @SuppressWarnings("unchecked")
     private static <T extends RuntimeException> T handleParseException(SPARQLQuery aBuilder,
             T aException)
     {
         String[] queryStringLines = aBuilder.selectQuery().getQueryString().split("\n");
+
         if (aException.getCause() instanceof ParseException) {
             ParseException cause = (ParseException) aException.getCause();
             String message = String.format("Error: %s%n" + "Bad query part starting with: %s%n",
@@ -143,8 +145,7 @@ public class SPARQLQueryBuilderAsserts
                             .substring(cause.currentToken.beginColumn - 1));
             return (T) new MalformedQueryException(message);
         }
-        else {
-            return aException;
-        }
+
+        return aException;
     }
 }

@@ -30,7 +30,11 @@ public class ICasUtil
     public static final String UIMA_BUILTIN_JCAS_PREFIX = "org.apache.uima.jcas.";
 
     /**
-     * Get the feature value of this {@code Feature} on this annotation
+     * @param aFS
+     *            the feature structure to retrieve the value from
+     * @param aFeature
+     *            the feature to retrieve the value from
+     * @return the feature value of this {@code Feature} on this annotation
      */
     public static Object getFeatureValue(FeatureStructure aFS, Feature aFeature)
     {
@@ -58,7 +62,9 @@ public class ICasUtil
     }
 
     /**
-     * Get the feature value of this {@code Feature} on this annotation
+     * @param aFeature
+     *            a feature
+     * @return the feature value of this {@code Feature} on this annotation
      */
     public static Object getDefaultFeatureValue(Feature aFeature)
     {

@@ -213,6 +213,7 @@ public class MultiValueConceptFeatureSupport
         return editor;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {

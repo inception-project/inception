@@ -163,8 +163,7 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
-                applicationEventPublisher);
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
 
         TypeAdapter adapter = annotationService.getAdapter(layer);
         AnnotationFeature feature = adapter.listFeatures().stream().sequential()
@@ -184,8 +183,7 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
-                applicationEventPublisher);
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
         CasMergeOperationResult mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer,
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
@@ -200,8 +198,7 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
-                applicationEventPublisher);
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
         CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 

@@ -93,7 +93,8 @@ public class AgreementMeasureSupportRegistryImpl
     }
 
     @Override
-    public List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature)
+    public List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(
+            AnnotationFeature aFeature)
     {
         return agreementMeasures.stream() //
                 .filter(factory -> factory.accepts(aFeature)) //

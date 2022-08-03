@@ -205,9 +205,6 @@ public class BratSerializerImplTest
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 
-    /**
-     * generate brat JSON data for the document
-     */
     @Test
     public void thatLineOrientedStrategyRenderCorrectly() throws Exception
     {
@@ -247,9 +244,6 @@ public class BratSerializerImplTest
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 
-    /**
-     * generate brat JSON data for the document
-     */
     @Test
     public void thatTokenWrappingStrategyRenderCorrectly() throws Exception
     {

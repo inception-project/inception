@@ -26,11 +26,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
@@ -38,8 +35,6 @@ public class StructuredReviewDraftPanel
     extends AnnotationPanel
 {
     private static final long serialVersionUID = 5419276164971178588L;
-
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private static final String CID_LINKED_ANNOTATIONS_CONTAINER = "linkedAnnotationsContainer";
     private static final String CID_UNLINKED_ANNOTATIONS_CONTAINER = "unlinkedAnnotationsContainer";
@@ -56,7 +51,6 @@ public class StructuredReviewDraftPanel
         super(aId, aModel, aCasProvider);
 
         model = aModel;
-        Project project = aModel.getObject().getProject();
 
         // Allow AJAX updates.
         setOutputMarkupId(true);

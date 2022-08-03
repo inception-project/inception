@@ -58,6 +58,8 @@ public class FileUploadDownloadHelper
      * @param marker
      *            The object to whose lifetime the temporary file is bound
      * @return A handle to the created temporary file
+     * @throws IOException
+     *             if there was an I/O problem writing to the file
      */
     public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
         throws IOException
