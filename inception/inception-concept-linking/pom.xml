@@ -170,12 +170,12 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
-    <!-- Testing -->
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
-      <scope>test</scope>
     </dependency>
+
+    <!-- Testing -->
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
@@ -245,6 +245,7 @@
             <ignoredDependencies>
               <!-- Dependency analysis does not get it... -->
               <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
+              <ignoredDependency>javax.persistence:javax.persistence-api</ignoredDependency>
             </ignoredDependencies>
             <usedDependencies>
               <!-- Testing - used via reflection -->
