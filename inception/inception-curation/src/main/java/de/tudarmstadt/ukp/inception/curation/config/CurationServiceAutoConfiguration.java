@@ -84,8 +84,7 @@ public class CurationServiceAutoConfiguration
             AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
-        return new CurationMergeServiceImpl(aAnnotationService, aAnnotationEditorProperties,
-                aApplicationEventPublisher);
+        return new CurationMergeServiceImpl(aAnnotationService, aApplicationEventPublisher);
     }
 
     @Bean

@@ -83,13 +83,14 @@ public interface RecommendationService
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 
     /**
-     * Returns all annotation layers in the given project which have any enabled recommenders.
+     * @return all annotation layers in the given project which have any enabled recommenders.
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
     /**
-     * This can be empty if e.g. a recommender is only available behind a feature flag that was once
-     * enabled and now is disabled.
+     * @return the recommender factory for the given recommender. This can be empty if e.g. a
+     *         recommender is only available behind a feature flag that was once enabled and now is
+     *         disabled.
      */
     Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
 
@@ -144,8 +145,20 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
+     * 
+     * @param annotationService
+     *            the annotation schema service
+     * @param aDocument
+     * @param aUsername
+     * @param aCas
+     * @param layer
+     * @param aFeature
+     * @param aValue
+     * @param aBegin
+     * @param aEnd
      *
      * @return the CAS address of the created/updated annotation.
+     * @throws AnnotationException
      */
     int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
@@ -215,7 +228,7 @@ public interface RecommendationService
     List<LogMessageGroup> getLog(String aUser, Project aProject);
 
     /**
-     * Retrieve the total amount of enabled recommenders
+     * @return the total amount of enabled recommenders
      */
     long countEnabledRecommenders();
 

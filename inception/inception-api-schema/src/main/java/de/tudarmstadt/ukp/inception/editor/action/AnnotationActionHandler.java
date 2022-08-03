@@ -37,12 +37,20 @@ public interface AnnotationActionHandler
      * 
      * @deprecated to be removed without replacement.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
+     * 
+     * @param aTarget
+     *            the AJAX target
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
@@ -50,6 +58,7 @@ public interface AnnotationActionHandler
      * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
      *             {@link #actionSelect(AjaxRequestTarget, VID)}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
         throws IOException, AnnotationException;
@@ -65,6 +74,7 @@ public interface AnnotationActionHandler
      * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
      *             {@link #actionSelectAndJump(AjaxRequestTarget, VID)}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
@@ -73,28 +83,49 @@ public interface AnnotationActionHandler
      * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
      *             {@link #actionJump(AjaxRequestTarget, VID)}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
     /**
      * Delete currently selected annotation.
+     * 
+     * @param aTarget
+     *            the AJAX target
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
      * Clear the currently selected annotation from the editor panel.
+     * 
+     * @param aTarget
+     *            the AJAX target
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionClear(AjaxRequestTarget aTarget) throws AnnotationException;
 
     /**
      * Reverse the currently selected relation.
+     * 
+     * @param aTarget
+     *            the AJAX target
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
      * @deprecated Use either of the other two {@link #actionFillSlot} variants instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     default void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
             int aSlotFillerEnd, VID aExistingSlotFillerId)
@@ -120,6 +151,10 @@ public interface AnnotationActionHandler
      *            of the span of the selected existing annotation.
      * @param aSlotFillerEnd
      *            the corresponding end.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
             int aSlotFillerEnd)
@@ -134,6 +169,10 @@ public interface AnnotationActionHandler
      *            the CAS in which the slot is going to be filled.
      * @param aExistingSlotFillerId
      *            ID of the existing span annotation to be filled into the armed slot
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;

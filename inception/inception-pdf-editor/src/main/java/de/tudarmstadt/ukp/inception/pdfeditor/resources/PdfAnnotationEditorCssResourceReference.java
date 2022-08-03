@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.inception.pdfeditor.resources;
 
 import org.apache.wicket.request.resource.CssResourceReference;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfAnnotationEditorCssResourceReference
     extends CssResourceReference
 {

@@ -44,8 +44,25 @@ public interface AnnotationEditorExtension
 
     /**
      * Handle an action.
+     * 
+     * @param aActionHandler
+     *            the action handler.
+     * @param aState
+     *            the annotator state
+     * @param aTarget
+     *            the AJAX target
+     * @param aCas
+     *            the CAS being edited
+     * @param paramId
+     *            the annotation the action is being performed on
+     * @param aAction
+     *            the action to perform
+     * @throws AnnotationException
+     *             if there was an annotation-level exception
+     * @throws IOException
+     *             if there was an I/O-level exception
      */
-    default void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
+    default void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
             AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction)
         throws AnnotationException, IOException
     {

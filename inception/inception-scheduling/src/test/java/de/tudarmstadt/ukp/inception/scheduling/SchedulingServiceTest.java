@@ -44,8 +44,6 @@ public class SchedulingServiceTest
 {
     private @Mock ApplicationContext mockContext;
 
-    private List<Task> executedTasks;
-
     private SchedulingServiceImpl sut;
 
     @BeforeEach

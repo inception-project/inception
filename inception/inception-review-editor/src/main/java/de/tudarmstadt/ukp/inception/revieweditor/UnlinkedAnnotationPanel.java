@@ -24,8 +24,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -37,8 +35,6 @@ public class UnlinkedAnnotationPanel
     extends AnnotationPanel
 {
     private static final long serialVersionUID = -6975253945462000226L;
-
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
     private static final String CID_ANNOTATIONS = "annotations";

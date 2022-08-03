@@ -76,6 +76,12 @@ public interface ValueTypeSupport
      * 
      * @param aId
      *            Wicket markup id received by the editor instances
+     * @param aModel
+     *            the statement model
+     * @param aDatatype
+     *            the property which the editor should edit
+     * @param aKbModel
+     *            the knowledge base to which the statement belongs
      */
     ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype,
             IModel<KnowledgeBase> aKbModel);
@@ -86,6 +92,12 @@ public interface ValueTypeSupport
      * 
      * @param aId
      *            Wicket markup id received by the presenter instances
+     * @param aModel
+     *            the statement model
+     * @param aDatatype
+     *            the property which the presenter should display
+     * @param aKbModel
+     *            the knowledge base to which the statement belongs
      */
     ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
             IModel<KBProperty> aDatatype, IModel<KnowledgeBase> aKbModel);

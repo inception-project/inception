@@ -90,6 +90,7 @@ public class CasMergeTest
      * If one annotator has provided an annotation at a given position and the other annotator did
      * not (i.e. the annotations are incomplete), then this should be detected as a disagreement.
      */
+    @SuppressWarnings("javadoc")
     @Test
     public void thatIncompleteAnnotationIsNotMerged() throws Exception
     {
@@ -115,9 +116,11 @@ public class CasMergeTest
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
-                .extracting(set -> set.getPosition()).usingFieldByFieldElementComparator()
-                .containsExactly(new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word",
-                        null, null, -1, -1, null, null));
+                .extracting(set -> set.getPosition()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly( //
+                        new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word", null,
+                                null, -1, -1, null, null));
 
         assertThat(select(curatorCas, POS.class)).isEmpty();
     }
@@ -126,6 +129,7 @@ public class CasMergeTest
      * If one annotator has provided an annotation at a given position and the other annotator did
      * not (i.e. the annotations are incomplete), then this should be detected as a disagreement.
      */
+    @SuppressWarnings("javadoc")
     @Test
     public void thatIncompleteAnnotationIsMerged() throws Exception
     {
@@ -150,9 +154,11 @@ public class CasMergeTest
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
-                .extracting(set -> set.getPosition()).usingFieldByFieldElementComparator()
-                .containsExactly(new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word",
-                        null, null, -1, -1, null, null));
+                .extracting(set -> set.getPosition()) //
+                .usingRecursiveFieldByFieldElementComparator()//
+                .containsExactly(//
+                        new SpanPosition(null, null, 0, POS.class.getName(), 0, 4, "word", null,
+                                null, -1, -1, null, null));
 
         assertThat(select(curatorCas, POS.class)).hasSize(1);
     }

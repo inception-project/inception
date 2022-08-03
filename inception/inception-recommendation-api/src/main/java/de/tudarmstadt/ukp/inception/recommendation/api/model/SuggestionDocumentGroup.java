@@ -31,6 +31,9 @@ import org.apache.commons.lang3.Validate;
 /**
  * Container for {@link SuggestionGroup suggestion groups} all coming from a single document. No
  * guarantees about layers and features though.
+ * 
+ * @param <T>
+ *            the suggestion type
  */
 public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
     extends AbstractCollection<SuggestionGroup<T>>
@@ -50,7 +53,13 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
     }
 
     /**
-     * Returns a SuggestionDocumentGroup where only suggestions of type V are added
+     * @param type
+     *            the type of suggestions to retrieve
+     * @param aSuggestions
+     *            the list to retrieve suggestions from
+     * @param <V>
+     *            the suggestion type
+     * @return a SuggestionDocumentGroup where only suggestions of type V are added
      */
     @SuppressWarnings("unchecked")
     public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> groupsOfType(

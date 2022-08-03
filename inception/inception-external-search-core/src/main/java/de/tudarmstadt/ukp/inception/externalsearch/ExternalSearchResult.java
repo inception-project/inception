@@ -82,7 +82,8 @@ public class ExternalSearchResult
     }
 
     /**
-     * Set the title of the matching document.
+     * @param aDocumentTitle
+     *            the title of the matching document.
      */
     public void setDocumentTitle(String aDocumentTitle)
     {
@@ -100,7 +101,8 @@ public class ExternalSearchResult
     }
 
     /**
-     * Get the source of the matching document.
+     * @param aSource
+     *            the source of the matching document.
      */
     public void setOriginalSource(String aSource)
     {
@@ -118,7 +120,8 @@ public class ExternalSearchResult
     }
 
     /**
-     * Get the source URI of the matching document.
+     * @param aUri
+     *            the source URI of the matching document.
      */
     public void setOriginalUri(String aUri)
     {

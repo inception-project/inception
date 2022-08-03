@@ -26,8 +26,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -49,7 +47,6 @@ public class PdfAnnotationEditor
     extends ExternalAnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
-    private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private static final String VIS = "vis";
 

@@ -93,6 +93,7 @@ public class ExportedTagSet
      *             The property is only used for deserialization/import but not for serialization
      *             /export!
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public String getTypeName()
     {
@@ -104,6 +105,7 @@ public class ExportedTagSet
      *             The property is only used for deserialization/import but not for serialization
      *             /export!
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public void setTypeName(String aTypeName)
     {

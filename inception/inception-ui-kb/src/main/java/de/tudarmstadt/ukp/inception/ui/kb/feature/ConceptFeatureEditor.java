@@ -183,7 +183,7 @@ public class ConceptFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<KBHandle> getFocusComponent()
     {
         return focusComponent;
     }
@@ -273,6 +273,7 @@ public class ConceptFeatureEditor
                     "return [];");
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <C> IConverter<C> getConverter(Class<C> aType)
         {

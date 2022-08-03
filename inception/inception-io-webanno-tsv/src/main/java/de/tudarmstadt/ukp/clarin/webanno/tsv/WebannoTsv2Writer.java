@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -95,18 +94,12 @@ public class WebannoTsv2Writer
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
-        OutputStream docOS = null;
-        try {
-            docOS = getOutputStream(aJCas, filenameSuffix);
+        try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
             convertToTsv(aJCas, docOS, encoding);
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);
         }
-        finally {
-            closeQuietly(docOS);
-        }
-
     }
 
     private void convertToTsv(JCas aJCas, OutputStream aOs, String aEncoding)

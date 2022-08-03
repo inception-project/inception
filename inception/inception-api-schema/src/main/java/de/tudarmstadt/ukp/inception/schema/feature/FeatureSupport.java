@@ -277,6 +277,8 @@ public interface FeatureSupport<T>
      *            the annotation ID.
      * @param aValue
      *            the value.
+     * @throws AnnotationException
+     *             if there was a problem setting the feature value
      */
     default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws AnnotationException
@@ -291,6 +293,7 @@ public interface FeatureSupport<T>
         setFeature(fs, aFeature, value);
     }
 
+    @SuppressWarnings("unchecked")
     default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         Object value;
@@ -316,8 +319,12 @@ public interface FeatureSupport<T>
     /**
      * Convert the value returned by the feature editor to the value stored in the CAS.
      * 
+     * @param <V>
+     *            the value type
      * @param aFeature
      *            the feature.
+     * @param aCAS
+     *            the CAS being edited
      * @param aValue
      *            the value provided from the feature editor.
      * @return the CAS value.
@@ -359,6 +366,7 @@ public interface FeatureSupport<T>
     /**
      * @deprecated Use {@link #unsupportedFeatureTypeException(AnnotationFeature)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
     {
@@ -368,6 +376,7 @@ public interface FeatureSupport<T>
     /**
      * @deprecated Use {@link #unsupportedLinkModeException(AnnotationFeature)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     default IllegalArgumentException unsupportedLinkModeException(FeatureState aFeatureState)
     {
@@ -377,6 +386,7 @@ public interface FeatureSupport<T>
     /**
      * @deprecated Use {@link #unsupportedMultiValueModeException(AnnotationFeature)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     default IllegalArgumentException unsupportedMultiValueModeException(FeatureState aFeatureState)
     {
@@ -391,6 +401,10 @@ public interface FeatureSupport<T>
      * focus automatically, then the shortcuts won't be available and the user has to unfocus the
      * editor before the shortcuts can be used. So it is better to suppress the auto-focus in such a
      * case.
+     * 
+     * @param aFeature
+     *            the feature
+     * @return if auto-focusing the feature editor should be suppressed
      */
     default boolean suppressAutoFocus(AnnotationFeature aFeature)
     {

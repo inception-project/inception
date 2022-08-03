@@ -38,24 +38,29 @@ public class JsonImportUtil
      * Works for scenarios with overwrite enabled Checks if tagset already exists, then overwrites
      * otherwise works normally
      * 
+     * @param aProject
+     *            the project to import the tags into
+     * @param aInputStream
+     *            the stream to read the JSON tagset from
+     * @param aAnnotationService
+     *            the annotation service to use for the import
      * @return the imported tag set
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
-    public static TagSet importTagSetFromJsonWithOverwrite(Project project,
-            InputStream tagInputStream, AnnotationSchemaService aAnnotationService)
+    public static TagSet importTagSetFromJsonWithOverwrite(Project aProject,
+            InputStream aInputStream, AnnotationSchemaService aAnnotationService)
         throws IOException
     {
-        String text = IOUtils.toString(tagInputStream, "UTF-8");
+        ExportedTagSet importedTagSet = JSONUtil.fromJsonStream(ExportedTagSet.class, aInputStream);
 
-        ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
-                ExportedTagSet.class);
-
-        if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
+        if (aAnnotationService.existsTagSet(importedTagSet.getName(), aProject)) {
             // A tagset exists so we'll have to replace it
-            return replaceTagSet(project, importedTagSet, aAnnotationService);
+            return replaceTagSet(aProject, importedTagSet, aAnnotationService);
         }
         else {
             // Proceed normally
-            return createTagSet(project, importedTagSet, aAnnotationService);
+            return createTagSet(aProject, importedTagSet, aAnnotationService);
         }
     }
 
@@ -136,16 +141,22 @@ public class JsonImportUtil
     /**
      * Provides a new name if TagSet already exists.
      * 
+     * @param aAnnotationService
+     *            annotation service to look up existing tagsets
+     * @param aName
+     *            the suggested name
+     * @param aProject
+     *            the project into which to import the tagset
      * @return a unique tag set name
      */
     public static String copyTagSetName(AnnotationSchemaService aAnnotationService,
-            String importedTagSetName, Project project)
+            String aName, Project aProject)
     {
-        String betterTagSetName = "copy_of_" + importedTagSetName;
+        String betterTagSetName = "copy_of_" + aName;
         int i = 1;
         while (true) {
-            if (aAnnotationService.existsTagSet(betterTagSetName, project)) {
-                betterTagSetName = "copy_of_" + importedTagSetName + "(" + i + ")";
+            if (aAnnotationService.existsTagSet(betterTagSetName, aProject)) {
+                betterTagSetName = "copy_of_" + aName + "(" + i + ")";
                 i++;
             }
             else {

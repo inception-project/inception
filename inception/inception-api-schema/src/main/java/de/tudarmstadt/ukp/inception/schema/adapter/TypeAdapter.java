@@ -115,16 +115,6 @@ public interface TypeAdapter
      */
     void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid);
 
-    // /**
-    // * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-    // * {@link #delete(SourceDocument, String, CAS, VID)} instead.
-    // */
-    // @Deprecated
-    // default void delete(AnnotatorState aState, CAS aCas, VID aVid)
-    // {
-    // delete(aState.getDocument(), aState.getUser().getUsername(), aCas, aVid);
-    // }
-
     /**
      * @return the layer for which this adapter has been created.
      */
@@ -152,23 +142,12 @@ public interface TypeAdapter
      *            the feature.
      * @param aValue
      *            the value.
+     * @throws AnnotationException
+     *             if there was an error setting the feature value
      */
     void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
-
-    // /**
-    // * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-    // * {@link #setFeatureValue(SourceDocument, String, CAS, int, AnnotationFeature, Object)}.
-    // */
-    // @Deprecated
-    // default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
-    // AnnotationFeature aFeature, Object aValue)
-    // throws AnnotationException
-    // {
-    // setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aCas, aAddress,
-    // aFeature, aValue);
-    // }
 
     /**
      * Get the value of the given feature.
@@ -185,6 +164,10 @@ public interface TypeAdapter
      * Initialize the layer when it is created. This can be used e.g. to add default features. This
      * is mainly called when a layer is created through the UI, in other cases (e.g. during import)
      * all necessary information should be included in the imported data.
+     * 
+     * @param aSchemaService
+     *            the schema service (because type adapters do currently not support dependency
+     *            injection)
      */
     void initializeLayerConfiguration(AnnotationSchemaService aSchemaService);
 
@@ -192,6 +175,10 @@ public interface TypeAdapter
      * Check if all annotations of this layer conform with the layer configuration. This is usually
      * called when a document is marked as finished to prevent invalid annotations ending up in the
      * finished document.
+     * 
+     * @param aCas
+     *            the CAS to validate
+     * @return a list of messages indicating the result of the validation
      */
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
 

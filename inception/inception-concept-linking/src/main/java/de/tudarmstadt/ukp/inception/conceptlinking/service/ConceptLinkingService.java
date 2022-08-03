@@ -41,8 +41,12 @@ public interface ConceptLinkingService
      *
      * @param aKB
      *            the KB used to generate candidates.
-     * @param aTypedString
-     *            What the user has typed so far in the text field. Might be null.
+     * @param aUserQuery
+     *            the input made by the user into the feature editor (can be null)
+     * @param aConceptScope
+     *            the search scope
+     * @param aValueType
+     *            the kind of KB items to be retrieved
      * @param aMention
      *            Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset
@@ -52,7 +56,7 @@ public interface ConceptLinkingService
      * @return a ranked list of entities.
      */
     List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aTypedString, String aMention,
+            ConceptFeatureValueType aValueType, String aUserQuery, String aMention,
             int aMentionBeginOffset, CAS aCas);
 
     /**
@@ -65,8 +69,12 @@ public interface ConceptLinkingService
      *            the RepositoryId of the knowledge base that defines the scope. If this parameter
      *            is {@code null}, then all enabled knowledge bases are searched. If the specified
      *            knowledge base is disabled, an empty list is returned.
-     * @param aTypedString
-     *            What the user has typed so far in the text field. Might be null.
+     * @param aConceptScope
+     *            the search scope
+     * @param aValueType
+     *            the kind of KB items to be retrieved
+     * @param aUserQuery
+     *            the input made by the user into the feature editor (can be null)
      * @param aMention
      *            Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset
@@ -78,7 +86,7 @@ public interface ConceptLinkingService
      * @return all linking instances within the scope
      */
     List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aTypedString, String aMention,
+            ConceptFeatureValueType aValueType, String aUserQuery, String aMention,
             int aMentionBeginOffset, CAS aCas, Project aProject);
 
     /**
@@ -96,7 +104,19 @@ public interface ConceptLinkingService
      * This method does the actual ranking of the candidate entities. First the candidates from
      * full-text matching are sorted by frequency cutoff after a threshold because they are more
      * numerous. Then the candidates from exact matching are added and sorted by multiple keys.
+     * 
+     * @param aUserQuery
+     *            the input made by the user into the feature editor (can be null)
+     * @param aMention
+     *            the mention
+     * @param aCandidates
+     *            the linking candidate handles
+     * @param aCas
+     *            the CAS containing the mention
+     * @param aBegin
+     *            the begin offset of the mention in the document
+     * @return the ranked handles
      */
-    List<KBHandle> rankCandidates(String aTypedString, String aMention, Set<KBHandle> aCandidates,
+    List<KBHandle> rankCandidates(String aUserQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin);
 }

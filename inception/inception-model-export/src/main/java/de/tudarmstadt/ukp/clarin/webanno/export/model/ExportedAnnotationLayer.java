@@ -218,6 +218,7 @@ public class ExportedAnnotationLayer
      *             for the time being to enable backwards compatibility of exported projects with
      *             older versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public boolean isLockToTokenOffset()
     {
@@ -229,6 +230,7 @@ public class ExportedAnnotationLayer
      *             kept around for the time being to enable backwards compatibility of exported
      *             projects with older versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public void setLockToTokenOffset(boolean lockToTokenOffset)
     {
@@ -240,6 +242,7 @@ public class ExportedAnnotationLayer
      *             the time being to enable backwards compatibility of exported projects with older
      *             versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public boolean isAllowStacking()
     {
@@ -251,6 +254,7 @@ public class ExportedAnnotationLayer
      *             the time being to enable backwards compatibility of exported projects with older
      *             versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public void setAllowStacking(boolean allowStacking)
     {
@@ -282,6 +286,7 @@ public class ExportedAnnotationLayer
      *             for the time being to enable backwards compatibility of exported projects with
      *             older versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public boolean isMultipleTokens()
     {
@@ -293,6 +298,7 @@ public class ExportedAnnotationLayer
      *             kept around for the time being to enable backwards compatibility of exported
      *             projects with older versions of WebAnno.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public void setMultipleTokens(boolean multipleTokens)
     {

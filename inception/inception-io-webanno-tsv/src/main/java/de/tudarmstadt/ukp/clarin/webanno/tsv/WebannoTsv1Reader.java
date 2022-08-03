@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -314,15 +312,9 @@ public class WebannoTsv1Reader
     {
         Resource res = nextFile();
         initCas(aJCas, res);
-        InputStream is = null;
-        try {
-            is = res.getInputStream();
+        try (InputStream is = res.getInputStream()) {
             convertToCas(aJCas, is, encoding);
         }
-        finally {
-            closeQuietly(is);
-        }
-
     }
 
     /**

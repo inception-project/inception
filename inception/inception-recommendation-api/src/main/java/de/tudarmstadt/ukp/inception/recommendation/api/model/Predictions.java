@@ -82,9 +82,9 @@ public class Predictions
     }
 
     /**
-     * Get the predictions of a given window for each document, where the outer list is a list of
-     * tokens and the inner list is a list of predictions for a token. The method filters all tokens
-     * which already have an annotation and don't need further recommendation.
+     * @return the predictions of a given window for each document, where the outer list is a list
+     *         of tokens and the inner list is a list of predictions for a token. The method filters
+     *         all tokens which already have an annotation and don't need further recommendation.
      */
     public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
             Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
@@ -106,14 +106,27 @@ public class Predictions
     /**
      * TODO #176 use the document Id once it it available in the CAS
      * 
-     * Get the predictions of a given window, where the outer list is a list of tokens and the inner
-     * list is a list of predictions for a token
+     * @param type
+     *            the type of suggestions to retrieve
+     * @param aDocumentName
+     *            the name of the document to retrieve suggestions for
+     * @param aLayer
+     *            the layer to retrieve suggestions for
+     * @param aWindowBegin
+     *            the begin of the window for which to retrieve suggestions
+     * @param aWindowEnd
+     *            the end of the window for which to retrieve suggestions
+     * @param <T>
+     *            the suggestion type
+     * 
+     * @return the predictions of a given window, where the outer list is a list of tokens and the
+     *         inner list is a list of predictions for a token
      */
     public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
             Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
             int aWindowEnd)
     {
-        return new SuggestionDocumentGroup(
+        return new SuggestionDocumentGroup<>(
                 getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 
@@ -124,6 +137,7 @@ public class Predictions
      * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
      * respectively. This is useful when all suggestions should be fetched.
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
@@ -142,8 +156,8 @@ public class Predictions
     }
 
     /**
-     * Returns the first prediction that matches recommendationId and recommenderId in the given
-     * document.
+     * @return the first prediction that matches recommendationId and recommenderId in the given
+     *         document.
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
@@ -155,7 +169,7 @@ public class Predictions
 
     /**
      * @param aPredictions
-     *            - list of sentences containing recommendations
+     *            list of sentences containing recommendations
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
@@ -208,6 +222,7 @@ public class Predictions
      *            the given annotation feature name
      * @return the annotation suggestions
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {

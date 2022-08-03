@@ -340,7 +340,6 @@ public class BratSerializerImpl
      *            the span begin (window-relative positions)
      * @param aEnd
      *            (window-relative positions)
-     * @param aI
      * @return list of ranges.
      */
     private List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,

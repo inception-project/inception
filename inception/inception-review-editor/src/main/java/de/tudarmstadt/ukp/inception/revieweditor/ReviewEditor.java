@@ -19,11 +19,9 @@ package de.tudarmstadt.ukp.inception.revieweditor;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
@@ -66,18 +64,6 @@ public class ReviewEditor
         // selecting annotations or updating values in the right sidebar which occurs on
         // using aTarget.add(this);
         send(getPage(), Broadcast.BREADTH, new RefreshEvent(aTarget));
-    }
-
-    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
-    {
-        LOG.error(aMessage, aCause);
-        handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
-    }
-
-    private void handleError(String aMessage, AjaxRequestTarget aTarget)
-    {
-        error(aMessage);
-        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     @OnEvent(stop = true)

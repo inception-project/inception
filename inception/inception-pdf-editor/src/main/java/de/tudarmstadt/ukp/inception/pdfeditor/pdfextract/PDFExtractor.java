@@ -70,6 +70,10 @@ import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PDFExtractor
     extends PDFGraphicsStreamEngine
 {
@@ -479,12 +483,12 @@ public class PDFExtractor
         return s;
     }
 
-    private boolean isWriteGlyphCoords()
+    public boolean isWriteGlyphCoords()
     {
         return writeGlyphCoords;
     }
 
-    private void setWriteGlyphCoords(boolean writeGlyphCoords)
+    public void setWriteGlyphCoords(boolean writeGlyphCoords)
     {
         this.writeGlyphCoords = writeGlyphCoords;
     }

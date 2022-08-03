@@ -32,14 +32,18 @@ public interface FeatureSupportRegistry
     String SERVICE_NAME = "featureSupportRegistry";
 
     /**
-     * Get the types of all features the user should be able to create. There can also be internal
-     * types reserved for built-in features. These are not returned.
+     * @param aLayer
+     *            a layer
+     * @return the types of all features the user should be able to create. There can also be
+     *         internal types reserved for built-in features. These are not returned.
      */
     List<FeatureType> getAllTypes(AnnotationLayer aLayer);
 
     /**
-     * Get the types of all features the user should be able to create. There can also be internal
-     * types reserved for built-in features. These are not returned.
+     * @param aLayer
+     *            a layer
+     * @return the types of all features the user should be able to create. There can also be
+     *         internal types reserved for built-in features. These are not returned.
      */
     List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer);
 

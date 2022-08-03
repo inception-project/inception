@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public class FullProjectExportRequest
     extends ProjectExportRequest_ImplBase
@@ -34,6 +35,12 @@ public class FullProjectExportRequest
     /**
      * Create a new project export request. Use this constructor if the project is not known yet or
      * may change. Make sure to set the project via the setter before starting the export.
+     * 
+     * @param aFormat
+     *            the ID of the export format.
+     * @param aIncludeInProgress
+     *            whether to include documents that are
+     *            {@link SourceDocumentState#CURATION_IN_PROGRESS}
      */
     public FullProjectExportRequest(String aFormat, boolean aIncludeInProgress)
     {
@@ -50,7 +57,8 @@ public class FullProjectExportRequest
     }
 
     /**
-     * Set the ID of the export format.
+     * @param aFormat
+     *            the ID of the export format.
      * 
      * @see FormatSupport#getId()
      */
@@ -60,7 +68,7 @@ public class FullProjectExportRequest
     }
 
     /**
-     * Get the ID of the export format.
+     * @return the ID of the export format.
      * 
      * @see FormatSupport#getId()
      */
@@ -69,6 +77,11 @@ public class FullProjectExportRequest
         return format;
     }
 
+    /**
+     * @param aIncludeInProgress
+     *            whether to include documents that are
+     *            {@link SourceDocumentState#CURATION_IN_PROGRESS}
+     */
     public void setIncludeInProgress(boolean aIncludeInProgress)
     {
         includeInProgress = aIncludeInProgress;

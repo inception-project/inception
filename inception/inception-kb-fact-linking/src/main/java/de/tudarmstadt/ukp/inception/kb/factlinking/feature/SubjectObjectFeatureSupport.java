@@ -57,9 +57,10 @@ import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
  * This class is exposed as a Spring Component via
  * {@link FactLinkingAutoConfiguration#subjectObjectFeatureSupport}.
  * </p>
+ * 
  */
-@Deprecated
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Deprecated
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>
 {

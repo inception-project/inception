@@ -125,6 +125,9 @@ public abstract class AnnotationEditorBase
      * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
      * multiple times, even for the same annotation editor, but only resulting in a single rendering
      * call.
+     * 
+     * @param aTarget
+     *            the AJAX target
      */
     public void requestRender(AjaxRequestTarget aTarget)
     {

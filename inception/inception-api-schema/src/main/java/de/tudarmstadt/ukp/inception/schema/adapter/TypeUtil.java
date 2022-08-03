@@ -220,6 +220,9 @@ public final class TypeUtil
     }
 
     /**
+     * @param aLayer
+     *            a layer
+     * @return the encoded type name sent to the browser.
      * @see TypeAdapter#getEncodedTypeName()
      */
     public static String getUiTypeName(AnnotationLayer aLayer)

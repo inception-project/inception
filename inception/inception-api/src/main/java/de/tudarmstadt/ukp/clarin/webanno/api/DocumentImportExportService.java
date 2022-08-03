@@ -151,6 +151,20 @@ public interface DocumentImportExportService
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
+     * 
+     * @param cas
+     *            the CAS to export
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aFileName
+     *            the name the exported file should have - only the name, no path!
+     * @param aFormat
+     *            the format in which to export
+     * @return the exported file
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
      */
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat)
         throws IOException, UIMAException;
@@ -161,6 +175,24 @@ public interface DocumentImportExportService
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
+     * 
+     * @param cas
+     *            the CAS to export
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aFileName
+     *            the name the exported file should have - only the name, no path!
+     * @param aFormat
+     *            the format in which to export
+     * @param aStripExtension
+     *            whether to strip the original file extension from the file name
+     * @param aBulkOperationContext
+     *            a bulk export context (used to speed up bulk exports)
+     * @return the exported file
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
      */
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
             boolean aStripExtension, Map<Pair<Project, String>, Object> aBulkOperationContext)
@@ -198,8 +230,13 @@ public interface DocumentImportExportService
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**
-     * Returns a type system with all the types that should be present in an exported CAS. This
-     * means in particular that type internal to the application should <b>not</b> be included.
+     * @return a type system with all the types that should be present in an exported CAS. This
+     *         means in particular that type internal to the application should <b>not</b> be
+     *         included.
+     * @param aProject
+     *            the project
+     * @throws ResourceInitializationException
+     *             if there was an UIMA-level problem
      */
     TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException;

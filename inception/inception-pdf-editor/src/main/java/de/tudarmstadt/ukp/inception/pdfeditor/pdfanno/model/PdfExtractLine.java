@@ -22,7 +22,10 @@ import java.util.Objects;
 
 /**
  * Represents a line within a PDFExtract file.
+ * 
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfExtractLine
     implements Serializable
 {
@@ -92,10 +95,12 @@ public class PdfExtractLine
     @Override
     public boolean equals(Object aObject)
     {
-        if (this == aObject)
+        if (this == aObject) {
             return true;
-        if (aObject == null || getClass() != aObject.getClass())
+        }
+        if (aObject == null || getClass() != aObject.getClass()) {
             return false;
+        }
         PdfExtractLine that = (PdfExtractLine) aObject;
         return page == that.page && position == that.position && Objects.equals(value, that.value)
                 && Objects.equals(displayPositions, that.displayPositions);

@@ -22,6 +22,10 @@ import java.util.Objects;
 
 import org.apache.wicket.request.IRequestParameters;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class Offset
     implements Serializable
 {
@@ -55,10 +59,12 @@ public class Offset
     @Override
     public boolean equals(Object o)
     {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         Offset offset = (Offset) o;
         return begin == offset.begin && end == offset.end;
     }

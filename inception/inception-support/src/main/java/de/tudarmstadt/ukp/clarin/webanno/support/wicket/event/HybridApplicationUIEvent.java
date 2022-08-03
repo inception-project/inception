@@ -26,8 +26,8 @@ import org.apache.wicket.request.cycle.RequestCycle;
 public interface HybridApplicationUIEvent
 {
     /**
-     * Returns the request target which can be used to update the UI (if the event was triggered in
-     * the context of a UI action).
+     * @return the request target which can be used to update the UI (if the event was triggered in
+     *         the context of a UI action).
      */
     default AjaxRequestTarget getRequestTarget()
     {
