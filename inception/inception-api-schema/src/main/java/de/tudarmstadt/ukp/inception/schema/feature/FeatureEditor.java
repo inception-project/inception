@@ -95,7 +95,7 @@ public abstract class FeatureEditor
 
     public void addFeatureUpdateBehavior()
     {
-        FormComponent focusComponent = getFocusComponent();
+        FormComponent<?> focusComponent = getFocusComponent();
         focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -8944946839865527412L;
@@ -145,5 +145,5 @@ public abstract class FeatureEditor
         });
     }
 
-    abstract public FormComponent getFocusComponent();
+    abstract public FormComponent<?> getFocusComponent();
 }

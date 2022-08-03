@@ -145,8 +145,20 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
+     * 
+     * @param annotationService
+     *            the annotation schema service
+     * @param aDocument
+     * @param aUsername
+     * @param aCas
+     * @param layer
+     * @param aFeature
+     * @param aValue
+     * @param aBegin
+     * @param aEnd
      *
      * @return the CAS address of the created/updated annotation.
+     * @throws AnnotationException
      */
     int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,

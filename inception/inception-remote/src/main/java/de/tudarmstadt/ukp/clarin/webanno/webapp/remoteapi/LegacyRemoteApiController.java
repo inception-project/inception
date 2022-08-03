@@ -122,6 +122,9 @@ public class LegacyRemoteApiController
      *            the type of the files contained in the ZIP.
      * @param aFile
      *            a ZIP file containing the project data.
+     * @param aName
+     *            the desired name of the project (optional)
+     * @return JSON object with information about the project
      * @throws Exception
      *             if there was an error.
      */
@@ -275,6 +278,7 @@ public class LegacyRemoteApiController
      * 
      * @param aProjectId
      *            The id of the project.
+     * @return message about the result of the operation
      * @throws Exception
      *             if there was an error.
      */
@@ -323,6 +327,8 @@ public class LegacyRemoteApiController
      * @param aProjectId
      *            the project ID
      * @return JSON with {@link SourceDocument} : id
+     * @throws Exception
+     *             if something went wrong
      */
     @Operation(summary = "Show source documents in a project managed by the given user")
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS)
@@ -381,6 +387,7 @@ public class LegacyRemoteApiController
      *            {@link Project} ID.
      * @param aSourceDocumentId
      *            {@link SourceDocument} ID.
+     * @return message about the result of the operation
      * @throws Exception
      *             if there was an error.
      */

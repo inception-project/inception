@@ -36,6 +36,7 @@ public enum SourceDocumentStateTransition
      *             marked their annotation documents as done. This is nothing we can record
      *             statically in the source document.
      */
+    @Deprecated
     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
 
     /**
@@ -68,6 +69,7 @@ public enum SourceDocumentStateTransition
      *             marked their annotation documents as done. This is nothing we can record
      *             statically in the source document.
      */
+    @Deprecated
     ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 
     public static SourceDocumentState transition(SourceDocumentStateTransition aTransition)

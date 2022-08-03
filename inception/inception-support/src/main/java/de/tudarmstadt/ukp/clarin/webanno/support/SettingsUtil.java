@@ -193,7 +193,6 @@ public class SettingsUtil
     }
 
     /**
-     * 
      * @deprecated To access setting properties, use Spring Boot
      *             {@link org.springframework.boot.context.properties.ConfigurationProperties}
      *             classes implementing a corresponding interface instead (e.g. @see

@@ -106,6 +106,19 @@ public class Predictions
     /**
      * TODO #176 use the document Id once it it available in the CAS
      * 
+     * @param type
+     *            the type of suggestions to retrieve
+     * @param aDocumentName
+     *            the name of the document to retrieve suggestions for
+     * @param aLayer
+     *            the layer to retrieve suggestions for
+     * @param aWindowBegin
+     *            the begin of the window for which to retrieve suggestions
+     * @param aWindowEnd
+     *            the end of the window for which to retrieve suggestions
+     * @param <T>
+     *            the suggestion type
+     * 
      * @return the predictions of a given window, where the outer list is a list of tokens and the
      *         inner list is a list of predictions for a token
      */
@@ -113,7 +126,7 @@ public class Predictions
             Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
             int aWindowEnd)
     {
-        return new SuggestionDocumentGroup(
+        return new SuggestionDocumentGroup<>(
                 getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 
@@ -124,6 +137,7 @@ public class Predictions
      * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
      * respectively. This is useful when all suggestions should be fetched.
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
@@ -208,6 +222,7 @@ public class Predictions
      *            the given annotation feature name
      * @return the annotation suggestions
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {

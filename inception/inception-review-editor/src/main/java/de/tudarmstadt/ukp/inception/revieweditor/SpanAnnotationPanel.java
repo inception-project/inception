@@ -35,8 +35,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -55,8 +53,6 @@ public class SpanAnnotationPanel
 {
     private static final long serialVersionUID = 7375798934091777439L;
 
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
-
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
@@ -65,7 +61,6 @@ public class SpanAnnotationPanel
     private static final String CID_TEXT_FEATURES = "textFeatures";
     private static final String CID_FEATURES = "features";
     private static final String CID_SELECT = "select";
-    private static final String CID_SELECTED = "selected";
     private static final String CID_LABEL = "label";
     private static final String CID_VALUE = "value";
     private static final String CID_PRE_CONTEXT = "preContext";

@@ -384,6 +384,7 @@ public class ProjectCasDoctorPanel
         }
     }
 
+    @SuppressWarnings("unused")
     private static class LogMessageSet
         implements Serializable
     {

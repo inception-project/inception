@@ -237,7 +237,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         }
         else if (size() == 1) {
             T top = get(0);
-            return singletonMap(top.getRecommenderId(), asList(new Delta(top)));
+            return singletonMap(top.getRecommenderId(), asList(new Delta<T>(top)));
         }
         else {
             // Group the suggestions by recommender because the scores cannot be compared
@@ -286,7 +286,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         else if (size() == 1) {
             T top = get(0);
             if (top.isVisible() && top.getScore() >= aPreferences.getScoreThreshold()) {
-                return singletonMap(top.getRecommenderId(), new Delta(top));
+                return singletonMap(top.getRecommenderId(), new Delta<T>(top));
             }
             else {
                 return emptyMap();
@@ -316,13 +316,13 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                 }
                 else if (visibleSuggestions.size() == 1) {
                     // If there is only one visible suggestions, grab it to create the delta
-                    result.put(recommenderId, new Delta(visibleSuggestions.get(0)));
+                    result.put(recommenderId, new Delta<T>(visibleSuggestions.get(0)));
                 }
                 else {
                     // Exploiting the fact that the filtered suggestions are still sorted, we just
                     // grab the first and second one to construct the delta
                     result.put(recommenderId,
-                            new Delta(visibleSuggestions.get(0), visibleSuggestions.get(1)));
+                            new Delta<T>(visibleSuggestions.get(0), visibleSuggestions.get(1)));
                 }
             }
 

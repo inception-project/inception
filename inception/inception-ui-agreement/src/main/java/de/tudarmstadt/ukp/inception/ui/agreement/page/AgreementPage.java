@@ -167,6 +167,7 @@ public class AgreementPage
             {
                 private static final long serialVersionUID = -2666048788050249581L;
 
+                @SuppressWarnings({ "rawtypes", "unchecked" })
                 @Override
                 protected void onModelChanged()
                 {
@@ -176,8 +177,7 @@ public class AgreementPage
                     // editor
                     Component newTraits;
                     if (getModelObject() != null) {
-                        @SuppressWarnings("unchecked")
-                        AgreementMeasureSupport<DefaultAgreementTraits, ?, ?> ams = agreementRegistry
+                        AgreementMeasureSupport ams = agreementRegistry
                                 .getAgreementMeasureSupport(getModelObject().getKey());
                         newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
                                 Model.of((DefaultAgreementTraits) ams.createTraits()));

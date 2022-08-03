@@ -26,8 +26,8 @@ public interface AgreementMeasureSupportRegistry
 
     List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports();
 
-    AgreementMeasureSupport getAgreementMeasureSupport(String aId);
+    AgreementMeasureSupport<?, ?, ?> getAgreementMeasureSupport(String aId);
 
-    List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature);
+    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
 
 }

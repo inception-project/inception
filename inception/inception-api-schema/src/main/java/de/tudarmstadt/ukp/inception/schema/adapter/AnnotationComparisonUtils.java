@@ -28,6 +28,12 @@ import org.apache.uima.cas.text.AnnotationFS;
 public class AnnotationComparisonUtils
 {
     /**
+     * @param aFs1
+     *            one annotation
+     * @param aFs2
+     *            another annotation
+     * @param aFilter
+     *            a filter determining which features to take into account
      * @return true if these two annotations agree on every non slot features
      */
     public static boolean isEquivalentSpanAnnotation(AnnotationFS aFs1, AnnotationFS aFs2,

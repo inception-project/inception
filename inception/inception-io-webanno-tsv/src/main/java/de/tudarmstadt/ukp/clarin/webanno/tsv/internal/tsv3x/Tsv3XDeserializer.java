@@ -350,7 +350,6 @@ public class Tsv3XDeserializer
 
         StringBuilder sentenceText = new StringBuilder();
         String sentenceId = null;
-        TsvSentence prevSentence = null;
         TsvSentence sentence = null;
         TsvToken token = null;
 
@@ -429,7 +428,6 @@ public class Tsv3XDeserializer
                     // The -1 here is to account for the tailing line break
                     sentence.getUimaSentence().setEnd(text.length() - 1);
                     sentence.getUimaSentence().addToIndexes();
-                    prevSentence = sentence;
                     sentence = null;
                     break;
                 case TOKEN:
