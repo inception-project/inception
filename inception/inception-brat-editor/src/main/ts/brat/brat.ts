@@ -41,6 +41,7 @@
 // export = brat;
 
 import { BratEditorFactory } from './BratEditorFactory'
+import '../scss/brat.scss'
 
 const INSTANCE = new BratEditorFactory()
 

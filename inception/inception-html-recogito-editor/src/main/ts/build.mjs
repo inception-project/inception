@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const esbuild = require('esbuild')
-const { sassPlugin } = require('esbuild-sass-plugin');
+import esbuild from 'esbuild'
+import { sassPlugin } from 'esbuild-sass-plugin'
+
+const packagePath = 'de/tudarmstadt/ukp/inception/recogitojseditor/resources'
 
 esbuild.build({
   entryPoints: ["main.ts"],
-  outfile: "../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js",
+  outfile: `../../../target/js/${packagePath}/RecogitoEditor.min.js`,
   bundle: true,
   sourcemap: true,
   minify: true,

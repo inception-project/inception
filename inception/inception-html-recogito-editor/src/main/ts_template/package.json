@@ -9,7 +9,7 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build:recogito": "node build.js"
+    "build:recogito": "node build.mjs"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",

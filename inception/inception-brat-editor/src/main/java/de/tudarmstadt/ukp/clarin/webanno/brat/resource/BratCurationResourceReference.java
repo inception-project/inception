@@ -41,6 +41,6 @@ public class BratCurationResourceReference
      */
     private BratCurationResourceReference()
     {
-        super(BratCurationResourceReference.class, "brat_curation.js");
+        super(BratCurationResourceReference.class, "brat_curation.min.js");
     }
 }

@@ -15,26 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
-const esbuild = require('esbuild')
-const fs = require('fs-extra')
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+import esbuild from 'esbuild'
+import { sassPlugin } from 'esbuild-sass-plugin'
+import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-let outbase = '../../../target//js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/'
+const packagePath = 'de/tudarmstadt/ukp/clarin/webanno/brat/resource'
 
-if (!argv.live) {
-  fs.emptyDirSync(outbase)
-}
-fs.mkdirsSync(`${outbase}`)
+let outbase = `../../../target/js/${packagePath}`
 
 const defaults = {
   bundle: true,
   sourcemap: true,
+  minify: !argv.live,
   target: 'es6',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
+  plugins: [sassPlugin()]
 }
 
 if (argv.live) {
@@ -44,28 +44,17 @@ if (argv.live) {
       else console.log('watch build succeeded:', result)
     }
   }
-  outbase = '../../../target/classes/de/tudarmstadt/ukp/clarin/webanno/brat/resource/'
+  outbase = `../../../target/classes/${packagePath}`
+} else {
+  fs.emptyDirSync(outbase)
 }
-
-esbuild.build(Object.assign({
-  entryPoints: ['brat/brat.ts'],
-  outfile: `${outbase}/brat.js`,
-  globalName: 'Brat',
-  minify: false
-}, defaults))
+fs.mkdirsSync(`${outbase}`)
 
 esbuild.build(Object.assign({
   entryPoints: ['brat/brat.ts'],
   outfile: `${outbase}/brat.min.js`,
   globalName: 'Brat',
   minify: true
-}, defaults))
-
-esbuild.build(Object.assign({
-  entryPoints: ['brat/brat_curation.ts'],
-  outfile: `${outbase}/brat_curation.js`,
-  globalName: 'BratCuration',
-  minify: false
 }, defaults))
 
 esbuild.build(Object.assign({

@@ -4,9 +4,7 @@
   "author": "INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build:brat": "node build.js",
-    "build:brat-css": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
-    "build:brat-css-minified": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
+    "build": "node build.mjs"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
@@ -17,19 +15,24 @@
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "^10.0.0",
+    "fs-extra": "${fs-extra.version}",
     "@types/events": "^3.0.0",
     "@types/urijs": "^1.19.11",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-promise": "^6.0.0",
     "@types/jquery": "^2.0.46",
-    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
-    "sass": "^1.45.1",
-    "yargs": "^17.3.1"
+    "sass": "${sass.version}",
+    "yargs": "^17.3.1",
+    "chai": "${chai.version}",
+    "@types/chai": "${types-chai.version}",
+    "mocha": "${mocha.version}",
+    "@types/mocha": "${types-mocha.version}"
   }
 }
