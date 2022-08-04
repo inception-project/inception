@@ -26,8 +26,7 @@
     dayjs.extend(localizedFormat)
 
     export let dataUrl: string
-
-    let activities = [];
+    export let activities = [];
 
     onMount(async () => {
         const res = await fetch(dataUrl)
