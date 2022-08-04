@@ -134,7 +134,7 @@ public class NamedEntityLinker
         }
 
         Type predictedType = getPredictedType(aCas);
-        Feature scoreFeature = getScoreFeature(aCas);
+        // Feature scoreFeature = getScoreFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
