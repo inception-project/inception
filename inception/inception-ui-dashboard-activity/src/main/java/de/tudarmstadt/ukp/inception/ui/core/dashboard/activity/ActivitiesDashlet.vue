@@ -17,11 +17,11 @@
 -->
 
 <template>
-  <div class="card border-0 flex-v-container">
+  <div class="card border-0 flex-content flex-v-container">
     <div class="card-header rounded-0">
       Recent activity
     </div>
-    <ul class="list-group list-group-flush">
+    <ul class="list-group list-group-flush scrolling flex-content flex-v-container">
       <li v-if="!activities" class="list-group-item">Loading...</li>
       <li v-for="activity in activities" :key="activity.id" class="list-group-item" >
         <span class="badge bg-secondary float-end">
