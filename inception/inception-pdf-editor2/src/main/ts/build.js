@@ -22,12 +22,9 @@ const fs = require('fs-extra')
 
 const argv = yargs(hideBin(process.argv)).argv
 
-let outbase = '../../../target/js/de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
+const packagePath = 'de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
 
-if (!argv.live) {
-  fs.emptyDirSync(outbase)
-}
-fs.mkdirsSync(`${outbase}`)
+let outbase = `../../../target/js/${packagePath}`
 
 const defaults = {
   bundle: true,
@@ -45,8 +42,11 @@ if (argv.live) {
       else console.log('watch build succeeded:', result)
     }
   }
-  outbase = '../../../target/classes/de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
+  outbase = `../../../target/classes/${packagePath}`
+} else {
+  fs.emptyDirSync(outbase)
 }
+fs.mkdirsSync(`${outbase}`)
 
 esbuild.build(Object.assign({
   entryPoints: ['src/main.ts'],

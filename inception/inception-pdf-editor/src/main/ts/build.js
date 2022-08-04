@@ -18,18 +18,18 @@
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const esbuild = require('esbuild')
-const fs = require('fs-extra');
+const fs = require('fs-extra')
 
 const argv = yargs(hideBin(process.argv)).argv
 
-let outbase = "../../../target/js/de/tudarmstadt/ukp/inception/pdfeditor/resources/";
+let outbase = "../../../target/js/de/tudarmstadt/ukp/inception/pdfeditor/resources/"
 
 if (!argv.live) {
   fs.emptyDirSync(outbase)
 }
 fs.mkdirsSync(`${outbase}`)
 
-defaults = {
+const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
