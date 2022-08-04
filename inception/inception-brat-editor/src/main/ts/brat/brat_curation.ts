@@ -19,7 +19,7 @@ import { Ajax } from './ajax/Ajax'
 import { INSTANCE as Util } from './util/Util'
 import { CurationMod } from './curation/CurationMod'
 import { factory as diamAjaxFactory } from '@inception-project/inception-diam'
-import '../scss/brat.scss'
+import './style-vis.scss'
 
 declare let Wicket
 
