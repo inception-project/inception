@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
-import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.LOCALIZED_FORMAT;
-import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.RELATIVE_TIME;
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
 import java.util.Map;
 
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -31,9 +27,7 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
-import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
-import de.tudarmstadt.ukp.inception.support.vue.VueBehavior;
+import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class ActivitiesDashlet
     extends WebMarkupContainer
@@ -51,16 +45,13 @@ public class ActivitiesDashlet
 
         setOutputMarkupPlaceholderTag(true);
 
-        add(new VueBehavior(
-                new PackageResourceReference(getClass(), getClass().getSimpleName() + ".vue")));
+        add(new SvelteBehavior(
+                new PackageResourceReference(getClass(), getClass().getSimpleName() + ".min.js")));
     }
 
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
-        aResponse.render(forReference(new DayJsResourceReference(RELATIVE_TIME, LOCALIZED_FORMAT)));
-        aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }
