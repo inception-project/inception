@@ -7,6 +7,13 @@
     "build": "node build.mjs",
     "test": "cross-env JUNIT_REPORT_PATH=../../../target/mocha-test-report.xml mocha -r esbuild-runner-plugins/register './test/**/*.test.ts' --extension ts --reporter mocha-jenkins-reporter"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
@@ -32,7 +39,7 @@
     "@types/urijs": "^1.19.11",
     "@types/jquery": "^2.0.46",
     "sass": "${sass.version}",
-    "yargs": "^17.3.1",
+    "yargs": "${yargs.version}",
     "chai": "${chai.version}",
     "@types/chai": "${types-chai.version}",
     "mocha": "${mocha.version}",

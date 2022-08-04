@@ -54,12 +54,10 @@ esbuild.build(Object.assign({
   entryPoints: ['src/brat.ts'],
   outfile: `${outbase}/brat.min.js`,
   globalName: 'Brat',
-  minify: true
 }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ['src/brat_curation.ts'],
   outfile: `${outbase}/brat_curation.min.js`,
   globalName: 'BratCuration',
-  minify: true
 }, defaults))

@@ -1,17 +1,15 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
-  "description": "",
-  "main": "index.js",
+  "author": "hshindo, yoheiMune, INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.mjs"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/inception-project/inception.git"
   },
-  "author": "hshindo, yoheiMune, INCEpTION Team",
-  "license": "(MIT AND Apache-2.0)",
   "bugs": {
     "url": "https://github.com/inception-project/issues"
   },
@@ -19,22 +17,33 @@
     "@inception-project/inception-js-api": "${semver}",
     "events": "^3.3.0",
     "urijs": "^1.19.11",
-    "pdfjs-dist": "^2.14.305",
-    "yargs": "^17.3.1"
+    "pdfjs-dist": "^2.14.305"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
-    "eslint": "${eslint.version}",
     "esbuild-plugin-alias": "^0.2.1",
+    "esbuild-runner-plugins": "2.3.0-plugins.0",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-chai-friendly": "^0.7.2",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "^10.0.0",
+    "fs-extra": "${fs-extra.version}",
     "@types/events": "^3.0.0",
     "@types/urijs": "^1.19.11",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.2",
-    "eslint-plugin-promise": "^6.0.0"
+    "@types/jquery": "^2.0.46",
+    "sass": "${sass.version}",
+    "yargs": "${yargs.version}",
+    "chai": "${chai.version}",
+    "@types/chai": "${types-chai.version}",
+    "mocha": "${mocha.version}",
+    "@types/mocha": "${types-mocha.version}",
+    "mocha-jenkins-reporter": "^0.4.7",
+    "cross-env": "^7.0.3"
   }
 }

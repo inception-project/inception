@@ -150,6 +150,7 @@
     <eslint-plugin-promise.version>^6.0.0</eslint-plugin-promise.version>
     <fs-extra.version>^10.0.0</fs-extra.version>
     <sass.version>^1.45.1</sass.version>
+    <yargs.version>^17.5.1</yargs.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->

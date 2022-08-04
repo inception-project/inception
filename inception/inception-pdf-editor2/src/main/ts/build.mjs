@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
-const esbuild = require('esbuild')
-const fs = require('fs-extra')
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+import esbuild from 'esbuild'
+import { sassPlugin } from 'esbuild-sass-plugin'
+import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
@@ -32,7 +33,8 @@ const defaults = {
   minify: !argv.live,
   target: 'es6',
   loader: { '.ts': 'ts' },
-  logLevel: 'info'
+  logLevel: 'info',
+  plugins: [sassPlugin()]
 }
 
 if (argv.live) {
