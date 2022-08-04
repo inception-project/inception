@@ -74,6 +74,9 @@ public class DocumentNavigator
 
     /**
      * Show the previous document, if exist
+     * 
+     * @param aTarget
+     *            the AJAX request target
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
@@ -89,6 +92,9 @@ public class DocumentNavigator
 
     /**
      * Show the next document if exist
+     * 
+     * @param aTarget
+     *            the AJAX request target
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
