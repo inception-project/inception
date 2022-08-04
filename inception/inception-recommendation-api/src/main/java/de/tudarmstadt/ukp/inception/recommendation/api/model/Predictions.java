@@ -82,6 +82,14 @@ public class Predictions
     }
 
     /**
+     * @param type
+     *            the suggestion type
+     * @param aLayer
+     *            the layer
+     * @param aDocumentService
+     *            the document service for obtaining documents
+     * @param <T>
+     *            the suggestion type
      * @return the predictions of a given window for each document, where the outer list is a list
      *         of tokens and the inner list is a list of predictions for a token. The method filters
      *         all tokens which already have an annotation and don't need further recommendation.
@@ -156,6 +164,10 @@ public class Predictions
     }
 
     /**
+     * @param aDocument
+     *            the source document
+     * @param aVID
+     *            the annotation ID
      * @return the first prediction that matches recommendationId and recommenderId in the given
      *         document.
      */
