@@ -51,14 +51,14 @@ if (argv.live) {
 fs.mkdirsSync(`${outbase}`)
 
 esbuild.build(Object.assign({
-  entryPoints: ['brat/brat.ts'],
+  entryPoints: ['src/brat.ts'],
   outfile: `${outbase}/brat.min.js`,
   globalName: 'Brat',
   minify: true
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ['brat/brat_curation.ts'],
+  entryPoints: ['src/brat_curation.ts'],
   outfile: `${outbase}/brat_curation.min.js`,
   globalName: 'BratCuration',
   minify: true

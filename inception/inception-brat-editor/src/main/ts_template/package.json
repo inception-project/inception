@@ -4,7 +4,8 @@
   "author": "INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test": "cross-env JUNIT_REPORT_PATH=../../../target/mocha-test-report.xml mocha -r esbuild-runner-plugins/register './test/**/*.test.ts' --extension ts --reporter mocha-jenkins-reporter"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
@@ -15,12 +16,14 @@
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
+    "esbuild-runner-plugins": "2.3.0-plugins.0",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "eslint-config-standard": "${eslint-config-standard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-chai-friendly": "^0.7.2",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
@@ -33,6 +36,8 @@
     "chai": "${chai.version}",
     "@types/chai": "${types-chai.version}",
     "mocha": "${mocha.version}",
-    "@types/mocha": "${types-mocha.version}"
+    "@types/mocha": "${types-mocha.version}",
+    "mocha-jenkins-reporter": "^0.4.7",
+    "cross-env": "^7.0.3"
   }
 }
