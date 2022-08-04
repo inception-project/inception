@@ -20,39 +20,41 @@
 <body>
   <wicket:extend>
     <div wicket:id="menu" class="dashboard-menu"/>
-    <div class="dashboard-content flex-content scrolling">
-      <div class="flex-tile-container">
-        <div class="flex-tile flex-v-container" wicket:id="currentProjectDashlet" />
-        <!--
-        <div class="flex-tile">
-          Current user in the project
+    <div class="dashboard-content flex-content flex-v-container scrolling">
+      <div class="scrolling flex-content flex-v-container">
+        <div class="flex-tile-container">
+          <div class="flex-tile flex-v-container" wicket:id="currentProjectDashlet" />
+          <!--
+          <div class="flex-tile">
+            Current user in the project
+            
+            Information about the current user in the selected project. Who is (s)he and what
+            should be done next, e.g. link to the next document to annotation / curate...
+            Information when the user has last logged in...
+          </div>
+          -->
           
-          Information about the current user in the selected project. Who is (s)he and what
-          should be done next, e.g. link to the next document to annotation / curate...
-          Information when the user has last logged in...
+          <!--  
+          <div class="flex-tile">
+            Other users in the project
+          
+            Information about the users and their roles in the selected project
+          </div>
+          -->
+          
+          <!--  
+          <div class="flex-tile">
+            Recent activity in the project
+          
+            Information about recent activity by the current user and other useds in this project
+          </div>
+          -->
         </div>
-        -->
-        
-        <!--  
-        <div class="flex-tile">
-          Other users in the project
-        
-          Information about the users and their roles in the selected project
-        </div>
-        -->
-        
-        <!--  
-        <div class="flex-tile">
-          Recent activity in the project
-        
-          Information about recent activity by the current user and other useds in this project
-        </div>
-        -->
       </div>
     </div>
-    <div class="flex-sidebar scrolling border-start" style="min-width: 20rem;" wicket:enclosure="rightSidebarDashlets">
-      <div wicket:id="rightSidebarDashlets">
-        <div wicket:id="dashlet"/>
+    <div class="flex-sidebar border-start flex-v-container" style="min-width: 20rem;" wicket:enclosure="rightSidebarDashlets">
+      <div class="flex-content flex-v-container" wicket:id="rightSidebarDashlets">
+        <div class="flex-content flex-v-container" wicket:id="dashlet"/>
       </div>
     </div>
   </wicket:extend>
