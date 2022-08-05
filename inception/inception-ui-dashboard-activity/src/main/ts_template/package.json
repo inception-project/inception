@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "node build.mjs",
-    "test": "mocha -r esbuild-runner-plugins/register -r jsdom-global/register './test/**/*.test.ts' --extension ts"
+    "test": "cross-env JUNIT_REPORT_PATH=../../../target/surefire-reports/mocha-test-report.xml mocha -r esbuild-runner-plugins/register -r jsdom-global/register './test/**/*.test.ts' --extension ts  --reporter mocha-jenkins-reporter"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
     "sass": "${sass.version}",
     "@types/events": "^3.0.0",
     "@types/urijs": "^1.19.11",
-    "yargs": "^17.3.1",
+    "yargs": "${yargs.version}",
     "chai": "${chai.version}",
     "@types/chai": "${types-chai.version}",
     "mocha": "${mocha.version}",
