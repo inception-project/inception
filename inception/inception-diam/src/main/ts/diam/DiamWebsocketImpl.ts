@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs';
-import { DiamWebsocket, Viewport } from '@inception-project/inception-js-api';
-import * as jsonpatch from 'fast-json-patch';
+import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs'
+import { DiamWebsocket, Viewport } from '@inception-project/inception-js-api'
+import * as jsonpatch from 'fast-json-patch'
 
-declare var Wicket: any;
+declare let Wicket: any
 
 /**
  * This callback will accept the annotation data.
@@ -27,76 +27,75 @@ declare var Wicket: any;
 export declare type dataCallback = (data: Viewport) => void;
 
 export class DiamWebsocketImpl implements DiamWebsocket {
+  private stompClient: Client
+  private webSocket: WebSocket
+  private initSubscription: StompSubscription
+  private updateSubscription: StompSubscription
 
-    private stompClient: Client;
-    private webSocket: WebSocket;
-    private initSubscription: StompSubscription;
-    private updateSubscription: StompSubscription;
+  private data: Viewport
+  private diff: any
 
-    private data: Viewport;
-    private diff: any;
+  public onConnect: frameCallbackType
 
-    public onConnect: frameCallbackType;
-
-    connect(aWsEndpoint: string) {
-        if (this.stompClient) {
-            throw "Already connected";
-        }
-
-        let protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
-        let wsEndpoint = new URL(aWsEndpoint)
-        wsEndpoint.protocol = protocol;
-
-        this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(wsEndpoint.toString()));
-        this.stompClient.reconnectDelay = 5000;
-
-        this.stompClient.onConnect = frame => {
-            this.stompClient.subscribe("/user/queue/errors", this.handleProtocolError);
-            if (this.onConnect) {
-                this.onConnect(frame);
-            }
-        }
-
-        this.stompClient.onStompError = this.handleBrokerError;
-
-        this.stompClient.activate();
+  connect (aWsEndpoint: string) {
+    if (this.stompClient) {
+      throw 'Already connected'
     }
 
-    disconnect() {
-        this.stompClient.deactivate();
-        this.webSocket.close();
+    const protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+    const wsEndpoint = new URL(aWsEndpoint)
+    wsEndpoint.protocol = protocol
+
+    this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(wsEndpoint.toString()))
+    this.stompClient.reconnectDelay = 5000
+
+    this.stompClient.onConnect = frame => {
+      this.stompClient.subscribe('/user/queue/errors', this.handleProtocolError)
+      if (this.onConnect) {
+        this.onConnect(frame)
+      }
     }
 
-    private handleBrokerError(receipt: IFrame) {
-        console.log('Broker reported error: ' + receipt.headers['message']);
-        console.log('Additional details: ' + receipt.body);
-    }
+    this.stompClient.onStompError = this.handleBrokerError
 
-    private handleProtocolError(msg) {
-        console.log(msg);
-    }
+    this.stompClient.activate()
+  }
 
-    subscribeToViewport(aViewportTopic: string, callback: dataCallback) {
-        this.unsubscribeFromViewport();
-        this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, msg => {
-            this.data = JSON.parse(msg.body);
-            this.diff = null;
-            callback(this.data);
-        });
-        this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, msg => {
-            var update = JSON.parse(msg.body);
-            this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument;
-            this.diff = update.diff;
-            callback(this.data);
-        });
-    }
+  disconnect () {
+    this.stompClient.deactivate()
+    this.webSocket.close()
+  }
 
-    unsubscribeFromViewport() {
-        if (this.initSubscription) {
-            this.initSubscription.unsubscribe();
-        }
-        if (this.updateSubscription) {
-            this.updateSubscription.unsubscribe();
-        }
+  private handleBrokerError (receipt: IFrame) {
+    console.log('Broker reported error: ' + receipt.headers.message)
+    console.log('Additional details: ' + receipt.body)
+  }
+
+  private handleProtocolError (msg) {
+    console.log(msg)
+  }
+
+  subscribeToViewport (aViewportTopic: string, callback: dataCallback) {
+    this.unsubscribeFromViewport()
+    this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, msg => {
+      this.data = JSON.parse(msg.body)
+      this.diff = null
+      callback(this.data)
+    })
+    this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, msg => {
+      const update = JSON.parse(msg.body)
+      this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument
+      this.diff = update.diff
+      callback(this.data)
+    })
+  }
+
+  unsubscribeFromViewport () {
+    if (this.initSubscription) {
+      this.initSubscription.unsubscribe()
     }
+    if (this.updateSubscription) {
+      this.updateSubscription.unsubscribe()
+    }
+  }
 }
