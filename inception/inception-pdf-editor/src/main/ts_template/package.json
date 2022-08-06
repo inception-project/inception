@@ -27,8 +27,8 @@
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "fs-extra": "${fs-extra.version}",
     "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
     "@types/events": "${types-events.version}",
     "@types/urijs": "${types-urijs.version}",
     "yargs": "${yargs.version}"

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "node build.mjs",
-    "test": "cross-env JUNIT_REPORT_PATH=../../../target/surefire-reports/mocha-test-report.xml mocha -r esbuild-runner-plugins/register -r jsdom-global/register './test/**/*.test.ts' --extension ts  --reporter mocha-jenkins-reporter"
+    "test": "mocha -r esbuild-runner-plugins/register './test/**/*.test.ts' --extension ts mocha-junit-reporter --reporter-options mochaFile='../../../target/surefire-reports/mocha-test-report.xml'"
   },
   "repository": {
     "type": "git",
@@ -34,12 +34,12 @@
     "jsdom": "${jsdom.version}",
     "jsdom-global": "${jsdom-global.version}",
     "mocha": "${mocha.version}",
-    "mocha-jenkins-reporter": "${mocha-jenkins-reporter.version}",
+    "mocha-junit-reporter": "${mocha-junit-reporter.version}",
     "sass": "${sass.version}",
     "svelte-preprocess": "${svelte-preprocess.version}",
     "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
     "@types/chai": "${types-chai.version}",
     "@types/events": "${types-events.version}",
     "@types/mocha": "${types-mocha.version}",
