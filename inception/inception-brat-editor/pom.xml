@@ -212,7 +212,7 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-js-api @inception-project/inception-diam</arguments>
+              <arguments>link --no-optional @inception-project/inception-js-api @inception-project/inception-diam</arguments>
             </configuration>
           </execution>
           <execution>

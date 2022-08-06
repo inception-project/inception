@@ -276,7 +276,7 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-js-api</arguments>
+              <arguments>link --no-optional @inception-project/inception-js-api</arguments>
             </configuration>
           </execution>
           <execution>
@@ -290,13 +290,13 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm build:minified</id>
+            <id>npm test</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>${ts-build-phase}</phase>
+            <phase>${ts-test-phase}</phase>
             <configuration>
-              <arguments>run build:minified</arguments>
+              <arguments>run test</arguments>
             </configuration>
           </execution>
         </executions>

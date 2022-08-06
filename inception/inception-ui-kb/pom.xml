@@ -263,7 +263,7 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-bootstrap</arguments>
+              <arguments>link --no-optional @inception-project/inception-bootstrap</arguments>
             </configuration>
           </execution>
           <execution>

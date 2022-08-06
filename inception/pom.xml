@@ -73,6 +73,8 @@
     <uima.version>3.3.0</uima.version>
     <uimafit.version>3.3.0</uimafit.version>
 
+    <pdfbox.version>2.0.26</pdfbox.version>
+
     <spring.version>5.3.22</spring.version>
     <spring.boot.version>2.7.2</spring.boot.version>
     <spring.security.version>5.7.2</spring.security.version>
@@ -99,8 +101,6 @@
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
     <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
-    <bootstrap.version>5.2.0</bootstrap.version>
-    <hover.version>2.0.2</hover.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -130,26 +130,52 @@
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.2.0</okio.version>
 
+    <npm-install-command>ci</npm-install-command>
+
     <node.version>16.14.2</node.version>
     <npm.version>8.5.0</npm.version>
-    <typescript.version>^4.6.3</typescript.version>
-    <typescript-eslint.version>^5.20.0</typescript-eslint.version>
+    <bootstrap.version>5.2.0</bootstrap.version>
+    <chai.version>^4.3.6</chai.version>
+    <cross-env.version>^7.0.3</cross-env.version>
+    <dayjs.version>^1.11.4</dayjs.version>
     <esbuild.version>^0.14.38</esbuild.version>
     <esbuild-sass-plugin.version>^2.2.6</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>^0.7.1</esbuild-svelte.version>
+    <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.13.0</eslint.version>
-    <chai.version>^4.3.6</chai.version>
-    <types-chai.version>^4.3.1</types-chai.version>
-    <mocha.version>^9.1.1</mocha.version>
-    <types-mocha.version>^9.1.1</types-mocha.version>
-    <jsdom.version>^20.0.0</jsdom.version>
-    <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <eslint-plugin-mocha.version>^9.0.0</eslint-plugin-mocha.version>
+    <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
     <eslint-config-standard.version>^17.0.0</eslint-config-standard.version>
     <eslint-plugin-import.version>^2.26.0</eslint-plugin-import.version>
+    <eslint-plugin-mocha.version>^9.0.0</eslint-plugin-mocha.version>
     <eslint-plugin-n.version>^15.2.2</eslint-plugin-n.version>
     <eslint-plugin-promise.version>^6.0.0</eslint-plugin-promise.version>
+    <events.version>^3.3.0</events.version>
+    <fast-json-patch.version>^3.1.0</fast-json-patch.version>
+    <hover.version>2.0.2</hover.version>
+    <types-chai.version>^4.3.1</types-chai.version>
     <fs-extra.version>^10.0.0</fs-extra.version>
+    <jsdom.version>^20.0.0</jsdom.version>
+    <jsdom-global.version>^3.0.2</jsdom-global.version>
+    <jquery.version>^3.6.0</jquery.version>
+    <mocha.version>^9.1.1</mocha.version>
+    <mocha-jenkins-reporter.version>^0.4.7</mocha-jenkins-reporter.version>
+    <pdfjs.version>^2.14.305</pdfjs.version>
+    <recogitojs.version>^1.6.0</recogitojs.version>
     <sass.version>^1.45.1</sass.version>
+    <stomp-stompjs.version>^6.1.01</stomp-stompjs.version>
+    <svelte-preprocess.version>^4.10.7</svelte-preprocess.version>
+    <svgdotjs-svg-js.version>^3.1.1</svgdotjs-svg-js.version>
+    <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
+    <testing-library-svelte.version>^3.1.3</testing-library-svelte.version>
+    <typescript.version>^4.6.3</typescript.version>
+    <typescript-eslint.version>^5.20.0</typescript-eslint.version>
+    <types-events.version>^3.0.0</types-events.version>
+    <types-jquery.version>^3.5.13</types-jquery.version>
+    <types-mocha.version>^9.1.1</types-mocha.version>
+    <types-stompjs.version>^2.3.4</types-stompjs.version>
+    <types-urijs.version>^1.19.11</types-urijs.version>
+    <uuid.version>^8.3.2</uuid.version>
+    <urijs.version>^1.19.11</urijs.version>
     <yargs.version>^17.5.1</yargs.version>
   </properties>
   <repositories>
@@ -2863,13 +2889,13 @@
                 <phase>initialize</phase>
               </execution>
               <execution>
-                <id>npm install</id>
+                <id>npm install/ci</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
-                <phase>generate-resources</phase>
+                <phase>${ts-build-phase}</phase>
                 <configuration>
-                  <arguments>install</arguments>
+                  <arguments>${npm-install-command} --no-optional</arguments>
                 </configuration>
               </execution>
               <execution>

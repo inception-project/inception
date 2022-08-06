@@ -3,9 +3,6 @@
   "version": "${semver}",
   "author": "hshindo, yoheiMune, INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
-  "scripts": {
-    "build": "node build.mjs"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/inception-project/inception.git"
@@ -13,37 +10,41 @@
   "bugs": {
     "url": "https://github.com/inception-project/issues"
   },
+  "scripts": {
+    "build": "node build.mjs"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
-    "events": "^3.3.0",
-    "urijs": "^1.19.11",
-    "pdfjs-dist": "^2.14.305"
+    "events": "${events.version}",
+    "urijs": "${urijs.version}",
+    "pdfjs-dist": "${pdfjs.version}"
   },
   "devDependencies": {
+    "chai": "${chai.version}",
+    "cross-env": "${cross-env.version}",
     "esbuild": "${esbuild.version}",
-    "esbuild-plugin-alias": "^0.2.1",
-    "esbuild-runner-plugins": "2.3.0-plugins.0",
+    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "eslint-config-standard": "${eslint-config-standard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
-    "eslint-plugin-chai-friendly": "^0.7.2",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
+    "fs-extra": "${fs-extra.version}",
+    "mocha": "${mocha.version}",
+    "mocha-jenkins-reporter": "${mocha-jenkins-reporter.version}",
+    "sass": "${sass.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "${fs-extra.version}",
-    "@types/events": "^3.0.0",
-    "@types/urijs": "^1.19.11",
-    "@types/jquery": "^2.0.46",
-    "sass": "${sass.version}",
-    "yargs": "${yargs.version}",
-    "chai": "${chai.version}",
     "@types/chai": "${types-chai.version}",
-    "mocha": "${mocha.version}",
+    "@types/events": "${types-events.version}",
+    "@types/jquery": "${types-jquery.version}",
     "@types/mocha": "${types-mocha.version}",
-    "mocha-jenkins-reporter": "^0.4.7",
-    "cross-env": "^7.0.3"
+    "@types/urijs": "${types-urijs.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
   }
 }
