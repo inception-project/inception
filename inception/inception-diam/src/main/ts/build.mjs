@@ -32,7 +32,7 @@ const defaults = {
   minify: !argv.live,
   target: 'es6',
   loader: { '.ts': 'ts' },
-  logLevel: 'info',
+  logLevel: 'info'
 }
 
 if (argv.live) {
@@ -49,7 +49,7 @@ if (argv.live) {
 fs.mkdirsSync(`${outbase}`)
 
 esbuild.build(Object.assign({
-  entryPoints: ['index.ts'],
+  entryPoints: ['src/index.ts'],
   outfile: `${outbase}/Diam.min.js`,
-  globalName: 'Diam',
+  globalName: 'Diam'
 }, defaults))
