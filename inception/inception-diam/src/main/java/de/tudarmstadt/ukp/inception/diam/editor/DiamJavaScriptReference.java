@@ -36,6 +36,6 @@ public class DiamJavaScriptReference
      */
     private DiamJavaScriptReference()
     {
-        super(DiamJavaScriptReference.class, "Diam.js");
+        super(DiamJavaScriptReference.class, "Diam.min.js");
     }
 }
