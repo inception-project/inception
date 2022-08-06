@@ -29,7 +29,7 @@
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
-    "eslint-plugin-chai-friendly": "^0.7.2",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
     "fs-extra": "${fs-extra.version}",
     "jsdom": "${jsdom.version}",
     "jsdom-global": "${jsdom-global.version}",
