@@ -276,7 +276,7 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link --no-optional @inception-project/inception-js-api</arguments>
+              <arguments>link @inception-project/inception-js-api</arguments>
             </configuration>
           </execution>
           <execution>

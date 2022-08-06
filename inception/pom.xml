@@ -2895,7 +2895,7 @@
                 </goals>
                 <phase>${ts-build-phase}</phase>
                 <configuration>
-                  <arguments>${npm-install-command} --no-optional</arguments>
+                  <arguments>${npm-install-command}</arguments>
                 </configuration>
               </execution>
               <execution>

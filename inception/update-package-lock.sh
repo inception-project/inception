@@ -2,7 +2,18 @@
 set -e
 
 MVN=${MVN:-'mvn'}
-TS_MODULES=`find . -path "*src/main/ts"`
+TS_MODULES="./inception-js-api/src/main/ts
+./inception-diam/src/main/ts
+./inception-ui-kb/src/main/ts
+./inception-html-recogito-editor/src/main/ts
+./inception-bootstrap/src/main/ts
+./inception-external-editor/src/main/ts
+./inception-html-editor/src/main/ts
+./inception-pdf-editor/src/main/ts
+./inception-pdf-editor2/src/main/ts
+./inception-ui-dashboard-activity/src/main/ts
+./inception-brat-editor/src/main/ts
+./inception-ui-search/src/main/ts"
 
 for module in $TS_MODULES ; do
   pushd "$module"
