@@ -24,6 +24,7 @@ module.exports = {
     target: 'es6',
     plugins: [
       esbuildSvelte({
+        compilerOptions: { css: true },
         preprocess: sveltePreprocess({ sourceMap: true })
       })
     ]
