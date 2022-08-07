@@ -15,7 +15,7 @@
     "url": "https://github.com/inception-project/issues"
   },
   "dependencies": {
-    "dayjs": "${dayjs.version}"
+    "@stomp/stompjs": "${stomp-stompjs.version}"
   },
   "devDependencies": {
     "chai": "${chai.version}",

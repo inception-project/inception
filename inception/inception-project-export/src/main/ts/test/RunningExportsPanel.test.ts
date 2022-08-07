@@ -16,38 +16,32 @@
  * limitations under the License.
  */
 import { expect } from 'chai'
-import ActivitiesDashlet from '../src/ActivitiesDashlet.svelte'
+import RunningExportsPanel from '../src/RunningExportsPanel.svelte'
 import { render } from '@testing-library/svelte'
 
 it('Shows the loading indicator', async () => {
-  const { getByText } = render(ActivitiesDashlet, {
-    props: {
-      activities: []
-    }
-  })
+  const { getByText } = render(RunningExportsPanel)
 
-  const loadIndicator = getByText('Loading...')
+  const loadIndicator = getByText('Connecting...')
 
   expect(loadIndicator).to.be.not.null
 })
 
 it('Shows the activities', async () => {
-  const { queryByText, getByText } = render(ActivitiesDashlet, {
+  const { queryByText, getByText } = render(RunningExportsPanel, {
     props: {
-      activities: [{
-        id: 1,
-        projectId: 2,
-        documentId: 3,
-        documentName: 'document.txt',
-        user: 'username',
-        annotator: 'annotator-username',
-        timestamp: 1600945790000,
-        link: '/inception/p/2/annotate/3',
-        type: 'Annotation'
-      }]
+      connected: true,
+      exports: [
+        {
+          id: '1',
+          title: 'test-download',
+          progress: 0.5,
+          state: 'RUNNING'
+        }
+      ]
     }
   })
 
-  expect(queryByText('Loading...')).to.be.null
-  expect(getByText('document.txt')).to.have.property('href').equal('/inception/p/2/annotate/3')
+  expect(queryByText('Connecting...')).to.be.null
+  expect(getByText('test-download')).to.be.not.null
 })

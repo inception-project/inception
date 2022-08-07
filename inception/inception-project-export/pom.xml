@@ -161,11 +161,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>animate.css</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
@@ -259,6 +254,35 @@
   </dependencies>
 
   <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>npm build</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm test</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-test-phase}</phase>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <arguments>run test</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -270,8 +294,6 @@
               <ignoredDependency>org.springframework:spring-websocket</ignoredDependency>
             </ignoredDependencies>
             <usedDependencies combine.children="append">
-              <!-- Resources -->
-              <usedDependency>org.webjars:animate.css</usedDependency>
               <!-- Test -->
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-test-autoconfigure</usedDependency>

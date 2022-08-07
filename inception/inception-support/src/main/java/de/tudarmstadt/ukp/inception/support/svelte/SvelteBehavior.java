@@ -26,13 +26,17 @@ import javax.servlet.ServletContext;
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class SvelteBehavior
     extends Behavior
@@ -41,23 +45,41 @@ public class SvelteBehavior
 
     private @SpringBean ServletContext context;
 
-    private final ResourceReference ref;
+    private ResourceReference jsRef;
+    private ResourceReference cssRef;
+
+    public SvelteBehavior()
+    {
+        this(null);
+    }
 
     public SvelteBehavior(ResourceReference aRef)
     {
-        super();
-        ref = aRef;
+        jsRef = aRef;
     }
 
     @Override
     public void bind(Component aComponent)
     {
         aComponent.setOutputMarkupId(true);
+
+        var componentClass = aComponent.getClass();
+
+        if (jsRef == null) {
+            jsRef = new PackageResourceReference(componentClass,
+                    componentClass.getSimpleName() + ".min.js");
+        }
+
+        if (componentClass.getResource(componentClass.getSimpleName() + ".min.css") != null) {
+            cssRef = new PackageResourceReference(componentClass,
+                    componentClass.getSimpleName() + ".min.css");
+        }
     }
 
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
+        aResponse.render(CssReferenceHeaderItem.forReference(cssRef));
         aResponse.render(OnDomReadyHeaderItem.forScript(initScript(aComponent)));
     }
 
@@ -66,11 +88,12 @@ public class SvelteBehavior
     {
         aComponent.getRequestCycle().find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.prependJavaScript(destroyScript(aComponent)));
+
     }
 
     private CharSequence initScript(Component aComponent)
     {
-        IRequestHandler handler = new ResourceReferenceRequestHandler(ref);
+        IRequestHandler handler = new ResourceReferenceRequestHandler(jsRef);
         String url = RequestCycle.get().urlFor(handler).toString();
 
         Object model = aComponent.getDefaultModelObject();
@@ -95,8 +118,8 @@ public class SvelteBehavior
 
     private CharSequence destroyScript(Component aComponent)
     {
-        // return WicketUtil.wrapInTryCatch("document.getElementById('" + aComponent.getMarkupId()
-        // + "').__vue_app__.unmount(); console.log('Unmounting');");
-        return "";
+        return WicketUtil.wrapInTryCatch("document.getElementById('" + aComponent.getMarkupId()
+                + "').$destroy(); console.log('Svelte component " + aComponent.getMarkupId()
+                + " destroyed');");
     }
 }

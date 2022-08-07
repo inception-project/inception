@@ -13,7 +13,8 @@ TS_MODULES="./inception-js-api/src/main/ts
 ./inception-pdf-editor2/src/main/ts
 ./inception-ui-dashboard-activity/src/main/ts
 ./inception-brat-editor/src/main/ts
-./inception-ui-search/src/main/ts"
+./inception-ui-search/src/main/ts
+./inception-project-export/src/main/ts"
 
 for module in $TS_MODULES ; do
   pushd "$module"

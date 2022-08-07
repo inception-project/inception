@@ -134,6 +134,7 @@
 
     <node.version>16.16.0</node.version>
     <bootstrap.version>5.2.0</bootstrap.version>
+    <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <dayjs.version>^1.11.4</dayjs.version>
@@ -148,6 +149,7 @@
     <eslint-plugin-mocha.version>^10.1.0</eslint-plugin-mocha.version>
     <eslint-plugin-n.version>^15.2.4</eslint-plugin-n.version>
     <eslint-plugin-promise.version>^6.0.0</eslint-plugin-promise.version>
+    <eslint-plugin-svelte3.version>^4.0.0</eslint-plugin-svelte3.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
     <hover.version>2.0.2</hover.version>
@@ -1246,7 +1248,7 @@
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>animate.css</artifactId>
-        <version>3.2.6</version>
+        <version>${animate-css.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
