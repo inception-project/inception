@@ -107,10 +107,6 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-progressbar</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
