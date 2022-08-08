@@ -15,31 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// import { Ajax } from './ajax/Ajax'
-// import { factory as diamAjaxFactory } from '@inception-project/inception-diam'
-// import { AnnotatorUI } from './annotator_ui/AnnotatorUI'
-// import { Dispatcher } from './dispatcher/Dispatcher'
-// import { Visualizer } from './visualizer/Visualizer'
-// import { VisualizerUI } from './visualizer_ui/VisualizerUI'
-
-// declare let Wicket
-
-// function brat (markupId: string, callbackUrl: string) {
-//   console.debug('Setting up brat editor...')
-
-//   const dispatcher = new Dispatcher()
-//   const diamAjax = diamAjaxFactory().createAjaxClient(callbackUrl)
-//   new Ajax(dispatcher, markupId, callbackUrl)
-//   const visualizer = new Visualizer(dispatcher, markupId)
-//   new VisualizerUI(dispatcher)
-//   new AnnotatorUI(dispatcher, visualizer.svg, diamAjax)
-//   dispatcher.post('init')
-//   Wicket.$(markupId).dispatcher = dispatcher
-//   Wicket.$(markupId).visualizer = visualizer
-// }
-
-// export = brat;
-
 import { BratEditorFactory } from './BratEditorFactory'
 
 const INSTANCE = new BratEditorFactory()

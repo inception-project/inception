@@ -15,20 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
-const esbuild = require('esbuild')
-const fs = require('fs-extra')
+
+import esbuild from 'esbuild'
+import esbuildSvelte from 'esbuild-svelte'
+import sveltePreprocess from 'svelte-preprocess'
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-const packagePath = 'de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
+const packagePath = 'de/tudarmstadt/ukp/inception/project/export/settings'
 
 let outbase = `../../../target/js/${packagePath}`
 
 const defaults = {
+  mainFields: ['svelte', 'browser', 'module', 'main'],
+  format: 'esm',
+  plugins: [
+    esbuildSvelte({
+      preprocess: sveltePreprocess()
+    })
+  ],
   bundle: true,
-  sourcemap: true,
+  sourcemap: false,
   minify: !argv.live,
   target: 'es6',
   loader: { '.ts': 'ts' },
@@ -48,13 +58,9 @@ if (argv.live) {
 }
 fs.mkdirsSync(`${outbase}`)
 
-esbuild.build(Object.assign({
-  entryPoints: ['src/main.ts'],
-  outfile: `${outbase}/PdfAnnotationEditor.min.js`,
-  globalName: 'PdfAnnotationEditor'
-}, defaults))
-
-fs.copySync('pdfjs-web', `${outbase}`)
-fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
-fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
-fs.copySync('node_modules/pdfjs-dist/standard_fonts', `${outbase}/standard_fonts`)
+esbuild
+  .build(Object.assign({
+    entryPoints: ['src/RunningExportsPanel.svelte'],
+    outfile: `${outbase}/RunningExportsPanel.min.js`
+  }, defaults))
+  .catch(() => process.exit(1))

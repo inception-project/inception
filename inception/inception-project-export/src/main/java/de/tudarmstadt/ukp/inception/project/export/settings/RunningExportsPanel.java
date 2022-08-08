@@ -19,28 +19,23 @@ package de.tudarmstadt.ukp.inception.project.export.settings;
 
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Map;
 
 import javax.servlet.ServletContext;
 
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
-import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
+import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class RunningExportsPanel
-    extends VueComponent
+    extends WebMarkupContainer
 {
     private static final long serialVersionUID = -9006607500867612027L;
 
@@ -50,7 +45,7 @@ public class RunningExportsPanel
 
     public RunningExportsPanel(String aId, IModel<Project> aProject)
     {
-        super(aId, "RunningExportsPanel.vue");
+        super(aId);
         setOutputMarkupPlaceholderTag(true);
         project = aProject;
     }
@@ -60,10 +55,11 @@ public class RunningExportsPanel
     {
         super.onConfigure();
 
-        // model will be added as props to vue component
         setDefaultModel(Model.ofMap(Map.of( //
-                "wsEndpoint", constructEndpointUrl(), //
+                "wsEndpointUrl", constructEndpointUrl(), //
                 "topicChannel", "/p/" + project.getObject().getId() + "/exports")));
+
+        add(new SvelteBehavior());
     }
 
     private String constructEndpointUrl()
@@ -72,17 +68,5 @@ public class RunningExportsPanel
         endPointUrl.setProtocol("ws");
         String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
         return fullUrl;
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
-                "webstomp-client/current/dist/webstomp.min.js")));
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
-        aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }

@@ -34,16 +34,16 @@ it('Shows the loading indicator', async () => {
 it('Shows the activities', async () => {
   const { queryByText, getByText } = render(ActivitiesDashlet, {
     props: {
-      activities: [{ 
-        "id": 1, 
-        "projectId": 2, 
-        "documentId": 3, 
-        "documentName": "document.txt", 
-        "user": "username", 
-        "annotator": "annotator-username", 
-        "timestamp": 1600945790000, 
-        "link": "/inception/p/2/annotate/3", 
-        "type": "Annotation" 
+      activities: [{
+        id: 1,
+        projectId: 2,
+        documentId: 3,
+        documentName: 'document.txt',
+        user: 'username',
+        annotator: 'annotator-username',
+        timestamp: 1600945790000,
+        link: '/inception/p/2/annotate/3',
+        type: 'Annotation'
       }]
     }
   })

@@ -15,21 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Ajax } from './ajax/Ajax'
-import { INSTANCE as Util } from './util/Util'
-import { CurationMod } from './curation/CurationMod'
-import { factory as diamAjaxFactory } from '@inception-project/inception-diam'
+import { expect } from 'chai'
+import RunningExportsPanel from '../src/RunningExportsPanel.svelte'
+import { render } from '@testing-library/svelte'
 
-declare let Wicket
+it('Shows the loading indicator', async () => {
+  const { getByText } = render(RunningExportsPanel)
 
-function brat (markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
-  Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
-    function (dispatcher) {
-      const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl)
-      new Ajax(dispatcher, markupId, controllerCallbackUrl)
-      new CurationMod(dispatcher, diamAjax)
-      Wicket.$(markupId).dispatcher = dispatcher
-    })
-}
+  const loadIndicator = getByText('Connecting...')
 
-export = brat;
+  expect(loadIndicator).to.be.not.null
+})
+
+it('Shows the activities', async () => {
+  const { queryByText, getByText } = render(RunningExportsPanel, {
+    props: {
+      connected: true,
+      exports: [
+        {
+          id: '1',
+          title: 'test-download',
+          progress: 0.5,
+          state: 'RUNNING'
+        }
+      ]
+    }
+  })
+
+  expect(queryByText('Connecting...')).to.be.null
+  expect(getByText('test-download')).to.be.not.null
+})

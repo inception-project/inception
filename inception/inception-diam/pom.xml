@@ -270,7 +270,7 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>npm link dependency inception-js-api</id>
+            <id>npm link dependencies</id>
             <goals>
               <goal>npm</goal>
             </goals>
@@ -290,13 +290,13 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm build:minified</id>
+            <id>npm test</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>${ts-build-phase}</phase>
+            <phase>${ts-test-phase}</phase>
             <configuration>
-              <arguments>run build:minified</arguments>
+              <arguments>run test</arguments>
             </configuration>
           </execution>
         </executions>

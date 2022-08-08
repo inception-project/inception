@@ -64,7 +64,7 @@ export class Util {
     return box
   }
 
-  escapeHTML (str: string) {
+  escapeHTML (str: string | null) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping
     if (str === null) {
       return null

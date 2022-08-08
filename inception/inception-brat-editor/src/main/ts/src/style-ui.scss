@@ -93,15 +93,6 @@ $background_color_16: pink;
   #options_button {
     float: right;
   }
-  #pulluptrigger {
-    height: 35px;
-    width: 35px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    background: url('static/img/Fugue-shadowless-information-balloon.png') center no-repeat;
-    z-index: 3;
-  }
   #messagepullup {
     max-height: 300px;
     overflow-y: scroll;
@@ -227,30 +218,6 @@ $background_color_16: pink;
     position: absolute;
     top: -6px;
     right: -2px;
-  }
-  #span_form {
-    .collapser {
-      float: left;
-      height: 16px;
-      width: 16px;
-      margin-top: 3px;
-      cursor: hand;
-      background: url('static/img/expand_icon.gif') no-repeat;
-    }
-    .collapser.open {
-      background: url('static/img/collapse_icon.gif') no-repeat;
-    }
-    .collapsible.open {
-      display: block;
-    }
-    .collapsible {
-      display: none;
-      margin-left: 20px;
-    }
-    .item_content {
-      margin-left: 16px;
-      white-space: nowrap;
-    }
   }
   .type_scroller {
     overflow-y: scroll;

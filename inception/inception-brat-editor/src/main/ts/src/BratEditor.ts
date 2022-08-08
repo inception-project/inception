@@ -21,6 +21,7 @@ import { AnnotatorUI } from './annotator_ui/AnnotatorUI'
 import { Dispatcher, Message } from './dispatcher/Dispatcher'
 import { Visualizer } from './visualizer/Visualizer'
 import { VisualizerUI } from './visualizer_ui/VisualizerUI'
+import './style-vis.scss'
 
 export class BratEditor implements AnnotationEditor {
   dispatcher: Dispatcher
