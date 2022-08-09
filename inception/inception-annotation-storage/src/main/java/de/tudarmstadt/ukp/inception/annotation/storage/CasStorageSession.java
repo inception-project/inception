@@ -346,6 +346,7 @@ public class CasStorageSession
 
         Optional<SessionManagedCas> result = managedCases.values().stream()
                 .flatMap(casByUser -> casByUser.values().stream()
+                        .filter(metadata -> metadata.isCasSet())
                         .filter(metadata -> metadata.getCas() == aCas))
                 .findFirst();
 

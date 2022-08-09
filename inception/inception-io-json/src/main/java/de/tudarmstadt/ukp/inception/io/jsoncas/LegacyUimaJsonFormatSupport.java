@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.json;
+package de.tudarmstadt.ukp.inception.io.jsoncas;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 
@@ -30,11 +30,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class JsonFormatSupport
+public class LegacyUimaJsonFormatSupport
     implements FormatSupport
 {
     public static final String ID = "json";
-    public static final String NAME = "UIMA CAS JSON";
+    public static final String NAME = "UIMA CAS JSON (legacy)";
 
     @Override
     public String getId()

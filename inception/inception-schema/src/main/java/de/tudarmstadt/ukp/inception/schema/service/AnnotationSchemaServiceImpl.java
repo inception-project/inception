@@ -1242,7 +1242,10 @@ public class AnnotationSchemaServiceImpl
         _upgradeCas(aSourceCas, aTargetCas, aTargetTypeSystem);
     }
 
-    static void _upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+    // TODO: This method should be come private again ASAP. It is only public to work around
+    // the fact that the JSON CAS deserializer does not support lenient deserialization yet!
+    public static void _upgradeCas(CAS aSourceCas, CAS aTargetCas,
+            TypeSystemDescription aTargetTypeSystem)
         throws IOException, ResourceInitializationException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
