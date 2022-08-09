@@ -247,6 +247,10 @@ include::{include-dir}formats-text.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimabinarycas.adoc[leveloffset=+2]
 
+include::{include-dir}formats-uimajson.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimajson-legacy.adoc[leveloffset=+2]
+
 include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]

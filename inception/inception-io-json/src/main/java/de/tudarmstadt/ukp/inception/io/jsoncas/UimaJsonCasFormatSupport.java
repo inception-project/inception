@@ -38,7 +38,6 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
 @Component
@@ -49,14 +48,11 @@ public class UimaJsonCasFormatSupport
     public static final String NAME = "UIMA CAS JSON 0.4.0 (experimental)";
 
     private final DocumentImportExportService documentImportExportService;
-    private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public UimaJsonCasFormatSupport(DocumentImportExportService aDocumentImportExportService,
-            AnnotationSchemaService aAnnotationSchemaService)
+    public UimaJsonCasFormatSupport(DocumentImportExportService aDocumentImportExportService)
     {
         documentImportExportService = aDocumentImportExportService;
-        annotationSchemaService = aAnnotationSchemaService;
     }
 
     @Override
