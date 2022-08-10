@@ -49,4 +49,4 @@
 | version 10.5 or higher 
 |===
 
-NOTE: link:https://mariadb.org[MariaDB] is an open source drop-in replacement for link:https://www.mysql.com[MySQL]. So generally, you can also use MySQL instead of MariaDB. Also, as far as we know, we do not use any fancy features of MariaDB 10.5 and did in fact until recently always use MySQL 5. So you can probably also use an older version of MariaDB or MySQL... but why should you? Think of all the unfixed bugs and consider also upgrading your database if you do a fresh installation of {product-name} - or use <<sect_docker,Docker>>.
+NOTE: link:https://mariadb.org[MariaDB] is an open source drop-in replacement for link:https://www.mysql.com[MySQL]. So generally, you can also use MySQL instead of MariaDB. Also, as far as we know, we do not use any fancy features of MariaDB 10.5 and did in fact until recently always use MySQL 5. So you can probably also use an older version of MariaDB or MySQL... but why should you? Think of all the unfixed bugs and consider also upgrading your database if you do a fresh installation of {product-name} - or use <<admin_guide.adoc#sect_docker,Docker>>.
