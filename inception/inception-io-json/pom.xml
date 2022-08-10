@@ -43,10 +43,20 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -59,6 +69,7 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-io-json</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-json-asl</artifactId>
@@ -66,10 +77,6 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-io-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-beans</artifactId>
     </dependency>
   </dependencies>
 </project>
