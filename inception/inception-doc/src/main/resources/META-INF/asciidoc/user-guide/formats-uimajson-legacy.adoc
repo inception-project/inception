@@ -17,6 +17,13 @@
 [[sect_formats_uimajson_legacy]]
 = UIMA CAS JSON (legacy)
 
+====
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.json-cas-legacy.enabled=true` to the `settings.properties` file. 
+
+Support for this feature will be removed in a future version. The replacement is <<sect_formats_uimajson>>.
+====
+
+
 This is an old and deprecated UIMA CAS JSON format which can be exported but not imported.
 It should no longer be used. Instead, one should turn to <<sect_formats_uimajson>>.
 

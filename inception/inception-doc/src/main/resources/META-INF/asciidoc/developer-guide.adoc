@@ -79,6 +79,8 @@ include::{include-dir}external-editor.adoc[leveloffset=+1]
 
 include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
+include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
+
 include::{include-dir}format-support-extensions.adoc[leveloffset=+1]
 
 include::{include-dir}repository.adoc[leveloffset=+1]

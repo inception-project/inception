@@ -15,41 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pdfeditor.config;
+package de.tudarmstadt.ukp.inception.io.jsoncas.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.pdfeditor.PdfFormatSupport;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.inception.io.jsoncas.LegacyUimaJsonFormatSupport;
+import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
 
-/**
- * Provides support for an PDF-oriented annotation editor.
- * 
- * @deprecated Superseded by the new PDF editor
- */
-@Deprecated
 @Configuration
-public class PdfAnnotationEditorSupportAutoConfiguration
+public class UimaJsonCasSupportAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "ui.json-cas-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
-    public PdfAnnotationEditorFactory pdfAnnotationEditorFactory()
+    public LegacyUimaJsonFormatSupport legacyUimaJsonFormatSupport()
     {
-        return new PdfAnnotationEditorFactory();
+        return new LegacyUimaJsonFormatSupport();
     }
 
-    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "ui.json-cas", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
-    public PdfFormatSupport pdfFormatSupport()
+    public UimaJsonCasFormatSupport uimaJsonCasFormatSupport(
+            DocumentImportExportService aDocumentImportExportService)
     {
-        return new PdfFormatSupport();
-    }
-
-    @Bean
-    public PdfDocumentIFrameViewFactory pdfDocumentIFrameViewFactory()
-    {
-        return new PdfDocumentIFrameViewFactory();
+        return new UimaJsonCasFormatSupport(aDocumentImportExportService);
     }
 }

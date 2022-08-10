@@ -14,10 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_annotation-editor_pdf]]
-= PDF Editor Settings
+[[sect_settings_annotation-editor_pdf_legacy]]
+= PDF Editor Settings (legacy)
 
-This section describes the global settings related to the PDF annotation editor module.
+====
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.pdf-legacy.enabled=true` to the `settings.properties` file. 
+
+Support for this feature will be removed in a future version. The replacement is <<sect_settings_annotation-editor_pdf>>.
+====
+
+This section describes the global settings related to the legacy PDF annotation editor module.
 
 .Knowledge base settings overview
 [cols="4*", options="header"]
@@ -27,8 +33,8 @@ This section describes the global settings related to the PDF annotation editor 
 | Default
 | Example
 
-| ui.pdf.enabled.enabled
+| `ui.pdf-legacy.enabled`
 | enable/disable KB support
-| true
-| false
+| `false`
+| `true`
 |===
