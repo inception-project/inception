@@ -79,7 +79,9 @@ public class SvelteBehavior
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        aResponse.render(CssReferenceHeaderItem.forReference(cssRef));
+        if (cssRef != null) {
+            aResponse.render(CssReferenceHeaderItem.forReference(cssRef));
+        }
         aResponse.render(OnDomReadyHeaderItem.forScript(initScript(aComponent)));
     }
 
