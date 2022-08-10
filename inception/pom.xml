@@ -72,6 +72,7 @@
     <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.3.0</uima.version>
     <uimafit.version>3.3.0</uimafit.version>
+    <uima-json.version>0.4.0</uima-json.version>
 
     <pdfbox.version>2.0.26</pdfbox.version>
 
@@ -463,6 +464,11 @@
         <groupId>org.apache.uima</groupId>
         <artifactId>uimafit-cpe</artifactId>
         <version>${uimafit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-io-json</artifactId>
+        <version>${uima-json.version}</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>

@@ -2211,7 +2211,9 @@ public class RecommendationServiceImpl
 
             // Concurrent action has deleted project, so we can ignore this
             var affectedProjects = dirties.stream() //
-                    .collect(toMap(d -> d.getProject().getId(), d -> d.getProject()));
+                    .map(d -> d.getProject()) //
+                    .distinct() //
+                    .collect(toMap(p -> p.getId(), p -> p));
             for (Project project : affectedProjects.values()) {
                 if (projectService.getProject(project.getId()) == null) {
                     dirties.removeIf(dirty -> dirty.getProject().equals(project));

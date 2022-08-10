@@ -1,10 +1,16 @@
-[[sect_pdf_editor_dev]]
-# PDF Annotation Editor
+[[sect_pdf_editor_legacy_dev]]
+# PDF Annotation Editor (legacy)
+
+====
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.pdf-legacy.enabled=true` to the `settings.properties` file. 
+
+Support for this feature will be removed in a future version. The replacement is <<sect_pdf_editor_dev>>.
+====
 
 The PDF-Editor module allows the view and annotation of PDF documents. 
 This is implemented using _PDFAnno_, _PDFExtract_ and _DKPro PDF Reader_. 
 The choice for _PDFAnno_ and other implementation choices
- are explained in the following.
+are explained in the following.
 
 ## Selecting a PDF Annotation Tool
 

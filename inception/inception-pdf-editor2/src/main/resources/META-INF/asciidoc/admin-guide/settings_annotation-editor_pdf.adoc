@@ -14,14 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_documentmetadata]]
-= Document Metadata Settings
+[[sect_settings_annotation-editor_pdf]]
+= PDF Editor Settings
 
-This section describes the global settings related to the document metadata annotation support.
-
-NOTE: Disabling document metadata support prevents new document metadata layers from being
-       created, but it does not prevent the use of existing document metadata layers layers in order
-       not to break existing projects. 
+This section describes the global settings related to the PDF annotation editor module.
 
 .Knowledge base settings overview
 [cols="4*", options="header"]
@@ -31,9 +27,8 @@ NOTE: Disabling document metadata support prevents new document metadata layers 
 | Default
 | Example
 
-
-| documentmetadata.enabled
-| Enable/disable search
-| false
-| true
+| `ui.pdf.enabled`
+| enable/disable KB support
+| `true`
+| `false`
 |===
