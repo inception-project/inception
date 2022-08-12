@@ -89,7 +89,7 @@ public class OpenDocumentDialogPanel
         state = aState;
         docListProvider = aDocListProvider;
 
-        queue(userListChoice = createUserListChoice(aState));
+        queue(userListChoice = createUserListChoice());
         queue(docListChoice = createDocListChoice());
 
         openButton = new LambdaAjaxButton<>("openButton", this::actionOpenDocument);
@@ -123,16 +123,9 @@ public class OpenDocumentDialogPanel
             }
         });
         choice.setOutputMarkupId(true);
-        choice.add(new OnChangeAjaxBehavior()
-        {
-            private static final long serialVersionUID = -8232688660762056913L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                aTarget.add(buttonsContainer);
-            }
-        }).add(AjaxEventBehavior.onEvent("dblclick", _target -> actionOpenDocument(_target, null)));
+        choice.add(OnChangeAjaxBehavior.onChange(_target -> _target.add(buttonsContainer)));
+        choice.add(AjaxEventBehavior.onEvent("dblclick",
+                _target -> actionOpenDocument(_target, null)));
 
         if (!choice.getChoices().isEmpty()) {
             choice.setModelObject(choice.getChoices().get(0));
@@ -142,12 +135,10 @@ public class OpenDocumentDialogPanel
         return choice;
     }
 
-    private OverviewListChoice<DecoratedObject<User>> createUserListChoice(
-            IModel<AnnotatorState> aState)
+    private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
     {
-        var state = aState.getObject();
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        DecoratedObject<User> viewUser = DecoratedObject.of(state.getUser());
+        DecoratedObject<User> viewUser = DecoratedObject.of(state.getObject().getUser());
 
         var choice = new OverviewListChoice<>("user", Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
@@ -166,28 +157,9 @@ public class OpenDocumentDialogPanel
             }
         });
         choice.setOutputMarkupId(true);
-        choice.add(visibleWhen(() -> state.getMode().equals(ANNOTATION) && projectService
-                .hasRole(userRepository.getCurrentUser(), state.getProject(), MANAGER)));
-        choice.add(new OnChangeAjaxBehavior()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                docListChoice.setChoices(listDocuments());
-
-                if (!docListChoice.getChoices().isEmpty()) {
-                    docListChoice.setModelObject(docListChoice.getChoices().get(0));
-                }
-                else {
-                    docListChoice.setModelObject(null);
-                }
-
-                aTarget.add(buttonsContainer);
-                aTarget.add(docListChoice);
-            }
-        });
+        choice.add(visibleWhen(state.map(s -> s.getMode().equals(ANNOTATION) && projectService
+                .hasRole(userRepository.getCurrentUser(), s.getProject(), MANAGER))));
+        choice.add(OnChangeAjaxBehavior.onChange(this::actionSelectUser));
 
         if (choice.getChoices().contains(viewUser)) {
             choice.setModelObject(viewUser);
@@ -203,6 +175,20 @@ public class OpenDocumentDialogPanel
         }
 
         return choice;
+    }
+
+    private void actionSelectUser(AjaxRequestTarget aTarget)
+    {
+        docListChoice.setChoices(listDocuments());
+
+        if (docListChoice.getChoices().isEmpty()) {
+            docListChoice.setModelObject(null);
+        }
+        else {
+            docListChoice.setModelObject(docListChoice.getChoices().get(0));
+        }
+
+        aTarget.add(buttonsContainer, docListChoice);
     }
 
     private List<DecoratedObject<User>> listUsers()

@@ -54,7 +54,6 @@ import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.markup.html.form.DateTextField;
-import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
@@ -71,7 +70,6 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -111,6 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -210,28 +209,15 @@ public class DynamicWorkloadManagementPage
     public void commonInit()
     {
         // Header of the page
-        Label name = new Label("name", currentProject.getObject().getName());
-        add(name);
+        queue(new Label("name", currentProject.getObject().getName()));
 
         // Data Provider for the table
-        dataProvider = makeAnnotationQueueOverviewDataProvider();
+        dataProvider = new AnnotationQueueOverviewDataProvider(getQueue());
 
         // Columns of the table
-        // Each column creates TableMetaData
-        List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState().symbol())
-        {
-            private static final long serialVersionUID = -2103168638018286379L;
-
-            @Override
-            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> item,
-                    String componentId, IModel<AnnotationQueueItem> rowModel)
-            {
-                item.add(new Label(componentId, getDataModel(rowModel))
-                        .setEscapeModelStrings(false));
-            }
-        });
+        var columns = new ArrayList<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>>();
+        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> item.getState().symbol()));
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), DOCUMENT,
                 AnnotationQueueItem::getSourceDocumentName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), ASSIGNED,
@@ -246,8 +232,7 @@ public class DynamicWorkloadManagementPage
         table.setOutputMarkupId(true);
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
-
-        add(table);
+        queue(table);
 
         // Add StateFilters
         stateFilters = new WebMarkupContainer("stateFilters");
@@ -706,11 +691,6 @@ public class DynamicWorkloadManagementPage
                     traits.getDefaultNumberOfAnnotations(), traits.getAbandonationTimeout()));
         }
         return queue;
-    }
-
-    private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
-    {
-        return new AnnotationQueueOverviewDataProvider(getQueue());
     }
 
     @OnEvent
