@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.EnumSet;
@@ -58,6 +60,9 @@ public class UserDaoImpl
     implements UserDao
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
+            CURATION_USER);
 
     private final EntityManager entityManager;
     private final SecurityProperties securityProperties;
@@ -126,6 +131,11 @@ public class UserDaoImpl
     @Transactional
     public User create(User aUser)
     {
+        if (RESERVED_USERNAMES.contains(aUser.getUsername())) {
+            throw new IllegalArgumentException("Username [" + aUser.getUsername()
+                    + "] is reserved. No user with this name can be created.");
+        }
+
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
