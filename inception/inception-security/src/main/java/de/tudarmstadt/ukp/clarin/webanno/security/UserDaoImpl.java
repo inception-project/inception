@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -71,11 +73,13 @@ public class UserDaoImpl
     private static final String MSG_PASSWORD_ERROR_TOO_LONG = "password.error.too-long";
     private static final String MSG_PASSWORD_ERROR_TOO_SHORT = "password.error.too-short";
     private static final String MSG_PASSWORD_ERROR_BLANK = "password.error.blank";
+    private static final String MSG_PASSWORD_ERROR_CONTROL_CHARACTERS = "password.error.control-characters";
     private static final String MSG_USERNAME_ERROR_PATTERN_MISMATCH = "username.error.pattern-mismatch";
     private static final String MSG_USERNAME_ERROR_TOO_LONG = "username.error.too-long";
     private static final String MSG_USERNAME_ERROR_TOO_SHORT = "username.error.too-short";
     private static final String MSG_USERNAME_ERROR_RESERVED = "username.error.reserved";
     private static final String MSG_USERNAME_ERROR_ILLEGAL_CHARACTERS = "username.error.illegal-characters";
+    private static final String MSG_USERNAME_ERROR_CONTROL_CHARACTERS = "username.error.control-characters";
     private static final String MSG_USERNAME_ERROR_ILLEGAL_SPACE = "username.error.illegal-space";
     private static final String MSG_USERNAME_ERROR_BLANK = "username.error.blank";
 
@@ -155,6 +159,11 @@ public class UserDaoImpl
     @Transactional
     public User create(User aUser)
     {
+        if (RESERVED_USERNAMES.contains(aUser.getUsername())) {
+            throw new IllegalArgumentException("Username [" + aUser.getUsername()
+                    + "] is reserved. No user with this name can be created.");
+        }
+
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
@@ -402,10 +411,7 @@ public class UserDaoImpl
         }
 
         // Do not allow space
-        if (containsAny(aName, " ")) {
-            // This is actually part of the USERNAME_ILLEGAL_CHARACTERS but the space character
-            // cannot really be seen in the validation message... so we have a special message
-            // for it
+        if (containsAnyCharacterMatching(aName, Character::isWhitespace)) {
             errors.add(new ValidationError("Username cannot contain a space character") //
                     .addKey(MSG_USERNAME_ERROR_ILLEGAL_SPACE));
             return errors;
@@ -417,6 +423,12 @@ public class UserDaoImpl
                     + USERNAME_ILLEGAL_CHARACTERS) //
                             .addKey(MSG_USERNAME_ERROR_ILLEGAL_CHARACTERS)
                             .setVariable(MVAR_CHARS, USERNAME_ILLEGAL_CHARACTERS));
+            return errors;
+        }
+
+        if (containsAnyCharacterMatching(aName, TextUtils::isControlCharacter)) {
+            errors.add(new ValidationError("Username cannot contain any control characters") //
+                    .addKey(MSG_USERNAME_ERROR_CONTROL_CHARACTERS));
             return errors;
         }
 
@@ -470,6 +482,12 @@ public class UserDaoImpl
         if (isBlank(aPassword)) {
             errors.add(new ValidationError("Password cannot be empty or blank") //
                     .addKey(MSG_PASSWORD_ERROR_BLANK));
+            return errors;
+        }
+
+        if (containsAnyCharacterMatching(aPassword, TextUtils::isControlCharacter)) {
+            errors.add(new ValidationError("Password cannot contain any control characters") //
+                    .addKey(MSG_PASSWORD_ERROR_CONTROL_CHARACTERS));
             return errors;
         }
 
