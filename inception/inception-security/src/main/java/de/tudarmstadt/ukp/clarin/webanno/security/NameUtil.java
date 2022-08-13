@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static org.apache.commons.lang3.StringUtils.containsNone;
+import static java.lang.Character.isWhitespace;
+import static org.apache.commons.lang3.StringUtils.containsAny;
+
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 
 public class NameUtil
 {
@@ -35,6 +39,26 @@ public class NameUtil
      */
     public static boolean isNameValidUserName(String aName)
     {
-        return aName != null && containsNone(aName, WEBANNO_ILLEGAL_CHARACTERS);
+        if (aName == null) {
+            return false;
+        }
+
+        if (containsAny(aName, WEBANNO_ILLEGAL_CHARACTERS)) {
+            return false;
+        }
+
+        var iter = new StringCharacterIterator(aName);
+        for (char c = iter.first(); c != CharacterIterator.DONE; c = iter.next()) {
+            if (isWhitespace(c) || isControlCharacter(c)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean isControlCharacter(char aChar)
+    {
+        return aChar < 32 || aChar == 127 || (aChar >= 128 && aChar <= 159);
     }
 }
