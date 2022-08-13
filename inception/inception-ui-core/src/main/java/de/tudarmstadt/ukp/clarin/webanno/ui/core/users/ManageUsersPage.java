@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.NameUtil.isNameValidUserName;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -96,6 +95,7 @@ public class ManageUsersPage
             username.add(this::validateUsername);
             username.add(enabledWhen(() -> isCreate));
             add(username);
+
             add(new TextField<String>("uiName") //
                     .add(this::validateUiName)
                     .add(AttributeModifier.replace("placeholder", username.getModel())));
@@ -103,12 +103,14 @@ public class ManageUsersPage
             add(new EmailTextField("email"));
 
             passwordField = new PasswordTextField("password");
+            passwordField.add(this::validatePassword);
             passwordField.setModel(PropertyModel.of(DetailForm.this, "password"));
             passwordField.setRequired(false);
             passwordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
             add(passwordField);
 
             repeatPasswordField = new PasswordTextField("repeatPassword");
+            repeatPasswordField.add(this::validatePassword);
             repeatPasswordField.setModel(PropertyModel.of(DetailForm.this, "repeatPassword"));
             repeatPasswordField.setRequired(false);
             repeatPasswordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
@@ -130,18 +132,19 @@ public class ManageUsersPage
             add(new LambdaAjaxLink("cancel", ManageUsersPage.this::actionCancel));
         }
 
+        private void validatePassword(IValidatable<String> aValidatable)
+        {
+            userRepository.validatePassword(aValidatable.getValue()).forEach(aValidatable::error);
+        }
+
         private void validateUsername(IValidatable<String> aValidatable)
         {
             if (userRepository.exists(aValidatable.getValue()) && isCreate) {
                 aValidatable.error(new ValidationError().addKey("username.alreadyExistsError")
                         .setVariable("name", aValidatable.getValue()));
             }
-            else if (aValidatable.getValue().contains(" ")) {
-                aValidatable.error(new ValidationError().addKey("username.containsSpaceError"));
-            }
-            else if (!isNameValidUserName(aValidatable.getValue())) {
-                aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
-            }
+
+            userRepository.validateUsername(aValidatable.getValue()).forEach(aValidatable::error);
         }
 
         private void validateUiName(IValidatable<String> aValidatable)

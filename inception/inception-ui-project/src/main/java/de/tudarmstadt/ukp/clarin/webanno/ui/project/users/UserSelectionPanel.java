@@ -227,7 +227,7 @@ class UserSelectionPanel
                 aUser.getUser().ifPresentOrElse( //
                         user -> { //
                             if (!user.isEnabled()) {
-                                builder.append(" (disabled)");
+                                builder.append(" (deactivated)");
                             }
                         }, //
                         () -> builder.append(" (missing!)"));
