@@ -15,21 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav.DocumentNavigator;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 
 @Order(0)
 @Component
-public class DefaultDocumentNavigatorActionBarExtension
+public class AnnotationDocumentNavigatorActionBarExtension
     implements ActionBarExtension
 {
+    @Override
+    public String getRole()
+    {
+        return ROLE_NAVIGATOR;
+    }
+
+    @Override
+    public boolean accepts(AnnotationPageBase aPage)
+    {
+        return aPage instanceof AnnotationPage;
+    }
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
@@ -39,11 +53,6 @@ public class DefaultDocumentNavigatorActionBarExtension
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
-        ActionBarExtension.super.onInitialize(aPage);
-
-        aPage.getFooterItems().getObject().stream()
-                .anyMatch(component -> component instanceof OpenDocumentDialog);
-
         // Open the dialog if no document has been selected.
         aPage.add(new AutoOpenDialogBehavior());
 
@@ -53,13 +62,13 @@ public class DefaultDocumentNavigatorActionBarExtension
         // selected. In order to allow the dialog to be rendered *before* a document has been
         // selected (i.e. when the action bar is still not on screen), we need to attach it to the
         // page. The same for the AutoOpenDialogBehavior we add below.
-        OpenDocumentDialog openDocumentsModal = createOpenDocumentsDialog("item", aPage);
-        aPage.addToFooter(openDocumentsModal);
+        aPage.addToFooter(createOpenDocumentsDialog("item", aPage));
     }
 
-    protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
+    private OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
+        var page = (AnnotationPage) aPage;
         return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                aPage::listAccessibleDocuments);
+                page::listAccessibleDocuments);
     }
 }

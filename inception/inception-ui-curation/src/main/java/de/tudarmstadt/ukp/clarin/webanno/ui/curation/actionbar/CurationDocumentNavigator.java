@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -31,14 +31,14 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import wicket.contrib.input.events.key.KeyType;
 
-public class DocumentNavigator
+public class CurationDocumentNavigator
     extends Panel
 {
     private static final long serialVersionUID = 7061696472939390003L;
@@ -49,27 +49,32 @@ public class DocumentNavigator
 
     private final ExportDocumentDialog exportDialog;
 
-    public DocumentNavigator(String aId, AnnotationPageBase aPage)
+    public CurationDocumentNavigator(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
         page = aPage;
 
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
+        queue(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { Shift, Page_up }, click)));
 
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
+        queue(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { Shift, Page_down }, click)));
 
-        add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
+        queue(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
-        add(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
-        add(new LambdaAjaxLink("showExportDialog", exportDialog::show).add(visibleWhen(() -> {
-            AnnotatorState state = page.getModelObject();
-            return state.getProject() != null
-                    && (projectService.hasRole(state.getUser(), state.getProject(), MANAGER)
-                            || !state.getProject().isDisableExport());
-        })));
+        queue(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
+
+        queue(new LambdaAjaxLink("showExportDialog", exportDialog::show) //
+                .add(visibleWhen(this::isExportable)));
+    }
+
+    private boolean isExportable()
+    {
+        AnnotatorState state = page.getModelObject();
+        return state.getProject() != null
+                && (projectService.hasRole(state.getUser(), state.getProject(), MANAGER)
+                        || !state.getProject().isDisableExport());
     }
 
     /**
@@ -111,8 +116,9 @@ public class DocumentNavigator
     {
         page.getModelObject().getSelection().clear();
         page.getFooterItems().getObject().stream()
-                .filter(component -> component instanceof OpenDocumentDialog)
-                .map(component -> (OpenDocumentDialog) component).findFirst()
+                .filter(component -> component instanceof CurationOpenDocumentDialog)
+                .map(component -> (CurationOpenDocumentDialog) component) //
+                .findFirst() //
                 .ifPresent(dialog -> dialog.show(aTarget));
     }
 }

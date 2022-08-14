@@ -22,9 +22,12 @@ import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import java.util.Properties;
 
 import org.apache.wicket.Application;
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
@@ -33,6 +36,25 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 public class WicketUtil
 {
+    /**
+     * Focus a component either via the current AJAX request or by adding a focus script as a header
+     * item.
+     * 
+     * @param aResponse
+     *            a header response
+     * @param aComponent
+     *            the component to focus
+     */
+    public static void ajaxFallbackFocus(IHeaderResponse aResponse, Component aComponent)
+    {
+        var script = "setTimeout(() => document.getElementById('" + aComponent.getMarkupId()
+                + "')?.focus(), 100)";
+        RequestCycle.get().find(AjaxRequestTarget.class).ifPresentOrElse(
+                target -> target.appendJavaScript(script),
+                () -> aResponse.render(OnDomReadyHeaderItem.forScript(script)));
+
+    }
+
     public static void serverTiming(String aKey, long aTime)
     {
         serverTiming(aKey, null, aTime);

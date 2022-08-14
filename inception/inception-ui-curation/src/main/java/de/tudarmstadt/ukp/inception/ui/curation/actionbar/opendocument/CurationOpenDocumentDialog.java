@@ -15,53 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
+package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
-import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
-public class OpenDocumentDialog
+public class CurationOpenDocumentDialog
     extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 2767538203924633288L;
 
-    private final SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> docListProvider;
+    private final IModel<List<SourceDocument>> documentList;
     private final IModel<AnnotatorState> state;
 
-    public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
+    public CurationOpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
             IModel<List<DecoratedObject<Project>>> aProjects,
-            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> aDocListProvider)
+            IModel<List<SourceDocument>> aDocumentList)
     {
         super(aId);
         setOutputMarkupId(true);
         trapFocus();
 
-        docListProvider = aDocListProvider;
+        documentList = aDocumentList;
         state = aModel;
     }
 
     public void show(AjaxRequestTarget aTarget)
     {
-        var content = new OpenDocumentDialogPanel(ModalDialog.CONTENT_ID, state, docListProvider);
+        var content = new CurationOpenDocumentDialogPanel(ModalDialog.CONTENT_ID, state,
+                documentList);
         super.open(content, aTarget);
-
-        // Normally, using focusComponent should work, but it doesn't. Therefore, we manually add
-        // a JavaScript snippet with a timeout that gives the modal window the opportunity to draw
-        // itself before setting the focus. This seems to help.
-        // (cf. https://issues.apache.org/jira/browse/WICKET-5858)
-        // aTarget.focusComponent(panel.getFocusComponent());
-        aTarget.appendJavaScript("setTimeout(function() { document.getElementById('"
-                + content.getFocusComponent().getMarkupId() + "').focus(); }, 100);");
     }
 }

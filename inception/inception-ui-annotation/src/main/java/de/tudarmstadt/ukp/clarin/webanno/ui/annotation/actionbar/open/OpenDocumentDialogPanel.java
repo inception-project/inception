@@ -15,47 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
@@ -72,17 +68,15 @@ public class OpenDocumentDialogPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
 
-    private final WebMarkupContainer buttonsContainer;
-    private final OverviewListChoice<DecoratedObject<SourceDocument>> docListChoice;
-    private final OverviewListChoice<DecoratedObject<User>> userListChoice;
-    private final LambdaAjaxButton<Void> openButton;
+    private final DropDownChoice<DecoratedObject<User>> userListChoice;
+    private final AnnotationDocumentTable table;
 
     private final IModel<AnnotatorState> state;
 
-    private final SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> docListProvider;
+    private final SerializableBiFunction<Project, User, List<AnnotationDocument>> docListProvider;
 
     public OpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
-            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> aDocListProvider)
+            SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider)
     {
         super(aId);
 
@@ -90,57 +84,21 @@ public class OpenDocumentDialogPanel
         docListProvider = aDocListProvider;
 
         queue(userListChoice = createUserListChoice());
-        queue(docListChoice = createDocListChoice());
 
-        openButton = new LambdaAjaxButton<>("openButton", this::actionOpenDocument);
-        openButton.add(enabledWhen(() -> docListChoice.getModelObject() != null));
-        queue(openButton);
-
-        queue(new LambdaAjaxLink("cancelButton", this::actionCancel));
         queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
 
-        buttonsContainer = new WebMarkupContainer("buttons");
-        buttonsContainer.setOutputMarkupId(true);
-        queue(buttonsContainer);
-
-        Form<Void> form = new Form<>("form");
-        form.setOutputMarkupId(true);
-        form.setDefaultButton(openButton);
-        queue(form);
+        table = new AnnotationDocumentTable("table",
+                LoadableDetachableModel.of(this::listDocuments));
+        table.setOutputMarkupId(true);
+        queue(table);
     }
 
-    private OverviewListChoice<DecoratedObject<SourceDocument>> createDocListChoice()
-    {
-        var choice = new OverviewListChoice<>("documents", Model.of(), listDocuments());
-        choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<SourceDocument>>()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public Object getDisplayValue(DecoratedObject<SourceDocument> aDoc)
-            {
-                return defaultIfEmpty(aDoc.getLabel(), aDoc.get().getName());
-            }
-        });
-        choice.setOutputMarkupId(true);
-        choice.add(OnChangeAjaxBehavior.onChange(_target -> _target.add(buttonsContainer)));
-        choice.add(AjaxEventBehavior.onEvent("dblclick",
-                _target -> actionOpenDocument(_target, null)));
-
-        if (!choice.getChoices().isEmpty()) {
-            choice.setModelObject(choice.getChoices().get(0));
-        }
-
-        choice.setDisplayMessageOnEmptyChoice(true);
-        return choice;
-    }
-
-    private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
+    private DropDownChoice<DecoratedObject<User>> createUserListChoice()
     {
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
         DecoratedObject<User> viewUser = DecoratedObject.of(state.getObject().getUser());
 
-        var choice = new OverviewListChoice<>("user", Model.of(), listUsers());
+        var choice = new DropDownChoice<>("user", Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
             private static final long serialVersionUID = 1L;
@@ -153,7 +111,7 @@ public class OpenDocumentDialogPanel
                 if (user.equals(currentUser.get())) {
                     username += " (me)";
                 }
-                return username + (user.isEnabled() ? "" : " (login disabled)");
+                return username + (user.isEnabled() ? "" : " (deactivated)");
             }
         });
         choice.setOutputMarkupId(true);
@@ -179,16 +137,9 @@ public class OpenDocumentDialogPanel
 
     private void actionSelectUser(AjaxRequestTarget aTarget)
     {
-        docListChoice.setChoices(listDocuments());
+        table.getDataProvider().getModel().setObject(listDocuments());
 
-        if (docListChoice.getChoices().isEmpty()) {
-            docListChoice.setModelObject(null);
-        }
-        else {
-            docListChoice.setModelObject(docListChoice.getChoices().get(0));
-        }
-
-        aTarget.add(buttonsContainer, docListChoice);
+        aTarget.add(table);
     }
 
     private List<DecoratedObject<User>> listUsers()
@@ -220,7 +171,7 @@ public class OpenDocumentDialogPanel
         return users;
     }
 
-    private List<DecoratedObject<SourceDocument>> listDocuments()
+    private List<AnnotationDocument> listDocuments()
     {
         Project project = state.getObject().getProject();
         User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
@@ -232,14 +183,13 @@ public class OpenDocumentDialogPanel
         return docListProvider.apply(project, user);
     }
 
-    private void actionOpenDocument(AjaxRequestTarget aTarget, Form<?> aForm)
+    @OnEvent
+    public void onSourceDocumentOpenDocumentEvent(AnnotationDocumentOpenDocumentEvent aEvent)
     {
-        if (docListChoice.getModelObject() == null) {
-            return;
-        }
+        var documents = listDocuments().stream().map(AnnotationDocument::getDocument)
+                .collect(toList());
 
-        state.getObject().setDocument(docListChoice.getModelObject().get(),
-                docListChoice.getChoices().stream().map(t -> t.get()).collect(Collectors.toList()));
+        state.getObject().setDocument(aEvent.getAnnotationDocument().getDocument(), documents);
 
         // for curation view in inception: when curating into CURATION_USER's CAS
         // and opening new document it should also be from the CURATION_USER
@@ -248,15 +198,14 @@ public class OpenDocumentDialogPanel
             state.getObject().setUser(userListChoice.getModelObject().get());
         }
 
-        ((AnnotationPageBase) getPage()).actionLoadDocument(aTarget);
+        ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
 
-        findParent(ModalDialog.class).close(aTarget);
+        findParent(ModalDialog.class).close(aEvent.getTarget());
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         userListChoice.detach();
-        docListChoice.detach();
 
         // If the dialog is aborted without choosing a document, return to a sensible
         // location.
@@ -276,10 +225,5 @@ public class OpenDocumentDialogPanel
         }
 
         findParent(ModalDialog.class).close(aTarget);
-    }
-
-    public Component getFocusComponent()
-    {
-        return docListChoice;
     }
 }

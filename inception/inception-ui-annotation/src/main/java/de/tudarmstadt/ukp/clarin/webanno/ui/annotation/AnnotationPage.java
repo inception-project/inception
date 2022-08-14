@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
@@ -692,33 +693,30 @@ public class AnnotationPage
         }
     }
 
-    @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
-            User aUser)
+    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser)
     {
-        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-
-        // FIXME: This should be changed to call getListOfDocs or getListOfDocs should base on
-        // this call - in any case, the selection/filtering code should only be there once
+        final List<AnnotationDocument> allDocuments = new ArrayList<>();
         Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 
         User user = userRepository.getCurrentUser();
         for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
-            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
-            if (e.getValue() != null) {
-                AnnotationDocumentState docState = e.getValue().getState();
-                dsd.setColor(docState.getColor());
-
+            SourceDocument sd = e.getKey();
+            AnnotationDocument ad = e.getValue();
+            if (ad != null) {
                 // if current user is opening her own docs, don't let her see locked ones
                 boolean userIsSelected = aUser.equals(user);
-                if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
+                if (userIsSelected && ad.getState() == IGNORE) {
                     continue;
                 }
             }
-            allSourceDocuments.add(dsd);
+            else {
+                ad = new AnnotationDocument(user.getUsername(), sd);
+            }
+
+            allDocuments.add(ad);
         }
 
-        return allSourceDocuments;
+        return allDocuments;
     }
 }

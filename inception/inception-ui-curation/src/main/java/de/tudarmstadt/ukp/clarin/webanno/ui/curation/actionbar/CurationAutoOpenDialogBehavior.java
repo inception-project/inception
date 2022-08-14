@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -23,13 +23,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 
 /**
  * Opens the "Open document" dialog if the page is loaded and no document has been selected yet.
  */
-class AutoOpenDialogBehavior
+public class CurationAutoOpenDialogBehavior
     extends AbstractDefaultAjaxBehavior
 {
     private static final long serialVersionUID = 5700114110001447912L;
@@ -58,8 +58,8 @@ class AutoOpenDialogBehavior
         }
 
         page.getFooterItems().getObject().stream()
-                .filter(component -> component instanceof OpenDocumentDialog)
-                .map(component -> (OpenDocumentDialog) component).findFirst()
+                .filter(component -> component instanceof CurationOpenDocumentDialog)
+                .map(component -> (CurationOpenDocumentDialog) component).findFirst()
                 .ifPresent(dialog -> dialog.show(aTarget));
 
     }
