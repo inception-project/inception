@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
+import java.util.regex.Pattern;
+
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 
 public interface SecurityProperties
@@ -39,4 +41,16 @@ public interface SecurityProperties
      * @return username for the default admin user.
      */
     String getDefaultAdminUsername();
+
+    int getMinimumPasswordLength();
+
+    int getMaximumPasswordLength();
+
+    int getMinimumUsernameLength();
+
+    int getMaximumUsernameLength();
+
+    Pattern getUsernamePattern();
+
+    Pattern getPasswordPattern();
 }
