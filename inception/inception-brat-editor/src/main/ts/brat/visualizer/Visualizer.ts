@@ -3199,11 +3199,11 @@ export class Visualizer {
       this.fastTranslateGroup(sentNumGroup, oversized, 0)
 
       if (scrollable) {
-        scrollable.scrollLeft(oversized + 4)
+        scrollable.scrollLeft = oversized + 4
       }
     } else {
       if (scrollable) {
-        scrollable.scrollLeft(0)
+        scrollable.scrollLeft = 0
       }
     }
   }
