@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.wicket.validation.ValidationError;
+
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -162,4 +164,22 @@ public interface UserDao
     }
 
     boolean hasRole(User aUser, Role aRole);
+
+    /**
+     * @param aPassword
+     *            a password.
+     * @return if the given value meets the password policy.
+     */
+    boolean isValidPassword(String aPassword);
+
+    /**
+     * @param aName
+     *            a name.
+     * @return if the name meets the user name policy.
+     */
+    boolean isValidUsername(String aName);
+
+    List<ValidationError> validatePassword(String aPassword);
+
+    List<ValidationError> validateUsername(String aName);
 }
