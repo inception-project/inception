@@ -2796,7 +2796,7 @@
       <id>typescript-module</id>
       <activation>
         <file>
-          <exists>src/main/ts</exists>
+          <exists>src/main/ts_template/package.json</exists>
         </file>
       </activation>
       <properties>
