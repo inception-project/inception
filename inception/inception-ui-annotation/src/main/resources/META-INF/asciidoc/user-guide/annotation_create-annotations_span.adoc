@@ -41,7 +41,7 @@ link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one tok
 image::annotation_pos.jpg[align="center"]
 
 .Zero-width spans
-To create a zero-length annotation, hold *SHIFT* and click on the position where you wish to create the annotation. To avoid accidental creations of zero-length annotations, a simple single-click triggers no action by default. The *lock to token* behavior cancels the ability to create zero-length annotations.
+To create a zero-length annotation, hold kbd:[Shift] and click on the position where you wish to create the annotation. To avoid accidental creations of zero-length annotations, a simple single-click triggers no action by default. The *lock to token* behavior cancels the ability to create zero-length annotations.
 
 NOTE: A zero-width span between two tokens that are directly adjacent, e.g. the full stop at the
       end of a sentence and the token before it (`end.`) is always considered to be *at the end of the
