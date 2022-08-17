@@ -717,23 +717,6 @@ public class CurationPage
         }
     }
 
-    @Override
-    public List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
-            User aUser)
-    {
-        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
-        List<SourceDocument> sdocs = getListOfDocs();
-
-        for (SourceDocument sourceDocument : sdocs) {
-            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
-            dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
-            dsd.setColor(sourceDocument.getState().getColor());
-            allSourceDocuments.add(dsd);
-        }
-
-        return allSourceDocuments;
-    }
-
     private List<CurationUnit> buildUnitOverview(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {

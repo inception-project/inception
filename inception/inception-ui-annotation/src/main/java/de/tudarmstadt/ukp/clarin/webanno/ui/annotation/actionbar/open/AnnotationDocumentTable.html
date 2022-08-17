@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style type="text/css">
+    .document-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .document-table thead td, .document-table thead th{ border-bottom-width: 0 !important; }
+    .document-table tr td, .document-table tr th { text-align: center; }
+    .document-table tr th { white-space: nowrap; }
+    .document-table tr td:nth-child(2), .document-table tr th:nth-child(2) { text-align: left; width: 100%;}
+    .document-table col.s, .document-table tr.s , .document-table td.s { background-color: var(--primary); }
+    .document-table .state-toggle { white-space: nowrap; cursor: pointer; }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="flex-h-container flex-gutter flex-only-internal-gutter justify-content-end mb-3">
+    <div class="flex-content">
+      <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+    </div>
+    <div wicket:id="stateFilters" />
+  </div>
+  <div class="flex-content scrolling flex-h-container border">
+    <div class="flex-content">
+      <table wicket:id="dataTable" class="table table-sm table-hover table-striped document-table" cellspacing="0"
+        align="center" />
+    </div>
+  </div>
+</wicket:panel>
+<wicket:fragment wicket:id="openDocumentColumn">
+  <span wicket:id="name"/>
+</wicket:fragment>
+</html>

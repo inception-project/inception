@@ -473,9 +473,6 @@ public abstract class AnnotationPageBase
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
 
-    public abstract List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
-            User aUser);
-
     /**
      * This is a special AJAX target response listener which implements hashCode and equals. It uses
      * the markup ID of its host component to identify itself. This enables us to add multiple

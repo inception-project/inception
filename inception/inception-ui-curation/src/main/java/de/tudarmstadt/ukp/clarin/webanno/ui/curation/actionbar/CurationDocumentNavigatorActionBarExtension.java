@@ -19,23 +19,25 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static java.lang.Integer.MAX_VALUE;
 
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 
 @Order(0)
 @Component
 public class CurationDocumentNavigatorActionBarExtension
-    extends DefaultDocumentNavigatorActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public String getRole()
     {
-        return DefaultDocumentNavigatorActionBarExtension.class.getName();
+        return ROLE_NAVIGATOR;
     }
 
     @Override
@@ -51,9 +53,31 @@ public class CurationDocumentNavigatorActionBarExtension
     }
 
     @Override
-    protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
-        return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
-                aPage::listAccessibleDocuments);
+        return new CurationDocumentNavigator(aId, aPage);
+    }
+
+    @Override
+    public void onInitialize(AnnotationPageBase aPage)
+    {
+        // Open the dialog if no document has been selected.
+        aPage.add(new CurationAutoOpenDialogBehavior());
+
+        // We put the dialog into the page footer since this is presently the only place where we
+        // can dynamically add stuff to the page. We cannot add simply to the action bar (i.e.
+        // DocumentNavigator) because the action bar only shows *after* a document has been
+        // selected. In order to allow the dialog to be rendered *before* a document has been
+        // selected (i.e. when the action bar is still not on screen), we need to attach it to the
+        // page. The same for the AutoOpenDialogBehavior we add below.
+        aPage.addToFooter(createOpenDocumentsDialog("item", aPage));
+    }
+
+    private CurationOpenDocumentDialog createOpenDocumentsDialog(String aId,
+            AnnotationPageBase aPage)
+    {
+        CurationPage page = (CurationPage) aPage;
+        return new CurationOpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(),
+                LoadableDetachableModel.of(page::getListOfDocs));
     }
 }
