@@ -34,12 +34,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.NotImplementedException;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSession;
 
 @Entity
 @Table(name = "elg_session", uniqueConstraints = { @UniqueConstraint(columnNames = { "project" }) })
 public class ElgSession
-    implements Serializable
+    implements Serializable, OAuthSession
 {
     private static final long serialVersionUID = 5378118174761262214L;
     @Id
@@ -94,41 +97,49 @@ public class ElgSession
         project = aProject;
     }
 
+    @Override
     public String getAccessToken()
     {
         return accessToken;
     }
 
+    @Override
     public void setAccessToken(String aAccessToken)
     {
         accessToken = aAccessToken;
     }
 
+    @Override
     public Date getAccessTokenValidUntil()
     {
         return accessTokenValidUntil;
     }
 
+    @Override
     public void setAccessTokenValidUntil(Date aAccessTokenValidUntil)
     {
         accessTokenValidUntil = aAccessTokenValidUntil;
     }
 
+    @Override
     public String getRefreshToken()
     {
         return refreshToken;
     }
 
+    @Override
     public void setRefreshToken(String aRefreshToken)
     {
         refreshToken = aRefreshToken;
     }
 
+    @Override
     public Date getRefreshTokenValidUntil()
     {
         return refreshTokenValidUntil;
     }
 
+    @Override
     public void setRefreshTokenValidUntil(Date aRefreshTokenValidUntil)
     {
         refreshTokenValidUntil = aRefreshTokenValidUntil;
@@ -154,12 +165,40 @@ public class ElgSession
         }
     }
 
-    public void clear()
+    @Override
+    public Date getLastUpdate()
     {
-        setAccessToken(null);
-        setAccessTokenValidUntil(null);
-        setRefreshToken(null);
-        setRefreshTokenValidUntil(null);
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void setLastUpdate(Date aDate)
+    {
+        // Ignore
+    }
+
+    @Override
+    public long getAccessTokenExpiresIn()
+    {
+        return (new Date().getTime() - getAccessTokenValidUntil().getTime()) / 1000;
+    }
+
+    @Override
+    public void setAccessTokenExpiresIn(long aTime)
+    {
+        // Ignore
+    }
+
+    @Override
+    public long getRefreshTokenExpiresIn()
+    {
+        return (new Date().getTime() - getRefreshTokenValidUntil().getTime()) / 1000;
+    }
+
+    @Override
+    public void setRefreshTokenExpiresIn(long aTime)
+    {
+        // Ignore
     }
 
     @Override
