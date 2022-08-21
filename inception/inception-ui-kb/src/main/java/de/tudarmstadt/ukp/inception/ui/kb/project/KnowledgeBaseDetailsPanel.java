@@ -17,17 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Collections;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -45,12 +46,12 @@ import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -60,10 +61,14 @@ public class KnowledgeBaseDetailsPanel
 {
     private static final long serialVersionUID = -3550082954966752196L;
 
-    private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
 
-    private static final String TITLE_MARKUP_ID = "title";
-    private static final String CONTENT_MARKUP_ID = "content";
+    private static final String CID_FORM = "form";
+    private static final String CID_SAVE = "save";
+    private static final String CID_REINDEX = "reindex";
+    private static final String CID_DELETE = "delete";
+    private static final String CID_TITLE = "title";
+    private static final String CID_CONTENT = "content";
 
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean KnowledgeBaseService kbService;
@@ -72,10 +77,8 @@ public class KnowledgeBaseDetailsPanel
     private final IModel<KnowledgeBase> kbModel;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
 
-    private Component title;
-    private Component content;
-
-    private ConfirmationDialog confirmationDialog;
+    private final KBSettingsContent content;
+    private final ConfirmationDialog confirmationDialog;
 
     public KnowledgeBaseDetailsPanel(String aId, IModel<KnowledgeBase> aKbModel)
     {
@@ -84,12 +87,11 @@ public class KnowledgeBaseDetailsPanel
 
         kbModel = aKbModel;
 
-        KnowledgeBaseWrapper kbw = new KnowledgeBaseWrapper();
-        KnowledgeBase kb = kbModel.getObject();
-        kbw.setKb(kb);
+        KnowledgeBaseWrapper kbw = new KnowledgeBaseWrapper(kbModel.getObject());
+
         // set the URL of the KBW to the current SPARQL URL, if dealing with a remote repository
-        if (kbw.getKb().getType() == RepositoryType.REMOTE) {
-            RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
+        if (kbw.getKb().getType() == REMOTE) {
+            RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
             kbw.setUrl(url);
         }
@@ -100,44 +102,20 @@ public class KnowledgeBaseDetailsPanel
 
         // this form contains all the wicket components in this panel; not only the components used
         // for editing, but also the ones for showing information about a KB (when in ViewMode)
-        Form<KnowledgeBaseWrapper> form = new Form<>("form", kbwModel);
-        add(form);
+        queue(new Form<KnowledgeBaseWrapper>(CID_FORM, kbwModel));
 
         // title/content
-        title = new KBSettingsTitle(TITLE_MARKUP_ID, kbwModel);
-        content = new KBSettingsContent(CONTENT_MARKUP_ID, kbwModel);
-        form.add(title);
-        form.add(content);
+        queue(new KBSettingsTitle(CID_TITLE, kbwModel));
+        queue(content = new KBSettingsContent(CID_CONTENT, kbwModel));
 
         // re-index button only visible for local KBs
-        form.add(new LambdaAjaxLink("delete", KnowledgeBaseDetailsPanel.this::actionDelete));
-        form.add(new LambdaAjaxLink("reindex", KnowledgeBaseDetailsPanel.this::actionReindex)
-                .add(LambdaBehavior.visibleWhen(() -> RepositoryType.LOCAL
-                        .equals(kbwModel.getObject().getKb().getType()))));
-        form.add(new AjaxButton("save", form)
-        {
-            private static final long serialVersionUID = 3393631640806116694L;
-
-            @Override
-            protected void onError(AjaxRequestTarget aTarget)
-            {
-                aTarget.addChildren(getPage(), IFeedback.class);
-            }
-
-            @Override
-            protected void onAfterSubmit(AjaxRequestTarget aTarget)
-            {
-                KnowledgeBaseDetailsPanel.this.actionSave(aTarget, form);
-                success("Knowledge base settings saved.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-                applicationEventPublisherHolder.get()
-                        .publishEvent(new KnowledgeBaseConfigurationChangedEvent(this,
-                                aKbModel.getObject().getProject()));
-            }
-        });
+        queue(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
+        queue(new LambdaAjaxLink(CID_REINDEX, this::actionReindex) //
+                .add(visibleWhen(kbwModel.map($ -> $.getKb().getType() == LOCAL).orElse(false))));
+        queue(new LambdaAjaxButton<>(CID_SAVE, this::actionSave).triggerAfterSubmit());
 
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
-        add(confirmationDialog);
+        queue(confirmationDialog);
     }
 
     @Override
@@ -161,7 +139,7 @@ public class KnowledgeBaseDetailsPanel
     private void actionSave(AjaxRequestTarget aTarget, Form<KnowledgeBaseWrapper> aForm)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(findParentWithAssociatedMarkup());
+        aTarget.add(this);
 
         try {
             KnowledgeBaseWrapper kbw = kbwModel.getObject();
@@ -169,15 +147,20 @@ public class KnowledgeBaseDetailsPanel
             // if dealing with a remote repository and a non-empty URL, get a new
             // RepositoryImplConfig for the new URL; otherwise keep using the existing config
             RepositoryImplConfig cfg;
-            if (kbw.getKb().getType() == RepositoryType.REMOTE && kbw.getUrl() != null) {
+            if (kbw.getKb().getType() == REMOTE && kbw.getUrl() != null) {
                 cfg = kbService.getRemoteConfig(kbw.getUrl());
             }
             else {
                 cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             }
+
+            content.applyState();
+
             KnowledgeBase kb = kbw.getKb();
+            kb.setTraits(JSONUtil.toJsonString(kbw.getTraits()));
             kbService.updateKnowledgeBase(kb, cfg);
-            if (kb.getType() == RepositoryType.LOCAL) {
+
+            if (kb.getType() == LOCAL) {
                 kbService.defineBaseProperties(kb);
                 for (Pair<String, File> f : kbw.getFiles()) {
                     try (InputStream is = new FileInputStream(f.getValue())) {
@@ -186,16 +169,20 @@ public class KnowledgeBaseDetailsPanel
                     }
                     catch (Exception e) {
                         error("Failed to import [" + f.getKey() + "]: " + getRootCauseMessage(e));
-                        log.error("Failed to import [{}]: ", f.getKey(), e);
+                        LOG.error("Failed to import [{}]: ", f.getKey(), e);
                     }
                 }
             }
+
             modelChanged();
-            aTarget.add(this);
+
+            success("Knowledge base settings saved.");
+            applicationEventPublisherHolder.get().publishEvent(
+                    new KnowledgeBaseConfigurationChangedEvent(this, kbw.getKb().getProject()));
         }
         catch (Exception e) {
             error("Unable to save knowledge base: " + e.getLocalizedMessage());
-            log.error("Unable to save knowledge base.", e);
+            LOG.error("Unable to save knowledge base.", e);
         }
     }
 
@@ -205,14 +192,14 @@ public class KnowledgeBaseDetailsPanel
 
         KnowledgeBase kb = kbwModel.getObject().getKb();
         try {
-            log.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
+            LOG.info("Starting rebuilding full-text index of {} ... this may take a while ...", kb);
             kbService.rebuildFullTextIndex(kb);
-            log.info("Completed rebuilding full-text index of {}", kb);
+            LOG.info("Completed rebuilding full-text index of {}", kb);
             success("Completed rebuilding full-text index");
         }
         catch (Exception e) {
             error("Unable to rebuild full text index: " + e.getLocalizedMessage());
-            log.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
+            LOG.error("Unable to rebuild full text index for KB [{}]({}) in project [{}]({})",
                     kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
                     kb.getProject().getId(), e);
         }
@@ -234,7 +221,7 @@ public class KnowledgeBaseDetailsPanel
             }
             catch (RepositoryException | RepositoryConfigException e) {
                 error("Unable to remove knowledge base: " + e.getLocalizedMessage());
-                log.error("Unable to remove knowledge base.", e);
+                LOG.error("Unable to remove knowledge base.", e);
                 _target.addChildren(getPage(), IFeedback.class);
 
             }
@@ -262,7 +249,8 @@ public class KnowledgeBaseDetailsPanel
     {
         private static final long serialVersionUID = 7838564354437836375L;
 
-        private CompoundPropertyModel<KnowledgeBaseWrapper> localKbwModel;
+        private final CompoundPropertyModel<KnowledgeBaseWrapper> localKbwModel;
+        private final AccessSpecificSettingsPanel accessSpecificSettings;
 
         public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aKbwModel)
         {
@@ -270,35 +258,34 @@ public class KnowledgeBaseDetailsPanel
 
             localKbwModel = aKbwModel;
 
-            Component generalSettings = new GeneralSettingsPanel("generalSettings",
-                    Model.of(kbModel.getObject().getProject()), localKbwModel);
-            add(generalSettings);
+            var generalSettings = new GeneralSettingsPanel("generalSettings",
+                    kbModel.map(KnowledgeBase::getProject), localKbwModel);
             generalSettings.get("name").setVisible(false);
+            add(generalSettings);
 
-            Component accessSettings = new AccessSettingsPanel("accessSettings", localKbwModel);
-            add(accessSettings);
+            var accessSettings = new AccessSettingsPanel("accessSettings", localKbwModel);
             accessSettings.get("type").setEnabled(false);
             accessSettings.get("writeprotection")
-                    .setEnabled(localKbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
+                    .setEnabled(localKbwModel.getObject().getKb().getType() == LOCAL);
+            add(accessSettings);
 
-            Component accessSpecificSettings = new AccessSpecificSettingsPanel(
-                    "accessSpecificSettings", localKbwModel, Collections.emptyMap());
+            accessSpecificSettings = new AccessSpecificSettingsPanel("accessSpecificSettings",
+                    localKbwModel, emptyMap());
             add(accessSpecificSettings);
-            accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
-            accessSpecificSettings.get("localSpecificSettings:listViewContainer").setVisible(false);
 
-            Component querySettings = new QuerySettingsPanel("querySettings", localKbwModel);
-            add(querySettings);
+            add(new QuerySettingsPanel("querySettings", localKbwModel));
 
-            Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", localKbwModel);
-            add(schemaMapping);
+            add(new KnowledgeBaseIriPanel("schemaMapping", localKbwModel));
 
-            Component rootConcepts = new RootConceptsPanel("rootConcepts", localKbwModel);
-            add(rootConcepts);
+            add(new RootConceptsPanel("rootConcepts", localKbwModel));
 
-            Component additionalMatchingProperties = new AdditionalMatchingPropertiesPanel(
-                    "additionalMatchingProperties", localKbwModel);
-            add(additionalMatchingProperties);
+            add(new AdditionalMatchingPropertiesPanel("additionalMatchingProperties",
+                    localKbwModel));
+        }
+
+        public void applyState()
+        {
+            accessSpecificSettings.applyState();
         }
     }
 }
