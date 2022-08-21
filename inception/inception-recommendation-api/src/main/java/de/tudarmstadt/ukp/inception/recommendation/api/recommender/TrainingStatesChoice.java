@@ -82,7 +82,6 @@ public class TrainingStatesChoice
         setPrefix("<div class=\"form-check\">");
         setSuffix("</div>");
         setLabelPosition(AbstractChoice.LabelPosition.AFTER);
-        setChoices(asList(AnnotationDocumentState.values()));
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
     }
 
