@@ -63,8 +63,8 @@ import org.slf4j.LoggerFactory;
 
 import com.github.rjeschke.txtmark.Processor;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -298,9 +298,6 @@ public class AccessSpecificSettingsPanel
         config.initialCaption("Import knowledge base ...");
         config.showPreview(false);
         config.showUpload(false);
-        config.removeIcon("<i class=\"fa fa-remove\"></i>");
-        // config.uploadIcon("<i class=\"fa fa-upload\"></i>");
-        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         importProjectForm
                 .add(fileUpload = new BootstrapFileInputField(aFieldId, new ListModel<>(), config));
         return importProjectForm;
