@@ -60,8 +60,8 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
 
         linkCompareBehaviorDropDown = new DropDownChoice<>("linkCompareBehavior",
                 asList(LinkCompareBehavior.values()), new EnumChoiceRenderer<>(this));
-        linkCompareBehaviorDropDown.add(visibleWhen(() -> aFeature
-                .map(f -> !LinkMode.NONE.equals(f.getLinkMode())).orElse(false).getObject()));
+        linkCompareBehaviorDropDown.add(
+                visibleWhen(aFeature.map(f -> LinkMode.NONE != f.getLinkMode()).orElse(false)));
         linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
         form.add(linkCompareBehaviorDropDown);
 
