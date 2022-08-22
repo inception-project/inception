@@ -29,7 +29,9 @@ public class MemoryOAuthSessionRepository<T>
 
     public MemoryOAuthSessionRepository()
     {
-        sessions = Caffeine.newBuilder().expireAfter(new OAuthSessionExpiry<T>()).build();
+        sessions = Caffeine.newBuilder() //
+                .expireAfter(new OAuthSessionExpiry<T>()) //
+                .build();
     }
 
     public OAuthSession get(T aKey, FailableFunction<T, OAuthSession, Throwable> aSessionCreator)
@@ -55,20 +57,20 @@ public class MemoryOAuthSessionRepository<T>
         @Override
         public long expireAfterCreate(K aKey, OAuthSession aValue, long aCurrentTime)
         {
-            if (aValue.getRefreshTokenExpiresIn() > 0) {
-                return aValue.getRefreshTokenExpiresIn();
+            if (aValue.getRefreshTokenExpiresIn().negated().isNegative()) {
+                return aValue.getRefreshTokenExpiresIn().toNanos();
             }
-            return aValue.getAccessTokenExpiresIn();
+            return aValue.getAccessTokenExpiresIn().toNanos();
         }
 
         @Override
         public long expireAfterUpdate(K aKey, OAuthSession aValue, long aCurrentTime,
                 long aCurrentDuration)
         {
-            if (aValue.getRefreshTokenExpiresIn() > 0) {
-                return aValue.getRefreshTokenExpiresIn();
+            if (aValue.getRefreshTokenExpiresIn().negated().isNegative()) {
+                return aValue.getRefreshTokenExpiresIn().toNanos();
             }
-            return aValue.getAccessTokenExpiresIn();
+            return aValue.getAccessTokenExpiresIn().toNanos();
         }
 
         @Override

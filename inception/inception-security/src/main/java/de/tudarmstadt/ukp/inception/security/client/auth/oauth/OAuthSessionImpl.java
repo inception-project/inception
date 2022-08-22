@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.security.client.auth.oauth;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -28,11 +30,11 @@ public class OAuthSessionImpl
 {
     private static final long serialVersionUID = 5378118174761262214L;
 
-    private Date lastUpdate;
+    private Instant lastUpdate;
 
-    private long accessTokenExpiresIn;
+    private Duration accessTokenExpiresIn;
 
-    private long refreshTokenExpiresIn;
+    private Duration refreshTokenExpiresIn;
 
     private String accessToken;
 
@@ -96,37 +98,37 @@ public class OAuthSessionImpl
     }
 
     @Override
-    public Date getLastUpdate()
+    public Instant getLastUpdate()
     {
         return lastUpdate;
     }
 
     @Override
-    public void setLastUpdate(Date aLastUpdate)
+    public void setLastUpdate(Instant aLastUpdate)
     {
         lastUpdate = aLastUpdate;
     }
 
     @Override
-    public long getAccessTokenExpiresIn()
+    public Duration getAccessTokenExpiresIn()
     {
         return accessTokenExpiresIn;
     }
 
     @Override
-    public void setAccessTokenExpiresIn(long aAccessTokenExpiresIn)
+    public void setAccessTokenExpiresIn(Duration aAccessTokenExpiresIn)
     {
         accessTokenExpiresIn = aAccessTokenExpiresIn;
     }
 
     @Override
-    public long getRefreshTokenExpiresIn()
+    public Duration getRefreshTokenExpiresIn()
     {
         return refreshTokenExpiresIn;
     }
 
     @Override
-    public void setRefreshTokenExpiresIn(long aRefreshTokenExpiresIn)
+    public void setRefreshTokenExpiresIn(Duration aRefreshTokenExpiresIn)
     {
         refreshTokenExpiresIn = aRefreshTokenExpiresIn;
     }

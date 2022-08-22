@@ -17,21 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.security.client.auth.oauth;
 
+import static java.time.Duration.ZERO;
+
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 
 public interface OAuthSession
 {
-    Date getLastUpdate();
+    Instant getLastUpdate();
 
-    void setLastUpdate(Date aDate);
+    void setLastUpdate(Instant aDate);
 
-    long getAccessTokenExpiresIn();
+    Duration getAccessTokenExpiresIn();
 
-    void setAccessTokenExpiresIn(long aTime);
+    void setAccessTokenExpiresIn(Duration aTime);
 
-    long getRefreshTokenExpiresIn();
+    Duration getRefreshTokenExpiresIn();
 
-    void setRefreshTokenExpiresIn(long aTime);
+    void setRefreshTokenExpiresIn(Duration aTime);
 
     String getAccessToken();
 
@@ -51,10 +55,10 @@ public interface OAuthSession
 
     default void update(OAuthAccessTokenResponse response)
     {
-        setLastUpdate(new Date(response.getSubmitTime()));
+        setLastUpdate(Instant.ofEpochMilli(response.getSubmitTime()));
 
         setAccessToken(response.getAccessToken());
-        setAccessTokenExpiresIn(response.getExpiresIn());
+        setAccessTokenExpiresIn(Duration.ofSeconds(response.getExpiresIn()));
 
         if (response.getExpiresIn() > 0) {
             setAccessTokenValidUntil(
@@ -65,7 +69,7 @@ public interface OAuthSession
         }
 
         setRefreshToken(response.getRefreshToken());
-        setRefreshTokenExpiresIn(response.getRefreshExpiresIn());
+        setRefreshTokenExpiresIn(Duration.ofSeconds(response.getRefreshExpiresIn()));
 
         if (response.getRefreshExpiresIn() > 0) {
             setRefreshTokenValidUntil(
@@ -78,8 +82,8 @@ public interface OAuthSession
 
     default void clear()
     {
-        setAccessTokenExpiresIn(0);
-        setRefreshTokenExpiresIn(0);
+        setAccessTokenExpiresIn(ZERO);
+        setRefreshTokenExpiresIn(ZERO);
         setLastUpdate(null);
         setAccessToken(null);
         setAccessTokenValidUntil(null);
