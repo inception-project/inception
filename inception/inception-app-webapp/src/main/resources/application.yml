@@ -103,6 +103,10 @@ server:
     path: /whoops
 
 wicket:
+  core:
+    settings:
+      markup:
+        default-markup-encoding: UTF-8
   web:
     servlet:
       dispatcher-types: request, error, async, forward

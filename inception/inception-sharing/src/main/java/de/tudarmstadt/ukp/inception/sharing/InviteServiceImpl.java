@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.security.NameUtil.isNameValidUserName;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
@@ -129,7 +128,7 @@ public class InviteServiceImpl
 
             // Do not accept base64 values which contain characters that are not safe for file
             // names / not valid as usernames
-            if (!isNameValidUserName(randomUserId)) {
+            if (!userRepository.isValidUsername(randomUserId)) {
                 continue nextName;
             }
 

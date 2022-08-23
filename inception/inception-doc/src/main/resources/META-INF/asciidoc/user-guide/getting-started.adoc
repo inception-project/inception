@@ -31,7 +31,7 @@ Also, they may be consulted later on for a quick look-up on basic concepts.
 After the <<Introduction>>, _Getting Started_ leads you to using {product-name} in three steps:
 
 . We will see how to install it in <<Installing and starting {product-name}>>.
-. In <<Settings and Structure of an Annotation Project>>, for a basic orientation and understanding the structure of a project will be explained.
+. In <<sect_intro_settings>> and <<sect_intro_structure>>, for a basic orientation and understanding the structure of a project will be explained.
 . You will be guided to make your first annotations in <<First Annotations with {product-name}>>.
 
 = Introduction
@@ -183,6 +183,7 @@ The project has now been added and you can use it to follow the explanations of 
 
 image::getting_started_import_project.png[align="center"]
 
+[[sect_intro_settings]]
 == Project Settings
 
 In this section we will see what elements each project _has_ and where you can adjust these elements by examining the <<Project Settings>>. Note that you may have different projects in {product-name} at the same time.
@@ -423,6 +424,7 @@ We recommend using _WebAnno TSV x.x_ (where "`x.x.`" is the highest number avail
 Since it has been created specially for this application, it will provide all features required.
 However, many other formats are provided.
 
+[[sect_intro_structure]]
 == Structure of an Annotation Project
 
 Here, we will find out what you can _do_ in each project having a look at the <<Structure of an Annotation Project>>. Therefore, we examine the dashboard.

@@ -73,6 +73,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.Annotati
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
+@SpringBootTest( //
+        webEnvironment = WebEnvironment.RANDOM_PORT, //
+        properties = { //
+                "spring.main.banner-mode=off",
+                "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
 @ImportAutoConfiguration( //
         exclude = { //
                 SecurityAutoConfiguration.class, //
@@ -84,14 +89,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
                 WebMvcAutoConfiguration.class, //
                 RemoteApiAutoConfiguration.class, //
                 TestService.class })
-@SpringBootTest( //
-        webEnvironment = WebEnvironment.RANDOM_PORT, //
-        properties = { //
-                "spring.main.banner-mode=off",
-                "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
-        "de.tudarmstadt.ukp.clarin.webanno.model", //
-        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+        "de.tudarmstadt.ukp.inception", //
+        "de.tudarmstadt.ukp.clarin.webanno" })
 public class WebhookServiceTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";

@@ -49,7 +49,7 @@ Depending on the layer behavior configuration, relation annotations can stack, c
 and can cross sentence boundaries.
 
 .Self-looping relations
-To create a relation from a span to itself, press the *SHIFT* key before starting to drag the mouse
+To create a relation from a span to itself, press the kbd:[Shift] key before starting to drag the mouse
 and hold it until you release the mouse button. Or alternatively select the span and then 
 right-click on it and select **Link to...**.
 

@@ -199,6 +199,10 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
 
 <<<
@@ -237,6 +241,10 @@ include::{include-dir}formats-lif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
+include::{include-dir}formats-pdf.adoc[leveloffset=+2]
+
+include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
+
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 
 include::{include-dir}formats-tcf.adoc[leveloffset=+2]
@@ -246,6 +254,10 @@ include::{include-dir}formats-tei.adoc[leveloffset=+2]
 include::{include-dir}formats-text.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimabinarycas.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimajson.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimajson-legacy.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
 

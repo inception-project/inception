@@ -48,8 +48,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInput;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInput;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
@@ -110,9 +110,6 @@ public class StringMatchingRecommenderTraitsEditor
         config.allowedFileExtensions(asList("txt"));
         config.showPreview(false);
         config.showUpload(true);
-        config.removeIcon("<i class=\"fa fa-remove\"></i>");
-        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
-        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
         uploadField = new BootstrapFileInput("upload", new ListModel<>(), config)
         {
             private static final long serialVersionUID = -7072183979425490246L;

@@ -223,6 +223,10 @@ public abstract class AnnotationPageBase
     /**
      * Show the specified document.
      * 
+     * @param aTarget
+     *            the AJAX request target
+     * @param aDocument
+     *            the document to open
      * @return whether the document had to be switched or not.
      */
     public boolean actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -247,6 +251,17 @@ public abstract class AnnotationPageBase
 
     /**
      * Show the next document if it exists, starting in a certain begin offset
+     * 
+     * @param aTarget
+     *            the AJAX request target
+     * @param aDocument
+     *            the document to open
+     * @param aBegin
+     *            the position in the document to scroll to
+     * @param aEnd
+     *            the position in the document to scroll to
+     * @throws IOException
+     *             if there was a problem retrieving the CAS
      */
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             int aBegin, int aEnd)
@@ -291,6 +306,9 @@ public abstract class AnnotationPageBase
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
+     * 
+     * @param aTarget
+     *            the AJAX request target
      */
     public abstract void actionLoadDocument(AjaxRequestTarget aTarget);
 
@@ -299,6 +317,9 @@ public abstract class AnnotationPageBase
      * 
      * This method should be used while the editing process is ongoing. It does not upgrade the CAS
      * and it does not reset the annotator state.
+     * 
+     * @param aTarget
+     *            the AJAX request target
      */
     public abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
 
@@ -451,9 +472,6 @@ public abstract class AnnotationPageBase
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
-
-    public abstract List<DecoratedObject<SourceDocument>> listAccessibleDocuments(Project aProject,
-            User aUser);
 
     /**
      * This is a special AJAX target response listener which implements hashCode and equals. It uses

@@ -72,6 +72,9 @@
     <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.3.0</uima.version>
     <uimafit.version>3.3.0</uimafit.version>
+    <uima-json.version>0.4.0</uima-json.version>
+
+    <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.22</spring.version>
     <spring.boot.version>2.7.2</spring.boot.version>
@@ -99,8 +102,6 @@
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
     <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
-    <bootstrap.version>5.2.0</bootstrap.version>
-    <hover.version>2.0.2</hover.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -130,13 +131,55 @@
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.2.0</okio.version>
 
-    <node.version>16.14.2</node.version>
-    <npm.version>8.5.0</npm.version>
-    <typescript.version>^4.6.3</typescript.version>
-    <typescript-eslint.version>^5.20.0</typescript-eslint.version>
-    <esbuild.version>^0.14.38</esbuild.version>
-    <esbuild-sass-plugin.version>^2.2.6</esbuild-sass-plugin.version>
-    <eslint.version>^8.13.0</eslint.version>
+    <npm-install-command>ci</npm-install-command>
+
+    <node.version>16.16.0</node.version>
+    <bootstrap.version>5.2.0</bootstrap.version>
+    <animate-css.version>3.2.6</animate-css.version>
+    <chai.version>^4.3.6</chai.version>
+    <cross-env.version>^7.0.3</cross-env.version>
+    <dayjs.version>^1.11.4</dayjs.version>
+    <esbuild.version>^0.14.53</esbuild.version>
+    <esbuild-sass-plugin.version>^2.3.1</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>^0.7.1</esbuild-svelte.version>
+    <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
+    <eslint.version>^8.21.0</eslint.version>
+    <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
+    <eslint-config-standard.version>^17.0.0</eslint-config-standard.version>
+    <eslint-plugin-import.version>^2.26.0</eslint-plugin-import.version>
+    <eslint-plugin-mocha.version>^10.1.0</eslint-plugin-mocha.version>
+    <eslint-plugin-n.version>^15.2.4</eslint-plugin-n.version>
+    <eslint-plugin-promise.version>^6.0.0</eslint-plugin-promise.version>
+    <eslint-plugin-svelte3.version>^4.0.0</eslint-plugin-svelte3.version>
+    <events.version>^3.3.0</events.version>
+    <fast-json-patch.version>^3.1.1</fast-json-patch.version>
+    <hover.version>2.0.2</hover.version>
+    <types-chai.version>^4.3.1</types-chai.version>
+    <fs-extra.version>^10.1.0</fs-extra.version>
+    <jsdom.version>^20.0.0</jsdom.version>
+    <jsdom-global.version>^3.0.2</jsdom-global.version>
+    <jquery.version>^3.6.0</jquery.version>
+    <mocha.version>^10.0.0</mocha.version>
+    <mocha-junit-reporter.version>^2.0.2</mocha-junit-reporter.version>
+    <pdfjs.version>^2.14.305</pdfjs.version>
+    <recogitojs.version>^1.7.1</recogitojs.version>
+    <sass.version>^1.54.3</sass.version>
+    <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
+    <svelte-preprocess.version>^4.10.7</svelte-preprocess.version>
+    <svgdotjs-svg-js.version>^3.1.2</svgdotjs-svg-js.version>
+    <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
+    <testing-library-svelte.version>^3.1.3</testing-library-svelte.version>
+    <typescript.version>^4.7.4</typescript.version>
+    <typescript-eslint-eslint-plugin.version>^5.32.0</typescript-eslint-eslint-plugin.version>
+    <typescript-eslint-parser.version>^5.32.0</typescript-eslint-parser.version>
+    <types-events.version>^3.0.0</types-events.version>
+    <types-jquery.version>^3.5.14</types-jquery.version>
+    <types-mocha.version>^9.1.1</types-mocha.version>
+    <types-stompjs.version>^2.3.5</types-stompjs.version>
+    <types-urijs.version>^1.19.19</types-urijs.version>
+    <uuid.version>^8.3.2</uuid.version>
+    <urijs.version>^1.19.11</urijs.version>
+    <yargs.version>^17.5.1</yargs.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -421,6 +464,11 @@
         <groupId>org.apache.uima</groupId>
         <artifactId>uimafit-cpe</artifactId>
         <version>${uimafit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-io-json</artifactId>
+        <version>${uima-json.version}</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
@@ -1206,7 +1254,7 @@
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>animate.css</artifactId>
-        <version>3.2.6</version>
+        <version>${animate-css.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
@@ -2748,11 +2796,12 @@
       <id>typescript-module</id>
       <activation>
         <file>
-          <exists>src/main/ts</exists>
+          <exists>src/main/ts_template/package.json</exists>
         </file>
       </activation>
       <properties>
         <ts-build-phase>generate-resources</ts-build-phase>
+        <ts-test-phase>generate-test-resources</ts-test-phase>
         <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
         <ts-link-phase>install</ts-link-phase>
       </properties>
@@ -2837,7 +2886,6 @@
               <workingDirectory>src/main/ts</workingDirectory>
               <installDirectory>../../node</installDirectory>
               <nodeVersion>v${node.version}</nodeVersion>
-              <npmVersion>${npm.version}</npmVersion>
             </configuration>
             <executions>
               <execution>
@@ -2848,13 +2896,13 @@
                 <phase>initialize</phase>
               </execution>
               <execution>
-                <id>npm install</id>
+                <id>npm install/ci</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
-                <phase>generate-resources</phase>
+                <phase>${ts-build-phase}</phase>
                 <configuration>
-                  <arguments>install</arguments>
+                  <arguments>${npm-install-command}</arguments>
                 </configuration>
               </execution>
               <execution>

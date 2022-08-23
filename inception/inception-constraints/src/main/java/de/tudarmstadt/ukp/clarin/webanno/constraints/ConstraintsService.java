@@ -35,6 +35,9 @@ public interface ConstraintsService
 
     /**
      * Creates Constraint Set
+     * 
+     * @param aSet
+     *            the set to create/update
      */
     void createOrUpdateConstraintSet(ConstraintSet aSet);
 
@@ -49,6 +52,9 @@ public interface ConstraintsService
 
     /**
      * Remove a constraint
+     * 
+     * @param aSet
+     *            the set to remove the constraint from
      */
     void removeConstraintSet(ConstraintSet aSet);
 
@@ -62,6 +68,8 @@ public interface ConstraintsService
      * @param aSet
      *            The Constraint Set
      * @return File pointing to Constraint
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     File exportConstraintAsFile(ConstraintSet aSet) throws IOException;
 
@@ -70,6 +78,8 @@ public interface ConstraintsService
      * 
      * @param constraintSetName
      *            The name of constraint set
+     * @param aProject
+     *            a project
      * @return true if exists
      */
     boolean existConstraintSet(String constraintSetName, Project aProject);

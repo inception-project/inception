@@ -206,53 +206,34 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>npm link dependency inception-js-api</id>
+            <id>npm link dependencies</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-js-api</arguments>
+              <arguments>link @inception-project/inception-js-api @inception-project/inception-diam</arguments>
             </configuration>
           </execution>
           <execution>
-            <id>npm link dependency inception-diam</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>${ts-link-dependency-phase}</phase>
-            <configuration>
-              <arguments>link @inception-project/inception-diam</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm build:brat</id>
+            <id>npm build</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>${ts-build-phase}</phase>
             <configuration>
-              <arguments>run build:brat</arguments>
+              <arguments>run build</arguments>
             </configuration>
           </execution>
           <execution>
-            <id>npm build:brat-css</id>
+            <id>npm test</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>${ts-build-phase}</phase>
+            <phase>${ts-test-phase}</phase>
             <configuration>
-              <arguments>run build:brat-css</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm build:brat-css-minified</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>${ts-build-phase}</phase>
-            <configuration>
-              <arguments>run build:brat-css-minified</arguments>
+              <skip>${skipTests}</skip>
+              <arguments>run test</arguments>
             </configuration>
           </execution>
         </executions>

@@ -1,6 +1,7 @@
 env:
   browser: true
   es2021: true
+  mocha: true
 extends:
   - standard
 parser: '@typescript-eslint/parser'
@@ -9,4 +10,8 @@ parserOptions:
   sourceType: module
 plugins:
   - '@typescript-eslint'
-rules: {}
+  - 'chai-friendly'
+rules: {
+  "no-unused-expressions": 0,
+  "chai-friendly/no-unused-expressions": 2
+}

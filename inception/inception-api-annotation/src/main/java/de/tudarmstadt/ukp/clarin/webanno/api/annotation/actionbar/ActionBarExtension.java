@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 public interface ActionBarExtension
     extends Extension<AnnotationPageBase>
 {
+    public static final String ROLE_NAVIGATOR = "navigator";
+
     @Override
     default String getId()
     {

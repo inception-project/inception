@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_US
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FileUtils.forceDelete;
@@ -499,6 +500,12 @@ public class DocumentImportExportServiceImpl
     }
 
     @Override
+    public TypeSystemDescription getExportSpecificTypes()
+    {
+        return (TypeSystemDescription) schemaTypeSystem.clone();
+    }
+
+    @Override
     public TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException
     {
@@ -587,7 +594,8 @@ public class DocumentImportExportServiceImpl
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
         List<AnnotationLayer> layers = featuresGroupedByLayer.keySet().stream()
-                .sorted(Comparator.comparing(AnnotationLayer::getName)).collect(toList());
+                .sorted(comparing(AnnotationLayer::getName)) //
+                .collect(toList());
 
         for (var layer : layers) {
             final var layerDefFs = aCas.createFS(layerDefType);

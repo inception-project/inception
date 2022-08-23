@@ -92,6 +92,10 @@ include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 
 include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+1]
 
+include::{include-dir}settings_annotation-editor_pdf_legacy.adoc[leveloffset=+1]
+
+include::{include-dir}security-policy.adoc[leveloffset=+1]
+
 include::{include-dir}security-preauth.adoc[leveloffset=+1]
 
 include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]

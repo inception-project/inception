@@ -240,4 +240,6 @@ public interface DocumentImportExportService
      */
     TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException;
+
+    TypeSystemDescription getExportSpecificTypes();
 }

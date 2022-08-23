@@ -20,6 +20,8 @@
 <wicket:head>
 <style type="text/css">
   .page-content { overflow: auto; }
+  .document-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+  .document-table thead td, .document-table thead th{ border-bottom-width: 0 !important; }
   tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5) { text-align: left; }
   tr th:nth-child(2) { width: 80%; }
   tr th:nth-child(5) { width: 20%; }
@@ -259,16 +261,8 @@
             </button>
           </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
-            <div wicket:id="stateFilters" class="input-group justify-content-end">
-              <div class="input-group-text">
-                <i class="fas fa-filter"></i>
-              </div>
-              <wicket:container wicket:id="stateFilter">
-                <button type="button" class="btn btn-outline-secondary"
-                  wicket:id="stateFilterLink">
-                  <wicket:container wicket:id="label" />
-                </button>
-              </wicket:container>
+            <div class="d-flex flex-fill justify-content-end">
+              <div wicket:id="stateFilters" />
             </div>
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="btn-group" role="group">
@@ -306,7 +300,7 @@
         </div>
 
         <div class="card-body p-0 flex-v-container">
-          <div class="flex-content scrolling">
+          <div class="flex-content scrolling border">
             <div class="fit-child-snug">
               <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
                 wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">

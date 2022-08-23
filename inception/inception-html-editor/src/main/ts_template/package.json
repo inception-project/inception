@@ -12,18 +12,25 @@
     "build": "node build.js"
   },
   "dependencies": {
-    "jquery": "^3.6.0",
+    "jquery": "${jquery.version}",
     "@inception-project/inception-js-api": "${semver}"
   },
   "devDependencies": {
+    "cross-env": "${cross-env.version}",
     "esbuild": "${esbuild.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
     "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "@types/jquery": "^3.5.13",
-    "fs-extra": "^10.0.0",
-    "yargs": "^17.3.1"
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/jquery": "${types-jquery.version}",
+    "fs-extra": "${fs-extra.version}",
+    "yargs": "${yargs.version}"
   }
 }

@@ -63,6 +63,11 @@ public class ConfusionMatrix
     /**
      * Increment the confusion matrix entries according to a result with the given predicted and the
      * given gold label.
+     * 
+     * @param aPredictedLabel
+     *            the predicted label
+     * @param aGoldLabel
+     *            the gold label
      */
     public void incrementCounts(String aPredictedLabel, String aGoldLabel)
     {

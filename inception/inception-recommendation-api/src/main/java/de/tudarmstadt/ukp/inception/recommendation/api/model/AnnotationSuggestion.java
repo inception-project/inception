@@ -242,6 +242,8 @@ public abstract class AnnotationSuggestion
     /**
      * Determine if the given label is equal to this object's label or if they are both null
      * 
+     * @param aLabel
+     *            the label
      * @return true if both labels are null or equal
      */
     public boolean labelEquals(String aLabel)

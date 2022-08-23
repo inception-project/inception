@@ -4,32 +4,47 @@
   "author": "INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build:brat": "node build.js",
-    "build:brat-css": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
-    "build:brat-css-minified": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
+    "build": "node build.mjs",
+    "test": "mocha -r esbuild-runner-plugins/register './test/**/*.test.ts' --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile='../../../target/surefire-reports/mocha-test-report.xml'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
-    "fast-json-patch": "^3.1.0",
-    "@svgdotjs/svg.js": "^3.1.1",
-    "@svgdotjs/svg.filter.js": "^3.0.8"
+    "fast-json-patch": "${fast-json-patch.version}",
+    "@svgdotjs/svg.js": "${svgdotjs-svg-js.version}",
+    "@svgdotjs/svg.filter.js": "${svgdotjs-svg-filter-js.version}"
   },
   "devDependencies": {
+    "chai": "${chai.version}",
     "esbuild": "${esbuild.version}",
-    "eslint": "${eslint.version}",
-    "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "^10.0.0",
-    "@types/events": "^3.0.0",
-    "@types/urijs": "^1.19.11",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "@types/jquery": "^2.0.46",
+    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
-    "sass": "^1.45.1",
-    "yargs": "^17.3.1"
+    "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
+    "fs-extra": "${fs-extra.version}",
+    "mocha": "${mocha.version}",
+    "mocha-junit-reporter": "${mocha-junit-reporter.version}",
+    "typescript": "${typescript.version}",
+    "sass": "${sass.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/chai": "${types-chai.version}",
+    "@types/events": "${types-events.version}",
+    "@types/jquery": "${types-jquery.version}",
+    "@types/mocha": "${types-mocha.version}",
+    "@types/urijs": "${types-urijs.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
   }
 }
