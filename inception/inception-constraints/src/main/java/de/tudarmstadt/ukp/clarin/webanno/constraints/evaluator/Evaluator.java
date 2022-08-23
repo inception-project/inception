@@ -31,11 +31,15 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 public interface Evaluator
 {
     /**
+     * @param aContext
+     *            the context annotation
      * @param aFeature
      *            the target feature
      * @param parsedConstraints
      *            the object containing object generated after parsing rules
      * @return list of possible values based on rules
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
      */
     List<PossibleValue> generatePossibleValues(FeatureStructure aContext, String aFeature,
             ParsedConstraints parsedConstraints)

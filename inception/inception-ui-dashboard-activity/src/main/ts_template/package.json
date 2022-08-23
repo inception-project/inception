@@ -1,0 +1,51 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "mocha -r esbuild-runner-plugins/register -r jsdom-global/register './test/**/*.test.ts' --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile='../../../target/surefire-reports/mocha-test-report.xml'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "dependencies": {
+    "dayjs": "${dayjs.version}"
+  },
+  "devDependencies": {
+    "chai": "${chai.version}",
+    "esbuild": "${esbuild.version}",
+    "esbuild-svelte": "${esbuild-svelte.version}",
+    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint": "${eslint.version}",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-svelte3": "${eslint-plugin-svelte3.version}",
+    "fs-extra": "${fs-extra.version}",
+    "jsdom": "${jsdom.version}",
+    "jsdom-global": "${jsdom-global.version}",
+    "mocha": "${mocha.version}",
+    "mocha-junit-reporter": "${mocha-junit-reporter.version}",
+    "sass": "${sass.version}",
+    "svelte-preprocess": "${svelte-preprocess.version}",
+    "typescript": "${typescript.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/chai": "${types-chai.version}",
+    "@types/events": "${types-events.version}",
+    "@types/mocha": "${types-mocha.version}",
+    "@testing-library/svelte": "${testing-library-svelte.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
+  }
+}

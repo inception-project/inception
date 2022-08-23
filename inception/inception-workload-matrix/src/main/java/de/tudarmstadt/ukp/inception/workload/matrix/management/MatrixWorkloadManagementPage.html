@@ -21,6 +21,8 @@
 <wicket:head>
   <style type="text/css">
     .page-content { overflow: auto; }
+    .document-matrix thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .document-matrix thead td, .document-table thead th{ border-bottom-width: 0 !important; }
     .document-matrix tr td, .document-matrix tr th { text-align: center; }
     .document-matrix tr th { white-space: nowrap; }
     .document-matrix tr td:nth-child(3), .document-matrix tr th:nth-child(3) { text-align: left; width: 100%;}

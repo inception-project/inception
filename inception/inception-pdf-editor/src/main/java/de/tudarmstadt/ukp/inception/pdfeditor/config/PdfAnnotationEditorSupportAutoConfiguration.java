@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFacto
  */
 @Deprecated
 @Configuration
-@ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class PdfAnnotationEditorSupportAutoConfiguration
 {
     @Bean
@@ -41,6 +40,7 @@ public class PdfAnnotationEditorSupportAutoConfiguration
         return new PdfAnnotationEditorFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     public PdfFormatSupport pdfFormatSupport()
     {

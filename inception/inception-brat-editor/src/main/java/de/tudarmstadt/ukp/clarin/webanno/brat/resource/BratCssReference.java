@@ -41,6 +41,6 @@ public class BratCssReference
      */
     private BratCssReference()
     {
-        super(BratCssReference.class, "brat.css");
+        super(BratCssReference.class, "brat.min.css");
     }
 }

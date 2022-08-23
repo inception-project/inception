@@ -9,17 +9,36 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build": "esbuild index.ts --target=es6 --bundle --sourcemap --global-name=Diam --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/Diam.js",
-    "build:minified": "esbuild index.ts --minify --target=es6 --bundle --sourcemap --global-name=Diam --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/Diam.min.js"
+    "build": "node build.mjs",
+    "test": "mocha -r esbuild-runner-plugins/register './test/**/*.test.ts' --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile='../../../target/surefire-reports/mocha-test-report.xml'"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
-    "@stomp/stompjs": "^6.1.0",
-    "@types/stompjs": "^2.3.4",
-    "fast-json-patch": "^3.1.0"
+    "@stomp/stompjs": "${stomp-stompjs.version}",
+    "@types/stompjs": "${types-stompjs.version}",
+    "fast-json-patch": "${fast-json-patch.version}"
   },
   "devDependencies": {
-    "esbuild": "^0.13.12",
-    "typescript": "^4.4.2"
+    "chai": "${chai.version}",
+    "cross-env": "${cross-env.version}",
+    "esbuild": "${esbuild.version}",
+    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "fs-extra": "${fs-extra.version}",
+    "mocha": "${mocha.version}",
+    "mocha-junit-reporter": "${mocha-junit-reporter.version}",
+    "typescript": "${typescript.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/chai": "${types-chai.version}",
+    "@types/mocha": "${types-mocha.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
   }
 }

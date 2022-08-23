@@ -82,7 +82,7 @@ class UserSelectionPanel
                     builder.append(")");
                 }
                 if (!aUser.isEnabled()) {
-                    builder.append(" (disabled)");
+                    builder.append(" (deactivated)");
                 }
                 return builder.toString();
             }

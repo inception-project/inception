@@ -19,45 +19,25 @@
 
 NOTE: This functionality is only available to *curators*.
 
+== Opening a Document for Curation
+
 When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
 
-.Explanation of the project colors in the curation open document dialog
-[cols="2*"]
-|===
-| No curatable documents
-| Red
+The table reflects the state of the document. A document can be *in-progress*, *finished*, *curation-in-progress* or *curation-finished*. 
 
-| Curatable documents
-| Green
-|===
+== Curating a document
 
-.Explanation of the document colors in the curation open document dialog
-[cols="2*"]
-|===
-| New
-| Black
+On the left, there is a sidebar titled *Units*, an overview of the chosen document is displayed. Units are represented by their number inside the document. Click on a unit in order to select it and to to edit it in the central part of the page.
 
-| Annotation in progress
-| Black
-
-| Curation in progress
-| Blue
-
-| Curation finished
-| Red
-|===
-
-In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. Click on a sentence in order to select it and to to edit it in the central part of the page.
-
-The sentences are shown using different colors that indicate their state. Since the calculation of
+The units are shown using different colors that indicate their state. Since the calculation of
 the state can take significant time, it is not updated as changes are made in the main editor pane.
-To update the coloring of the sentence overview, use the *Refresh* button. When switching between
+To update the coloring of the unit overview, use the *Refresh* button. When switching between
 documents, the overview is automatically refreshed.
 
-NOTE: In order for the sentence overview to consider a sentence as *Curated*, the curation pane must
+NOTE: In order for the unit overview to consider a unit as *Curated*, the curation pane must
 contain an annotation for all positions that any of the annotators have annotated. This implies
 that the *Curated* state requires the curator to have made an annotation. It is not possible
-at this time to mark a sentence as curated in which an annotator has made an annotator, but the
+at this time to mark a unit as curated in which an annotator has made an annotator, but the
 curator has not (e.g. because the curator considers the annotator's annotation to be entirely
 wrong and misplaced).
 

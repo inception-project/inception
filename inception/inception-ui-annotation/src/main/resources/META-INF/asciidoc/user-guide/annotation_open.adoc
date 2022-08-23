@@ -16,20 +16,14 @@
 // limitations under the License.
 ////
 
-= Opening a Document
+= Opening a Document for Annotation
 
-When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
-a document within the project. If you want to open a different project or document later, click on 
-*Open* to open the dialog.
+When navigating to the *Annotation* page, a dialogue opens that allows you to select the document you want to annotate. If you want to access this dialog later, use the *Open* button in the action bar.
 
 image::open_doc.png[align="center"]
 
-Projects appear as folders, and contain the documents of the project. Double-click on a document to 
-open it for annotation. Document names written in black show that the document has not been opened 
-by the current user, blue font means that it has already been opened, whereas red font indicates 
-that the document has already been marked as *done*.
+The keyboard focus is automatically placed into the search field when the dialog opens. You can use it to conveniently search for documents by name. The table below is automatically filtered according to your input.
+If only one document is left, you can press kbd:[ENTER] to open it. Otherwise, you can click on a document in the table to open it.
+The *Filter* buttons allow to filter the table by document state.
 
-Users that are managers can additionally open other users' documents to view their annotations but cannot change them.
-This is done by selecting the project, user and then document in the described dialogue. The user's own name is listed at the top and marked _(me)_.
-
-image::open_doc_manager.png[align="center"]
+Users that are managers can additionally open other users' documents to view their annotations but cannot change them. This is down via the *User* dropdown menu. The user's own name is listed at the top and marked _(me)_.

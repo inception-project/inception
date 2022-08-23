@@ -17,8 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
+import static java.time.Duration.ofMillis;
+
+import java.time.Duration;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxCallListener;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.attributes.IAjaxCallListener;
+import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
@@ -26,15 +34,18 @@ import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxFormComponentUpdatingBehavior
     extends AjaxFormComponentUpdatingBehavior
+    implements HtmlElementEvents
 {
     private static final long serialVersionUID = -8496566485055940375L;
 
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
+    private ThrottlingSettings throttlingSettings;
+    private int keyCode;
 
     public LambdaAjaxFormComponentUpdatingBehavior()
     {
-        this("change", null, null);
+        this(CHANGE_EVENT, null, null);
     }
 
     public LambdaAjaxFormComponentUpdatingBehavior(String aEvent)
@@ -53,6 +64,47 @@ public class LambdaAjaxFormComponentUpdatingBehavior
         super(aEvent);
         action = aAction;
         exceptionHandler = aExceptionHandler;
+    }
+
+    public LambdaAjaxFormComponentUpdatingBehavior withDebounce(Duration aDuration)
+    {
+        throttlingSettings = new ThrottlingSettings(ofMillis(200), true);
+        return this;
+    }
+
+    /**
+     * @param aKeyCode
+     *            a keycode
+     * @return the behavior for chaining
+     * @see KeyCodes
+     */
+    public LambdaAjaxFormComponentUpdatingBehavior withKeyCode(int aKeyCode)
+    {
+        keyCode = aKeyCode;
+        return this;
+    }
+
+    @Override
+    protected void updateAjaxAttributes(AjaxRequestAttributes attributes)
+    {
+        super.updateAjaxAttributes(attributes);
+        attributes.setThrottlingSettings(throttlingSettings);
+
+        if (keyCode != 0) {
+            IAjaxCallListener listener = new AjaxCallListener()
+            {
+                private static final long serialVersionUID = 3873282863927185983L;
+
+                @Override
+                public CharSequence getPrecondition(Component component)
+                {
+                    return String.join("\n", //
+                            "var keycode = Wicket.Event.keyCode(attrs.event);", //
+                            "return keycode == " + keyCode + ";");
+                }
+            };
+            attributes.getAjaxCallListeners().add(listener);
+        }
     }
 
     @Override

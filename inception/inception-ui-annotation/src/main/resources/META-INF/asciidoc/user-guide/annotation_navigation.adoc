@@ -35,30 +35,30 @@ You can also use the following keyboard assignments in order to navigate only us
 |====
 | Key | Action 
 
-| *HOME*
-| jump to first sentence
+| kbd:[Home]
+| go to the start of the document
 
-| *END*
-| jump to last sentence
+| kbd:[End]
+| go to the end of the document
 
-| *PAGE DOWN*
-| move to the next page, if not in the last page already
+| kbd:[Page-Down]
+| go to the next page, if not in the last page already
 
-| *PAGE UP*
-| move to previous page, if not already in the first page
+| kbd:[Page-Up]
+| go to previous page, if not already in the first page
 
-| *SHIFT+PAGE DOWN*
+| kbd:[Shift + Page-Down]
 | go to next document in project, if available
 
-| *SHIFT+PAGE UP* 
+| kbd:[Shift + Page-Up]
 | go to previous document in project, if available
 
-| *SHIFT+CURSOR LEFT* 
+| kbd:[Shuft + Cursor-Left]
 | go to previous annotation on the current layer, if available
 
-| *SHIFT+CURSOR RIGHT* 
+| kbd:[Shift + Cursor-Right]
 | go to next annotation on the current layer, if available
 
-| *SHIFT+DELETE* 
+| kbd:[Shift + Delete]
 | delete the currently selected annotation
 |====

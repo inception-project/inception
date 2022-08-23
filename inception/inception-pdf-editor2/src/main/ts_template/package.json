@@ -1,40 +1,48 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "node build.js"
-  },
+  "author": "hshindo, yoheiMune, INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/inception-project/inception.git"
   },
-  "author": "hshindo, yoheiMune, INCEpTION Team",
-  "license": "(MIT AND Apache-2.0)",
   "bugs": {
     "url": "https://github.com/inception-project/issues"
   },
+  "scripts": {
+    "build": "node build.mjs"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
-    "events": "^3.3.0",
-    "urijs": "^1.19.11",
-    "pdfjs-dist": "^2.14.305",
-    "yargs": "^17.3.1"
+    "events": "${events.version}",
+    "urijs": "${urijs.version}",
+    "pdfjs-dist": "${pdfjs.version}"
   },
   "devDependencies": {
+    "chai": "${chai.version}",
     "esbuild": "${esbuild.version}",
+    "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "esbuild-plugin-alias": "^0.2.1",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
+    "fs-extra": "${fs-extra.version}",
+    "mocha": "${mocha.version}",
+    "sass": "${sass.version}",
     "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "^10.0.0",
-    "@types/events": "^3.0.0",
-    "@types/urijs": "^1.19.11",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.2",
-    "eslint-plugin-promise": "^6.0.0"
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/chai": "${types-chai.version}",
+    "@types/events": "${types-events.version}",
+    "@types/jquery": "${types-jquery.version}",
+    "@types/mocha": "${types-mocha.version}",
+    "@types/urijs": "${types-urijs.version}",
+    "uuid": "${uuid.version}",
+    "yargs": "${yargs.version}"
   }
 }

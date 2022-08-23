@@ -257,7 +257,7 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>npm link dependency</id>
+            <id>npm link dependencies</id>
             <goals>
               <goal>npm</goal>
             </goals>

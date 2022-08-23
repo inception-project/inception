@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_documentmetadata]]
-=== Document Metadata Settings
+= Document Metadata Settings
 
 This section describes the global settings related to the document metadata annotation support.
 

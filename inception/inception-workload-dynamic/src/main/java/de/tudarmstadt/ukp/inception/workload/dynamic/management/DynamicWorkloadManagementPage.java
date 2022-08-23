@@ -51,10 +51,8 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.markup.html.form.DateTextField;
-import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
@@ -69,9 +67,6 @@ import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -99,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
@@ -111,9 +105,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
+import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
@@ -147,8 +144,6 @@ public class DynamicWorkloadManagementPage
     private static final long serialVersionUID = 1180618893870240262L;
 
     public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
-
-    private static final String MID_LABEL = "label";
 
     // Forms
     private Form<Void> searchForm;
@@ -210,28 +205,15 @@ public class DynamicWorkloadManagementPage
     public void commonInit()
     {
         // Header of the page
-        Label name = new Label("name", currentProject.getObject().getName());
-        add(name);
+        queue(new Label("name", currentProject.getObject().getName()));
 
         // Data Provider for the table
-        dataProvider = makeAnnotationQueueOverviewDataProvider();
+        dataProvider = new AnnotationQueueOverviewDataProvider(getQueue());
 
         // Columns of the table
-        // Each column creates TableMetaData
-        List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState().symbol())
-        {
-            private static final long serialVersionUID = -2103168638018286379L;
-
-            @Override
-            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> item,
-                    String componentId, IModel<AnnotationQueueItem> rowModel)
-            {
-                item.add(new Label(componentId, getDataModel(rowModel))
-                        .setEscapeModelStrings(false));
-            }
-        });
+        var columns = new ArrayList<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>>();
+        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> item.getState().symbol()));
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), DOCUMENT,
                 AnnotationQueueItem::getSourceDocumentName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), ASSIGNED,
@@ -242,38 +224,17 @@ public class DynamicWorkloadManagementPage
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
 
-        table = new DataTable<>("dataTable", columns, dataProvider, 20);
+        table = new DataTable<>("dataTable", columns, dataProvider, 100);
         table.setOutputMarkupId(true);
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
-
-        add(table);
+        queue(table);
 
         // Add StateFilters
-        stateFilters = new WebMarkupContainer("stateFilters");
-        var listview = new ListView<>("stateFilter", asList(SourceDocumentState.values()))
-        {
-            private static final long serialVersionUID = -2292408105823066466L;
-
-            @Override
-            protected void populateItem(ListItem<SourceDocumentState> aItem)
-            {
-                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
-                        (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
-
-                link.add(new Label(MID_LABEL, aItem.getModel().map( //
-                        SourceDocumentState::symbol).orElse("")).setEscapeModelStrings(false));
-                link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
-                        .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
-                aItem.add(link);
-            }
-        };
-
+        stateFilters = new SourceDocumentStateFilterPanel("stateFilters",
+                () -> dataProvider.getFilterState().getStates());
         stateFilters.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
-
-        stateFilters = new WebMarkupContainer("stateFilters");
         stateFilters.setOutputMarkupPlaceholderTag(true);
-        stateFilters.add(listview);
         add(stateFilters);
 
         // Add forms of the dropdowns
@@ -669,18 +630,13 @@ public class DynamicWorkloadManagementPage
     {
         dataProvider.setAnnotationQueueItems(getQueue());
         aTarget.add(table);
+
     }
 
-    private void actionApplyStateFilter(AjaxRequestTarget aTarget, SourceDocumentState aState)
+    @OnEvent
+    public void onSourceDocumentFilterStateChanged(SourceDocumentFilterStateChanged aEvent)
     {
-        List<SourceDocumentState> selectedStates = dataProvider.getFilterState().getStates();
-        if (selectedStates.contains(aState)) {
-            selectedStates.remove(aState);
-        }
-        else {
-            selectedStates.add(aState);
-        }
-        aTarget.add(table, stateFilters);
+        aEvent.getTarget().add(table, stateFilters);
     }
 
     private List<AnnotationQueueItem> getQueue()
@@ -706,11 +662,6 @@ public class DynamicWorkloadManagementPage
                     traits.getDefaultNumberOfAnnotations(), traits.getAbandonationTimeout()));
         }
         return queue;
-    }
-
-    private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
-    {
-        return new AnnotationQueueOverviewDataProvider(getQueue());
     }
 
     @OnEvent

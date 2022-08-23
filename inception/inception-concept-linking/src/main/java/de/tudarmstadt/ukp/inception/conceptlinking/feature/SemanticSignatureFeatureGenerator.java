@@ -257,6 +257,8 @@ public class SemanticSignatureFeatureGenerator
 
     /**
      *
+     * @param aConn
+     *            a repository connection
      * @param aIri
      *            an IRI, e.g. "http://www.wikidata.org/entity/Q3"
      * @param aLimit

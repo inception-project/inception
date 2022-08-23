@@ -5,32 +5,32 @@
   "license": "(MIT AND Apache-2.0)",
   "private": true,
   "homepage": "https://github.com/inception-project/inception#readme",
-  "bugs": {
-    "url": "https://github.com/inception-project/issues"
-  },
   "scripts": {
     "build": "node build.js"
   },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
-    "events": "^3.3.0",
+    "events": "${events.version}",
     "toml": "github:yoheiMune/toml-node",
-    "urijs": "^1.19.11",
+    "urijs": "${urijs.version}",
     "pdfjs-dist": "^2.14.305"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "eslint": "${eslint.version}",
+    "eslint-config-standard": "${eslint-config-standard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "fs-extra": "${fs-extra.version}",
     "typescript": "${typescript.version}",
-    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
-    "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "fs-extra": "^10.0.0",
-    "@types/events": "^3.0.0",
-    "@types/urijs": "^1.19.11",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.2",
-    "eslint-plugin-promise": "^6.0.0",
-    "yargs": "^17.3.1"
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/events": "${types-events.version}",
+    "@types/urijs": "${types-urijs.version}",
+    "yargs": "${yargs.version}"
   }
 }

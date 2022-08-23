@@ -17,13 +17,44 @@
  */
 package de.tudarmstadt.ukp.inception.support.text;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.function.Predicate;
+
 public class TextUtils
 {
+    public static final char SHY = '\u00AD';
+    public static final char NBSP = '\u00A0';
+
+    public static boolean containsNoCharacterMatching(String aValue,
+            Predicate<Character> aPredicate)
+    {
+        return !containsAnyCharacterMatching(aValue, aPredicate);
+    }
+
+    public static boolean containsAnyCharacterMatching(String aValue,
+            Predicate<Character> aPredicate)
+    {
+        var iter = new StringCharacterIterator(aValue);
+        for (char c = iter.first(); c != CharacterIterator.DONE; c = iter.next()) {
+            if (aPredicate.test(c)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isControlCharacter(char aChar)
+    {
+        return aChar < 32 || aChar == 127 || (aChar >= 128 && aChar <= 159);
+    }
+
     public static String sanitizeVisibleText(String aText, char aReplacementCharacter)
     {
         // NBSP is recognized by Firefox as a proper addressable character in
         // SVGText.getNumberOfChars()
-        char whiteplaceReplacementChar = '\u00A0'; // NBSP
+        char whiteplaceReplacementChar = NBSP; // NBSP
         if (aReplacementCharacter > 0) {
             whiteplaceReplacementChar = aReplacementCharacter;
         }

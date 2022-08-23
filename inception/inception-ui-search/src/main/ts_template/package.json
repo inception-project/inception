@@ -11,6 +11,6 @@
   },
   "external": {},
   "devDependencies": {
-    "sass": "^1.45.1"
+    "sass": "${sass.version}"
   }
 }

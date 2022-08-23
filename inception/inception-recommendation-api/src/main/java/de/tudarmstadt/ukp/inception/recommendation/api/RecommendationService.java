@@ -83,11 +83,15 @@ public interface RecommendationService
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 
     /**
+     * @param aProject
+     *            the project
      * @return all annotation layers in the given project which have any enabled recommenders.
      */
     List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject);
 
     /**
+     * @param aRecommender
+     *            the recommender
      * @return the recommender factory for the given recommender. This can be empty if e.g. a
      *         recommender is only available behind a feature flag that was once enabled and now is
      *         disabled.
@@ -149,16 +153,25 @@ public interface RecommendationService
      * @param annotationService
      *            the annotation schema service
      * @param aDocument
+     *            the source document to which the annotations belong
      * @param aUsername
+     *            the annotator user to whom the annotations belong
      * @param aCas
+     *            the CAS containing the annotations
      * @param layer
+     *            the layer to upsert
      * @param aFeature
+     *            the feature on the layer that should be upserted
      * @param aValue
+     *            the new value
      * @param aBegin
+     *            the position of the annotation (in case it is created)
      * @param aEnd
+     *            the position of the annotation (in case it is created)
      *
      * @return the CAS address of the created/updated annotation.
      * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
     int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
