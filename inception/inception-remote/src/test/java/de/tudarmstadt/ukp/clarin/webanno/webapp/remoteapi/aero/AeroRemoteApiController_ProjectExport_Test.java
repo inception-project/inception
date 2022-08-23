@@ -39,31 +39,17 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = { //
-        LiquibaseAutoConfiguration.class, EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
@@ -71,19 +57,11 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
                 "repository.path="
                         + AeroRemoteApiController_ProjectExport_Test.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
-@Import({ //
-        ProjectServiceAutoConfiguration.class, //
-        ProjectExportServiceAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class, //
-        CasStorageServiceAutoConfiguration.class, //
-        CurationDocumentServiceAutoConfiguration.class, //
-        TextFormatsAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
-        MatrixWorkloadManagerAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
-        RepositoryAutoConfiguration.class, //
-        SecurityAutoConfiguration.class, //
-        RemoteApiAutoConfiguration.class })
+@EnableAutoConfiguration( //
+        exclude = { //
+                LiquibaseAutoConfiguration.class, //
+                EventLoggingAutoConfiguration.class, //
+                SearchServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
