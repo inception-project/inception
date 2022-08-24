@@ -19,10 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public interface RedoableAnnotationAction
 {
+    VID getVid();
+
     void redo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException;
 }

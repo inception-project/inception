@@ -21,7 +21,6 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -32,18 +31,15 @@ public class CreateSpanAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    private Range range;
-
     public CreateSpanAnnotationAction(SpanCreatedEvent aEvent)
     {
         super(aEvent, new VID(aEvent.getAnnotation()));
-        range = aEvent.getAffectedRange();
     }
 
     @Override
     public void undo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
     {
-        var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
+        var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
     }
 
@@ -51,6 +47,6 @@ public class CreateSpanAnnotationAction
     public void redo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        adapter.add(getDocument(), getUser(), aCas, range.getBegin(), range.getEnd());
+        adapter.restore(getDocument(), getUser(), aCas, getVid());
     }
 }

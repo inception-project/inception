@@ -17,15 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
-public interface UndoableAnnotationAction
+public class DeleteRelationAnnotationAction
+    extends AnnotationAction_ImplBase
+    implements RedoableAnnotationAction, UndoableAnnotationAction
 {
-    VID getVid();
+    private static final long serialVersionUID = -6268918582061776355L;
 
-    void undo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException;
+    public DeleteRelationAnnotationAction(RelationDeletedEvent aEvent)
+    {
+        super(aEvent, new VID(aEvent.getAnnotation()));
+    }
+
+    @Override
+    public void undo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    {
+        aCas.addFsToIndexes(selectFsByAddr(aCas, getVid().getId()));
+    }
+
+    @Override
+    public void redo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    {
+        var adapter = aSchemaService.getAdapter(getLayer());
+        adapter.delete(getDocument(), getUser(), aCas, getVid());
+    }
 }

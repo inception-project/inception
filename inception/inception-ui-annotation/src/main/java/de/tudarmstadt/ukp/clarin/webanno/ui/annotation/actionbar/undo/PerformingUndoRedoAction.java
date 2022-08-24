@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
 import org.apache.wicket.MetaDataKey;
 
-public class PerformingUndoAction
+public class PerformingUndoRedoAction
     extends MetaDataKey<Boolean>
 {
     private static final long serialVersionUID = -4244853609075676915L;
-    public final static PerformingUndoAction INSTANCE = new PerformingUndoAction();
+    public final static PerformingUndoRedoAction INSTANCE = new PerformingUndoRedoAction();
 }

@@ -88,10 +88,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-preferences</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-log</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
