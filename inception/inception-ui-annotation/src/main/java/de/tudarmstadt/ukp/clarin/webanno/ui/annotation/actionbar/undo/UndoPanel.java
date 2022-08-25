@@ -21,9 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUt
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -31,7 +29,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.danekja.java.util.function.serializable.SerializableFunction;
+import org.danekja.java.util.function.serializable.SerializableBiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -44,8 +42,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.De
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UpdateFeatureValueAnnotationAction;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
@@ -62,37 +62,51 @@ public class UndoPanel
 
     private @SpringBean AnnotationSchemaService schemaService;
 
-    private final Deque<UndoableAnnotationAction> undoableActions;
-    private final Deque<RedoableAnnotationAction> redoableActions;
-    private final Map<Class<? extends AnnotationEvent>, SerializableFunction<AnnotationEvent, UndoableAnnotationAction>> undoHandlers;
+    private final Map<Class<? extends AnnotationEvent>, SerializableBiFunction<AnnotationSchemaService, AnnotationEvent, UndoableAnnotationAction>> undoHandlers;
 
     public UndoPanel(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
-        undoableActions = new LinkedList<>();
-        redoableActions = new LinkedList<>();
         undoHandlers = new HashMap<>();
 
         registerHandler(SpanCreatedEvent.class, CreateSpanAnnotationAction::new);
         registerHandler(SpanDeletedEvent.class, DeleteSpanAnnotationAction::new);
         registerHandler(RelationCreatedEvent.class, CreateRelationAnnotationAction::new);
         registerHandler(RelationDeletedEvent.class, DeleteRelationAnnotationAction::new);
+        registerHandler(FeatureValueUpdatedEvent.class, UpdateFeatureValueAnnotationAction::new);
 
         queue(new LambdaAjaxLink("undo", this::actionUndo));
         queue(new LambdaAjaxLink("redo", this::actionRedo));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends AnnotationEvent> void registerHandler(Class<T> aEventClass,
-            SerializableFunction<T, UndoableAnnotationAction> aHandler)
+            SerializableBiFunction<AnnotationSchemaService, T, UndoableAnnotationAction> aHandler)
     {
-        undoHandlers.put(aEventClass, (SerializableFunction) aHandler);
+        undoHandlers.put(aEventClass, (SerializableBiFunction) aHandler);
+    }
+
+    private UndoRedoState getState()
+    {
+        // We keep the state in the page because the undo panel is part of the list view in the
+        // action bar and looses its state when the page is reloaded
+        UndoRedoState state = getPage().getMetaData(UndoRedoStateKey.INSTANCE);
+        if (state == null) {
+            state = new UndoRedoState();
+            getPage().setMetaData(UndoRedoStateKey.INSTANCE, state);
+        }
+        return state;
+    }
+
+    private void clearState()
+    {
+        getPage().setMetaData(UndoRedoStateKey.INSTANCE, null);
     }
 
     private void actionUndo(AjaxRequestTarget aTarget)
     {
-        if (undoableActions.isEmpty()) {
+        if (getState().getUndoableActions().isEmpty()) {
             info("There are no un-doable actions");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -103,17 +117,22 @@ public class UndoPanel
 
             AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
-            var action = undoableActions.poll();
+            var action = getState().getUndoableActions().poll();
+
+            // select + scroll to (on create)
+            // only scroll to and maybe highlight where the annotation was (on delete)
+            // nothing (???)
 
             var cas = page.getEditorCas();
-            action.undo(schemaService, cas);
+            var postAction = action.undo(schemaService, cas);
             page.writeEditorCas(cas);
 
             if (action instanceof RedoableAnnotationAction) {
-                redoableActions.push((RedoableAnnotationAction) action);
+                getState().getRedoableActions().push((RedoableAnnotationAction) action);
             }
 
-            page.getAnnotationActionHandler().actionSelectAndJump(aTarget, action.getVid());
+            postAction.ifPresent($ -> $.apply(this, aTarget));
+
             page.actionRefreshDocument(aTarget);
         }
         catch (IOException | AnnotationException e) {
@@ -126,7 +145,7 @@ public class UndoPanel
 
     private void actionRedo(AjaxRequestTarget aTarget)
     {
-        if (redoableActions.isEmpty()) {
+        if (getState().getRedoableActions().isEmpty()) {
             info("There are no re-doable actions");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -137,17 +156,18 @@ public class UndoPanel
 
             AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
-            var action = redoableActions.poll();
+            var action = getState().getRedoableActions().poll();
 
             var cas = page.getEditorCas();
-            action.redo(schemaService, cas);
+            var postAction = action.redo(schemaService, cas);
             page.writeEditorCas(cas);
 
             if (action instanceof UndoableAnnotationAction) {
-                undoableActions.push((UndoableAnnotationAction) action);
+                getState().getUndoableActions().push((UndoableAnnotationAction) action);
             }
 
-            page.getAnnotationActionHandler().actionSelectAndJump(aTarget, action.getVid());
+            postAction.ifPresent($ -> $.apply(this, aTarget));
+
             page.actionRefreshDocument(aTarget);
         }
         catch (IOException | AnnotationException e) {
@@ -161,8 +181,7 @@ public class UndoPanel
     @OnEvent
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
-        redoableActions.clear();
-        undoableActions.clear();
+        clearState();
     }
 
     @OnEvent
@@ -173,12 +192,11 @@ public class UndoPanel
             return;
         }
 
-        redoableActions.clear();
-
         var handler = undoHandlers.get(aEvent.getClass());
 
         if (handler != null) {
-            undoableActions.push(handler.apply(aEvent));
+            getState().getRedoableActions().clear();
+            getState().getUndoableActions().push(handler.apply(schemaService, aEvent));
         }
     }
 }

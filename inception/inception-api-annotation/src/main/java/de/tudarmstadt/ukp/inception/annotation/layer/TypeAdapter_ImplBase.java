@@ -119,14 +119,15 @@ public abstract class TypeAdapter_ImplBase
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
     {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
         FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 
-        Object oldValue = getValue(fs, aFeature);
+        var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
-        featureSupportRegistry.findExtension(aFeature).orElseThrow().setFeatureValue(aCas, aFeature,
-                aAddress, aValue);
+        featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
 
-        Object newValue = getValue(fs, aFeature);
+        var newValue = featureSupport.getFeatureValue(aFeature, fs);
 
         if (!Objects.equals(oldValue, newValue)) {
             publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
@@ -153,6 +154,7 @@ public abstract class TypeAdapter_ImplBase
         return FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {

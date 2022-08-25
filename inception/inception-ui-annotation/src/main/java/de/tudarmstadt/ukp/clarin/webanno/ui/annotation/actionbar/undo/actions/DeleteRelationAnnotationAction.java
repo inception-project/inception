@@ -17,36 +17,37 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public class DeleteRelationAnnotationAction
-    extends AnnotationAction_ImplBase
-    implements RedoableAnnotationAction, UndoableAnnotationAction
+    extends CreateRelationAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    public DeleteRelationAnnotationAction(RelationDeletedEvent aEvent)
+    public DeleteRelationAnnotationAction(AnnotationSchemaService aSchemaService,
+            RelationEvent aEvent)
     {
-        super(aEvent, new VID(aEvent.getAnnotation()));
+        super(aSchemaService, aEvent);
     }
 
     @Override
-    public void undo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+        throws AnnotationException
     {
-        aCas.addFsToIndexes(selectFsByAddr(aCas, getVid().getId()));
+        return super.redo(aSchemaService, aCas);
     }
 
     @Override
-    public void redo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
+        throws AnnotationException
     {
-        var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.delete(getDocument(), getUser(), aCas, getVid());
+        return super.undo(aSchemaService, aCas);
     }
 }

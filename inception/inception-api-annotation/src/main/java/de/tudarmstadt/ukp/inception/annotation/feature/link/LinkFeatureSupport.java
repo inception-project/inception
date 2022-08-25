@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.text.WordUtils;
@@ -251,36 +252,44 @@ public class LinkFeatureSupport
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ArrayList<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
     {
-        if (aValue instanceof ArrayFS) {
-            ArrayFS array = (ArrayFS) aValue;
-
-            Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
-            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-            Feature targetFeat = linkType
-                    .getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
-
-            ArrayList<LinkWithRoleModel> links = new ArrayList<>();
-            for (FeatureStructure link : array.toArray()) {
-                LinkWithRoleModel m = new LinkWithRoleModel();
-                m.role = link.getStringValue(roleFeat);
-                m.targetAddr = ICasUtil.getAddr(link.getFeatureValue(targetFeat));
-                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
-                links.add(m);
-            }
-
-            return links;
-        }
-        else if (aValue == null) {
+        if (aValue == null) {
             return new ArrayList<>();
         }
-        else {
+
+        FeatureStructure[] values = null;
+        if (aValue instanceof ArrayFS) {
+            values = ((ArrayFS<?>) aValue).toArray();
+        }
+
+        if (aValue instanceof Collection) {
+            values = ((Collection<FeatureStructure>) aValue).stream()
+                    .toArray(FeatureStructure[]::new);
+        }
+
+        if (values == null) {
             throw new IllegalArgumentException(
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
+
+        Type linkType = aCAS.getTypeSystem().getType(aFeature.getLinkTypeName());
+        Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+        Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+
+        ArrayList<LinkWithRoleModel> links = new ArrayList<>();
+        for (FeatureStructure link : values) {
+            LinkWithRoleModel m = new LinkWithRoleModel();
+            m.role = link.getStringValue(roleFeat);
+            m.targetAddr = ICasUtil.getAddr(link.getFeatureValue(targetFeat));
+            m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
+            links.add(m);
+        }
+
+        return links;
     }
 
     @Override

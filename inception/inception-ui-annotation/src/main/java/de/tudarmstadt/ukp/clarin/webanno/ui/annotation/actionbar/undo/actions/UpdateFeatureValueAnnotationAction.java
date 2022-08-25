@@ -17,51 +17,73 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
-public class CreateSpanAnnotationAction
+public class UpdateFeatureValueAnnotationAction
     extends AnnotationAction_ImplBase
     implements RedoableAnnotationAction, UndoableAnnotationAction
 {
-    private static final long serialVersionUID = -6268918582061776355L;
+    private final AnnotationFeature feature;
+    private final Serializable oldValue;
+    private final Serializable newValue;
 
-    private final Range range;
-
-    public CreateSpanAnnotationAction(AnnotationSchemaService aSchemaService, SpanEvent aEvent)
+    public UpdateFeatureValueAnnotationAction(AnnotationSchemaService aSchemaService,
+            FeatureValueUpdatedEvent aEvent)
     {
-        super(aEvent, new VID(aEvent.getAnnotation()));
+        super(aEvent, new VID(aEvent.getFS()));
 
-        range = new Range(aEvent.getAnnotation());
+        feature = aEvent.getFeature();
+
+        Object eventOldValue = aEvent.getOldValue();
+        if (eventOldValue == null || eventOldValue instanceof Serializable) {
+            oldValue = (Serializable) eventOldValue;
+        }
+        else {
+            oldValue = null;
+        }
+
+        Object eventNewValue = aEvent.getNewValue();
+        if (eventNewValue == null || eventNewValue instanceof Serializable) {
+            newValue = (Serializable) eventNewValue;
+        }
+        else {
+            newValue = null;
+        }
     }
+
+    private static final long serialVersionUID = -1475379306317223468L;
 
     @Override
     public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.delete(getDocument(), getUser(), aCas, getVid());
-        return Optional
-                .of(new PostActionScrollToAndHighlight(getDocument(), range, "Span deleted"));
+        adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
+                oldValue);
+        return Optional.of(new PostActionScrollToAndSelect(getVid(),
+                "Feature value of [" + feature.getUiName() + "] restored"));
     }
 
     @Override
     public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
         throws AnnotationException
     {
-        var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        adapter.restore(getDocument(), getUser(), aCas, getVid());
-        return Optional.of(new PostActionScrollToAndSelect(getVid(), "Span restored"));
+        var adapter = aSchemaService.getAdapter(getLayer());
+        adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
+                newValue);
+        return Optional.of(new PostActionScrollToAndSelect(getVid(),
+                "Feature value of [" + feature.getUiName() + "] set"));
     }
+
 }

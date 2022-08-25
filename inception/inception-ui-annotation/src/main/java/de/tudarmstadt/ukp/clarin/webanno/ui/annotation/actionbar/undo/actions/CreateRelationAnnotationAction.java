@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEvent;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -32,22 +37,32 @@ public class CreateRelationAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    public CreateRelationAnnotationAction(RelationCreatedEvent aEvent)
+    private final Range range;
+
+    public CreateRelationAnnotationAction(AnnotationSchemaService aSchemaService,
+            RelationEvent aEvent)
     {
         super(aEvent, new VID(aEvent.getAnnotation()));
+
+        range = new Range(aEvent.getSourceAnnotation());
     }
 
     @Override
-    public void undo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+        throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
+        return Optional
+                .of(new PostActionScrollToAndHighlight(getDocument(), range, "Relation deleted"));
     }
 
     @Override
-    public void redo(AnnotationSchemaService aSchemaService, CAS aCas) throws AnnotationException
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
+        throws AnnotationException
     {
-        var fs = selectFsByAddr(aCas, getVid().getId());
-        aCas.addFsToIndexes(fs);
+        var adapter = (RelationAdapter) aSchemaService.getAdapter(getLayer());
+        adapter.restore(getDocument(), getUser(), aCas, getVid());
+        return Optional.of(new PostActionScrollToAndSelect(getVid(), "Relation restored"));
     }
 }
