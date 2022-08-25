@@ -38,13 +38,38 @@ public class UndoRedoState
         redoableActions = new LinkedList<>();
     }
 
-    public Deque<RedoableAnnotationAction> getRedoableActions()
+    public void pushRedoable(RedoableAnnotationAction aRedo)
     {
-        return redoableActions;
+        redoableActions.push(aRedo);
     }
 
-    public Deque<UndoableAnnotationAction> getUndoableActions()
+    public RedoableAnnotationAction popRedoable()
     {
-        return undoableActions;
+        return redoableActions.pop();
+    }
+
+    public boolean hasRedoableActions()
+    {
+        return !redoableActions.isEmpty();
+    }
+
+    public void clearRedoableActions()
+    {
+        redoableActions.clear();
+    }
+
+    public void pushUndoable(UndoableAnnotationAction aRedo)
+    {
+        undoableActions.push(aRedo);
+    }
+
+    public UndoableAnnotationAction popUndoable()
+    {
+        return undoableActions.pop();
+    }
+
+    public boolean hasUndoableActions()
+    {
+        return !undoableActions.isEmpty();
     }
 }

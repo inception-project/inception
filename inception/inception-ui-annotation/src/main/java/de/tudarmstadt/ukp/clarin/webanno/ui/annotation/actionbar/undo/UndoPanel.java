@@ -120,7 +120,7 @@ public class UndoPanel
 
     private void actionUndo(AjaxRequestTarget aTarget)
     {
-        if (getState().getUndoableActions().isEmpty()) {
+        if (!getState().hasUndoableActions()) {
             info("There are no un-doable actions");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -131,7 +131,7 @@ public class UndoPanel
 
             AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
-            var action = getState().getUndoableActions().poll();
+            var action = getState().popUndoable();
 
             // select + scroll to (on create)
             // only scroll to and maybe highlight where the annotation was (on delete)
@@ -142,7 +142,7 @@ public class UndoPanel
             page.writeEditorCas(cas);
 
             if (action instanceof RedoableAnnotationAction) {
-                getState().getRedoableActions().push((RedoableAnnotationAction) action);
+                getState().pushRedoable((RedoableAnnotationAction) action);
             }
 
             postAction.ifPresent($ -> $.apply(this, aTarget));
@@ -159,7 +159,7 @@ public class UndoPanel
 
     private void actionRedo(AjaxRequestTarget aTarget)
     {
-        if (getState().getRedoableActions().isEmpty()) {
+        if (!getState().hasRedoableActions()) {
             info("There are no re-doable actions");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -170,14 +170,14 @@ public class UndoPanel
 
             AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
-            var action = getState().getRedoableActions().poll();
+            var action = getState().popRedoable();
 
             var cas = page.getEditorCas();
             var postAction = action.redo(schemaService, cas);
             page.writeEditorCas(cas);
 
             if (action instanceof UndoableAnnotationAction) {
-                getState().getUndoableActions().push((UndoableAnnotationAction) action);
+                getState().pushUndoable((UndoableAnnotationAction) action);
             }
 
             postAction.ifPresent($ -> $.apply(this, aTarget));
@@ -209,8 +209,8 @@ public class UndoPanel
         var handler = undoHandlers.get(aEvent.getClass());
 
         if (handler != null) {
-            getState().getRedoableActions().clear();
-            getState().getUndoableActions().push(handler.apply(schemaService, aEvent));
+            getState().clearRedoableActions();
+            getState().pushUndoable(handler.apply(schemaService, aEvent));
         }
     }
 }
