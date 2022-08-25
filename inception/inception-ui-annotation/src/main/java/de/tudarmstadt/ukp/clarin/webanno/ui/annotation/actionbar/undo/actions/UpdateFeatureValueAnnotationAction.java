@@ -71,8 +71,9 @@ public class UpdateFeatureValueAnnotationAction
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
                 oldValue);
-        return Optional.of(new PostActionScrollToAndSelect(getVid(),
-                "Feature value of [" + feature.getUiName() + "] restored"));
+        return Optional
+                .of(new PostActionScrollToAndSelect(getVid(), "[" + feature.getLayer().getUiName()
+                        + " feature value of [" + feature.getUiName() + "] restored"));
     }
 
     @Override
@@ -82,8 +83,9 @@ public class UpdateFeatureValueAnnotationAction
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
                 newValue);
-        return Optional.of(new PostActionScrollToAndSelect(getVid(),
-                "Feature value of [" + feature.getUiName() + "] set"));
+        return Optional
+                .of(new PostActionScrollToAndSelect(getVid(), "[" + feature.getLayer().getUiName()
+                        + "] feature value of [" + feature.getUiName() + "] set"));
     }
 
 }

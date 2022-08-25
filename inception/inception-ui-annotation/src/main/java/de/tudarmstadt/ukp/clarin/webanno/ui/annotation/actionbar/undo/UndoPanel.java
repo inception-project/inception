@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil.handleException;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Ctrl;
+import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -36,6 +39,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateRelationAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteRelationAnnotationAction;
@@ -52,6 +56,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import wicket.contrib.input.events.key.KeyType;
 
 public class UndoPanel
     extends Panel
@@ -76,8 +81,11 @@ public class UndoPanel
         registerHandler(RelationDeletedEvent.class, DeleteRelationAnnotationAction::new);
         registerHandler(FeatureValueUpdatedEvent.class, UpdateFeatureValueAnnotationAction::new);
 
-        queue(new LambdaAjaxLink("undo", this::actionUndo));
-        queue(new LambdaAjaxLink("redo", this::actionRedo));
+        queue(new LambdaAjaxLink("undo", this::actionUndo)
+                .add(new InputBehavior(new KeyType[] { Ctrl, KeyType.z }, click)));
+        queue(new LambdaAjaxLink("redo", this::actionRedo)
+                .add(new InputBehavior(new KeyType[] { Shift, Ctrl, KeyType.z }, click)));
+
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

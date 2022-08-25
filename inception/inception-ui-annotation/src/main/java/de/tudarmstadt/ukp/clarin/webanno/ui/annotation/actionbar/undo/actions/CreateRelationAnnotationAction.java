@@ -53,8 +53,8 @@ public class CreateRelationAnnotationAction
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
-        return Optional
-                .of(new PostActionScrollToAndHighlight(getDocument(), range, "Relation deleted"));
+        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range,
+                "[" + getLayer().getUiName() + "] deleted"));
     }
 
     @Override
@@ -63,6 +63,7 @@ public class CreateRelationAnnotationAction
     {
         var adapter = (RelationAdapter) aSchemaService.getAdapter(getLayer());
         adapter.restore(getDocument(), getUser(), aCas, getVid());
-        return Optional.of(new PostActionScrollToAndSelect(getVid(), "Relation restored"));
+        return Optional.of(new PostActionScrollToAndSelect(getVid(),
+                "[" + getLayer().getUiName() + "] restored"));
     }
 }
