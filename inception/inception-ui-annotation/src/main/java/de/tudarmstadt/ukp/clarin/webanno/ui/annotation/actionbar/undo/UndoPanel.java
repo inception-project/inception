@@ -71,7 +71,9 @@ public class UndoPanel
 
     private @SpringBean AnnotationSchemaService schemaService;
 
-    private final Map<Class<? extends AnnotationEvent>, SerializableBiFunction<AnnotationSchemaService, AnnotationEvent, UndoableAnnotationAction>> undoHandlers;
+    private final Map<Class<? extends AnnotationEvent>, //
+            SerializableBiFunction<AnnotationSchemaService, AnnotationEvent, //
+                    UndoableAnnotationAction>> undoHandlers;
 
     public UndoPanel(String aId, AnnotationPageBase aPage)
     {
