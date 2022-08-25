@@ -27,6 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Un
 public class UndoRedoState
     implements Serializable
 {
+    private static final int MAX_HISTORY_SIZE = 100;
+
     private static final long serialVersionUID = 6899707476888758707L;
 
     private final Deque<UndoableAnnotationAction> undoableActions;
@@ -41,6 +43,10 @@ public class UndoRedoState
     public void pushRedoable(RedoableAnnotationAction aRedo)
     {
         redoableActions.push(aRedo);
+
+        while (redoableActions.size() > MAX_HISTORY_SIZE) {
+            redoableActions.removeLast();
+        }
     }
 
     public RedoableAnnotationAction popRedoable()
@@ -61,6 +67,10 @@ public class UndoRedoState
     public void pushUndoable(UndoableAnnotationAction aRedo)
     {
         undoableActions.push(aRedo);
+
+        while (undoableActions.size() > 100) {
+            undoableActions.removeLast();
+        }
     }
 
     public UndoableAnnotationAction popUndoable()
