@@ -278,8 +278,8 @@ public class KnowledgeBaseDetailsPanel
             Component accessSettings = new AccessSettingsPanel("accessSettings", localKbwModel);
             add(accessSettings);
             accessSettings.get("type").setEnabled(false);
-            accessSettings.get("writeprotection")
-                    .setEnabled(localKbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
+            accessSettings.get("writeprotection").setEnabled(
+                    localKbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
 
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
                     "accessSpecificSettings", localKbwModel, Collections.emptyMap());

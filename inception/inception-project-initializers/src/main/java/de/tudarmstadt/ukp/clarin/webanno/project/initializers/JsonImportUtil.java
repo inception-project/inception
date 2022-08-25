@@ -149,8 +149,8 @@ public class JsonImportUtil
      *            the project into which to import the tagset
      * @return a unique tag set name
      */
-    public static String copyTagSetName(AnnotationSchemaService aAnnotationService,
-            String aName, Project aProject)
+    public static String copyTagSetName(AnnotationSchemaService aAnnotationService, String aName,
+            Project aProject)
     {
         String betterTagSetName = "copy_of_" + aName;
         int i = 1;

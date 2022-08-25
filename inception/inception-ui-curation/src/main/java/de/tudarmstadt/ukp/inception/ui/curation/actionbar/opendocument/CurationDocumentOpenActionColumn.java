@@ -44,8 +44,8 @@ public class CurationDocumentOpenActionColumn
 
     private MarkupContainer fragmentProvider;
 
-    public CurationDocumentOpenActionColumn(MarkupContainer aFragmentProvider, IModel<String> aTitle,
-            CurationDocumentTableSortKeys aSortProperty)
+    public CurationDocumentOpenActionColumn(MarkupContainer aFragmentProvider,
+            IModel<String> aTitle, CurationDocumentTableSortKeys aSortProperty)
     {
         super(aTitle, aSortProperty);
         fragmentProvider = aFragmentProvider;
