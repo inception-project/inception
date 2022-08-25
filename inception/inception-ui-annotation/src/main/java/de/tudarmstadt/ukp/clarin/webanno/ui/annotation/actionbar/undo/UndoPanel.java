@@ -40,6 +40,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateChainLinkAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateChainSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateRelationAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteRelationAnnotationAction;
@@ -50,6 +52,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Up
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
@@ -79,6 +83,8 @@ public class UndoPanel
         registerHandler(SpanDeletedEvent.class, DeleteSpanAnnotationAction::new);
         registerHandler(RelationCreatedEvent.class, CreateRelationAnnotationAction::new);
         registerHandler(RelationDeletedEvent.class, DeleteRelationAnnotationAction::new);
+        registerHandler(ChainSpanCreatedEvent.class, CreateChainSpanAnnotationAction::new);
+        registerHandler(ChainLinkCreatedEvent.class, CreateChainLinkAnnotationAction::new);
         registerHandler(FeatureValueUpdatedEvent.class, UpdateFeatureValueAnnotationAction::new);
 
         queue(new LambdaAjaxLink("undo", this::actionUndo)
