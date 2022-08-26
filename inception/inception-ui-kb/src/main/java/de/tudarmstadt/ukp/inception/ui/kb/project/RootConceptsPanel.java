@@ -107,7 +107,7 @@ public class RootConceptsPanel
         }
 
         concepts.getObject().add(concept);
-        kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
+        kbModel.getObject().getKb().setRootConcepts(concepts.getObject());
         newConceptIRIString.setObject(null);
 
         aTarget.add(this);
@@ -116,7 +116,7 @@ public class RootConceptsPanel
     private void actionRemoveConcept(AjaxRequestTarget aTarget, String iri)
     {
         concepts.getObject().remove(iri);
-        kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
+        kbModel.getObject().getKb().setRootConcepts(concepts.getObject());
         aTarget.add(this);
     }
 
