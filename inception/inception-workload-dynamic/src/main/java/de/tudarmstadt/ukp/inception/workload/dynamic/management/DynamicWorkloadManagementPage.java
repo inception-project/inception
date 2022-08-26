@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQu
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 
@@ -426,7 +427,7 @@ public class DynamicWorkloadManagementPage
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);
         workflowChoices.setChoices(workflowExtensionPoint.getTypes().stream() //
-                .sorted(Comparator.comparing(WorkflowType::getUiName))
+                .sorted(comparing(WorkflowType::getUiName)) //
                 .map(WorkflowType::getWorkflowExtensionId) //
                 .collect(toList()));
         settingsForm.add(workflowChoices);

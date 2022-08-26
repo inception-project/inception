@@ -445,4 +445,17 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220818-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>
