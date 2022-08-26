@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.model.RemoteRepositoryTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
 
 /**
  * Wrapper class around {@link KnowledgeBase}.<br>
@@ -39,9 +46,24 @@ public class KnowledgeBaseWrapper
 {
     private static final long serialVersionUID = 4639345743242356537L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseWrapper.class);
+
+    private final List<Pair<String, File>> files = new ArrayList<>();
+
     private KnowledgeBase kb;
     private String url;
-    private final List<Pair<String, File>> files = new ArrayList<>();
+    private AuthenticationType authenticationType;
+    private RemoteRepositoryTraits traits = new RemoteRepositoryTraits();
+
+    public KnowledgeBaseWrapper()
+    {
+        // Nothing to do
+    }
+
+    public KnowledgeBaseWrapper(KnowledgeBase aKb)
+    {
+        setKb(aKb);
+    }
 
     public KnowledgeBase getKb()
     {
@@ -51,6 +73,33 @@ public class KnowledgeBaseWrapper
     public void setKb(KnowledgeBase aKB)
     {
         kb = aKB;
+        if (kb != null && kb.getType() != null) {
+            switch (kb.getType()) {
+            case LOCAL:
+                // Local repos have no traits
+                break;
+            case REMOTE:
+                traits = new RemoteRepositoryTraits();
+                if (kb.getTraits() != null) {
+                    try {
+                        traits = fromJsonString(RemoteRepositoryTraits.class, kb.getTraits());
+                    }
+                    catch (IOException e) {
+                        LOG.error("Unable to read traits - resetting them", e);
+                    }
+                }
+                if (traits.getAuthentication() != null) {
+                    authenticationType = traits.getAuthentication().getType();
+                }
+                else {
+                    authenticationType = null;
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unsupported knowledge base type [" + kb.getType() + "]");
+            }
+        }
     }
 
     public String getUrl()
@@ -61,6 +110,26 @@ public class KnowledgeBaseWrapper
     public void setUrl(String aUrl)
     {
         url = aUrl;
+    }
+
+    public RemoteRepositoryTraits getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(RemoteRepositoryTraits aTraits)
+    {
+        traits = aTraits;
+    }
+
+    public AuthenticationType getAuthenticationType()
+    {
+        return authenticationType;
+    }
+
+    public void setAuthenticationType(AuthenticationType aAuthenticationType)
+    {
+        authenticationType = aAuthenticationType;
     }
 
     /**

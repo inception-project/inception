@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<html xmlns:wicket="http://wicket.apache.org">
+
+<body>
+  <wicket:panel>
+    <!-- Import -->
+    <div wicket:enclosure="uploadForm">
+      <div class="row form-row">
+        <label class="col-form-label col-sm-3">
+          <wicket:message key="kb.details.local.contents" />
+        </label>
+        <div class="col-sm-9">
+          <div style="flex-basis: 30%; min-width: 20em;">
+            <form wicket:id="uploadForm">
+              <input type="file" wicket:id="uploadField" multiple="multiple" />
+            </form>
+          </div>
+          <div id="supportedList">
+            <small class="text-muted">
+              <wicket:message key="kb.local.fileupload.supported.list" />
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <wicket:enclosure wicket:id="clear">
+      <div class="row form-row">
+        <label class="col-sm-3 col-form-label">
+          <wicket:message key="kb.details.local.contents.clear" />
+        </label>
+        <div class="col-sm-9">
+          <input type="button" wicket:id="clear" class="btn btn-danger" wicket:message="value:kb.clear" />
+        </div>
+      </div>
+    </wicket:enclosure>
+    
+    <!-- Export -->
+    <div class="row form-row" wicket:enclosure="exportButtons">
+      <label class="col-form-label col-sm-3">
+        <wicket:message key="kb.details.local.contents.export" />
+      </label>
+      <div class="col-sm-9">
+        <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+          <div wicket:id="exportButtons">
+            <button wicket:id="link" type="button" class="btn btn-secondary"><i class="fas fa-download"
+                aria-hidden="true"></i>
+              <wicket:container wicket:id="label"></wicket:container>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row form-row" wicket:id="listViewContainer" wicket:enclosure="listViewContainer">
+      <label class="col-form-label col-sm-3">
+        <wicket:message key="kb.wizard.steps.local.predefinedKBs" />
+      </label>
+      <div class="col-sm-9">
+        <div class="btn-group-vertical">
+          <wicket:container wicket:id="localKBs">
+            <button wicket:id="suggestionLink" type="button" class="btn btn-outline-secondary">
+              <wicket:container wicket:id="suggestionLabel" />
+            </button>
+          </wicket:container>
+        </div>
+        <button wicket:id="addKbButton" type="button" class="btn btn-secondary">
+          <wicket:container wicket:id="addKbLabel"></wicket:container>
+        </button>
+      </div>
+    </div>
+
+    <hr />
+
+    <div wicket:id="infoContainer" />
+  </wicket:panel>
+</body>
+
+</html>

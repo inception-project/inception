@@ -19,15 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -69,6 +70,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 public class KnowledgeBaseCreationWizard
     extends BootstrapWizard
 {
+    private static final long serialVersionUID = -3459525951269555510L;
 
     /*-
      * Wizard structure as of 2018-02 (use http://asciiflow.com):
@@ -82,8 +84,7 @@ public class KnowledgeBaseCreationWizard
      *             LOCAL
      */
 
-    private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseCreationWizard.class);
-    private static final long serialVersionUID = -3459525951269555510L;
+    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseCreationWizard.class);
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbProperties;
@@ -112,12 +113,12 @@ public class KnowledgeBaseCreationWizard
         try {
             profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles().entrySet().stream()
                     .filter(e -> !e.getValue().isDisabled())
-                    .sorted(Comparator.comparing(e -> e.getValue().getName()))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    .sorted(comparing(e -> e.getValue().getName()))
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
         catch (IOException e) {
             error("Unable to read knowledge base profiles " + e.getMessage());
-            log.error("Unable to read knowledge base profiles ", e);
+            LOG.error("Unable to read knowledge base profiles ", e);
         }
         return profiles;
     }
@@ -196,34 +197,16 @@ public class KnowledgeBaseCreationWizard
         {
             super(previousStep, "Create Knowledgebase", "", aKbModel);
             kbModel = aKbModel;
-            kbModel.getObject().clearFiles();
 
             panel = new AccessSpecificSettingsPanel("accessSpecificSettings", kbModel,
                     knowledgeBaseProfiles);
             add(panel);
-            panel.get("localSpecificSettings:exportButtons").setVisible(false);
-            panel.get("localSpecificSettings:clear").setVisible(false);
         }
 
         @Override
         public void applyState()
         {
-            // We need to handle this manually here because the onSubmit method of the upload
-            // form is only called *after* the upload component has already been detached and
-            // as a consequence all uploaded files have been cleared
-            panel.handleUploadedFiles();
-
-            switch (kbModel.getObject().getKb().getType()) {
-            case LOCAL:
-                // local knowledge bases are editable by default
-                kbModel.getObject().getKb().setReadOnly(false);
-                break;
-            case REMOTE:
-                // MB: as of 2018-02, all remote knowledge bases are read-only, hence the
-                // PermissionsStep is currently not shown. Therefore, set read-only property here
-                // manually.
-                kbModel.getObject().getKb().setReadOnly(true);
-            }
+            panel.applyState();
         }
 
         @Override
@@ -267,42 +250,56 @@ public class KnowledgeBaseCreationWizard
         @Override
         public void applyState()
         {
-            KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
-
-            wrapper.getKb().setProject(projectModel.getObject());
-
             try {
+                KnowledgeBaseWrapper wrapper = wizardDataModel.getObject();
                 KnowledgeBase kb = wrapper.getKb();
 
+                kb.setProject(projectModel.getObject());
+                kb.setTraits(JSONUtil.toJsonString(wrapper.getTraits()));
+
                 // set up the repository config, then register the knowledge base
-                RepositoryImplConfig cfg;
                 switch (kb.getType()) {
                 case LOCAL:
-                    cfg = kbService.getNativeConfig();
-                    kbService.registerKnowledgeBase(kb, cfg);
-                    success("Created knowledge base: " + kb.getName());
-                    kbService.defineBaseProperties(kb);
-                    for (Pair<String, File> f : wrapper.getFiles()) {
-                        try (InputStream is = new FileInputStream(f.getValue())) {
-                            kbService.importData(kb, f.getValue().getName(), is);
-                            success("Imported: " + f.getKey());
-                        }
-                        catch (Exception e) {
-                            error("Failed to import: " + f.getKey());
-                        }
-                    }
+                    finalizeLocalRepositoryConfiguration(wrapper, kb);
                     break;
                 case REMOTE:
-                    cfg = kbService.getRemoteConfig(wrapper.getUrl());
-                    kbService.registerKnowledgeBase(kb, cfg);
-                    success("Created knowledge base: " + kb.getName());
+                    finalizeRemoteRepositoryConfiguration(wrapper, kb);
                     break;
                 default:
-                    throw new IllegalStateException();
+                    throw new IllegalStateException(
+                            "Unsupported knowledge base type [" + kb.getType() + "]");
                 }
             }
             catch (Exception e) {
                 error("Failed to create knowledge base: " + e.getMessage());
+            }
+        }
+
+        private void finalizeRemoteRepositoryConfiguration(KnowledgeBaseWrapper wrapper,
+                KnowledgeBase kb)
+        {
+            RepositoryImplConfig cfg = kbService.getRemoteConfig(wrapper.getUrl());
+            kbService.registerKnowledgeBase(kb, cfg);
+            success("Created knowledge base: " + kb.getName());
+        }
+
+        private void finalizeLocalRepositoryConfiguration(KnowledgeBaseWrapper wrapper,
+                KnowledgeBase kb)
+        {
+            RepositoryImplConfig cfg = kbService.getNativeConfig();
+            kbService.registerKnowledgeBase(kb, cfg);
+            success("Created knowledge base: " + kb.getName());
+
+            kbService.defineBaseProperties(kb);
+
+            for (Pair<String, File> f : wrapper.getFiles()) {
+                try (InputStream is = new FileInputStream(f.getValue())) {
+                    kbService.importData(kb, f.getValue().getName(), is);
+                    success("Imported: " + f.getKey());
+                }
+                catch (Exception e) {
+                    error("Failed to import: " + f.getKey());
+                }
             }
         }
 

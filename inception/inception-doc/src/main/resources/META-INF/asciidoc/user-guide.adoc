@@ -50,6 +50,8 @@ include::{include-dir}annotation_open.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
 
+include::{include-dir}annotation_undo.adoc[leveloffset=+2]
+
 include::{include-dir}annotation_create-annotations.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+3]
