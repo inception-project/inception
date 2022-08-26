@@ -18,8 +18,18 @@
 
 = Relations
 
-In order to create relation annotation, a corresponding relation layer needs to be defined between
-the source and target spans. If this is the case, there are two ways of creating a relation:
+In order to create relation annotation, a corresponding relation layer needs to be defined
+and attached to the span layer you want to connect the relations to. An example of a relation
+layer is the built-in **Dependency** relation layer which connects to the **Part of speech**
+span layer, so you can create relations immediately on the **Part of speech** layer to try it out.
+
+If you want to create relations on other span layers, you need to create a new layer of type 
+**Relation** in the  <<sect_projects_layers,layer settings>>. Attach the new relation layer
+to a span layer. Note that only a single relation layer can connect to any given span layer.
+
+Then you can start connecting the source and target annotations using relations. 
+
+There are two ways of creating a relation:
 
 * for short-distance relations, you can conveniently create relation by left-clicking on a span and
   while keeping the mouse button pressed moving the cursor over to the target span. A rubber-band
