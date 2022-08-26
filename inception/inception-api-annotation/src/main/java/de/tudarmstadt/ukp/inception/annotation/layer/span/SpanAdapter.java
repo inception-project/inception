@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -43,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -134,14 +134,7 @@ public class SpanAdapter
         // If if the layer attaches to a feature, then set the attach-feature to the newly
         // created annotation.
         if (getAttachFeatureName() != null) {
-            Type theType = CasUtil.getType(aCas, getAttachTypeName());
-            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
-            if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
-                throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
-                        + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
-            }
-            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0).setFeatureValue(attachFeature,
-                    newAnnotation);
+            attach(aCas, aBegin, aEnd, newAnnotation);
         }
 
         aCas.addFsToIndexes(newAnnotation);
@@ -152,20 +145,54 @@ public class SpanAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            Type theType = getType(aCas, getAttachTypeName());
-            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
-            if (attachFeature != null) {
-                selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
-                        .setFeatureValue(attachFeature, null);
-            }
+            detatch(aCas, fs);
         }
 
         publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
+    }
+
+    public AnnotationFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
+        throws AnnotationException
+    {
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+
+        if (getAttachFeatureName() != null) {
+            attach(aCas, fs.getBegin(), fs.getEnd(), fs);
+        }
+
+        aCas.addFsToIndexes(fs);
+
+        publishEvent(new SpanCreatedEvent(this, aDocument, aUsername, getLayer(), fs));
+
+        return fs;
+    }
+
+    private void attach(CAS aCas, int aBegin, int aEnd, AnnotationFS newAnnotation)
+        throws IllegalPlacementException
+    {
+        Type theType = getType(aCas, getAttachTypeName());
+        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        if (selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
+            throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
+                    + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
+        }
+        selectCovered(aCas, theType, aBegin, aEnd).get(0).setFeatureValue(attachFeature,
+                newAnnotation);
+    }
+
+    private void detatch(CAS aCas, AnnotationFS fs)
+    {
+        Type theType = getType(aCas, getAttachTypeName());
+        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+        if (attachFeature != null) {
+            selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
+                    .setFeatureValue(attachFeature, null);
+        }
     }
 
     @Override

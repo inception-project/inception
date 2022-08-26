@@ -528,8 +528,13 @@ public class KnowledgeBaseServiceImpl
                 .build();
 
         // Check if there is already a session we can use
-        var session = oAuthSessionRepository.get(kb,
-                _kb -> new OAuthSessionImpl(client.getToken()));
+        var session = oAuthSessionRepository.get(kb, _kb -> {
+            log.debug("[{}] Creating new OAuth session as [{}]...", _kb, auth.getClientId());
+            var _session = new OAuthSessionImpl(client.getToken());
+            log.debug("[{}] OAuth session as [{}] will expire in [{}]", _kb, auth.getClientId(),
+                    _session.getAccessTokenExpiresIn());
+            return _session;
+        });
 
         try {
             client.refreshSessionIfNecessary(session);

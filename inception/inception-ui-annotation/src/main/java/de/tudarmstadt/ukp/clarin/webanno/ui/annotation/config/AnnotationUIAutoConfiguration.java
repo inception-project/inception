@@ -26,15 +26,22 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.AnnotationUndoActionBarExtension;
 
 @ConditionalOnWebApplication
 @Configuration
 public class AnnotationUIAutoConfiguration
 {
     @Bean
-    AnnotationPageMenuItem annotationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            ServletContext aServletContext)
+    public AnnotationPageMenuItem annotationPageMenuItem(UserDao aUserRepo,
+            ProjectService aProjectService, ServletContext aServletContext)
     {
         return new AnnotationPageMenuItem(aUserRepo, aProjectService, aServletContext);
+    }
+
+    @Bean
+    public AnnotationUndoActionBarExtension annotationUndoActionBarExtension()
+    {
+        return new AnnotationUndoActionBarExtension();
     }
 }

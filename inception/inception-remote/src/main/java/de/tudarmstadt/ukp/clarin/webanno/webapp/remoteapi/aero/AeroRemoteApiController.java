@@ -186,7 +186,13 @@ public class AeroRemoteApiController
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
         throws IOException
     {
-        LOG.error(aException.getMessage(), aException);
+        if (LOG.isDebugEnabled()) {
+            LOG.error(aException.getMessage(), aException);
+        }
+        else {
+            LOG.error(aException.getMessage());
+        }
+
         return ResponseEntity.status(aException.getStatus()).contentType(APPLICATION_JSON)
                 .body(new RResponse<>(ERROR, aException.getMessage()));
     }
@@ -195,6 +201,7 @@ public class AeroRemoteApiController
     public ResponseEntity<RResponse<Void>> handleException(Exception aException) throws IOException
     {
         LOG.error(aException.getMessage(), aException);
+
         return ResponseEntity.status(INTERNAL_SERVER_ERROR).contentType(APPLICATION_JSON)
                 .body(new RResponse<>(ERROR, "Internal server error: " + aException.getMessage()));
     }

@@ -92,8 +92,8 @@ public class AnnotationDocumentsExporterTest
         driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
-                schemaService);
+        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+                null, schemaService);
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);

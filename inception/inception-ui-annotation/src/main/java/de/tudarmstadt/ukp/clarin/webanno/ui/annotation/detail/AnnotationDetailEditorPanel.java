@@ -856,9 +856,8 @@ public abstract class AnnotationDetailEditorPanel
         // remove the entire annotation.
         if (featureState.value == null) {
             TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(aCas,
-                    state.getSelection().getAnnotation().getId());
-            deleteAnnotation(aCas, state, fs, featureState.feature.getLayer(), adapter);
+            deleteAnnotation(aCas, state, state.getSelection().getAnnotation(),
+                    featureState.feature.getLayer(), adapter);
         }
 
         // Move on to the next token
@@ -1101,8 +1100,8 @@ public abstract class AnnotationDetailEditorPanel
 
         CAS cas = getEditorCas();
 
-        int addr = state.getSelection().getAnnotation().getId();
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, addr);
+        VID vid = state.getSelection().getAnnotation();
+        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
@@ -1123,23 +1122,23 @@ public abstract class AnnotationDetailEditorPanel
             deleteAnnotationDialog.setContentModel(
                     new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
                             .setParameters(attachStatus.attachCount));
-            deleteAnnotationDialog.setConfirmAction(_target -> doDelete(_target, layer, addr));
+            deleteAnnotationDialog.setConfirmAction(_target -> doDelete(_target, layer, vid));
             deleteAnnotationDialog.show(aTarget);
             return;
         }
 
-        doDelete(aTarget, layer, addr);
+        doDelete(aTarget, layer, vid);
     }
 
-    private void doDelete(AjaxRequestTarget aTarget, AnnotationLayer layer, int aAddr)
+    private void doDelete(AjaxRequestTarget aTarget, AnnotationLayer layer, VID aVid)
         throws IOException, AnnotationException
     {
         CAS cas = getEditorCas();
         AnnotatorState state = getModelObject();
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, aAddr);
+        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, aVid.getId());
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
-        deleteAnnotation(cas, state, fs, layer, adapter);
+        deleteAnnotation(cas, state, aVid, layer, adapter);
 
         // Store CAS again
         editorPage.writeEditorCas(cas);
@@ -1155,11 +1154,13 @@ public abstract class AnnotationDetailEditorPanel
         reset(aTarget);
     }
 
-    private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
-            AnnotationLayer layer, TypeAdapter adapter)
+    private void deleteAnnotation(CAS aCas, AnnotatorState state, VID aVid, AnnotationLayer layer,
+            TypeAdapter adapter)
     {
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+
+        AnnotationFS fs = selectAnnotationByAddr(aCas, aVid.getId());
 
         // == DELETE ATTACHED SPANS ==
         // This case is currently not implemented because WebAnno currently does not allow to
@@ -1178,8 +1179,8 @@ public abstract class AnnotationDetailEditorPanel
                 TypeAdapter attachedSpanLayerAdapter = annotationService
                         .findAdapter(state.getProject(), attachedFs);
 
-                deleteAnnotation(aCas, state, attachedFs, attachedSpanLayerAdapter.getLayer(),
-                        attachedSpanLayerAdapter);
+                deleteAnnotation(aCas, state, new VID(attachedFs),
+                        attachedSpanLayerAdapter.getLayer(), attachedSpanLayerAdapter);
             }
         }
 
@@ -1214,7 +1215,7 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas, new VID(fs));
+        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas, aVid);
 
         info(generateMessage(adapter.getLayer(), null, true));
     }
