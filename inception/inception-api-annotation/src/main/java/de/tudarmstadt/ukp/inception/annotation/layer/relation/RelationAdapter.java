@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -170,6 +171,18 @@ public class RelationAdapter
         aCas.removeFsFromIndexes(fs);
         publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
                 getTargetAnnotation(fs), getSourceAnnotation(fs)));
+    }
+
+    public AnnotationFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
+        throws AnnotationException
+    {
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        aCas.addFsToIndexes(fs);
+
+        publishEvent(new RelationCreatedEvent(this, aDocument, aUsername, getLayer(), fs,
+                getTargetAnnotation(fs), getSourceAnnotation(fs)));
+
+        return fs;
     }
 
     public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)

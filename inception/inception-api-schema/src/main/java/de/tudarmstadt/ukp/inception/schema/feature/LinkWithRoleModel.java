@@ -19,9 +19,14 @@ package de.tudarmstadt.ukp.inception.schema.feature;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
  * Represents a link with a role in the UI.
  */
+@JsonSerialize
+@JsonInclude(value = JsonInclude.Include.NON_DEFAULT)
 public class LinkWithRoleModel
     implements Serializable
 {
