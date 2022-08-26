@@ -138,6 +138,7 @@ public class KnowledgeBaseExporter
                     kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
             exportedKB.setMaxResults(kb.getMaxResults());
             exportedKB.setSubPropertyIri(kb.getSubPropertyIri());
+            exportedKB.setTraits(kb.getTraits());
             exportedKnowledgeBases.add(exportedKB);
 
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -228,6 +229,7 @@ public class KnowledgeBaseExporter
             kb.setUseFuzzy(exportedKB.isUseFuzzy());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
+            kb.setTraits(exportedKB.getTraits());
 
             if (exportedKB.getRootConcepts() != null) {
                 kb.setRootConcepts(exportedKB.getRootConcepts());
