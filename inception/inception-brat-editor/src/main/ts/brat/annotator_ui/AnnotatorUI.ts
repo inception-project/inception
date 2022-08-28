@@ -56,6 +56,7 @@ export class AnnotatorUI {
   private arcDragJustStarted = false
   private spanDragJustStarted = false
   private dragStartedAt?: MouseEvent & { target: Element }
+  private selectionInProgress = false
 
   private spanOptions?: { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
   private arcOptions?: { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
@@ -177,9 +178,6 @@ export class AnnotatorUI {
     }
   }
 
-  /**
-   * @deprecated to be removed without replacement (https://github.com/inception-project/inception/issues/3315)
-   */
   private customAction (evt: MouseEvent & { target: Element }) {
     if (evt.target.getAttribute('data-span-id')) {
       this.customSpanAction(evt)
@@ -191,9 +189,6 @@ export class AnnotatorUI {
     }
   }
 
-  /**
-   * @deprecated to be removed without replacement (https://github.com/inception-project/inception/issues/3315)
-   */
   private customArcAction (evt: MouseEvent) {
     if (!(evt.target instanceof Element)) return
 
@@ -221,9 +216,6 @@ export class AnnotatorUI {
     }])
   }
 
-  /**
-   * @deprecated to be removed without replacement (https://github.com/inception-project/inception/issues/3315)
-   */
   private customSpanAction (evt: MouseEvent & { target: Element }) {
     const id = evt.target.getAttribute('data-span-id')
 
@@ -358,15 +350,23 @@ export class AnnotatorUI {
     // is it arc drag start?
     if (evt.target.getAttribute('data-span-id')) {
       this.dragStartedAt = evt // XXX do we really need the whole evt?
+      this.selectionInProgress = true
+      this.dispatcher.post('selectionStarted')
       return false
     }
 
     if (evt.target.getAttribute('data-chunk-id')) {
       this.spanDragJustStarted = true
+      this.selectionInProgress = true
+      this.dispatcher.post('selectionStarted')
     }
   }
 
   onMouseMove (evt: MouseEvent) {
+    if (!evt.buttons && this.selectionInProgress) {
+      this.dispatcher.post('selectionEnded')
+    }
+
     if (!this.arcDragOrigin && this.dragStartedAt) {
       // When the user has pressed the mouse button, we monitor the mouse cursor. If the cursor
       // moves more than a certain distance, we start the arc-drag operation. Starting this
@@ -704,6 +704,10 @@ export class AnnotatorUI {
   }
 
   onMouseUp (evt: MouseEvent) {
+    if (!evt.buttons && this.selectionInProgress) {
+      this.dispatcher.post('selectionEnded')
+    }
+
     // Restore pointer events on annotations
     this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null))
 
