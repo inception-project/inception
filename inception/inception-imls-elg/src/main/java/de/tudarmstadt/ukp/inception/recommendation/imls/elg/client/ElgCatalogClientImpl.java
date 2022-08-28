@@ -31,9 +31,10 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSearchResponse;
+import de.tudarmstadt.ukp.inception.support.http.HttpClientImplBase;
 
 public class ElgCatalogClientImpl
-    extends ElgClientImplBase
+    extends HttpClientImplBase
     implements ElgCatalogClient
 {
     private String searchUrl = "https://live.european-language-grid.eu/catalogue_backend/api/registry/search/";
