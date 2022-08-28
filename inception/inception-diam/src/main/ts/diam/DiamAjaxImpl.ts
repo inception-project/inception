@@ -37,61 +37,96 @@ export class DiamAjaxImpl implements DiamAjax {
     this.ajaxEndpoint = ajaxEndpoint;
   }
 
-  selectAnnotation(id: VID): void {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'selectAnnotation',
-        id: id
+  /**
+   * @returns if the focus is (probably) in a feature editor
+   */
+   private static isFocusInFeatureEditor(): boolean {
+    return document.activeElement?.closest('.feature-editors-sidebar') != null
+  }
+
+  /**
+   * When the focus is in a feature editor, then we need to delay our calls to the server to give
+   * any "onFocusLost" event time to be processed.
+   * 
+   * @param ajaxCall the AJAX call function to execute
+   */
+  private static performAjaxCall(ajaxCall): void {
+    if (this.isFocusInFeatureEditor()) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
       }
-    });
+      setTimeout(() => ajaxCall(), 50)
+      return
+    }
+
+    ajaxCall()
+  }
+
+  selectAnnotation(id: VID): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'selectAnnotation',
+          id: id
+        }
+      })
+    })
   }
 
   createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        spanText: spanText
-      }
-    });
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'spanOpenDialog',
+          offsets: JSON.stringify(offsets),
+          spanText: spanText
+        }
+      })
+    })
   }
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'arcOpenDialog',
-        originSpanId: originSpanId,
-        targetSpanId: targetSpanId,
-      }
-    });
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'arcOpenDialog',
+          originSpanId: originSpanId,
+          targetSpanId: targetSpanId,
+        }
+      })
+    })
   }
 
   deleteAnnotation(id: VID): void {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'deleteAnnotation',
-        id: id
-      }
-    });
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'deleteAnnotation',
+          id: id
+        }
+      })
+    })
   }
 
   triggerExtensionAction(id: VID): void {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'doAction',
-        id: id
-      }
-    });
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'doAction',
+          id: id
+        }
+      })
+    })
   }
 
   static newToken(): string {
