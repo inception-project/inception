@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
-    "@recogito/recogito-js": "^1.6.0",
-    "@recogito/recogito-client-core": "1.6.0"
+    "@recogito/recogito-js": "^1.7.1",
+    "@recogito/recogito-client-core": "1.7.4"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
