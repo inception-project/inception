@@ -52,6 +52,7 @@ export class DiamAjaxImpl implements DiamAjax {
    */
   private static performAjaxCall(ajaxCall): void {
     if (this.isFocusInFeatureEditor()) {
+      // Cause the feature editor to commit its value
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur()
       }
@@ -231,24 +232,26 @@ export class DiamAjaxImpl implements DiamAjax {
     clientX = Math.round(clientX)
     clientY = Math.round(clientY)
 
-    new Promise<void>((resolve, reject) => {
-      Wicket.Ajax.ajax({
-        "m": "POST",
-        "u": this.ajaxEndpoint,
-        "ep": {
-          action: 'contextMenu',
-          id: id,
-          clientX,
-          clientY
-        },
-        "sh": [() => {
-          resolve()
-        }],
-        "eh": [() => {
-          reject("Unable to open context menu")
-        }]
-      });
-    }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay));
+    DiamAjaxImpl.performAjaxCall(() => {
+      new Promise<void>((resolve, reject) => {
+        Wicket.Ajax.ajax({
+          "m": "POST",
+          "u": this.ajaxEndpoint,
+          "ep": {
+            action: 'contextMenu',
+            id: id,
+            clientX,
+            clientY
+          },
+          "sh": [() => {
+            resolve()
+          }],
+          "eh": [() => {
+            reject("Unable to open context menu")
+          }]
+        });
+      }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay));
+    })
   }
 
   private createOverlay(frame: HTMLElement): HTMLElement {
