@@ -31,9 +31,10 @@ import org.springframework.http.HttpHeaders;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
+import de.tudarmstadt.ukp.inception.support.http.HttpClientImplBase;
 
 public class ElgServiceClientImpl
-    extends ElgClientImplBase
+    extends HttpClientImplBase
     implements ElgServiceClient
 {
     public ElgServiceClientImpl()
