@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthentica
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAccessTokenResponse;
 
 public class ElgServiceImpl
     implements ElgService
@@ -112,7 +112,7 @@ public class ElgServiceImpl
 
         try {
             log.trace("Refreshing tokens for ELG session in project {}", aSession.getProject());
-            ElgTokenResponse response = elgAuthenticationClient
+            OAuthAccessTokenResponse response = elgAuthenticationClient
                     .refreshToken(aSession.getRefreshToken());
             aSession.update(response);
             createOrUpdateSession(aSession);

@@ -32,14 +32,17 @@ import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgUserInfoResponse;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAccessTokenResponse;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthGrantType;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSession;
+import de.tudarmstadt.ukp.inception.support.http.HttpClientImplBase;
 
 public class ElgAuthenticationClientImpl
-    extends ElgClientImplBase
+    extends HttpClientImplBase
     implements ElgAuthenticationClient
 {
+    private static final String ELG_CLIENT_ID = "elg-oob";
     private static final String CODE_URL = "https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/auth?client_id=elg-oob&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=offline_access";
     private static final String TOKEN_URL = "https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/token/";
     private static final String USER_INFO_URL = "https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/userinfo/";
@@ -61,7 +64,7 @@ public class ElgAuthenticationClientImpl
     }
 
     @Override
-    public boolean requiresSignIn(ElgSession aSession)
+    public boolean requiresSignIn(OAuthSession aSession)
     {
         Date validUntil = aSession.getRefreshTokenValidUntil();
 
@@ -80,7 +83,7 @@ public class ElgAuthenticationClientImpl
     }
 
     @Override
-    public boolean requiresRefresh(ElgSession aSession)
+    public boolean requiresRefresh(OAuthSession aSession)
     {
         Date validUntil = aSession.getAccessTokenValidUntil();
         if (validUntil == null) {
@@ -91,7 +94,7 @@ public class ElgAuthenticationClientImpl
     }
 
     @Override
-    public boolean refreshSessionIfNecessary(ElgSession aSession) throws IOException
+    public boolean refreshSessionIfNecessary(OAuthSession aSession) throws IOException
     {
         if (!requiresRefresh(aSession)) {
             return false;
@@ -102,11 +105,11 @@ public class ElgAuthenticationClientImpl
     }
 
     @Override
-    public ElgTokenResponse getToken(String aCode) throws IOException
+    public OAuthAccessTokenResponse getToken(String aCode) throws IOException
     {
         Map<String, String> parameters = new LinkedHashMap<>();
-        parameters.put("grant_type", "authorization_code");
-        parameters.put("client_id", "elg-oob");
+        parameters.put("grant_type", OAuthGrantType.AUTHORIZATION_CODE.toHeaderValue());
+        parameters.put("client_id", ELG_CLIENT_ID);
         parameters.put("redirect_uri", "urn:ietf:wg:oauth:2.0:oob");
         parameters.put("code", aCode);
 
@@ -117,18 +120,17 @@ public class ElgAuthenticationClientImpl
                 .build();
 
         long submitTime = System.currentTimeMillis();
-        ElgTokenResponse response = deserializeResponse(sendRequest(request),
-                ElgTokenResponse.class);
+        var response = deserializeResponse(sendRequest(request), OAuthAccessTokenResponse.class);
         response.setSubmitTime(submitTime);
         return response;
     }
 
     @Override
-    public ElgTokenResponse refreshToken(String aRefreshToken) throws IOException
+    public OAuthAccessTokenResponse refreshToken(String aRefreshToken) throws IOException
     {
         Map<String, String> parameters = new LinkedHashMap<>();
         parameters.put("grant_type", "refresh_token");
-        parameters.put("client_id", "elg-oob");
+        parameters.put("client_id", ELG_CLIENT_ID);
         parameters.put("refresh_token", aRefreshToken);
 
         HttpRequest request = HttpRequest.newBuilder() //
@@ -138,8 +140,7 @@ public class ElgAuthenticationClientImpl
                 .build();
 
         long submitTime = System.currentTimeMillis();
-        ElgTokenResponse response = deserializeResponse(sendRequest(request),
-                ElgTokenResponse.class);
+        var response = deserializeResponse(sendRequest(request), OAuthAccessTokenResponse.class);
         response.setSubmitTime(submitTime);
         return response;
     }
