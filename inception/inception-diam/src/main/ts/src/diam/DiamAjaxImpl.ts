@@ -17,18 +17,17 @@
  */
 import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
-import { client, over } from 'stompjs'
 
 declare const Wicket: any
 
-type SuccessHandler = (attrs, jqXHR, data, textStatus: string) => void;
-type ErrorHandler = (attrs, jqXHR, errorMessage, textStatus: string) => void;
+// type SuccessHandler = (attrs, jqXHR, data, textStatus: string) => void;
+// type ErrorHandler = (attrs, jqXHR, errorMessage, textStatus: string) => void;
 
-if (!document.hasOwnProperty('DIAM_TRANSPORT_BUFFER')) {
-  document.DIAM_TRANSPORT_BUFFER = {}
+if (!Object.prototype.hasOwnProperty.call(document, 'DIAM_TRANSPORT_BUFFER')) {
+  (document as any).DIAM_TRANSPORT_BUFFER = {}
 }
 
-const TRANSPORT_BUFFER: any = document.DIAM_TRANSPORT_BUFFER
+const TRANSPORT_BUFFER: any = (document as any).DIAM_TRANSPORT_BUFFER
 
 export class DiamAjaxImpl implements DiamAjax {
   private ajaxEndpoint: string
@@ -37,60 +36,96 @@ export class DiamAjaxImpl implements DiamAjax {
     this.ajaxEndpoint = ajaxEndpoint
   }
 
-  selectAnnotation (id: VID): void {
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      u: this.ajaxEndpoint,
-      ep: {
-        action: 'selectAnnotation',
-        id
+  /**
+   * @returns if the focus is (probably) in a feature editor
+   */
+  private static isFocusInFeatureEditor (): boolean {
+    return document.activeElement?.closest('.feature-editors-sidebar') != null
+  }
+
+  /**
+   * When the focus is in a feature editor, then we need to delay our calls to the server to give
+   * any "onFocusLost" event time to be processed.
+   *
+   * @param ajaxCall the AJAX call function to execute
+   */
+  private static performAjaxCall (ajaxCall): void {
+    if (this.isFocusInFeatureEditor()) {
+      // Cause the feature editor to commit its value
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
       }
+      setTimeout(() => ajaxCall(), 50)
+      return
+    }
+
+    ajaxCall()
+  }
+
+  selectAnnotation (id: VID): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'selectAnnotation',
+          id
+        }
+      })
     })
   }
 
   createSpanAnnotation (offsets: Array<Offsets>, spanText?: string): void {
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      u: this.ajaxEndpoint,
-      ep: {
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        spanText
-      }
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'spanOpenDialog',
+          offsets: JSON.stringify(offsets),
+          spanText
+        }
+      })
     })
   }
 
   createRelationAnnotation (originSpanId: VID, targetSpanId: VID): void {
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      u: this.ajaxEndpoint,
-      ep: {
-        action: 'arcOpenDialog',
-        originSpanId,
-        targetSpanId
-      }
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'arcOpenDialog',
+          originSpanId,
+          targetSpanId
+        }
+      })
     })
   }
 
   deleteAnnotation (id: VID): void {
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      u: this.ajaxEndpoint,
-      ep: {
-        action: 'deleteAnnotation',
-        id
-      }
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'deleteAnnotation',
+          id
+        }
+      })
     })
   }
 
   triggerExtensionAction (id: VID): void {
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      u: this.ajaxEndpoint,
-      ep: {
-        action: 'doAction',
-        id
-      }
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'doAction',
+          id
+        }
+      })
     })
   }
 
@@ -103,7 +138,7 @@ export class DiamAjaxImpl implements DiamAjax {
   }
 
   static clearResult (token: string): any {
-    if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
+    if (Object.prototype.hasOwnProperty.call(TRANSPORT_BUFFER, token)) {
       const result = TRANSPORT_BUFFER[token]
       delete TRANSPORT_BUFFER[token]
       return result
@@ -146,7 +181,7 @@ export class DiamAjaxImpl implements DiamAjax {
         sh: [() => {
           const result = DiamAjaxImpl.clearResult(token)
           if (result === undefined) {
-            reject('Server did not place result into transport buffer')
+            reject(new Error('Server did not place result into transport buffer'))
             return
           }
 
@@ -155,7 +190,7 @@ export class DiamAjaxImpl implements DiamAjax {
         eh: [() => {
           DiamAjaxImpl.clearResult(token)
 
-          reject('Unable to load annotation')
+          reject(new Error('Unable to load annotation'))
         }]
       })
     })
@@ -173,7 +208,7 @@ export class DiamAjaxImpl implements DiamAjax {
     if (evt?.target != null && 'ownerDocument' in evt?.target) {
       const target = evt.target as HTMLElement
       const eventContextWindow = target.ownerDocument?.defaultView
-      if (window != eventContextWindow) {
+      if (window !== eventContextWindow) {
         const frameId = eventContextWindow?.frameElement?.id
         if (frameId) {
           const frame = parent.window.document.getElementById(frameId)
@@ -195,24 +230,26 @@ export class DiamAjaxImpl implements DiamAjax {
     clientX = Math.round(clientX)
     clientY = Math.round(clientY)
 
-    new Promise<void>((resolve, reject) => {
-      Wicket.Ajax.ajax({
-        m: 'POST',
-        u: this.ajaxEndpoint,
-        ep: {
-          action: 'contextMenu',
-          id,
-          clientX,
-          clientY
-        },
-        sh: [() => {
-          resolve()
-        }],
-        eh: [() => {
-          reject('Unable to open context menu')
-        }]
-      })
-    }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay))
+    DiamAjaxImpl.performAjaxCall(() => {
+      new Promise<void>((resolve, reject) => {
+        Wicket.Ajax.ajax({
+          m: 'POST',
+          u: this.ajaxEndpoint,
+          ep: {
+            action: 'contextMenu',
+            id,
+            clientX,
+            clientY
+          },
+          sh: [() => {
+            resolve()
+          }],
+          eh: [() => {
+            reject(new Error('Unable to open context menu'))
+          }]
+        })
+      }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay))
+    })
   }
 
   private createOverlay (frame: HTMLElement): HTMLElement {
@@ -239,7 +276,7 @@ export class DiamAjaxImpl implements DiamAjax {
 
     // Now we keep an eye on the context menu - when it gets hidden, we also remove the overlay
     const remover = () => {
-      if (contextMenu.style.display == 'none') {
+      if (contextMenu.style.display === 'none') {
         overlay.remove()
       } else {
         setTimeout(remover, 20)

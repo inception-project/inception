@@ -162,7 +162,6 @@ public class ConceptFeatureEditor
                 super.updateAjaxAttributes(aAttributes);
                 aAttributes.getDynamicExtraParameters()
                         .add(focusComponent.getIdentifierDynamicAttributeScript());
-                addDelay(aAttributes, 250);
             }
 
             @Override
