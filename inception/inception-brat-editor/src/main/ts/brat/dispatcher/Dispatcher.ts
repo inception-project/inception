@@ -48,7 +48,8 @@ export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRende
   | 'resize' | 'displaySpanButtons' | 'renderError: Fatal' | 'configurationChanged'
   | 'mouseover' | 'mouseout' | 'dblclick' | 'keypress' | 'touchstart' | 'touchend'
   | 'collectionChanged' | 'renderData' | 'renderDataPatch' | 'triggerRender'
-  | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'loadAnnotations';
+  | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'loadAnnotations' 
+  | 'selectionStarted' | 'selectionEnded';
 
 export class Dispatcher {
   table : Record<string, [Object, Function][]> = {}

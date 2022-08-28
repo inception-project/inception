@@ -4,7 +4,11 @@ import { Rectangle } from '../../../../vmodel/Rectangle'
 import { mergeRects } from '../UI/span'
 
 let clickCount = 0
-let timer = null
+let timer : number | null = null
+
+/**
+ * Number of milliseconds in which a click event is detected as a double-click event
+ */
 const CLICK_DELAY = 300
 
 /**
@@ -133,11 +137,26 @@ export default class SpanAnnotation extends AbstractAnnotation {
       return
     }
 
-    this.element.querySelectorAll('.anno-knob').forEach(e =>
-      e.addEventListener('click', this.handleClickEvent))
+    this.element.querySelectorAll('.anno-knob').forEach(e => {
+      e.addEventListener('mousedown', this.preventFocusChange)
+      e.addEventListener('click', this.handleClickEvent)
+    })
   }
 
+  /**
+   * We do not want the focus to leave the feature editors when clicking on a knob, so we need
+   * to prevent the default action for 'mousedown' events.
+   */
+  private preventFocusChange (ev: Event) {
+    ev.preventDefault()
+  }
+
+  /**
+   * Detect if a click is a single-click or a double-click and trigger the corresponding action.
+   */
   handleClickEvent (ev: Event) {
+    ev.stopPropagation()
+    ev.preventDefault()
     clickCount++
     if (clickCount === 1) {
       timer = setTimeout(() => {
@@ -148,11 +167,13 @@ export default class SpanAnnotation extends AbstractAnnotation {
         }
       }, CLICK_DELAY)
     } else {
-      clearTimeout(timer) // prevent single-click action
-      try {
-        this.handleDoubleClickEvent() // perform double-click action
-      } finally {
-        clickCount = 0 // after action performed, reset counter
+      if (timer !== null) {
+        clearTimeout(timer) // prevent single-click action
+        try {
+          this.handleDoubleClickEvent() // perform double-click action
+        } finally {
+          clickCount = 0 // after action performed, reset counter
+        }
       }
     }
   }
@@ -162,7 +183,9 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   disableViewMode () {
     super.disableViewMode()
-    this.element.querySelectorAll('.anno-knob').forEach(e =>
-      e.removeEventListener('click', this.handleClickEvent))
+    this.element.querySelectorAll('.anno-knob').forEach(e => {
+      e.removeEventListener('click', this.handleClickEvent)
+      e.removeEventListener('mousedown', this.preventFocusChange)
+    })
   }
 }

@@ -139,6 +139,8 @@ export class Visualizer {
 
   private args: Record<MarkerType, MarkerDto> = {}
 
+  private selectionInProgress = false
+  private dataChangedButNotRendered = false
   private isRenderRequested = false
   private drawing = false
   private redraw = false
@@ -274,7 +276,9 @@ export class Visualizer {
       .on('svgWidth', this, this.setSvgWidth) //
       .on('loadAnnotations', this, this.loadAnnotations) //
       .on('mouseover', this, this.onMouseOver) //
-      .on('mouseout', this, this.onMouseOut)
+      .on('mouseout', this, this.onMouseOut) //
+      .on('selectionStarted', this, this.onSelectionStarted) //
+      .on('selectionEnded', this, this.onSelectionEnded)
 
     // Object.seal(this);
   }
@@ -1032,13 +1036,6 @@ export class Visualizer {
     }
 
     this.calculateFragmentDrawingOrder(this.data, sortedFragments)
-
-    this.renderText(this.data) // chunks
-
-    // sort by "from"; we don't need to sort by "to" as well,
-    // because unlike spans, chunks are disjunct
-    this.markedText.sort((a, b) => Util.cmp(a[0], b[0]))
-    this.applyMarkedTextToChunks(this.markedText, this.data.chunks)
 
     this.dispatcher.post('dataReady', [this.data])
   }
@@ -3276,18 +3273,24 @@ export class Visualizer {
       // Adding a spacer between the rows. We make is a *little* bit larger than necessary
       // to avoid exposing areas where the background shines through and which would again
       // cause jumpyness during selection.
-      textRow.before(this.verticalSpacer(
+      const beforeSpacer = this.verticalSpacer(
         Math.floor(prevRowRect.y),
-        Math.ceil(spaceHeight)))
+        Math.ceil(spaceHeight))
+      if (beforeSpacer) {
+        textRow.before(beforeSpacer)
+      }
 
       prevRowRect = rowRect
 
       // Add a spacer below the final row until the end of the canvas
       if (rowIndex === textRows.length - 1) {
         const lastSpacerY = Math.floor(rowRect.y + rowRect.height)
-        textRow.after(this.verticalSpacer(
+        const afterSpacer = this.verticalSpacer(
           Math.floor(rowRect.y + rowRect.height),
-          Math.ceil(y - lastSpacerY) + 1))
+          Math.ceil(y - lastSpacerY) + 1)
+        if (afterSpacer) {
+          textRow.after(afterSpacer)
+        }
       }
     })
   }
@@ -3313,11 +3316,26 @@ export class Visualizer {
         return
       }
 
+      if (sourceData) {
+        this.setData(sourceData)
+      }
+
+      // Prevent re-rendering from interfering with the selection
+      if (this.selectionInProgress) {
+        this.dataChangedButNotRendered = true
+        return
+      }
+
       this.redraw = false
       this.drawing = true
 
-      if (sourceData) {
-        this.setData(sourceData)
+      if (this.data) {
+        this.renderText(this.data) // chunks
+
+        // sort by "from"; we don't need to sort by "to" as well,
+        // because unlike spans, chunks are disjunct
+        this.markedText.sort((a, b) => Util.cmp(a[0], b[0]))
+        this.applyMarkedTextToChunks(this.markedText, this.data.chunks)
       }
 
       this.svg.clear()
@@ -3351,7 +3369,9 @@ export class Visualizer {
 
       this.highlightGroup = this.svg.group().addClass('highlight')
 
-      const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group().addClass('text')
+      const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+        .addClass('text')
+        .addClass('contain-selection')
       Util.profileEnd('init')
 
       Util.profileStart('measures')
@@ -3729,6 +3749,18 @@ export class Visualizer {
     }
   }
 
+  onSelectionStarted () {
+    this.selectionInProgress = true
+  }
+
+  onSelectionEnded () {
+    this.selectionInProgress = false
+    if (this.dataChangedButNotRendered) {
+      this.dataChangedButNotRendered = false
+      setTimeout(() => this.rerender(), 50)
+    }
+  }
+
   setAbbrevs (_abbrevsOn) {
     // TODO: this is a slightly weird place to tweak the configuration
     Configuration.abbrevsOn = _abbrevsOn
@@ -3857,7 +3889,7 @@ export class Visualizer {
     return !this.drawing
   }
 
-  verticalSpacer (y: number, height: number) {
+  verticalSpacer (y: number, height: number): SVGForeignObjectElement | undefined {
     if (height > 0) {
       const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject')
       const spacer = document.createElement('span')
