@@ -28,7 +28,6 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -185,13 +184,6 @@ public class RadioGroupStringFeatureEditor
         focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
         {
             private static final long serialVersionUID = -5058365578109385064L;
-
-            @Override
-            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
-            {
-                super.updateAjaxAttributes(aAttributes);
-                addDelay(aAttributes, 300);
-            }
 
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
