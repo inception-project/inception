@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
@@ -166,37 +168,37 @@ public class ElgSession
     }
 
     @Override
-    public Date getLastUpdate()
+    public Instant getLastUpdate()
     {
         throw new NotImplementedException();
     }
 
     @Override
-    public void setLastUpdate(Date aDate)
+    public void setLastUpdate(Instant aDate)
     {
         // Ignore
     }
 
     @Override
-    public long getAccessTokenExpiresIn()
+    public Duration getAccessTokenExpiresIn()
     {
-        return (new Date().getTime() - getAccessTokenValidUntil().getTime()) / 1000;
+        return Duration.ofMillis(new Date().getTime() - getAccessTokenValidUntil().getTime());
     }
 
     @Override
-    public void setAccessTokenExpiresIn(long aTime)
+    public void setAccessTokenExpiresIn(Duration aTime)
     {
         // Ignore
     }
 
     @Override
-    public long getRefreshTokenExpiresIn()
+    public Duration getRefreshTokenExpiresIn()
     {
-        return (new Date().getTime() - getRefreshTokenValidUntil().getTime()) / 1000;
+        return Duration.ofMillis(new Date().getTime() - getRefreshTokenValidUntil().getTime());
     }
 
     @Override
-    public void setRefreshTokenExpiresIn(long aTime)
+    public void setRefreshTokenExpiresIn(Duration aTime)
     {
         // Ignore
     }
