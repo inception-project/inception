@@ -27,10 +27,12 @@
 
     export let dataUrl: string
     export let activities = [];
+    export let loading = true;
 
     onMount(async () => {
         const res = await fetch(dataUrl)
         activities = await res.json()
+        loading = false
     })
 
     export function formatRelativeTime(timestamp) {
@@ -51,13 +53,17 @@
 
 <div class="card border-0 flex-content flex-v-container">
     <div class="card-header rounded-0">Recent activity</div>
-    {#if !activities || activities.length === 0}
+    {#if loading}
         <div class="mt-5 d-flex flex-column justify-content-center">
             <div class="d-flex flex-row justify-content-center">
                 <div class="spinner-border text-muted" role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
             </div>
+        </div>
+    {:else if !activities || activities.length === 0}
+        <div class="flex-content no-data-notice">
+            <span>No recent activity</span>
         </div>
     {:else}
         <ul class="list-group list-group-flush scrolling flex-content flex-v-container">

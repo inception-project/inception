@@ -34,6 +34,7 @@ it('Shows the loading indicator', async () => {
 it('Shows the activities', async () => {
   const { queryByText, getByText } = render(ActivitiesDashlet, {
     props: {
+      loading: false,
       activities: [{
         id: 1,
         projectId: 2,
