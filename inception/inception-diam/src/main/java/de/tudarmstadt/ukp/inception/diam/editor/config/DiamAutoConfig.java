@@ -72,6 +72,7 @@ public class DiamAutoConfig
         return new ExtensionActionHandler(aExtensionRegistry);
     }
 
+    @Deprecated
     @Bean
     public CustomActionHandler customActionHandler(AnnotationSchemaService aAnnotationService)
     {

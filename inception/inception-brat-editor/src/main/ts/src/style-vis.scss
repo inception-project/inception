@@ -511,7 +511,15 @@ $background_color_10: #ffcccc;
   #viewspan_highlight_link {
     float: right;
   }
-  
+
+  .contain-selection {
+    -moz-user-select: -moz-contain;
+    -khtml-user-select: contain;
+    -webkit-user-select: contain;
+    -o-user-select: contain;
+    user-select: contain;
+  }
+
   .unselectable {
     -moz-user-select: -moz-none;
     -khtml-user-select: none;

@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.RadioGroup;
@@ -82,17 +81,10 @@ public class RatingFeatureEditor
     {
         // Need to use a AjaxFormChoiceComponentUpdatingBehavior here since we use a RadioGroup
         // here.
-        FormComponent focusComponent = getFocusComponent();
+        FormComponent<?> focusComponent = getFocusComponent();
         focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
         {
             private static final long serialVersionUID = -5058365578109385064L;
-
-            @Override
-            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
-            {
-                super.updateAjaxAttributes(aAttributes);
-                addDelay(aAttributes, 300);
-            }
 
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
