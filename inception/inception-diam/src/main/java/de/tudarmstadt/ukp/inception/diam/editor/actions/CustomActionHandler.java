@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter.decodeTypeName;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +49,11 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
  * <p>
  * This class is exposed as a Spring Component via {@link DiamAutoConfig#customActionHandler}.
  * </p>
+ * 
+ * @deprecated To be removed without replacement
+ * @see <a href="https://github.com/inception-project/inception/issues/3315">Issue 3315</a>
  */
+@Deprecated
 @Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
 public class CustomActionHandler
     extends EditorAjaxRequestHandlerBase
@@ -94,20 +96,17 @@ public class CustomActionHandler
 
         AnnotatorState state = ((AnnotationPageBase) aTarget.getPage()).getModelObject();
 
-        long layerId = decodeTypeName(layerParam.toString());
-        AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
-                .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
-                        + "] does not exist in project [" + state.getProject().getName() + "]("
-                        + state.getProject().getId() + ")"));
+        CAS cas = ((AnnotationPageBase) aTarget.getPage()).getEditorCas();
+        AnnotationFS anno = ICasUtil.selectAnnotationByAddr(cas, paramId.getId());
+
+        AnnotationLayer layer = annotationService.findLayer(state.getProject(), anno);
 
         if (StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
             return;
         }
 
-        CAS cas = ((AnnotationPageBase) aTarget.getPage()).getEditorCas();
         // parse the action
         List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
-        AnnotationFS anno = ICasUtil.selectAnnotationByAddr(cas, paramId.getId());
         Map<String, Object> functionParams = parse(layer, features, state.getDocument(), anno);
         // define anonymous function, fill the body and immediately execute
         String js = String.format("(function ($PARAM){ %s })(%s)",
