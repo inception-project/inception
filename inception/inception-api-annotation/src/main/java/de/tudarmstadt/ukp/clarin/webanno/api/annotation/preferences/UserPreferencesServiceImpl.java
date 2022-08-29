@@ -142,12 +142,6 @@ public class UserPreferencesServiceImpl
 
         AnnotationPreference pref = loadLegacyPreferences(aProject, aUsername, aMode);
 
-        // If the choice for remember layer is not enabled, hard-set to "true" which is the default
-        // and in the future the only option ;)
-        if (!annotationEditorProperties.isRememberLayerEnabled()) {
-            pref.setRememberLayer(true);
-        }
-
         return pref;
     }
 
@@ -267,7 +261,6 @@ public class UserPreferencesServiceImpl
                     .loadDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS, aProject)
                     .getDefaultPageSize());
             preference.setScrollPage(defaultPreferences.isAutoScroll());
-            preference.setRememberLayer(defaultPreferences.isRememberLayer());
         }
 
         // Get color preferences for each layer, init with default if not found

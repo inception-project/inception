@@ -17,21 +17,6 @@
 [[sect_settings_annotation]]
 = Annotation editor
 
-.Settings related to all annotation editors
-[cols="4*", options="header"]
-|===
-| Setting
-| Description
-| Default
-| Example
-
-| annotation.default-preferences.remember-layer
-| Whether "remember layer" is activated by default
-| false
-| 
-|===
-
-
 .Settings related to the brat editor
 [cols="4*", options="header"]
 |===

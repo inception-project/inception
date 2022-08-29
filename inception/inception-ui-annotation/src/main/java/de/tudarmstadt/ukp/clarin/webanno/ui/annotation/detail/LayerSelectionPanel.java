@@ -82,13 +82,11 @@ public class LayerSelectionPanel
 
         add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
-        // Visible if there is more than one selectable layer and if either "remember layer" is off
-        // (meaning that the dropdown indicates the currently selected layer) or "remember layer"
-        // is on and the document is editable (meaning we need to be able to change the layer)
-        add(visibleWhen(() -> layerSelector.getChoicesModel()
-                .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
-                && (!getModelObject().getPreferences().isRememberLayer()
-                        || getEditorPage().isEditable())));
+        // Visible if there is more than one selectable layer and if the document is editable
+        // (meaning we need to be able to change the layer)
+        add(visibleWhen(
+                () -> layerSelector.getChoicesModel().map(layerChoices -> layerChoices.size() > 1)
+                        .orElse(false).getObject() && getEditorPage().isEditable()));
 
         // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
         // not visible causes an error in the JS console saying that the component could not be

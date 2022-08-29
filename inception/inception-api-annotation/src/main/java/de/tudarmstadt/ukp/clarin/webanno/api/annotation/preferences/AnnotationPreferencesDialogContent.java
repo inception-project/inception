@@ -154,11 +154,6 @@ public class AnnotationPreferencesDialogContent
         collapseCheckBox.setOutputMarkupId(true);
         form.add(collapseCheckBox);
 
-        CheckBox rememberCheckbox = new CheckBox("rememberLayer");
-        rememberCheckbox.setOutputMarkupId(true);
-        rememberCheckbox.setVisible(annotationEditorProperties.isRememberLayerEnabled());
-        form.add(rememberCheckbox);
-
         // Add global read-only coloring strategy combo box
         DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new DropDownChoice<>(
                 "readonlyLayerColoringBehaviour");
@@ -190,7 +185,6 @@ public class AnnotationPreferencesDialogContent
 
             AnnotationPreference prefs = state.getPreferences();
             prefs.setScrollPage(model.scrollPage);
-            prefs.setRememberLayer(model.rememberLayer);
             prefs.setWindowSize(model.windowSize);
             prefs.setSidebarSizeLeft(model.sidebarSizeLeft);
             prefs.setSidebarSizeRight(model.sidebarSizeRight);
@@ -238,7 +232,6 @@ public class AnnotationPreferencesDialogContent
         model.scrollPage = prefs.isScrollPage();
         model.colorPerLayer = prefs.getColorPerLayer();
         model.readonlyLayerColoringBehaviour = prefs.getReadonlyLayerColoringBehaviour();
-        model.rememberLayer = prefs.isRememberLayer();
         model.collapseArcs = prefs.isCollapseArcs();
 
         model.editor = editorChoices.stream().filter(
@@ -344,7 +337,6 @@ public class AnnotationPreferencesDialogContent
         private int sidebarSizeRight;
         private int fontZoom;
         private boolean scrollPage;
-        private boolean rememberLayer;
         private List<AnnotationLayer> annotationLayers;
         private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour;
         private Map<Long, ColoringStrategyType> colorPerLayer;

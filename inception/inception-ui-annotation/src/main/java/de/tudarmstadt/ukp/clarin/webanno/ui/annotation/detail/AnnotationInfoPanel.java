@@ -93,7 +93,6 @@ public class AnnotationInfoPanel
         Label label = new Label("selectedAnnotationLayer",
                 CompoundPropertyModel.of(getDefaultModel()).bind("selectedAnnotationLayer.uiName"));
         label.setOutputMarkupPlaceholderTag(true);
-        label.add(visibleWhen(() -> getModelObject().getPreferences().isRememberLayer()));
         return label;
     }
 
