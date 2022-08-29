@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 import java.io.Serializable;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
@@ -49,6 +50,11 @@ public class UndoRedoState
         }
     }
 
+    public Optional<RedoableAnnotationAction> peekRedoable()
+    {
+        return Optional.ofNullable(redoableActions.peek());
+    }
+
     public RedoableAnnotationAction popRedoable()
     {
         return redoableActions.pop();
@@ -71,6 +77,11 @@ public class UndoRedoState
         while (undoableActions.size() > 100) {
             undoableActions.removeLast();
         }
+    }
+
+    public Optional<UndoableAnnotationAction> peekUndoable()
+    {
+        return Optional.ofNullable(undoableActions.peek());
     }
 
     public UndoableAnnotationAction popUndoable()

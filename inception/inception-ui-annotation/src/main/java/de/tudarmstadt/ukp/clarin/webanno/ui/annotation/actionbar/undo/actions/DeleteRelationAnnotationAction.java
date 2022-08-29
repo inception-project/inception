@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -31,23 +33,25 @@ public class DeleteRelationAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    public DeleteRelationAnnotationAction(AnnotationSchemaService aSchemaService,
+    public DeleteRelationAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
             RelationEvent aEvent)
     {
-        super(aSchemaService, aEvent);
+        super(aRequestId, aSchemaService, aEvent);
     }
 
     @Override
-    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
-        return super.redo(aSchemaService, aCas);
+        return super.redo(aSchemaService, aCas, aMessages);
     }
 
     @Override
-    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
-        return super.undo(aSchemaService, aCas);
+        return super.undo(aSchemaService, aCas, aMessages);
     }
 }

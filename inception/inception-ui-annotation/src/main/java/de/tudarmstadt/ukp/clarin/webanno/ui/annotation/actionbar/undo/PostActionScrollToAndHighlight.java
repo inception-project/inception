@@ -22,10 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUt
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +39,11 @@ public class PostActionScrollToAndHighlight
 
     private final SourceDocument document;
     private final Range range;
-    private final String message;
 
-    public PostActionScrollToAndHighlight(SourceDocument aDocument, Range aRange, String aMessage)
+    public PostActionScrollToAndHighlight(SourceDocument aDocument, Range aRange)
     {
         document = aDocument;
         range = aRange;
-        message = aMessage;
     }
 
     @Override
@@ -58,11 +54,6 @@ public class PostActionScrollToAndHighlight
             page.getAnnotationActionHandler().actionClear(aTarget);
             page.actionShowSelectedDocument(aTarget, document, range.getBegin(), range.getEnd());
             // FIXME: the highlighting part is still missing...
-
-            if (StringUtils.isNotBlank(message)) {
-                aContextComponent.info(message);
-                aTarget.addChildren(page, IFeedback.class);
-            }
         }
         catch (IOException | AnnotationException e) {
             handleException(LOG, aContextComponent, aTarget, e);
