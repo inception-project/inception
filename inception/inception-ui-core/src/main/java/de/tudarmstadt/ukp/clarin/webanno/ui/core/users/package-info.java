@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Conatin classes for user management related pages
+ * Contain classes for user management related pages
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
- * Indiates that a merge operation could not be performed because the annotation had already been
+ * Indicates that a merge operation could not be performed because the annotation had already been
  * merged before.
  */
 public class AlreadyMergedException

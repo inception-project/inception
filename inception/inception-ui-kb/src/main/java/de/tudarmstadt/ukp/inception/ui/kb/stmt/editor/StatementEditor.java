@@ -321,7 +321,7 @@ public class StatementEditor
         private DropDownChoice<ValueType> valueType;
 
         /**
-         * Creates a new fragement for editing a statement.<br>
+         * Creates a new fragment for editing a statement.<br>
          * The editor has two slightly different behaviors, depending on the value of
          * {@code isNewStatement}:
          * <ul>

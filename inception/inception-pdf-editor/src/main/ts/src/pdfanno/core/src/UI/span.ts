@@ -22,7 +22,7 @@ function mergeRects (rects) {
     return rect
   })
 
-  // a virtical margin of error.
+  // a vertical margin of error.
   const error = 5 * scale()
 
   let tmp = convertToObject(rects[0])

@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
@@ -38,10 +40,10 @@ public class UpdateFeatureValueAnnotationAction
     private final Serializable oldValue;
     private final Serializable newValue;
 
-    public UpdateFeatureValueAnnotationAction(AnnotationSchemaService aSchemaService,
-            FeatureValueUpdatedEvent aEvent)
+    public UpdateFeatureValueAnnotationAction(long aRequestId,
+            AnnotationSchemaService aSchemaService, FeatureValueUpdatedEvent aEvent)
     {
-        super(aEvent, new VID(aEvent.getFS()));
+        super(aRequestId, aEvent, new VID(aEvent.getFS()));
 
         feature = aEvent.getFeature();
 
@@ -65,27 +67,29 @@ public class UpdateFeatureValueAnnotationAction
     private static final long serialVersionUID = -1475379306317223468L;
 
     @Override
-    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
                 oldValue);
-        return Optional
-                .of(new PostActionScrollToAndSelect(getVid(), "[" + feature.getLayer().getUiName()
-                        + " feature value of [" + feature.getUiName() + "] restored"));
+        aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] restored",
+                feature.getLayer().getUiName(), feature.getUiName()));
+        return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 
     @Override
-    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
                 newValue);
-        return Optional
-                .of(new PostActionScrollToAndSelect(getVid(), "[" + feature.getLayer().getUiName()
-                        + "] feature value of [" + feature.getUiName() + "] set"));
+        aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] set",
+                feature.getLayer().getUiName(), feature.getUiName()));
+        return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 
 }

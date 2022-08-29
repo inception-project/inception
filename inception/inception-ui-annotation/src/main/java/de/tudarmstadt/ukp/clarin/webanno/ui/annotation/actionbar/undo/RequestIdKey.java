@@ -15,41 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
-import java.io.Serializable;
-import java.util.List;
+import org.apache.wicket.MetaDataKey;
 
-/**
- * Class representing "Scope" (name) and list of "Rules" for a particular "Scope".
- */
-public class Scope
-    implements Serializable
+public class RequestIdKey
+    extends MetaDataKey<Long>
 {
-    private static final long serialVersionUID = 226908916809455385L;
-    private final String scopeName;
-    private final List<Rule> rules;
-
-    public Scope(String scopeName, List<Rule> rules)
-    {
-        this.scopeName = scopeName;
-        this.rules = rules;
-    }
-
-    public String getScopeName()
-    {
-        return scopeName;
-    }
-
-    public List<Rule> getRules()
-    {
-        return rules;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "Scope [" + scopeName + "]\nRules\n" + rules.toString() + "]";
-    }
-
+    private static final long serialVersionUID = -3701548276700630688L;
+    public final static RequestIdKey INSTANCE = new RequestIdKey();
 }

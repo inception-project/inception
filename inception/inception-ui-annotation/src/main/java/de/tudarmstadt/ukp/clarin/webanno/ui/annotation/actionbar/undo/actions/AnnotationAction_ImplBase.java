@@ -29,13 +29,15 @@ public abstract class AnnotationAction_ImplBase
 {
     private static final long serialVersionUID = -7723798951981402947L;
 
+    private final long requestId;
     private final SourceDocument document;
     private final String user;
     private final VID vid;
     private final AnnotationLayer layer;
 
-    public AnnotationAction_ImplBase(AnnotationEvent aEvent, VID aVid)
+    public AnnotationAction_ImplBase(long aRequestId, AnnotationEvent aEvent, VID aVid)
     {
+        requestId = aRequestId;
         vid = aVid;
         document = aEvent.getDocument();
         user = aEvent.getUser();
@@ -60,5 +62,10 @@ public abstract class AnnotationAction_ImplBase
     public String getUser()
     {
         return user;
+    }
+
+    public long getRequestId()
+    {
+        return requestId;
     }
 }

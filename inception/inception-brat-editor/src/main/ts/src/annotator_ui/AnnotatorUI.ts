@@ -607,7 +607,7 @@ export class AnnotatorUI {
               activeSelRect.setAttributeNS(null, 'width', rw.toString())
             }
           } else {
-            // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
+            // We didn't truncate anything but we have moved to a new line so we need to create a new highlight
             const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1]
             const startBox = (startsAt.parentNode as SVGGraphicsElement).getBBox()
             const endBox = (endsAt.parentNode as SVGGraphicsElement).getBBox()

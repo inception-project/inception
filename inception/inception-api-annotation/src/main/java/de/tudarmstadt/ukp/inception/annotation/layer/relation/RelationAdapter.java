@@ -147,7 +147,7 @@ public class RelationAdapter
             throw new IllegalPlacementException("Relation must have a source and a target!");
         }
 
-        // Set the relation offsets in DKPro Core style - the relation recieves the offsets from
+        // Set the relation offsets in DKPro Core style - the relation receives the offsets from
         // the dependent
         // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
         // the begin position of the first token and dependentFS.getEnd will be the End

@@ -58,7 +58,7 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        LOG.trace("AJAX request recieved");
+        LOG.trace("AJAX request received");
 
         Request request = RequestCycle.get().getRequest();
 

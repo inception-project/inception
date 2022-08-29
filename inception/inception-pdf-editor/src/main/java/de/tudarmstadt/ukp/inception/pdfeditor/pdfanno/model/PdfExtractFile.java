@@ -138,7 +138,7 @@ public class PdfExtractFile
         stringToSanitizedSequence = new HashMap<>();
         sanitizedToStringSequence = new HashMap<>();
 
-        // build Aho-Corasick Trie to search for ligature occurences and replace them
+        // build Aho-Corasick Trie to search for ligature occurrences and replace them
         Trie.TrieBuilder trieBuilder = Trie.builder();
         substitutionTable.keySet().forEach(key -> trieBuilder.addKeyword(key));
         Trie trie = trieBuilder.build();

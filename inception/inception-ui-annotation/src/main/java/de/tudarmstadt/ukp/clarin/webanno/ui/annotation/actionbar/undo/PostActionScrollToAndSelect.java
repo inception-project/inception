@@ -22,10 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUt
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +37,10 @@ public class PostActionScrollToAndSelect
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final VID vid;
-    private final String message;
 
-    public PostActionScrollToAndSelect(VID aVid, String aMessage)
+    public PostActionScrollToAndSelect(VID aVid)
     {
         vid = aVid;
-        message = aMessage;
     }
 
     @Override
@@ -53,11 +49,6 @@ public class PostActionScrollToAndSelect
         try {
             AnnotationPageBase page = aContextComponent.findParent(AnnotationPageBase.class);
             page.getAnnotationActionHandler().actionSelectAndJump(aTarget, vid);
-
-            if (StringUtils.isNotBlank(message)) {
-                aContextComponent.info(message);
-                aTarget.addChildren(page, IFeedback.class);
-            }
         }
         catch (AnnotationException | IOException e) {
             handleException(LOG, aContextComponent, aTarget, e);

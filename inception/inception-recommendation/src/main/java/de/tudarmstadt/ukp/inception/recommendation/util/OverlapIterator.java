@@ -68,7 +68,7 @@ public class OverlapIterator
     {
         done = !((aList.size() > 0) && (bList.size() > 0));
 
-        // Intialize A
+        // Initialize A
         la = aList;
         maxa = la.size() - 1; // Up until here and no further
         ia = la.listIterator(); // Where we are now

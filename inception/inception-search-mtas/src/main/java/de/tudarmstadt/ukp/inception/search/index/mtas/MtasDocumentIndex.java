@@ -272,7 +272,7 @@ public class MtasDocumentIndex
                 indexWriter.close();
             }
             catch (IOException e1) {
-                log.error("Error while trying to close index which could not be initalized"
+                log.error("Error while trying to close index which could not be initialized"
                         + " - actual exception follows", e);
             }
             throw e;
@@ -832,7 +832,7 @@ public class MtasDocumentIndex
                                     && !aRequest.getUser().getUsername().equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
-                                // is different from the quering user
+                                // is different from the querying user
                                 log.trace(
                                         "Skipping results from annotation document for user {} "
                                                 + "which does not match the requested user {}",
@@ -1018,7 +1018,7 @@ public class MtasDocumentIndex
                                     && !aRequest.getUser().getUsername().equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
-                                // is different from the quering user
+                                // is different from the querying user
                                 log.trace(
                                         "Skipping results from annotation document for user {} "
                                                 + "which does not match the requested user {}",
@@ -1103,7 +1103,7 @@ public class MtasDocumentIndex
                                     else {
                                         // Only add the whitespace to the match if we already have
                                         // added any text to the match - otherwise consider the
-                                        // whitespace to be part of the left contex
+                                        // whitespace to be part of the left context
                                         if (resultText.length() > 0) {
                                             fill(resultText, prevToken, token);
                                         }

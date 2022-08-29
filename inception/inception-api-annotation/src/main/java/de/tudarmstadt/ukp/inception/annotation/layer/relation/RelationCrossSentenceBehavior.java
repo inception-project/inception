@@ -70,7 +70,7 @@ public class RelationCrossSentenceBehavior
 
         if (!isBeginEndInSameSentence(aRequest.getCas(), aRequest.getOriginFs().getBegin(),
                 aRequest.getTargetFs().getEnd())) {
-            throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
+            throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
 
@@ -118,7 +118,7 @@ public class RelationCrossSentenceBehavior
             return emptyList();
         }
 
-        // Prepare feedback messsage list
+        // Prepare feedback message list
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
 
         // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since

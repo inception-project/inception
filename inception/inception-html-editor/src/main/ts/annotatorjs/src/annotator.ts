@@ -348,7 +348,7 @@ export class Annotator extends Delegator {
 
   // Public: Initialises an annotation either from an object representation or
   // an annotation created with Annotator#createAnnotation(). It finds the
-  // selected range and higlights the selection in the DOM.
+  // selected range and highlights the selection in the DOM.
   //
   // annotation - An annotation Object to initialise.
   //
@@ -360,7 +360,7 @@ export class Annotator extends Delegator {
   //   # annotation has now been assigned the currently selected range
   //   # and a highlight appended to the DOM.
   //
-  //   # Add an existing annotation that has been stored elsewere to the DOM.
+  //   # Add an existing annotation that has been stored elsewhere to the DOM.
   //   annotation = getStoredAnnotationWithSerializedRanges()
   //   annotation = annotator.setupAnnotation(annotation)
   //

@@ -15,41 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
-import java.io.Serializable;
-import java.util.List;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
-/**
- * Class representing "Scope" (name) and list of "Rules" for a particular "Scope".
- */
-public class Scope
-    implements Serializable
+@FunctionalInterface
+public interface ActionFactory<T extends UndoableAnnotationAction, E extends AnnotationEvent>
 {
-    private static final long serialVersionUID = 226908916809455385L;
-    private final String scopeName;
-    private final List<Rule> rules;
-
-    public Scope(String scopeName, List<Rule> rules)
-    {
-        this.scopeName = scopeName;
-        this.rules = rules;
-    }
-
-    public String getScopeName()
-    {
-        return scopeName;
-    }
-
-    public List<Rule> getRules()
-    {
-        return rules;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "Scope [" + scopeName + "]\nRules\n" + rules.toString() + "]";
-    }
-
+    T create(long aRequestId, AnnotationSchemaService aSchemaService, E aEvent);
 }

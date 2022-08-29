@@ -1767,7 +1767,7 @@ public class SPARQLQueryBuilderTest
         // Detect the file format
         RDFFormat format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-        System.out.printf("Loading %s data fron %s%n", format, aFilename);
+        System.out.printf("Loading %s data from %s%n", format, aFilename);
 
         // Load files into the repository
         try (InputStream is = new FileInputStream(aFilename)) {

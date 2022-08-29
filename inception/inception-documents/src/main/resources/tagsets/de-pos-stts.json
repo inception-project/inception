@@ -92,10 +92,10 @@
     "tag_description" : "irreflexives Personalpronomen \nBsp: ich, er, ihm, mich, dir"
   }, {
     "tag_name" : "PPOSAT",
-    "tag_description" : "attribuierendes Possessivpronome \nBsp: mein [Buch], deine [Mutter] "
+    "tag_description" : "attribuierendes Possessivpronomen \nBsp: mein [Buch], deine [Mutter] "
   }, {
     "tag_name" : "PPOSS",
-    "tag_description" : "substituierendes Possessivpronome \nBsp: meins, deiner"
+    "tag_description" : "substituierendes Possessivpronomen \nBsp: meins, deiner"
   }, {
     "tag_name" : "PRELAT",
     "tag_description" : "attribuierendes Relativpronomen \nBsp: [der Mann ,] dessen [Hund]   "

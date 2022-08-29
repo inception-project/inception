@@ -222,7 +222,7 @@ public class AnnotationPage
      * might have triggered a change in some feature that might be shown on screen.
      * <p>
      * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimicks
+     * current view. It might be more efficient to have another event that more closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")
@@ -245,7 +245,7 @@ public class AnnotationPage
      * triggered a change in some feature that might be shown on screen.
      * <p>
      * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimicks
+     * current view. It might be more efficient to have another event that more closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")

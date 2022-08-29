@@ -123,5 +123,5 @@ see an anonymous label like *Anonymized annotator 1* instead of the annotator na
 project managers can still see the annotator names.
 
 NOTE: The order of the annotators is not randomized - only the names are removed from the UI. Only 
-      annotators who have marked their documents as *finished* are shown. Thus, which annotator recieves 
+      annotators who have marked their documents as *finished* are shown. Thus, which annotator receives
       which number may changed depending on documents being marked as finished or put back into progress.

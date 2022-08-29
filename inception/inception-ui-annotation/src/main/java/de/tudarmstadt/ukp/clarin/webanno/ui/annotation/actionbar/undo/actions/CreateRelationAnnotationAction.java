@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
@@ -39,31 +41,33 @@ public class CreateRelationAnnotationAction
 
     private final Range range;
 
-    public CreateRelationAnnotationAction(AnnotationSchemaService aSchemaService,
+    public CreateRelationAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
             RelationEvent aEvent)
     {
-        super(aEvent, new VID(aEvent.getAnnotation()));
+        super(aRequestId, aEvent, new VID(aEvent.getAnnotation()));
 
         range = new Range(aEvent.getSourceAnnotation());
     }
 
     @Override
-    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
-        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range,
-                "[" + getLayer().getUiName() + "] deleted"));
+        aMessages.add(LogMessage.info(this, "[%s] deleted", getLayer().getUiName()));
+        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range));
     }
 
     @Override
-    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
         var adapter = (RelationAdapter) aSchemaService.getAdapter(getLayer());
         adapter.restore(getDocument(), getUser(), aCas, getVid());
-        return Optional.of(new PostActionScrollToAndSelect(getVid(),
-                "[" + getLayer().getUiName() + "] restored"));
+        aMessages.add(LogMessage.info(this, "[%s] restored", getLayer().getUiName()));
+        return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 }
