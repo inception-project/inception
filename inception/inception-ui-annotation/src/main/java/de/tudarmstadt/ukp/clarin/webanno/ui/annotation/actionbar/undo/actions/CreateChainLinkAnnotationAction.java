@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainEvent;
@@ -37,21 +39,22 @@ public class CreateChainLinkAnnotationAction
 
     private final Range range;
 
-    public CreateChainLinkAnnotationAction(AnnotationSchemaService aSchemaService,
+    public CreateChainLinkAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
             ChainEvent aEvent)
     {
-        super(aEvent, new VID(aEvent.getAnnotation(), 1, VID.NONE, VID.NONE));
+        super(aRequestId, aEvent, new VID(aEvent.getAnnotation(), 1, VID.NONE, VID.NONE));
 
         range = new Range(aEvent.getAnnotation());
     }
 
     @Override
-    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+    public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
-        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range,
-                "[" + getLayer().getUiName() + "] link deleted"));
+        aMessages.add(LogMessage.info(this, "[%s] link deleted", getLayer().getUiName()));
+        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range));
     }
 }

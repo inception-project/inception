@@ -17,16 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public interface UndoableAnnotationAction
 {
+    long getRequestId();
+
     /**
      * Undo the captured action.
      * 
@@ -34,10 +38,13 @@ public interface UndoableAnnotationAction
      *            a schema service used to obtain an adapter.
      * @param aCas
      *            the editor CAS
+     * @param aMessages
+     *            message sink for the undo action
      * @return an optional annotation ID to select after rolling back the captured action
      * @throws AnnotationException
      *             if the action cannot be rolled back
      */
-    Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas)
+    Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
         throws AnnotationException;
 }
