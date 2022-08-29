@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Class representating "Scope" (name) and list of "Rules" for a particular "Scope".
+ * Class representing "Scope" (name) and list of "Rules" for a particular "Scope".
  */
 public class Scope
     implements Serializable

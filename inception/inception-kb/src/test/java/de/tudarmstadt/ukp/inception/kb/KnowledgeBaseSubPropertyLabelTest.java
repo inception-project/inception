@@ -131,7 +131,7 @@ public class KnowledgeBaseSubPropertyLabelTest
 
         assertThat(instanceKBHandle).as("Check that instance list is not empty").isNotEmpty();
         assertThat(instanceKBHandle.stream().map(KBHandle::getName))
-                .as("Check that child concept is retreived").contains("Abele, Familie");
+                .as("Check that child concept is retrieved").contains("Abele, Familie");
     }
 
     @Disabled("#1522 - GND tests not running")

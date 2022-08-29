@@ -163,7 +163,7 @@ public class KnowledgeBaseServiceRemoteTest
                 .isNotEmpty();
         for (String expectedRoot : aSutConfig.getRootIdentifier()) {
             assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
-                    .as("Check that root concept is retreived").contains(expectedRoot);
+                    .as("Check that root concept is retrieved").contains(expectedRoot);
         }
     }
 
@@ -363,7 +363,7 @@ public class KnowledgeBaseServiceRemoteTest
                             "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
 
-        // Commenting this out for the moment becuase we expect that every ontology contains
+        // Commenting this out for the moment because we expect that every ontology contains
         // property definitions. However, this one does not include any property definitions!
         // {
         // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");

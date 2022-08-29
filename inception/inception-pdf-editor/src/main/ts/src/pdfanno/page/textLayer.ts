@@ -130,7 +130,7 @@ export function getGlyphsInRange (pageNum: number, startPosition: number, endPos
     var last = data
     const { position } = data
 
-    // if zero-width spans are allowed interprete ranges different from PDFAnno default
+    // if zero-width spans are allowed interpret ranges different from PDFAnno default
     // [3,3] is zero-width, [3,4] is one character
     if (allowZeroWidth) {
       if (startPosition === endPosition && startPosition === position) {
@@ -150,7 +150,7 @@ export function getGlyphsInRange (pageNum: number, startPosition: number, endPos
       }
 
       if (last.position < data.position) last = data
-      // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
+      // if zero-width spans are not allowed interpret ranges as PDFAnno does usually
       // [3,3] is one character, [3,4] are two characters
     } else {
       if (startPosition <= position) {

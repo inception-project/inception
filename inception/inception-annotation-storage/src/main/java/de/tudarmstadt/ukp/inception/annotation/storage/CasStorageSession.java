@@ -429,13 +429,13 @@ public class CasStorageSession
             String docId = WebAnnoCasUtil.getDocumentId(aCas);
             String docTitle = WebAnnoCasUtil.getDocumentTitle(aCas);
             throw new WriteAccessNotPermittedException(
-                    "CAS [" + docTitle + "](" + docId + ") not found in current sesssion");
+                    "CAS [" + docTitle + "](" + docId + ") not found in current session");
         }
 
         if (!mCas.map(SessionManagedCas::isWritingPermitted).orElse(false)) {
             throw new WriteAccessNotPermittedException("Write access to CAS for user ["
                     + mCas.get().getUserId() + "] for document [" + mCas.get().getSourceDocumentId()
-                    + "] is not permitted in the current sesssion");
+                    + "] is not permitted in the current session");
         }
     }
 }

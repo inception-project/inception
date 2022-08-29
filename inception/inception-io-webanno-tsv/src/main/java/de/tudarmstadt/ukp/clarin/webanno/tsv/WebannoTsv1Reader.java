@@ -219,7 +219,7 @@ public class WebannoTsv1Reader
      * The Second column is the token <br>
      * The third column is the lemma annotation <br>
      * The fourth column is the POS annotation <br>
-     * The fifth column is used for Named Entity annotations (Multiple annotations separeted by |
+     * The fifth column is used for Named Entity annotations (Multiple annotations separated by |
      * character) <br>
      * The sixth column is the origin token number of dependency parsing <br>
      * The seventh column is the function/type of the dependency parsing <br>

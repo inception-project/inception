@@ -247,7 +247,7 @@ public class WebhookServiceTest
                 @RequestBody ProjectStateChangeMessage aMsg)
             throws Exception
         {
-            LOG.info("Recieved: {}", aMsg);
+            LOG.info("Received: {}", aMsg);
             projectStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
@@ -261,7 +261,7 @@ public class WebhookServiceTest
                 @RequestBody DocumentStateChangeMessage aMsg)
             throws Exception
         {
-            LOG.info("Recieved: {}", aMsg);
+            LOG.info("Received: {}", aMsg);
             docStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
@@ -275,7 +275,7 @@ public class WebhookServiceTest
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception
         {
-            LOG.info("Recieved: {}", aMsg);
+            LOG.info("Received: {}", aMsg);
             annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }

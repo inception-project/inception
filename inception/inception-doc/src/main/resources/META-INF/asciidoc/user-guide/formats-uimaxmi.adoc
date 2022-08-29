@@ -27,7 +27,7 @@ the world of XML parsers, so you may expect better interoperability with other p
 (e.g. Python) with the XML 1.0 flavor. XML 1.1 has a support for a wider range of characters, despite 
 dating back to 2006, it is still not supported by all XML parsers.
 
-The format can be processed in Java usind the link:https://github.com/apache/uima-uimaj#readme[Apache UIMA Java SDK] (both flavors) or in Python using link:https://pypi.org/project/dkpro-cassis/[DKPro Cassis] (only the XMI 1.0 flavor).
+The format can be processed in Java using the link:https://github.com/apache/uima-uimaj#readme[Apache UIMA Java SDK] (both flavors) or in Python using link:https://pypi.org/project/dkpro-cassis/[DKPro Cassis] (only the XMI 1.0 flavor).
 
 [cols="2,1,1,1,3"]
 |====

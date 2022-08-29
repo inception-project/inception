@@ -274,7 +274,7 @@ public class LegacyRemoteApiController
      * To test when running in Eclipse, use the Linux "curl" command.
      * 
      * curl -v -X DELETE
-     * 'http://USERNAME:PASSOWRD@localhost:8080/webanno-webapp/api/projects/{aProjectId}'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}'
      * 
      * @param aProjectId
      *            The id of the project.
@@ -727,7 +727,7 @@ public class LegacyRemoteApiController
             FileCopyUtils.copy(inputStream, response.getOutputStream());
         }
         catch (Exception e) {
-            LOG.info("Exception occured" + e.getMessage());
+            LOG.info("Exception occurred" + e.getMessage());
         }
         finally {
             if (downloadableFile.exists()) {
@@ -849,7 +849,7 @@ public class LegacyRemoteApiController
             FileCopyUtils.copy(inputStream, response.getOutputStream());
         }
         catch (Exception e) {
-            LOG.info("Exception occured" + e.getMessage());
+            LOG.info("Exception occurred" + e.getMessage());
         }
         finally {
             if (downloadableFile.exists()) {

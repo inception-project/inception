@@ -177,7 +177,7 @@ public class SolrSearchProvider
      * Convert data from SolrDocument to ExternalSearchResult
      * 
      * @param result
-     *            result has just the id complete before the methode
+     *            result has just the id complete before the method
      * @param document
      *            contain all the information about the document
      * @param aTraits
@@ -343,7 +343,7 @@ public class SolrSearchProvider
     }
 
     /**
-     * Escape special characters for standard query parser. Usefull when retrieving document with an
+     * Escape special characters for standard query parser. Useful when retrieving document with an
      * id that contain such of those characters
      * 
      * @param query

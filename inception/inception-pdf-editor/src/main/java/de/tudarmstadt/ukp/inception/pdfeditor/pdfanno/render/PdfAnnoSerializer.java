@@ -106,7 +106,7 @@ public class PdfAnnoSerializer
         do {
             // add context before and after each span
             addContextToSpans(spans, windowSize, aDocumentText);
-            // find occurences by using Aho-Corasick algorithm
+            // find occurrences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap = findOccurrences(spans,
                     aPdfExtractFile.getSanitizedContent());
 
@@ -220,19 +220,19 @@ public class PdfAnnoSerializer
         do {
             // add context before and after each span
             addContextToSpans(iterList, windowSize, aPdfExtractFile.getSanitizedContent());
-            // find occurences by using Aho-Corasick algorithm
+            // find occurrences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap = findOccurrences(iterList,
                     aDocumentModel.getWhitespacelessText());
 
             for (RenderSpan renderSpan : iterList) {
-                List<Emit> occurences = occurrenceMap.get(renderSpan.getTextWithWindow());
-                if (occurences == null || occurences.size() == 0) {
+                List<Emit> occurrences = occurrenceMap.get(renderSpan.getTextWithWindow());
+                if (occurrences == null || occurrences.size() == 0) {
                     // if occurrence list is null or empty, no match was found
                     processed.add(new Offset(-1, -1));
                 }
-                else if (occurences.size() == 1) {
+                else if (occurrences.size() == 1) {
                     // if one occurrence was found produce Offset
-                    Emit emit = occurences.get(0);
+                    Emit emit = occurrences.get(0);
                     int begin = aDocumentModel.getDocumentIndex(
                             emit.getStart() + renderSpan.getWindowBeforeText().length());
                     int end = aDocumentModel.getDocumentIndex(

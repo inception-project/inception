@@ -1557,7 +1557,7 @@ public abstract class AnnotationDetailEditorPanel
     @Deprecated
     protected void onAutoForward(AjaxRequestTarget aTarget)
     {
-        // Overriden in CurationPanel
+        // Overridden in CurationPanel
     }
 
     @SuppressWarnings("unchecked")

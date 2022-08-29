@@ -199,7 +199,7 @@ public abstract class WicketApplicationBase
         File customBootstrap = new File(getApplicationHome(), "bootstrap.css");
 
         if (customBootstrap.exists()) {
-            log.info("Using custom boostrap at [{}]", customBootstrap);
+            log.info("Using custom bootstrap at [{}]", customBootstrap);
             settings.setCssResourceReference(new FileSystemResourceReference(
                     "inception-bootstrap.css", customBootstrap.toPath()));
         }

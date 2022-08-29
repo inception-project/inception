@@ -161,7 +161,7 @@ public class DashboardMenu
 
             if (currentPage == null) {
                 throw new IllegalStateException(
-                        "Menu item targetting a specific project must be on a project page");
+                        "Menu item targeting a specific project must be on a project page");
             }
 
             Project project = currentPage.getProject();
