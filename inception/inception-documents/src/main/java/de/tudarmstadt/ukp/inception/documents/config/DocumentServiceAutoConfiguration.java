@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
+import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 
@@ -52,7 +53,7 @@ public class DocumentServiceAutoConfiguration
     public DocumentAccess documentAccess(ProjectService aProjectService, UserDao aUserService,
             DocumentService aDocumentService)
     {
-        return new DocumentAccess(aProjectService, aUserService, aDocumentService);
+        return new DocumentAccessImpl(aProjectService, aUserService, aDocumentService);
     }
 
     @Bean
