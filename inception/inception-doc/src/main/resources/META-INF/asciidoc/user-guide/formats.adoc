@@ -16,3 +16,11 @@
 
 [[sect_formats]]
 = Formats
+
+This section provides information about the different formats that {product-name} can import and 
+export. While many formats can be imported and exported, some formats can only be imported and others
+can only be exported. Also, not all formats support custom annotation layers. Each format description
+includes a small table explaining whether the format can be imported, exported and whether custom
+layers are supported. The first column includes a format ID in addition to the format name. This
+ID can be used e.g. in conjunction with the remote API when to select the format when importing or
+exporting annotations and documents.
