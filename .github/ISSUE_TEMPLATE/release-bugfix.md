@@ -9,7 +9,7 @@ about: Release checklist for feature releases (first or second digit increase)
 
 **Local**
 - [ ] Run Maven release (usually increase second digit of version, not first). Check that the JDK 
-      used to run the release is not newer than the Java version specified in the minium system
+      used to run the release is not newer than the Java version specified in the minimum system
       requirements!
 - [ ] Sign the standalone JAR
 

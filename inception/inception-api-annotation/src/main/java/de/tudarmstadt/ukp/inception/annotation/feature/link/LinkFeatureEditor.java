@@ -477,7 +477,7 @@ public class LinkFeatureEditor
             Optional<Tag> optionalTag = annotationService.getTag(id);
 
             // If a tag is missing, ignore it. We do not have foreign-key constraints in
-            // traits, so it is not an unusal situation that a user deletes a tag still
+            // traits, so it is not an unusual situation that a user deletes a tag still
             // referenced in a trait.
             if (optionalTag.isPresent()) {
                 Tag tag = optionalTag.get();

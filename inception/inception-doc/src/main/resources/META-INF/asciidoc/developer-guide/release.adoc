@@ -122,7 +122,7 @@ Also, your user needs to have push rights to the `inceptionproject` Dockerhub gr
 If you have just made a release, change to `target/checkout/inception-docker`. Otherwise check out the release
 tag e.g. via `git checkout tags/inception-app-0.18.0`. 
 Make sure that in the top-level POM, the version is set to a release version (no snapshot suffix).
-Then go to the `inception-docker` module folder and there run the following commmands:
+Then go to the `inception-docker` module folder and there run the following commands:
 
 [source,xml]
 ----

@@ -684,7 +684,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteConcept(kb, concept))
-                .as("Check that deleting non-existant concept does nothing")
+                .as("Check that deleting non-existent concept does nothing")
                 .doesNotThrowAnyException();
     }
 
@@ -1004,7 +1004,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteProperty(kb, property))
-                .as("Check that deleting non-existant property does nothing")
+                .as("Check that deleting non-existent property does nothing")
                 .doesNotThrowAnyException();
     }
 
@@ -1336,7 +1336,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteInstance(kb, instance))
-                .as("Check that deleting non-existant instance does nothing")
+                .as("Check that deleting non-existent instance does nothing")
                 .doesNotThrowAnyException();
     }
 

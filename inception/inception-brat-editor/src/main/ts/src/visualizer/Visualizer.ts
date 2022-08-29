@@ -101,7 +101,7 @@ function setSourceDataDefaults (sourceData: SourceData) {
     sourceData.sentence_offsets = sentenceSplit(sourceData.text)
   }
 
-  // Similarily we fall back on whitespace tokenisation
+  // Similarly we fall back on whitespace tokenisation
   if (sourceData.token_offsets === undefined) {
     sourceData.token_offsets = tokenise(sourceData.text)
   }
@@ -988,7 +988,7 @@ export class Visualizer {
   }
 
   /**
-   * Populates the "data" field based on the "sourceData" JSON that we recieved from the server.
+   * Populates the "data" field based on the "sourceData" JSON that we received from the server.
    */
   setData (sourceData: SourceData) {
     this.sourceData = sourceData

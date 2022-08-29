@@ -16,7 +16,7 @@ export function mergeRects (glyphs: VGlyph[]) {
     return []
   }
 
-  // a virtical margin of error.
+  // a vertical margin of error.
   const error = 5 * scale()
 
   let tmp = new Rectangle(glyphs[0].bbox)

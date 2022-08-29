@@ -96,7 +96,7 @@ export class Delegator {
   //   # This will bind the updateAnnotationStore() method to the custom
   //   # annotation:save event. NOTE: Because this is a custom event the
   //   # Delegator#subscribe() method will be used and updateAnnotationStore()
-  //   # will not recieve an event parameter like the previous two examples.
+  //   # will not receive an event parameter like the previous two examples.
   //   @options = {"annotation:save": "updateAnnotationStore"}
   //
   // Returns nothing.
@@ -122,7 +122,7 @@ export class Delegator {
   // can be provided in order to watch for events on a child element.
   //
   // The event can be any standard event supported by jQuery or a custom String.
-  // If a custom string is used the callback function will not recieve an
+  // If a custom string is used the callback function will not receive an
   // event object as it's first parameter.
   //
   // selector     - Selector String matching child elements. (default: '')
@@ -205,8 +205,8 @@ export class Delegator {
 
   // Public: Listens for custom event which when published will call the provided
   // callback. This is essentially a wrapper around @element.bind() but removes
-  // the event parameter that jQuery event callbacks always recieve. These
-  // parameters are unnessecary for custom events.
+  // the event parameter that jQuery event callbacks always receive. These
+  // parameters are unnecessary for custom events.
   //
   // event    - A String event name.
   // callback - A callback function called when the event is published.
@@ -275,7 +275,7 @@ export function _parseEvents(eventsObj: { [x: string]: any; }) {
 };
 
 
-// Native jQuery events that should recieve an event object. Plugins can
+// Native jQuery events that should receive an event object. Plugins can
 // add their own methods to this if required.
 Delegator.natives = (function () {
   const specials = ((() => {

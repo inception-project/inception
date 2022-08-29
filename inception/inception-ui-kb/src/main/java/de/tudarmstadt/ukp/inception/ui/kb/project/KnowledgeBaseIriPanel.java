@@ -122,7 +122,7 @@ public class KnowledgeBaseIriPanel
         iriSchemaChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             SchemaProfile profile = iriSchemaChoice.getModelObject();
             // If the user switches to the custom profile, we retain the values from the
-            // previously selected profile and just make the IRI mapping ediable. If the user
+            // previously selected profile and just make the IRI mapping editable. If the user
             // switches to a pre-defined profile, we reset the values.
             if (SchemaProfile.CUSTOMSCHEMA != profile) {
                 classField.setModelObject(profile.getClassIri());

@@ -292,7 +292,7 @@ public class PdfAnnotationEditor
                 getAnnotations(aTarget, aParams);
                 break;
             default:
-                handleError("Unkown action: " + action, aTarget);
+                handleError("Unknown action: " + action, aTarget);
             }
         }
         catch (IOException e) {

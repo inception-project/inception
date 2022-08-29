@@ -29,7 +29,7 @@ export function renderKnob ({ a, x, y, readOnly, text }): HTMLElement {
 }
 
 /**
- * Adjust the circle position not overlay anothers.
+ * Adjust the circle position not overlay another.
  */
 function adjustPoint (x, y, radius) {
   // Get all knobs.

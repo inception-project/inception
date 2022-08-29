@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 public class GetCollectionInformationResponseTest
 {
     /**
-     * generate BRAT JSON for the collection informations
+     * generate BRAT JSON for the collection information
      *
      * @throws IOException
      *             if an I/O error occurs.

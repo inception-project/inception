@@ -27,7 +27,7 @@ The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *
 The *Prev.* and *Next* buttons in the *Document* frame allow you to go to the previous or next document on your project list. 
 
 When an annotation is selected, there are additional arrow buttons in the right sidebar
-which can be used to navigate between annotations on the selected layer withing the current document.
+which can be used to navigate between annotations on the selected layer within the current document.
 
 You can also use the following keyboard assignments in order to navigate only using your keyboard.
 

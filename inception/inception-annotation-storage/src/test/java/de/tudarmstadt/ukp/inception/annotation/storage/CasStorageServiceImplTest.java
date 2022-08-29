@@ -628,7 +628,7 @@ public class CasStorageServiceImplTest
                     Thread.sleep(50);
                 }
                 catch (FileNotFoundException e) {
-                    // We ignore the FileNotFoundException, this could be hapening if the deleter
+                    // We ignore the FileNotFoundException, this could be happening if the deleter
                     // has just kicked in and would be perfectly normal
                 }
                 catch (Exception e) {

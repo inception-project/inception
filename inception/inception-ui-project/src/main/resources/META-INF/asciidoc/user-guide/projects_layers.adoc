@@ -161,7 +161,7 @@ The layer type defines the structure of the layer. Three different types are sup
 | Example
 
 | Span
-| Continous segment of text delimited by a start and end character offset. The example shows two spans.
+| Continuous segment of text delimited by a start and end character offset. The example shows two spans.
 | image:project_layer_type_span.png[]
 
 | Relation

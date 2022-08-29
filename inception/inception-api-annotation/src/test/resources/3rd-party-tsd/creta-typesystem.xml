@@ -287,7 +287,7 @@ under which filename a CAS is stored.&lt;p&gt;
 &lt;li&gt;&lt;b&gt;document base URI / document URI:&lt;/b&gt; this system identifies a document using
   a URI. The base URI is used to derive the relative path of the document with
   respect to the base location from where it has been read. E.g. if the base
-  URI is &lt;code&gt;file:/texts&lt;/code&gt; and the document URI is &lt;code&gt;file:/texts/english/text1.txt&lt;/code&gt;, then the relativ
+  URI is &lt;code&gt;file:/texts&lt;/code&gt; and the document URI is &lt;code&gt;file:/texts/english/text1.txt&lt;/code&gt;, then the relative
   path of the document is &lt;code&gt;english/text1.txt&lt;/code&gt;. This
   information is used by writers to recreate the directory structure found
   under the base location in the target location.&lt;/li&gt;
@@ -583,7 +583,7 @@ systems.&lt;/p&gt;
                 </featureDescription>
                 <featureDescription>
                     <name>id</name>
-                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assiged by DKPro Core components. If an ID is present, it should be respected by writers.</description>
+                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assigned by DKPro Core components. If an ID is present, it should be respected by writers.</description>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
             </features>
@@ -639,7 +639,7 @@ systems.&lt;/p&gt;
             <features>
                 <featureDescription>
                     <name>id</name>
-                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assiged by DKPro Core components. If an ID is present, it should be respected by writers.</description>
+                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assigned by DKPro Core components. If an ID is present, it should be respected by writers.</description>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
             </features>
@@ -706,7 +706,7 @@ systems.&lt;/p&gt;
                 </featureDescription>
                 <featureDescription>
                     <name>id</name>
-                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assiged by DKPro Core components. If an ID is present, it should be respected by writers.</description>
+                    <description>If this unit had an ID in the source format from which it was imported, it may be stored here. IDs are typically not assigned by DKPro Core components. If an ID is present, it should be respected by writers.</description>
                     <rangeTypeName>uima.cas.String</rangeTypeName>
                 </featureDescription>
             </features>

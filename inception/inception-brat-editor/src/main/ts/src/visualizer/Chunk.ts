@@ -86,8 +86,8 @@ export class Chunk {
   renderText (svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement>) {
     svg.plain(this.text)
       .attr({
-        // Storing the exact position in the attributs here is an optimization because that
-        // allows us to obtain the position direcly later without the browser having to actually
+        // Storing the exact position in the attributes here is an optimization because that
+        // allows us to obtain the position directly later without the browser having to actually
         // layout stuff
         x: this.textX,
         y: this.row.textY,

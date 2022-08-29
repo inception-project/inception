@@ -220,7 +220,7 @@ public class Selection
     /**
      * If an existing annotation is selected, it is returned here. Mind that a selection does not
      * have to point at an existing annotation. It can also point just at a span of text or at the
-     * endpoints of a relation. In this case, the enpoints or begin/end offsets are set, but not the
+     * endpoints of a relation. In this case, the endpoints or begin/end offsets are set, but not the
      * annotation ID.
      * 
      * @return the VID;

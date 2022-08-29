@@ -149,7 +149,7 @@
     "tag_description" : "open clausal complement\r\nAn open clausal complement (xcomp) of a VP or an ADJP is a clausal complement without its own subject, whose reference is determined by an external subject. These complements are always non-finite. The name xcomp is borrowed from Lexical-Functional Grammar.\r\n“He says that you like to swim” xcomp(like, swim)\r\n“I am ready to leave” xcomp(ready, leave)"
   }, {
     "tag_name" : "xsubj",
-    "tag_description" : "controlling subject\r\nA controlling subject is the relation between the head of a open clausal complement (xcomp) and the external subject of that clause. This is an additional dependency, not a basic depedency.\r\n“Tom likes to eat fish” xsubj(eat, Tom)"
+    "tag_description" : "controlling subject\r\nA controlling subject is the relation between the head of a open clausal complement (xcomp) and the external subject of that clause. This is an additional dependency, not a basic dependency.\r\n“Tom likes to eat fish” xsubj(eat, Tom)"
   } ],
   "create_tag" : false
 }

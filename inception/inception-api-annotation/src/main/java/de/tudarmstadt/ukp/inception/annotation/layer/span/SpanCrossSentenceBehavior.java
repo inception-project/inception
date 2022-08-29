@@ -137,7 +137,7 @@ public class SpanCrossSentenceBehavior
             return emptyList();
         }
 
-        // Prepare feedback messsage list
+        // Prepare feedback message list
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
 
         // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
