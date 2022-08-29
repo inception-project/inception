@@ -281,7 +281,7 @@ are supported.
 * HTTP basic authentication
 * OAuth (client credentials)
 
-To enable authentication, select one of the options from the **Authenication** dropdown menu.
+To enable authentication, select one of the options from the **Authentication** dropdown menu.
 
 NOTE: To protect you credentials while sending them to the remote side, it is strongly recommended
       to use a HTTPS connection to the SPARQL endpoint and keep SSL certificate checking enabled.

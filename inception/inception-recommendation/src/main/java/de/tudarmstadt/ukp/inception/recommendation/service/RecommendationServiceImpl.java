@@ -1700,7 +1700,7 @@ public class RecommendationServiceImpl
                 }
                 default:
                     throw new IllegalStateException(
-                            "Unsupport layer type [" + layer.getType() + "]");
+                            "Unsupported layer type [" + layer.getType() + "]");
                 }
 
                 result.add(suggestion);

@@ -26,7 +26,7 @@ A layer behavior may have any of the following responsibilities:
   relevant method is `onRender`. If an annotation does not conform with the behavior, a error
   marker should be added for problematic annotation. This is done by creating a `VComment`
   which attaches an error message to a specified visual element, then adding that to the
-  repsonse `VDocument`. Note that `onRender` is unlike `onCreate` and `onValidate` in that it
+  response `VDocument`. Note that `onRender` is unlike `onCreate` and `onValidate` in that it
   only has indirect access to the CAS: it is passed a mapping from `AnnotationFS` instances to
   their corresponding visual elements, and can use `.getCAS()` on the FS. The annotation layer
   can be identified from the visual element with `.getLayer().getName()`.

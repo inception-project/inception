@@ -327,7 +327,7 @@ export class NormalizedRange {
   }
 
   // Public: Limits the nodes within the NormalizedRange to those contained
-  // withing the bounds parameter. It returns an updated range with all
+  // within the bounds parameter. It returns an updated range with all
   // properties updated. NOTE: Method returns null if all nodes fall outside
   // of the bounds.
   //

@@ -64,7 +64,7 @@ public class RemoteApiAutoConfiguration
                 .pathsToExclude("/**") //
                 .addOpenApiCustomiser(openApi -> { //
                     openApi.info(new Info() //
-                            .title("Remote API disbled") //
+                            .title("Remote API disabled") //
                             .description("The remote API is not enabled."));
                 })//
                 .build();

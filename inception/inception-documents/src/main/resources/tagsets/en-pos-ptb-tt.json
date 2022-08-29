@@ -59,7 +59,7 @@
     "tag_description" : "list item marker\nExamples:  "
   }, {
     "tag_name" : "MD",
-    "tag_description" : "verb, modal auxillary\nExamples: may, should"
+    "tag_description" : "verb, modal auxiliary\nExamples: may, should"
   }, {
     "tag_name" : "NN",
     "tag_description" : "noun, singular or mass\nExamples: tiger, chair, laughter"

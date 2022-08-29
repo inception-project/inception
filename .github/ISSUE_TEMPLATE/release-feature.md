@@ -9,7 +9,7 @@ about: Release checklist for bug-fix releases (third-digit increase)
 
 **Local**
 - [ ] Run Maven release (increase third digit of version). Check that the JDK 
-      used to run the release is not newer than the Java version specified in the minium system
+      used to run the release is not newer than the Java version specified in the minimum system
       requirements!
 - [ ] Sign the standalone JAR
 

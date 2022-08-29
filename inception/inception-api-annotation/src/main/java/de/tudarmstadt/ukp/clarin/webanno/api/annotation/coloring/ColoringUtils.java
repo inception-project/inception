@@ -34,7 +34,7 @@ public class ColoringUtils
     }
 
     /**
-     * Filter out too light colors from the palette - those that do not show propely on a ligth
+     * Filter out too light colors from the palette - those that do not show properly on a light
      * background. The threshold controls what to filter.
      *
      * @param aPalette

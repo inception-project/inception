@@ -261,7 +261,7 @@ public class ProjectConstraintsPanel
             catch (IOException e) {
                 // Cannot call "Component.error()" here - it causes a
                 // org.apache.wicket.WicketRuntimeException: Cannot modify component
-                // hierarchy after render phase has started (page version cant change then
+                // hierarchy after render phase has started (page version can't change then
                 // anymore)
                 LOG.error("Unable to load script", e);
                 return "Unable to load script: " + ExceptionUtils.getRootCauseMessage(e);

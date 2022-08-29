@@ -539,7 +539,7 @@ public class DocumentServiceImpl
     @Override
     public List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument)
     {
-        Validate.notNull(aDocument, "Source cocument must be specified");
+        Validate.notNull(aDocument, "Source document must be specified");
 
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aDocument.getProject());

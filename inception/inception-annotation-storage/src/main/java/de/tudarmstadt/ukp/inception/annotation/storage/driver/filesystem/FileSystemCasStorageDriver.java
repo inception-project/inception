@@ -121,7 +121,7 @@ public class FileSystemCasStorageDriver
         String msgOldExists = "";
         if (oldCasFile.exists()) {
             msgOldExists = String.format(
-                    "Existance of temporary annotation file [%s] indicates that a previous "
+                    "Existence of temporary annotation file [%s] indicates that a previous "
                             + "annotation storage process did not successfully complete. Contact "
                             + "your server administator and request renaming the '%s%s' file "
                             + "to '.ser' manually on the command line. Advise the administrator to "

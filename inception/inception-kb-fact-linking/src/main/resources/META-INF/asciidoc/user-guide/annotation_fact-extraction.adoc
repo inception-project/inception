@@ -19,7 +19,7 @@ and a dialogue box shows as in the figure below.
 image::factExtraction1.png[align="center"]
 
 To create a local knowledge base, one needs to choose *Local* for the type. For the reification,
-*NONE* is the defaut case, but one cannot add or view qualifiers in the knowledge base with *NONE*.
+*NONE* is the default case, but one cannot add or view qualifiers in the knowledge base with *NONE*.
 So, to support qualifiers, one needs to choose *WIKIDATA* for the Reification. One can then follow
 the wizard to finish the setting.
 
@@ -35,7 +35,7 @@ enter _1988_ for this qualifier value, and click *√* to save this qualifier.
 
 image::factExtraction3.png[align="center"]
 
-One can click the pencil icon on the same line as this qualifer to edit and delete this qualifier.
+One can click the pencil icon on the same line as this qualifier to edit and delete this qualifier.
 
 == Linking a fact in the annotation page
 Assuming the project contains documents for annotation, one can now switch to the annotation page

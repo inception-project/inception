@@ -259,7 +259,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         private final CountDownLatch initDoneLatch;
         private final ViewportDefinition vpd;
 
-        private final List<String> recieved = new ArrayList<>();
+        private final List<String> received = new ArrayList<>();
 
         public SessionHandler(CountDownLatch aSubscriptionDoneLatch, CountDownLatch aInitDoneLatch,
                 ViewportDefinition aVpd)
@@ -287,12 +287,12 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         public void onUpdate(StompHeaders aHeaders, MViewportUpdate aPayload)
         {
-            recieved.add(aPayload.getBegin() + "-" + aPayload.getEnd());
+            received.add(aPayload.getBegin() + "-" + aPayload.getEnd());
         }
 
         public List<String> getRecieved()
         {
-            return recieved;
+            return received;
         }
     }
 
