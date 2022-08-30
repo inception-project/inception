@@ -148,7 +148,6 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       console.debug(`Preparing to load script: ${scriptSource} ...`);
 
       var script = document.createElement("script");
-      script.type = "text/javascript";
       script.src = scriptSource;
       script.onload = () => {
         console.info(`Loaded script: ${scriptSource}`);
