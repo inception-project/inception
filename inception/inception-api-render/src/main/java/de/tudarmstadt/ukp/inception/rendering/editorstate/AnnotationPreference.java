@@ -59,9 +59,6 @@ public class AnnotationPreference
 
     private boolean scrollPage = true;
 
-    // if a default layer is to be set
-    private boolean rememberLayer;
-
     // // determine if static color for annotations will be used or we shall
     // // dynamically generate one
     @Deprecated
@@ -147,16 +144,6 @@ public class AnnotationPreference
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;
-    }
-
-    public boolean isRememberLayer()
-    {
-        return rememberLayer;
-    }
-
-    public void setRememberLayer(boolean aRememberLayer)
-    {
-        rememberLayer = aRememberLayer;
     }
 
     public Map<Long, ColoringStrategyType> getColorPerLayer()

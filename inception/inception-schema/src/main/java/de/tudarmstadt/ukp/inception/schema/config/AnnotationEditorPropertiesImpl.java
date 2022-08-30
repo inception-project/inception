@@ -35,7 +35,6 @@ public class AnnotationEditorPropertiesImpl
 {
     private boolean tokenLayerEditable;
     private boolean sentenceLayerEditable;
-    private boolean rememberLayerEnabled = false;
     private boolean forwardAnnotationEnabled = false;
     private boolean configurableJavaScriptActionEnabled = false;
 
@@ -75,17 +74,6 @@ public class AnnotationEditorPropertiesImpl
     public void setForwardAnnotationEnabled(boolean aForwardAnnotationEnabled)
     {
         forwardAnnotationEnabled = aForwardAnnotationEnabled;
-    }
-
-    @Override
-    public boolean isRememberLayerEnabled()
-    {
-        return rememberLayerEnabled;
-    }
-
-    public void setRememberLayerEnabled(boolean aRememberLayerEnabled)
-    {
-        rememberLayerEnabled = aRememberLayerEnabled;
     }
 
     public void setConfigurableJavaScriptActionEnabled(boolean aConfigurableJavaScriptActionEnabled)

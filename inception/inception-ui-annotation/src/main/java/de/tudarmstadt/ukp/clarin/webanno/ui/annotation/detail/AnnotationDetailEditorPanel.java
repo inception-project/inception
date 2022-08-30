@@ -104,7 +104,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
@@ -1387,14 +1386,6 @@ public abstract class AnnotationDetailEditorPanel
                             "Unknown layer [" + annoFs.getType().getName() + "]", e);
                 }
 
-                // If remember layer is off, then the current layer follows the selected annotations
-                // This is only relevant for span annotations because we only have these in the
-                // dropdown - relation annotations are automatically determined based on the
-                // selected span annotation
-                if (!selection.isArc() && !state.getPreferences().isRememberLayer()) {
-                    state.setSelectedAnnotationLayer(layer);
-                }
-
                 loadFeatureEditorModelsCommon(aTarget, aCas, layer, annoFs, null);
             }
             else {
@@ -1857,12 +1848,7 @@ public abstract class AnnotationDetailEditorPanel
     private void updateRememberLayer()
     {
         AnnotatorState state = getModelObject();
-        if (state.getPreferences().isRememberLayer()) {
-            if (state.getDefaultAnnotationLayer() == null) {
-                state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
-            }
-        }
-        else if (!state.getSelection().isArc()) {
+        if (state.getDefaultAnnotationLayer() == null) {
             state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
         }
     }
@@ -1874,11 +1860,6 @@ public abstract class AnnotationDetailEditorPanel
 
     public void refresh(AjaxRequestTarget aTarget)
     {
-        // If the layer selector is de-coupled from the selection, then we leave it in peace
-        if (!getModelObject().getPreferences().isRememberLayer()) {
-            aTarget.add(layerSelectionPanel);
-        }
-
         // featureEditorListPanel is in a wicket:container, so we cannot refresh it directly. It
         // is in a wicket:container for the no-data-notice to lay out properly
         featureEditorListPanel.stream().forEach(aTarget::add);
@@ -1896,42 +1877,6 @@ public abstract class AnnotationDetailEditorPanel
             }
             catch (Exception e) {
                 handleException(this, target, e);
-            }
-        }
-    }
-
-    @OnEvent
-    public void onDefaultLayerChangedEvent(DefaultLayerChangedEvent aEvent)
-    {
-        AnnotatorState state = getModelObject();
-
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class).get();
-
-        // If "remember layer" is set, the we really just update the selected layer...
-        // we do not touch the selected annotation nor the annotation detail panel
-        if (!state.getPreferences().isRememberLayer()) {
-
-            // If "remember layer" is not set, then changing the layer means that we
-            // want to change the type of the currently selected annotation
-            if (!Objects.equals(state.getSelectedAnnotationLayer(),
-                    state.getDefaultAnnotationLayer())
-                    && state.getSelection().getAnnotation().isSet()) {
-                try {
-                    if (state.getSelection().isArc()) {
-                        actionClear(target);
-                    }
-                    else {
-                        actionReplace(target);
-                    }
-                }
-                catch (Exception e) {
-                    handleException(this, target, e);
-                }
-            }
-            // If no annotation is selected, then prime the annotation detail panel for the new type
-            else {
-                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-                reset(target);
             }
         }
     }

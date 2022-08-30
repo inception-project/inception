@@ -33,22 +33,22 @@
     <img id="spinner" src="images/spinner.gif" />
   </div>
   
-  <div class="page-header">
+  <header class="page-header">
     <wicket:container wicket:id="menubar"/>
-  </div>
+  </header>
   
-  <div class="page-content flex-h-container">
+  <main class="page-content flex-h-container">
     <wicket:child>
       [CONTENT]
     </wicket:child>
-  </div>
+  </main>
 
   <div wicket:id="feedbackPanel" class="feedback-panel"></div>
 
-  <div wicket:id="footer" class="page-footer">
+  <footer wicket:id="footer" class="page-footer">
     <wicket:container wicket:id="footerItems">
       <div wicket:id="item"/>
     </wicket:container>
-  </div>
+  </footer>
 </body>
 </html>
