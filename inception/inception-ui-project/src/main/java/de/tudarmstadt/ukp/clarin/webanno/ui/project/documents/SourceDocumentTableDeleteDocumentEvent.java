@@ -17,29 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * A Panel used to add Documents to the selected {@link Project}
+ * Fired when a user clicks to delete a document.
  */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+public class SourceDocumentTableDeleteDocumentEvent
+    extends AbstractAjaxAwareEvent
 {
-    private static final long serialVersionUID = 2116717853865353733L;
+    private final SourceDocument document;
 
-    private @SpringBean DocumentService documentService;
-
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    public SourceDocumentTableDeleteDocumentEvent(AjaxRequestTarget aTarget,
+            SourceDocument aDocument)
     {
-        super(id, aProject);
+        super(aTarget);
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new SourceDocumentTable("documents",
-                aProject.map(documentService::listSourceDocuments)));
+        document = aDocument;
+    }
+
+    public SourceDocument getDocument()
+    {
+        return document;
     }
 }

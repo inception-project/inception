@@ -17,29 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 /**
- * A Panel used to add Documents to the selected {@link Project}
+ * Fired when a user selects or de-selects a row.
  */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+public class SourceDocumentTableRowSelectionChangedEvent
+    extends AbstractAjaxAwareEvent
 {
-    private static final long serialVersionUID = 2116717853865353733L;
+    private final IModel<SourceDocumentTableRow> row;
 
-    private @SpringBean DocumentService documentService;
-
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    public SourceDocumentTableRowSelectionChangedEvent(AjaxRequestTarget aTarget,
+            IModel<SourceDocumentTableRow> aRow)
     {
-        super(id, aProject);
+        super(aTarget);
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new SourceDocumentTable("documents",
-                aProject.map(documentService::listSourceDocuments)));
+        row = aRow;
+    }
+
+    public IModel<SourceDocumentTableRow> getRow()
+    {
+        return row;
     }
 }

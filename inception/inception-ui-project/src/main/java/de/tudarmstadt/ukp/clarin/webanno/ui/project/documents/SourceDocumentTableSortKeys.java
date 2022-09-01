@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-public enum AnnotationDocumentTableSortKeys
+public enum SourceDocumentTableSortKeys
 {
-    NAME, STATE, CREATED, UPDATED;
+    NAME, STATE, CREATED, UPDATED, FORMAT;
 }

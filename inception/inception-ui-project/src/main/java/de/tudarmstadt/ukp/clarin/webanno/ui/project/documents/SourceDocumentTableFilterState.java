@@ -17,29 +17,41 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
-/**
- * A Panel used to add Documents to the selected {@link Project}
- */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+public class SourceDocumentTableFilterState
+    implements Serializable
 {
-    private static final long serialVersionUID = 2116717853865353733L;
+    private static final long serialVersionUID = -6340607235253080789L;
 
-    private @SpringBean DocumentService documentService;
+    private final List<SourceDocumentState> states = new ArrayList<>();
 
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    private String documentName;
+
+    public List<SourceDocumentState> getStates()
     {
-        super(id, aProject);
+        return states;
+    }
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new SourceDocumentTable("documents",
-                aProject.map(documentService::listSourceDocuments)));
+    public void setState(List<SourceDocumentState> states)
+    {
+        states.clear();
+        if (states != null) {
+            states.addAll(states);
+        }
+    }
+
+    public String getDocumentName()
+    {
+        return documentName;
+    }
+
+    public void setDocumentName(String aDocumentName)
+    {
+        documentName = aDocumentName;
     }
 }

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.NAME;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
@@ -33,30 +33,35 @@ import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvid
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-
-public class AnnotationDocumentTableDataProvider
-    extends SortableDataProvider<AnnotationDocument, AnnotationDocumentTableSortKeys>
-    implements IFilterStateLocator<AnnotationDocumentTableFilterState>, Serializable
+public class SourceDocumentTableDataProvider
+    extends SortableDataProvider<SourceDocumentTableRow, SourceDocumentTableSortKeys>
+    implements IFilterStateLocator<SourceDocumentTableFilterState>, Serializable
 {
     private static final long serialVersionUID = -8262950880527423715L;
 
-    private AnnotationDocumentTableFilterState filterState;
-    private IModel<List<AnnotationDocument>> data;
+    private SourceDocumentTableFilterState filterState;
+    private IModel<List<SourceDocumentTableRow>> source;
+    private IModel<List<SourceDocumentTableRow>> data;
 
-    public AnnotationDocumentTableDataProvider(IModel<List<AnnotationDocument>> aDocuments)
+    public SourceDocumentTableDataProvider(IModel<List<SourceDocumentTableRow>> aDocuments)
     {
-        data = aDocuments;
+        source = aDocuments;
+        refresh();
 
         // Init filter
-        filterState = new AnnotationDocumentTableFilterState();
+        filterState = new SourceDocumentTableFilterState();
 
         // Initial Sorting
         setSort(NAME, ASCENDING);
     }
 
+    public void refresh()
+    {
+        data = Model.ofList(source.getObject());
+    }
+
     @Override
-    public Iterator<? extends AnnotationDocument> iterator(long aFirst, long aCount)
+    public Iterator<? extends SourceDocumentTableRow> iterator(long aFirst, long aCount)
     {
         var filteredData = filter(data.getObject());
         filteredData.sort(this::comparator);
@@ -65,8 +70,10 @@ public class AnnotationDocumentTableDataProvider
                 .iterator();
     }
 
-    private int comparator(AnnotationDocument o1, AnnotationDocument o2)
+    private int comparator(SourceDocumentTableRow ob1, SourceDocumentTableRow ob2)
     {
+        var o1 = ob1.getDocument();
+        var o2 = ob2.getDocument();
         int dir = getSort().isAscending() ? 1 : -1;
         switch (getSort().getProperty()) {
         case NAME:
@@ -77,24 +84,27 @@ public class AnnotationDocumentTableDataProvider
             return dir * (o1.getCreated().compareTo(o2.getCreated()));
         case UPDATED:
             return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
+        case FORMAT:
+            return dir * (o1.getFormat().compareTo(o2.getFormat()));
         default:
             return 0;
         }
     }
 
-    public List<AnnotationDocument> filter(List<AnnotationDocument> aData)
+    public List<SourceDocumentTableRow> filter(List<SourceDocumentTableRow> aData)
     {
-        Stream<AnnotationDocument> docStream = aData.stream();
+        Stream<SourceDocumentTableRow> docStream = aData.stream();
 
         // Filter by document name
         if (filterState.getDocumentName() != null) {
-            docStream = docStream.filter(
-                    doc -> containsIgnoreCase(doc.getName(), filterState.getDocumentName()));
+            docStream = docStream.filter(doc -> containsIgnoreCase(doc.getDocument().getName(),
+                    filterState.getDocumentName()));
         }
 
         // Filter by document states
         if (isNotEmpty(filterState.getStates())) {
-            docStream = docStream.filter(doc -> filterState.getStates().contains(doc.getState()));
+            docStream = docStream
+                    .filter(doc -> filterState.getStates().contains(doc.getDocument().getState()));
         }
 
         return docStream.collect(toList());
@@ -107,24 +117,24 @@ public class AnnotationDocumentTableDataProvider
     }
 
     @Override
-    public IModel<AnnotationDocument> model(AnnotationDocument aObject)
+    public IModel<SourceDocumentTableRow> model(SourceDocumentTableRow aObject)
     {
         return Model.of(aObject);
     }
 
     @Override
-    public AnnotationDocumentTableFilterState getFilterState()
+    public SourceDocumentTableFilterState getFilterState()
     {
         return filterState;
     }
 
     @Override
-    public void setFilterState(AnnotationDocumentTableFilterState aState)
+    public void setFilterState(SourceDocumentTableFilterState aState)
     {
         filterState = aState;
     }
 
-    public IModel<List<AnnotationDocument>> getModel()
+    public IModel<List<SourceDocumentTableRow>> getModel()
     {
         return data;
     }

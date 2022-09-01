@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style type="text/css">
+    .document-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .document-table thead td, .document-table thead th{ border-bottom-width: 0 !important; }
+    .document-table tr td, .document-table tr th { text-align: center; }
+    .document-table tr th { white-space: nowrap; }
+    .document-table tr td:nth-child(3), .document-table tr th:nth-child(3) { text-align: left; width: 100%;}
+    .document-table tr td:nth-child(4), .document-table tr th:nth-child(4) { white-space: nowrap;}
+    .document-table tr td:nth-child(5), .document-table tr th:nth-child(5) { white-space: nowrap;}
+    .document-table tr td:nth-child(6), .document-table tr th:nth-child(6) { white-space: nowrap;}
+    .document-table col.s, .document-table tr.s , .document-table td.s { background-color: var(--primary); }
+    .document-table .state-toggle { white-space: nowrap; cursor: pointer; }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="flex-v-container flex-content">
+    <div wicket:id="confirmationDialog"/>
+    <div class="flex-h-container flex-gutter flex-only-internal-gutter justify-content-end mb-3">
+      <div class="flex-content">
+        <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+      </div>
+      <div wicket:id="stateFilters" />
+      <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="btn-group" role="group">
+          <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
+            Bulk action
+          </button>
+          <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+          <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+            <a wicket:id="bulkExport" class="dropdown-item">
+              <span class="badge text-reset">
+                <i class="fas fa-file-download"></i>
+              </span>
+              Export selected
+            </a>
+            <a wicket:id="bulkDelete" class="dropdown-item">
+              <span class="badge badge-pill text-bg-danger">
+                <i class="fas fa-trash"></i>
+              </span>
+              Delete selected
+            </a>
+          </div>
+        </span>
+      </span>
+    </div>
+    <div class="flex-content scrolling flex-h-container border">
+      <div class="flex-content">
+        <table wicket:id="dataTable" class="table table-sm table-hover table-striped document-table" cellspacing="0"
+          align="center" />
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+<wicket:fragment wicket:id="select-column-header">
+  <input wicket:id="allSelected" type="checkbox"/>
+</wicket:fragment>
+<wicket:fragment wicket:id="select-column">
+  <input wicket:id="selected" type="checkbox"/>
+</wicket:fragment>
+<wicket:fragment wicket:id="deleteDocumentColumn">
+  <button wicket:id="delete" type="button" class="btn btn-inline btn-outline-danger btn-inline text-nowrap">
+    <i class="fas fa-trash"></i>
+    <wicket:message key="delete"/>
+  </button>
+</wicket:fragment>
+<wicket:fragment wicket:id="exportDocumentColumn">
+  <button wicket:id="export" type="button" class="btn btn-inline btn-outline-secondary btn-inline text-nowrap">
+    <i class="fas fa-file-download"></i>
+    <wicket:message key="export"/>
+  </button>
+</wicket:fragment>
+</html>

@@ -17,29 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 /**
- * A Panel used to add Documents to the selected {@link Project}
+ * Fired when a user selects or de-selects the entire table
  */
-public class ProjectDocumentsPanel
-    extends ProjectSettingsPanelBase
+public class SourceDocumentTableToggleSelectAllEvent
+    extends AbstractAjaxAwareEvent
 {
-    private static final long serialVersionUID = 2116717853865353733L;
+    private final boolean selectAll;
 
-    private @SpringBean DocumentService documentService;
-
-    public ProjectDocumentsPanel(String id, IModel<Project> aProject)
+    public SourceDocumentTableToggleSelectAllEvent(AjaxRequestTarget aTarget, boolean aSelectAll)
     {
-        super(id, aProject);
+        super(aTarget);
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new SourceDocumentTable("documents",
-                aProject.map(documentService::listSourceDocuments)));
+        selectAll = aSelectAll;
+    }
+
+    public boolean isSelectAll()
+    {
+        return selectAll;
     }
 }

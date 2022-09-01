@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.wicket.Application;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
@@ -34,9 +35,10 @@ public class TempFileResource
 {
     private static final long serialVersionUID = -5472036265926982604L;
 
+    private final DataSupplier supplier;
+
     private File tempFile;
     private FileInputStream is;
-    private DataSupplier supplier;
 
     public TempFileResource(DataSupplier aSupplier)
     {
@@ -57,6 +59,10 @@ public class TempFileResource
         // Write the data to the temporary file
         try {
             tempFile = File.createTempFile("inception-temp", "");
+            var app = Application.get();
+            if (app != null) {
+                app.getResourceSettings().getFileCleaner().track(tempFile, this);
+            }
             tempFile.deleteOnExit();
 
             try (FileOutputStream os = new FileOutputStream(tempFile)) {
