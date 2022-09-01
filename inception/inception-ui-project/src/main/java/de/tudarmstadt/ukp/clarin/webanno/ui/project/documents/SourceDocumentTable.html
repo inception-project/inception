@@ -25,6 +25,8 @@
     .document-table tr th { white-space: nowrap; }
     .document-table tr td:nth-child(3), .document-table tr th:nth-child(3) { text-align: left; width: 100%;}
     .document-table tr td:nth-child(4), .document-table tr th:nth-child(4) { white-space: nowrap;}
+    .document-table tr td:nth-child(5), .document-table tr th:nth-child(5) { white-space: nowrap;}
+    .document-table tr td:nth-child(6), .document-table tr th:nth-child(6) { white-space: nowrap;}
     .document-table col.s, .document-table tr.s , .document-table td.s { background-color: var(--primary); }
     .document-table .state-toggle { white-space: nowrap; cursor: pointer; }
   </style>
@@ -40,15 +42,21 @@
       <span class="dropdown" aria-haspopup="true" aria-expanded="false">
         <span class="btn-group" role="group">
           <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
-            Bulk change
+            Bulk action
           </button>
           <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
           <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+            <a wicket:id="bulkExport" class="dropdown-item">
+              <span class="badge text-reset">
+                <i class="fas fa-file-download"></i>
+              </span>
+              Export selected
+            </a>
             <a wicket:id="bulkDelete" class="dropdown-item">
-              Delete selected
-              <span class="float-end badge badge-pill bg-danger">
+              <span class="badge badge-pill text-bg-danger">
                 <i class="fas fa-trash"></i>
               </span>
+              Delete selected
             </a>
           </div>
         </span>
@@ -72,6 +80,12 @@
   <button wicket:id="delete" type="button" class="btn btn-inline btn-outline-danger btn-inline text-nowrap">
     <i class="fas fa-trash"></i>
     <wicket:message key="delete"/>
+  </button>
+</wicket:fragment>
+<wicket:fragment wicket:id="exportDocumentColumn">
+  <button wicket:id="export" type="button" class="btn btn-inline btn-outline-secondary btn-inline text-nowrap">
+    <i class="fas fa-file-download"></i>
+    <wicket:message key="export"/>
   </button>
 </wicket:fragment>
 </html>

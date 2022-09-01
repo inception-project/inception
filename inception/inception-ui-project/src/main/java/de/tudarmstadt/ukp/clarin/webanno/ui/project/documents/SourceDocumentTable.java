@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.CREATED;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.FORMAT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.STATE;
 import static java.time.Duration.ofMillis;
@@ -51,17 +52,22 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PipedStreamResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
@@ -82,6 +88,7 @@ public class SourceDocumentTable
     private static final String CID_TOGGLE_BULK_CHANGE = "toggleBulkChange";
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentImportExportService importExportService;
 
     private SourceDocumentTableDataProvider dataProvider;
     private DataTable<SourceDocumentTableRow, SourceDocumentTableSortKeys> table;
@@ -110,9 +117,12 @@ public class SourceDocumentTable
                 $ -> $.getDocument().getState().symbol()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentName"), NAME,
                 $ -> $.getDocument().getName()));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentFormat"), FORMAT,
+                $ -> renderFormat($.getDocument().getFormat())));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new SourceDocumentTableDeleteActionColumn(this));
+        columns.add(new SourceDocumentTableExportActionColumn(this));
 
         table = new DataTable<>(CID_DATA_TABLE, columns, dataProvider, 100);
         table.setOutputMarkupId(true);
@@ -142,7 +152,10 @@ public class SourceDocumentTable
         bulkActionDropdownButton.add(visibleWhen(() -> bulkChangeMode));
         queue(bulkActionDropdownButton);
 
-        queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteDocument));
+        queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteDocuments));
+        queue(new AjaxDownloadLink("bulkExport", //
+                Model.of("files.zip"), //
+                LoadableDetachableModel.of(this::exportDocuments)));
 
         queue(new SourceDocumentStateFilterPanel(CID_STATE_FILTERS,
                 () -> dataProvider.getFilterState().getStates()));
@@ -162,6 +175,12 @@ public class SourceDocumentTable
         selectColumns.setVisible(bulkChangeMode);
         dataProvider.refresh();
         aTarget.add(this);
+    }
+
+    private String renderFormat(String aFormatId)
+    {
+        return importExportService.getFormatById(aFormatId).map(FormatSupport::getName)
+                .orElse("Unsupported [" + aFormatId + "]");
     }
 
     private String renderDate(Date aDate)
@@ -230,6 +249,22 @@ public class SourceDocumentTable
         aEvent.getTarget().add(table);
     }
 
+    private List<SourceDocument> getSelectedDocuments()
+    {
+        var selectedDocuments = dataProvider.getModel().getObject().stream() //
+                .filter(SourceDocumentTableRow::isSelected) //
+                .map(SourceDocumentTableRow::getDocument) //
+                .collect(toList());
+        return selectedDocuments;
+    }
+
+    private IResourceStream exportDocuments()
+    {
+        var selectedDocuments = getSelectedDocuments();
+        return new PipedStreamResource(
+                os -> documentService.exportSourceDocuments(os, selectedDocuments));
+    }
+
     private void actionDeleteDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
         IModel<String> documentNameModel = Model.of(aDocument.getName());
@@ -244,15 +279,7 @@ public class SourceDocumentTable
         confirmationDialog.show(aTarget);
     }
 
-    private List<SourceDocument> getSelectedDocuments()
-    {
-        var selectedDocuments = dataProvider.getModel().getObject().stream() //
-                .filter(SourceDocumentTableRow::isSelected) //
-                .map(SourceDocumentTableRow::getDocument).collect(toList());
-        return selectedDocuments;
-    }
-
-    private void actionBulkDeleteDocument(AjaxRequestTarget aTarget)
+    private void actionBulkDeleteDocuments(AjaxRequestTarget aTarget)
     {
         var selectedDocuments = getSelectedDocuments();
 
@@ -300,5 +327,10 @@ public class SourceDocumentTable
         aTarget.addChildren(getPage(), IFeedback.class);
         dataProvider.refresh();
         aTarget.add(table);
+    }
+
+    DocumentService getDocumentService()
+    {
+        return documentService;
     }
 }

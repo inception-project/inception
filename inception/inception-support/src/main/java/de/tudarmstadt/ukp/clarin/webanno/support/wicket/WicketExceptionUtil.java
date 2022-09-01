@@ -22,35 +22,37 @@ import org.apache.uima.UIMAException;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.feedback.IFeedbackContributor;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.Logger;
 
 public final class WicketExceptionUtil
 {
-    public static void handleException(Logger aLog, Component aComponent, AjaxRequestTarget aTarget,
-            Exception aException)
+    public static void handleException(Logger aLog, IFeedbackContributor aFeedbackTarget,
+            AjaxRequestTarget aTarget, Exception aException)
     {
         if (aException instanceof ReplaceHandlerException) {
             // Let Wicket redirects still work
             throw (ReplaceHandlerException) aException;
         }
 
-        if (aTarget != null) {
-            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        if (aTarget != null && aFeedbackTarget instanceof Component) {
+            var component = (Component) aFeedbackTarget;
+            aTarget.addChildren(component.getPage(), IFeedback.class);
         }
 
         try {
             throw aException;
         }
         catch (CommonException e) {
-            aComponent.error("Error: " + e.getMessage());
+            aFeedbackTarget.error("Error: " + e.getMessage());
         }
         catch (UIMAException e) {
-            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            aFeedbackTarget.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
             aLog.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (Exception e) {
-            aComponent.error("Error: " + e.getMessage());
+            aFeedbackTarget.error("Error: " + e.getMessage());
             aLog.error("Error: " + e.getMessage(), e);
         }
     }

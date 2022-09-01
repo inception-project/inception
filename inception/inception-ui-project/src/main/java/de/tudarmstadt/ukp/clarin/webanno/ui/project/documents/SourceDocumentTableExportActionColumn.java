@@ -17,48 +17,64 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import static org.apache.wicket.event.Broadcast.BUBBLE;
+import java.lang.invoke.MethodHandles;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.util.resource.FileResourceStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 
-public class SourceDocumentTableDeleteActionColumn
+public class SourceDocumentTableExportActionColumn
     extends AbstractColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>
 {
-    public static final String FID_DELETE_DOCUMENT_COLUMN = "deleteDocumentColumn";
-
     private static final long serialVersionUID = 8324173231787296215L;
 
-    private MarkupContainer fragmentProvider;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public SourceDocumentTableDeleteActionColumn(MarkupContainer aFragmentProvider)
+    public static final String FID_EXPORT_DOCUMENT_COLUMN = "exportDocumentColumn";
+
+    private static final String CID_EXPORT = "export";
+
+    private SourceDocumentTable table;
+
+    public SourceDocumentTableExportActionColumn(SourceDocumentTable aTable)
     {
         super(null);
-        fragmentProvider = aFragmentProvider;
+        table = aTable;
     }
 
     @Override
     public void populateItem(Item<ICellPopulator<SourceDocumentTableRow>> aItem,
             String aComponentId, IModel<SourceDocumentTableRow> aRowModel)
     {
-        var fragment = new Fragment(aComponentId, FID_DELETE_DOCUMENT_COLUMN, fragmentProvider);
-        fragment.queue(new LambdaAjaxLink("delete",
-                $ -> actionDeleteDocument($, aItem, aRowModel.getObject().getDocument())));
+        var fragment = new Fragment(aComponentId, FID_EXPORT_DOCUMENT_COLUMN, table);
+
+        fragment.queue(new AjaxDownloadLink(CID_EXPORT,
+                LoadableDetachableModel.of(() -> export(aRowModel.getObject().getDocument()))));
         aItem.add(fragment);
     }
 
-    private void actionDeleteDocument(AjaxRequestTarget aTarget, Component aItem,
-            SourceDocument aDocument)
+    private FileResourceStream export(SourceDocument aDocument)
     {
-        aItem.send(aItem, BUBBLE, new SourceDocumentTableDeleteDocumentEvent(aTarget, aDocument));
+        try {
+            return new FileResourceStream(
+                    table.getDocumentService().getSourceDocumentFile(aDocument));
+        }
+        catch (Exception e) {
+            var handler = RequestCycle.get().find(AjaxRequestTarget.class);
+            WicketExceptionUtil.handleException(LOG, table.getSession(), handler.orElse(null), e);
+            return null;
+        }
     }
 }

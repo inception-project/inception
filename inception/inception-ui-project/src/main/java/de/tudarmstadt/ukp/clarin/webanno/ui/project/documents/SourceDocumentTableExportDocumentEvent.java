@@ -17,7 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-public enum SourceDocumentTableSortKeys
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+/**
+ * Fired when a user clicks to delete a document.
+ */
+public class SourceDocumentTableExportDocumentEvent
+    extends AbstractAjaxAwareEvent
 {
-    NAME, STATE, CREATED, UPDATED, FORMAT;
+    private final SourceDocument document;
+
+    public SourceDocumentTableExportDocumentEvent(AjaxRequestTarget aTarget,
+            SourceDocument aDocument)
+    {
+        super(aTarget);
+
+        document = aDocument;
+    }
+
+    public SourceDocument getDocument()
+    {
+        return document;
+    }
 }

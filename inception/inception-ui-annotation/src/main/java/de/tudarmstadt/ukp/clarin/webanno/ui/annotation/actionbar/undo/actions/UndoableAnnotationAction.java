@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public interface UndoableAnnotationAction
+    extends Serializable
 {
     long getRequestId();
 

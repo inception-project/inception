@@ -84,6 +84,8 @@ public class SourceDocumentTableDataProvider
             return dir * (o1.getCreated().compareTo(o2.getCreated()));
         case UPDATED:
             return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
+        case FORMAT:
+            return dir * (o1.getFormat().compareTo(o2.getFormat()));
         default:
             return 0;
         }
