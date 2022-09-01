@@ -34,6 +34,8 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public class PostActionScrollToAndSelect
     implements PostAction
 {
+    private static final long serialVersionUID = -1582144292323507612L;
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final VID vid;

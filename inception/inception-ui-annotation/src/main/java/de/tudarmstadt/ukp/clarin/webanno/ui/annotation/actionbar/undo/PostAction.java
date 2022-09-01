@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
+import java.io.Serializable;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 public interface PostAction
+    extends Serializable
 {
     void apply(Component aContextComponent, AjaxRequestTarget aTarget);
 }
