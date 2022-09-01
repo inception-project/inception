@@ -68,9 +68,9 @@ import wicket.contrib.input.events.key.KeyType;
 public class UndoPanel
     extends Panel
 {
-    private static final long serialVersionUID = -6213541738534665790L;
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final long serialVersionUID = -6213541738534665790L;
 
     private static final AtomicLong NEXT_REQUEST_ID = new AtomicLong(1);
 
@@ -224,6 +224,7 @@ public class UndoPanel
             }
 
             postAction.ifPresent($ -> $.apply(this, aTarget));
+            aTarget.addChildren(page, IFeedback.class);
 
             page.writeEditorCas(cas);
             page.actionRefreshDocument(aTarget);

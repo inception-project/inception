@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public class PostActionScrollToAndHighlight
     implements PostAction
 {
+    private static final long serialVersionUID = 7366190520775097868L;
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final SourceDocument document;
