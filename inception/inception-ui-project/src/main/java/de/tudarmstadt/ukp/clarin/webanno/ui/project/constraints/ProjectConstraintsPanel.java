@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.io.IOUtils.toInputStream;
 
 import java.io.File;
