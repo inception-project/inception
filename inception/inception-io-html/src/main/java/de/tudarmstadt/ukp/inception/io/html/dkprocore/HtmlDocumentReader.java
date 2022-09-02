@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.io.html.dkprocore;
 
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils.trim;
+import static de.tudarmstadt.ukp.inception.io.html.dkprocore.internal.JSoupUtil.appendNormalisedText;
+import static de.tudarmstadt.ukp.inception.io.html.dkprocore.internal.JSoupUtil.lastCharIsWhitespace;
 import static org.dkpro.core.api.parameter.ComponentParameters.DEFAULT_ENCODING;
-import static org.dkpro.core.io.html.internal.JSoupUtil.appendNormalisedText;
-import static org.dkpro.core.io.html.internal.JSoupUtil.lastCharIsWhitespace;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

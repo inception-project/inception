@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><xmi:XMI xmlns:pos="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos.ecore" xmlns:tcas="http:///uima/tcas.ecore" xmlns:xmi="http://www.omg.org/XMI" xmlns:cas="http:///uima/cas.ecore" xmlns:tweet="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/pos/tweet.ecore" xmlns:morph="http:///de/tudarmstadt/ukp/dkpro/core/api/lexmorph/type/morph.ecore" xmlns:dependency="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/dependency.ecore" xmlns:type6="http:///de/tudarmstadt/ukp/dkpro/core/api/semantics/type.ecore" xmlns:type="http:///de/tudarmstadt/ukp/dkpro/core/api/anomaly/type.ecore" xmlns:type7="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type.ecore" xmlns:type3="http:///de/tudarmstadt/ukp/dkpro/core/api/metadata/type.ecore" xmlns:type8="http:///org/dkpro/core/api/xml/type.ecore" xmlns:type4="http:///de/tudarmstadt/ukp/dkpro/core/api/ner/type.ecore" xmlns:type5="http:///de/tudarmstadt/ukp/dkpro/core/api/segmentation/type.ecore" xmlns:type2="http:///de/tudarmstadt/ukp/dkpro/core/api/coref/type.ecore" xmlns:constituent="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/constituent.ecore" xmlns:chunk="http:///de/tudarmstadt/ukp/dkpro/core/api/syntax/type/chunk.ecore" xmi:version="2.0">
     <cas:NULL xmi:id="0"/>
-    <type3:DocumentMetaData xmi:id="1" sofa="2" begin="0" end="73" language="en" documentTitle="test-with-head-and-doctype.html" documentId="test-with-head-and-doctype.html" isLastSegment="false"/>
+    <type3:DocumentMetaData xmi:id="1" sofa="2" begin="0" end="72" language="en" documentTitle="test-with-head-and-doctype.html" documentId="test-with-head-and-doctype.html" isLastSegment="false"/>
     <type8:XmlTextNode xmi:id="15" sofa="2" begin="0" end="1" parent="14" captured="true"/>
     <type8:XmlTextNode xmi:id="5" sofa="2" begin="0" end="0" parent="4" text=" " captured="false"/>
     <type8:XmlTextNode xmi:id="7" sofa="2" begin="0" end="0" parent="6" text=" " captured="false"/>
@@ -13,9 +13,9 @@
     <type8:XmlTextNode xmi:id="25" sofa="2" begin="39" end="40" parent="14" captured="true"/>
     <type8:XmlTextNode xmi:id="27" sofa="2" begin="40" end="71" parent="26" captured="true"/>
     <type8:XmlTextNode xmi:id="30" sofa="2" begin="71" end="72" parent="14" captured="true"/>
-    <type8:XmlTextNode xmi:id="31" sofa="2" begin="72" end="73" parent="14" captured="true"/>
-    <type8:XmlElement xmi:id="4" sofa="2" begin="0" end="73" children="5 6 13 14" qName="html"/>
-    <type8:XmlElement xmi:id="14" sofa="2" begin="0" end="73" parent="4" children="15 16 20 21 25 26 30 31" qName="body"/>
+    <type8:XmlTextNode xmi:id="32" sofa="2" begin="72" end="72" parent="4" text=" " captured="false"/>
+    <type8:XmlElement xmi:id="4" sofa="2" begin="0" end="72" children="5 6 13 14 32" qName="html"/>
+    <type8:XmlElement xmi:id="14" sofa="2" begin="0" end="72" parent="4" children="15 16 20 21 25 26 30" qName="body"/>
     <type8:XmlElement xmi:id="6" sofa="2" begin="0" end="0" parent="4" children="7 8 11" qName="head"/>
     <type8:XmlElement xmi:id="8" sofa="2" begin="0" end="0" parent="6" children="9" qName="title"/>
     <type8:XmlElement xmi:id="16" sofa="2" begin="1" end="8" parent="14" children="17" qName="h1"/>
@@ -24,7 +24,7 @@
     <type5:Heading xmi:id="19" sofa="2" begin="1" end="8" divType="h1"/>
     <type5:Paragraph xmi:id="24" sofa="2" begin="10" end="38" divType="p"/>
     <type5:Paragraph xmi:id="29" sofa="2" begin="41" end="70" divType="p"/>
-    <type8:XmlDocument xmi:id="3" sofa="2" begin="0" end="73" root="4"/>
-    <cas:Sofa xmi:id="2" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString=" Heading  This is the first paragraph.   This is the second paragraph.   "/>
-    <cas:View sofa="2" members="1 15 5 7 9 11 13 17 20 22 25 27 30 31 4 14 6 8 16 21 26 19 24 29 3"/>
+    <type8:XmlDocument xmi:id="3" sofa="2" begin="0" end="72" root="4"/>
+    <cas:Sofa xmi:id="2" sofaNum="1" sofaID="_InitialView" mimeType="text" sofaString=" Heading  This is the first paragraph.   This is the second paragraph.  "/>
+    <cas:View sofa="2" members="1 15 5 7 9 11 13 17 20 22 25 27 30 32 4 14 6 8 16 21 26 19 24 29 3"/>
 </xmi:XMI>
