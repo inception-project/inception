@@ -33,6 +33,9 @@ public interface LearningRecordService
 {
     List<LearningRecord> listRecords(String user, AnnotationLayer layer);
 
+    List<LearningRecord> listRecords(SourceDocument aDocument, String aUser,
+            AnnotationFeature aFeature);
+
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
      *         used, e.g. for loading only a reduced part of the history in the active learning
