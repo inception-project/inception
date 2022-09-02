@@ -172,13 +172,13 @@ public class LearningRecordServiceImpl
     {
         String sql = String.join("\n", //
                 "FROM LearningRecord l WHERE", //
-                "l.document = :document AND", //
+                "l.sourceDocument = :sourceDocument AND", //
                 "l.user = :user AND", //
-                "l.layer = :layer AND", //
+                "l.annotationFeature = :annotationFeature AND", //
                 "l.userAction != :action", //
                 "ORDER BY l.id desc");
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
-                .setParameter("document", aDocument) //
+                .setParameter("sourceDocument", aDocument) //
                 .setParameter("user", aUsername) //
                 .setParameter("annotationFeature", aFeature) //
                 .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
