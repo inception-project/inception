@@ -1126,8 +1126,8 @@ public class ActiveLearningSidebar
             SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.groupsOfType(
                     SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
-            recommendationService.calculateSpanSuggestionVisibility(cas, user.getUsername(), aLayer,
-                    group, 0, cas.getDocumentText().length());
+            recommendationService.calculateSpanSuggestionVisibility(aDocument, cas,
+                    user.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
             moveToNextSuggestion(aTarget);
         }

@@ -167,6 +167,26 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
+    public List<LearningRecord> listRecords(SourceDocument aDocument, String aUsername,
+            AnnotationFeature aFeature)
+    {
+        String sql = String.join("\n", //
+                "FROM LearningRecord l WHERE", //
+                "l.sourceDocument = :sourceDocument AND", //
+                "l.user = :user AND", //
+                "l.annotationFeature = :annotationFeature AND", //
+                "l.userAction != :action", //
+                "ORDER BY l.id desc");
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("sourceDocument", aDocument) //
+                .setParameter("user", aUsername) //
+                .setParameter("annotationFeature", aFeature) //
+                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
     public List<LearningRecord> listRecords(String aUsername, AnnotationLayer aLayer, int aLimit)
     {
         String sql = String.join("\n", //

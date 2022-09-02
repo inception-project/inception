@@ -42,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -57,9 +58,10 @@ public class RelationSuggestionVisibilityCalculationTest
     private @Mock AnnotationSchemaService annoService;
 
     private Project project;
+    private SourceDocument doc;
     private AnnotationLayer layer;
+    private AnnotationFeature feature;
     private String user;
-    private long layerId;
 
     private RecommendationServiceImpl sut;
 
@@ -71,10 +73,14 @@ public class RelationSuggestionVisibilityCalculationTest
         layer = new AnnotationLayer();
         layer.setName(Dependency._TypeName);
         layer.setId(42l);
-        layerId = layer.getId();
+
+        feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
+                .withName(Dependency._FeatName_DependencyType).build();
 
         project = new Project();
         project.setName("Test Project");
+
+        doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
 
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList
@@ -91,8 +97,8 @@ public class RelationSuggestionVisibilityCalculationTest
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(
-                layerId, Dependency._FeatName_DependencyType, new int[][] { { 1, 0, 3, 13, 20 } });
+        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(doc,
+                feature, new int[][] { { 1, 0, 3, 13, 20 } });
         sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
@@ -112,8 +118,8 @@ public class RelationSuggestionVisibilityCalculationTest
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(
-                layerId, Dependency._FeatName_DependencyType, new int[][] { { 1, 0, 3, 13, 20 } });
+        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(doc,
+                feature, new int[][] { { 1, 0, 3, 13, 20 } });
         sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
