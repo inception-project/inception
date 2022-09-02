@@ -112,7 +112,7 @@ public class RecommendationSpanRenderer
 
         String type = typeAdapter.getEncodedTypeName();
 
-        recommendationService.calculateSpanSuggestionVisibility(cas,
+        recommendationService.calculateSpanSuggestionVisibility(aRequest.getSourceDocument(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 

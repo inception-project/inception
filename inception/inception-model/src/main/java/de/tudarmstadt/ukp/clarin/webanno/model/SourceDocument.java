@@ -92,6 +92,18 @@ public class SourceDocument
         state = SourceDocumentState.NEW;
     }
 
+    private SourceDocument(Builder builder)
+    {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.project = builder.project;
+        this.format = builder.format;
+        this.state = builder.state;
+        this.timestamp = builder.timestamp;
+        this.created = builder.created;
+        this.updated = builder.updated;
+    }
+
     public Long getId()
     {
         return id;
@@ -219,4 +231,79 @@ public class SourceDocument
 
     public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator
             .comparing(SourceDocument::getName);
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private String name;
+        private Project project;
+        private String format;
+        private SourceDocumentState state = SourceDocumentState.NEW;
+        private Date timestamp;
+        private Date created;
+        private Date updated;
+
+        private Builder()
+        {
+            // No instanccs
+        }
+
+        public Builder withId(Long aId)
+        {
+            id = aId;
+            return this;
+        }
+
+        public Builder withName(String aName)
+        {
+            name = aName;
+            return this;
+        }
+
+        public Builder withProject(Project aProject)
+        {
+            project = aProject;
+            return this;
+        }
+
+        public Builder withFormat(String aFormat)
+        {
+            format = aFormat;
+            return this;
+        }
+
+        public Builder withState(SourceDocumentState aState)
+        {
+            state = aState;
+            return this;
+        }
+
+        public Builder withTimestamp(Date aTimestamp)
+        {
+            timestamp = aTimestamp;
+            return this;
+        }
+
+        public Builder withCreated(Date aCreated)
+        {
+            created = aCreated;
+            return this;
+        }
+
+        public Builder withUpdated(Date aUpdated)
+        {
+            updated = aUpdated;
+            return this;
+        }
+
+        public SourceDocument build()
+        {
+            return new SourceDocument(this);
+        }
+    }
 }

@@ -1631,7 +1631,7 @@ public class RecommendationServiceImpl
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
-        calculateSpanSuggestionVisibility(aOriginalCas, aUser.getUsername(),
+        calculateSpanSuggestionVisibility(aDocument, aOriginalCas, aUser.getUsername(),
                 aEngine.getRecommender().getLayer(), groupedSuggestions, 0,
                 aOriginalCas.getDocumentText().length());
 
@@ -1836,9 +1836,9 @@ public class RecommendationServiceImpl
      * Goes through all SpanSuggestions and determines the visibility of each one
      */
     @Override
-    public void calculateSpanSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
+    public void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
+            AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
+            int aWindowBegin, int aWindowEnd)
     {
         log.trace("calculateSpanSuggestionVisibility()");
 
@@ -2090,34 +2090,36 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void hideSuggestion(AnnotationSuggestion aSuggestion, LearningRecordType aAction)
+    static boolean hideSuggestion(AnnotationSuggestion aSuggestion, LearningRecordType aAction)
     {
         switch (aAction) {
         case REJECTED:
             aSuggestion.hide(FLAG_REJECTED);
-            break;
+            return true;
         case SKIPPED:
             aSuggestion.hide(FLAG_SKIPPED);
-            break;
+            return true;
         default:
             // Nothing to do for the other cases.
             // ACCEPTED annotation are filtered out anyway because the overlap with a created
             // annotation and the same for CORRECTED
+            return false;
         }
     }
 
-    private void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
+    static void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
             List<LearningRecord> aRecordedRecommendations)
     {
-        // If it was rejected or skipped, hide it
-        for (LearningRecord record : aRecordedRecommendations) {
-            boolean isAtTheSamePlace = record.getOffsetBegin() == aSuggestion.getBegin()
-                    && record.getOffsetEnd() == aSuggestion.getEnd();
-            if (isAtTheSamePlace && aSuggestion.labelEquals(record.getAnnotation())) {
-                hideSuggestion(aSuggestion, record.getUserAction());
-                return;
-            }
-        }
+        aRecordedRecommendations.stream() //
+                .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId()))
+                .filter(r -> Objects.equals(r.getAnnotationFeature().getName(),
+                        aSuggestion.getFeature()))
+                .filter(r -> Objects.equals(r.getSourceDocument().getName(),
+                        aSuggestion.getDocumentName()))
+                .filter(r -> aSuggestion.labelEquals(r.getAnnotation()))
+                .filter(r -> r.getOffsetBegin() == aSuggestion.getBegin()
+                        && r.getOffsetEnd() == aSuggestion.getEnd())
+                .filter(r -> hideSuggestion(aSuggestion, r.getUserAction())).findAny();
     }
 
     @Nullable
