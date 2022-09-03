@@ -33,10 +33,6 @@
         inputs[idx + 1].focus(); //  handles submit buttons
         inputs[idx + 1].select();
       }
-      // If it is a forward annotation on free text, trigger change even on Enter key up
-      if($('#annotationFeatureForm :checkbox:checked').length > 0) {
-        $(this).trigger("change")
-      }
     }
     
     function manageEnter() {
