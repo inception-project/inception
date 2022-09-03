@@ -17,35 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.config;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-
 public interface AnnotationEditorProperties
 {
     boolean isTokenLayerEditable();
 
     boolean isSentenceLayerEditable();
-
-    /**
-     * @return whether the "forward annotation" setting is available to annotators.
-     * @deprecated to be removed without replacement
-     */
-    @Deprecated
-    boolean isForwardAnnotationEnabled();
-
-    default boolean isLayerBlocked(AnnotationLayer aLayer)
-    {
-        if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
-            return true;
-        }
-
-        if (!isSentenceLayerEditable() && Sentence.class.getName().equals(aLayer.getName())) {
-            return true;
-        }
-
-        return false;
-    }
 
     /**
      * @deprecated Configurable JavaScript action to be removed soon.
