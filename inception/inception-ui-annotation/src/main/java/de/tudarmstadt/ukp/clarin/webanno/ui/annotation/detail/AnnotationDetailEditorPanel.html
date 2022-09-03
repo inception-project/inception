@@ -33,10 +33,6 @@
         inputs[idx + 1].focus(); //  handles submit buttons
         inputs[idx + 1].select();
       }
-      // If it is a forward annotation on free text, trigger change even on Enter key up
-      if($('#annotationFeatureForm :checkbox:checked').length > 0) {
-        $(this).trigger("change")
-      }
     }
     
     function manageEnter() {
@@ -68,7 +64,6 @@
   <wicket:panel>
     <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
       <div wicket:id=deleteAnnotationDialog/>
-      <div wicket:id=replaceAnnotationDialog/>
       <div id="annotationFeatureForm" class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id="layerContainer" class="card"/>
         <div class="flex-content panel card">
