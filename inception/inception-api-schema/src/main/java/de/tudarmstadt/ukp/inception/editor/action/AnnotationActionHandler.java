@@ -33,16 +33,6 @@ public interface AnnotationActionHandler
         throws IOException, AnnotationException;
 
     /**
-     * Create annotation on the next token for forward annotation
-     * 
-     * @deprecated to be removed without replacement.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
-        throws IOException, AnnotationException;
-
-    /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      * 
      * @param aTarget

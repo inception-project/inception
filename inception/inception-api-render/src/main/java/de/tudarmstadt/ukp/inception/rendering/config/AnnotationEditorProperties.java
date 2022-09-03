@@ -27,13 +27,6 @@ public interface AnnotationEditorProperties
 
     boolean isSentenceLayerEditable();
 
-    /**
-     * @return whether the "forward annotation" setting is available to annotators.
-     * @deprecated to be removed without replacement
-     */
-    @Deprecated
-    boolean isForwardAnnotationEnabled();
-
     default boolean isLayerBlocked(AnnotationLayer aLayer)
     {
         if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
