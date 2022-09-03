@@ -35,7 +35,6 @@ public class AnnotationEditorPropertiesImpl
 {
     private boolean tokenLayerEditable;
     private boolean sentenceLayerEditable;
-    private boolean forwardAnnotationEnabled = false;
     private boolean configurableJavaScriptActionEnabled = false;
 
     @ManagedAttribute
@@ -62,18 +61,6 @@ public class AnnotationEditorPropertiesImpl
     public void setSentenceLayerEditable(boolean aSentenceLayerEditable)
     {
         sentenceLayerEditable = aSentenceLayerEditable;
-    }
-
-    @Deprecated
-    @Override
-    public boolean isForwardAnnotationEnabled()
-    {
-        return forwardAnnotationEnabled;
-    }
-
-    public void setForwardAnnotationEnabled(boolean aForwardAnnotationEnabled)
-    {
-        forwardAnnotationEnabled = aForwardAnnotationEnabled;
     }
 
     public void setConfigurableJavaScriptActionEnabled(boolean aConfigurableJavaScriptActionEnabled)

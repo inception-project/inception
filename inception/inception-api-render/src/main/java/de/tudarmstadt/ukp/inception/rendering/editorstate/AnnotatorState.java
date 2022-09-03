@@ -62,11 +62,6 @@ public interface AnnotatorState
     // Control which kinds of annotations are created when an annotation creation action is
     // triggered and also what happens after the annotation has been created (e.g. auto-forward)
     // ---------------------------------------------------------------------------------------------
-    @Deprecated
-    boolean isForwardAnnotation();
-
-    @Deprecated
-    void setForwardAnnotation(boolean forwardAnnotation);
 
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages

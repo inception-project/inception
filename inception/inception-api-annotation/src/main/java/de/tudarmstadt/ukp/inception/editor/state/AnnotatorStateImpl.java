@@ -182,10 +182,6 @@ public class AnnotatorStateImpl
     @SuppressWarnings("unused")
     private String layerName;
 
-    // enable automatic forward annotations
-    @Deprecated
-    private boolean forwardAnnotation;
-
     // User action while annotating on document
     @Deprecated
     @SuppressWarnings("unused")
@@ -570,20 +566,6 @@ public class AnnotatorStateImpl
     public void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer)
     {
         this.defaultAnnotationLayer = defaultAnnotationLayer;
-    }
-
-    @Deprecated
-    @Override
-    public boolean isForwardAnnotation()
-    {
-        return forwardAnnotation;
-    }
-
-    @Deprecated
-    @Override
-    public void setForwardAnnotation(boolean forwardAnnotation)
-    {
-        this.forwardAnnotation = forwardAnnotation;
     }
 
     @Override
