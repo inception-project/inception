@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.CustomActionHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
@@ -70,13 +69,6 @@ public class DiamAutoConfig
             AnnotationEditorExtensionRegistry aExtensionRegistry)
     {
         return new ExtensionActionHandler(aExtensionRegistry);
-    }
-
-    @Deprecated
-    @Bean
-    public CustomActionHandler customActionHandler(AnnotationSchemaService aAnnotationService)
-    {
-        return new CustomActionHandler(aAnnotationService);
     }
 
     @Bean
