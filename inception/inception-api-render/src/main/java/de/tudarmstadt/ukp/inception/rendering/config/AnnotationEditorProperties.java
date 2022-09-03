@@ -17,11 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.config;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+
 public interface AnnotationEditorProperties
 {
     boolean isTokenLayerEditable();
 
     boolean isSentenceLayerEditable();
+
+    default boolean isLayerBlocked(AnnotationLayer aLayer)
+    {
+        if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
+            return true;
+        }
+
+        if (!isSentenceLayerEditable() && Sentence.class.getName().equals(aLayer.getName())) {
+            return true;
+        }
+
+        return false;
+    }
 
     /**
      * @deprecated Configurable JavaScript action to be removed soon.
