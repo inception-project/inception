@@ -55,6 +55,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
@@ -84,6 +85,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
@@ -1405,19 +1407,21 @@ public class KnowledgeBaseServiceImpl
             luceneSail.reindex();
             conn.commit();
         }
-        catch (IndexFormatTooNewException e) {
-            log.warn("Unable to access index: {}", e.getMessage());
-            log.info("Downgrade detected - trying to rebuild index from scratch...");
+        catch (SailException e) {
+            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)) {
+                log.warn("Unable to access index: {}", e.getMessage());
+                log.info("Downgrade detected - trying to rebuild index from scratch...");
 
-            String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
-            luceneSail.shutDown();
-            FileUtils.deleteQuietly(new File(luceneDir));
-            luceneSail.init();
+                String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+                luceneSail.shutDown();
+                FileUtils.deleteQuietly(new File(luceneDir));
+                luceneSail.init();
 
-            // Only try to rebuild once - so no recursion here!
-            try (RepositoryConnection conn = getConnection(aKB)) {
-                luceneSail.reindex();
-                conn.commit();
+                // Only try to rebuild once - so no recursion here!
+                try (RepositoryConnection conn = getConnection(aKB)) {
+                    luceneSail.reindex();
+                    conn.commit();
+                }
             }
         }
     }
