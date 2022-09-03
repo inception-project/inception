@@ -137,7 +137,6 @@ public abstract class AnnotationDetailEditorPanel
 
     // Components
     private final ConfirmationDialog deleteAnnotationDialog;
-    private final ConfirmationDialog replaceAnnotationDialog;
     private final AnnotationPageBase editorPage;
 
     public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
@@ -152,9 +151,6 @@ public abstract class AnnotationDetailEditorPanel
 
         add(deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog",
                 new StringResourceModel("DeleteDialog.title", this, null)));
-        add(replaceAnnotationDialog = new ConfirmationDialog("replaceAnnotationDialog",
-                new StringResourceModel("ReplaceDialog.title", this, null),
-                new StringResourceModel("ReplaceDialog.text", this, null)));
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));
@@ -810,7 +806,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         CAS cas = getEditorCas();
         AnnotatorState state = getModelObject();
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, aVid.getId());
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
         deleteAnnotation(cas, state, aVid, layer, adapter);
@@ -1465,60 +1460,6 @@ public abstract class AnnotationDetailEditorPanel
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
         link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
-    }
-
-    private void actionReplace(AjaxRequestTarget aTarget) throws IOException
-    {
-        AnnotatorState state = getModelObject();
-
-        AnnotationLayer newLayer = state.getDefaultAnnotationLayer();
-
-        CAS cas = getEditorCas();
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas,
-                state.getSelection().getAnnotation().getId());
-        AnnotationLayer currentLayer = annotationService.findLayer(state.getProject(), fs);
-
-        if (currentLayer.isReadonly()) {
-            error("Cannot replace an annotation on a read-only layer.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        AttachStatus attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
-        if (attachStatus.readOnlyAttached) {
-            error("Cannot replace an annotation to which annotations on read-only layers attach.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        replaceAnnotationDialog
-                .setContentModel(new StringResourceModel("ReplaceDialog.text", this).setParameters(
-                        currentLayer.getUiName(), newLayer.getUiName(), attachStatus.attachCount));
-        replaceAnnotationDialog.setConfirmAction((_target) -> {
-            // The delete action clears the selection, but we need it to create
-            // the new annotation - so we save it.
-            Selection savedSel = getModelObject().getSelection().copy();
-
-            // Delete current annotation
-            actionDelete(_target);
-
-            // Set up the action to create the replacement annotation
-            AnnotationLayer layer = state.getDefaultAnnotationLayer();
-            state.getSelection().set(savedSel);
-            state.getSelection().setAnnotation(VID.NONE_ID);
-            state.setSelectedAnnotationLayer(layer);
-            state.setDefaultAnnotationLayer(layer);
-            loadFeatureEditorModels(_target);
-
-            // Create the replacement annotation
-            actionCreateOrUpdate(_target, getEditorCas());
-            refresh(_target);
-        });
-        replaceAnnotationDialog.setCancelAction((_target) -> {
-            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
-            refresh(_target);
-        });
-        replaceAnnotationDialog.show(aTarget);
     }
 
     private void updateRememberLayer()
