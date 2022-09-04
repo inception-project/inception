@@ -17,15 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static org.apache.wicket.event.Broadcast.BUBBLE;
-
 import java.util.Objects;
 
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxEventBehavior;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.markup.html.basic.Label;
@@ -35,18 +29,16 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public class UserSelectActionColumn
+public class UsernameColumn
     extends AbstractColumn<User, UserTableSortKeys>
 {
-    public static final String FID_SELECT_USER_COLUMN = "selectUserColumn";
-
-    public static final String CID_OPEN = "open";
-
     private static final long serialVersionUID = 8324173231787296215L;
+
+    public static final String FID_SELECT_USER_COLUMN = "selectUserColumn";
 
     private MarkupContainer fragmentProvider;
 
-    public UserSelectActionColumn(MarkupContainer aFragmentProvider, IModel<String> aTitle,
+    public UsernameColumn(MarkupContainer aFragmentProvider, IModel<String> aTitle,
             UserTableSortKeys aSortProperty)
     {
         super(aTitle, aSortProperty);
@@ -62,14 +54,6 @@ public class UserSelectActionColumn
         fragment.queue(new Label("uiName", aRowModel.map(User::getUiName)));
         fragment.queue(new Label("name", aRowModel.map(User::getUsername))
                 .setVisible(!Objects.equals(user.getUiName(), user.getUsername())));
-        aItem.add(AttributeModifier.replace("role", "button"));
-        aItem.add(AjaxEventBehavior.onEvent("click",
-                _target -> actionSelectUser(_target, aItem, aRowModel.getObject())));
         aItem.add(fragment);
-    }
-
-    private void actionSelectUser(AjaxRequestTarget aTarget, Component aItem, User aUser)
-    {
-        aItem.send(aItem, BUBBLE, new SelectUserEvent(aTarget, aUser));
     }
 }

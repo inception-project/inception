@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.UI_NAME;
 import static java.time.Duration.ofMillis;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,6 +31,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFallbackHeadersToolbar;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxNavigationToolbar;
@@ -75,7 +79,7 @@ public class UserTable
         var columns = new ArrayList<IColumn<User, UserTableSortKeys>>();
         columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("UserState"), STATE,
                 $ -> UserState.of($).symbol()));
-        columns.add(new UserSelectActionColumn(this, new ResourceModel("UserName"), UI_NAME));
+        columns.add(new UsernameColumn(this, new ResourceModel("UserName"), UI_NAME));
         columns.add(new LambdaColumn<>(new ResourceModel("UserCreated"), CREATED,
                 $ -> renderDate($.getCreated())));
         columns.add(new LambdaColumn<>(new ResourceModel("UserLastLogin"), LAST_LOGIN,
@@ -88,10 +92,16 @@ public class UserTable
             protected Item<User> newRowItem(String id, int index, IModel<User> model)
             {
                 var item = super.newRowItem(id, index, model);
+
                 if (selectedUser.map(u -> Objects.equals(u, model.getObject())).orElse(false)
                         .getObject()) {
                     item.add(new CssClassNameAppender("table-active"));
                 }
+
+                item.add(AttributeModifier.replace("role", "button"));
+                item.add(AjaxEventBehavior.onEvent("click",
+                        _target -> actionSelectUser(_target, item, model.getObject())));
+
                 return item;
             };
         };
@@ -132,6 +142,11 @@ public class UserTable
     private void actionApplyFilter(AjaxRequestTarget aTarget)
     {
         aTarget.add(table);
+    }
+
+    private void actionSelectUser(AjaxRequestTarget aTarget, Component aItem, User aUser)
+    {
+        aItem.send(aItem, BUBBLE, new SelectUserEvent(aTarget, aUser));
     }
 
     public UserTableDataProvider getDataProvider()

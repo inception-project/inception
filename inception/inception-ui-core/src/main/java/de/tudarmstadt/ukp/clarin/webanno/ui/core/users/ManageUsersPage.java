@@ -140,6 +140,7 @@ public class ManageUsersPage
         queue(table);
 
         details = new UserDetailPanel("details", selectedUser);
+        details.setOutputMarkupPlaceholderTag(true);
         details.add(visibleWhen(selectedUser.map(Objects::nonNull)));
         queue(details);
 
@@ -183,7 +184,7 @@ public class ManageUsersPage
     @OnEvent
     public void onSelectUser(SelectUserEvent aEvent)
     {
-        details.setCreate(false);
+        details.setCreatingNewUser(false);
         selectedUser.setObject(aEvent.getUser());
         // Get the inner table for refresh to avoid a reset of the scrolling position
         aEvent.getTarget().add(table.getInnerTable(), details);
@@ -207,7 +208,7 @@ public class ManageUsersPage
         user.setEnabled(true);
         user.setRoles(Set.of(ROLE_USER));
         selectedUser.setObject(user);
-        details.setCreate(true);
+        details.setCreatingNewUser(true);
         aTarget.add(table.getInnerTable(), details);
     }
 
