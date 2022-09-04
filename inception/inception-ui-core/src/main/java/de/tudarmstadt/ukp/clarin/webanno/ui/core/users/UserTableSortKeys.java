@@ -15,28 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-// Override default variables. Apparently only the first declaration of a variable counts, so this
-// import must be first
-@import "inception-variables";
-
-// Import the original bootstrap
-@import "../node_modules/bootstrap/scss/bootstrap";
-
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@import "inception-custom";
-@import "inception-card-actions";
-@import "inception-actionbar";
-@import "inception-navbar";
-@import "inception-feature-editors";
-@import "inception-dashboard";
-@import "inception-tables";
-
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicket";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
-@import "shim-jquery";
-@import "shim-fileinput";
+public enum UserTableSortKeys
+{
+    STATE, UI_NAME, NAME, ENABLED, CREATED, LAST_LOGIN;
+}
