@@ -22,8 +22,10 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -146,6 +148,7 @@ public class ImportDocumentsPanel
                 .map(SourceDocument::getName) //
                 .collect(toCollection(HashSet::new));
 
+        List<SourceDocument> importedDocuments = new ArrayList<>();
         for (FileUpload documentToUpload : uploadedFiles) {
             String fileName = documentToUpload.getClientFileName();
 
@@ -166,6 +169,7 @@ public class ImportDocumentsPanel
                     documentService.uploadSourceDocument(is, document, fullProjectTypeSystem);
                 }
 
+                importedDocuments.add(document);
                 info("Document [" + fileName + "] has been imported successfully!");
 
                 // Add the imported document to the set of existing documents just in case the user
@@ -178,6 +182,8 @@ public class ImportDocumentsPanel
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
+
+        send(this, BUBBLE, new SourceDocumentImportedEvent(aTarget, importedDocuments));
 
         aTarget.add(findParent(ProjectSettingsPanelBase.class));
     }
