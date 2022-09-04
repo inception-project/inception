@@ -1189,18 +1189,18 @@ public class ActiveLearningSidebar
     {
         LOG.trace("onRecommendationRejectEvent()");
 
-        AnnotatorState annotatorState = getModelObject();
-        AnnotatorState eventState = aEvent.getAnnotatorState();
+        var annotatorState = getModelObject();
+        var eventState = aEvent.getAnnotatorState();
 
-        Predictions predictions = recommendationService.getPredictions(annotatorState.getUser(),
+        var predictions = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
 
         if (alStateModel.getObject().isSessionActive()
                 && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            SourceDocument doc = eventState.getDocument();
-            VID vid = aEvent.getVid();
-            Optional<SpanSuggestion> prediction = predictions.getPredictionByVID(doc, vid)
+            var doc = eventState.getDocument();
+            var vid = VID.parse(aEvent.getVid().getExtensionPayload());
+            var prediction = predictions.getPredictionByVID(doc, vid)
                     .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
 
             if (!prediction.isPresent()) {
@@ -1209,7 +1209,7 @@ public class ActiveLearningSidebar
                 return;
             }
 
-            SpanSuggestion rejectedRecommendation = prediction.get();
+            var rejectedRecommendation = prediction.get();
             applicationEventPublisherHolder.get().publishEvent(
                     new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                             rejectedRecommendation, annotatorState.getUser().getUsername(),
@@ -1243,15 +1243,15 @@ public class ActiveLearningSidebar
     {
         LOG.trace("onRecommendationAcceptEvent()");
 
-        AnnotatorState state = getModelObject();
-        Predictions predictions = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
-        AnnotatorState eventState = aEvent.getAnnotatorState();
-        SourceDocument doc = state.getDocument();
-        VID vid = aEvent.getVid();
+        var state = getModelObject();
+        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
+        var eventState = aEvent.getAnnotatorState();
+        var doc = state.getDocument();
+        var vid = VID.parse(aEvent.getVid().getExtensionPayload());
 
-        Optional<SpanSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid)
-                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
+        var oRecommendation = predictions.getPredictionByVID(doc, vid) //
+                .filter(f -> f instanceof SpanSuggestion) //
+                .map(f -> (SpanSuggestion) f);
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
             error("Could not find prediction");
@@ -1259,7 +1259,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        SpanSuggestion acceptedSuggestion = oRecommendation.get();
+        var acceptedSuggestion = oRecommendation.get();
 
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningRecommendationEvent(
                 this, eventState.getDocument(), acceptedSuggestion, state.getUser().getUsername(),
