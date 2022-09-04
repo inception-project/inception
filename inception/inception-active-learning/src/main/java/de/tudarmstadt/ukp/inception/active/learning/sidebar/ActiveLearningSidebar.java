@@ -98,6 +98,8 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionS
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -1049,6 +1051,44 @@ public class ActiveLearningSidebar
                     aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }
+    }
+
+    @OnEvent
+    public void onSpanCreated(SpanCreatedEvent aEvent)
+    {
+        // Is active learning on and is any suggestion currently displayed?
+        ActiveLearningUserState alState = alStateModel.getObject();
+        if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
+            return;
+        }
+
+        // Does event match the current active learning configuration?
+        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+                || !aEvent.getLayer().equals(alState.getLayer())) {
+            return;
+        }
+
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+                aEvent.getDocument());
+    }
+
+    @OnEvent
+    public void onRelationCreated(RelationCreatedEvent aEvent)
+    {
+        // Is active learning on and is any suggestion currently displayed?
+        ActiveLearningUserState alState = alStateModel.getObject();
+        if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
+            return;
+        }
+
+        // Does event match the current active learning configuration?
+        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+                || !aEvent.getLayer().equals(alState.getLayer())) {
+            return;
+        }
+
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+                aEvent.getDocument());
     }
 
     /**
