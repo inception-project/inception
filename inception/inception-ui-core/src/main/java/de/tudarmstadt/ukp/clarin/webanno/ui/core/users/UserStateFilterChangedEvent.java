@@ -15,28 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-// Override default variables. Apparently only the first declaration of a variable counts, so this
-// import must be first
-@import "inception-variables";
+import java.util.List;
 
-// Import the original bootstrap
-@import "../node_modules/bootstrap/scss/bootstrap";
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@import "inception-custom";
-@import "inception-card-actions";
-@import "inception-actionbar";
-@import "inception-navbar";
-@import "inception-feature-editors";
-@import "inception-dashboard";
-@import "inception-tables";
+public class UserStateFilterChangedEvent
+    extends AbstractAjaxAwareEvent
+{
+    private final List<UserState> selectedStates;
 
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicket";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
-@import "shim-jquery";
-@import "shim-fileinput";
+    public UserStateFilterChangedEvent(AjaxRequestTarget aTarget, List<UserState> aSelectedStates)
+    {
+        super(aTarget);
+
+        selectedStates = aSelectedStates;
+    }
+
+    public List<UserState> getSelectedStates()
+    {
+        return selectedStates;
+    }
+}

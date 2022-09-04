@@ -15,28 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-// Override default variables. Apparently only the first declaration of a variable counts, so this
-// import must be first
-@import "inception-variables";
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-// Import the original bootstrap
-@import "../node_modules/bootstrap/scss/bootstrap";
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@import "inception-custom";
-@import "inception-card-actions";
-@import "inception-actionbar";
-@import "inception-navbar";
-@import "inception-feature-editors";
-@import "inception-dashboard";
-@import "inception-tables";
+/**
+ * Fired when a user clicks to select a user
+ */
+public class UserSavedEvent
+    extends AbstractAjaxAwareEvent
+{
+    private final User user;
 
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicket";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
-@import "shim-jquery";
-@import "shim-fileinput";
+    public UserSavedEvent(AjaxRequestTarget aTarget, User aAnnotationDocument)
+    {
+        super(aTarget);
+
+        user = aAnnotationDocument;
+    }
+
+    public User getUser()
+    {
+        return user;
+    }
+}

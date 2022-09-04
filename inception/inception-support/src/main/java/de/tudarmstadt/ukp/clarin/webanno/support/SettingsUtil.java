@@ -203,7 +203,7 @@ public class SettingsUtil
     public static synchronized Properties getSettings()
     {
         if (settings == null) {
-            var props = new Properties();
+            var props = new Properties(System.getProperties());
             File settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
@@ -214,6 +214,7 @@ public class SettingsUtil
                             .error("Unable to load settings file [" + settings + "]", e);
                 }
             }
+
             settings = props;
         }
         return settings;

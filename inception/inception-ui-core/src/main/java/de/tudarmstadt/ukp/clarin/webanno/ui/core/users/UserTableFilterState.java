@@ -15,28 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-// Override default variables. Apparently only the first declaration of a variable counts, so this
-// import must be first
-@import "inception-variables";
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-// Import the original bootstrap
-@import "../node_modules/bootstrap/scss/bootstrap";
+public class UserTableFilterState
+    implements Serializable
+{
+    private static final long serialVersionUID = -6340607235253080789L;
 
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@import "inception-custom";
-@import "inception-card-actions";
-@import "inception-actionbar";
-@import "inception-navbar";
-@import "inception-feature-editors";
-@import "inception-dashboard";
-@import "inception-tables";
+    private String username;
+    private final List<UserState> states = new ArrayList<>();
 
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicket";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
-@import "shim-jquery";
-@import "shim-fileinput";
+    public List<UserState> getStates()
+    {
+        return states;
+    }
+
+    public void setState(List<UserState> states)
+    {
+        states.clear();
+        if (states != null) {
+            states.addAll(states);
+        }
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public void setUsername(String aUsername)
+    {
+        username = aUsername;
+    }
+}

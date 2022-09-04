@@ -15,28 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-// Override default variables. Apparently only the first declaration of a variable counts, so this
-// import must be first
-@import "inception-variables";
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-// Import the original bootstrap
-@import "../node_modules/bootstrap/scss/bootstrap";
+public enum UserState
+{
+    ENABLED("<i class=\"fas fa-user\"></i>"), //
+    DEACTIVATED("<i class=\"fas fa-user-lock\"></i>");
 
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@import "inception-custom";
-@import "inception-card-actions";
-@import "inception-actionbar";
-@import "inception-navbar";
-@import "inception-feature-editors";
-@import "inception-dashboard";
-@import "inception-tables";
+    private final String symbol;
 
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicket";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
-@import "shim-jquery";
-@import "shim-fileinput";
+    private UserState(String aSymbol)
+    {
+        symbol = aSymbol;
+    }
+
+    public static UserState of(User aUser)
+    {
+        if (aUser.isEnabled()) {
+            return ENABLED;
+        }
+        else {
+            return DEACTIVATED;
+        }
+    }
+
+    public String symbol()
+    {
+        return symbol;
+    }
+}
