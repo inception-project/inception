@@ -117,7 +117,7 @@ span.form-control {
   vertical-align: middle !important;
 }
 
-/* Faciliate Wicket modal windows with fixed button bar at the bottom */
+/* Facilitate Wicket modal windows with fixed button bar at the bottom */
 .w_flex .w_content_container { overflow: hidden !important; }
 .w_flex .w_content_container > div { height: 100%; }
 .w_flex .w_flex_container { display: flex; flex-direction: column; height: 100%; }
@@ -323,60 +323,6 @@ a.menulink > span {
     padding-right: 1em;
 }
 
-/* -------------------------------------------------------------------------------------------------
- * Tables
- */
-
-th{
-    padding:3px;
-}
-
-tr.odd{
-    background:#EEEEEE;
-}
-
-tr.even{
-    background:#DDDDDD;
-}
-
-tr.odd:hover{
-    background:#CCCCAA;
-}
-
-tr.even:hover{
-    background:#CCCCAA;
-}
-
-.headers,
-.headers a:link,
-.headers a:visited{
-    background-color:#B90F22 !important;
-    color:white !important;
-}
-
-tr.headers th.wicket_orderDown a::after {
-    font-family: "Font Awesome 5 Free";
-    content: "\f0dd";
-    display: inline-block;
-    padding-left: 3px;
-    font-weight: 900;
-}
-
-tr.headers th.wicket_orderUp a::after {
-    font-family: "Font Awesome 5 Free";
-    content: "\f0de";
-    display: inline-block;
-    padding-left: 3px;
-    font-weight: 900;
-}
-
-div.navigatorLabel{
-    float:left;
-}
-
-div.navigator{
-    text-align:right;
-}
 
 /* -------------------------------------------------------------------------------------------------
  * Tab panel left
@@ -522,4 +468,9 @@ div.left-tabpanel div.tab-row a:hover {
 
 .above-modal {
   z-index: 30000;
+}
+
+.btn-inline {
+  font-size: 80%;
+  padding: 1px 4px;
 }

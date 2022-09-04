@@ -114,4 +114,4 @@ $ docker run -p 9090:8080 cars10/elasticvue
 15. Enter `document` into the search field and press the *Search* button
 16. You should get result for the document you posted to the ElasticSearch index in step 8
 17. Click on *Import*
-18. The import button should change to *Open* now - click on it to open the documen in the annotation editor
+18. The import button should change to *Open* now - click on it to open the document in the annotation editor

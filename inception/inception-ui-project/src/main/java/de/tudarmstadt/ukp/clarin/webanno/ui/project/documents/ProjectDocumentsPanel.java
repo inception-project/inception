@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
@@ -30,11 +32,14 @@ public class ProjectDocumentsPanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
+    private @SpringBean DocumentService documentService;
+
     public ProjectDocumentsPanel(String id, IModel<Project> aProject)
     {
         super(id, aProject);
 
         add(new ImportDocumentsPanel("import", aProject));
-        add(new DocumentListPanel("documents", aProject));
+        add(new SourceDocumentTable("documents",
+                aProject.map(documentService::listSourceDocuments)));
     }
 }

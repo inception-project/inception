@@ -216,7 +216,7 @@ public class TagSetEditorPanel
                     JSONUtil.generatePrettyJson(exTagSet, exportFile);
                 }
                 catch (IOException e) {
-                    error("File Path not found or No permision to save the file!");
+                    error("File Path not found or No permission to save the file!");
                 }
 
                 info("TagSets successfully exported to :" + exportFile.getAbsolutePath());

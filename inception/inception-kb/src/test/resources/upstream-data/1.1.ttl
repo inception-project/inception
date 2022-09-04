@@ -237,7 +237,7 @@ wo:EcosystemRole  a      owl:Class ;
         vs:term_status   "testing" .
 
 wo:Phylum  a             owl:Class ;
-        rdfs:comment     "A phylum - also known as a division when referring to plants - is a scientfic way of grouping together related organisms. All the members of a phylum have a common ancestor and anatomical similarities. For instance, all the arthropods have external skeletons. Phlya are large groups and are further subdivided into classes, orders, families and so on."@en-gb ;
+        rdfs:comment     "A phylum - also known as a division when referring to plants - is a scientific way of grouping together related organisms. All the members of a phylum have a common ancestor and anatomical similarities. For instance, all the arthropods have external skeletons. Phlya are large groups and are further subdivided into classes, orders, families and so on."@en-gb ;
         rdfs:isDefinedBy wo:; rdfs:label       "Phylum"@en-gb ;
         rdfs:seeAlso     <http://www.bbc.co.uk/nature/phylum> , <http://en.wikipedia.org/wiki/Phylum> ;
         rdfs:subClassOf  wo:TaxonRank ;

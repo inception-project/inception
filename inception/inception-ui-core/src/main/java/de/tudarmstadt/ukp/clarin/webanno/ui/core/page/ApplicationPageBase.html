@@ -18,10 +18,10 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <head>
-  <meta charset="utf-8"></meta>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
-  <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
-  <meta name="google" content="notranslate"></meta>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
   
   <link rel="icon" href="favicon.png" type="image/x-icon"/>  
   <title><wicket:message key="product.name" /> - <wicket:message key="page.title" /></title>
@@ -30,25 +30,25 @@
 </head>
 <body data-bs-no-jquery="data-bs-no-jquery">
   <div>
-    <img id="spinner" src="images/spinner.gif" />
+    <img id="spinner" wicket:message="alt:busy" src="images/spinner.gif" />
   </div>
   
-  <div class="page-header">
+  <header class="page-header">
     <wicket:container wicket:id="menubar"/>
-  </div>
+  </header>
   
-  <div class="page-content flex-h-container">
+  <main class="page-content flex-h-container">
     <wicket:child>
       [CONTENT]
     </wicket:child>
-  </div>
+  </main>
 
   <div wicket:id="feedbackPanel" class="feedback-panel"></div>
 
-  <div wicket:id="footer" class="page-footer">
+  <footer wicket:id="footer" class="page-footer">
     <wicket:container wicket:id="footerItems">
       <div wicket:id="item"/>
     </wicket:container>
-  </div>
+  </footer>
 </body>
 </html>

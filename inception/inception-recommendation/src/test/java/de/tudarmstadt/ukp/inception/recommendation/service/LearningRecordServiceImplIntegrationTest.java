@@ -37,7 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
@@ -76,8 +75,8 @@ public class LearningRecordServiceImplIntegrationTest
     @Test
     public void thatSpanSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument();
-        AnnotationLayer layer = createAnnotationLayer();
+        SourceDocument sourceDoc = createSourceDocument("doc");
+        AnnotationLayer layer = createAnnotationLayer("layer");
         AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
 
         SpanSuggestion suggestion = new SpanSuggestion(42, 1337, "testRecommender", layer.getId(),
@@ -110,8 +109,8 @@ public class LearningRecordServiceImplIntegrationTest
     @Test
     public void thatRelationSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument();
-        AnnotationLayer layer = createAnnotationLayer();
+        SourceDocument sourceDoc = createSourceDocument("doc");
+        AnnotationLayer layer = createAnnotationLayer("layer");
         AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
 
         RelationSuggestion suggestion = new RelationSuggestion(42, 1337, "testRecommender",
@@ -141,23 +140,65 @@ public class LearningRecordServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("suggestionType", SuggestionType.RELATION);
     }
 
+    @Test
+    void thatListingRecordsForRendering()
+    {
+        SourceDocument sourceDoc1 = createSourceDocument("doc1");
+        SourceDocument sourceDoc2 = createSourceDocument("doc2");
+        AnnotationLayer layer1 = createAnnotationLayer("layer1");
+        AnnotationLayer layer2 = createAnnotationLayer("layer2");
+        AnnotationFeature feature1 = createAnnotationFeature(layer1, "feat1");
+        AnnotationFeature feature2 = createAnnotationFeature(layer2, "feat1");
+
+        sut.logSpanRecord(sourceDoc1, USER_NAME,
+                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
+                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
+                        0.42, "Test confidence"),
+                layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+
+        sut.logSpanRecord(sourceDoc1, USER_NAME,
+                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
+                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
+                        0.42, "Test confidence"),
+                layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+
+        sut.logSpanRecord(sourceDoc2, USER_NAME,
+                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
+                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
+                        0.42, "Test confidence"),
+                layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+
+        sut.logSpanRecord(sourceDoc2, USER_NAME,
+                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
+                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
+                        0.42, "Test confidence"),
+                layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+
+        assertThat(sut.listRecords(sourceDoc1, USER_NAME, feature1)).hasSize(1);
+        assertThat(sut.listRecords(sourceDoc1, USER_NAME, feature2)).hasSize(1);
+        assertThat(sut.listRecords(sourceDoc2, USER_NAME, feature1)).hasSize(1);
+        assertThat(sut.listRecords(sourceDoc2, USER_NAME, feature2)).hasSize(1);
+        assertThat(sut.listRecords(sourceDoc1, "otherUser", feature1)).hasSize(0);
+        assertThat(sut.listRecords(sourceDoc1, "otherUser", feature2)).hasSize(0);
+    }
+
     // Helper
 
-    private SourceDocument createSourceDocument()
+    private SourceDocument createSourceDocument(String aName)
     {
         SourceDocument doc = new SourceDocument();
-        doc.setName("testDocument");
+        doc.setName(aName);
         return testEntityManager.persist(doc);
     }
 
-    private AnnotationLayer createAnnotationLayer()
+    private AnnotationLayer createAnnotationLayer(String aType)
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setEnabled(true);
-        layer.setName(NamedEntity.class.getName());
+        layer.setName(aType);
         layer.setReadonly(false);
-        layer.setType(NamedEntity.class.getName());
-        layer.setUiName("test ui name");
+        layer.setType(aType);
+        layer.setUiName(aType);
         layer.setAnchoringMode(false, false);
 
         return testEntityManager.persist(layer);

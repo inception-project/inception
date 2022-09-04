@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
 
 public class ElgAuthenticationClientImplTest
 {
@@ -41,7 +40,7 @@ public class ElgAuthenticationClientImplTest
     {
         // Get a code here:
         // https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/auth?client_id=elg-oob&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=offline_access
-        ElgTokenResponse response = sut.getToken("hahaha");
+        var response = sut.getToken("hahaha");
 
         System.out.println(response);
     }

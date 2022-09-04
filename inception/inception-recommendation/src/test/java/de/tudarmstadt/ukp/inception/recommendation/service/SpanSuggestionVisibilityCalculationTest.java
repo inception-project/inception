@@ -42,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -58,9 +59,10 @@ public class SpanSuggestionVisibilityCalculationTest
     private @Mock AnnotationSchemaService annoService;
 
     private Project project;
+    private SourceDocument doc;
     private AnnotationLayer layer;
+    private AnnotationFeature feature;
     private String user;
-    private long layerId;
 
     private RecommendationServiceImpl sut;
 
@@ -72,10 +74,14 @@ public class SpanSuggestionVisibilityCalculationTest
         layer = new AnnotationLayer();
         layer.setName(NamedEntity._TypeName);
         layer.setId(42l);
-        layerId = layer.getId();
+
+        feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
+                .withName(NamedEntity._FeatName_value).build();
 
         project = new Project();
         project.setName("Test Project");
+
+        doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
 
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature(NamedEntity._FeatName_value, TYPE_NAME_STRING));
@@ -91,9 +97,9 @@ public class SpanSuggestionVisibilityCalculationTest
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(layerId,
-                NamedEntity._FeatName_value, new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
+        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
 
         List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
@@ -117,9 +123,9 @@ public class SpanSuggestionVisibilityCalculationTest
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(layerId,
-                NamedEntity._FeatName_value, new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+                new int[][] { { 1, 5, 10 } });
+        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
 
         List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
@@ -134,16 +140,19 @@ public class SpanSuggestionVisibilityCalculationTest
     {
         List<LearningRecord> records = new ArrayList<>();
         LearningRecord rejectedRecord = new LearningRecord();
+        rejectedRecord.setSourceDocument(doc);
         rejectedRecord.setUserAction(LearningRecordType.REJECTED);
+        rejectedRecord.setLayer(layer);
+        rejectedRecord.setAnnotationFeature(feature);
         rejectedRecord.setOffsetBegin(5);
         rejectedRecord.setOffsetEnd(10);
         records.add(rejectedRecord);
         when(recordService.listRecords(user, layer)).thenReturn(records);
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(layerId,
-                NamedEntity._FeatName_value, new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+                new int[][] { { 1, 5, 10 } });
+        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
 
         List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
@@ -163,9 +172,9 @@ public class SpanSuggestionVisibilityCalculationTest
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(layerId,
-                NamedEntity._FeatName_value, new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
+        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -176,7 +185,7 @@ public class SpanSuggestionVisibilityCalculationTest
 
         cas.select(NamedEntity.class).forEach(NamedEntity::removeFromIndexes);
 
-        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("No suggestions are hidden as they no longer overlap with annotations") //

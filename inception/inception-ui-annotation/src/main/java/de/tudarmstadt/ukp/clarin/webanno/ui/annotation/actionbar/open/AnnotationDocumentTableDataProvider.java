@@ -73,6 +73,10 @@ public class AnnotationDocumentTableDataProvider
             return dir * (o1.getName().compareTo(o2.getName()));
         case STATE:
             return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
+        case CREATED:
+            return dir * (o1.getCreated().compareTo(o2.getCreated()));
+        case UPDATED:
+            return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
         default:
             return 0;
         }

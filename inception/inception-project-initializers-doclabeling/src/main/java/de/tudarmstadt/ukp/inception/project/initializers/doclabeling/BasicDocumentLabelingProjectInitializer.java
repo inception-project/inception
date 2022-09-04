@@ -91,7 +91,7 @@ public class BasicDocumentLabelingProjectInitializer
                 "", //
                 "This project has been pre-configured for document labeling tasks.", //
                 "", //
-                "When you open a document, the document-level annotation sidebar is direclty", //
+                "When you open a document, the document-level annotation sidebar is directly", //
                 "visible and offers a single-choice list to choose between some example labels.", //
                 "You can change the labels **Tag sets** pane of the project settings.", //
                 "Depending on how many tags you add or whether you allow annotators to add tags, ", //

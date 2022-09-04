@@ -170,7 +170,7 @@ export class Editor extends Widget {
   //
   // Examples
   //
-  //   # Diplays the editor with the annotation loaded.
+  //   # Displays the editor with the annotation loaded.
   //   editor.load({text: 'My Annotation'})
   //
   //   editor.on('load', (annotation) ->
@@ -226,22 +226,22 @@ export class Editor extends Widget {
     return this.hide();
   }
 
-  // Public: Adds an addional form field to the editor. Callbacks can be provided
+  // Public: Adds an additional form field to the editor. Callbacks can be provided
   // to update the view and anotations on load and submission.
   //
   // options - An options Object. Options are as follows:
   //           id     - A unique id for the form element will also be set as the
-  //                    "for" attrubute of a label if there is one. Defaults to
+  //                    "for" attribute of a label if there is one. Defaults to
   //                    a timestamp. (default: "annotator-field-{timestamp}")
   //           type   - Input type String. One of "input", "textarea",
   //                    "checkbox", "select" (default: "input")
   //           label  - Label to display either in a label Element or as place-
   //                    holder text depending on the type. (default: "")
   //           load   - Callback Function called when the editor is loaded with a
-  //                    new annotation. Recieves the field <li> element and the
+  //                    new annotation. Receives the field <li> element and the
   //                    annotation to be loaded.
   //           submit - Callback Function called when the editor is submitted.
-  //                    Recieves the field <li> element and the annotation to be
+  //                    Receives the field <li> element and the annotation to be
   //                    updated.
   //
   // Examples

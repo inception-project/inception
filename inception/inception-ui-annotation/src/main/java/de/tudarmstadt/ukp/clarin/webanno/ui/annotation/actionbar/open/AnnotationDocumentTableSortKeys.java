@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
 public enum AnnotationDocumentTableSortKeys
 {
-    NAME, STATE
+    NAME, STATE, CREATED, UPDATED;
 }

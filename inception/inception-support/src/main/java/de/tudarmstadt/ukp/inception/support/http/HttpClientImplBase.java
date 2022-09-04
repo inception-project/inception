@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
+package de.tudarmstadt.ukp.inception.support.http;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,21 +31,28 @@ import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ElgClientImplBase
+public class HttpClientImplBase
 {
     public static final int HTTP_BAD_REQUEST = 400;
+
+    public static final String CONTENT_TYPE = "Content-Type";
 
     protected final HttpClient client;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ElgClientImplBase()
+    public HttpClientImplBase()
     {
-        this.client = HttpClient.newBuilder().build();
+        this(null);
     }
 
-    public ElgClientImplBase(HttpClient aClient)
+    public HttpClientImplBase(HttpClient aClient)
     {
-        this.client = aClient;
+        if (aClient != null) {
+            client = aClient;
+        }
+        else {
+            client = HttpClient.newBuilder().build();
+        }
     }
 
     protected HttpResponse<String> sendRequest(HttpRequest aRequest) throws IOException

@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPa
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
@@ -84,6 +82,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
@@ -120,6 +119,7 @@ public class AnnotationPage
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean DocumentAccess documentAccess;
 
     private long currentprojectId;
 
@@ -222,7 +222,7 @@ public class AnnotationPage
      * might have triggered a change in some feature that might be shown on screen.
      * <p>
      * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimicks
+     * current view. It might be more efficient to have another event that more closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")
@@ -245,7 +245,7 @@ public class AnnotationPage
      * triggered a change in some feature that might be shown on screen.
      * <p>
      * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimicks
+     * current view. It might be more efficient to have another event that more closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")
@@ -559,13 +559,13 @@ public class AnnotationPage
 
         AnnotatorState state = getModelObject();
         Project project = getProject();
-        SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
+        SourceDocument doc = getDocumentFromParameters(project, aDocumentParameter);
 
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (document != null && //
-                document.equals(state.getDocument()) && //
+        if (doc != null && //
+                doc.equals(state.getDocument()) && //
                 aFocusParameter != null && //
                 aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //
                 aUserParameter != null && //
@@ -574,48 +574,50 @@ public class AnnotationPage
             return;
         }
 
-        if (!aUserParameter.isEmpty()) {
-            User requestedUser = userRepository.get(aUserParameter.toString());
-            if (requestedUser == null) {
-                error("User not found [" + aUserParameter + "]");
-                return;
-            }
-            state.setUser(requestedUser);
+        if (doc != null && !documentAccess.canViewAnnotationDocument(user.getUsername(),
+                String.valueOf(project.getId()), doc.getId(), state.getUser().getUsername())) {
+            getSession().error(
+                    "Requested document does not exist or you have no permissions to access it.");
+            backToProjectPage();
         }
 
-        if (!user.equals(state.getUser())) {
-            if (CURATION_USER.equals(state.getUser().getUsername())) {
-                // Curators can access the special CURATION_USER
-                requireProjectRole(user, MANAGER, CURATOR);
-            }
-            else {
-                // Only managers are allowed to open documents as another user
-                requireProjectRole(user, MANAGER);
-            }
-        }
+        // if (!aUserParameter.isEmpty()) {
+        // User requestedUser = userRepository.get(aUserParameter.toString());
+        // if (requestedUser == null) {
+        // error("User not found [" + aUserParameter + "]");
+        // return;
+        // }
+        // state.setUser(requestedUser);
+        // }
+        //
+        // if (!user.equals(state.getUser())) {
+        // if (CURATION_USER.equals(state.getUser().getUsername())) {
+        // // Curators can access the special CURATION_USER
+        // requireProjectRole(user, MANAGER, CURATOR);
+        // }
+        // else {
+        // // Only managers are allowed to open documents as another user
+        // requireProjectRole(user, MANAGER);
+        // }
+        // }
+        //
+        // // Check if document is locked for the user
+        // if (doc != null && documentService.existsAnnotationDocument(doc, state.getUser())) {
+        // AnnotationDocument adoc = documentService.getAnnotationDocument(doc, state.getUser());
+        //
+        // if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
+        // error("Document [" + doc.getId() + "] in project [" + project.getId()
+        // + "] is locked for user [" + state.getUser().getUsername() + "]");
+        // return;
+        // }
+        // }
 
-        // Check if document is locked for the user
-        if (document != null
-                && documentService.existsAnnotationDocument(document, state.getUser())) {
-            AnnotationDocument adoc = documentService.getAnnotationDocument(document,
-                    state.getUser());
-
-            if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
-                error("Document [" + document.getId() + "] in project [" + project.getId()
-                        + "] is locked for user [" + state.getUser().getUsername() + "]");
-                return;
-            }
-        }
-
-        // Update project in state
-        // Mind that this is relevant if the project was specified as a query parameter
-        // i.e. not only in the case that it was a URL fragment parameter.
         state.setProject(project);
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
-        if (document != null && !document.equals(state.getDocument())) {
-            state.setDocument(document, getListOfDocs());
+        if (doc != null && !doc.equals(state.getDocument())) {
+            state.setDocument(doc, getListOfDocs());
         }
     }
 

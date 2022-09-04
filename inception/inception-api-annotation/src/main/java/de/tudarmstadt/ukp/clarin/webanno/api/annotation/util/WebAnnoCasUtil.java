@@ -341,7 +341,7 @@ public class WebAnnoCasUtil
 
         AnnotationFS currentToken = selectAt(aCas, tokenType, aBegin, aEnd).stream().findFirst()
                 .orElse(null);
-        // thid happens when tokens such as Dr. OR Ms. selected with double
+        // this happens when tokens such as Dr. OR Ms. selected with double
         // click, which make seletected text as Dr OR Ms
         if (currentToken == null) {
             currentToken = selectAt(aCas, tokenType, aBegin, aEnd + 1).stream().findFirst()

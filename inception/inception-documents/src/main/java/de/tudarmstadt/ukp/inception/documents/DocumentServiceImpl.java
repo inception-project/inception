@@ -48,6 +48,7 @@ import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -70,12 +71,15 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -176,6 +180,22 @@ public class DocumentServiceImpl
                 .resolve(Long.toString(aDocument.getId())) //
                 .resolve(SOURCE_FOLDER) //
                 .toFile();
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public void exportSourceDocuments(OutputStream os, List<SourceDocument> selectedDocuments)
+        throws IOException
+    {
+        try (var zos = new ZipOutputStream(os)) {
+            for (var doc : selectedDocuments) {
+                try (InputStream dis = new FileInputStream(getSourceDocumentFile(doc))) {
+                    zos.putNextEntry(new ZipEntry(doc.getName()));
+                    IOUtils.copyLarge(dis, zos);
+                }
+            }
+        }
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -539,7 +559,7 @@ public class DocumentServiceImpl
     @Override
     public List<AnnotationDocument> listFinishedAnnotationDocuments(SourceDocument aDocument)
     {
-        Validate.notNull(aDocument, "Source cocument must be specified");
+        Validate.notNull(aDocument, "Source document must be specified");
 
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aDocument.getProject());

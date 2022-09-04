@@ -204,7 +204,7 @@ public class ExternalRecommender
             return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
-            throw new RecommendationException("Coud not serialize type system", e);
+            throw new RecommendationException("Could not serialize type system", e);
         }
     }
 

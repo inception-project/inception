@@ -16,7 +16,7 @@
     "events": "${events.version}",
     "toml": "github:yoheiMune/toml-node",
     "urijs": "${urijs.version}",
-    "pdfjs-dist": "^2.14.305"
+    "pdfjs-dist": "${pdfjs.version}"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",

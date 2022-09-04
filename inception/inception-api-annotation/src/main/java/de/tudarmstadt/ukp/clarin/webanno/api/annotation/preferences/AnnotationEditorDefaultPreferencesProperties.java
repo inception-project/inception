@@ -22,6 +22,4 @@ public interface AnnotationEditorDefaultPreferencesProperties
     int getPageSize();
 
     boolean isAutoScroll();
-
-    boolean isRememberLayer();
 }

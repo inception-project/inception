@@ -106,6 +106,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("remote_url")
     private String remoteURL;
 
+    @JsonProperty("traits")
+    private String traits;
+
     public String getId()
     {
         return id;
@@ -356,5 +359,15 @@ public class ExportedKnowledgeBase
     public boolean isUseFuzzy()
     {
         return useFuzzy;
+    }
+
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
     }
 }

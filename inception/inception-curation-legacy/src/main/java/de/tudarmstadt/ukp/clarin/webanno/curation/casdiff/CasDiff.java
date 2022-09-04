@@ -1331,7 +1331,7 @@ public class CasDiff
     // /**
     // * Rebuilds the diff with the current offsets and entry types. This can be used to fix the
     // diff
-    // * after reattaching to CASes that have changed. Mind that the diff results can be differnent
+    // * after reattaching to CASes that have changed. Mind that the diff results can be different
     // * due to the changes.
     // */
     // public void rebuild()

@@ -17,23 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
-import static java.util.Objects.isNull;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -44,7 +37,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -68,39 +60,20 @@ public class LayerSelectionPanel
 
     private final Label relationHint;
     private final DropDownChoice<AnnotationLayer> layerSelector;
-    private final WebMarkupContainer forwardAnnotationGroup;
-    private final AnnotationDetailEditorPanel owner;
 
-    public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
-            AnnotationDetailEditorPanel aOwner)
+    public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, new CompoundPropertyModel<>(aModel));
 
         setOutputMarkupPlaceholderTag(true);
 
-        owner = aOwner;
-
         add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
-        // Visible if there is more than one selectable layer and if either "remember layer" is off
-        // (meaning that the dropdown indicates the currently selected layer) or "remember layer"
-        // is on and the document is editable (meaning we need to be able to change the layer)
-        add(visibleWhen(() -> layerSelector.getChoicesModel()
-                .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
-                && (!getModelObject().getPreferences().isRememberLayer()
-                        || getEditorPage().isEditable())));
-
-        // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
-        // not visible causes an error in the JS console saying that the component could not be
-        // found. Placing it in this WebMarkupContainer and controlling the visibility via the
-        // container resolves this issue. Mind, using a "wicket:enclosure" instead of the
-        // WebMarkupGroup also did not work.
-        forwardAnnotationGroup = new WebMarkupContainer("forwardAnnotationGroup");
-        forwardAnnotationGroup.add(createForwardAnnotationCheckBox());
-        forwardAnnotationGroup.setOutputMarkupPlaceholderTag(true);
-        forwardAnnotationGroup.add(visibleWhen(this::isForwardable));
-        add(forwardAnnotationGroup);
-
+        // Visible if there is more than one selectable layer and if the document is editable
+        // (meaning we need to be able to change the layer)
+        add(visibleWhen(
+                () -> layerSelector.getChoicesModel().map(layerChoices -> layerChoices.size() > 1)
+                        .orElse(false).getObject() && getEditorPage().isEditable()));
     }
 
     public AnnotationPageBase getEditorPage()
@@ -161,18 +134,11 @@ public class LayerSelectionPanel
         return selector;
     }
 
-    @SuppressWarnings("deprecation")
     private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
 
         aTarget.add(relationHint);
-        aTarget.add(forwardAnnotationGroup);
-
-        // If forward annotation was enabled, disable it
-        if (state.isForwardAnnotation()) {
-            state.setForwardAnnotation(false);
-        }
 
         send(this, Broadcast.BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
 
@@ -194,88 +160,5 @@ public class LayerSelectionPanel
                 handleException(this, aTarget, e);
             }
         }
-    }
-
-    /**
-     * Part of <i>forward annotation</i> mode: creates the checkbox to toggle forward annotation
-     * mode.
-     */
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    private CheckBox createForwardAnnotationCheckBox()
-    {
-        CheckBox checkbox = new CheckBox("forwardAnnotation");
-        checkbox.setOutputMarkupId(true);
-        checkbox.add(LambdaBehavior.onConfigure(_this -> {
-            // Force-disable forward annotation mode if current layer is not forwardable
-            if (!isForwardable()) {
-                getModelObject().setForwardAnnotation(false);
-            }
-        }));
-        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> owner
-                .getFeatureEditorListPanel().focusForwardAnnotationComponent(_target, true)));
-
-        return checkbox;
-    }
-
-    /**
-     * Part of <i>forward annotation</i> mode: determines whether the currently selected layer is
-     * forwardable or not.
-     */
-    @Deprecated
-    private boolean isForwardable()
-    {
-        if (!annotationEditorProperties.isForwardAnnotationEnabled()) {
-            return false;
-        }
-
-        AnnotatorState state = getModelObject();
-
-        // Fetch the current default layer (the one which determines the type of new annotations)
-        AnnotationLayer layer = state.getDefaultAnnotationLayer();
-
-        if (isNull(layer) || isNull(layer.getId())) {
-            return false;
-        }
-
-        if (!SPAN_TYPE.equals(layer.getType())) {
-            return false;
-        }
-
-        if (!SINGLE_TOKEN.equals(layer.getAnchoringMode())) {
-            return false;
-        }
-
-        // Forward annotation mode requires that there is exactly one feature.
-        // No forward annotation for multi-feature and zero-feature layers (where features count
-        // which are are both enabled and visible).
-        List<AnnotationFeature> features = getEnabledAndVisibleFeatures(layer);
-        if (features.size() != 1) {
-            return false;
-        }
-
-        AnnotationFeature feature = features.get(0);
-
-        // Forward mode is only valid for string features
-        if (!CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-            return false;
-        }
-
-        // If there is a tagset, it must have tags
-        if (feature.getTagset() != null) {
-            return !annotationService.listTags(feature.getTagset()).isEmpty();
-        }
-        else {
-            return true;
-        }
-    }
-
-    /**
-     * Returns all enabled and visible features of the given annotation layer.
-     */
-    private List<AnnotationFeature> getEnabledAndVisibleFeatures(AnnotationLayer aLayer)
-    {
-        return annotationService.listAnnotationFeature(aLayer).stream().filter(f -> f.isEnabled())
-                .filter(f -> f.isVisible()).collect(Collectors.toList());
     }
 }

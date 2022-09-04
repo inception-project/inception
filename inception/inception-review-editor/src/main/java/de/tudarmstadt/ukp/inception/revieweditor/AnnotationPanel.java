@@ -167,8 +167,8 @@ public abstract class AnnotationPanel
                 value = adapter.getFeatureValue(feature, fs);
             }
 
-            linkedAddr.addAll(((List<LinkWithRoleModel>) value).stream()
-                    .map(m -> m.targetAddr).collect(Collectors.toList()));
+            linkedAddr.addAll(((List<LinkWithRoleModel>) value).stream().map(m -> m.targetAddr)
+                    .collect(Collectors.toList()));
         }
 
         return linkedAddr;

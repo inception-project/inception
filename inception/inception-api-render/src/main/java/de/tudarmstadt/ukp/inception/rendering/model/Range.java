@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.model;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -24,7 +25,10 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
 public class Range
+    implements Serializable
 {
+    private static final long serialVersionUID = -6261188569647696831L;
+
     public static final Range UNDEFINED = new Range(-1, -1);
 
     private final int begin;

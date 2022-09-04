@@ -77,10 +77,10 @@
     <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.22</spring.version>
-    <spring.boot.version>2.7.2</spring.boot.version>
-    <spring.security.version>5.7.2</spring.security.version>
-    <springdoc.version>1.6.9</springdoc.version>
-    <swagger.version>2.2.1</swagger.version>
+    <spring.boot.version>2.7.3</spring.boot.version>
+    <spring.security.version>5.7.3</spring.security.version>
+    <springdoc.version>1.6.11</springdoc.version>
+    <swagger.version>2.2.2</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
@@ -115,8 +115,8 @@
     <!-- * 7.17.1   depends on Lucene 8.11.1 -->
     <!--   8.1.1    depends on Lucene 9.0.0 -->
 
-    <rdf4j.version>4.0.4</rdf4j.version> 
-    <!-- * 4.0.3 depends on Lucene 8.5.1 -->
+    <rdf4j.version>4.1.1</rdf4j.version> 
+    <!-- * 4.1.1 depends on Lucene 8.5.1 -->
 
     <jena.version>4.5.0</jena.version>
     <!-- * 4.5.0    depends on Lucene 8.11.1 -->
@@ -161,7 +161,7 @@
     <jquery.version>^3.6.0</jquery.version>
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.0.2</mocha-junit-reporter.version>
-    <pdfjs.version>^2.14.305</pdfjs.version>
+    <pdfjs.version>2.14.305</pdfjs.version>
     <recogitojs.version>^1.7.1</recogitojs.version>
     <sass.version>^1.54.3</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
@@ -1672,7 +1672,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.14.3</version>
+        <version>1.15.3</version>
       </dependency>
 
       <!-- LUCENE MTAS -->

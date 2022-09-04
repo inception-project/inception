@@ -275,15 +275,31 @@ You may have to specify credentials as part of the URL to gain access.
 
 ==== SPARQL Endpoint Authentication
 
-{product-name} supports endpoints that use HTTP "Basic" authentication. You can simply add the
-username and password required to access the remote SPARQL endpoint as part of the URL. However,
-note that the credentials are visible to anybody visiting the KB settings and are also stored
-unencrypted.
+{product-name} supports endpoints require authentication. The following authentication mechanisms
+are supported.
 
-.HTTP "Basic" authenticated SPARQL URL
-----
-http://USERNAME:PASSWORD@localhost:5820/mock/query
-----
+* HTTP basic authentication
+* OAuth (client credentials)
+
+To enable authentication, select one of the options from the **Authentication** dropdown menu.
+
+NOTE: To protect you credentials while sending them to the remote side, it is strongly recommended
+      to use a HTTPS connection to the SPARQL endpoint and keep SSL certificate checking enabled.
+
+.HTTP "basic" authentication
+This is a simple mechanism that sends a username and password on every request. 
+
+.OAuth (client credentials) authentication
+This mechanism uses the client ID and client secret to obtain an authentication token which is then
+used for subsequent requests. Once the token expires, a new token is requested.
+
+====
+CAUTION: Legacy feature. It is also possible to use HTTP basic authentication by prefixing the 
+      SPARQL URL with the username and password (`http://USERNAME:PASSWORD@localhost:5820/mock/query`). 
+      However, this is not recommended. For example, the password will be visible to anybody being able to 
+      access the knowledge base settings. This option is only supported for backwards compatibility and will
+      be removed in future versions.
+====
 
 === Importing RDF
 

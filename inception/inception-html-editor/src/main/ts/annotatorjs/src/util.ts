@@ -202,7 +202,7 @@ export function mousePosition(e: { pageY: number; pageX: number; }, offsetEl: an
 // default method. If it does it calls it.
 //
 // This is useful for methods that can be optionally used as callbacks
-// where the existance of the parameter must be checked before calling.
+// where the existence of the parameter must be checked before calling.
 export const preventEventDefault = (event: any) => __guardMethod__(event, 'preventDefault', (o: { preventDefault: () => any; }) => o.preventDefault());
 
 function __guard__(value: any, transform: { (x: any): any; (arg0: any): any; }) {

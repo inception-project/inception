@@ -20,26 +20,12 @@ package de.tudarmstadt.ukp.inception.rendering.config;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 
 public interface AnnotationEditorProperties
 {
     boolean isTokenLayerEditable();
 
     boolean isSentenceLayerEditable();
-
-    /**
-     * @return whether the "forward annotation" setting is available to annotators.
-     * @deprecated to be removed without replacement
-     */
-    @Deprecated
-    boolean isForwardAnnotationEnabled();
-
-    /**
-     * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link AnnotationPreference#setRememberLayer} is set to true.
-     */
-    boolean isRememberLayerEnabled();
 
     default boolean isLayerBlocked(AnnotationLayer aLayer)
     {

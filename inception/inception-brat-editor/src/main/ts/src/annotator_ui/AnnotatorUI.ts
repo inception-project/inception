@@ -50,17 +50,18 @@ export class AnnotatorUI {
   private data: DocumentData
 
   private arcDragOrigin?: string
-  private arcDragOriginBox : Box
+  private arcDragOriginBox: Box
   private arcDragOriginGroup: SVGTypeMapping<SVGGElement>
   private arcDragArc: SVGTypeMapping<SVGPathElement>
   private arcDragJustStarted = false
   private spanDragJustStarted = false
-  private dragStartedAt? : MouseEvent & { target: Element }
+  private dragStartedAt?: MouseEvent & { target: Element }
+  private selectionInProgress = false
 
-  private spanOptions? : { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
-  private arcOptions? : { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
+  private spanOptions?: { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
+  private arcOptions?: { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
   private editedSpan: Entity
-  private editedFragment : string | null = null
+  private editedFragment: string | null = null
   private spanTypes: Record<string, EntityTypeDto>
   private selRect: SVGRectElement[]
   private lastStartRec = null
@@ -177,7 +178,7 @@ export class AnnotatorUI {
     }
   }
 
-  private customAction (evt: MouseEvent & { target: HTMLElement }) {
+  private customAction (evt: MouseEvent & { target: Element }) {
     if (evt.target.getAttribute('data-span-id')) {
       this.customSpanAction(evt)
       return
@@ -189,7 +190,7 @@ export class AnnotatorUI {
   }
 
   private customArcAction (evt: MouseEvent) {
-    if (!(evt.target instanceof HTMLElement)) return
+    if (!(evt.target instanceof Element)) return
 
     const id = evt.target.getAttribute('data-arc-ed')
     const type = evt.target.getAttribute('data-arc-role')
@@ -215,7 +216,7 @@ export class AnnotatorUI {
     }])
   }
 
-  private customSpanAction (evt: MouseEvent & { target: HTMLElement }) {
+  private customSpanAction (evt: MouseEvent & { target: Element }) {
     const id = evt.target.getAttribute('data-span-id')
 
     if (id) {
@@ -236,7 +237,7 @@ export class AnnotatorUI {
     }])
   }
 
-  private selectAnnotation (evt: MouseEvent & { target: HTMLElement }) {
+  private selectAnnotation (evt: MouseEvent & { target: Element }) {
     // must not be creating an arc
     if (this.arcDragOrigin) return
 
@@ -250,7 +251,7 @@ export class AnnotatorUI {
     }
   }
 
-  private selectArc (evt: MouseEvent & { target: HTMLElement }) {
+  private selectArc (evt: MouseEvent & { target: Element }) {
     this.clearSelection()
     const originSpanId = evt.target.getAttribute('data-arc-origin')
     const targetSpanId = evt.target.getAttribute('data-arc-target')
@@ -321,13 +322,13 @@ export class AnnotatorUI {
     this.arcDragJustStarted = true
   }
 
-  private getValidArcTypesForDrag (targetId, targetType) : string[] {
+  private getValidArcTypesForDrag (targetId, targetType): string[] {
     const arcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type)
     if (!this.arcDragOrigin || targetId === this.arcDragOrigin) return []
 
     const originType = this.data.spans[this.arcDragOrigin].type
     const spanType = this.spanTypes[originType]
-    const result : string[] = []
+    const result: string[] = []
     if (spanType && spanType.arcs) {
       $.each(spanType.arcs, (arcNo, arc) => {
         if (arcType && arcType !== arc.type) return
@@ -349,15 +350,23 @@ export class AnnotatorUI {
     // is it arc drag start?
     if (evt.target.getAttribute('data-span-id')) {
       this.dragStartedAt = evt // XXX do we really need the whole evt?
+      this.selectionInProgress = true
+      this.dispatcher.post('selectionStarted')
       return false
     }
 
     if (evt.target.getAttribute('data-chunk-id')) {
       this.spanDragJustStarted = true
+      this.selectionInProgress = true
+      this.dispatcher.post('selectionStarted')
     }
   }
 
   onMouseMove (evt: MouseEvent) {
+    if (!evt.buttons && this.selectionInProgress) {
+      this.dispatcher.post('selectionEnded')
+    }
+
     if (!this.arcDragOrigin && this.dragStartedAt) {
       // When the user has pressed the mouse button, we monitor the mouse cursor. If the cursor
       // moves more than a certain distance, we start the arc-drag operation. Starting this
@@ -598,7 +607,7 @@ export class AnnotatorUI {
               activeSelRect.setAttributeNS(null, 'width', rw.toString())
             }
           } else {
-            // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
+            // We didn't truncate anything but we have moved to a new line so we need to create a new highlight
             const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1]
             const startBox = (startsAt.parentNode as SVGGraphicsElement).getBBox()
             const endBox = (endsAt.parentNode as SVGGraphicsElement).getBBox()
@@ -695,6 +704,10 @@ export class AnnotatorUI {
   }
 
   onMouseUp (evt: MouseEvent) {
+    if (!evt.buttons && this.selectionInProgress) {
+      this.dispatcher.post('selectionEnded')
+    }
+
     // Restore pointer events on annotations
     this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null))
 
@@ -883,36 +896,27 @@ export class AnnotatorUI {
     }
   }
 
-  spanAndAttributeTypesLoaded (_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
+  spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes
   }
 
-  // WEBANNO EXTENSION BEGIN - #1388 Support context menu
   contextMenu (evt: MouseEvent) {
-    // If the user shift-right-clicks, open the normal browser context menu. This is useful
-    // e.g. during debugging / developing
-    if (evt.shiftKey) {
-      return
-    }
+    if (evt.target instanceof Element) {
+      // If the user shift-right-clicks, open the normal browser context menu. This is useful
+      // e.g. during debugging / developing
+      if (evt.shiftKey) {
+        return
+      }
 
-    this.stopArcDrag()
+      this.stopArcDrag()
 
-    const target = $(evt.target)
-    const id = target.attr('data-span-id')
-    if (id) {
-      evt.preventDefault()
-      const offsets = this.data.spans[id].fragmentOffsets
-      this.dispatcher.post('ajax', [{
-        action: 'contextMenu',
-        offsets: JSON.stringify(offsets),
-        id,
-        type: this.data.spans[id].type,
-        clientX: evt.clientX,
-        clientY: evt.clientY
-      }])
+      const id = evt.target.getAttribute('data-span-id')
+      if (id) {
+        evt.preventDefault()
+        this.ajax.openContextMenu(id, evt)
+      }
     }
   }
-  // WEBANNO EXTENSION END - #1388 Support context menu
 
   isReloadOkay () {
     // do not reload while the user is in the middle of editing

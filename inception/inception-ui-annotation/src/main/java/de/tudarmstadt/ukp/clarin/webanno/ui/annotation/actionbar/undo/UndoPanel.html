@@ -19,18 +19,16 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div wicket:id="confirmationDialog"></div>
-    <form wicket:id="form" class="card border-0 flex-content flex-v-container">
-      <div class="flex-content fit-child-snug">
-        <select wicket:id="documents" class="form-control"></select>
-      </div>
-      <div class="card-footer text-end">
-        <button wicket:id="delete" class="btn btn-danger">
-          <i class="fas fa-trash"></i>&nbsp;
-          <wicket:message key="deleteDocument"/>
+    <div class="action-bar-group">
+      <div class="btn-group">
+        <button wicket:id="undo" class="btn btn-light" type="button" wicket:message="title:undo">
+          <i class="fas fa-undo"></i>
+        </button>
+        <button wicket:id="redo" class="btn btn-light" type="button" wicket:message="title:redo">
+          <i class="fas fa-redo"></i>
         </button>
       </div>
-    </form>
+    </div>
   </wicket:panel>
 </body>
 </html>

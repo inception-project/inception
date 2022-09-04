@@ -239,7 +239,7 @@ public class PdfAnnoRendererTest
         offsets.add(new Offset(28, 28));
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
-        // convert to offests for document in INCEpTION
+        // convert to offsets for document in INCEpTION
         List<Offset> docOffsets = PdfAnnoSerializer.convertToDocumentOffsets(offsets, documentModel,
                 pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();

@@ -181,8 +181,8 @@ public class KBProperty
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, vf.createIRI(aKb.getPropertyLabelIri()),
-                    nameLiteral);
+            Statement nameStmt = vf.createStatement(subject,
+                    vf.createIRI(aKb.getPropertyLabelIri()), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }

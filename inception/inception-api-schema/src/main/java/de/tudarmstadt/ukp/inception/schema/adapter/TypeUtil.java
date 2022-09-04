@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 
 /**
- * Utility Class for {@link TypeAdapter} with static methods such as geting {@link TypeAdapter}
+ * Utility Class for {@link TypeAdapter} with static methods such as getting {@link TypeAdapter}
  * based on its {@link CAS} {@link Type}
  */
 public final class TypeUtil

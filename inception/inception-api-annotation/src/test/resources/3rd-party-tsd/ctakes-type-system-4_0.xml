@@ -1023,7 +1023,7 @@ More qualifying information on how the procedure was done.</description>
     </typeDescription>
     <typeDescription>
       <name>org.apache.ctakes.typesystem.type.refsem.Attribute</name>
-      <description>The semantic encapsulation of a modifer.  E.g., for Clinical Elements, Attributes may be used to specify Body Side for a Procedure.</description>
+      <description>The semantic encapsulation of a modifier.  E.g., for Clinical Elements, Attributes may be used to specify Body Side for a Procedure.</description>
       <supertypeName>org.apache.ctakes.typesystem.type.refsem.Element</supertypeName>
     </typeDescription>
     <typeDescription>
@@ -1713,7 +1713,7 @@ This instantiates a manages/treats relation which should be marked as conditiona
         <featureDescription>
           <name>originalText</name>
           <description>The covered text of the span or the disjoint spans that resulted in the creation of this
-              IdentifiedAnnotation. If the covered text is from disjoint spans, they are separated by a delimeter.</description>
+              IdentifiedAnnotation. If the covered text is from disjoint spans, they are separated by a delimiter.</description>
           <rangeTypeName>uima.cas.FSArray</rangeTypeName>
         </featureDescription>
       </features>

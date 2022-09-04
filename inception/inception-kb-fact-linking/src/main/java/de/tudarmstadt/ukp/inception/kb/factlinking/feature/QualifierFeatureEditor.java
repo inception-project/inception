@@ -362,7 +362,7 @@ public class QualifierFeatureEditor
 
                 // Save the CAS. This must be done explicitly here since the KBItem dropdown
                 // is not the focus-component of this editor. In fact, there could be multiple
-                // KBItem dropdowns in this feature editor since we can have multilpe modifiers.
+                // KBItem dropdowns in this feature editor since we can have multiple modifiers.
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
                 actionHandler.actionCreateOrUpdate(

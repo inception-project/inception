@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
@@ -54,6 +55,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
@@ -83,6 +85,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
@@ -100,6 +103,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpHeaders;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -108,6 +112,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -122,12 +127,18 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.model.RemoteRepositoryTraits;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.MemoryOAuthSessionRepository;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAuthenticationClientImpl;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
 
 /**
  * <p>
@@ -146,6 +157,7 @@ public class KnowledgeBaseServiceImpl
     private final KnowledgeBaseProperties properties;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
+    private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
 
     @Autowired
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -153,17 +165,8 @@ public class KnowledgeBaseServiceImpl
     {
         properties = aKBProperties;
 
-        Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
-                .maximumWeight(aKBProperties.getCacheSize())
-                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
-                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
-                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
-
-        if (log.isTraceEnabled()) {
-            cacheBuilder.recordStats();
-        }
-
-        queryCache = cacheBuilder.build(this::runQuery);
+        queryCache = createQueryCache(aKBProperties);
+        oAuthSessionRepository = new MemoryOAuthSessionRepository<>();
 
         kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
 
@@ -197,6 +200,22 @@ public class KnowledgeBaseServiceImpl
                 .newPerThreadSslCheckingHttpClientBuilder().build());
 
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
+    }
+
+    private LoadingCache<QueryKey, List<KBHandle>> createQueryCache(
+            KnowledgeBaseProperties aKBProperties)
+    {
+        Caffeine<QueryKey, List<KBHandle>> queryCacheBuilder = Caffeine.newBuilder()
+                .maximumWeight(aKBProperties.getCacheSize())
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
+                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
+                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
+
+        if (log.isTraceEnabled()) {
+            queryCacheBuilder.recordStats();
+        }
+
+        return queryCacheBuilder.build(this::runQuery);
     }
 
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -349,6 +368,9 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
+        // We clear any current OAuth session on the repository because we do not know if maybe
+        // the user has changed the repository URL / credentials as part of the update...
+        oAuthSessionRepository.clear(kb);
         entityManager.merge(kb);
     }
 
@@ -359,7 +381,7 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         repoManager.addRepositoryConfig(new RepositoryConfig(kb.getRepositoryId(), cfg));
-        entityManager.merge(kb);
+        updateKnowledgeBase(kb);
     }
 
     @SuppressWarnings("unchecked")
@@ -399,6 +421,8 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(aKB);
+
+        oAuthSessionRepository.clear(aKB);
 
         repoManager.removeRepository(aKB.getRepositoryId());
 
@@ -441,23 +465,21 @@ public class KnowledgeBaseServiceImpl
         if (repo instanceof SPARQLRepository) {
             SPARQLRepositoryConfig sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(
                     kb);
-            URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
-            String userInfo = uri.getUserInfo();
-            if (StringUtils.isNotBlank(userInfo)) {
-                userInfo = userInfo.trim();
-                String username;
-                String password;
-                if (userInfo.contains(":")) {
-                    username = substringBefore(userInfo, ":");
-                    password = substringAfter(userInfo, ":");
-                }
-                else {
-                    username = userInfo;
-                    password = "";
-                }
+            SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
+            applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
+            RemoteRepositoryTraits traits = readTraits(kb);
 
-                SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
-                sparqlRepo.setUsernameAndPassword(username, password);
+            if (traits != null && traits.getAuthentication() != null) {
+                switch (traits.getAuthentication().getType()) {
+                case BASIC: {
+                    applyBasicHttpAuthenticationConfiguration(sparqlRepo, traits);
+                    break;
+                }
+                case OAUTH_CLIENT_CREDENTIALS: {
+                    applyOAuthConfiguration(kb, sparqlRepo, traits);
+                    break;
+                }
+                }
             }
         }
 
@@ -478,6 +500,75 @@ public class KnowledgeBaseServiceImpl
                 }
             };
         };
+    }
+
+    private RemoteRepositoryTraits readTraits(KnowledgeBase kb)
+    {
+        try {
+            return JSONUtil.fromJsonString(RemoteRepositoryTraits.class, kb.getTraits());
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void applyBasicHttpAuthenticationConfiguration(SPARQLRepository sparqlRepo,
+            RemoteRepositoryTraits traits)
+    {
+        var auth = (BasicAuthenticationTraits) traits.getAuthentication();
+        sparqlRepo.setUsernameAndPassword(auth.getUsername(), auth.getPassword());
+    }
+
+    private void applyOAuthConfiguration(KnowledgeBase kb, SPARQLRepository sparqlRepo,
+            RemoteRepositoryTraits traits)
+    {
+        var auth = (OAuthClientCredentialsAuthenticationTraits) traits.getAuthentication();
+        var client = OAuthAuthenticationClientImpl.builder() //
+                .withClientId(auth.getClientId()) //
+                .withClientSecret(auth.getClientSecret()) //
+                .withTokenEndpointUrl(auth.getTokenEndpointUrl()) //
+                .build();
+
+        // Check if there is already a session we can use
+        var session = oAuthSessionRepository.get(kb, _kb -> {
+            log.debug("[{}] Creating new OAuth session as [{}]...", _kb, auth.getClientId());
+            var _session = new OAuthSessionImpl(client.getToken());
+            log.debug("[{}] OAuth session as [{}] will expire in [{}]", _kb, auth.getClientId(),
+                    _session.getAccessTokenExpiresIn());
+            return _session;
+        });
+
+        try {
+            client.refreshSessionIfNecessary(session);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        var headers = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken());
+        sparqlRepo.setAdditionalHttpHeaders(headers);
+    }
+
+    private void applyBasicHttpAuthenticationConfigurationFromUrl(
+            SPARQLRepositoryConfig sparqlRepoConfig, SPARQLRepository sparqlRepo)
+    {
+        URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
+        String userInfo = uri.getUserInfo();
+        if (isNotBlank(userInfo)) {
+            userInfo = userInfo.trim();
+            String username;
+            String password;
+            if (userInfo.contains(":")) {
+                username = substringBefore(userInfo, ":");
+                password = substringAfter(userInfo, ":");
+            }
+            else {
+                username = userInfo;
+                password = "";
+            }
+
+            sparqlRepo.setUsernameAndPassword(username, password);
+        }
     }
 
     @SuppressWarnings("resource")
@@ -1316,19 +1407,21 @@ public class KnowledgeBaseServiceImpl
             luceneSail.reindex();
             conn.commit();
         }
-        catch (IndexFormatTooNewException e) {
-            log.warn("Unable to access index: {}", e.getMessage());
-            log.info("Downgrade detected - trying to rebuild index from scratch...");
+        catch (SailException e) {
+            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)) {
+                log.warn("Unable to access index: {}", e.getMessage());
+                log.info("Downgrade detected - trying to rebuild index from scratch...");
 
-            String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
-            luceneSail.shutDown();
-            FileUtils.deleteQuietly(new File(luceneDir));
-            luceneSail.init();
+                String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+                luceneSail.shutDown();
+                FileUtils.deleteQuietly(new File(luceneDir));
+                luceneSail.init();
 
-            // Only try to rebuild once - so no recursion here!
-            try (RepositoryConnection conn = getConnection(aKB)) {
-                luceneSail.reindex();
-                conn.commit();
+                // Only try to rebuild once - so no recursion here!
+                try (RepositoryConnection conn = getConnection(aKB)) {
+                    luceneSail.reindex();
+                    conn.commit();
+                }
             }
         }
     }

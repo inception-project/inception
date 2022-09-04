@@ -27,7 +27,6 @@ public class AnnotationEditorDefaultPreferencesPropertiesImpl
 {
     private int pageSize = 10;
     private boolean autoScroll = true;
-    private boolean rememberLayer = false;
 
     @Override
     public int getPageSize()
@@ -49,16 +48,5 @@ public class AnnotationEditorDefaultPreferencesPropertiesImpl
     public void setAutoScroll(boolean aAutoScroll)
     {
         autoScroll = aAutoScroll;
-    }
-
-    @Override
-    public boolean isRememberLayer()
-    {
-        return rememberLayer;
-    }
-
-    public void setRememberLayer(boolean aRememberLayer)
-    {
-        rememberLayer = aRememberLayer;
     }
 }

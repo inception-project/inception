@@ -775,4 +775,7 @@ public interface DocumentService
             List<User> aUsersWithPermission);
 
     SourceDocumentStateStats getSourceDocumentStats(Project aProject);
+
+    void exportSourceDocuments(OutputStream aOs, List<SourceDocument> aSelectedDocuments)
+        throws IOException;
 }

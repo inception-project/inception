@@ -173,7 +173,7 @@ export class Viewer extends Widget {
   //
   //   viewer.load([annotation1, annotation2, annotation3])
   //
-  // Returns itslef.
+  // Returns itself.
   load(annotations: {}) {
     this.annotations = annotations || [];
 
@@ -221,12 +221,12 @@ export class Viewer extends Widget {
     return this.show();
   }
 
-  // Public: Adds an addional field to an annotation view. A callback can be
+  // Public: Adds an additional field to an annotation view. A callback can be
   // provided to update the view on load.
   //
   // options - An options Object. Options are as follows:
   //           load - Callback Function called when the view is loaded with an
-  //                  annotation. Recieves a newly created clone of @item and
+  //                  annotation. Receives a newly created clone of @item and
   //                  the annotation to be displayed (it will be called once
   //                  for each annotation being loaded).
   //
