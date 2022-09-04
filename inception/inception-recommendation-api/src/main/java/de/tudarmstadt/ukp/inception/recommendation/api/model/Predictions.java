@@ -173,10 +173,11 @@ public class Predictions
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
-        return predictions.values().stream()
-                .filter(f -> f.getDocumentName().equals(aDocument.getName()))
-                .filter(f -> f.getId() == aVID.getSubId())
-                .filter(f -> f.getRecommenderId() == aVID.getId()).findFirst();
+        return predictions.values().stream() //
+                .filter(f -> f.getDocumentName().equals(aDocument.getName())) //
+                .filter(f -> f.getId() == aVID.getSubId()) //
+                .filter(f -> f.getRecommenderId() == aVID.getId()) //
+                .findFirst();
     }
 
     /**
