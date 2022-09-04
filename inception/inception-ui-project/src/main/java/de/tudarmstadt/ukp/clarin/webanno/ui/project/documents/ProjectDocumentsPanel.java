@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -34,12 +35,22 @@ public class ProjectDocumentsPanel
 
     private @SpringBean DocumentService documentService;
 
+    private final SourceDocumentTable sourceDocumentTable;
+
     public ProjectDocumentsPanel(String id, IModel<Project> aProject)
     {
         super(id, aProject);
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new SourceDocumentTable("documents",
-                aProject.map(documentService::listSourceDocuments)));
+        queue(new ImportDocumentsPanel("import", aProject));
+        sourceDocumentTable = new SourceDocumentTable("documents",
+                aProject.map(documentService::listSourceDocuments));
+        queue(sourceDocumentTable);
+    }
+
+    @OnEvent
+    public void onSourceDocumentImported(SourceDocumentImportedEvent aEvent)
+    {
+        sourceDocumentTable.getDataProvider().refresh();
+        aEvent.getTarget().add(sourceDocumentTable);
     }
 }
