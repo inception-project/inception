@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -866,10 +867,15 @@ public class ActiveLearningSidebar
                 else {
                     recFeatureValue = rec.getAnnotation();
                 }
+
                 LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,
                         _target -> actionSelectHistoryItem(_target, item.getModelObject()));
                 textLink.setBody(rec::getTokenText);
                 item.add(textLink);
+
+                if (isBlank(recFeatureValue)) {
+                    recFeatureValue = "<no label>";
+                }
 
                 item.add(new Label(CID_RECOMMENDED_ANNOTATION, recFeatureValue));
                 item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
