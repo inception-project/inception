@@ -43,6 +43,14 @@
                 <input wicket:id="uiName" type="text" class="form-control"/>
               </div>
             </div>
+            <div class="row form-row" wicket:enclosure="oldPassword">
+              <label wicket:for="oldPassword" class="col-sm-2 col-form-label">
+                <wicket:label key="oldPassword"/>
+              </label>
+              <div class="col-sm-10">
+                <input wicket:id="oldPassword" type="password" class="form-control" autocomplete="current-password"/>
+              </div>
+            </div>
             <div class="row form-row" wicket:enclosure="password">
               <label wicket:for="password" class="col-sm-2 col-form-label">
                 <wicket:label key="password"/>
