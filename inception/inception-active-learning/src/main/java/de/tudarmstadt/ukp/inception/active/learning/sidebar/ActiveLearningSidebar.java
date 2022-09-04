@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -97,6 +98,8 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionS
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -866,10 +869,15 @@ public class ActiveLearningSidebar
                 else {
                     recFeatureValue = rec.getAnnotation();
                 }
+
                 LambdaAjaxLink textLink = new LambdaAjaxLink(CID_JUMP_TO_ANNOTATION,
                         _target -> actionSelectHistoryItem(_target, item.getModelObject()));
                 textLink.setBody(rec::getTokenText);
                 item.add(textLink);
+
+                if (isBlank(recFeatureValue)) {
+                    recFeatureValue = "<no label>";
+                }
 
                 item.add(new Label(CID_RECOMMENDED_ANNOTATION, recFeatureValue));
                 item.add(new Label(CID_USER_ACTION, rec.getUserAction()));
@@ -1045,6 +1053,44 @@ public class ActiveLearningSidebar
         }
     }
 
+    @OnEvent
+    public void onSpanCreated(SpanCreatedEvent aEvent)
+    {
+        // Is active learning on and is any suggestion currently displayed?
+        ActiveLearningUserState alState = alStateModel.getObject();
+        if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
+            return;
+        }
+
+        // Does event match the current active learning configuration?
+        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+                || !aEvent.getLayer().equals(alState.getLayer())) {
+            return;
+        }
+
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+                aEvent.getDocument());
+    }
+
+    @OnEvent
+    public void onRelationCreated(RelationCreatedEvent aEvent)
+    {
+        // Is active learning on and is any suggestion currently displayed?
+        ActiveLearningUserState alState = alStateModel.getObject();
+        if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
+            return;
+        }
+
+        // Does event match the current active learning configuration?
+        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+                || !aEvent.getLayer().equals(alState.getLayer())) {
+            return;
+        }
+
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+                aEvent.getDocument());
+    }
+
     /**
      * Listens to the user setting a feature on an annotation in the main annotation editor. Mind
      * that we do not need to listen to the creation of annotations since they have no effect on the
@@ -1143,18 +1189,18 @@ public class ActiveLearningSidebar
     {
         LOG.trace("onRecommendationRejectEvent()");
 
-        AnnotatorState annotatorState = getModelObject();
-        AnnotatorState eventState = aEvent.getAnnotatorState();
+        var annotatorState = getModelObject();
+        var eventState = aEvent.getAnnotatorState();
 
-        Predictions predictions = recommendationService.getPredictions(annotatorState.getUser(),
+        var predictions = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
 
         if (alStateModel.getObject().isSessionActive()
                 && eventState.getUser().equals(annotatorState.getUser())
                 && eventState.getProject().equals(annotatorState.getProject())) {
-            SourceDocument doc = eventState.getDocument();
-            VID vid = aEvent.getVid();
-            Optional<SpanSuggestion> prediction = predictions.getPredictionByVID(doc, vid)
+            var doc = eventState.getDocument();
+            var vid = VID.parse(aEvent.getVid().getExtensionPayload());
+            var prediction = predictions.getPredictionByVID(doc, vid)
                     .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
 
             if (!prediction.isPresent()) {
@@ -1163,7 +1209,7 @@ public class ActiveLearningSidebar
                 return;
             }
 
-            SpanSuggestion rejectedRecommendation = prediction.get();
+            var rejectedRecommendation = prediction.get();
             applicationEventPublisherHolder.get().publishEvent(
                     new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                             rejectedRecommendation, annotatorState.getUser().getUsername(),
@@ -1197,15 +1243,15 @@ public class ActiveLearningSidebar
     {
         LOG.trace("onRecommendationAcceptEvent()");
 
-        AnnotatorState state = getModelObject();
-        Predictions predictions = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
-        AnnotatorState eventState = aEvent.getAnnotatorState();
-        SourceDocument doc = state.getDocument();
-        VID vid = aEvent.getVid();
+        var state = getModelObject();
+        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
+        var eventState = aEvent.getAnnotatorState();
+        var doc = state.getDocument();
+        var vid = VID.parse(aEvent.getVid().getExtensionPayload());
 
-        Optional<SpanSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid)
-                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
+        var oRecommendation = predictions.getPredictionByVID(doc, vid) //
+                .filter(f -> f instanceof SpanSuggestion) //
+                .map(f -> (SpanSuggestion) f);
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
             error("Could not find prediction");
@@ -1213,7 +1259,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        SpanSuggestion acceptedSuggestion = oRecommendation.get();
+        var acceptedSuggestion = oRecommendation.get();
 
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningRecommendationEvent(
                 this, eventState.getDocument(), acceptedSuggestion, state.getUser().getUsername(),
