@@ -207,6 +207,10 @@ public abstract class AnnotationDetailEditorPanel
         if (next != null) {
             actionSelectAndJump(aTarget, next);
         }
+        else {
+            info("There is no next annotation");
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private void actionPreviousAnnotation(AjaxRequestTarget aTarget)
@@ -224,6 +228,10 @@ public abstract class AnnotationDetailEditorPanel
 
         if (prev != null) {
             actionSelectAndJump(aTarget, prev);
+        }
+        else {
+            info("There is no previous annotation");
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
