@@ -33,7 +33,7 @@ public class Palette
             "#bebada", // Lavender Gray
             "#fb8072", // Salmon
             "#80b1d3", // Half Baked - bluish
-            "#fdb462", // Koromiko - peachy
+            // "#fdb462", // Koromiko - peachy - too close to the FOCUS marker color
             "#b3de69", // Yellow Green
             "#fccde5", // Classic Rose
             // Grey colors reserved for special purposes, e.g. for read-only
@@ -45,14 +45,15 @@ public class Palette
     // public final static String[] PALETTE_PASTEL_FILTERED = filterLightColors(PALETTE_PASTEL,
     // LIGHTNESS_FILTER_THRESHOLD);
 
-    public final static String[] PALETTE_NORMAL = { "#a6cee3", // Regent St Blue
+    public final static String[] PALETTE_NORMAL = { //
+            "#a6cee3", // Regent St Blue
             "#1f78b4", // Matisse - dark bluish
             "#b2df8a", // Feijoa - greenish
             "#33a02c", // Forest Green
             "#fb9a99", // Sweet Pink
             "#e31a1c", // Alizarin Crimson
             "#fdbf6f", // Macaroni and Cheese - peachy
-            "#ff7f00", // Flush Orange
+            // "#ff7f00", // Flush Orange - too close to the FOCUS marker color
             "#cab2d6", // Lavender Gray
             "#6a3d9a", // Royal Purple
             "#ffff99", // Pale Canary
