@@ -20,6 +20,11 @@ package de.tudarmstadt.ukp.inception.rendering.pipeline;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import de.tudarmstadt.ukp.inception.rendering.config.RenderingAutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -32,6 +37,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 public class RenderingPipelineImpl
     implements RenderingPipeline
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final RenderStepExtensionPoint renderStepExtensionPoint;
 
     public RenderingPipelineImpl(RenderStepExtensionPoint aRenderStepExtensionPoint)
@@ -42,6 +49,9 @@ public class RenderingPipelineImpl
     @Override
     public VDocument render(RenderRequest aRequest)
     {
+        LOG.trace("Rendering [{}-{}]", aRequest.getWindowBeginOffset(),
+                aRequest.getWindowEndOffset());
+
         VDocument vdoc = new VDocument();
 
         for (RenderStep step : renderStepExtensionPoint.getExtensions(aRequest)) {
