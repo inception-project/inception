@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from "../Offsets";
-import { VID } from "../VID";
-import { CompactAnnotationMarker } from "./CompactAnnotationMarker";
-import { CompactRelation } from "./CompactRelation";
-import { CompactSpan } from "./CompactSpan";
-import { CompactTextMarker } from "./CompactTextMarker";
+import { Offsets } from '../Offsets'
+import { VID } from '../VID'
+import { CompactAnnotationMarker } from './CompactAnnotationMarker'
+import { CompactRelation } from './CompactRelation'
+import { CompactSpan } from './CompactSpan'
+import { CompactTextMarker } from './CompactTextMarker'
 
 export interface CompactAnnotatedText {
   text?: string;
@@ -32,25 +32,25 @@ export interface CompactAnnotatedText {
 }
 
 /**
- * Converts a list of {@link CompactAnnotationMarker}s to an easily accessible map using the {@link VID} 
+ * Converts a list of {@link CompactAnnotationMarker}s to an easily accessible map using the {@link VID}
  * as key and the set of markers on that annotation as values.
- * 
+ *
  * @param markerList a list of {@link CompactAnnotationMarker}s
  * @returns the map
  */
-export function makeMarkerMap<T>(markerList: T[] | undefined): Map<VID, Array<T>> {
-  const markerMap = new Map<VID, Array<T>>();
+export function makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
+  const markerMap = new Map<VID, Array<T>>()
   if (markerList) {
     markerList.forEach(marker => {
       marker[1].forEach(vid => {
-        let ms = markerMap.get(vid);
+        let ms = markerMap.get(vid)
         if (!ms) {
-          ms = [];
-          markerMap.set(vid, ms);
+          ms = []
+          markerMap.set(vid, ms)
         }
-        ms.push(marker);
+        ms.push(marker)
       })
-    });
+    })
   }
-  return markerMap;
+  return markerMap
 }
