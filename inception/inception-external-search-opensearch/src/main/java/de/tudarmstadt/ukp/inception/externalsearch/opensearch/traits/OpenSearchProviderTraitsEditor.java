@@ -108,12 +108,8 @@ public class OpenSearchProviderTraitsEditor
         searchPath.setRequired(true);
         form.add(searchPath);
 
-        TextField<String> objectType = new TextField<>("objectType");
-        objectType.setRequired(true);
-        form.add(objectType);
-
         TextField<String> defaultField = new TextField<>("defaultField");
-        objectType.setRequired(true);
+        defaultField.setRequired(true);
         form.add(defaultField);
 
         NumberTextField<Integer> resultSize = new NumberTextField<>("resultSize", Integer.class);
