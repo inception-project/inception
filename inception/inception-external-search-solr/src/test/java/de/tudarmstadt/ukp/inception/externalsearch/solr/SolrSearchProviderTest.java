@@ -24,11 +24,24 @@ package de.tudarmstadt.ukp.inception.externalsearch.solr;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.embedded.JettyConfig;
+import org.apache.solr.client.solrj.embedded.JettySolrRunner;
+import org.apache.solr.common.SolrInputDocument;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -40,46 +53,90 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProvide
  * collection, setup the name of the collection, names of the fields and provide an existing id for
  * the method 'thatDocumentTextCanBeRetrieved()'
  */
-@Disabled("Server not publicly accessible")
-public class SolrSearchProviderTest
+class SolrSearchProviderTest
 {
+    private static JettySolrRunner solrRunner;
+
     private SolrSearchProvider sut;
     private DocumentRepository repo;
     private SolrSearchProviderTraits traits;
 
+    @BeforeAll
+    static void startServer(@TempDir Path aTemp) throws Exception
+    {
+        File origSolrHome = new File("src/test/resources/solr");
+        File tempSolrHome = aTemp.toFile();
+        File tempSolrData = aTemp.resolve("data").toFile();
+        FileUtils.copyDirectory(origSolrHome, tempSolrHome);
+        JettyConfig jettyConfig = JettyConfig.builder() //
+                .setContext("") //
+                .setPort(0) //
+                .stopAtShutdown(true) //
+                .build();
+        Properties nodeProperties = new Properties();
+        nodeProperties.setProperty("solr.data.dir", tempSolrData.getCanonicalPath());
+        nodeProperties.setProperty("coreRootDirectory", tempSolrHome.toString());
+        nodeProperties.setProperty("configSetBaseDir", tempSolrHome.toString());
+        System.setProperty("solr.directoryFactory", "solr.RAMDirectoryFactory");
+        System.setProperty("jetty.testMode", "true");
+        solrRunner = new JettySolrRunner(tempSolrHome.toString(), nodeProperties, jettyConfig);
+        solrRunner.start();
+        solrRunner.getCoreContainer().create("core", Map.of());
+
+        try (var client = solrRunner.newClient()) {
+            addDoc(client, "1", "Title 1", "Here goes the document text.");
+            addDoc(client, "2", "Title 2", "Here goes the document text.");
+            addDoc(client, "3", "Title 3", "Here goes the document text.");
+        }
+    }
+
+    @AfterAll()
+    static void shutDown() throws Exception
+    {
+        solrRunner.stop();
+    }
+
     @BeforeEach
-    public void setup()
+    void setup() throws Exception
     {
         sut = new SolrSearchProvider();
 
         repo = new DocumentRepository("test", null);
 
         traits = new SolrSearchProviderTraits();
-        traits.setRemoteUrl("http://localhost:8983/solr");
-        traits.setIndexName("techproducts");
+        traits.setRemoteUrl("http://localhost:" + solrRunner.getLocalPort());
+        traits.setIndexName("core");
         traits.setSearchPath("/select");
-        traits.setDefaultField("id");
-        traits.setTextField("features");
+        traits.setDefaultField("text");
+        traits.setTextField("text");
+    }
+
+    private static void addDoc(SolrClient client, String id, String title, String text)
+        throws SolrServerException, IOException
+    {
+        final SolrInputDocument doc = new SolrInputDocument();
+        doc.addField("id", id);
+        doc.addField("title", title);
+        doc.addField("text", text);
+        client.add("core", doc);
+        client.commit("core");
     }
 
     @Test
-    public void thatQueryWorks() throws Exception
+    void thatQueryWorks() throws Exception
     {
-        String query = "0*";
+        String query = "document";
 
-        List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
-
-        // System.out.println(results.get(0).getDocumentTitle());
-
-        assertThat(results).isNotEmpty();
+        assertThat(sut.executeQuery(repo, traits, query)) //
+                .extracting(ExternalSearchResult::getDocumentId) //
+                .containsExactlyInAnyOrder("1", "2", "3");
     }
 
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String documentText = sut.getDocumentText(repo, traits, traits.getIndexName(), "SP2514N");
-        // System.out.println(documentText);
-        assertThat(documentText).isNotNull();
+        assertThat(sut.getDocumentText(repo, traits, traits.getIndexName(), "1"))
+                .isEqualTo("Here goes the document text.");
     }
 
     @Test
@@ -104,8 +161,7 @@ public class SolrSearchProviderTest
     @Test
     public void highlightingWork() throws Exception
     {
-        String query = "the";
-        traits.setDefaultField(traits.getTextField());
+        String query = "document";
         traits.setResultSize(5);
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
