@@ -1947,7 +1947,7 @@
 
       <dependency>
         <groupId>org.opensearch</groupId>
-        <artifactId>os</artifactId>
+        <artifactId>opensearch</artifactId>
         <version>${opensearch.version}</version>
       </dependency>
       <dependency>
