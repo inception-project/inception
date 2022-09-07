@@ -1,16 +1,16 @@
-[[sect_external-search-repos-elasticsearch]]
-= ElasticSearch
+[[sect_external-search-repos-opensearch]]
+= OpenSearch
 
-Selecting the **ElasticSearch** repository type allows connecting to remote ElasticSearch instances.
+Selecting the **OpenSearch** repository type allows connecting to remote OpenSearch instances.
 
-In order to set up a connection to an ElasticSearch repository, the following information needs to
+In order to set up a connection to an OpenSearch repository, the following information needs to
 be provided:
 
-* *Remote URL*: the URL where the ElasticSearch instance is running (e.g. `http://localhost:9200/`) 
+* *Remote URL*: the URL where the OpenSearch instance is running (e.g. `http://localhost:9200/`) 
 * *Index Name*: the name of the index within the instance (e.g. `mycorpus`)
 * *Search path*: the suffix used to access the searching endpoint (usually `_search`)
 * *Object type*: the endpoint used to download the full document text (usually `texts`)
-* *Field*: the field of the documents in the ElasticSearch repository that is used for matching
+* *Field*: the field of the documents in the OpenSearch repository that is used for matching
 the search query (default `doc.text`)
 
 From this information, two URLs are constructed:
@@ -29,7 +29,7 @@ The individual documents should contain following two fields as their source:
 to provide further information about the document
 
 The *Random Ordering* setting allows to switch the ranking of results from the default ranking used by
-the ElasticSearch server to a random order. The documents returned will still match the query, but
+the OpenSearch server to a random order. The documents returned will still match the query, but
 the order does not correspond to the matching quality anymore. When random ordering is enabled, no
 score is associated with the search results. If desired, the *random seed* used for the ordering
 can be customized.
@@ -56,17 +56,22 @@ should look as follows:
 }
 ----
 
-== Setting up a simple ElasticSearch document repository
+NOTE: If you run {product-name} with the `-ea` parameter that enables assertions, then you may be
+      unable to connect to an OpenSearch server unless the Lucene version used by the server matches exactly
+      the Lucene version used by {product-name}. In general, this check is too strict and you should be able
+      to use OpenSearch nicely if you simply omit the `-ea` parameter.
 
-In this example, we use link:https://www.docker.com[Docker] to get ElasticSearch and link:https://elasticvue.com[ElasticVue] up and running very quickly. Note, that the docker containers we start
+== Setting up a simple OpenSearch document repository
+
+In this example, we use link:https://www.docker.com[Docker] to get OpenSearch and link:https://elasticvue.com[ElasticVue] up and running very quickly. Note, that the docker containers we start
 here will not save any data permanently. It is just for you to get an idea of how the setup works.
-In a productive environment, you need to use a proper installation of ElasticSearch.
+In a productive environment, you need to use a proper installation of OpenSearch.
 
-1. Open a terminal and run ElasticSearch as a Docker service
+1. Open a terminal and run OpenSearch as a Docker service
 +
 [source,sh]
 ----
-$ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.cors.enabled=true" -e "http.cors.allow-origin=http://localhost:9090" elasticsearch:7.17.6
+$ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.cors.enabled=true" -e "http.cors.allow-origin=http://localhost:9090" -e "http.cors.allow-headers=*"  opensearchproject/opensearch:1
 ----
 2. Open a second terminal and run ElasticVue as a Docker service
 +
@@ -74,7 +79,8 @@ $ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.
 ----
 $ docker run -p 9090:8080 cars10/elasticvue
 ----
-3. Open a browser and access ElasticVue at `http://localhost:9090`
+3. Open a browser and access ElasticVue at `http://localhost:9090` - tell ElasticVue to connect to 
+   `https://localhost:9200` using the username `admin` and password `admin`
 4. Switch to the Indices tab in ElasticVue
 5. Create an index named `test`
 6. Switch to the REST tab in ElasticVue
@@ -100,9 +106,12 @@ $ docker run -p 9090:8080 cars10/elasticvue
 10. Start up INCEpTION
 11. Create a new project
 12. Add a document repository with the following settings (and click save):
-* Name: `My ElasticSearch Document Repository`
-* Type: `Elastic Search`
-* Remote URL: `http://localhost:9200`
+* Name: `My OpenSearch Document Repository`
+* Type: `OpenSearch`
+* Remote URL: `https://localhost:9200`
+* SSL verification: disabled
+* Authentication type: basic
+* Username / password: `admin` / `admin`
 * Index name: `test`
 * Search path: `_search`
 * Object type: `_doc`
@@ -110,8 +119,8 @@ $ docker run -p 9090:8080 cars10/elasticvue
 * Result Size: `1000`
 * Random ordering: `false`
 13. Switch to the *Dashboard* and from there to the *Search* page
-14. Select the repository `My ElasticSearch Document Repository`
+14. Select the repository `My OpenSearch Document Repository`
 15. Enter `document` into the search field and press the *Search* button
-16. You should get result for the document you posted to the ElasticSearch index in step 8
+16. You should get result for the document you posted to the OpenSearch index in step 8
 17. Click on *Import*
 18. The import button should change to *Open* now - click on it to open the document in the annotation editor

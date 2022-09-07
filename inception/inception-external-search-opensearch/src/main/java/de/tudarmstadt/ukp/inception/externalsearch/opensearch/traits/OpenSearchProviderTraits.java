@@ -15,21 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
+package de.tudarmstadt.ukp.inception.externalsearch.opensearch.traits;
 
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchProviderTraits
+public class OpenSearchProviderTraits
     implements Serializable
 {
     private static final long serialVersionUID = -3109239605741337123L;
 
     private static final int ARBITRARY_FIXED_SEED = 5;
 
-    private String remoteUrl = "http://localhost:9200";
+    private String remoteUrl = "https://localhost:9200";
 
     private String indexName = "common-crawl-en";
 
@@ -45,6 +48,12 @@ public class ElasticSearchProviderTraits
     private int resultSize = 1000;
 
     private boolean randomOrder = false;
+
+    private boolean sslVerification = true;
+
+    private AuthenticationType authenticationType;
+
+    private AuthenticationTraits authentication;
 
     private int seed = ARBITRARY_FIXED_SEED;
 
@@ -126,5 +135,35 @@ public class ElasticSearchProviderTraits
     public void setSeed(int seed)
     {
         this.seed = seed;
+    }
+
+    public void setSslVerification(boolean aSslVerification)
+    {
+        sslVerification = aSslVerification;
+    }
+
+    public boolean isSslVerification()
+    {
+        return sslVerification;
+    }
+
+    public void setAuthenticationType(AuthenticationType aAuthenticationType)
+    {
+        authenticationType = aAuthenticationType;
+    }
+
+    public AuthenticationType getAuthenticationType()
+    {
+        return authenticationType;
+    }
+
+    public AuthenticationTraits getAuthentication()
+    {
+        return authentication;
+    }
+
+    public void setAuthentication(AuthenticationTraits aAuthentication)
+    {
+        authentication = aAuthentication;
     }
 }
