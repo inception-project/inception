@@ -1,6 +1,14 @@
 [[sect_external-search-repos-elasticsearch]]
 = ElasticSearch
 
+====
+CAUTION: Custom builds only. This functionality is no longer included in standard builds of {product-name}. The last version of ElasticSearch that is proper open source under the Apache License 2.0 is version 7.10.2. However, ES 7.10.2 has security issues, so an upgrade to a more recent 7.x version is advised. These, however, are no longer available under the Apache License 2.0 - only under the Elastic License - which is not OSI-approved open source.
+
+Thus, after upgrading the ElasticSearch dependency to a recent 7.x version, ElasticSearch support was removed from the `inception-app-webapp` module. The code remains in the repository, but if you need it, you need to add it as a dependency to `inception-app-webapp` manually and re-build.
+
+As a replacement, {product-name} v25 will support the ElasticSearch fork **OpenSearch** which continues under the Apache License 2.0.
+====
+
 Selecting the **ElasticSearch** repository type allows connecting to remote ElasticSearch instances.
 
 In order to set up a connection to an ElasticSearch repository, the following information needs to
