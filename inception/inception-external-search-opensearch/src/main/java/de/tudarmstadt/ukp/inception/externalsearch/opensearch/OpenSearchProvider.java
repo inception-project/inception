@@ -182,8 +182,7 @@ public class OpenSearchProvider
                     "Requested collection name does not match connection collection name");
         }
 
-        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
-                aDocumentId);
+        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aDocumentId);
 
         try (RestHighLevelClient client = makeClient(aTraits)) {
             ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
@@ -207,8 +206,7 @@ public class OpenSearchProvider
                     "Requested collection name does not match connection collection name");
         }
 
-        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
-                aDocumentId);
+        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aDocumentId);
 
         try (RestHighLevelClient client = makeClient(aTraits)) {
             // Send get query

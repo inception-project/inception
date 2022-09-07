@@ -1965,6 +1965,11 @@
         <artifactId>opensearch-rest-high-level-client</artifactId>
         <version>${opensearch.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.codelibs.opensearch</groupId>
+        <artifactId>opensearch-runner</artifactId>
+        <version>${opensearch.version}.0</version>
+      </dependency>
 
       <dependency>
         <groupId>org.eclipse.jgit</groupId>

@@ -38,8 +38,6 @@ public class OpenSearchProviderTraits
 
     private String searchPath = "_search";
 
-    private String objectType = "_doc";
-
     private String defaultField = "doc.text";
 
     /**
@@ -85,16 +83,6 @@ public class OpenSearchProviderTraits
     public void setSearchPath(String aSearchPath)
     {
         searchPath = aSearchPath;
-    }
-
-    public String getObjectType()
-    {
-        return objectType;
-    }
-
-    public void setObjectType(String aObjectType)
-    {
-        objectType = aObjectType;
     }
 
     public String getDefaultField()
