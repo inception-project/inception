@@ -6,14 +6,14 @@ import SpanAnnotation from './span'
  * Relation Annotation (one-way / two-way / link)
  */
 export default class RelationAnnotation extends AbstractAnnotation {
-  text: string
+  text: string | null = null
   x1: number
   y1: number
   x2: number
   y2: number
   zIndex: number
-  _rel1Annotation: SpanAnnotation
-  _rel2Annotation: SpanAnnotation
+  _rel1Annotation: SpanAnnotation | null = null
+  _rel2Annotation: SpanAnnotation | null = null
 
   /**
    * Constructor.
@@ -22,11 +22,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super()
 
     this.type = 'relation'
-    this.rel1Annotation = null
-    this.rel2Annotation = null
-    this.text = null
-    this.color = null
-    this.readOnly = false
     this.element = this.createDummyElement()
 
     // for render.
@@ -40,17 +35,19 @@ export default class RelationAnnotation extends AbstractAnnotation {
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
-    window.globalEvent.on('enableViewMode', this.enableViewMode)
+    globalThis.globalEvent.on('enableViewMode', this.enableViewMode)
   }
 
   /**
    * Set a hover event.
    */
   setHoverEvent () {
-    this.element.querySelectorAll('path').forEach(e => {
-      e.addEventListener('mouseenter', this.handleHoverInEvent)
-      e.addEventListener('mouseleave', this.handleHoverOutEvent)
-    })
+    if (this.element) {
+      this.element.querySelectorAll('path').forEach(e => {
+        e.addEventListener('mouseenter', this.handleHoverInEvent)
+        e.addEventListener('mouseleave', this.handleHoverOutEvent)
+      })
+    }
   }
 
   /**
@@ -95,9 +92,9 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Render the annotation.
    */
-  render (): boolean {
+  render (): void {
     this.setStartEndPosition()
-    return super.render()
+    super.render()
   }
 
   /**
@@ -110,17 +107,17 @@ export default class RelationAnnotation extends AbstractAnnotation {
       this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.removeListener('hoverout', this.handleRelHoverOut)
       this._rel1Annotation.removeListener('delete', this.handleRelDelete)
-      delete this._rel1Annotation
+      this._rel1Annotation = null
     }
 
     if (this._rel2Annotation) {
       this._rel2Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel2Annotation.removeListener('hoverout', this.handleRelHoverOut)
       this._rel2Annotation.removeListener('delete', this.handleRelDelete)
-      delete this._rel2Annotation
+      this._rel2Annotation = null
     }
 
-    window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
+    globalThis.globalEvent.removeListener('enableViewMode', this.enableViewMode)
 
     return promise
   }
@@ -224,7 +221,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super.enableViewMode()
 
     if (!this.readOnly) {
-      this.element.querySelectorAll('path').forEach(e =>
+      this.element?.querySelectorAll('path').forEach(e =>
         e.addEventListener('click', this.handleSingleClickEvent))
     }
   }
@@ -234,7 +231,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   disableViewMode () {
     super.disableViewMode()
-    this.element.querySelectorAll('path').forEach(e =>
+    this.element?.querySelectorAll('path').forEach(e =>
       e.removeEventListener('click', this.handleSingleClickEvent))
   }
 
@@ -244,13 +241,17 @@ export default class RelationAnnotation extends AbstractAnnotation {
   setStartEndPosition () {
     if (this._rel1Annotation) {
       const p = this._rel1Annotation.getBoundingCirclePosition()
-      this.x1 = p.x
-      this.y1 = p.y
+      if (p !== null) {
+        this.x1 = p.x
+        this.y1 = p.y
+      }
     }
     if (this._rel2Annotation) {
       const p = this._rel2Annotation.getBoundingCirclePosition()
-      this.x2 = p.x
-      this.y2 = p.y
+      if (p !== null) {
+        this.x2 = p.x
+        this.y2 = p.y
+      }
     }
   }
 
@@ -259,8 +260,9 @@ export default class RelationAnnotation extends AbstractAnnotation {
       return false
     }
 
-    const isSame = anyOf(this.rel1Annotation.vid, [anno.rel1Annotation.vid, anno.rel2Annotation.vid]) &&
-      anyOf(this.rel2Annotation.vid, [anno.rel1Annotation.vid, anno.rel2Annotation.vid])
+    const isSame =
+      anyOf(this.rel1Annotation?.vid, [anno.rel1Annotation?.vid, anno.rel2Annotation?.vid]) &&
+      anyOf(this.rel2Annotation?.vid, [anno.rel1Annotation?.vid, anno.rel2Annotation?.vid])
 
     return isSame
   }

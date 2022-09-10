@@ -40,9 +40,9 @@ export default class PDFAnnoPage {
     console.log(`Loading PDF from ${pdfUrl}`)
 
     // Load PDF.
-    return window.PDFViewerApplication.open(pdfUrl).then(() => {
+    return globalThis.PDFViewerApplication.open(pdfUrl).then(() => {
       // Set the PDF file name.
-      window.PDFViewerApplication.url = name
+      globalThis.PDFViewerApplication.url = name
     })
   }
 
@@ -50,8 +50,8 @@ export default class PDFAnnoPage {
    * Start the viewer.
    */
   initializeViewer (viewerSelector = '#viewer') {
-    window.pdf = null
-    window.pdfName = null
+    // window.pdf = null
+    // window.pdfName = null
 
     // Reset setting.
     this.resetPDFViewerSettings()
@@ -61,9 +61,9 @@ export default class PDFAnnoPage {
    * Close the viewer.
    */
   closePDFViewer () {
-    if (window.PDFViewerApplication) {
-      window.PDFViewerApplication.close()
-      $('#numPages', window.document).text('')
+    if (globalThis.PDFViewerApplication) {
+      globalThis.PDFViewerApplication.close()
+      // $('#numPages', window.document).text('')
       dispatchWindowEvent('didCloseViewer')
     }
   }
@@ -86,24 +86,33 @@ export default class PDFAnnoPage {
       let pageNumber: number
       let y: number
 
-      if (annotation.type === 'span') {
-        const spanAnnotation = annotation as SpanAnnotation
-        pageNumber = spanAnnotation.page
-        y = spanAnnotation.rectangles[0].y
-      }
-
-      if (annotation.type === 'relation') {
-        const relationAnnotation = annotation as RelationAnnotation
-        const d = convertToExportY(relationAnnotation.y1)
-        pageNumber = d.pageNumber
-        y = d.y
+      switch (annotation.type) {
+        case 'span': {
+          const spanAnnotation = annotation as SpanAnnotation
+          pageNumber = spanAnnotation.page
+          y = spanAnnotation.rectangles[0].y
+          break
+        }
+        case 'relation': {
+          const relationAnnotation = annotation as RelationAnnotation
+          const d = convertToExportY(relationAnnotation.y1)
+          pageNumber = d.pageNumber
+          y = d.y
+          break
+        }
+        default:
+          console.error(`Unknown annotation type: ${annotation.type}`)
+          return
       }
 
       const pageHeight = this.getViewerViewport().height
       const scale = this.getViewerViewport().scale
       let _y = (pageHeight + paddingBetweenPages) * (pageNumber - 1) + y * scale
       _y -= 100
-      document.getElementById('viewer').parentElement.scrollTop = _y
+      const viewer = document.getElementById('viewer')
+      if (viewer && viewer.parentElement) {
+        viewer.parentElement.scrollTop = _y
+      }
 
       // highlight.
       annotation.highlight()
@@ -115,7 +124,7 @@ export default class PDFAnnoPage {
    * Get the viewport of the viewer.
    */
   getViewerViewport () {
-    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+    return globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   }
 
   /**

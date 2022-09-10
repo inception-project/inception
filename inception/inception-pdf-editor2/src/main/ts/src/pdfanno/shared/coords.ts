@@ -28,7 +28,7 @@ export const paddingBetweenPages = 9
  * Get a page size of a single PDF page.
  */
 export function getPageSize () : {width: number, height: number} {
-  const pdfView = window.PDFView
+  const pdfView = globalThis.PDFView
 
   const viewBox = pdfView.pdfViewer.getPageView(0).viewport.viewBox
   const size = { width: viewBox[2], height: viewBox[3] }

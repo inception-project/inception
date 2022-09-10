@@ -13,7 +13,7 @@ export function scaleUp (svg, rect) {
   }
 
   const result = {}
-  const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+  const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
 
   Object.keys(rect).forEach((key) => {
     result[key] = rect[key] * viewport.scale
@@ -35,7 +35,7 @@ export function scaleDown (rect: Record<string, number>) : Record<string, number
   }
 
   const result : Record<string, number> = {}
-  const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+  const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   Object.keys(rect).forEach((key) => {
     result[key] = rect[key] / viewport.scale
   })
