@@ -608,6 +608,13 @@ public class AnnotationLayer
             return this;
         }
 
+        public Builder forUimaType(org.apache.uima.cas.Type aType)
+        {
+            withName(aType.getName());
+            withUiName(aType.getShortName());
+            return this;
+        }
+
         public Builder withId(Long id)
         {
             this.id = id;
