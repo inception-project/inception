@@ -12,7 +12,7 @@ import { installRelationSelection } from './core/src/UI/relation'
 import { CompactAnnotatedText, CompactSpan, DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import SpanAnnotation from './core/src/annotation/span'
-import { getGlyphsInRange } from './page/textLayer'
+import { getGlyphAt, getGlyphsInRange } from './page/textLayer'
 import RelationAnnotation from './core/src/annotation/relation'
 import { createRect, mapToDocumentCoordinates } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
@@ -20,6 +20,7 @@ import { makeMarkerMap } from '@inception-project/inception-js-api/src/model/com
 import { CompactTextMarker } from '@inception-project/inception-js-api/src/model/compact/CompactTextMarker'
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
 import { CompactAnnotationMarker } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotationMarker'
+import { Rectangle } from '../vmodel/Rectangle'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -310,9 +311,8 @@ function makeSpan (s: CompactSpan, doc: CompactAnnotatedText, annotationMarkers:
     return
   }
 
-  const rectangles = mergeRects(getGlyphsInRange(range))
-  if (!rectangles?.length) {
-    console.warn(`No glyphs found for span range ${range}`)
+  const rectangles = calculateRectangles(range)
+  if (!rectangles) {
     return
   }
 
@@ -358,9 +358,8 @@ function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
     return
   }
 
-  const rectangles = mergeRects(getGlyphsInRange(range))
-  if (!rectangles?.length) {
-    console.warn(`No glyphs found for marker range ${range}`)
+  const rectangles = calculateRectangles(range)
+  if (!rectangles) {
     return
   }
 
@@ -372,6 +371,31 @@ function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
   marker.rectangles = rectangles
   marker.classList = [`marker-${m[0]}`]
   marker.save()
+}
+
+function calculateRectangles (range: [number, number]): Rectangle[] | null {
+  let rectangles : Rectangle[]
+  if (range[0] === range[1]) {
+    const glyph = getGlyphAt(range[0])
+    if (!glyph) {
+      console.warn(`No glyph found for offset ${range[0]}`)
+      return null
+    }
+    rectangles = [new Rectangle({
+      p: glyph.page,
+      x: glyph.bbox.x,
+      y: glyph.bbox.y,
+      w: 3,
+      h: glyph.bbox.h
+    })]
+  } else {
+    rectangles = mergeRects(getGlyphsInRange(range))
+    if (!rectangles?.length) {
+      console.warn(`No glyphs found for range ${range}`)
+      return null
+    }
+  }
+  return rectangles
 }
 
 async function displayViewer (): Promise<void> {

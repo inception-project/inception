@@ -1,6 +1,6 @@
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
-import { findCharacterOffset, getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
+import { getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { VGlyph } from '../../../../vmodel/VGlyph'
 
@@ -181,7 +181,9 @@ function handleMouseUp (e: MouseEvent) {
         bubbles: true,
         detail: { begin: selectionBegin, end: selectionEnd }
       })
+
       document.getElementById('viewer')?.dispatchEvent(event)
+
       // wait a second before destroying selection for better user experience
       setTimeout(function () {
         if (currentSelectionHighlight) {
@@ -219,16 +221,15 @@ function handleClick (e: MouseEvent) {
     const x = e.clientX - left
     const y = e.clientY - top
 
-    const position = findCharacterOffset(page, scaleDown({ x, y }))
-
-    if (!position) {
-      console.log(`Position is ${position}, cannot create zero-width span annotaton`)
+    const glyph = findGlyphAtPoint(page, scaleDown({ x, y }))
+    if (!glyph) {
+      console.log(`No glyph at point ${[x, y]} - cannot create zero-width annotation`)
       return
     }
 
     const event = new CustomEvent('createSpanAnnotation', {
       bubbles: true,
-      detail: { begin: position, end: position }
+      detail: { begin: glyph.begin, end: glyph.begin }
     })
     document.getElementById('viewer')?.dispatchEvent(event)
 
