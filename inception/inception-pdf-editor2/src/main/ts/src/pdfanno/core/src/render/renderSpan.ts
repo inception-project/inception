@@ -4,7 +4,7 @@ import SpanAnnotation from '../annotation/span'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 
 export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[] | undefined {
-  if (!aRectangles) {
+  if (!aRectangles || aRectangles.length === 0) {
     return undefined
   }
 
@@ -15,13 +15,13 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
   }
 
   const paddingTop = 9
-  const pageView = window.PDFViewerApplication.pdfViewer.getPageView(0)
+  const pageView = globalThis.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
   const marginBetweenPages = 1 // TODO Where does this 1 come from?!
 
   const rectangles : Rectangle[] = []
   for (let r of aRectangles) {
-    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`)
+    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
     if (!pageContainer) {
       console.warn(`No page element found for page ${r.p}`)
       return undefined
@@ -39,13 +39,13 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     }
 
     r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
-    if (r.w > 0 && r.h > 0 /*&& r.x > -1 && r.y > -1*/) {
+    if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)
     }
   }
 
   if (rectangles.length === 0) {
-    console.warn(`${aRectangles.length} Input rectangles reduced to nothing`, aRectangles)
+    console.warn(`${aRectangles.length} input rectangles reduced to nothing`, aRectangles)
     return undefined
   }
 
@@ -58,11 +58,12 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
  * @param span - span annotation.
  * @return a html element describing a span annotation.
  */
-export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
+export function renderSpan (span: SpanAnnotation): HTMLElement | null {
   const rectangles = mapToDocumentCoordinates(span.rectangles)
 
-  if (!rectangles) {
-    return undefined
+  if (!rectangles || rectangles.length === 0) {
+    console.warn('No rectangles found for span annotation', span)
+    return null
   }
 
   const base = document.createElement('div')
@@ -70,7 +71,7 @@ export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
   base.style.zIndex = '10'
 
   rectangles.forEach(r => {
-    base.appendChild(createRect(span, r, span.color, span.readOnly))
+    base.appendChild(createRect(r, span, span.color, span.readOnly))
   })
 
   if (span.knob) {
@@ -86,11 +87,11 @@ export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
   return base
 }
 
-export function createRect (a: SpanAnnotation | undefined, r: Rectangle, color?: string, readOnly?: boolean): HTMLElement {
+export function createRect (r: Rectangle, a?: SpanAnnotation, color?: string, readOnly?: boolean): HTMLElement {
   const rect = document.createElement('div')
   rect.classList.add(readOnly ? 'anno-span__border' : 'anno-span__area')
 
-  if (!a?.border) {
+  if (!(a?.border)) {
     rect.classList.add('no-border')
   }
 

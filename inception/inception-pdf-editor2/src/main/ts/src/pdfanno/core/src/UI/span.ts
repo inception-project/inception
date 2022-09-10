@@ -1,11 +1,11 @@
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
-import { findCharacterOffset, getGlyphsInRange, findGlyphAtPoint, Rect } from '../../../page/textLayer'
+import { getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { VGlyph } from '../../../../vmodel/VGlyph'
 
 function scale () {
-  return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
+  return globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
 }
 
 /**
@@ -24,9 +24,9 @@ export function mergeRects (glyphs: VGlyph[]) {
   for (let i = 1; i < glyphs.length; i++) {
     const rect = glyphs[i].bbox
 
-    if (tmp.p !== rect.p) {
-      console.log('Page switch')
-    }
+    // if (tmp.p !== rect.p) {
+    //   console.log('Page switch')
+    // }
 
     if (tmp.p === rect.p && withinMargin(rect.top, tmp.top, error)) {
       // Same line/same page -> Merge rects.
@@ -66,23 +66,37 @@ export function getRectangles () {
 
 export function installSpanSelection () {
   const viewer = document.getElementById('viewer')
-  viewer.addEventListener('mousedown', handleMouseDown)
-  viewer.addEventListener('mousemove', handleMouseMove)
-  viewer.addEventListener('mouseup', handleMouseUp)
-  viewer.addEventListener('click', handleClick)
-  window.addEventListener('annotationHoverIn', () => otherAnnotationTreating = true)
-  window.addEventListener('annotationHoverOut', () => otherAnnotationTreating = false)
-  window.addEventListener('annotationDeleted', () => otherAnnotationTreating = false)
+  if (viewer) {
+    viewer.addEventListener('mousedown', handleMouseDown)
+    viewer.addEventListener('mousemove', handleMouseMove)
+    viewer.addEventListener('mouseup', handleMouseUp)
+    viewer.addEventListener('click', handleClick)
+  }
+  window.addEventListener('annotationHoverIn', () => { otherAnnotationTreating = true })
+  window.addEventListener('annotationHoverOut', () => { otherAnnotationTreating = false })
+  window.addEventListener('annotationDeleted', () => { otherAnnotationTreating = false })
 }
 
 function setPositions (e: MouseEvent) {
   const canvasElement = (e.target as HTMLElement).closest('.canvasWrapper')
   if (!canvasElement) {
+    console.error('No canvas element found.')
     return
   }
 
   const pageElement = canvasElement.parentElement
-  const page = parseInt(pageElement.getAttribute('data-page-number'))
+  if (!pageElement) {
+    console.error('No page element found.')
+    return
+  }
+
+  const pageNumberAttribute = pageElement.getAttribute('data-page-number')
+  if (!pageNumberAttribute) {
+    console.error('No page number attribute found.')
+    return
+  }
+
+  const page = parseInt(pageNumberAttribute)
   currentPage = page
 
   const { top, left } = canvasElement.getBoundingClientRect()
@@ -91,7 +105,7 @@ function setPositions (e: MouseEvent) {
 
   const glyph = findGlyphAtPoint(page, scaleDown({ x, y }))
   if (glyph) {
-    if (!selectionBegin || !selectionEnd) {
+    if (selectionBegin === null || selectionEnd === null || initPosition === null) {
       initPosition = glyph.begin
       selectionBegin = glyph.begin
       selectionEnd = glyph.end
@@ -115,7 +129,9 @@ function makeSelections (e: MouseEvent) {
     currentSelectionHighlight = null
   }
 
-  currentSelectionHighlight = selectionHighlight([selectionBegin, selectionEnd], currentPage)
+  if (selectionBegin !== null && selectionEnd !== null && currentPage !== null) {
+    currentSelectionHighlight = selectionHighlight([selectionBegin, selectionEnd], currentPage)
+  }
 }
 
 function handleMouseDown (e: MouseEvent) {
@@ -165,7 +181,9 @@ function handleMouseUp (e: MouseEvent) {
         bubbles: true,
         detail: { begin: selectionBegin, end: selectionEnd }
       })
-      document.getElementById('viewer').dispatchEvent(event)
+
+      document.getElementById('viewer')?.dispatchEvent(event)
+
       // wait a second before destroying selection for better user experience
       setTimeout(function () {
         if (currentSelectionHighlight) {
@@ -186,24 +204,34 @@ function handleClick (e: MouseEvent) {
 
   if (e.shiftKey) {
     const pageElement = canvasElement.parentElement
-    const page = parseInt(pageElement.getAttribute('data-page-number'))
+    if (!pageElement) {
+      console.error('No page element found.')
+      return
+    }
+
+    const pageNumberAttribute = pageElement.getAttribute('data-page-number')
+    if (!pageNumberAttribute) {
+      console.error('No page number attribute found.')
+      return
+    }
+
+    const page = parseInt(pageNumberAttribute)
     currentPage = page
     const { top, left } = canvasElement.getBoundingClientRect()
     const x = e.clientX - left
     const y = e.clientY - top
 
-    const position = findCharacterOffset(page, scaleDown({ x, y }))
-
-    if (position == null) {
-      console.log('Position is null, cannot create zero-width span annotaton')
+    const glyph = findGlyphAtPoint(page, scaleDown({ x, y }))
+    if (!glyph) {
+      console.log(`No glyph at point ${[x, y]} - cannot create zero-width annotation`)
       return
     }
 
     const event = new CustomEvent('createSpanAnnotation', {
       bubbles: true,
-      detail: { begin: position, end: position }
+      detail: { begin: glyph.begin, end: glyph.begin }
     })
-    document.getElementById('viewer').dispatchEvent(event)
+    document.getElementById('viewer')?.dispatchEvent(event)
 
     // wait a second before destroying selection for better user experience
     setTimeout(function () {
@@ -215,7 +243,7 @@ function handleClick (e: MouseEvent) {
   }
 }
 
-function selectionHighlight (textRange: [number, number], page: number): SpanAnnotation {
+function selectionHighlight (textRange: [number, number], page: number): SpanAnnotation | null {
   const hl = new SpanAnnotation()
   hl.color = '#0f0'
   hl.textRange = textRange
@@ -234,9 +262,9 @@ function selectionHighlight (textRange: [number, number], page: number): SpanAnn
 }
 
 let mouseDown = false
-let initPosition = null
-let selectionBegin: number = null
-let selectionEnd: number = null
-let currentPage: number = null
-let currentSelectionHighlight: SpanAnnotation = null
+let initPosition: number | null = null
+let selectionBegin: number | null = null
+let selectionEnd: number | null = null
+let currentPage: number | null = null
+let currentSelectionHighlight: SpanAnnotation | null = null
 let otherAnnotationTreating = false

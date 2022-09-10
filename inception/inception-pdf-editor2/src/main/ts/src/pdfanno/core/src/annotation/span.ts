@@ -16,31 +16,24 @@ const CLICK_DELAY = 300
  */
 export default class SpanAnnotation extends AbstractAnnotation {
   rectangles: Rectangle[] = []
-  readOnly = false
   knob = true
   border = true
   text: string
   textRange: [number, number]
-  page: number = -1
+  page: number
   zIndex = 10
-  element: HTMLElement
 
   constructor () {
     super()
 
     this.type = 'span'
-    this.vid = null
-    this.color = null
-    this.textRange = null
-    this.page = null
-    this.element = this.createDummyElement()
 
     // Need to bind these event handler methods
     this.handleClickEvent = this.handleClickEvent.bind(this)
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
-    window.globalEvent.on('enableViewMode', this.enableViewMode)
+    globalThis.globalEvent.on('enableViewMode', this.enableViewMode)
   }
 
   equalTo (anno: SpanAnnotation) {
@@ -54,23 +47,23 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Render annotation(s).
    */
-  render (): boolean {
+  render (): void {
     if (!this.rectangles || this.rectangles.length === 0) {
       if (!this.page || !this.textRange) {
         console.error('ERROR: span missing page or textRange. span=', this)
-        return false
+        return
       }
       this.rectangles = mergeRects(getGlyphsInRange(this.textRange))
     }
 
-    return super.render()
+    super.render()
   }
 
   /**
    * Set a hover event.
    */
   setHoverEvent () {
-    this.element.querySelectorAll('.anno-knob').forEach(e => {
+    this.element?.querySelectorAll('.anno-knob').forEach(e => {
       e.addEventListener('mouseenter', this.handleHoverInEvent)
       e.addEventListener('mouseleave', this.handleHoverOutEvent)
     })
@@ -83,24 +76,8 @@ export default class SpanAnnotation extends AbstractAnnotation {
     const promise = super.destroy()
     this.emit('delete')
 
-    window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
+    globalThis.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
-  }
-
-  /**
-   * Get the position for text.
-   */
-  getTextPosition () {
-    let p = null
-
-    if (this.rectangles.length > 0) {
-      p = {
-        x: this.rectangles[0].x + 7,
-        y: this.rectangles[0].y - 20
-      }
-    }
-
-    return p
   }
 
   /**
@@ -124,7 +101,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
       bubbles: true,
       detail: this
     })
-    this.element.dispatchEvent(event)
+    this.element?.dispatchEvent(event)
   }
 
   /**
@@ -137,7 +114,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
       return
     }
 
-    this.element.querySelectorAll('.anno-knob').forEach(e => {
+    this.element?.querySelectorAll('.anno-knob').forEach(e => {
       e.addEventListener('mousedown', this.preventFocusChange)
       e.addEventListener('click', this.handleClickEvent)
     })
@@ -159,7 +136,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     ev.preventDefault()
     clickCount++
     if (clickCount === 1) {
-      timer = setTimeout(() => {
+      timer = window.setTimeout(() => {
         try {
           this.handleSingleClickEvent(ev) // perform single-click action
         } finally {
@@ -183,7 +160,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   disableViewMode () {
     super.disableViewMode()
-    this.element.querySelectorAll('.anno-knob').forEach(e => {
+    this.element?.querySelectorAll('.anno-knob').forEach(e => {
       e.removeEventListener('click', this.handleClickEvent)
       e.removeEventListener('mousedown', this.preventFocusChange)
     })

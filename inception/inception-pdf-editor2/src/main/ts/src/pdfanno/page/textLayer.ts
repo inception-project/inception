@@ -33,7 +33,7 @@ export function getPageBefore (num: number): VPage | undefined {
   return pageBefore
 }
 
-export function getPageAfter(num: number): VPage | undefined {
+export function getPageAfter (num: number): VPage | undefined {
   let stop = false
   for (const page of pages) {
     if (stop) {
@@ -54,33 +54,6 @@ export function findPageForOffset (offset: number): VPage | undefined {
     console.error(`No page found for offset [${offset}]. Last offset is [${pages[pages.length - 1].range[1]}]`)
   }
   return page
-}
-
-/**
- * Find index between characters in the text.
- * Used for zero-width span annotations.
- * @param pageNum - the page number.
- * @param point - { x, y } coords.
- * @return {*} - The nearest text index to the given point.
- */
-export function findCharacterOffset (pageNum: number, point: { x: number, y: number }): number | undefined {
-  const page = getPage(pageNum)
-
-  if (!page) {
-    return undefined
-  }
-
-  for (const g of page.glyphs) {
-    if (g.bbox.x <= point.y && point.y <= (g.bbox.y + g.bbox.h)) {
-      if (g.bbox.x <= point.x && point.x <= g.bbox.x + g.bbox.w / 2) {
-        return g.begin
-      } else if (g.bbox.x + g.bbox.w / 2 < point.x && point.x <= g.bbox.x + g.bbox.w) {
-        return g.begin + 1
-      }
-    }
-  }
-
-  return undefined
 }
 
 /**
@@ -109,12 +82,26 @@ function overlapping (range1: Offsets, range2: Offsets): boolean {
   return aYBegin === aXBegin || aYEnd === aXEnd || (aXBegin < aYEnd && aYBegin < aXEnd)
 }
 
+export function getGlyphAt (offset: number): VGlyph | null {
+  const page = findPageForOffset(offset)
+  if (!page) {
+    return null
+  }
+
+  const glyph = page.glyphs.find(g => g.begin <= offset && offset < g.end)
+  if (!glyph) {
+    return null
+  }
+
+  return glyph
+}
+
 export function getGlyphsInRange (range: Offsets): VGlyph[] {
   if (!range) {
     return []
   }
 
-  const glyphs = []
+  const glyphs : VGlyph[] = []
   let currentPage = findPageForOffset(range[0])
   while (currentPage && overlapping(range, currentPage.range)) {
     for (const g of currentPage.glyphs) {
@@ -133,9 +120,9 @@ export function getGlyphsInRange (range: Offsets): VGlyph[] {
  * assumed.
  */
 function scale () {
-  if (window.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
+  if (globalThis.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
     return 1
   } else {
-    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
+    return globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
   }
 }
