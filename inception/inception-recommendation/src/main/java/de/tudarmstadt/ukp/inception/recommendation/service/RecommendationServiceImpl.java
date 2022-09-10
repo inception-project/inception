@@ -1659,6 +1659,7 @@ public class RecommendationServiceImpl
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
 
+        var documentText = aPredictionCas.getDocumentText();
         for (FeatureStructure predictedFS : aPredictionCas.select(predictedType)) {
             if (!predictedFS.getBooleanValue(predictionFeature)) {
                 continue;
@@ -1680,10 +1681,12 @@ public class RecommendationServiceImpl
                         continue;
                     }
 
+                    var offsets = targetOffsets.get();
+                    var coveredText = documentText.substring(offsets.getBegin(), offsets.getEnd());
+
                     suggestion = new SpanSuggestion(id, aRecommender, layer.getId(), featureName,
-                            aDocument.getName(), targetOffsets.get(),
-                            predictedAnnotation.getCoveredText(), label, label, score,
-                            scoreExplanation);
+                            aDocument.getName(), targetOffsets.get(), coveredText, label, label,
+                            score, scoreExplanation);
                     break;
                 }
                 case RELATION_TYPE: {
