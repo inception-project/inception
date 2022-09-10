@@ -16,8 +16,8 @@ export function transform (base: HTMLElement, node: HTMLElement, viewport: any):
   return node
 }
 
-export function appendChild (base: HTMLElement, annotation: AbstractAnnotation): HTMLElement | undefined {
-  let child: HTMLElement | undefined
+export function appendChild (base: HTMLElement, annotation: AbstractAnnotation): HTMLElement | null {
+  let child: HTMLElement | null
   switch (annotation.type) {
     case 'span':
       child = renderSpan(annotation as SpanAnnotation)
@@ -30,7 +30,7 @@ export function appendChild (base: HTMLElement, annotation: AbstractAnnotation):
   // If no type was provided for an annotation it will result in node being null.
   // Skip appending/transforming if node doesn't exist.
   if (child) {
-    const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+    const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
     const elm = transform(base, child, viewport)
     base.append(elm)
   }

@@ -3,14 +3,18 @@ import RelationAnnotation from '../annotation/relation.js'
 import SpanAnnotation from '../annotation/span.js'
 import { scaleDown } from './utils'
 
-let relationAnnotation : RelationAnnotation = null
-let hoveredAnnotation : SpanAnnotation = null
+let relationAnnotation : RelationAnnotation | null = null
+let hoveredAnnotation : SpanAnnotation | null = null
 let mousedownFired = false
 let onAnnotation = false
 let drawing = false
 
 export function installRelationSelection () {
   const viewer = document.getElementById('viewer')
+  if (!viewer) {
+    console.error('Viewer element not found')
+    return
+  }
 
   window.addEventListener('annotationHoverIn', (e) => {
     hoveredAnnotation = e.detail

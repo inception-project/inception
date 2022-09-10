@@ -2,11 +2,11 @@
  * Deselect annotations when pages clicked.
  */
 function handlePageClick (e) {
-  window.annotationContainer
+  globalThis.annotationContainer
     .getSelectedAnnotations()
     .forEach(a => a.deselect())
 
-  var event = document.createEvent('CustomEvent')
+  const event = document.createEvent('CustomEvent')
   event.initCustomEvent('annotationDeselected', true, true, this)
   window.dispatchEvent(event)
 }

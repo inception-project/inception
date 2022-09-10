@@ -33,7 +33,7 @@ export function getPageBefore (num: number): VPage | undefined {
   return pageBefore
 }
 
-export function getPageAfter(num: number): VPage | undefined {
+export function getPageAfter (num: number): VPage | undefined {
   let stop = false
   for (const page of pages) {
     if (stop) {
@@ -114,7 +114,7 @@ export function getGlyphsInRange (range: Offsets): VGlyph[] {
     return []
   }
 
-  const glyphs = []
+  const glyphs : VGlyph[] = []
   let currentPage = findPageForOffset(range[0])
   while (currentPage && overlapping(range, currentPage.range)) {
     for (const g of currentPage.glyphs) {
@@ -133,9 +133,9 @@ export function getGlyphsInRange (range: Offsets): VGlyph[] {
  * assumed.
  */
 function scale () {
-  if (window.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
+  if (globalThis.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
     return 1
   } else {
-    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
+    return globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
   }
 }
