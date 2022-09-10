@@ -53,17 +53,6 @@ function withinMargin (x: number, base: number, margin: number) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
-/**
- * Get the rect area of User selected.
- */
-export function getRectangles () {
-  if (!currentPage || !selectionBegin || !selectionEnd) {
-    return null
-  }
-
-  return mergeRects(getGlyphsInRange([selectionBegin, selectionEnd]))
-}
-
 export function installSpanSelection () {
   const viewer = document.getElementById('viewer')
   if (viewer) {

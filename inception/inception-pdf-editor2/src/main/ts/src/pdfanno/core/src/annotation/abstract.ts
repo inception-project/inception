@@ -144,16 +144,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   }
 
   /**
-   * Create a dummy DOM element for the timing that a annotation hasn't be specified yet.
-   */
-  createDummyElement (): HTMLElement {
-    const element = document.createElement('dummy')
-    element.classList.add('dummy')
-    // return element
-    return null
-  }
-
-  /**
    * Get the central position of the boundingCircle.
    */
   getBoundingCirclePosition () {

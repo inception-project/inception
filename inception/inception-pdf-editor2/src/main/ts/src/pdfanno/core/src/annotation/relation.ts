@@ -22,7 +22,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super()
 
     this.type = 'relation'
-    this.element = this.createDummyElement()
 
     // for render.
     this.x1 = 0
