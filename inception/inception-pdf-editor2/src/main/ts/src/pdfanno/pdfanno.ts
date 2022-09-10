@@ -45,7 +45,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   globalThis.annotationContainer = annotationContainer
 
   // Enable a view mode.
-  UI.enableViewMode()
+  // UI.enableViewMode()
 
   const initPromise = new Promise<void>((resolve) => {
     console.log('Waiting for the document to load...')

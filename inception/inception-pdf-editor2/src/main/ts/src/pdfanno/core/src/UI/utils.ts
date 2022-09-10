@@ -1,44 +1,13 @@
-export const BORDER_COLOR = '#00BFFF'
-
-/**
- * Adjust scale from normalized scale (100%) to rendered scale.
- *
- * @param {SVGElement} svg The SVG to gather metadata from
- * @param {Object} rect A map of numeric values to scale
- * @return {Object} A copy of `rect` with values scaled up
- */
-export function scaleUp (svg, rect) {
-  if (arguments.length === 1) {
-    rect = svg
-  }
-
-  const result = {}
-  const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
-
-  Object.keys(rect).forEach((key) => {
-    result[key] = rect[key] * viewport.scale
-  })
-
-  return result
-}
-
 /**
  * Adjust scale from rendered scale to a normalized scale (100%).
  *
- * @param {Object} rect A map of numeric values to scale
- * @return {Object} A copy of `rect` with values scaled down
+ * @param point A coordinate to scale
+ * @return A of the coordinate with values scaled down
  */
-export function scaleDown (rect: Record<string, number>) : Record<string, number> {
-  // TODO for old style:  scaleDown(svg, rect)
-  if (arguments.length === 2) {
-    rect = arguments[1]
-  }
-
-  const result : Record<string, number> = {}
+export function scaleDown (point: { x: number, y: number }) : { x: number, y: number } {
   const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
-  Object.keys(rect).forEach((key) => {
-    result[key] = rect[key] / viewport.scale
-  })
-
-  return result
+  return {
+    x: point.x / viewport.scale,
+    y: point.y / viewport.scale
+  }
 }
