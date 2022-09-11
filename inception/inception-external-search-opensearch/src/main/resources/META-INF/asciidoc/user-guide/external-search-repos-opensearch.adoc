@@ -56,11 +56,6 @@ should look as follows:
 }
 ----
 
-NOTE: If you run {product-name} with the `-ea` parameter that enables assertions, then you may be
-      unable to connect to an OpenSearch server unless the Lucene version used by the server matches exactly
-      the Lucene version used by {product-name}. In general, this check is too strict and you should be able
-      to use OpenSearch nicely if you simply omit the `-ea` parameter.
-
 == Setting up a simple OpenSearch document repository
 
 In this example, we use link:https://www.docker.com[Docker] to get OpenSearch and link:https://elasticvue.com[ElasticVue] up and running very quickly. Note, that the docker containers we start

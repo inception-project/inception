@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.opensearch.config;
 
+import org.opensearch.LegacyESVersion;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,6 +38,13 @@ import de.tudarmstadt.ukp.inception.externalsearch.opensearch.OpenSearchProvider
 @ConditionalOnBean(ExternalSearchService.class)
 public class OpenSearchDocumentRepositoryAutoConfiguration
 {
+    static {
+        // Disable asserts for LegacyESVersion because we use a slightly higher version of Lucene
+        // than OpenSearch expects
+        LegacyESVersion.class.getClassLoader()
+                .setClassAssertionStatus(LegacyESVersion.class.getName(), false);
+    }
+
     @Bean
     public OpenSearchProviderFactory openSearchProviderFactory()
     {

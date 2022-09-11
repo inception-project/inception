@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.opensearch;
 
+import static java.lang.String.join;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.codelibs.opensearch.runner.OpenSearchRunner.newConfigs;
 
@@ -26,6 +27,7 @@ import org.codelibs.opensearch.runner.OpenSearchRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.LegacyESVersion;
 import org.opensearch.common.settings.Settings;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -34,6 +36,13 @@ import de.tudarmstadt.ukp.inception.externalsearch.opensearch.traits.OpenSearchP
 
 public class OpenSearchProviderTest
 {
+    static {
+        // Disable asserts for LegacyESVersion because we use a slightly higher version of Lucene
+        // than OpenSearch expects
+        LegacyESVersion.class.getClassLoader()
+                .setClassAssertionStatus(LegacyESVersion.class.getName(), false);
+    }
+
     private OpenSearchProvider sut;
     private DocumentRepository repo;
     private OpenSearchProviderTraits traits;
@@ -49,7 +58,7 @@ public class OpenSearchProviderTest
         osRunner.ensureYellow();
 
         osRunner.createIndex("test", (Settings) null);
-        osRunner.insert("test", "1", String.join("\n", //
+        osRunner.insert("test", "1", join("\n", //
                 "{", //
                 "  'metadata': {", //
                 "    'language': 'en',", //

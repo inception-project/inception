@@ -149,20 +149,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
-  <build>
-    <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-surefire-plugin</artifactId>
-      <configuration>
-        <!-- 
-          - Need to disable assertions because OpenSearch 1.3.5 otherwise complains about a 
-          - too-new Lucene
-          -->
-        <enableAssertions>false</enableAssertions>
-      </configuration>
-    </plugin>
-    </plugins>
-  </build>
-</project>
+  </project>
