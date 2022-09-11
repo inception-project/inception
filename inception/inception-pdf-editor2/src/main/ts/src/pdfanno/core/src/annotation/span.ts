@@ -1,7 +1,7 @@
 import AbstractAnnotation from './abstract'
 import { getGlyphsInRange } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
-import { mergeRects } from '../UI/span'
+import { mergeRects } from '../render/renderSpan'
 
 let clickCount = 0
 let timer : number | null = null

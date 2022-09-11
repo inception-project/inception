@@ -4,17 +4,16 @@ import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
-import UI from './core/src/UI'
 import AnnotationContainer from './core/src/annotation/container'
 import AbstractAnnotation from './core/src/annotation/abstract'
-import { installSpanSelection, mergeRects } from './core/src/UI/span'
+import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
 import { CompactAnnotatedText, CompactSpan, DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import SpanAnnotation from './core/src/annotation/span'
-import { getGlyphAt, getGlyphsInRange } from './page/textLayer'
+import { getGlyphAtTextOffset, getGlyphsInRange } from './page/textLayer'
 import RelationAnnotation from './core/src/annotation/relation'
-import { createRect, mapToDocumentCoordinates } from './core/src/render/renderSpan'
+import { createRect, mapToDocumentCoordinates, mergeRects } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
 import { makeMarkerMap } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotatedText'
 import { CompactTextMarker } from '@inception-project/inception-js-api/src/model/compact/CompactTextMarker'
@@ -220,7 +219,7 @@ function renderAnnotations () {
 }
 
 export function scrollTo (offset: number, position: string): void {
-  const page = textLayer.findPageForOffset(offset)?.index
+  const page = textLayer.findPageForTextOffset(offset)?.index
   if (!page) {
     console.error(`No page found for offset: ${offset}`)
     return
@@ -305,7 +304,7 @@ function makeSpan (s: CompactSpan, doc: CompactAnnotatedText, annotationMarkers:
   const end = offsets[0][1] + doc.window[0]
   const range: Offsets = [begin, end]
 
-  const page = textLayer.findPageForOffset(begin)?.index
+  const page = textLayer.findPageForTextOffset(begin)?.index
   if (page === undefined) {
     console.warn(`No page found for span range ${range}`)
     return
@@ -352,7 +351,7 @@ function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
   const end = offsets[0][1] + doc.window[0]
   const range: Offsets = [begin, end]
 
-  const page = textLayer.findPageForOffset(begin)?.index
+  const page = textLayer.findPageForTextOffset(begin)?.index
   if (page === undefined) {
     console.warn(`No page found for marker range ${range}`)
     return
@@ -376,7 +375,7 @@ function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
 function calculateRectangles (range: [number, number]): Rectangle[] | null {
   let rectangles : Rectangle[]
   if (range[0] === range[1]) {
-    const glyph = getGlyphAt(range[0])
+    const glyph = getGlyphAtTextOffset(range[0])
     if (!glyph) {
       console.warn(`No glyph found for offset ${range[0]}`)
       return null
