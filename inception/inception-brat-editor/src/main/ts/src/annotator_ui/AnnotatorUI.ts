@@ -78,7 +78,7 @@ export class AnnotatorUI {
   private svgPosition: JQueryCoordinates
 
   private clickCount = 0
-  private clickTimer = null
+  private clickTimer: number | null = null
   private CLICK_DELAY = 300
 
   private ajax: DiamAjax
@@ -161,7 +161,7 @@ export class AnnotatorUI {
       : this.selectAnnotation
 
     if (this.clickCount === 1) {
-      this.clickTimer = setTimeout(() => {
+      this.clickTimer = window.setTimeout(() => {
         try {
           singleClickAction.call(this, evt) // perform single-click action
         } finally {
@@ -169,7 +169,9 @@ export class AnnotatorUI {
         }
       }, this.CLICK_DELAY)
     } else {
-      clearTimeout(this.clickTimer) // prevent single-click action
+      if (this.clickTimer !== null) {
+        clearTimeout(this.clickTimer) // prevent single-click action
+      }
       try {
         doubleClickAction.call(this, evt) // perform double-click action
       } finally {

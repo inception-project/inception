@@ -2,6 +2,8 @@ import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
 import SpanAnnotation from '../annotation/span'
 import { Rectangle } from '../../../../vmodel/Rectangle'
+import { scale } from '../../../page/textLayer'
+import { VGlyph } from '../../../../vmodel/VGlyph'
 
 export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[] | undefined {
   if (!aRectangles || aRectangles.length === 0) {
@@ -107,4 +109,49 @@ export function createRect (r: Rectangle, a?: SpanAnnotation, color?: string, re
   }
   rect.style.pointerEvents = 'none'
   return rect
+}
+
+/**
+ * Merge the rectangles of the glyphs into fewer rectangles.
+ */
+export function mergeRects (glyphs: VGlyph[]): Rectangle[] {
+  if (glyphs.length === 0) {
+    return []
+  }
+
+  // a vertical margin of error.
+  const error = 5 * scale()
+
+  let tmp = new Rectangle(glyphs[0].bbox)
+  const newRects = [tmp]
+  for (let i = 1; i < glyphs.length; i++) {
+    const rect = glyphs[i].bbox
+
+    // if (tmp.p !== rect.p) {
+    //   console.log('Page switch')
+    // }
+
+    if (tmp.p === rect.p && withinMargin(rect.top, tmp.top, error)) {
+      // Same line/same page -> Merge rects.
+      tmp.setPosition({
+        top: Math.min(tmp.top, rect.top),
+        left: Math.min(tmp.left, rect.left),
+        right: Math.max(tmp.right, rect.right),
+        bottom: Math.max(tmp.bottom, rect.bottom)
+      })
+    } else {
+      // New line/new page -> Create a new rect.
+      tmp = new Rectangle(rect)
+      newRects.push(tmp)
+    }
+  }
+
+  return newRects
+}
+
+/**
+ * Check the value(x) within the range.
+ */
+function withinMargin (x: number, base: number, margin: number) {
+  return (base - margin) <= x && x <= (base + margin)
 }

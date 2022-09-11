@@ -48,7 +48,7 @@ export function getPageAfter (num: number): VPage | undefined {
   return undefined
 }
 
-export function findPageForOffset (offset: number): VPage | undefined {
+export function findPageForTextOffset (offset: number): VPage | undefined {
   const page = pages.find(p => p.range[0] <= offset && offset < p.range[1])
   if (!page) {
     console.error(`No page found for offset [${offset}]. Last offset is [${pages[pages.length - 1].range[1]}]`)
@@ -64,7 +64,7 @@ export function findPageForOffset (offset: number): VPage | undefined {
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-export function findGlyphAtPoint (pageNum: number, point: { x: number, y: number }): VGlyph | undefined {
+export function findGlyphAtPointWithinPage (pageNum: number, point: { x: number, y: number }): VGlyph | undefined {
   const page = getPage(pageNum)
 
   if (!page) {
@@ -82,8 +82,8 @@ function overlapping (range1: Offsets, range2: Offsets): boolean {
   return aYBegin === aXBegin || aYEnd === aXEnd || (aXBegin < aYEnd && aYBegin < aXEnd)
 }
 
-export function getGlyphAt (offset: number): VGlyph | null {
-  const page = findPageForOffset(offset)
+export function getGlyphAtTextOffset (offset: number): VGlyph | null {
+  const page = findPageForTextOffset(offset)
   if (!page) {
     return null
   }
@@ -102,7 +102,7 @@ export function getGlyphsInRange (range: Offsets): VGlyph[] {
   }
 
   const glyphs : VGlyph[] = []
-  let currentPage = findPageForOffset(range[0])
+  let currentPage = findPageForTextOffset(range[0])
   while (currentPage && overlapping(range, currentPage.range)) {
     for (const g of currentPage.glyphs) {
       if (range[0] <= g.begin && g.begin < range[1]) {
@@ -119,7 +119,7 @@ export function getGlyphsInRange (range: Offsets): VGlyph[] {
  * Returns the scaling factor of the PDF. If the PDF has not been drawn yet, a factor of 1 is
  * assumed.
  */
-function scale () {
+export function scale () {
   if (globalThis.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
     return 1
   } else {
