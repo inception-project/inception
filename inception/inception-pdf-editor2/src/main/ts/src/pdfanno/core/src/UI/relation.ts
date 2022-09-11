@@ -1,7 +1,6 @@
-import { annoLayer2Id } from '../../../pdfanno.js'
 import RelationAnnotation from '../annotation/relation.js'
 import SpanAnnotation from '../annotation/span.js'
-import { scaleDown } from './utils'
+import { getClientXY, scaleDown } from './utils'
 
 let relationAnnotation: RelationAnnotation | null = null
 let hoveredAnnotation: SpanAnnotation | null = null
@@ -17,17 +16,22 @@ export function installRelationSelection () {
     return
   }
 
-  window.addEventListener('annotationHoverIn', (e) => {
-    hoveredAnnotation = e.detail
-  })
-
-  window.addEventListener('annotationHoverOut', () => {
-    hoveredAnnotation = null
-  })
+  window.addEventListener('annotationHoverIn', ev => handleHoverIn(ev))
+  window.addEventListener('annotationHoverOut', ev => handleHoverOut(ev))
 
   viewer.addEventListener('mousedown', ev => handleMouseDown(ev))
   viewer.addEventListener('mousemove', ev => handleMouseMove(ev))
   viewer.addEventListener('mouseup', ev => handleMouseUp(ev))
+}
+
+function handleHoverOut (ev: Event) {
+  hoveredAnnotation = null
+}
+
+function handleHoverIn (ev: Event) {
+  if (ev instanceof CustomEvent) {
+    hoveredAnnotation = ev.detail
+  }
 }
 
 function handleMouseDown (ev: MouseEvent): void {
@@ -46,7 +50,7 @@ function handleMouseDown (ev: MouseEvent): void {
 }
 
 function handleMouseUp (ev: MouseEvent): void {
-  if (mousedownFired && onAnnotation && drawing && hoveredAnnotation && relationAnnotation) {
+  if (mousedownFired && onAnnotation && drawing && hoveredAnnotation && relationAnnotation?.rel1Annotation) {
     const event = new CustomEvent('createRelationAnnotation', {
       bubbles: true,
       detail: {
@@ -56,9 +60,11 @@ function handleMouseUp (ev: MouseEvent): void {
     })
     document.getElementById('viewer')?.dispatchEvent(event)
   }
+
   if (relationAnnotation) {
     relationAnnotation.destroy()
   }
+
   drawing = false
   onAnnotation = false
   mousedownFired = false
@@ -84,11 +90,4 @@ function handleMouseMove (ev: MouseEvent): void {
     relationAnnotation.y2 = p.y
     relationAnnotation.render()
   }
-}
-
-function getClientXY (e: MouseEvent): { x: number, y: number } {
-  const rect = document.getElementById(annoLayer2Id).getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  return { x, y }
 }
