@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * <p>
@@ -81,5 +82,11 @@ public class EvaluationSimulationPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return EvaluationSimulationPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.s };
     }
 }

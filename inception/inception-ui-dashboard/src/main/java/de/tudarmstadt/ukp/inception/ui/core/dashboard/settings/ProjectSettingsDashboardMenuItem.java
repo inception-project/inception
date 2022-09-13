@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDetailPage;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * <p>
@@ -68,5 +69,11 @@ public class ProjectSettingsDashboardMenuItem
     public boolean applies(Project aProject)
     {
         return super.applies(aProject) || userRepo.isAdministrator(userRepo.getCurrentUser());
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.s };
     }
 }

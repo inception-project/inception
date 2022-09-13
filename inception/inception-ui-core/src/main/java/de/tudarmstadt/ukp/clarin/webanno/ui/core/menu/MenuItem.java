@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 import org.apache.wicket.Page;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import wicket.contrib.input.events.key.KeyType;
 
 public interface MenuItem
 {
@@ -32,4 +33,6 @@ public interface MenuItem
     Class<? extends Page> getPageClass();
 
     boolean applies();
+
+    KeyType[] shortcut();
 }
