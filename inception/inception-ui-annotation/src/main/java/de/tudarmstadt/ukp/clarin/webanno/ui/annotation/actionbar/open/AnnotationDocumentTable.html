@@ -31,7 +31,12 @@
 <wicket:panel>
   <div class="flex-h-container flex-gutter flex-only-internal-gutter justify-content-end mb-3">
     <div class="flex-content">
-      <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="fas fa-search"></i>
+        </span>
+        <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+      </div>
     </div>
     <div wicket:id="stateFilters" />
   </div>

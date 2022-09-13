@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
+import static wicket.contrib.input.events.EventType.click;
+
 import java.util.List;
 
 import org.apache.wicket.RestartResponseException;
@@ -33,8 +35,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
@@ -65,7 +69,8 @@ public class CurationOpenDocumentDialogPanel
         state = aState;
         documentList = aDocumentList;
 
-        queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel));
+        queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
+                .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
 
         table = new CurationDocumentTable(CID_TABLE, documentList);
         queue(table);

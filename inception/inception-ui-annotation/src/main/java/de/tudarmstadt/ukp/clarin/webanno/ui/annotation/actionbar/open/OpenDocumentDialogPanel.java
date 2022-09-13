@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_US
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static wicket.contrib.input.events.EventType.click;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
@@ -85,7 +88,8 @@ public class OpenDocumentDialogPanel
 
         queue(userListChoice = createUserListChoice());
 
-        queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
+        queue(new LambdaAjaxLink("closeDialog", this::actionCancel)
+                .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
 
         table = new AnnotationDocumentTable("table",
                 LoadableDetachableModel.of(this::listDocuments));
