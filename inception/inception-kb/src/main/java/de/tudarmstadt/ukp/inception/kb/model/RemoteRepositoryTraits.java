@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.kb.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RemoteRepositoryTraits
     implements Serializable
 {

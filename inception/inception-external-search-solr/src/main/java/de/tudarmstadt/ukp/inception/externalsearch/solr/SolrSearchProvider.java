@@ -82,9 +82,7 @@ public class SolrSearchProvider
         try {
             try {
                 SolrQuery query = new SolrQuery();
-                // query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
-                // solrClient.query(aTraits.getIndexName(), query);
 
                 if (aQuery.isEmpty() || aQuery.equals("*:*")) {
                     aQuery = "*:*";

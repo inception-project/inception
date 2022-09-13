@@ -15,9 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -193,7 +191,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-external-search-elastic</artifactId>
+      <artifactId>inception-external-search-opensearch</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -748,20 +746,11 @@
 
                 <replace dir="src/main/resources/public/doc">
                   <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/jquery-migrate-3.1.0.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter
-                    token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter
-                    token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
-                  <replacefilter
-                    token="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference/webjars/font-awesome/5.15.3/css/all.css" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference/webjars/font-awesome/5.15.3/css/all.css" />
                 </replace>
               </target>
             </configuration>
@@ -855,7 +844,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-opensearch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
@@ -1050,8 +1039,7 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory
-                    implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory" />
                   <!--
                     We want the original file to be the WAR and the repackaged all-inclusive runnable
                     thing with the embedded Tomcat to be the JAR.
@@ -1081,8 +1069,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}-standalone.war"
-                      tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                   </target>
                 </configuration>
               </execution>

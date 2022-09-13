@@ -111,7 +111,7 @@ export function renderRelation (a: RelationAnnotation): HTMLDivElement {
   group.appendChild(relation)
 
   const base = document.createElement('div')
-  base.title = a.text
+  base.title = a.text || ''
   base.style.position = 'absolute'
   base.style.top = '0'
   base.style.left = '0'

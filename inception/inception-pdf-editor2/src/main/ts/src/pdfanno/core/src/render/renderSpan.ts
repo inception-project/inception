@@ -2,9 +2,11 @@ import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
 import SpanAnnotation from '../annotation/span'
 import { Rectangle } from '../../../../vmodel/Rectangle'
+import { scale } from '../../../page/textLayer'
+import { VGlyph } from '../../../../vmodel/VGlyph'
 
 export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[] | undefined {
-  if (!aRectangles) {
+  if (!aRectangles || aRectangles.length === 0) {
     return undefined
   }
 
@@ -15,13 +17,13 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
   }
 
   const paddingTop = 9
-  const pageView = window.PDFViewerApplication.pdfViewer.getPageView(0)
+  const pageView = globalThis.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
   const marginBetweenPages = 1 // TODO Where does this 1 come from?!
 
   const rectangles : Rectangle[] = []
   for (let r of aRectangles) {
-    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`)
+    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`) as HTMLElement
     if (!pageContainer) {
       console.warn(`No page element found for page ${r.p}`)
       return undefined
@@ -39,13 +41,13 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     }
 
     r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
-    if (r.w > 0 && r.h > 0 /*&& r.x > -1 && r.y > -1*/) {
+    if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)
     }
   }
 
   if (rectangles.length === 0) {
-    console.warn(`${aRectangles.length} Input rectangles reduced to nothing`, aRectangles)
+    console.warn(`${aRectangles.length} input rectangles reduced to nothing`, aRectangles)
     return undefined
   }
 
@@ -58,11 +60,12 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
  * @param span - span annotation.
  * @return a html element describing a span annotation.
  */
-export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
+export function renderSpan (span: SpanAnnotation): HTMLElement | null {
   const rectangles = mapToDocumentCoordinates(span.rectangles)
 
-  if (!rectangles) {
-    return undefined
+  if (!rectangles || rectangles.length === 0) {
+    console.warn('No rectangles found for span annotation', span)
+    return null
   }
 
   const base = document.createElement('div')
@@ -70,7 +73,7 @@ export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
   base.style.zIndex = '10'
 
   rectangles.forEach(r => {
-    base.appendChild(createRect(span, r, span.color, span.readOnly))
+    base.appendChild(createRect(r, span, span.color, span.readOnly))
   })
 
   if (span.knob) {
@@ -86,11 +89,11 @@ export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
   return base
 }
 
-export function createRect (a: SpanAnnotation | undefined, r: Rectangle, color?: string, readOnly?: boolean): HTMLElement {
+export function createRect (r: Rectangle, a?: SpanAnnotation, color?: string, readOnly?: boolean): HTMLElement {
   const rect = document.createElement('div')
   rect.classList.add(readOnly ? 'anno-span__border' : 'anno-span__area')
 
-  if (!a?.border) {
+  if (!(a?.border)) {
     rect.classList.add('no-border')
   }
 
@@ -106,4 +109,49 @@ export function createRect (a: SpanAnnotation | undefined, r: Rectangle, color?:
   }
   rect.style.pointerEvents = 'none'
   return rect
+}
+
+/**
+ * Merge the rectangles of the glyphs into fewer rectangles.
+ */
+export function mergeRects (glyphs: VGlyph[]): Rectangle[] {
+  if (glyphs.length === 0) {
+    return []
+  }
+
+  // a vertical margin of error.
+  const error = 5 * scale()
+
+  let tmp = new Rectangle(glyphs[0].bbox)
+  const newRects = [tmp]
+  for (let i = 1; i < glyphs.length; i++) {
+    const rect = glyphs[i].bbox
+
+    // if (tmp.p !== rect.p) {
+    //   console.log('Page switch')
+    // }
+
+    if (tmp.p === rect.p && withinMargin(rect.top, tmp.top, error)) {
+      // Same line/same page -> Merge rects.
+      tmp.setPosition({
+        top: Math.min(tmp.top, rect.top),
+        left: Math.min(tmp.left, rect.left),
+        right: Math.max(tmp.right, rect.right),
+        bottom: Math.max(tmp.bottom, rect.bottom)
+      })
+    } else {
+      // New line/new page -> Create a new rect.
+      tmp = new Rectangle(rect)
+      newRects.push(tmp)
+    }
+  }
+
+  return newRects
+}
+
+/**
+ * Check the value(x) within the range.
+ */
+function withinMargin (x: number, base: number, margin: number) {
+  return (base - margin) <= x && x <= (base + margin)
 }

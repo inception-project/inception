@@ -25,5 +25,5 @@ export function resizeHandler () {
   viewer.style.height = `${height}px`
 
   document.querySelectorAll('.loadingInProgress').forEach(
-    e => (e as HTMLElement).style.height = '100%')
+    e => { (e as HTMLElement).style.height = '100%' })
 }

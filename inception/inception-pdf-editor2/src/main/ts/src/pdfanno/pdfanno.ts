@@ -4,19 +4,22 @@ import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
-import UI from './core/src/UI'
 import AnnotationContainer from './core/src/annotation/container'
 import AbstractAnnotation from './core/src/annotation/abstract'
-import { installSpanSelection, mergeRects } from './core/src/UI/span'
+import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
-import { CompactAnnotatedText, DiamAjax } from '@inception-project/inception-js-api'
+import { CompactAnnotatedText, CompactSpan, DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import SpanAnnotation from './core/src/annotation/span'
-import { getGlyphsInRange } from './page/textLayer'
+import { getGlyphAtTextOffset, getGlyphsInRange } from './page/textLayer'
 import RelationAnnotation from './core/src/annotation/relation'
-import { createRect, mapToDocumentCoordinates } from './core/src/render/renderSpan'
+import { createRect, mapToDocumentCoordinates, mergeRects } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
 import { makeMarkerMap } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotatedText'
+import { CompactTextMarker } from '@inception-project/inception-js-api/src/model/compact/CompactTextMarker'
+import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
+import { CompactAnnotationMarker } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotationMarker'
+import { Rectangle } from '../vmodel/Rectangle'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -29,8 +32,8 @@ let currentFocusPage: number
 let pagechangeEventCounter: number
 
 export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
-  window.globalEvent = new EventEmitter()
-  window.globalEvent.setMaxListeners(0)
+  globalThis.globalEvent = new EventEmitter()
+  globalThis.globalEvent.setMaxListeners(0)
   diamAjax = ajax
 
   // Create an annocation container.
@@ -38,31 +41,31 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   annoPage = new PDFAnnoPage(annotationContainer)
 
   // FIXME: These should be removed
-  window.annotationContainer = annotationContainer
+  globalThis.annotationContainer = annotationContainer
 
   // Enable a view mode.
-  UI.enableViewMode()
+  // UI.enableViewMode()
 
   const initPromise = new Promise<void>((resolve) => {
     console.log('Waiting for the document to load...')
-    window.PDFViewerApplication.initializedPromise.then(function () {
+    globalThis.PDFViewerApplication.initializedPromise.then(function () {
       // The event called at page rendered by pdfjs.
-      window.PDFViewerApplication.eventBus.on('pagerendered', ev => onPageRendered(ev))
+      globalThis.PDFViewerApplication.eventBus.on('pagerendered', ev => onPageRendered(ev))
       // Adapt to scale change.
-      window.PDFViewerApplication.eventBus.on('scalechanged', ev => onScaleChange(ev))
-      window.PDFViewerApplication.eventBus.on('zoomin', ev => onScaleChange(ev))
-      window.PDFViewerApplication.eventBus.on('zoomout', ev => onScaleChange(ev))
-      window.PDFViewerApplication.eventBus.on('zoomreset', ev => onScaleChange(ev))
-      window.PDFViewerApplication.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
-      window.PDFViewerApplication.eventBus.on('resize', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('scalechanged', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('zoomin', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('zoomout', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('zoomreset', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
+      globalThis.PDFViewerApplication.eventBus.on('resize', ev => onScaleChange(ev))
 
       const loadedCallback = () => {
         console.log('Document loaded...')
-        window.PDFViewerApplication.eventBus.off('pagerendered', loadedCallback)
+        globalThis.PDFViewerApplication.eventBus.off('pagerendered', loadedCallback)
         resolve()
       }
 
-      window.PDFViewerApplication.eventBus.on('pagerendered', loadedCallback)
+      globalThis.PDFViewerApplication.eventBus.on('pagerendered', loadedCallback)
     })
   })
 
@@ -85,7 +88,7 @@ function onPageRendered (ev) {
   console.log('pagerendered:', ev.pageNumber)
 
   // No action, if the viewer is closed.
-  if (!window.PDFViewerApplication.pdfViewer.getPageView(0)) {
+  if (!globalThis.PDFViewerApplication.pdfViewer.getPageView(0)) {
     return
   }
 
@@ -106,7 +109,7 @@ function adjustPageGaps () {
   // Correctly rendering when changing scaling.
   // The margin between pages is fixed(9px), and never be scaled in default,
   // then manually have to change the margin.
-  const scale = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
+  const scale = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
   document.querySelectorAll('.page').forEach(e => {
     const page = e as HTMLElement
     const borderWidth = `${9 * scale}px`
@@ -131,7 +134,7 @@ function removeAnnoLayer () {
  */
 function renderAnno () {
   // No action, if the viewer is closed.
-  if (!window.PDFViewerApplication.pdfViewer.getPageView(0)) {
+  if (!globalThis.PDFViewerApplication.pdfViewer.getPageView(0)) {
     return
   }
 
@@ -144,7 +147,17 @@ function renderAnno () {
   }
 
   const viewer = document.getElementById('viewer')
+  if (!viewer) {
+    console.error('Cannot render: no viewer element found.')
+    return
+  }
+
   const pageElement = document.querySelector('.page')
+  if (!pageElement) {
+    console.error('Cannot render: no page element found.')
+    return
+  }
+
   let leftMargin = (viewer.clientWidth - pageElement.clientWidth) / 2
 
   // At window.width < page.width.
@@ -206,7 +219,7 @@ function renderAnnotations () {
 }
 
 export function scrollTo (offset: number, position: string): void {
-  const page = textLayer.findPageForOffset(offset)?.index
+  const page = textLayer.findPageForTextOffset(offset)?.index
   if (!page) {
     console.error(`No page found for offset: ${offset}`)
     return
@@ -228,10 +241,10 @@ export function scrollTo (offset: number, position: string): void {
   let base: HTMLElement = document.createElement('div')
   base.classList.add('anno-span')
   base.style.zIndex = '10'
-  const child = createRect(undefined, rectangles[0])
+  const child = createRect(rectangles[0])
   base.appendChild(child)
 
-  const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+  const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   base = transform(annoLayer, base, viewport)
   annoLayer.appendChild(base)
   child.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
@@ -261,50 +274,127 @@ export function getAnnotations () {
 
     const annotationMarkers = makeMarkerMap(doc.annotationMarkers)
 
+    console.log(`Loaded ${doc.spans?.length || '0'} spans and ${doc.relations?.length || '0'} relations in range [${doc.window}]`)
+
     if (doc.spans) {
-      console.log(`Loaded ${doc.spans.length} span annotations`)
       for (const s of doc.spans) {
-        const span = new SpanAnnotation()
-        span.vid = `${s[0]}`
-        span.textRange = [s[1][0][0] + doc.window[0], s[1][0][1] + doc.window[0]]
-        span.page = textLayer.findPageForOffset(span.textRange[0]).index
-        span.color = s[2]?.c || '#FFF'
-        span.text = s[2]?.l || ''
-        span.rectangles = mergeRects(getGlyphsInRange(span.textRange))
-        annotationMarkers.get(s[0])?.forEach(m => span.classList.push(`marker-${m[0]}`))
-        span.save()
+        makeSpan(s, doc, annotationMarkers)
       }
     }
 
     if (doc.relations) {
-      console.log(`Loaded ${doc.relations.length} relations annotations`)
       for (const r of doc.relations) {
-        const rel = new RelationAnnotation()
-        rel.vid = `${r[0]}`
-        rel.rel1Annotation = annotationContainer.findById(r[1][0][0])
-        rel.rel2Annotation = annotationContainer.findById(r[1][1][0])
-        rel.color = r[2].c
-        rel.text = r[2].l
-        annotationMarkers.get(r[0])?.forEach(m => rel.classList.push(`marker-${m[0]}`))
-        rel.save()
+        makeRelation(r, annotationMarkers)
       }
     }
 
     if (doc.textMarkers) {
       for (const m of doc.textMarkers) {
-        const span = new SpanAnnotation()
-        span.textRange = [m[1][0][0] + doc.window[0], m[1][0][1] + doc.window[0]]
-        span.page = textLayer.findPageForOffset(span.textRange[0]).index
-        span.knob = false
-        span.border = false
-        span.rectangles = mergeRects(getGlyphsInRange(span.textRange))
-        span.classList = [`marker-${m[0]}`]
-        span.save()
+        makeTextMarker(m, doc)
       }
     }
 
     renderAnnotations()
   })
+}
+
+function makeSpan (s: CompactSpan, doc: CompactAnnotatedText, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>) {
+  const offsets = s[1]
+  const begin = offsets[0][0] + doc.window[0]
+  const end = offsets[0][1] + doc.window[0]
+  const range: Offsets = [begin, end]
+
+  const page = textLayer.findPageForTextOffset(begin)?.index
+  if (page === undefined) {
+    console.warn(`No page found for span range ${range}`)
+    return
+  }
+
+  const rectangles = calculateRectangles(range)
+  if (!rectangles) {
+    return
+  }
+
+  const span = new SpanAnnotation()
+  span.vid = `${s[0]}`
+  span.textRange = range
+  span.page = page
+  span.color = s[2]?.c || '#FFF'
+  span.text = s[2]?.l || ''
+  span.rectangles = rectangles
+  annotationMarkers.get(s[0])?.forEach(m => span.classList.push(`marker-${m[0]}`))
+  span.save()
+}
+
+function makeRelation (r: CompactRelation, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>) {
+  const source = annotationContainer.findById(r[1][0][0])
+  const target = annotationContainer.findById(r[1][1][0])
+
+  if (!source || !target) {
+    console.warn(`Cannot find source or target for relation ${r[0]}`)
+    return
+  }
+
+  const rel = new RelationAnnotation()
+  rel.vid = `${r[0]}`
+  rel.rel1Annotation = source as SpanAnnotation
+  rel.rel2Annotation = target as SpanAnnotation
+  rel.color = r[2]?.c
+  rel.text = r[2]?.l || null
+  annotationMarkers.get(r[0])?.forEach(m => rel.classList.push(`marker-${m[0]}`))
+  rel.save()
+}
+
+function makeTextMarker (m: CompactTextMarker, doc: CompactAnnotatedText) {
+  const offsets = m[1]
+  const begin = offsets[0][0] + doc.window[0]
+  const end = offsets[0][1] + doc.window[0]
+  const range: Offsets = [begin, end]
+
+  const page = textLayer.findPageForTextOffset(begin)?.index
+  if (page === undefined) {
+    console.warn(`No page found for marker range ${range}`)
+    return
+  }
+
+  const rectangles = calculateRectangles(range)
+  if (!rectangles) {
+    return
+  }
+
+  const marker = new SpanAnnotation()
+  marker.textRange = range
+  marker.page = page
+  marker.knob = false
+  marker.border = false
+  marker.rectangles = rectangles
+  marker.classList = [`marker-${m[0]}`]
+  marker.save()
+}
+
+function calculateRectangles (range: [number, number]): Rectangle[] | null {
+  let rectangles : Rectangle[]
+  if (range[0] === range[1]) {
+    const glyph = getGlyphAtTextOffset(range[0])
+    if (!glyph) {
+      console.warn(`No glyph found for offset ${range[0]}`)
+      return null
+    }
+    rectangles = [new Rectangle({
+      p: glyph.page,
+      x: glyph.bbox.x,
+      y: glyph.bbox.y,
+      w: 3,
+      h: glyph.bbox.h
+    })]
+  } else {
+    rectangles = mergeRects(getGlyphsInRange(range))
+    if (!rectangles?.length) {
+      console.warn(`No glyphs found for range ${range}`)
+      return null
+    }
+  }
+  return rectangles
 }
 
 async function displayViewer (): Promise<void> {
@@ -331,11 +421,11 @@ async function displayViewer (): Promise<void> {
           try {
             getAnnotations()
           } finally {
-            window.PDFViewerApplication.eventBus.off('pagerendered', initAnnotations)
+            globalThis.PDFViewerApplication.eventBus.off('pagerendered', initAnnotations)
           }
         }
-        window.PDFViewerApplication.eventBus.on('pagerendered', initAnnotations)
-        window.PDFViewerApplication.eventBus.on('pagechanging', function (e) {
+        globalThis.PDFViewerApplication.eventBus.on('pagerendered', initAnnotations)
+        globalThis.PDFViewerApplication.eventBus.on('pagechanging', function (e) {
           pagechangeEventCounter++
           if (e.pageNumber !== currentFocusPage) {
             const snapshot = pagechangeEventCounter

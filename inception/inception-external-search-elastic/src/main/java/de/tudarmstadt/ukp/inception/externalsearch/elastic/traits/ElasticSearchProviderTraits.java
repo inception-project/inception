@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ElasticSearchProviderTraits
     implements Serializable
 {

@@ -25,8 +25,14 @@ public abstract class VMarker
     private static final long serialVersionUID = -9076788370434561381L;
 
     public static final String EDITED = "edited";
+
+    /**
+     * Indicates that an annotation has been selected.
+     */
     public static final String FOCUS = "focus";
+
     public static final String MATCH_FOCUS = "matchfocus";
+
     public static final String MATCH = "match";
 
     private final Object source;

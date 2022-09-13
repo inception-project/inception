@@ -11,7 +11,7 @@
  * @params y2 : the y of an end position.
  * @return { x, y } the position of bezier control.
  */
-export function findBezierControlPoint (x1: number, y1: number, x2: number, y2: number) {
+export function findBezierControlPoint (x1: number, y1: number, x2: number, y2: number): { x: number, y: number } {
   const DISTANCE = 30
 
   // vertical line.

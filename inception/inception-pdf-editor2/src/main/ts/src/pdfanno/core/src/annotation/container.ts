@@ -36,7 +36,7 @@ export default class AnnotationContainer {
    * Get all annotations from the container.
    */
   getAllAnnotations () : AbstractAnnotation[] {
-    const list = []
+    const list : AbstractAnnotation[] = []
     this.set.forEach(a => list.push(a))
     return list
   }
@@ -44,8 +44,8 @@ export default class AnnotationContainer {
   /**
    * Find an annotation by the id which an annotation has.
    */
-  findById (vid: VID) : AbstractAnnotation {
-    let annotation
+  findById (vid: VID) : AbstractAnnotation | null {
+    let annotation : AbstractAnnotation | null = null
     this.set.forEach(a => {
       if (a.vid === vid) {
         annotation = a

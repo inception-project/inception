@@ -8,15 +8,15 @@ import { VID } from '@inception-project/inception-js-api'
  * Abstract Annotation Class.
  */
 export default abstract class AbstractAnnotation extends EventEmitter {
-  vid: VID = null
-  color: string = null
+  vid: VID | null = null
+  color?: string
   deleted = false
   disabled = false
   readOnly = false
   hoverEventDisable = false
   selectedTime = null
-  element: HTMLElement = null
-  exportId: any
+  element: HTMLElement | null = null
+  // exportId: any
   type: 'span' | 'relation'
   classList: string[] = []
 
@@ -44,30 +44,39 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Render annotation(s).
    */
-  render (): boolean {
-    this.element.remove()
+  render (): void {
+    if (this.element) {
+      this.element.remove()
+      this.element = null
+    }
 
     if (this.deleted) {
-      return false
+      return
     }
 
     const base = document.getElementById('annoLayer2')
+    if (!base) {
+      console.error('annoLayer2 could not be found')
+      return
+    }
+
     this.element = appendChild(base, this)
+    if (!this.element) {
+      return
+    }
 
     if (!this.hoverEventDisable && this.setHoverEvent) {
       this.setHoverEvent()
     }
 
     this.disabled && this.disable()
-
-    return true
   }
 
   /**
    * Save the annotation data.
    */
   save () {
-    window.annotationContainer.add(this)
+    globalThis.annotationContainer.add(this)
   }
 
   /**
@@ -75,12 +84,15 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    */
   destroy () {
     this.deleted = true
-    this.element.remove()
+    if (this.element) {
+      this.element.remove()
+      this.element = null
+    }
 
     const promise = Promise.resolve()
 
     if (this.vid) {
-      window.annotationContainer.remove(this)
+      globalThis.annotationContainer.remove(this)
     }
 
     return promise
@@ -90,16 +102,18 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Handle a click event.
    */
   handleSingleClickEvent (e: Event) {
-    const event = document.createEvent('CustomEvent')
-    event.initCustomEvent('annotationSelected', true, true, this)
-    this.element.dispatchEvent(event)
+    if (this.element) {
+      const event = document.createEvent('CustomEvent')
+      event.initCustomEvent('annotationSelected', true, true, this)
+      this.element.dispatchEvent(event)
+    }
   }
 
   /**
    * Handle a hoverIn event.
    */
-  handleHoverInEvent (e) {
-    console.log('handleHoverInEvent', this.element)
+  handleHoverInEvent (e: Event) {
+    // console.log('handleHoverInEvent', this.element)
     this.highlight()
     this.emit('hoverin')
     dispatchWindowEvent('annotationHoverIn', this)
@@ -108,8 +122,8 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a hoverOut event.
    */
-  handleHoverOutEvent (e) {
-    console.log('handleHoverOutEvent')
+  handleHoverOutEvent (e: Event) {
+    // console.log('handleHoverOutEvent')
     this.dehighlight()
     this.emit('hoverout')
     dispatchWindowEvent('annotationHoverOut', this)
@@ -119,30 +133,21 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Highlight the annotation.
    */
   highlight () {
-    this.element.classList.add('--hover')
+    this.element?.classList.add('--hover')
   }
 
   /**
    * Dehighlight the annotation.
    */
   dehighlight () {
-    this.element.classList.remove('--hover')
-  }
-
-  /**
-   * Create a dummy DOM element for the timing that a annotation hasn't be specified yet.
-   */
-  createDummyElement (): HTMLElement {
-    const element = document.createElement('dummy')
-    element.classList.add('dummy')
-    return element
+    this.element?.classList.remove('--hover')
   }
 
   /**
    * Get the central position of the boundingCircle.
    */
   getBoundingCirclePosition () {
-    const knob = this.element.querySelector('.anno-knob') as HTMLElement
+    const knob = this.element?.querySelector('.anno-knob') as HTMLElement | null
     if (!knob) {
       return null
     }
@@ -177,16 +182,20 @@ export default abstract class AbstractAnnotation extends EventEmitter {
 
   enable () {
     this.disabled = false
-    this.element.style.pointerEvents = 'auto'
+    if (this.element) {
+      this.element.style.pointerEvents = 'auto'
+    }
   }
 
   disable () {
     this.disabled = true
-    this.element.style.pointerEvents = 'none'
+    if (this.element) {
+      this.element.style.pointerEvents = 'none'
+    }
   }
 
   /**
    * Check the another annotation is equal to `this`.
    */
-  abstract equalTo(anotherAnnotation): boolean;
+  abstract equalTo(anotherAnnotation: any): boolean;
 }
