@@ -32,16 +32,17 @@ public enum PermissionLevel
 {
     // We keep the legacy values for the project export/import for compatibility reasons
     @JsonProperty("USER")
-    ANNOTATOR("user"),
+    ANNOTATOR("user", "<i class=\"fas fa-user-tag\"></i>"),
 
     @JsonProperty("CURATOR")
-    CURATOR("curator"),
+    CURATOR("curator", "<i class=\"fas fa-user-graduate\"></i>"),
 
     // We keep the legacy values for the project export/import for compatibility reasons
     @JsonProperty("ADMIN")
-    MANAGER("admin");
+    MANAGER("admin", "<i class=\"fas fa-user-tie\"></i>");
 
     private final String id;
+    private final String symbol;
 
     public String getName()
     {
@@ -53,9 +54,15 @@ public enum PermissionLevel
         return this.name().toLowerCase();
     }
 
-    PermissionLevel(String aId)
+    PermissionLevel(String aId, String aSymbol)
     {
-        this.id = aId;
+        id = aId;
+        symbol = aSymbol;
+    }
+
+    public String symbol()
+    {
+        return symbol;
     }
 
     @Override
