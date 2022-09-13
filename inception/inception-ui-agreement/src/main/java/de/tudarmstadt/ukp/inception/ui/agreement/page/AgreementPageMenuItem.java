@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import wicket.contrib.input.events.key.KeyType;
 
 @Component
 @Order(300)
@@ -81,5 +82,11 @@ public class AgreementPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return AgreementPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.g };
     }
 }

@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Menu item for the external search page.
@@ -73,5 +74,11 @@ public class SearchPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return SearchPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.f };
     }
 }
