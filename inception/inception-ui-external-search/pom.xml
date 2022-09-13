@@ -129,6 +129,10 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-input-events</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
     <dependency>

@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * <p>
@@ -101,5 +102,11 @@ public class AnnotationPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return AnnotationPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.a };
     }
 }

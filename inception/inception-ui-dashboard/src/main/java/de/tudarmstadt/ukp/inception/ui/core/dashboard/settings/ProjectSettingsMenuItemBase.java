@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import wicket.contrib.input.events.key.KeyType;
 
 public abstract class ProjectSettingsMenuItemBase
     implements ProjectMenuItem
@@ -37,5 +38,11 @@ public abstract class ProjectSettingsMenuItemBase
     {
         return userRepo.isCurrentUserAdmin()
                 || projectService.hasRole(userRepo.getCurrentUser(), aProject, MANAGER);
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return null;
     }
 }

@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * <p>
@@ -99,5 +100,11 @@ public class KnowledgeBasePageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return KnowledgeBasePage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.k };
     }
 }
