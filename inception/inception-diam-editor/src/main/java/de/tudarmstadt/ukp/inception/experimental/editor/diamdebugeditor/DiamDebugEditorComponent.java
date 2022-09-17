@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
 
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.FORMAT_LEGACY;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
@@ -62,7 +63,7 @@ public class DiamDebugEditorComponent
         super.onConfigure();
 
         var viewport = new ViewportDefinition(state.getObject().getDocument(),
-                state.getObject().getUser().getUsername(), 0, Integer.MAX_VALUE);
+                state.getObject().getUser().getUsername(), 0, Integer.MAX_VALUE, FORMAT_LEGACY);
 
         Map<String, Object> properties = Map.of( //
                 "ajaxEndpoint", diamBehavior.getCallbackUrl(), //

@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -66,11 +67,20 @@ public class ColorRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
+        AnnotatorState state = aRequest.getState();
+        if (state == null) {
+            return;
+        }
+
+        var allLayers = aRequest.getAllLayers();
+        if (allLayers == null) {
+            allLayers = schemaService.listAnnotationLayer(aRequest.getProject());
+        }
+
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aRequest.getAllLayers()) {
-            ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride()
-                    .orElse(coloringService.getStrategy(layer, aRequest.getState().getPreferences(),
-                            colorQueues));
+        for (AnnotationLayer layer : allLayers) {
+            ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride().orElse(
+                    coloringService.getStrategy(layer, state.getPreferences(), colorQueues));
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
