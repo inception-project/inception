@@ -132,7 +132,14 @@ public class XmlDocumentViewControllerImpl
                 renderEditorStylesheets(out, aEditor.get());
             }
 
-            var maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            Optional<XmlDocument> maybeXmlDocument;
+            if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
+                maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            }
+            else {
+                maybeXmlDocument = Optional.empty();
+            }
+
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
