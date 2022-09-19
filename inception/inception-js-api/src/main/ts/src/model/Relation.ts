@@ -15,9 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Annotation, VID } from '.'
+import { Argument } from './Argument'
+import { Layer } from './Layer'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+export class Relation implements Annotation {
+  layer: Layer
+  vid: VID
+  color?: string
+  label?: string
+  arguments: Array<Argument>
+}

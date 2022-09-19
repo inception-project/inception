@@ -15,9 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation } from "./Annotation";
+import { Annotation, Offsets, VID } from '.'
+import { Layer } from './Layer'
 
-export interface Span extends Annotation {
-    begin: number;
-    end: number;
+export type ClippingStatus = undefined | 's' | 'e' | 'se'
+
+export class Span implements Annotation {
+  layer: Layer
+  vid: VID
+  offsets: Array<Offsets>
+  color?: string
+  label?: string
+
+  /**
+   * Clipping status (optional)
+   */
+  clippingFlags?: ClippingStatus
 }
