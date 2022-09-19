@@ -15,45 +15,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
+
+import static java.util.Arrays.asList;
+
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-/**
- * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
- * to denote a given arc annotation such as dependency parsing and coreference resolution
- */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "target", "label" })
-public class CompactArgument
+@JsonPropertyOrder(value = { "type", "vids" })
+public class CompactAnnotationMarker
 {
-    /**
-     * Argument label.
-     */
-    private final String label;
+    private List<VID> vids;
+    private String type;
 
-    /**
-     * The target span annotation.
-     */
-    private final VID target;
-
-    public CompactArgument(String aLabel, VID aTarget)
+    public CompactAnnotationMarker(VID aVid, String aType)
     {
-        label = aLabel;
-        target = aTarget;
+        vids = asList(aVid);
+        type = aType;
     }
 
-    public String getLabel()
+    public CompactAnnotationMarker(List<VID> aVid, String aType)
     {
-        return label;
+        vids = aVid;
+        type = aType;
     }
 
-    public VID getTarget()
+    public CompactAnnotationMarker(VAnnotationMarker aAnnotationMarker)
     {
-        return target;
+        vids = asList(aAnnotationMarker.getVid());
+        type = aAnnotationMarker.getType();
+    }
+
+    public void setVids(List<VID> aVid)
+    {
+        vids = aVid;
+    }
+
+    public List<VID> getVids()
+    {
+        return vids;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
+    public String getType()
+    {
+        return type;
     }
 }

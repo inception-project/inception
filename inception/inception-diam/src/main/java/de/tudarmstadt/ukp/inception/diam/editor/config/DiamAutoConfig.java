@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupSer
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
-import de.tudarmstadt.ukp.inception.diam.model.compact_v2.CompactSerializerV2;
-import de.tudarmstadt.ukp.inception.diam.model.compact_v2.CompactSerializerV2Impl;
+import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2;
+import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;

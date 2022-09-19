@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
-@JsonInclude(Include.NON_DEFAULT)
-public class CompactRelationAttributes
-    extends CompactAnnotationAttributes
+public interface CompactAnnotation
 {
-    // No additional attributes (yet)
+    long getLayerId();
+
+    VID getVid();
 }

@@ -15,61 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
-
-import static java.util.Arrays.asList;
-
-import java.util.List;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
+/**
+ * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
+ * to denote a given arc annotation such as dependency parsing and coreference resolution
+ */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "type", "offsets" })
-public class CompactTextMarker
+@JsonPropertyOrder(value = { "target", "label" })
+public class CompactArgument
 {
-    private List<CompactRange> offsets;
-    private String type;
+    /**
+     * Argument label.
+     */
+    private final String label;
 
-    public CompactTextMarker(CompactRange aVid, String aType)
+    /**
+     * The target span annotation.
+     */
+    private final VID target;
+
+    public CompactArgument(String aLabel, VID aTarget)
     {
-        offsets = asList(aVid);
-        type = aType;
+        label = aLabel;
+        target = aTarget;
     }
 
-    public CompactTextMarker(List<CompactRange> aVid, String aType)
+    public String getLabel()
     {
-        offsets = aVid;
-        type = aType;
+        return label;
     }
 
-    public CompactTextMarker(VTextMarker aTextMarker)
+    public VID getTarget()
     {
-        var range = aTextMarker.getRange();
-        offsets = asList(new CompactRange(range.getBegin(), range.getEnd()));
-        type = aTextMarker.getType();
-    }
-
-    public void setOffsets(List<CompactRange> aVid)
-    {
-        offsets = aVid;
-    }
-
-    public List<CompactRange> getVid()
-    {
-        return offsets;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
-    }
-
-    public String getType()
-    {
-        return type;
+        return target;
     }
 }

@@ -15,19 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
-import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when
- * converting an array of offsets from JSON to Java.
- */
-public class CompactRangeList
-    extends ArrayList<CompactRange>
+public class CompactAnnotationAttributes
 {
-    // See
-    // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
+    public static final String ATTR_LABEL = "l";
+    public static final String ATTR_COLOR = "c";
 
-    private static final long serialVersionUID = 1441338116416225186L;
+    private @JsonProperty(ATTR_LABEL) String labelText;
+    private @JsonProperty(ATTR_COLOR) String color;
+
+    public void setLabelText(String aLabelText)
+    {
+        labelText = aLabelText;
+    }
+
+    public String getLabelText()
+    {
+        return labelText;
+    }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
+    }
 }

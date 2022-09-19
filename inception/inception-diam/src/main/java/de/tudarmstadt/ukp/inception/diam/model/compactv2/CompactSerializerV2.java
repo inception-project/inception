@@ -15,26 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
-public class CompactLayer
+import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
+
+public interface CompactSerializerV2
+    extends VDocumentSerializer<CompactAnnotatedText>
 {
-    private final long id;
-    private final String name;
-
-    public CompactLayer(long aId, String aName)
-    {
-        id = aId;
-        name = aName;
-    }
-
-    public long getId()
-    {
-        return id;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
+    // No additional methods
 }

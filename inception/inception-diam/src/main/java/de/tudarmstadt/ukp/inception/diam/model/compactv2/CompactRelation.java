@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
-
-import static java.util.Arrays.asList;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,32 +28,32 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "layerId", "vid", "offsets", "attributes" })
-public class CompactSpan
+@JsonPropertyOrder(value = { "layerId", "vid", "arguments", "attributes" })
+public class CompactRelation
     implements CompactAnnotation
 {
     private long layerId;
+
     private VID vid;
-    private List<CompactRange> offsets = new ArrayList<>();
+
+    /**
+     * The initial/destination span annotations as shown in the example above
+     */
+    private List<CompactArgument> arguments = new ArrayList<>();
+
     private CompactSpanAttributes attributes = new CompactSpanAttributes();
 
-    public CompactSpan()
+    public CompactRelation()
     {
         // Nothing to do
     }
 
-    public CompactSpan(AnnotationLayer aLayer, VID aVid, CompactRange aOffsets, String aLabelText,
-            String aColor)
-    {
-        this(aLayer, aVid, asList(aOffsets), aLabelText, aColor);
-    }
-
-    public CompactSpan(AnnotationLayer aLayer, VID aVid, List<CompactRange> aOffsets,
+    public CompactRelation(AnnotationLayer aLayer, VID aVid, List<CompactArgument> aArguments,
             String aLabelText, String aColor)
     {
         layerId = aLayer.getId();
         vid = aVid;
-        offsets = aOffsets;
+        arguments = aArguments;
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
     }
@@ -77,14 +75,14 @@ public class CompactSpan
         vid = aVid;
     }
 
-    public List<CompactRange> getOffsets()
+    public List<CompactArgument> getArguments()
     {
-        return offsets;
+        return arguments;
     }
 
-    public void setOffsets(List<CompactRange> aOffsets)
+    public void setArguments(List<CompactArgument> aArguments)
     {
-        offsets = aOffsets;
+        arguments = aArguments;
     }
 
     public CompactSpanAttributes getAttributes()

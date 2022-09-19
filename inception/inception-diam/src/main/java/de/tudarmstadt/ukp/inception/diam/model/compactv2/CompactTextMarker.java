@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact_v2;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
 import static java.util.Arrays.asList;
 
@@ -24,43 +24,43 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "type", "vids" })
-public class CompactAnnotationMarker
+@JsonPropertyOrder(value = { "type", "offsets" })
+public class CompactTextMarker
 {
-    private List<VID> vids;
+    private List<CompactRange> offsets;
     private String type;
 
-    public CompactAnnotationMarker(VID aVid, String aType)
+    public CompactTextMarker(CompactRange aVid, String aType)
     {
-        vids = asList(aVid);
+        offsets = asList(aVid);
         type = aType;
     }
 
-    public CompactAnnotationMarker(List<VID> aVid, String aType)
+    public CompactTextMarker(List<CompactRange> aVid, String aType)
     {
-        vids = aVid;
+        offsets = aVid;
         type = aType;
     }
 
-    public CompactAnnotationMarker(VAnnotationMarker aAnnotationMarker)
+    public CompactTextMarker(VTextMarker aTextMarker)
     {
-        vids = asList(aAnnotationMarker.getVid());
-        type = aAnnotationMarker.getType();
+        var range = aTextMarker.getRange();
+        offsets = asList(new CompactRange(range.getBegin(), range.getEnd()));
+        type = aTextMarker.getType();
     }
 
-    public void setVids(List<VID> aVid)
+    public void setOffsets(List<CompactRange> aVid)
     {
-        vids = aVid;
+        offsets = aVid;
     }
 
-    public List<VID> getVids()
+    public List<CompactRange> getVid()
     {
-        return vids;
+        return offsets;
     }
 
     public void setType(String aType)
