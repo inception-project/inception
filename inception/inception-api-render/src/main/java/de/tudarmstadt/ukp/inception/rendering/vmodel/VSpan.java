@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
 import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
@@ -41,21 +40,26 @@ public class VSpan
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, null);
+        this(aLayer, VID.of(aFS), aType, asList(aOffsets), aFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             int aEquivalenceClass, String aLabelHint)
     {
-        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, null);
+        super(aLayer, VID.of(aFS), aType, aEquivalenceClass, null);
         setLabelHint(aLabelHint);
         ranges = asList(aOffsets);
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             int aEquivalenceClass, Map<String, String> aFeatures)
     {
-        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures);
+        super(aLayer, VID.of(aFS), aType, aEquivalenceClass, aFeatures);
         ranges = asList(aOffsets);
     }
 
@@ -71,16 +75,26 @@ public class VSpan
         this(aLayer, aVid, aType, asList(aOffsets), aFeatures, color);
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
             Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, null);
+        this(aLayer, VID.of(aFS), aType, aOffsets, aFeatures, null);
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
             int aEquivalenceClass, Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, null);
+        this(aLayer, VID.of(aFS), aType, aOffsets, aFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, List<VRange> aOffsets,

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -34,27 +35,49 @@ public class VArc
     private VID source;
     private VID target;
 
+    private VArc(Builder builder)
+    {
+        super(builder.layer, builder.vid, builder.type, builder.equivalenceSet, builder.features);
+        setLabelHint(builder.label);
+        this.source = builder.source;
+        this.target = builder.target;
+    }
+
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @Deprecated
+    @SuppressWarnings("javadoc")
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), aLabelHint, null, null);
+        this(aLayer, VID.of(aFS), aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
+                aLabelHint, null, null);
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @Deprecated
+    @SuppressWarnings("javadoc")
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), null, aFeatures, null);
+        this(aLayer, VID.of(aFS), aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
+                null, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint)
     {
-        this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aLabelHint, null, null);
+        this(aLayer, aVid, aType, VID.of(aSourceFS), VID.of(aTargetFS), aLabelHint, null, null);
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @Deprecated
+    @SuppressWarnings("javadoc")
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
     {
@@ -71,6 +94,11 @@ public class VArc
         target = new VID(getAddr(aTargetFS));
     }
 
+    /**
+     * @deprecated Unused - to be removed without replacement
+     */
+    @Deprecated
+    @SuppressWarnings("javadoc")
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
@@ -113,5 +141,97 @@ public class VArc
     public VID getTarget()
     {
         return target;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private AnnotationLayer layer;
+        private VID vid;
+        private String type;
+        private int equivalenceSet;
+        private Map<String, String> features = Collections.emptyMap();
+        private VID source;
+        private VID target;
+        private String label;
+
+        private Builder()
+        {
+        }
+
+        public Builder forAnnotation(AnnotationFS aAnnotation)
+        {
+            withVid(VID.of(aAnnotation));
+            return this;
+        }
+
+        public Builder withLayer(AnnotationLayer aLayer)
+        {
+            this.layer = aLayer;
+            return this;
+        }
+
+        public Builder withVid(VID aVid)
+        {
+            this.vid = aVid;
+            return this;
+        }
+
+        public Builder withType(String aType)
+        {
+            this.type = aType;
+            return this;
+        }
+
+        public Builder withEquivalenceSet(int aEquivalenceSet)
+        {
+            this.equivalenceSet = aEquivalenceSet;
+            return this;
+        }
+
+        public Builder withFeatures(Map<String, String> aFeatures)
+        {
+            this.features = aFeatures;
+            return this;
+        }
+
+        public Builder withSource(FeatureStructure aSource)
+        {
+            this.source = VID.of(aSource);
+            return this;
+        }
+
+        public Builder withSource(VID aSource)
+        {
+            this.source = aSource;
+            return this;
+        }
+
+        public Builder withTarget(FeatureStructure aTarget)
+        {
+            this.target = VID.of(aTarget);
+            return this;
+        }
+
+        public Builder withTarget(VID aTarget)
+        {
+            this.target = aTarget;
+            return this;
+        }
+
+        public Builder withLabel(String aLabel)
+        {
+            this.label = aLabel;
+            return this;
+        }
+
+        public VArc build()
+        {
+            return new VArc(this);
+        }
     }
 }

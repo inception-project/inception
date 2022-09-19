@@ -15,25 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.coloring;
+package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.util.Map;
-import java.util.Queue;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
 
-public interface ColoringService
+public interface ColoringPreferences
 {
-    ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringPreferences aPreferences,
-            Map<String[], Queue<String>> aColorQueues);
+    Map<Long, ColoringStrategyType> getColorPerLayer();
 
-    /**
-     * Get the default coloring strategy for the given layer.
-     * 
-     * @param aLayer
-     *            the layer.
-     * @return the default coloring strategy.
-     */
-    ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer);
+    ReadonlyColoringBehaviour getReadonlyLayerColoringBehaviour();
 }
