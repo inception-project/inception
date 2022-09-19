@@ -58,9 +58,8 @@ if (argv.live) {
 }
 fs.mkdirsSync(`${outbase}`)
 
-esbuild
-  .build(Object.assign({
-    entryPoints: ['src/RunningExportsPanel.svelte'],
-    outfile: `${outbase}/RunningExportsPanel.min.js`
-  }, defaults))
-  .catch(() => process.exit(1))
+esbuild.build(Object.assign({
+  entryPoints: ['src/RunningExportsPanel.svelte'],
+  outfile: `${outbase}/RunningExportsPanel.min.js`
+}, defaults))
+.catch(() => process.exit(1))

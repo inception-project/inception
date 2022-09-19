@@ -51,7 +51,12 @@ public class RenderNotificationRenderStep
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         // Fire render event into UI
-        RequestCycle.get().find(IPageRequestHandler.class).ifPresent(handler -> {
+        RequestCycle requestCycle = RequestCycle.get();
+        if (requestCycle == null) {
+            return;
+        }
+
+        requestCycle.find(IPageRequestHandler.class).ifPresent(handler -> {
             Page page = (Page) handler.getPage();
             page.send(page, Broadcast.BREADTH,
                     new RenderAnnotationsEvent(aRequest.getCas(), aRequest, aVDoc));

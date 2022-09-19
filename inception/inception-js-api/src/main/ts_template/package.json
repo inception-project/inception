@@ -11,6 +11,10 @@
   "scripts": {
     "build": "esbuild --bundle src/index.ts --outdir=dist --minify --sourcemap"
   },
+  "dependencies": {
+    "@stomp/stompjs": "^6.1.2",
+    "@types/stompjs": "^2.3.5"
+  },
   "devDependencies": {
     "chai": "${chai.version}",
     "esbuild": "${esbuild.version}",

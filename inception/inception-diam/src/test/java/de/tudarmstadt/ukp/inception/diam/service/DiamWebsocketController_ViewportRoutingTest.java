@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.diam.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.FORMAT_LEGACY;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -212,8 +213,10 @@ public class DiamWebsocketController_ViewportRoutingTest
         CountDownLatch subscriptionDone = new CountDownLatch(2);
         CountDownLatch initDone = new CountDownLatch(2);
 
-        ViewportDefinition vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20);
-        ViewportDefinition vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40);
+        ViewportDefinition vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20,
+                FORMAT_LEGACY);
+        ViewportDefinition vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40,
+                FORMAT_LEGACY);
 
         var sessionHandler1 = new SessionHandler(subscriptionDone, initDone, vpd1);
         var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);

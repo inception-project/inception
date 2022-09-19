@@ -108,14 +108,20 @@ public class XHtmlXmlDocumentViewControllerImpl
         CAS cas = documentService.createOrReadInitialCas(doc);
 
         try (Writer out = new StringWriter()) {
-            ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
-
-            var maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            Optional<XmlDocument> maybeXmlDocument;
+            if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
+                maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            }
+            else {
+                maybeXmlDocument = Optional.empty();
+            }
 
             var casContainsHtml = maybeXmlDocument.map(XmlDocument::getRoot) //
                     .map(XmlElement::getQName) //
                     .map(qname -> HTML.equals(qname.toLowerCase(Locale.ROOT))) //
                     .orElse(false);
+
+            ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
