@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,7 +57,8 @@ public class AnnotationAutoConfiguration
 
     @Bean
     public ColorRenderer colorRenderer(AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, UserPreferencesService aUserPreferencesService)
+            ColoringService aColoringService,
+            @Autowired(required = false) UserPreferencesService aUserPreferencesService)
     {
         return new ColorRenderer(aSchemaService, aColoringService, aUserPreferencesService);
     }

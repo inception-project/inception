@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 import { VID } from '.'
+import { MarkerType } from './Marker'
 
 export class AnnotationMarker {
-  type: string
+  type: MarkerType
   vid: Array<VID>
 }
