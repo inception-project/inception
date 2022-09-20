@@ -211,8 +211,9 @@ public final class TypeUtil
      * @param aUiTypeName
      *            the brat type name.
      * @return the layer ID.
-     * @see TypeAdapter#getEncodedTypeName()
+     * @deprecated This is mostly brat specific and should be removed/replaced by a DIAM mechanism
      */
+    @Deprecated
     public static long getLayerId(String aUiTypeName)
     {
         return parseLong(aUiTypeName);
