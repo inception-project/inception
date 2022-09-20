@@ -149,10 +149,9 @@ public class SpanRenderer
         List<VObject> spansAndSlots = new ArrayList<>();
 
         SpanAdapter typeAdapter = getTypeAdapter();
-        String uiTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, uiTypeName, range.get(), labelFeatures);
+        VSpan span = new VSpan(typeAdapter.getLayer(), aFS, range.get(), labelFeatures);
         spansAndSlots.add(span);
 
         renderSlots(aFS, spansAndSlots);
@@ -163,7 +162,6 @@ public class SpanRenderer
     private void renderSlots(AnnotationFS aFS, List<VObject> aSpansAndSlots)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
-        String uiTypeName = typeAdapter.getEncodedTypeName();
 
         int fi = 0;
         nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
@@ -185,7 +183,6 @@ public class SpanRenderer
                     var arc = VArc.builder() //
                             .withLayer(typeAdapter.getLayer()) //
                             .withVid(vid) //
-                            .withType(uiTypeName) //
                             .withSource(aFS) //
                             .withTarget(targetFS) //
                             .withLabel(link.role) //

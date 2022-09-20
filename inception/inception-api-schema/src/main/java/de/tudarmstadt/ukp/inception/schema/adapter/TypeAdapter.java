@@ -190,26 +190,6 @@ public interface TypeAdapter
 
     Selection select(VID aVid, AnnotationFS aAnnotation);
 
-    /**
-     * @return the encoded type name sent to the browser.
-     * @see #decodeTypeName(String)
-     */
-    default String getEncodedTypeName()
-    {
-        return TypeUtil.getUiTypeName(getLayer());
-    }
-
-    /**
-     * @param aType
-     *            a encoded type name from {@link #getEncodedTypeName()}
-     * @return the layer ID.
-     * @see #getEncodedTypeName()
-     */
-    static long decodeTypeName(String aType)
-    {
-        return TypeUtil.getLayerId(aType);
-    }
-
     <T> Optional<T> getTraits(Class<T> aInterface);
 
     default boolean equivalents(AnnotationFS aFs1, AnnotationFS aFs2)

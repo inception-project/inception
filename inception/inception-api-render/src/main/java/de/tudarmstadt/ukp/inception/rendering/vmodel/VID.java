@@ -94,7 +94,12 @@ public class VID
         this(getAddr(aFS), NONE, NONE, NONE);
     }
 
-    @Deprecated
+    /**
+     * For testing only.
+     * 
+     * @param aAnnotationID
+     *            the annotation ID
+     */
     public VID(int aAnnotationID)
     {
         this(aAnnotationID, NONE, NONE, NONE);

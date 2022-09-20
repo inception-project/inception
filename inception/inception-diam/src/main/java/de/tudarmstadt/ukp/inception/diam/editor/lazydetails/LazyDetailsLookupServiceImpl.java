@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import static de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter.decodeTypeName;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -93,7 +92,7 @@ public class LazyDetailsLookupServiceImpl
 
         Project project = aSourceDocument.getProject();
         String database = databaseParam.toString();
-        long layerId = decodeTypeName(layerParam.toString());
+        long layerId = layerParam.toLong();
         AnnotationLayer layer = annotationService.getLayer(project, layerId)
                 .orElseThrow(() -> new AnnotationException(
                         "Layer with ID [" + layerId + "] does not exist in project " + project));

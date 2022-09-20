@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl.getBratTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -139,7 +140,7 @@ public class BratSerializerImpl
                         }) //
                         .collect(toList());
 
-                Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets,
+                Entity entity = new Entity(vspan.getVid(), getBratTypeName(vspan.getLayer()), offsets,
                         vspan.getLabelHint(), vspan.getColorHint(), vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
@@ -165,7 +166,7 @@ public class BratSerializerImpl
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
 
-                Relation arc = new Relation(varc.getVid(), varc.getType(),
+                Relation arc = new Relation(varc.getVid(), getBratTypeName(varc.getLayer()),
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);

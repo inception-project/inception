@@ -37,7 +37,7 @@ public class VArc
 
     private VArc(Builder builder)
     {
-        super(builder.layer, builder.vid, builder.type, builder.equivalenceSet, builder.features);
+        super(builder.layer, builder.vid, builder.equivalenceSet, builder.features);
         setLabelHint(builder.label);
         this.source = builder.source;
         this.target = builder.target;
@@ -48,10 +48,10 @@ public class VArc
      */
     @Deprecated
     @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint)
     {
-        this(aLayer, VID.of(aFS), aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
+        this(aLayer, VID.of(aFS), new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
                 aLabelHint, null, null);
     }
 
@@ -60,17 +60,17 @@ public class VArc
      */
     @Deprecated
     @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
-        this(aLayer, VID.of(aFS), aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                null, aFeatures, null);
+        this(aLayer, VID.of(aFS), new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)), null,
+                aFeatures, null);
     }
 
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint)
     {
-        this(aLayer, aVid, aType, VID.of(aSourceFS), VID.of(aTargetFS), aLabelHint, null, null);
+        this(aLayer, aVid, VID.of(aSourceFS), VID.of(aTargetFS), aLabelHint, null, null);
     }
 
     /**
@@ -78,17 +78,17 @@ public class VArc
      */
     @Deprecated
     @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
     {
-        this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aLabelHint, aFeatures, null);
+        this(aLayer, aVid, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)), aLabelHint,
+                aFeatures, null);
     }
 
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, String aLabel)
     {
-        super(aLayer, aVid, aType, aEquivalenceSet, null);
+        super(aLayer, aVid, aEquivalenceSet, null);
         setLabelHint(aLabel);
         source = new VID(getAddr(aSourceFS));
         target = new VID(getAddr(aTargetFS));
@@ -99,24 +99,24 @@ public class VArc
      */
     @Deprecated
     @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
-        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
+        super(aLayer, aVid, aEquivalenceSet, aFeatures);
         source = new VID(getAddr(aSourceFS));
         target = new VID(getAddr(aTargetFS));
     }
 
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            String aLabel, String aColor)
+    public VArc(AnnotationLayer aLayer, VID aVid, VID aSource, VID aTarget, String aLabel,
+            String aColor)
     {
-        this(aLayer, aVid, aType, aSource, aTarget, aLabel, null, aColor);
+        this(aLayer, aVid, aSource, aTarget, aLabel, null, aColor);
     }
 
-    public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            String aLabel, Map<String, String> aFeatures, String aColor)
+    public VArc(AnnotationLayer aLayer, VID aVid, VID aSource, VID aTarget, String aLabel,
+            Map<String, String> aFeatures, String aColor)
     {
-        super(aLayer, aVid, aType, aFeatures);
+        super(aLayer, aVid, aFeatures);
         setColorHint(aColor);
         setLabelHint(aLabel);
         source = aSource;
@@ -152,7 +152,6 @@ public class VArc
     {
         private AnnotationLayer layer;
         private VID vid;
-        private String type;
         private int equivalenceSet;
         private Map<String, String> features = Collections.emptyMap();
         private VID source;
@@ -178,12 +177,6 @@ public class VArc
         public Builder withVid(VID aVid)
         {
             this.vid = aVid;
-            return this;
-        }
-
-        public Builder withType(String aType)
-        {
-            this.type = aType;
             return this;
         }
 
