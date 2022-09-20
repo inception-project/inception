@@ -24,7 +24,7 @@ declare let Wicket: any
 /**
  * This callback will accept the annotation data.
  */
-export declare type dataCallback = (data: Viewport) => void;
+export declare type dataCallback = (data: any) => void;
 
 export class DiamWebsocketImpl implements DiamWebsocket {
   private stompClient: Client

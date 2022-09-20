@@ -15,36 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Indicates that a merge operation could not be performed because there was a conflict, e.g.
- * because the target CAS already contains a conflicting annotation at the same location.
- */
-public class MergeConflictException
-    extends AnnotationException
+public class CompactAnnotationAttributes
 {
-    private static final long serialVersionUID = -6732300638977474716L;
+    public static final String ATTR_LABEL = "l";
+    public static final String ATTR_COLOR = "c";
 
-    public MergeConflictException()
+    private @JsonProperty(ATTR_LABEL) String labelText;
+    private @JsonProperty(ATTR_COLOR) String color;
+
+    public void setLabelText(String aLabelText)
     {
-        super();
+        labelText = aLabelText;
     }
 
-    public MergeConflictException(String message)
+    public String getLabelText()
     {
-        super(message);
+        return labelText;
     }
 
-    public MergeConflictException(String aMessage, Throwable aCause)
+    public String getColor()
     {
-        super(aMessage, aCause);
+        return color;
     }
 
-    public MergeConflictException(Throwable aCause)
+    public void setColor(String aColor)
     {
-        super(aCause);
+        color = aColor;
     }
 }

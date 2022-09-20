@@ -15,9 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+import { Layer } from '../Layer'
+
+export type CompactLayer = {
+  id: number,
+  name: string
+}
+
+export function unpackCompactLayer (raw: CompactLayer): Layer {
+  const cooked = new Layer()
+  cooked.id = raw.id
+  cooked.name = raw.name
+  return cooked
+}

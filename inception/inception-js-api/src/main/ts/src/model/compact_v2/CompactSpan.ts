@@ -15,9 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Offsets, Span, VID, AnnotatedText } from '..'
+import { CompactSpanAttributes } from './CompactSpanAttributes'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
+export type CompactSpan = [
+  layerId: number,
+  vid: VID,
+  offsets: Array<Offsets>,
+  attributes?: CompactSpanAttributes
 ]
+
+export function unpackCompactSpan (doc: AnnotatedText, raw: CompactSpan): Span {
+  const cooked = new Span()
+  cooked.layer = doc.__getOrCreateLayer(raw[0])
+  cooked.vid = raw[1]
+  cooked.offsets = raw[2]
+  cooked.color = raw[3]?.c
+  cooked.label = raw[3]?.l
+  cooked.clippingFlags = raw[3]?.cl
+  return cooked
+}

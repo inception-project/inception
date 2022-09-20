@@ -15,9 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Offsets } from './Offsets'
+import { VID } from './VID'
+import { AnnotationMarker } from './AnnotationMarker'
+import { Relation } from './Relation'
+import { Span } from './Span'
+import { TextMarker } from './TextMarker'
+import { Layer } from './Layer'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+export class AnnotatedText {
+  window: Offsets
+  text?: string
+  layers: Map<number, Layer> = new Map<number, Layer>()
+  relations: Array<Relation>
+  spans: Array<Span>
+  annotationMarkers: Map<VID, AnnotationMarker[]>
+  textMarkers: TextMarker[]
+
+  __getOrCreateLayer (id: number): Layer {
+    let layer = this.layers.get(id)
+    if (!layer) {
+      layer = new Layer()
+      layer.id = id
+      this.layers.set(id, layer)
+    }
+    return layer
+  }
+}

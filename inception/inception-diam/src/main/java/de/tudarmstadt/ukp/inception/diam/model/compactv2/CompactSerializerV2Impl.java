@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact;
+package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,17 +39,17 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamAutoConfig#compactSerializer}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#compactSerializerV2}.
  * </p>
  */
-public class CompactSerializerImpl
-    implements CompactSerializer
+public class CompactSerializerV2Impl
+    implements CompactSerializerV2
 {
-    public static final String ID = "compact";
+    public static final String ID = "compact_v2";
 
     private final AnnotationEditorProperties properties;
 
-    public CompactSerializerImpl(AnnotationEditorProperties aProperties)
+    public CompactSerializerV2Impl(AnnotationEditorProperties aProperties)
     {
         properties = aProperties;
     }
@@ -75,6 +76,8 @@ public class CompactSerializerImpl
 
     private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc)
     {
+        var layers = new ArrayList<CompactLayer>();
+
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             if (!properties.isTokenLayerEditable()
                     && Token.class.getName().equals(layer.getName())) {
@@ -86,13 +89,15 @@ public class CompactSerializerImpl
                 continue;
             }
 
+            layers.add(new CompactLayer(layer.getId(), layer.getUiName()));
+
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<CompactRange> offsets = vspan.getRanges().stream()
                         .map(range -> new CompactRange(range.getBegin(), range.getEnd()))
                         .collect(toList());
 
-                CompactSpan entity = new CompactSpan(vspan.getVid(), offsets, vspan.getLabelHint(),
-                        vspan.getColorHint());
+                CompactSpan entity = new CompactSpan(vspan.getLayer(), vspan.getVid(), offsets,
+                        vspan.getLabelHint(), vspan.getColorHint());
                 entity.getAttributes()
                         .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
                 entity.getAttributes().setClippedAtEnd(
@@ -102,12 +107,14 @@ public class CompactSerializerImpl
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                CompactRelation arc = new CompactRelation(varc.getVid(),
+                CompactRelation arc = new CompactRelation(varc.getLayer(), varc.getVid(),
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);
             }
         }
+
+        aResponse.setLayers(layers);
 
         for (var marker : aVDoc.getMarkers()) {
             if (marker instanceof VAnnotationMarker) {

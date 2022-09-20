@@ -15,9 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+export interface CompactAnnotationAttributes {
+  /**
+   * Label (optional)
+   */
+  l: string;
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+  /**
+   * Color (optional)
+   */
+  c: string;
+}

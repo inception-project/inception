@@ -15,9 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { VID, Argument } from '..'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
+/**
+ * Represents the endpoint of an arc.
+ */
+export type CompactArgument = [
+  target: VID,
+  label?: string
 ]
+
+export function unpackCompactArgument (raw: CompactArgument): Argument {
+  const cooked = new Argument()
+  cooked.target = raw[0]
+  cooked.label = raw[1]
+  return cooked
+}

@@ -15,9 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { VID, Relation, AnnotatedText } from '..'
+import { CompactArgument, unpackCompactArgument } from './CompactArgument'
+import { CompactRelationAttributes } from './CompactRelationAttributes'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
+export type CompactRelation = [
+  layerId: number,
+  vid: VID,
+  arguments: Array<CompactArgument>,
+  attributes?: CompactRelationAttributes
 ]
+
+export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation {
+  const cooked = new Relation()
+  cooked.layer = doc.__getOrCreateLayer(raw[0])
+  cooked.vid = raw[1]
+  cooked.arguments = raw[2].map(unpackCompactArgument)
+  cooked.color = raw[3]?.c
+  cooked.label = raw[3]?.l
+  return cooked
+}

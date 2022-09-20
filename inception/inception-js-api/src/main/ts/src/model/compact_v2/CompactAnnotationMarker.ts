@@ -15,9 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { VID, AnnotationMarker } from '..'
 
-export type CompactTextMarker = [
+export type CompactAnnotationMarker = [
   type: string,
-  offsets: Array<Offsets>
+  vid: Array<VID>
 ]
+
+export function unpackCompactAnnotationMarker (raw: CompactAnnotationMarker): AnnotationMarker {
+  const cooked = new AnnotationMarker()
+  cooked.type = raw[0]
+  cooked.vid = raw[1]
+  return cooked
+}
