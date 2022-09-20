@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.FocusMarkerRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
@@ -55,9 +56,9 @@ public class AnnotationAutoConfiguration
 
     @Bean
     public ColorRenderer colorRenderer(AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService)
+            ColoringService aColoringService, UserPreferencesService aUserPreferencesService)
     {
-        return new ColorRenderer(aSchemaService, aColoringService);
+        return new ColorRenderer(aSchemaService, aColoringService, aUserPreferencesService);
     }
 
     @Bean
