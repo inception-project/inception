@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { CompactAnnotatedText } from "./CompactAnnotatedText";
-export { CompactAnnotationAttributes } from "./CompactAnnotationAttributes";
-export { CompactArgument } from "./CompactArgument";
-export { CompactRelationAttributes } from "./CompactRelationAttributes";
-export { CompactSpan } from "./CompactSpan";
-export { CompactSpanAttributes } from "./CompactSpanAttributes";
+export { CompactAnnotatedText } from './CompactAnnotatedText'
+export { CompactAnnotationAttributes } from './CompactAnnotationAttributes'
+export { CompactArgument } from './CompactArgument'
+export { CompactRelationAttributes } from './CompactRelationAttributes'
+export { CompactSpan } from './CompactSpan'
+export { CompactSpanAttributes } from './CompactSpanAttributes'

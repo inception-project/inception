@@ -61,7 +61,7 @@ public final class JSoupUtil
      */
     public static boolean preserveWhitespace(Node node)
     {
-        // looks only at this element and five levels up, to prevent recursion & needless stack 
+        // looks only at this element and five levels up, to prevent recursion & needless stack
         // searches
         if (node instanceof Element) {
             Element el = (Element) node;
@@ -72,7 +72,8 @@ public final class JSoupUtil
                 }
                 el = el.parent();
                 i++;
-            } while (i < 6 && el != null);
+            }
+            while (i < 6 && el != null);
         }
         return false;
     }

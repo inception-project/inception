@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Arc } from './Arc'
+import { Span } from './Span'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+export interface Viewport {
+    text: string;
+    arcs: Arc[];
+    spans: Span[];
+}

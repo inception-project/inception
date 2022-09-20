@@ -15,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { VID } from '.'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+/**
+ * Represents the endpoint of a relation.
+ */
+export class Argument {
+  target: VID
+  label?: string
+}

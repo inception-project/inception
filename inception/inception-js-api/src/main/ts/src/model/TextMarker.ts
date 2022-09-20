@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Offsets } from './Offsets'
 
-export type CompactTextMarker = [
-  type: string,
+export class TextMarker {
+  type: string
   offsets: Array<Offsets>
-]
+}

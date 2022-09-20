@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
+import { Annotation, VID } from '..'
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+export interface Arc extends Annotation {
+    source: VID
+    target: VID
+}

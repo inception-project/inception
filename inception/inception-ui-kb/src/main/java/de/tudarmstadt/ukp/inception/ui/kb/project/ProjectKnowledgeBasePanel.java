@@ -52,8 +52,8 @@ public class ProjectKnowledgeBasePanel
                 selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);
-            detailsPanel.replaceWith(new KnowledgeBaseDetailsPanel(CID_DETAILS,
-                    selectedKnowledgeBaseModel));
+            detailsPanel.replaceWith(
+                    new KnowledgeBaseDetailsPanel(CID_DETAILS, selectedKnowledgeBaseModel));
             t.add(this);
         });
         add(listPanel);
