@@ -31,7 +31,6 @@ public abstract class VObject
     private static final long serialVersionUID = -2362598130503053908L;
 
     private final AnnotationLayer layer;
-    private final String type;
     private final Map<String, String> features;
     private final int equivalenceSet;
 
@@ -41,17 +40,16 @@ public abstract class VObject
     private String label;
     private boolean actionButtons;
 
-    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
+    public VObject(AnnotationLayer aLayer, VID aVid, Map<String, String> aFeatures)
     {
-        this(aLayer, aVid, aType, -1, aFeatures);
+        this(aLayer, aVid, -1, aFeatures);
     }
 
-    public VObject(AnnotationLayer aLayer, VID aVid, String aType, int aEquivalenceSet,
+    public VObject(AnnotationLayer aLayer, VID aVid, int aEquivalenceSet,
             Map<String, String> aFeatures)
     {
         layer = aLayer;
         vid = aVid;
-        type = aType;
         features = aFeatures != null ? aFeatures : new HashMap<>();
         equivalenceSet = aEquivalenceSet;
     }
@@ -69,11 +67,6 @@ public abstract class VObject
     public AnnotationLayer getLayer()
     {
         return layer;
-    }
-
-    public String getType()
-    {
-        return type;
     }
 
     public int getEquivalenceSet()

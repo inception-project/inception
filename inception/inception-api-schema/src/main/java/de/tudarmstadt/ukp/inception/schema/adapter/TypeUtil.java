@@ -30,7 +30,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 
@@ -212,21 +211,11 @@ public final class TypeUtil
      * @param aUiTypeName
      *            the brat type name.
      * @return the layer ID.
-     * @see TypeAdapter#getEncodedTypeName()
+     * @deprecated This is mostly brat specific and should be removed/replaced by a DIAM mechanism
      */
+    @Deprecated
     public static long getLayerId(String aUiTypeName)
     {
         return parseLong(aUiTypeName);
-    }
-
-    /**
-     * @param aLayer
-     *            a layer
-     * @return the encoded type name sent to the browser.
-     * @see TypeAdapter#getEncodedTypeName()
-     */
-    public static String getUiTypeName(AnnotationLayer aLayer)
-    {
-        return aLayer.getId().toString();
     }
 }

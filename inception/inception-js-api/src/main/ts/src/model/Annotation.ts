@@ -21,12 +21,12 @@ export interface Annotation {
     vid: VID;
 
     /**
-     * Label (optional)
+     * Color (optional)
      */
     color?: string;
 
     /**
-    * Color (optional)
-    */
+     * Label (optional)
+     */
     label?: string;
 }

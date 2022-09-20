@@ -221,12 +221,17 @@ public class RelationRenderer
             return Collections.emptyList();
         }
 
-        String bratTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
         if (traits.isRenderArcs()) {
-            return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs,
-                    dependentFs, labelFeatures));
+            var arc = VArc.builder().forAnnotation(aFS) //
+                    .withLayer(typeAdapter.getLayer()) //
+                    .withSource(governorFs) //
+                    .withTarget(dependentFs) //
+                    .withFeatures(labelFeatures) //
+                    .build();
+
+            return asList(arc);
         }
         else {
             AnnotationFS governor = (AnnotationFS) governorFs;

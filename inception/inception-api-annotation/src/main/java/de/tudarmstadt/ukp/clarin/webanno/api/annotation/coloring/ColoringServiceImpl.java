@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_PASTEL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.DYNAMIC;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.GRAY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.LEGACY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.STATIC_PASTELLE;
@@ -53,7 +52,7 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
@@ -82,7 +81,7 @@ public class ColoringServiceImpl
     }
 
     @Override
-    public ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
+    public ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringPreferences aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
         ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
@@ -93,7 +92,7 @@ public class ColoringServiceImpl
         }
 
         if (t == null || t == LEGACY) {
-            t = getBestInitialStrategy(aLayer, aPreferences);
+            t = getBestInitialStrategy(aLayer);
         }
 
         return getStrategy(aLayer, t, aColorQueues);
@@ -165,21 +164,13 @@ public class ColoringServiceImpl
     }
 
     @Override
-    public ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer,
-            AnnotationPreference aPreferences)
+    public ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer)
     {
-        // Decide on coloring strategy for the current layer
-        ColoringStrategyType coloringStrategy;
         if (aLayer.isReadonly()) {
-            coloringStrategy = GRAY;
+            return GRAY;
         }
-        else if (aPreferences.isStaticColor()) {
-            coloringStrategy = STATIC_PASTELLE;
-        }
-        else {
-            coloringStrategy = DYNAMIC;
-        }
-        return coloringStrategy;
+
+        return STATIC_PASTELLE;
     }
 
     private boolean hasLinkFeature(AnnotationLayer aLayer)

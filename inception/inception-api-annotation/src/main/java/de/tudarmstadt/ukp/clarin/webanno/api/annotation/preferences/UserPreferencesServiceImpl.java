@@ -272,7 +272,7 @@ public class UserPreferencesServiceImpl
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!colorPerLayer.containsKey(layer.getId())) {
                 colorPerLayer.put(layer.getId(),
-                        coloringService.getBestInitialStrategy(layer, preference));
+                        coloringService.getBestInitialStrategy(layer));
             }
         }
 

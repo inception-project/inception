@@ -110,8 +110,6 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        String type = typeAdapter.getEncodedTypeName();
-
         recommendationService.calculateSpanSuggestionVisibility(aRequest.getSourceDocument(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
@@ -146,7 +144,7 @@ public class RecommendationSpanRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(ao.getFeature(), annotation);
 
-                VSpan v = new VSpan(layer, vid, type, range.get(), featureAnnotation, COLOR);
+                VSpan v = new VSpan(layer, vid, range.get(), featureAnnotation, COLOR);
 
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 

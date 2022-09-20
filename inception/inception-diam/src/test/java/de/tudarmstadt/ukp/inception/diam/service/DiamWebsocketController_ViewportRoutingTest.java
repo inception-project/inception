@@ -361,10 +361,9 @@ public class DiamWebsocketController_ViewportRoutingTest
                 {
                     AnnotationLayer layer = new AnnotationLayer();
                     layer.setId(1l);
-                    aResponse.add(new VSpan(layer, new VID(1), "dummy",
-                            new VRange(aRequest.getWindowBeginOffset(),
-                                    aRequest.getWindowEndOffset()),
-                            emptyMap()));
+                    aResponse.add(
+                            new VSpan(layer, new VID(1), new VRange(aRequest.getWindowBeginOffset(),
+                                    aRequest.getWindowEndOffset()), emptyMap()));
                 }
             };
         }
