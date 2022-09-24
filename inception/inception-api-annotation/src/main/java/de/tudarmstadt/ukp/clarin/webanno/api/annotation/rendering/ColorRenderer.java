@@ -24,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 
 import org.slf4j.Logger;
@@ -86,24 +87,9 @@ public class ColorRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        AnnotationPreference prefs;
+        Optional<AnnotationPreference> prefs = getPreferences(aRequest);
 
-        AnnotatorState state = aRequest.getState();
-        if (state != null) {
-            prefs = state.getPreferences();
-        }
-        else if (userPreferencesService != null) {
-            try {
-                prefs = userPreferencesService.loadPreferences(aRequest.getProject(),
-                        aRequest.getAnnotationUser().getUsername(), Mode.ANNOTATION);
-            }
-            catch (IOException e) {
-                LOG.error("Cannot load annotation preferences: {}", getRootCauseMessage(e), e);
-                return;
-            }
-        }
-        else {
-            // No way to access color preferences - bail out
+        if (prefs.isEmpty()) {
             return;
         }
 
@@ -115,7 +101,7 @@ public class ColorRenderer
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : allLayers) {
             ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride()
-                    .orElse(coloringService.getStrategy(layer, prefs, colorQueues));
+                    .orElse(coloringService.getStrategy(layer, prefs.get(), colorQueues));
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
@@ -136,5 +122,27 @@ public class ColorRenderer
                         coloringStrategy.getColor(vobj, vobj.getLabelHint(), coloringRules));
             }
         }
+    }
+
+    private Optional<AnnotationPreference> getPreferences(RenderRequest aRequest)
+    {
+        AnnotatorState state = aRequest.getState();
+        if (state != null) {
+            return Optional.of(state.getPreferences());
+        }
+
+        if (userPreferencesService != null) {
+            try {
+                return Optional.of(userPreferencesService.loadPreferences(aRequest.getProject(),
+                        aRequest.getAnnotationUser().getUsername(), Mode.ANNOTATION));
+            }
+            catch (IOException e) {
+                LOG.error("Cannot load annotation preferences: {}", getRootCauseMessage(e), e);
+                return Optional.empty();
+            }
+        }
+
+        // No way to access color preferences - bail out
+        return Optional.empty();
     }
 }

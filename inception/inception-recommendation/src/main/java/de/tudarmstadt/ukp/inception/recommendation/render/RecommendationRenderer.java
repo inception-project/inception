@@ -66,7 +66,6 @@ public class RecommendationRenderer
             FeatureSupportRegistry aFsRegistry, RecommenderProperties aRecommenderProperties,
             UserDao aUserRegistry)
     {
-        super();
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
         fsRegistry = aFsRegistry;
