@@ -20,20 +20,23 @@
         AnnotatedText,
         DiamAjax,
         Offsets,
+        Relation,
         Span,
-        VID,
     } from "@inception-project/inception-js-api";
     import LabelBadge from "./LabelBadge.svelte";
-    import { groupSpansByPosition, uniqueOffsets } from "./Utils"     
+    import SpanText from "./SpanText.svelte";
+    import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"     
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
 
     let groupedSpans: Record<string, Span[]>;
+    let groupedRelations: Record<string, Relation[]>;
     let sortedSpanOffsets: Offsets[];
 
-    $: groupedSpans = groupSpansByPosition(data);
-    $: sortedSpanOffsets = uniqueOffsets(data);
+    $: groupedSpans = groupSpansByPosition(data)
+    $: groupedRelations = groupRelationsByPosition(data)
+    $: sortedSpanOffsets = uniqueOffsets(data)  
 </script>
 
 <div class="flex-content fit-child-snug">
@@ -42,19 +45,36 @@
             {#each sortedSpanOffsets as offsets}
                 {@const spans = groupedSpans[`${offsets}`]}
                 {@const firstSpan = spans[0]}
-                {@const begin = firstSpan.offsets[0][0]}
-                {@const end = firstSpan.offsets[0][1]}
-                <li class="list-group-item py-1 px-2">
-                    <div class="float-end">
-                        {#each spans as span}
-                            <LabelBadge annotation={span} {ajaxClient} />
-                        {/each}
-                    </div>
+                <li class="list-group-item p-0 d-flex">
+                    <div class="flex-grow-1 py-1 px-2">
+                        <div class="float-end">
+                            {#each spans as span}
+                                <LabelBadge annotation={span} {ajaxClient} />
+                            {/each}
+                        </div>
 
-                    <div class="text-truncate">
-                        {data.text.substring(begin, end).substring(0, 50)}
+                        <SpanText {data} span={firstSpan} />
                     </div>
                 </li>
+
+                {@const relations = groupedRelations[`${offsets}`]}
+                {#if relations} 
+                    {#each relations as relation}
+                        {@const target = relation.arguments[1].target}
+                        <li class="list-group-item p-0 d-flex">
+                            <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
+                                <span>↳</span>
+                            </div>
+                            <div class="flex-grow-1 py-1 px-2">
+                                <div class="float-end">
+                                    <LabelBadge annotation={relation} {ajaxClient} />
+                                </div>
+
+                                <SpanText {data} span={target} />
+                            </div>
+                        </li>
+                    {/each}
+                {/if}
             {/each}
         </ul>
     {/if}

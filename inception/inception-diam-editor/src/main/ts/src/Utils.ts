@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Offsets, Span, VID } from '@inception-project/inception-js-api'
+import { AnnotatedText, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
 import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
 
 export function uniqueLabels (data: AnnotatedText): string[] {
   if (!data) return []
 
-  const sortedLabelsWithDuplicates = data.spans
-    .map((span) => span?.label || '')
+  const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => ann?.label || '')
     .sort()
 
   const sortedLabels: string[] = []
@@ -39,8 +38,7 @@ export function uniqueLabels (data: AnnotatedText): string[] {
 export function uniqueOffsets (data: AnnotatedText): Offsets[] {
   if (!data) return []
 
-  const sortedOffsetsWithDuplicates = data.spans
-    .map((span) => span.offsets[0])
+  const sortedOffsetsWithDuplicates = Array.from(data.spans.values(), (span) => span.offsets[0])
     .sort(compareOffsets)
 
   const sortedOffsets: Offsets[] = []
@@ -60,17 +58,17 @@ export function uniqueOffsets (data: AnnotatedText): Offsets[] {
   return sortedOffsets
 }
 
-export function groupBy<T> (data: T[], keyMapper: (s: any) => string): Record<string, T[]> {
+export function groupBy<T> (data: IterableIterator<T>, keyMapper: (s: T) => string): Record<string, T[]> {
   if (!data) return {}
 
   const groupedSpans = {}
-  data.forEach(d => {
+  for (const d of data) {
     const key = `${keyMapper(d)}`
     if (groupedSpans[key] === undefined) {
       groupedSpans[key] = []
     }
     groupedSpans[key].push(d)
-  })
+  }
 
   return groupedSpans
 }
@@ -82,9 +80,25 @@ export function groupBy<T> (data: T[], keyMapper: (s: any) => string): Record<st
  * @returns grouped spans
  */
 export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> {
-  const groups = groupBy(data?.spans, (s) => s.label)
+  const groups = groupBy(data?.spans.values(), (s) => s.label || '')
   for (const items of Object.values(groups)) {
     items.sort((a, b) => compareOffsets(a.offsets[0], b.offsets[0]))
+  }
+  return groups
+}
+
+/**
+ * Groups relations by label.
+ *
+ * @param data relations
+ * @returns grouped relations
+ */
+export function groupRelationsByLabel (data: AnnotatedText): Record<string, Relation[]> {
+  const groups = groupBy(data?.relations.values(), (s) => s.label || '')
+  for (const items of Object.values(groups)) {
+    items.sort((a, b) => compareOffsets(
+      (a.arguments[0].target as Span).offsets[0],
+      (b.arguments[0].target as Span).offsets[0]))
   }
   return groups
 }
@@ -96,7 +110,11 @@ export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> 
  * @returns grouped spans
  */
 export function groupSpansByPosition (data: AnnotatedText): Record<string, Span[]> {
-  return groupBy(data?.spans, (s) => `${s.offsets}`)
+  return groupBy(data?.spans.values(), (s) => `${s.offsets}`)
+}
+
+export function groupRelationsByPosition (data: AnnotatedText): Record<string, Relation[]> {
+  return groupBy(data?.relations.values(), (r) => `${(r.arguments[0].target as Span).offsets}`)
 }
 
 export function highlightClasses (vid: VID, data: AnnotatedText): string {

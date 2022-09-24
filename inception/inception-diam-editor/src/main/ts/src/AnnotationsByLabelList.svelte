@@ -23,7 +23,8 @@
         Span,
     } from "@inception-project/inception-js-api";
     import LabelBadge from "./LabelBadge.svelte";
-    import { groupSpansByLabel, uniqueLabels, uniqueOffsets } from "./Utils";
+    import SpanText from "./SpanText.svelte";
+    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels, uniqueOffsets } from "./Utils";
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
@@ -32,6 +33,7 @@
     let sortedLabels: string[];
 
     $: groupedSpans = groupSpansByLabel(data);
+    $: groupedRelations = groupRelationsByLabel(data);
     $: sortedLabels = uniqueLabels(data);
 </script>
 
@@ -39,23 +41,29 @@
     {#if sortedLabels || sortedLabels?.length}
         <ul class="scrolling flex-content list-group list-group-flush">
             {#each sortedLabels as label}
-                {@const spans = groupedSpans[`${label}`]}
-                <li class="list-group-item py-1 px-2">
-                    <div>
+                {@const spans = groupedSpans[`${label}`] || []}
+                {@const relations = groupedRelations[`${label}`] || []}
+                <li class="list-group-item py-1 px-0">
+                    <div class="px-2 py-1 bg.-light fw-bold">
                         {label || 'No label'}
                     </div>
-                    <ul>
+                    <ul class="ps-3 pe-0">
                         {#each spans as span}
-                            {@const begin = span.offsets[0][0]}
-                            {@const end = span.offsets[0][1]}
                             <li class="list-group-item py-1 px-2">
                                 <div class="float-end">
                                     <LabelBadge annotation={span} {ajaxClient} />
                                 </div>
             
-                                <div class="text-truncate">
-                                    {data.text.substring(begin, end).substring(0, 50)}
+                                <SpanText {data} span={span} />
+                            </li>
+                        {/each}
+                        {#each relations as relation}
+                            <li class="list-group-item py-1 px-2">
+                                <div class="float-end">
+                                    <LabelBadge annotation={relation} {ajaxClient} />
                                 </div>
+            
+                                <SpanText {data} span={relation.arguments[0].target} />
                             </li>
                         {/each}
                     </ul>

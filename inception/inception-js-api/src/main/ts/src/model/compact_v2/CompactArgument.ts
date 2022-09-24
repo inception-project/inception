@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Argument } from '..'
+import { VID, Argument, AnnotatedText } from '..'
 
 /**
  * Represents the endpoint of an arc.
@@ -25,9 +25,13 @@ export type CompactArgument = [
   label?: string
 ]
 
-export function unpackCompactArgument (raw: CompactArgument): Argument {
+export function unpackCompactArgument (doc: AnnotatedText, raw: CompactArgument): Argument {
   const cooked = new Argument()
-  cooked.target = raw[0]
+  cooked.targetId = raw[0]
+  cooked.target = doc.spans.get(cooked.targetId)
+  if (!cooked.target) {
+    console.warn(`Target ${cooked.targetId} not found`)
+  }
   cooked.label = raw[1]
   return cooked
 }

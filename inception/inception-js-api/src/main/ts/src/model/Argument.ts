@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID } from '.'
+import { Annotation, VID } from '.'
 
 /**
  * Represents the endpoint of a relation.
  */
 export class Argument {
-  target: VID
+  targetId: VID
+  target?: Annotation
   label?: string
 }

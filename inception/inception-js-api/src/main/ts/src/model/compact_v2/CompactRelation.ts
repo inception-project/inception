@@ -30,7 +30,7 @@ export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation)
   const cooked = new Relation()
   cooked.layer = doc.__getOrCreateLayer(raw[0])
   cooked.vid = raw[1]
-  cooked.arguments = raw[2].map(unpackCompactArgument)
+  cooked.arguments = raw[2].map(arg => unpackCompactArgument(doc, arg))
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   return cooked

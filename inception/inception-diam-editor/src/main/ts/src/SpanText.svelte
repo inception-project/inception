@@ -17,35 +17,18 @@
      * limitations under the License.
      */
 
-    import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
-    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
+    import { AnnotatedText, Span } from "@inception-project/inception-js-api";
 
-    export let annotation: Annotation;
-    export let ajaxClient: DiamAjax;
+    export let data: AnnotatedText
+    export let span: Span
 
-    $: backgroundColor = annotation.color || "var(--bs-secondary)";
-    $: textColor = bgToFgColor(backgroundColor);
+    $: begin = span.offsets[0][0]
+    $: end = span.offsets[0][1]
 </script>
 
-<span
-    class="badge border border-dark ms-1 fw-normal"
-    on:click={(ev) =>
-        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })}
-    title={`${annotation.vid}@${annotation.layer.name}`}
-    role="button"
-    style="color: {textColor}; background-color: {backgroundColor}"
->
-    {annotation.label || "No label"}
-</span>
+<div class="text-truncate">
+    {data.text.substring(begin, end).substring(0, 50)}
+</div>
 
 <style>
-  .badge {
-    font-family: sans-serif;
-  }
-
-  /*
-  .marker-focus {
-    box-shadow: 0px 0px 5px 2px orange;
-  }
-  */
 </style>
