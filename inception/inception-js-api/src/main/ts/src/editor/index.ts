@@ -15,6 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { AnnotationEditor } from "./AnnotationEditor";
-export { AnnotationEditorFactory } from "./AnnotationEditorFactory";
-export { AnnotationEditorProperties } from "./AnnotationEditorProperties";
+export { AnnotationEditor } from './AnnotationEditor'
+export { AnnotationEditorFactory } from './AnnotationEditorFactory'
+export { AnnotationEditorProperties } from './AnnotationEditorProperties'
