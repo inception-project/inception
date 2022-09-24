@@ -60,10 +60,12 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -74,6 +76,7 @@ import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -127,6 +130,7 @@ public class DiamWebsocketController
     private final ProjectService projectService;
     private final UserDao userRepository;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
+    private final UserPreferencesService userPreferencesService;
 
     private final LoadingCache<ViewportDefinition, ViewportState> activeViewports;
 
@@ -134,7 +138,8 @@ public class DiamWebsocketController
             RenderingPipeline aRenderingPipeline, DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties, AnnotationSchemaService aSchemaService,
             ProjectService aProjectService, UserDao aUserRepository,
-            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
+            UserPreferencesService aUserPreferencesService)
     {
         msgTemplate = aMsgTemplate;
         renderingPipeline = aRenderingPipeline;
@@ -144,6 +149,7 @@ public class DiamWebsocketController
         projectService = aProjectService;
         userRepository = aUserRepository;
         vDocumentSerializerExtensionPoint = aVDocumentSerializerExtensionPoint;
+        userPreferencesService = aUserPreferencesService;
 
         activeViewports = Caffeine.newBuilder() //
                 .expireAfterAccess(Duration.ofMinutes(30)) //
@@ -270,8 +276,12 @@ public class DiamWebsocketController
         User user = userRepository.get(aUser);
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
+        AnnotationPreference prefs = userPreferencesService.loadPreferences(doc.getProject(),
+                user.getUsername(), Mode.ANNOTATION);
+
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
+                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(toList());
 
         RenderRequest request = RenderRequest.builder() //
