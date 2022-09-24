@@ -18,9 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("annotation.default-preferences")
 public class AnnotationEditorDefaultPreferencesPropertiesImpl
     implements AnnotationEditorDefaultPreferencesProperties
