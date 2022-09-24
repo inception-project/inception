@@ -15,21 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID } from '.'
-import { Layer } from './Layer';
+const esbuildSvelte = require('esbuild-svelte')
+const sveltePreprocess = require('svelte-preprocess')
 
-export interface Annotation {
-    layer: Layer
-
-    vid: VID
-
-    /**
-     * Color (optional)
-     */
-    color?: string;
-
-    /**
-     * Label (optional)
-     */
-    label?: string;
+module.exports = {
+  type: 'bundle', // bundle or transform (see description above)
+  esbuild: {
+    target: 'es6',
+    plugins: [
+      esbuildSvelte({
+        compilerOptions: { css: true },
+        preprocess: sveltePreprocess({ sourceMap: true })
+      })
+    ]
+  }
 }
