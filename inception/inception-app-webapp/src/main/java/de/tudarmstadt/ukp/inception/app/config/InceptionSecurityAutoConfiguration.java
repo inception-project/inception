@@ -21,7 +21,11 @@ import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.provisioning.UserDetailsManager;
 
@@ -36,5 +40,20 @@ public class InceptionSecurityAutoConfiguration
         throws Exception
     {
         return new OverridableUserDetailsManager(aDataSource, aAuthenticationConfiguration);
+    }
+
+    @Bean
+    public GlobalAuthenticationConfigurerAdapter globalAuthenticationConfigurerAdapter(
+            AuthenticationProvider authenticationProvider)
+    {
+        return new GlobalAuthenticationConfigurerAdapter()
+        {
+            @Override
+            public void configure(AuthenticationManagerBuilder aAuth) throws Exception
+            {
+                aAuth.authenticationProvider(authenticationProvider);
+                aAuth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+            }
+        };
     }
 }
