@@ -37,8 +37,17 @@ export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): Annotate
   cooked.text = raw.text
   cooked.window = raw.window
   raw.layers?.forEach(layer => cooked.layers.set(layer.id, unpackCompactLayer(layer)))
-  cooked.spans = raw.spans?.map(span => unpackCompactSpan(cooked, span)) || []
-  cooked.relations = raw.relations?.map(rel => unpackCompactRelation(cooked, rel)) || []
+
+  for (const span of raw.spans || []) {
+    const cookedSpan = unpackCompactSpan(cooked, span)
+    cooked.spans.set(cookedSpan.vid, cookedSpan)
+  }
+
+  for (const rel of raw.relations || []) {
+    const cookedRel = unpackCompactRelation(cooked, rel)
+    cooked.relations.set(cookedRel.vid, cookedRel)
+  }
+
   const annotationMarkers = raw.annotationMarkers?.map(unpackCompactAnnotationMarker)
   cooked.annotationMarkers = makeMarkerMap(annotationMarkers)
   cooked.textMarkers = raw.textMarkers?.map(unpackCompactTextMarker) || []

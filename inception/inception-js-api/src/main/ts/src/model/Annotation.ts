@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 import { VID } from '.'
+import { Layer } from './Layer';
 
 export interface Annotation {
-    vid: VID;
+    layer: Layer
+
+    vid: VID
 
     /**
      * Color (optional)

@@ -15,23 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Relation, AnnotatedText } from '..'
-import { CompactArgument, unpackCompactArgument } from './CompactArgument'
-import { CompactRelationAttributes } from './CompactRelationAttributes'
+const esbuildSvelte = require('esbuild-svelte')
+const sveltePreprocess = require('svelte-preprocess')
 
-export type CompactRelation = [
-  layerId: number,
-  vid: VID,
-  arguments: Array<CompactArgument>,
-  attributes?: CompactRelationAttributes
-]
-
-export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation {
-  const cooked = new Relation()
-  cooked.layer = doc.__getOrCreateLayer(raw[0])
-  cooked.vid = raw[1]
-  cooked.arguments = raw[2].map(arg => unpackCompactArgument(doc, arg))
-  cooked.color = raw[3]?.c
-  cooked.label = raw[3]?.l
-  return cooked
+module.exports = {
+  type: 'bundle', // bundle or transform (see description above)
+  esbuild: {
+    target: 'es6',
+    plugins: [
+      esbuildSvelte({
+        compilerOptions: { css: true },
+        preprocess: sveltePreprocess({ sourceMap: true })
+      })
+    ]
+  }
 }

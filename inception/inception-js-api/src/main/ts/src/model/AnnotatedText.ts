@@ -27,8 +27,8 @@ export class AnnotatedText {
   window: Offsets
   text?: string
   layers: Map<number, Layer> = new Map<number, Layer>()
-  relations: Array<Relation>
-  spans: Array<Span>
+  relations: Map<VID, Relation> = new Map<VID, Relation>()
+  spans: Map<VID, Span> = new Map<VID, Span>()
   annotationMarkers: Map<VID, AnnotationMarker[]>
   textMarkers: TextMarker[]
 
@@ -40,5 +40,10 @@ export class AnnotatedText {
       this.layers.set(id, layer)
     }
     return layer
+  }
+
+  public * annotations () {
+    yield * this.spans.values()
+    yield * this.relations.values()
   }
 }
