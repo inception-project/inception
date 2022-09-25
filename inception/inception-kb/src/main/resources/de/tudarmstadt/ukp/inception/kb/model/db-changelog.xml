@@ -376,7 +376,7 @@
     </addColumn>
     <update tableName="knowledgebase">
       <column name="fullTextSearchIri" type="VARCHAR(255)" value="bif:contains"/>
-      <where>supportConceptLinking = true</where>
+      <where>supportConceptLinking = 1</where>
     </update>
   </changeSet>
   
