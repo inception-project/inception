@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.config;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;

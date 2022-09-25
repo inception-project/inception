@@ -20,19 +20,13 @@ package de.tudarmstadt.ukp.inception.app.config;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
@@ -88,16 +82,5 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                 .sessionRegistry(aSessionRegistry);
         // @formatter:on
         return aHttp.build();
-    }
-
-    @Bean(name = "authenticationProvider")
-    @Profile("auto-mode-builtin")
-    public DaoAuthenticationProvider internalAuthenticationProvider(
-            @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
-    {
-        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
-        authProvider.setUserDetailsService(aUserDetails);
-        authProvider.setPasswordEncoder(aPasswordEncoder);
-        return authProvider;
     }
 }

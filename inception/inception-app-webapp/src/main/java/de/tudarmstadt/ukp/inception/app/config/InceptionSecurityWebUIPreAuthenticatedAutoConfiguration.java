@@ -19,18 +19,13 @@ package de.tudarmstadt.ukp.inception.app.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -62,6 +57,8 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
                 .antMatchers("/assets/**").permitAll()
                 .antMatchers("/images/**").permitAll()
                 .antMatchers("/resources/**").permitAll()
+                .antMatchers("/whoops").permitAll()
+                .antMatchers("/about/**").permitAll()
                 .antMatchers("/wicket/resource/**").permitAll()
                 .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
                 .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
@@ -101,17 +98,5 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
         filter.setUserRepository(aUserRepository);
         filter.setExceptionIfHeaderMissing(true);
         return filter;
-    }
-
-    @Bean(name = "authenticationProvider")
-    @Profile("auto-mode-preauth")
-    public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
-            @Lazy UserDetailsManager aUserDetails)
-    {
-        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
-        authProvider.setPreAuthenticatedUserDetailsService(
-                new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
-                        aUserDetails));
-        return authProvider;
     }
 }

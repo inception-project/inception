@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.persistence.EntityManager;
-import javax.sql.DataSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +66,6 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -87,7 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
-import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -329,20 +326,12 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Bean(name = "authenticationProvider")
         public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
-                UserDetailsManager aUserDetailsManager)
+                @Lazy UserDetailsManager aUserDetailsManager)
         {
             DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
-        }
-
-        @Bean
-        public UserDetailsManager userDetailsService(DataSource aDataSource,
-                @Lazy AuthenticationConfiguration aAuthenticationConfiguration)
-            throws Exception
-        {
-            return new OverridableUserDetailsManager(aDataSource, aAuthenticationConfiguration);
         }
 
         @Primary
