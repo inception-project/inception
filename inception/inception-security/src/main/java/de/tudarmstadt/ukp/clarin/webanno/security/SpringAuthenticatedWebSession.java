@@ -29,7 +29,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
@@ -40,6 +39,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 
@@ -53,8 +53,8 @@ public class SpringAuthenticatedWebSession
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @SpringBean(name = "org.springframework.security.authenticationManager")
-    private AuthenticationManager authenticationManager;
+    // @SpringBean(name = "org.springframework.security.authenticationManager")
+    private @SpringBean AuthenticationConfigurationHolder authenticationConfigurationHolder;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
@@ -62,7 +62,6 @@ public class SpringAuthenticatedWebSession
     {
         super(request);
         injectDependencies();
-        ensureDependenciesNotNull();
 
         // If the a proper (non-anonymous) authentication has already been performed (e.g. via
         // external pre-authentication) then also mark the Wicket session as signed-in.
@@ -72,13 +71,6 @@ public class SpringAuthenticatedWebSession
         // !(authentication instanceof AnonymousAuthenticationToken && !isSignedIn())
         ) {
             signIn(true);
-        }
-    }
-
-    private void ensureDependenciesNotNull()
-    {
-        if (authenticationManager == null) {
-            throw new IllegalStateException("AdminSession requires an authenticationManager.");
         }
     }
 
@@ -100,7 +92,8 @@ public class SpringAuthenticatedWebSession
                 containerRequest.getSession().invalidate();
             }
 
-            Authentication authentication = authenticationManager
+            Authentication authentication = authenticationConfigurationHolder
+                    .getAuthenticationConfiguration().getAuthenticationManager()
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
             springSecuritySignIn(authentication);
@@ -109,6 +102,10 @@ public class SpringAuthenticatedWebSession
         }
         catch (AuthenticationException e) {
             log.warn("User [{}] failed to login. Reason: {}", username, e.getMessage());
+            return false;
+        }
+        catch (Exception e) {
+            log.error("Unexpected error during authentication: ", e.getMessage(), e);
             return false;
         }
     }

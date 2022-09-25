@@ -15,22 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.security.config;
+package de.tudarmstadt.ukp.inception.app.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.stereotype.Component;
+import javax.sql.DataSource;
 
-@Component
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.provisioning.UserDetailsManager;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+
+@EnableWebSecurity
 public class InceptionSecurityAutoConfiguration
 {
-    @Autowired
-    public void configureGlobal(AuthenticationProvider authenticationProvider,
-            AuthenticationManagerBuilder auth)
+    @Bean
+    public UserDetailsManager userDetailsService(DataSource aDataSource,
+            @Lazy AuthenticationConfiguration aAuthenticationConfiguration)
+        throws Exception
     {
-        auth.authenticationProvider(authenticationProvider);
-        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+        return new OverridableUserDetailsManager(aDataSource, aAuthenticationConfiguration);
     }
 }

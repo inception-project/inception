@@ -66,8 +66,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -339,12 +339,10 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Bean
         public UserDetailsManager userDetailsService(DataSource aDataSource,
-                @Lazy AuthenticationManager aAuthenticationManager)
+                @Lazy AuthenticationConfiguration aAuthenticationConfiguration)
+            throws Exception
         {
-            OverridableUserDetailsManager manager = new OverridableUserDetailsManager();
-            manager.setDataSource(aDataSource);
-            manager.setAuthenticationManager(aAuthenticationManager);
-            return manager;
+            return new OverridableUserDetailsManager(aDataSource, aAuthenticationConfiguration);
         }
 
         @Primary
