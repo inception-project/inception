@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
@@ -72,6 +73,8 @@ public class WebsocketSecurityConfig
             .nullDestMatcher().authenticated() //
             // subscribing to logged events is only for admins
             .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
+            .simpSubscribeDestMatchers("/*" + NS_PROJECT + "/{" + PARAM_PROJECT + "}/exports")
+                .access("@projectAccess.canManageProject(#" + PARAM_PROJECT + ")")
             .simpSubscribeDestMatchers(annotationEditorTopic)
                 .access("@documentAccess.canViewAnnotationDocument(#" + PARAM_PROJECT + 
                         ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")")

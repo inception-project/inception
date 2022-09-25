@@ -24,7 +24,6 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,22 +78,11 @@ public class ExportServiceControllerImpl
     }
 
     @SubscribeMapping(NS_PROJECT + "/{projectId}/exports")
-    public List<MProjectExportStateUpdate> getCurrentExportStates(Principal aPrincipal,
+    public List<MProjectExportStateUpdate> getCurrentExportStates(
             @DestinationVariable("projectId") long aProjectId)
         throws AccessDeniedException
     {
-        // Should use this instead:
-        // https://newbedev.com/how-to-reject-topic-subscription-based-on-user-rights-with-spring-websocket
-        if (aPrincipal == null) {
-            throw new AccessDeniedException("Access denied");
-        }
-
         Project project = projectService.getProject(aProjectId);
-        User user = userService.get(aPrincipal.getName());
-
-        if (!projectService.hasRole(user, project, MANAGER) && !userService.isAdministrator(user)) {
-            throw new AccessDeniedException("Access denied");
-        }
 
         return projectExportService.listRunningExportTasks(project).stream() //
                 .map(taskInfo -> new MProjectExportStateUpdate(taskInfo.getMonitor())) //

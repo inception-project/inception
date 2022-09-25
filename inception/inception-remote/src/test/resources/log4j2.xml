@@ -7,6 +7,8 @@
   </Appenders>
   <Loggers>
     <Logger name="de.tudarmstadt" level="INFO"/>
+<!--     <Logger name="org.springframework.security" level="TRACE" /> -->
+    
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

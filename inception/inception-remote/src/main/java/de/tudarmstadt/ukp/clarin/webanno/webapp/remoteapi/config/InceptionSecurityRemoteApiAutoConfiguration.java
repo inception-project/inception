@@ -36,6 +36,8 @@ public class InceptionSecurityRemoteApiAutoConfiguration
             UserDetailsManager aUserDetailsService, HttpSecurity aHttp)
         throws Exception
     {
+        // The remote API should always authenticate against the built-in user-database and
+        // not e.g. against the external pre-authentication
         DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
         authProvider.setUserDetailsService(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
