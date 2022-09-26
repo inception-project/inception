@@ -142,6 +142,14 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-crypto</artifactId>
+    </dependency>
 
     <!-- Swagger / Springdoc -->
     <dependency>
@@ -200,6 +208,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-starter</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
