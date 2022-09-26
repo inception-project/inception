@@ -43,8 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.FileSystemUtils;
 
@@ -55,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.support.spring.StartupWatcher;
 
 /**
  * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with the
@@ -79,7 +76,6 @@ import de.tudarmstadt.ukp.inception.support.spring.StartupWatcher;
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 class AeroRemoteApiController_Authentication_PreAuth_Test
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Authentication_Test";
@@ -89,7 +85,11 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
 
     private @Autowired TestRestTemplate template;
 
-    private String password;
+    private static Project project;
+    private static String password;
+    private static User remoteApiAdminUser;
+    private static User remoteApiNormalUser;
+    private static User nonRemoteNormalUser;
 
     @BeforeAll
     static void setupClass()
@@ -100,20 +100,37 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
     @BeforeEach
     void setup() throws Exception
     {
-        var project = new Project("project1");
-        projectService.createProject(project);
+        setupOnce();
+    }
+
+    void setupOnce() throws Exception
+    {
+        if (project != null) {
+            return;
+        }
 
         password = RandomStringUtils.random(16, true, true);
+
+        project = new Project("project1");
+        projectService.createProject(project);
+
+        remoteApiAdminUser = new User("admin", ROLE_ADMIN, ROLE_REMOTE);
+        remoteApiAdminUser.setPassword(password);
+        userRepository.create(remoteApiAdminUser);
+
+        remoteApiNormalUser = new User("user", ROLE_USER, ROLE_REMOTE);
+        remoteApiNormalUser.setPassword(password);
+        userRepository.create(remoteApiNormalUser);
+
+        nonRemoteNormalUser = new User("non-remote-user", ROLE_USER);
+        nonRemoteNormalUser.setPassword(password);
+        userRepository.create(nonRemoteNormalUser);
     }
 
     @Test
     void thatRemoteApiAdminUserCanAuthenticate()
     {
-        var user = new User("admin", ROLE_ADMIN, ROLE_REMOTE);
-        user.setPassword(password);
-        userRepository.create(user);
-
-        var response = template.withBasicAuth("admin", password)
+        var response = template.withBasicAuth(remoteApiAdminUser.getUsername(), password)
                 .getForEntity(API_BASE + "/projects", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(OK);
@@ -123,12 +140,8 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
     @Test
     void thatRemoteApiNormalUserCanAuthenticate()
     {
-        var user = new User("user", ROLE_USER, ROLE_REMOTE);
-        user.setPassword(password);
-        userRepository.create(user);
-
-        var response = template.withBasicAuth("user", password).getForEntity(API_BASE + "/projects",
-                String.class);
+        var response = template.withBasicAuth(remoteApiNormalUser.getUsername(), password)
+                .getForEntity(API_BASE + "/projects", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(OK);
         assertThat(response.getBody()).as("Returns empty project list").contains("\"body\":[]");
@@ -137,12 +150,8 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
     @Test
     void thatUserCannotAuthenticateWithoutRemoteApiRole()
     {
-        var user = new User("user", ROLE_USER);
-        user.setPassword(password);
-        userRepository.create(user);
-
-        var response = template.withBasicAuth("user", password).getForEntity(API_BASE + "/projects",
-                String.class);
+        var response = template.withBasicAuth(nonRemoteNormalUser.getUsername(), password)
+                .getForEntity(API_BASE + "/projects", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(FORBIDDEN);
         assertThat(response.getBody()).contains("\"Forbidden\"");
@@ -167,12 +176,6 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
         public ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
-        }
-
-        @Bean
-        public StartupWatcher startupWatcher()
-        {
-            return new StartupWatcher();
         }
     }
 }
