@@ -46,7 +46,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.FileSystemUtils;
 
-import com.giffing.wicket.spring.boot.starter.web.WicketWebInitializer;
+import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration
                 LiquibaseAutoConfiguration.class, //
                 EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
-                WicketWebInitializer.class })
+                WicketAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
