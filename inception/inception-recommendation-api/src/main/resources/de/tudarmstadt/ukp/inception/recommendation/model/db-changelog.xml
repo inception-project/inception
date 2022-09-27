@@ -229,8 +229,8 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180301-recommendation-01">
-    <sql>update recommender set alwaysSelected = true where alwaysSelected is null</sql>
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01a">
+    <sql>update recommender set alwaysSelected = 1 where alwaysSelected is null</sql>
     <addNotNullConstraint tableName="recommender"
       columnName="alwaysSelected" columnDataType="BOOLEAN"
      />
