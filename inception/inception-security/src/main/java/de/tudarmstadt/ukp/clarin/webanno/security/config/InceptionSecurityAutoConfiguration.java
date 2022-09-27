@@ -17,20 +17,73 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.sql.DataSource;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-@Component
+import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+
+@EnableWebSecurity
 public class InceptionSecurityAutoConfiguration
 {
-    @Autowired
-    public void configureGlobal(AuthenticationProvider authenticationProvider,
-            AuthenticationManagerBuilder auth)
+    @Bean
+    public UserDetailsManager userDetailsService(DataSource aDataSource,
+            @Lazy AuthenticationConfiguration aAuthenticationConfiguration)
+        throws Exception
     {
-        auth.authenticationProvider(authenticationProvider);
-        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+        return new OverridableUserDetailsManager(aDataSource, aAuthenticationConfiguration);
+    }
+
+    @Bean
+    public GlobalAuthenticationConfigurerAdapter globalAuthenticationConfigurerAdapter(
+            AuthenticationProvider authenticationProvider)
+    {
+        return new GlobalAuthenticationConfigurerAdapter()
+        {
+            @Override
+            public void configure(AuthenticationManagerBuilder aAuth) throws Exception
+            {
+                aAuth.authenticationProvider(authenticationProvider);
+                aAuth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+            }
+        };
+    }
+
+    @Bean(name = "authenticationProvider")
+    @Profile("auto-mode-preauth")
+    public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
+            @Lazy UserDetailsManager aUserDetails)
+    {
+        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
+        authProvider.setPreAuthenticatedUserDetailsService(
+                new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
+                        aUserDetails));
+        return authProvider;
+    }
+
+    @Bean(name = "authenticationProvider")
+    @Profile("auto-mode-builtin")
+    public DaoAuthenticationProvider internalAuthenticationProvider(
+            @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
+    {
+        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+        authProvider.setUserDetailsService(aUserDetails);
+        authProvider.setPasswordEncoder(aPasswordEncoder);
+        return authProvider;
     }
 }
