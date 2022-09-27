@@ -3491,8 +3491,13 @@ export class Visualizer {
    */
   renderDataPatch (patchData: ReadonlyArray<Operation>) {
     Util.profileEnd('invoke getDocument')
-    this.sourceData = jsonpatch.applyPatch(this.sourceData, patchData).newDocument
-    this.rerender()
+    try {
+      this.sourceData = jsonpatch.applyPatch(this.sourceData, patchData).newDocument
+      this.rerender()
+    } catch (error) {
+      console.warn('Error applying patch - reloading annotations', error)
+      this.dispatcher.post('loadAnnotations', [])
+    }
   }
 
   renderDocument () {
