@@ -1417,4 +1417,12 @@
       <column name="annotatorComment" type="LONGTEXT"/>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220930-1" dbms="!postgresql">
+    <modifyDataType tableName="project" columnName="disableExport" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="project" columnName="disableExport" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20220930-1-pg" dbms="postgresql">
+    <sql>ALTER TABLE project ALTER "disableExport" TYPE BOOLEAN USING ("disableExport"::int::bool)</sql>
+  </changeSet>
 </databaseChangeLog>
