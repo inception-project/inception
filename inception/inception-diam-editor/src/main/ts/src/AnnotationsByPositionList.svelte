@@ -22,17 +22,17 @@
         Offsets,
         Relation,
         Span,
-    } from "@inception-project/inception-js-api";
-    import LabelBadge from "./LabelBadge.svelte";
-    import SpanText from "./SpanText.svelte";
-    import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"     
+    } from "@inception-project/inception-js-api"
+    import LabelBadge from "./LabelBadge.svelte"
+    import SpanText from "./SpanText.svelte"
+    import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
 
-    let groupedSpans: Record<string, Span[]>;
-    let groupedRelations: Record<string, Relation[]>;
-    let sortedSpanOffsets: Offsets[];
+    let groupedSpans: Record<string, Span[]>
+    let groupedRelations: Record<string, Relation[]>
+    let sortedSpanOffsets: Offsets[]
 
     $: groupedSpans = groupSpansByPosition(data)
     $: groupedRelations = groupRelationsByPosition(data)
@@ -45,14 +45,13 @@
             {#each sortedSpanOffsets as offsets}
                 {@const spans = groupedSpans[`${offsets}`]}
                 {@const firstSpan = spans[0]}
-                <li class="list-group-item p-0 d-flex">
+                <li class="list-group-item p-0">
                     <div class="flex-grow-1 py-1 px-2">
                         <div class="float-end">
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
                             {/each}
                         </div>
-
                         <SpanText {data} span={firstSpan} />
                     </div>
                 </li>
