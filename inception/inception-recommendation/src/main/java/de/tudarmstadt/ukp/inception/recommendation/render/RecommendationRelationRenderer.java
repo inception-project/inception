@@ -117,8 +117,6 @@ public class RecommendationRelationRenderer
         Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
-        String typeName = typeAdapter.getEncodedTypeName();
-
         Type attachType = CasUtil.getType(cas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
@@ -158,9 +156,8 @@ public class RecommendationRelationRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(suggestion.getFeature(), annotation);
 
-                VArc arc = new VArc(layer, suggestion.getVID(), typeName, new VID(source),
-                        new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
-                        featureAnnotation, COLOR);
+                VArc arc = new VArc(layer, suggestion.getVID(), new VID(source), new VID(target),
+                        "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
 
                 List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
                         suggestion.getLabel());

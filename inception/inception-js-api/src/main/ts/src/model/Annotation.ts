@@ -15,10 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID } from ".";
+import { VID } from '.'
+import { Layer } from './Layer';
 
 export interface Annotation {
-    vid: VID;
-    color: string;
-    label: string;
+    layer: Layer
+
+    vid: VID
+
+    /**
+     * Color (optional)
+     */
+    color?: string;
+
+    /**
+     * Label (optional)
+     */
+    label?: string;
 }

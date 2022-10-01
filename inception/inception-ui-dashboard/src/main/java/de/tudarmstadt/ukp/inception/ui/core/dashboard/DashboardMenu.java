@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
@@ -45,11 +48,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import wicket.contrib.input.events.EventType;
 
 public class DashboardMenu
     extends Panel
@@ -180,6 +185,12 @@ public class DashboardMenu
         menulink.add(new Label("label", item.getLabel()));
         menulink.add(AttributeAppender.append("class",
                 () -> getPage().getClass().equals(pageClass) ? "active" : ""));
+        if (item.shortcut() != null && item.shortcut().length > 0) {
+            menulink.add(new InputBehavior(item.shortcut(), EventType.click));
+            menulink.add(AttributeModifier.append("title",
+                    "[" + Stream.of(item.shortcut()).map(Object::toString).collect(joining(" + "))
+                            + "]"));
+        }
         aItem.add(menulink);
     }
 

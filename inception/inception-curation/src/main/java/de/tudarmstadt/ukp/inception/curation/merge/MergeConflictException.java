@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
- * Indicates that a merge operation could not be performed because there was a conflict, e.g. because
- * the target CAS already contains a conflicting annotation at the same location.
+ * Indicates that a merge operation could not be performed because there was a conflict, e.g.
+ * because the target CAS already contains a conflicting annotation at the same location.
  */
 public class MergeConflictException
     extends AnnotationException

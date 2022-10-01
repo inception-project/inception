@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Viewport } from '../model';
-
-declare var Wicket: any;
+import { frameCallbackType } from '@stomp/stompjs'
 
 /**
  * This callback will accept the annotation data.
  */
-export declare type dataCallback = (data: Viewport) => void;
+export declare type dataCallback = (data: any) => void;
 
 export interface DiamWebsocket {
     connect(aWsEndpoint: string): void;
+
+    onConnect: frameCallbackType
 
     disconnect(): void;
 

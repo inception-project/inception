@@ -9,7 +9,11 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build": "esbuild --bundle src/index.ts --outdir=dist --minify --sourcemap"
+    "build": "esbuild --bundle index.ts --outdir=dist --minify --sourcemap"
+  },
+  "dependencies": {
+    "@stomp/stompjs": "${stomp-stompjs.version}",
+    "@types/stompjs": "${types-stompjs.version}"
   },
   "devDependencies": {
     "chai": "${chai.version}",

@@ -68,6 +68,7 @@ public class VID
 
     public static final VID NONE_ID = new VID(NONE);
 
+    @Deprecated
     private final long layerId;
     private final int annotationId;
     private final int subAnnotationId;
@@ -76,72 +77,102 @@ public class VID
     private final String extensionId;
     private final String extensionPayload;
 
+    private VID(Builder builder)
+    {
+        this.layerId = NONE;
+        this.annotationId = builder.annotationId;
+        this.subAnnotationId = builder.subAnnotationId;
+        this.attribute = builder.attribute;
+        this.slot = builder.slot;
+        this.extensionId = builder.extensionId;
+        this.extensionPayload = builder.extensionPayload;
+    }
+
+    @Deprecated
     public VID(FeatureStructure aFS)
     {
         this(getAddr(aFS), NONE, NONE, NONE);
     }
 
+    /**
+     * For testing only.
+     * 
+     * @param aAnnotationID
+     *            the annotation ID
+     */
     public VID(int aAnnotationID)
     {
         this(aAnnotationID, NONE, NONE, NONE);
     }
 
+    @Deprecated
     public VID(int aAnnotationID, String aExtensionId, String aPayload)
     {
         this(aExtensionId, -1l, aAnnotationID, NONE, NONE, NONE, aPayload);
     }
 
+    @Deprecated
     public VID(AnnotationFS aFS, int aAttribute)
     {
         this(getAddr(aFS), NONE, aAttribute, NONE);
     }
 
+    @Deprecated
     public VID(int aAnnotationID, int aAttribute)
     {
         this(aAnnotationID, NONE, aAttribute, NONE);
     }
 
+    @Deprecated
     public VID(AnnotationFS aFS, int aAttribute, int aSlot)
     {
         this(getAddr(aFS), NONE, aAttribute, aSlot);
     }
 
+    @Deprecated
     public VID(int aAnnotationID, int aAttribute, int aSlot)
     {
         this(aAnnotationID, NONE, aAttribute, aSlot);
     }
 
+    @Deprecated
     public VID(AnnotationFS aFS, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(getAddr(aFS), aSubAnnotationId, aAttribute, aSlot);
     }
 
+    @Deprecated
     public VID(String aExtensionId, int aAnnotationID)
     {
         this(aAnnotationID, aExtensionId, null);
     }
 
+    @Deprecated
     public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, -1l, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
 
+    @Deprecated
     public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId)
     {
         this(null, aLayerId, aAnnotationID, aSubAnnotationId, NONE, NONE, null);
     }
 
+    @Deprecated
     public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
 
+    @Deprecated
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot)
     {
         this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
 
+    @Deprecated
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             String aExtensionPayload)
     {
@@ -149,6 +180,7 @@ public class VID
                 aExtensionPayload);
     }
 
+    @Deprecated
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot, String aExtensionPayload)
     {
@@ -161,12 +193,6 @@ public class VID
         extensionPayload = aExtensionPayload;
     }
 
-    public static VID copyVID(VID aVID)
-    {
-        return new VID(aVID.getExtensionId(), aVID.getLayerId(), aVID.getId(), aVID.getSubId(),
-                aVID.getAttribute(), aVID.getSlot(), aVID.getExtensionPayload());
-    }
-
     public boolean isSet()
     {
         return annotationId >= 0;
@@ -177,6 +203,7 @@ public class VID
         return !isSet();
     }
 
+    @Deprecated
     public long getLayerId()
     {
         return layerId;
@@ -376,5 +403,76 @@ public class VID
             return false;
         }
         return true;
+    }
+
+    public static VID of(FeatureStructure aFS)
+    {
+        return new VID(aFS);
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private int annotationId = NONE;
+        private int subAnnotationId = NONE;
+        private int attribute = NONE;
+        private int slot = NONE;
+        private String extensionId;
+        private String extensionPayload;
+
+        private Builder()
+        {
+        }
+
+        public Builder forAnnotation(AnnotationFS aAnnotation)
+        {
+            withAnnotationId(getAddr(aAnnotation));
+            return this;
+        }
+
+        public Builder withAnnotationId(int aAnnotationId)
+        {
+            this.annotationId = aAnnotationId;
+            return this;
+        }
+
+        public Builder withSubAnnotationId(int aSubAnnotationId)
+        {
+            this.subAnnotationId = aSubAnnotationId;
+            return this;
+        }
+
+        public Builder withAttribute(int aAttribute)
+        {
+            this.attribute = aAttribute;
+            return this;
+        }
+
+        public Builder withSlot(int aSlot)
+        {
+            this.slot = aSlot;
+            return this;
+        }
+
+        public Builder withExtensionId(String aExtensionId)
+        {
+            this.extensionId = aExtensionId;
+            return this;
+        }
+
+        public Builder withExtensionPayload(String aExtensionPayload)
+        {
+            this.extensionPayload = aExtensionPayload;
+            return this;
+        }
+
+        public VID build()
+        {
+            return new VID(this);
+        }
     }
 }

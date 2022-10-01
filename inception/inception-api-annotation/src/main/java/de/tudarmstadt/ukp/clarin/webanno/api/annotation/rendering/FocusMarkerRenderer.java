@@ -48,6 +48,11 @@ public class FocusMarkerRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
+        if (aRequest.getState() == null) {
+            // We may not have a state, e.g. when rendering through WebSocket
+            return;
+        }
+
         VID selectedAnnotation = aRequest.getState().getSelection().getAnnotation();
         if (selectedAnnotation.isSet()) {
             aVDoc.add(new VAnnotationMarker(VMarker.FOCUS, selectedAnnotation));

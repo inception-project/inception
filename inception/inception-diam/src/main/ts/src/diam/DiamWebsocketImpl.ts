@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs'
-import { DiamWebsocket, Viewport } from '@inception-project/inception-js-api'
+import { DiamWebsocket } from '@inception-project/inception-js-api'
 import * as jsonpatch from 'fast-json-patch'
-
-declare let Wicket: any
 
 /**
  * This callback will accept the annotation data.
  */
-export declare type dataCallback = (data: Viewport) => void;
+export declare type dataCallback = (data: any) => void;
 
 export class DiamWebsocketImpl implements DiamWebsocket {
   private stompClient: Client
@@ -32,8 +30,7 @@ export class DiamWebsocketImpl implements DiamWebsocket {
   private initSubscription: StompSubscription
   private updateSubscription: StompSubscription
 
-  private data: Viewport
-  private diff: any
+  private data: any
 
   public onConnect: frameCallbackType
 

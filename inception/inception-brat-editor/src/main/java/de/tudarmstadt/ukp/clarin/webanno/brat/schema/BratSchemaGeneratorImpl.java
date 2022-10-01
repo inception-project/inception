@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
 
 /**
  * <p>
@@ -98,9 +97,8 @@ public class BratSchemaGeneratorImpl
             }
 
             if (hasLinkFeatures) {
-                String bratTypeName = TypeUtil.getUiTypeName(layer);
-                arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
-                        bratTypeName, null, "triangle,5", "3,3"));
+                arcs.add(new RelationType(layer.getName(), layer.getUiName(),
+                        getBratTypeName(layer), getBratTypeName(layer), null, "triangle,5", "3,3"));
             }
 
             // Styles for the remaining relation and chain layers
@@ -153,14 +151,14 @@ public class BratSchemaGeneratorImpl
 
     private EntityType configureEntityType(AnnotationLayer aLayer)
     {
-        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
+        String bratTypeName = getBratTypeName(aLayer);
         return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
     }
 
     private RelationType configureRelationType(AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
-        String attachingLayerBratTypeName = TypeUtil.getUiTypeName(aAttachingLayer);
+        String attachingLayerBratTypeName = getBratTypeName(aAttachingLayer);
 
         // // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
@@ -189,8 +187,13 @@ public class BratSchemaGeneratorImpl
             break;
         }
 
-        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
+        String bratTypeName = getBratTypeName(aLayer);
         return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
                 attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
+    }
+
+    public static String getBratTypeName(AnnotationLayer aLayer)
+    {
+        return aLayer.getId().toString();
     }
 }

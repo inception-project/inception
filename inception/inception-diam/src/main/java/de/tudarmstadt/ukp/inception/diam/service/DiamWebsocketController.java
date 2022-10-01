@@ -60,11 +60,12 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -75,8 +76,11 @@ import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
@@ -89,8 +93,11 @@ public class DiamWebsocketController
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    public static final String FORMAT_LEGACY = "legacy";
+
     public static final String PARAM_FROM = "from";
     public static final String PARAM_TO = "to";
+    public static final String PARAM_FORMAT = "format";
 
     public static final PropertyPlaceholderHelper PLACEHOLDER_RESOLVER = new PropertyPlaceholderHelper(
             "{", "}", null, false);
@@ -100,7 +107,8 @@ public class DiamWebsocketController
             + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}";
 
     public static final String DOCUMENT_VIEWPORT_TOPIC_TEMPLATE = //
-            DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO + "}";
+            DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO
+                    + "}/format/{" + PARAM_FORMAT + "}";
 
     // public static final String ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE = //
     // DOCUMENT_BASE_TOPIC_TEMPLATE + "/delete";
@@ -115,27 +123,33 @@ public class DiamWebsocketController
             DOCUMENT_BASE_TOPIC_TEMPLATE + "/select";
 
     private final SimpMessagingTemplate msgTemplate;
-    private final PreRenderer preRenderer;
+    private final RenderingPipeline renderingPipeline;
     private final DocumentService documentService;
     private final RepositoryProperties repositoryProperties;
     private final AnnotationSchemaService schemaService;
     private final ProjectService projectService;
     private final UserDao userRepository;
+    private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
+    private final UserPreferencesService userPreferencesService;
 
     private final LoadingCache<ViewportDefinition, ViewportState> activeViewports;
 
-    public DiamWebsocketController(SimpMessagingTemplate aMsgTemplate, PreRenderer aPreRenderer,
-            DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
-            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
-            UserDao aUserRepository)
+    public DiamWebsocketController(SimpMessagingTemplate aMsgTemplate,
+            RenderingPipeline aRenderingPipeline, DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties, AnnotationSchemaService aSchemaService,
+            ProjectService aProjectService, UserDao aUserRepository,
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
+            UserPreferencesService aUserPreferencesService)
     {
         msgTemplate = aMsgTemplate;
-        preRenderer = aPreRenderer;
+        renderingPipeline = aRenderingPipeline;
         documentService = aDocumentService;
         repositoryProperties = aRepositoryProperties;
         schemaService = aSchemaService;
         projectService = aProjectService;
         userRepository = aUserRepository;
+        vDocumentSerializerExtensionPoint = aVDocumentSerializerExtensionPoint;
+        userPreferencesService = aUserPreferencesService;
 
         activeViewports = Caffeine.newBuilder() //
                 .expireAfterAccess(Duration.ofMinutes(30)) //
@@ -187,11 +201,13 @@ public class DiamWebsocketController
 
     @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
     public JsonNode onSubscribeToAnnotationDocument(SimpMessageHeaderAccessor aHeaderAccessor,
-            Principal aPrincipal, @DestinationVariable(PARAM_PROJECT) long aProjectId,
+            Principal aPrincipal, //
+            @DestinationVariable(PARAM_PROJECT) long aProjectId,
             @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
             @DestinationVariable(PARAM_USER) String aUser,
             @DestinationVariable(PARAM_FROM) int aViewportBegin,
-            @DestinationVariable(PARAM_TO) int aViewportEnd)
+            @DestinationVariable(PARAM_TO) int aViewportEnd,
+            @DestinationVariable(PARAM_FORMAT) String aFormat)
         throws IOException
     {
         Project project = getProject(aProjectId);
@@ -201,7 +217,7 @@ public class DiamWebsocketController
             MDC.put(KEY_USERNAME, aPrincipal.getName());
 
             ViewportDefinition vpd = new ViewportDefinition(aProjectId, aDocumentId, aUser,
-                    aViewportBegin, aViewportEnd);
+                    aViewportBegin, aViewportEnd, aFormat);
 
             // Ensure that the viewport is registered
             ViewportState vps = activeViewports.get(vpd);
@@ -210,12 +226,10 @@ public class DiamWebsocketController
             vps.addSubscription(aHeaderAccessor.getSessionId(),
                     aHeaderAccessor.getSubscriptionId());
 
-            VDocument vdoc = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd);
-
-            JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(new MViewportInit(vdoc));
-            vps.setJson(newJson);
-
-            return newJson;
+            JsonNode json = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd,
+                    aFormat);
+            vps.setJson(json);
+            return json;
         }
         finally {
             MDC.remove(KEY_REPOSITORY_PATH);
@@ -254,16 +268,20 @@ public class DiamWebsocketController
     // }
     // }
 
-    private VDocument render(Project aProject, long aDocumentId, String aUser, int aViewportBegin,
-            int aViewportEnd)
+    private JsonNode render(Project aProject, long aDocumentId, String aUser, int aViewportBegin,
+            int aViewportEnd, String aFormat)
         throws IOException
     {
         SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
         User user = userRepository.get(aUser);
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
+        AnnotationPreference prefs = userPreferencesService.loadPreferences(doc.getProject(),
+                user.getUsername(), Mode.ANNOTATION);
+
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
+                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(toList());
 
         RenderRequest request = RenderRequest.builder() //
@@ -273,9 +291,16 @@ public class DiamWebsocketController
                 .withVisibleLayers(layers) //
                 .build();
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request);
-        return vdoc;
+        VDocument vdoc = renderingPipeline.render(request);
+
+        if (FORMAT_LEGACY.equals(aFormat)) {
+            return JSONUtil.getObjectMapper().valueToTree(new MViewportInit(vdoc));
+        }
+
+        var serializer = vDocumentSerializerExtensionPoint.getExtension(aFormat).orElseThrow(
+                () -> new IllegalStateException("Unsupported format [" + aFormat + "]"));
+
+        return JSONUtil.getObjectMapper().valueToTree(serializer.render(vdoc, request));
     }
 
     private ViewportState initState(ViewportDefinition aVpd)
@@ -311,12 +336,8 @@ public class DiamWebsocketController
 
         try (CasStorageSession session = CasStorageSession.openNested()) {
             Project project = projectService.getProject(vpd.getProjectId());
-            VDocument vdoc = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
-                    vpd.getEnd());
-
-            MViewportInit fullRender = new MViewportInit(vdoc);
-
-            JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(fullRender);
+            JsonNode newJson = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
+                    vpd.getEnd(), vpd.getFormat());
 
             JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
 

@@ -23,18 +23,18 @@ public enum ReadonlyColoringBehaviour
     NORMAL("normal", null),
     GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY);
 
-    private String descriptiveName;
-    private ColoringStrategyType t;
+    private final String descriptiveName;
+    private final ColoringStrategyType strategy;
 
-    private ReadonlyColoringBehaviour(String descriptiveName, ColoringStrategyType t)
+    private ReadonlyColoringBehaviour(String aDescriptiveName, ColoringStrategyType aStrategy)
     {
-        this.descriptiveName = descriptiveName;
-        this.t = t;
+        descriptiveName = aDescriptiveName;
+        strategy = aStrategy;
     }
 
     public ColoringStrategyType getColoringStrategy()
     {
-        return t;
+        return strategy;
     }
 
     public String getDescriptiveName()

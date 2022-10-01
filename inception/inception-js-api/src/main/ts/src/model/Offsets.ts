@@ -16,3 +16,13 @@
  * limitations under the License.
  */
 export type Offsets = [begin: number, end: number];
+
+export function compareOffsets (offsets1: Offsets, offsets2: Offsets): number {
+  // Ascending by begin offset
+  if (offsets1[0] < offsets2[0]) return -1
+  if (offsets1[0] > offsets2[0]) return 1
+  // Descending by end offset
+  if (offsets1[1] < offsets2[1]) return 1
+  if (offsets1[1] > offsets2[1]) return -1
+  return 0
+}

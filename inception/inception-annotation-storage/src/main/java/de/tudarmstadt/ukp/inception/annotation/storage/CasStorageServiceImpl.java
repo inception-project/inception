@@ -392,8 +392,9 @@ public class CasStorageServiceImpl
             // cache
             else if (SHARED_READ_ONLY_ACCESS.equals(aAccessMode)) {
                 if (!AUTO_CAS_UPGRADE.equals(aUpgradeMode)) {
-                    throw new IllegalArgumentException("When requesting a shared read-only CAS, the "
-                            + "access mode must be " + AUTO_CAS_UPGRADE);
+                    throw new IllegalArgumentException(
+                            "When requesting a shared read-only CAS, the " + "access mode must be "
+                                    + AUTO_CAS_UPGRADE);
                 }
 
                 // Ensure that the CAS is not being re-written and temporarily unavailable while we

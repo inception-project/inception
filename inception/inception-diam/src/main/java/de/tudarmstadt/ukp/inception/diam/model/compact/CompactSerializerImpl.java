@@ -23,7 +23,10 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -42,6 +45,13 @@ public class CompactSerializerImpl
     implements CompactSerializer
 {
     public static final String ID = "compact";
+
+    private final AnnotationEditorProperties properties;
+
+    public CompactSerializerImpl(AnnotationEditorProperties aProperties)
+    {
+        properties = aProperties;
+    }
 
     @Override
     public String getId()
@@ -66,6 +76,16 @@ public class CompactSerializerImpl
     private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
+            if (!properties.isTokenLayerEditable()
+                    && Token.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
+            if (!properties.isSentenceLayerEditable()
+                    && Sentence.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<CompactRange> offsets = vspan.getRanges().stream()
                         .map(range -> new CompactRange(range.getBegin(), range.getEnd()))

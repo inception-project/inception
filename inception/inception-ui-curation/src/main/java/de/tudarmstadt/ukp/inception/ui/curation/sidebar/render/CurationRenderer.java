@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -107,7 +108,12 @@ public class CurationRenderer
     @Override
     public boolean accepts(RenderRequest aContext)
     {
-        return aContext.getState().getMode() == Mode.ANNOTATION;
+        AnnotatorState state = aContext.getState();
+        if (state == null) {
+            return false;
+        }
+
+        return state.getMode() == Mode.ANNOTATION;
     }
 
     @Override

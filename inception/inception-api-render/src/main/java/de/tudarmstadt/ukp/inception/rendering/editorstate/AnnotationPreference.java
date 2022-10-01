@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour
  *
  */
 public class AnnotationPreference
-    implements Serializable
+    implements Serializable, ColoringPreferences
 {
     private static final long serialVersionUID = 2202236699782758271L;
 
@@ -59,11 +59,8 @@ public class AnnotationPreference
 
     private boolean scrollPage = true;
 
-    // // determine if static color for annotations will be used or we shall
-    // // dynamically generate one
     @Deprecated
-    private boolean staticColor = true; // this is only here to not break previous user settings,
-                                        // its not an option that can be set anymore
+    private boolean staticColor = true; //
 
     private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
 
@@ -146,6 +143,7 @@ public class AnnotationPreference
         scrollPage = aScrollPage;
     }
 
+    @Override
     public Map<Long, ColoringStrategyType> getColorPerLayer()
     {
         return colorPerLayer;
@@ -156,6 +154,7 @@ public class AnnotationPreference
         this.colorPerLayer = colorPerLayer;
     }
 
+    @Override
     public ReadonlyColoringBehaviour getReadonlyLayerColoringBehaviour()
     {
         return readonlyLayerColoringBehaviour;
@@ -167,6 +166,10 @@ public class AnnotationPreference
         this.readonlyLayerColoringBehaviour = readonlyLayerColoringBehaviour;
     }
 
+    /**
+     * @deprecated this is only here to not break previous user settings, its not an option that can
+     *             be set anymore and is also no longer used anywhere
+     */
     @Deprecated
     public boolean isStaticColor()
     {

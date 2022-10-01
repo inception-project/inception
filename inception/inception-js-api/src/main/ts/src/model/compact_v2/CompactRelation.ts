@@ -15,11 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Arc } from "../model/Arc";
-import { Span } from "../model/Span";
+import { VID, Relation, AnnotatedText } from '..'
+import { CompactArgument, unpackCompactArgument } from './CompactArgument'
+import { CompactRelationAttributes } from './CompactRelationAttributes'
 
-export interface Viewport {
-    text: string;
-    arcs: Arc[];
-    spans: Span[];
+export type CompactRelation = [
+  layerId: number,
+  vid: VID,
+  arguments: Array<CompactArgument>,
+  attributes?: CompactRelationAttributes
+]
+
+export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation): Relation {
+  const cooked = new Relation()
+  cooked.layer = doc.__getOrCreateLayer(raw[0])
+  cooked.vid = raw[1]
+  cooked.arguments = raw[2].map(arg => unpackCompactArgument(doc, arg))
+  cooked.color = raw[3]?.c
+  cooked.label = raw[3]?.l
+  return cooked
 }

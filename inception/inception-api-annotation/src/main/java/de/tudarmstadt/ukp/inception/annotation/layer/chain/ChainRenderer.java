@@ -156,8 +156,6 @@ public class ChainRenderer
                     continue; // Go to next link
                 }
 
-                String bratTypeName = typeAdapter.getEncodedTypeName();
-
                 // Render span
                 {
                     Optional<VRange> range = VRange.clippedRange(aResponse, linkFs);
@@ -169,8 +167,8 @@ public class ChainRenderer
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
 
-                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName,
-                            range.get(), colorIndex, bratLabelText);
+                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, range.get(), colorIndex,
+                            bratLabelText);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
 
@@ -193,8 +191,8 @@ public class ChainRenderer
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
-                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
-                            linkFs, colorIndex, bratLabelText));
+                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), prevLinkFs, linkFs,
+                            colorIndex, bratLabelText));
                 }
 
                 // Render errors if required features are missing

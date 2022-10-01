@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -65,7 +66,6 @@ public class RecommendationRenderer
             FeatureSupportRegistry aFsRegistry, RecommenderProperties aRecommenderProperties,
             UserDao aUserRegistry)
     {
-        super();
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
         fsRegistry = aFsRegistry;
@@ -82,9 +82,15 @@ public class RecommendationRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
-        // do not show predictions during curation or when viewing others' work
-        if (aRequest.getState().getMode() != ANNOTATION || !aRequest.getAnnotationUser()
-                .getUsername().equals(userRegistry.getCurrentUsername())) {
+        AnnotatorState state = aRequest.getState();
+
+        // do not show predictions during curation
+        if (state != null && state.getMode() != ANNOTATION) {
+            return false;
+        }
+
+        // do not show predictions when viewing others' work
+        if (!aRequest.getAnnotationUser().getUsername().equals(userRegistry.getCurrentUsername())) {
             return false;
         }
 

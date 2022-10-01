@@ -25,6 +25,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import wicket.contrib.input.events.key.KeyType;
 
 @Component
 public class ManageUsersPageMenuItem
@@ -63,5 +64,11 @@ public class ManageUsersPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return ManageUsersPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.u };
     }
 }

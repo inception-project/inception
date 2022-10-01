@@ -21,13 +21,19 @@ import java.util.Map;
 import java.util.Queue;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
 
 public interface ColoringService
 {
-    ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
+    ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringPreferences aPreferences,
             Map<String[], Queue<String>> aColorQueues);
 
-    ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer,
-            AnnotationPreference aPreferences);
+    /**
+     * Get the default coloring strategy for the given layer.
+     * 
+     * @param aLayer
+     *            the layer.
+     * @return the default coloring strategy.
+     */
+    ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer);
 }

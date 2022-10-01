@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
-import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 
 declare const Wicket: any
 
@@ -62,14 +62,15 @@ export class DiamAjaxImpl implements DiamAjax {
     ajaxCall()
   }
 
-  selectAnnotation (id: VID): void {
+  selectAnnotation (id: VID, options?: DiamSelectAnnotationOptions): void {
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({
         m: 'POST',
         u: this.ajaxEndpoint,
         ep: {
           action: 'selectAnnotation',
-          id
+          id,
+          scrollTo: options?.scrollTo
         }
       })
     })

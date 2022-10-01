@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
@@ -68,8 +69,10 @@ public class SelectAnnotationHandler
         try {
             AnnotationPageBase page = getPage();
 
+            IRequestParameters requestParameters = aRequest.getRequestParameters();
+
             VID vid = VID.parseOptional(
-                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
+                    requestParameters.getParameterValue(PARAM_ID).toOptionalString());
 
             if (vid.isNotSet() || vid.isSynthetic()) {
                 return new DefaultAjaxResponse(getAction(aRequest));
@@ -83,7 +86,13 @@ public class SelectAnnotationHandler
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
             state.getSelection().set(adapter.select(vid, fs));
 
-            page.getAnnotationActionHandler().actionSelect(aTarget);
+            if (requestParameters.getParameterValue(PARAM_SCROLL_TO).toBoolean(false)) {
+                page.getAnnotationActionHandler().actionSelectAndJump(aTarget,
+                        state.getSelection().getAnnotation());
+            }
+            else {
+                page.getAnnotationActionHandler().actionSelect(aTarget);
+            }
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
