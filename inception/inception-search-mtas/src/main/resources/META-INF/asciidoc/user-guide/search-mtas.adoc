@@ -2,22 +2,22 @@
 
 == Mtas search syntax
 
-The INCEpTION Mtas search provider allows queries to be executed using CQL (Corpus 
+The {product-name} Mtas search provider allows queries to be executed using CQL (Corpus 
 Query Language), as shown in the following examples.
 More examples and information about CQL syntax can be found 
-in https://meertensinstituut.github.io/mtas/search_cql.html.
+at https://meertensinstituut.github.io/mtas/search_cql.html.
 
 When performing queries, the user must reference the annotation types using the layer names, 
 as defined in the project schema. In the same way, the features must be referenced using their names 
 as defined in the project schema. In both cases, empty spaces in the names must be replaced by 
 an underscore. 
 
-Thus, *Lemma* refers to the *Lemma* layer, *Lemma.Lemma* refers to the the *Lemma* feature in the 
-*Lemma* layer. In the same way, *Named_entity* refers to *Named entity* layer, and 
-*Named_entity.value* refers to the *value* feature in the *Named entity* layer.
+Thus, `Lemma` refers to the *Lemma* layer, `Lemma.Lemma` refers to the the *Lemma* feature in the 
+*Lemma* layer. In the same way, `Named_entity` refers to *Named entity* layer, and 
+`Named_entity.value` refers to the *value* feature in the *Named entity* layer.
 
-Annotations made over single tokens can be queried using the [...] syntax, while annotations 
-made over multiple tokens must be queried using the <../> syntax. 
+Annotations made over single tokens can be queried using the `[...]` syntax, while annotations 
+made over multiple tokens must be queried using the `<.../>` syntax. 
 
 In the first case, the user must always provide a feature and a value. The following syntax returns 
 all single token annotations of the *LayerX* layer whose *FeatureX* feature have the given value.
@@ -170,31 +170,26 @@ The capital of Galicia
 
 === Relation layer queries
 
-When relations are index, they are indexed by their target span.
+{product-name} allows queries over relation annotations as well. When relations are indexed, they
+are indexed by the position of their target span. That entails that match highlighted in the query
+corresponds to text of the target of the relation. 
 
-.Search for dependency targets
-----
-<Dependency/>
-----
+For the following examples, we assume a span layer called `component` and a relation layer called `rel` attached to it. Both layers have a string feature called `value`.
 
-.Search for dependency based on a feature value
+.Search for rel annotation by feature on the relation
 ----
-<Dependency.Relation="nsubj"/>
-----
-
-.Search for dependency target by the source text
-----
-<Dependency-source="John"/>
+<rel.value="foo"/>
 ----
 
-.Search for dependency target by the target text
+.Search for rel annotation by the text of the source annotation
 ----
-<Dependency-target="Miller"/>
+<rel-source="foo"/>
 ----
 
-The following examples work for custom relation layers, but not for the built-in **Dependency**
-layer. We assume a span layer called `component` and a relation layer called `rel` attached to it.
-Both layers have a string feature called `value`.
+.Search for rel annotation by the text of the target annotation
+----
+<rel-target="foo"/>
+----
 
 .Search for rel annotations by feature on the relation source
 ----
@@ -206,6 +201,15 @@ Both layers have a string feature called `value`.
 <rel-target.value="foo"/>
 ----
 
+.Search for rel annotations by feature on the relation and on the relation target
+----
+<rel.value="bar"/> fullyalignedwith <rel-target.value="foo"/>
+----
+
+.Search for rel annotations by feature on the relation and on the relation source and target
+----
+<rel.value="bar"/> fullyalignedwith (<rel-source.value="foo"/> fullyalignedwith <rel-target.value="foo"/>)
+----
 
 === Boolean feature queries
 
