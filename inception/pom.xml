@@ -90,6 +90,7 @@
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.5</mariadb.driver.version>
+    <postgres.driver.version>42.5.0</postgres.driver.version>
     <hibernate.version>5.6.10.Final</hibernate.version>
     <hibernate.validator.version>6.2.3.Final</hibernate.validator.version>
 
@@ -2033,6 +2034,11 @@
         <groupId>org.mariadb.jdbc</groupId>
         <artifactId>mariadb-java-client</artifactId>
         <version>${mariadb.driver.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgres.driver.version}</version>
       </dependency>
 
       <dependency>
