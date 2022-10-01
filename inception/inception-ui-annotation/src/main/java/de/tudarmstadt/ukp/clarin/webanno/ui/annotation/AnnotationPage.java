@@ -38,7 +38,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -55,6 +54,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
+
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
+import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -74,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
@@ -123,6 +125,7 @@ public class AnnotationPage
 
     private long currentprojectId;
 
+    private WebMarkupContainer editorContainer;
     private WebMarkupContainer centerArea;
     private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
@@ -161,17 +164,24 @@ public class AnnotationPage
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        add(centerArea);
+        queue(centerArea);
 
         actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
 
-        add(createRightSidebar());
+        queue(createRightSidebar());
 
         createAnnotationEditor();
 
         leftSidebar = createLeftSidebar();
-        add(leftSidebar);
+        queue(leftSidebar);
+
+        editorContainer = new WebMarkupContainer("annotation-editor-container");
+        editorContainer.setOutputMarkupId(true);
+        queue(editorContainer);
+
+        add(new SplitterBehavior("#" + editorContainer.getMarkupId(),
+                new Options("orientation", Options.asString("horizontal")), new SplitterAdapter()));
     }
 
     @Override
@@ -340,10 +350,7 @@ public class AnnotationPage
     {
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupPlaceholderTag(true);
-        // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style",
-                LoadableDetachableModel.of(() -> String.format("flex-basis: %d%%;",
-                        getModelObject().getPreferences().getSidebarSizeRight()))));
+
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
         rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getSelectableLayers)
@@ -508,7 +515,13 @@ public class AnnotationPage
             if (aTarget != null) {
                 // Update URL for current document
                 updateUrlFragment(aTarget);
-                WicketUtil.refreshPage(aTarget, getPage());
+
+                // Refresh the sidebars and editor without disturbing the splitters
+                editorContainer.forEach(child -> {
+                    if (child.getOutputMarkupId()) {
+                        aTarget.add(child);
+                    }
+                });
             }
 
             applicationEventPublisherHolder.get().publishEvent(

@@ -17,13 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import static java.lang.String.format;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -60,7 +57,6 @@ public class SidebarPanel
 
         Validate.notNull(aActionHandler, "Action handler must not be null");
 
-        setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
         actionHandler = aActionHandler;
@@ -73,12 +69,6 @@ public class SidebarPanel
 
         add(new AttributeAppender("class",
                 LoadableDetachableModel.of(() -> tabsPanel.isExpanded() ? "" : "collapsed"), " "));
-
-        // Override sidebar width from preferences
-        add(new AttributeModifier("style",
-                LoadableDetachableModel.of(() -> tabsPanel.isExpanded()
-                        ? format("flex-basis: %d%%;", aWidthModel.orElse(20).getObject())
-                        : "")));
     }
 
     @Override
