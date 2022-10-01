@@ -29,6 +29,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,9 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.StyleAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -80,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
@@ -125,12 +131,17 @@ public class AnnotationPage
 
     private long currentprojectId;
 
-    private WebMarkupContainer editorContainer;
-    private WebMarkupContainer centerArea;
-    private WebMarkupContainer actionBar;
+    private final WebMarkupContainer leftSplitterContainer;
+    private final SplitterBehavior leftSplitterBehavior;
+    private final WebMarkupContainer leftSidebarContainer;
+    private final WebMarkupContainer rightSplitterContainer;
+    private final WebMarkupContainer centerAreaContainer;
+    private final WebMarkupContainer centerArea;
+    private final WebMarkupContainer actionBar;
+    private final SidebarPanel leftSidebar;
+    private final AnnotationDetailEditorPanel detailEditor;
+
     private AnnotationEditorBase annotationEditor;
-    private AnnotationDetailEditorPanel detailEditor;
-    private SidebarPanel leftSidebar;
 
     public AnnotationPage(final PageParameters aPageParameters)
     {
@@ -151,37 +162,137 @@ public class AnnotationPage
 
         handleParameters(document, focus, user);
 
-        createChildComponents();
-
-        updateDocumentView(null, null, null, focus);
-    }
-
-    private void createChildComponents()
-    {
         add(createUrlFragmentBehavior());
+
+        detailEditor = createDetailEditor();
+
+        leftSplitterContainer = new WebMarkupContainer("splitter-left");
+        leftSplitterContainer.setOutputMarkupId(true);
+
+        leftSplitterBehavior = new SplitterBehavior("#" + leftSplitterContainer.getMarkupId(),
+                new Options("orientation", Options.asString("horizontal")) //
+                        .set("panes", //
+                                new Options("size", Options.asString("20%")), //
+                                new Options("size", Options.asString("80%"))), //
+                new SplitterAdapter());
+
+        leftSplitterContainer.add(new StyleAttributeModifier()
+        {
+            private static final long serialVersionUID = 7341058776832932461L;
+
+            @Override
+            protected Map<String, String> update(Map<String, String> aOldStyles)
+            {
+                if (!leftSidebar.isCollapsed()) {
+                    return Map.of("width", "100%", "height", "100%");
+                }
+                return emptyMap();
+            }
+        });
+
+        leftSplitterContainer.add(new ClassAttributeModifier()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected Set<String> update(Set<String> aOldClasses)
+            {
+                if (leftSidebar.isCollapsed()) {
+                    return Set.of("flex-h-container");
+                }
+                return emptySet();
+            }
+        });
+
+        rightSplitterContainer = buildRightSplitter();
+
+        rightSplitterContainer.add(leftSplitterContainer);
+        add(rightSplitterContainer);
+
+        rightSplitterContainer.add(createRightSidebar());
+
+        leftSidebarContainer = new WebMarkupContainer("leftSidebarContainer");
+        leftSidebarContainer.add(new ClassAttributeModifier()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected Set<String> update(Set<String> aOldClasses)
+            {
+                if (leftSidebar.isCollapsed()) {
+                    return Set.of("flex-h-container");
+                }
+
+                return Set.of("fit-child-snug");
+            }
+        });
+        leftSplitterContainer.add(leftSidebarContainer);
+
+        leftSidebar = createLeftSidebar();
+        leftSidebarContainer.add(leftSidebar);
+
+        if (!leftSidebar.isCollapsed()) {
+            leftSplitterContainer.add(leftSplitterBehavior);
+        }
+
+        centerAreaContainer = new WebMarkupContainer("centerAreaContainer");
+        centerAreaContainer.add(new ClassAttributeModifier()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected Set<String> update(Set<String> aOldClasses)
+            {
+                if (leftSidebar.isCollapsed()) {
+                    return Set.of("flex-content", "flex-h-container", "ps-3");
+                }
+
+                return Set.of("fit-child-snug");
+            }
+        });
 
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        queue(centerArea);
+        centerAreaContainer.add(centerArea);
 
         actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
 
-        queue(createRightSidebar());
-
         createAnnotationEditor();
 
-        leftSidebar = createLeftSidebar();
-        queue(leftSidebar);
+        leftSplitterContainer.add(centerAreaContainer);
 
-        editorContainer = new WebMarkupContainer("annotation-editor-container");
-        editorContainer.setOutputMarkupId(true);
-        queue(editorContainer);
+        updateDocumentView(null, null, null, focus);
+    }
 
-        add(new SplitterBehavior("#" + editorContainer.getMarkupId(),
-                new Options("orientation", Options.asString("horizontal")), new SplitterAdapter()));
+    private WebMarkupContainer buildRightSplitter()
+    {
+        var splitter = new WebMarkupContainer("splitter-right");
+        splitter.setOutputMarkupId(true);
+
+        splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
+                new Options("orientation", Options.asString("horizontal")) //
+                        .set("panes", //
+                                new Options("size", Options.asString("80%")), //
+                                new Options("size", Options.asString("20%"))), //
+                new SplitterAdapter()));
+
+        return splitter;
+    }
+
+    @OnEvent
+    public void onSidebarStateChanged(SidebarStateChangedEvent aEvent)
+    {
+        if (aEvent.isCollapsed()) {
+            leftSplitterContainer.remove(leftSplitterBehavior);
+        }
+        else {
+            leftSplitterContainer.add(leftSplitterBehavior);
+        }
+
+        aEvent.getTarget().add(rightSplitterContainer);
     }
 
     @Override
@@ -351,7 +462,6 @@ public class AnnotationPage
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupPlaceholderTag(true);
 
-        detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
         rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getSelectableLayers)
                 .map(List::isEmpty).map(b -> !b)));
@@ -516,12 +626,7 @@ public class AnnotationPage
                 // Update URL for current document
                 updateUrlFragment(aTarget);
 
-                // Refresh the sidebars and editor without disturbing the splitters
-                editorContainer.forEach(child -> {
-                    if (child.getOutputMarkupId()) {
-                        aTarget.add(child);
-                    }
-                });
+                aTarget.add(rightSplitterContainer);
             }
 
             applicationEventPublisherHolder.get().publishEvent(

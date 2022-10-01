@@ -71,6 +71,11 @@ public class SidebarPanel
                 LoadableDetachableModel.of(() -> tabsPanel.isExpanded() ? "" : "collapsed"), " "));
     }
 
+    public boolean isCollapsed()
+    {
+        return !tabsPanel.isExpanded();
+    }
+
     @Override
     protected void onConfigure()
     {
