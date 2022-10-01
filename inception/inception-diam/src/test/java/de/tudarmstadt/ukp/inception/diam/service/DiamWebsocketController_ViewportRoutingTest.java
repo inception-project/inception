@@ -36,12 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.persistence.EntityManager;
-import javax.sql.DataSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,11 +63,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
-import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
@@ -87,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
-import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -158,13 +152,11 @@ public class DiamWebsocketController_ViewportRoutingTest
     private @Autowired UserDao userService;
 
     // temporarily store data for test project
-    @TempDir
-    File repositoryDir;
-
-    private User user;
-    private Project testProject;
-    private SourceDocument testDocument;
-    private AnnotationDocument testAnnotationDocument;
+    private static @TempDir File repositoryDir;
+    private static User user;
+    private static Project testProject;
+    private static SourceDocument testDocument;
+    private static AnnotationDocument testAnnotationDocument;
 
     @BeforeEach
     public void setup() throws Exception
@@ -178,6 +170,15 @@ public class DiamWebsocketController_ViewportRoutingTest
                 WS_AUTHENTICATION_PASSWORD, PASS));
         stompClient = new WebSocketStompClient(wsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+        setupOnce();
+    }
+
+    void setupOnce() throws Exception
+    {
+        if (testProject != null) {
+            return;
+        }
 
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
@@ -210,8 +211,7 @@ public class DiamWebsocketController_ViewportRoutingTest
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
-    public void thatViewportBasedMessageRoutingWorks()
-        throws InterruptedException, ExecutionException, TimeoutException
+    public void thatViewportBasedMessageRoutingWorks() throws Exception
     {
         CountDownLatch subscriptionDone = new CountDownLatch(2);
         CountDownLatch initDone = new CountDownLatch(2);
@@ -225,8 +225,6 @@ public class DiamWebsocketController_ViewportRoutingTest
         var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);
 
         // try {
-        WebSocketHttpHeaders wsHeaders = new WebSocketHttpHeaders();
-        wsHeaders.setBasicAuth(USER, "pass");
         StompSession session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000,
                 SECONDS);
         StompSession session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000,
@@ -302,10 +300,6 @@ public class DiamWebsocketController_ViewportRoutingTest
         }
     }
 
-    // /**
-    // * Test does not check correct authentication for websocket messages, instead we allow all to
-    // * test communication assuming an authenticated user
-    // */
     @Configuration
     public static class WebsocketSecurityTestConfig
         extends WebsocketSecurityConfig
@@ -329,22 +323,12 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Bean(name = "authenticationProvider")
         public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
-                UserDetailsManager aUserDetailsManager)
+                @Lazy UserDetailsManager aUserDetailsManager)
         {
             DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
-        }
-
-        @Bean
-        public UserDetailsManager userDetailsService(DataSource aDataSource,
-                @Lazy AuthenticationManager aAuthenticationManager)
-        {
-            OverridableUserDetailsManager manager = new OverridableUserDetailsManager();
-            manager.setDataSource(aDataSource);
-            manager.setAuthenticationManager(aAuthenticationManager);
-            return manager;
         }
 
         @Primary

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -41,6 +42,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -49,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
+@ActiveProfiles("auto-mode-builtin")
 @SpringBootTest( //
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
@@ -85,9 +88,9 @@ public class AeroRemoteApiController_Project_Test
     @BeforeEach
     void setup()
     {
-        adminActor = new MockAeroClient(context, "admin", "ADMIN");
+        adminActor = new MockAeroClient(context, "admin", "ADMIN", "REMOTE");
 
-        userRepository.create(new User("admin", ROLE_ADMIN));
+        userRepository.create(new User("admin", ROLE_ADMIN, ROLE_REMOTE));
     }
 
     @Test
