@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_US
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -172,8 +173,8 @@ public class AnnotationPage
         leftSplitterBehavior = new SplitterBehavior("#" + leftSplitterContainer.getMarkupId(),
                 new Options("orientation", Options.asString("horizontal")) //
                         .set("panes", //
-                                new Options("size", Options.asString("20%")), //
-                                new Options("size", Options.asString("80%"))), //
+                                new Options("size", Options.asString(SIDEBAR_SIZE_DEFAULT + "%")), //
+                                new Options()), //
                 new SplitterAdapter());
 
         leftSplitterContainer.add(new StyleAttributeModifier()
@@ -204,7 +205,15 @@ public class AnnotationPage
             }
         });
 
-        rightSplitterContainer = buildRightSplitter();
+        rightSplitterContainer = new WebMarkupContainer("splitter-right");
+        rightSplitterContainer.setOutputMarkupId(true);
+
+        rightSplitterContainer.add(new SplitterBehavior("#" + rightSplitterContainer.getMarkupId(),
+                new Options("orientation", Options.asString("horizontal")) //
+                        .set("panes", //
+                                new Options(), //
+                                new Options("size", Options.asString(SIDEBAR_SIZE_DEFAULT + "%"))), //
+                new SplitterAdapter()));
 
         rightSplitterContainer.add(leftSplitterContainer);
         add(rightSplitterContainer);
