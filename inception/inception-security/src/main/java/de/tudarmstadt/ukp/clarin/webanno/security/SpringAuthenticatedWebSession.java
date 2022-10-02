@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
 import org.apache.wicket.injection.Injector;
@@ -36,6 +37,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
@@ -53,7 +55,6 @@ public class SpringAuthenticatedWebSession
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    // @SpringBean(name = "org.springframework.security.authenticationManager")
     private @SpringBean AuthenticationConfigurationHolder authenticationConfigurationHolder;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
@@ -63,15 +64,22 @@ public class SpringAuthenticatedWebSession
         super(request);
         injectDependencies();
 
-        // If the a proper (non-anonymous) authentication has already been performed (e.g. via
-        // external pre-authentication) then also mark the Wicket session as signed-in.
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()
-                && authentication instanceof PreAuthenticatedAuthenticationToken
-        // !(authentication instanceof AnonymousAuthenticationToken && !isSignedIn())
-        ) {
-            signIn(true);
-        }
+        syncSpringSecurityAuthenticationToWicket();
+    }
+
+    /**
+     * @return Current authenticated web session
+     */
+    public static SpringAuthenticatedWebSession get()
+    {
+        return (SpringAuthenticatedWebSession) Session.get();
+    }
+
+    private boolean isAcceptableAuthenticationToken(Authentication aAuthentication)
+    {
+        return aAuthentication instanceof PreAuthenticatedAuthenticationToken
+                || aAuthentication instanceof OAuth2AuthenticationToken
+                || aAuthentication instanceof UsernamePasswordAuthenticationToken;
     }
 
     private void injectDependencies()
@@ -110,6 +118,25 @@ public class SpringAuthenticatedWebSession
         }
     }
 
+    /**
+     * Propagate a successful authentication that was already performed by Spring Security to the
+     * Wicket Security system.
+     */
+    public void syncSpringSecurityAuthenticationToWicket()
+    {
+        // If the a proper (non-anonymous) authentication has already been performed (e.g. via
+        // external pre-authentication) then also mark the Wicket session as signed-in.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (isAcceptableAuthenticationToken(authentication) && authentication.isAuthenticated()) {
+            if (!isSignedIn()) {
+                signIn(authentication);
+            }
+        }
+        else if (isSignedIn()) {
+            signOut();
+        }
+    }
+
     private void springSecuritySignIn(Authentication aAuthentication)
     {
         MDC.put(Logging.KEY_USERNAME, aAuthentication.getName());
@@ -135,8 +162,7 @@ public class SpringAuthenticatedWebSession
     {
         Request request = RequestCycle.get().getRequest();
         if (request instanceof ServletWebRequest) {
-            HttpServletRequest containerRequest = ((ServletWebRequest) request)
-                    .getContainerRequest();
+            var containerRequest = ((ServletWebRequest) request).getContainerRequest();
 
             // Kill current session and create a new one as part of the authentication
             containerRequest.getSession().invalidate();

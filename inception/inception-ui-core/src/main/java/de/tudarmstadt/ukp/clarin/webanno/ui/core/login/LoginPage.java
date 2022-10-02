@@ -89,7 +89,8 @@ public class LoginPage
     private @SpringBean SecurityProperties securityProperties;
     private @SpringBean SessionRegistry sessionRegistry;
 
-    private LoginForm form;
+    private LoginForm localLoginPanel;
+    private OAuth2LoginPanel oAuth2LoginPanel;
     private final WebMarkupContainer tooManyUsersLabel;
 
     public LoginPage()
@@ -97,18 +98,33 @@ public class LoginPage
         setStatelessHint(true);
         setVersioned(false);
 
-        add(form = new LoginForm("loginForm"));
-        form.add(enabledWhen(() -> !isTooManyUsers()));
+        localLoginPanel = new LoginForm("loginForm");
+        localLoginPanel.add(enabledWhen(this::isLoginAllowed));
+        queue(localLoginPanel);
+
+        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel");
+        oAuth2LoginPanel.add(enabledWhen(this::isLoginAllowed));
+        queue(oAuth2LoginPanel);
 
         redirectIfAlreadyLoggedIn();
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
         tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
-        form.add(tooManyUsersLabel);
+        localLoginPanel.add(tooManyUsersLabel);
 
+        maybeInitializeAdminUser();
+    }
+
+    private boolean isLoginAllowed()
+    {
+        return !isTooManyUsers() && !isAdminAccountRecoveryMode();
+    }
+
+    private void maybeInitializeAdminUser()
+    {
         // Reset/recreated default admin account if requested
-        if (System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null) {
-            form.setVisible(false);
+        if (isAdminAccountRecoveryMode()) {
+            localLoginPanel.setVisible(false);
             User admin;
             boolean exists;
             if (userRepository.exists(ADMIN_DEFAULT_USERNAME)) {
@@ -159,6 +175,11 @@ public class LoginPage
 
             userRepository.create(admin);
         }
+    }
+
+    private boolean isAdminAccountRecoveryMode()
+    {
+        return System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null;
     }
 
     /**
@@ -273,8 +294,9 @@ public class LoginPage
             }
             else {
                 log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
-                if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
-                    Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
+                if (isNotBlank(localLoginPanel.urlfragment)
+                        && localLoginPanel.urlfragment.startsWith("!")) {
+                    Url url = Url.parse("http://dummy?" + localLoginPanel.urlfragment.substring(1));
                     UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
                     LinkedHashMap<String, StringValue> params = new LinkedHashMap<>();
                     for (String name : adapter.getParameterNames()) {
@@ -312,8 +334,8 @@ public class LoginPage
 
         // In case there was a URL fragment in the original URL, append it again to the redirect
         // URL.
-        if (redirectUrl != null && isNotBlank(form.urlfragment)) {
-            redirectUrl += "#" + form.urlfragment;
+        if (redirectUrl != null && isNotBlank(localLoginPanel.urlfragment)) {
+            redirectUrl += "#" + localLoginPanel.urlfragment;
         }
 
         return redirectUrl;

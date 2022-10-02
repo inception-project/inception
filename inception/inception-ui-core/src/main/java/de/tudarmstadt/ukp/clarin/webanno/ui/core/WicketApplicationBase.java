@@ -57,6 +57,7 @@ import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplicatio
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.webjars.WicketWebjars;
+import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -113,6 +114,25 @@ public abstract class WicketApplicationBase
     {
         super.validateInit();
 
+        installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener();
+
+        installSpringSecurityContextPropagationRequestCycleListener();
+    }
+
+    private void installSpringSecurityContextPropagationRequestCycleListener()
+    {
+        getRequestCycleListeners().add(new IRequestCycleListener()
+        {
+            @Override
+            public void onBeginRequest(RequestCycle aCycle)
+            {
+                SpringAuthenticatedWebSession.get().syncSpringSecurityAuthenticationToWicket();
+            }
+        });
+    }
+
+    private void installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener()
+    {
         CrossOriginEmbedderPolicyConfiguration coepConfig = getSecuritySettings()
                 .getCrossOriginEmbedderPolicyConfiguration();
         if (coepConfig.isEnabled()) {
