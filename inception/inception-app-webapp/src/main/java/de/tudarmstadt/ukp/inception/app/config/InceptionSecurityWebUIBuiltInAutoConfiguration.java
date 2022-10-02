@@ -18,32 +18,41 @@
 package de.tudarmstadt.ukp.inception.app.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
-import static java.util.Collections.emptyMap;
+import static org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
-import org.springframework.boot.context.properties.bind.Bindable;
-import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -54,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
+@AutoConfigureAfter(OAuth2ClientAutoConfiguration.class)
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {
@@ -67,7 +77,8 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
     @Profile("auto-mode-builtin")
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
-            SessionRegistry aSessionRegistry, Environment aEnvironment)
+            SessionRegistry aSessionRegistry,
+            Optional<ClientRegistrationRepository> aClientRegistrationRepository)
         throws Exception
     {
         aHttp.csrf().disable();
@@ -102,9 +113,14 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                 new LoginUrlAuthenticationEntryPoint("/login.html"),
                 new AntPathRequestMatcher("/**"));
 
-        if (!getOAuth2ClientRegistrations(aEnvironment).isEmpty()) {
+        if (aClientRegistrationRepository.isPresent()) {
             aHttp.oauth2Login() //
                     .loginPage("/login.html") //
+                    .authorizationEndpoint() //
+                    .authorizationRequestResolver(new OAuth2SsoAuthorizationRequestResolver(
+                            aClientRegistrationRepository.get(),
+                            DEFAULT_AUTHORIZATION_REQUEST_BASE_URI))
+                    .and() //
                     .userInfoEndpoint() //
                     .oidcUserService(this::loadOidcUser) //
                     .userService(this::loadUserOAuth2User);
@@ -123,28 +139,76 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         return aHttp.build();
     }
 
-    private Map<String, OAuth2ClientProperties.Registration> getOAuth2ClientRegistrations(
-            Environment environment)
+    private static class OAuth2SsoAuthorizationRequestResolver
+        implements OAuth2AuthorizationRequestResolver
     {
-        var registrationMap = Bindable.mapOf(String.class,
-                OAuth2ClientProperties.Registration.class);
-        return Binder.get(environment)
-                .bind("spring.security.oauth2.client.registration", registrationMap)
-                .orElse(emptyMap());
+        private OAuth2AuthorizationRequestResolver defaultResolver;
+
+        public OAuth2SsoAuthorizationRequestResolver(ClientRegistrationRepository repo,
+                String authorizationRequestBaseUri)
+        {
+            defaultResolver = new DefaultOAuth2AuthorizationRequestResolver(repo,
+                    authorizationRequestBaseUri);
+        }
+
+        @Override
+        public OAuth2AuthorizationRequest resolve(HttpServletRequest aRequest)
+        {
+            var request = defaultResolver.resolve(aRequest);
+            if (request == null) {
+                return null;
+            }
+
+            return OAuth2AuthorizationRequest.from(request).build();
+        }
+
+        @Override
+        public OAuth2AuthorizationRequest resolve(HttpServletRequest aRequest,
+                String aClientRegistrationId)
+        {
+            var request = defaultResolver.resolve(aRequest, aClientRegistrationId);
+            if (request == null) {
+                return null;
+            }
+
+            return OAuth2AuthorizationRequest.from(request).build();
+        }
     }
 
     private OAuth2User loadUserOAuth2User(OAuth2UserRequest userRequest)
     {
         var externalUser = oauth2UserService.loadUser(userRequest);
-        materializeUser(externalUser);
-        return externalUser;
+        var user = materializeUser(externalUser);
+
+        var authorities = new LinkedHashSet<GrantedAuthority>();
+        for (var role : userRepository.getRoles(user)) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        authorities.addAll(externalUser.getAuthorities());
+
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint().getUserNameAttributeName();
+
+        return new DefaultOAuth2User(authorities, externalUser.getAttributes(),
+                userNameAttributeName);
     }
 
     private OidcUser loadOidcUser(OidcUserRequest userRequest)
     {
         var externalUser = oidcUserService.loadUser(userRequest);
-        materializeUser(externalUser);
-        return externalUser;
+        var user = materializeUser(externalUser);
+
+        var authorities = new LinkedHashSet<GrantedAuthority>();
+        for (var role : userRepository.getRoles(user)) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        authorities.addAll(externalUser.getAuthorities());
+
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint().getUserNameAttributeName();
+
+        return new DefaultOidcUser(authorities, externalUser.getIdToken(),
+                externalUser.getUserInfo(), userNameAttributeName);
     }
 
     private User materializeUser(OAuth2User user)
