@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_P
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_USERNAME;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhenNot;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -46,6 +46,8 @@ import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -66,6 +68,7 @@ import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -92,36 +95,45 @@ public class LoginPage
     private @SpringBean SecurityProperties securityProperties;
     private @SpringBean SessionRegistry sessionRegistry;
 
-    private LoginForm localLoginPanel;
-    private OAuth2LoginPanel oAuth2LoginPanel;
+    private final LoginForm localLoginPanel;
+    private final OAuth2LoginPanel oAuth2LoginPanel;
+
     private final WebMarkupContainer tooManyUsersLabel;
+    private final IModel<Boolean> tooManyUsers;
 
     public LoginPage(PageParameters aParameters)
     {
         setStatelessHint(true);
         setVersioned(false);
 
+        tooManyUsers = LoadableDetachableModel.of(this::isTooManyUsers).orElse(false);
+
         localLoginPanel = new LoginForm("loginForm");
-        localLoginPanel.add(enabledWhen(this::isLoginAllowed));
+        localLoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(localLoginPanel);
 
-        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel",
-                aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false));
-        oAuth2LoginPanel.add(enabledWhen(this::isLoginAllowed));
+        redirectIfAlreadyLoggedIn(); // Must come after the localLoginPanel is initialized!
+
+        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel");
+        oAuth2LoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(oAuth2LoginPanel);
 
-        redirectIfAlreadyLoggedIn();
+        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
+                || tooManyUsers.getObject();
+        if (!skipAutoLogin && isLoginAllowed()) {
+            oAuth2LoginPanel.autoLogin();
+        }
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
-        tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
-        localLoginPanel.add(tooManyUsersLabel);
+        tooManyUsersLabel.add(visibleWhen(tooManyUsers));
+        queue(tooManyUsersLabel);
 
         maybeInitializeAdminUser();
     }
 
     private boolean isLoginAllowed()
     {
-        return !isTooManyUsers() && !isAdminAccountRecoveryMode();
+        return !tooManyUsers.getObject() && !isAdminAccountRecoveryMode();
     }
 
     private void maybeInitializeAdminUser()
@@ -257,8 +269,9 @@ public class LoginPage
             add(new RequiredTextField<String>("username").setOutputMarkupId(true));
             add(new PasswordTextField("password").setOutputMarkupId(true));
             add(new HiddenField<>("urlfragment"));
-            add(new Button("signInBtn").add(enabledWhen(() -> !isTooManyUsers())));
-            add(new Label("loginMessage", loginProperties.getMessage()).setEscapeModelStrings(false)
+            add(new Button("signInBtn").add(enabledWhenNot(tooManyUsers)));
+            add(new Label("loginMessage", loginProperties.getMessage()) //
+                    .setEscapeModelStrings(false) //
                     .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 

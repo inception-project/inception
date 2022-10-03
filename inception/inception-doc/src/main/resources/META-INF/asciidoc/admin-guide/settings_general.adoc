@@ -24,33 +24,33 @@
 | Default
 | Example
 
-| warnings.unsupportedBrowser
+| `warnings.unsupportedBrowser`
 | Warn about unsupported browser
-| true
-| false
+| `true`
+| `false`
 
-| login.message
+| `security.login.message`
 | Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
 | _unset_
 | `<span style="color:red; font-size: 200%;">Use are your own risk.</span>`
 
-| user.profile.accessible
+| `user.profile.accessible`
 | Whether regular users can access their own profile to change their password and other profile information. This setting has no effect when running in pre-authentication mode.
-| false
-| true
+| `false`
+| `true`
 
-| user-selection.hideUsers
+| `user-selection.hideUsers`
 | Whether the list of users show in the users tab of the project settings is restricted. If this setting is enable, the full name of a user has to be entered into the input field before the user can be added. If this setting is disabled, it is possible to see all enabled users and to add any of them to the project.
-| false
-| true
+| `false`
+| `true`
 
-| commands.open-browser
+| `commands.open-browser`
 | Execute this command instead of the operating-systems's default command to open the browser window when running in standalone mode. `%u` is replaced with the INCEpTION URL.
 | _unset_
 | `/usr/bin/open %u -a "/Applications/Google Chrome.app"`
 
-| plugins.enabled
+| `plugins.enabled`
 | Whether to enable the ability to install plugins into {product-name}
-| false
-| true
+| `false`
+| `true`
 |===

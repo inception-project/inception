@@ -28,7 +28,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SecurityPropertiesImpl
     implements SecurityProperties
 {
-    private String autoLogin;
     private String defaultAdminUsername;
     private String defaultAdminPassword;
     private boolean defaultAdminRemoteAccess = false;
@@ -54,17 +53,6 @@ public class SecurityPropertiesImpl
 
     public static final String DEFAULT_PASSWORD_PATTERN = ".*";
     private Pattern passwordPattern = Pattern.compile(DEFAULT_PASSWORD_PATTERN);
-
-    public void setAutoLogin(String aAutoLogin)
-    {
-        autoLogin = aAutoLogin;
-    }
-
-    @Override
-    public String getAutoLogin()
-    {
-        return autoLogin;
-    }
 
     @Override
     public String getDefaultAdminUsername()

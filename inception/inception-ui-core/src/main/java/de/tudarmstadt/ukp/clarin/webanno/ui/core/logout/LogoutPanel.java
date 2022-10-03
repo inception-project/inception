@@ -41,8 +41,8 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
@@ -58,7 +58,7 @@ public class LogoutPanel
     private static final long serialVersionUID = 3725185820083021070L;
 
     private @SpringBean PreauthenticationProperties preauthenticationProperties;
-    private @SpringBean SecurityProperties securityProperties;
+    private @SpringBean LoginProperties securityProperties;
 
     public LogoutPanel(String id, IModel<User> aUser)
     {

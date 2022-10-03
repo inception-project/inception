@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 
@@ -38,7 +38,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
@@ -47,26 +47,13 @@ public class OAuth2LoginPanel
 {
     private static final long serialVersionUID = -3709147438732584586L;
 
-    private @SpringBean SecurityProperties securityProperties;
+    private @SpringBean LoginProperties loginProperties;
 
-    public OAuth2LoginPanel(String aId, boolean aSkipAutoLogin)
+    public OAuth2LoginPanel(String aId)
     {
         super(aId);
 
-        List<LoginLink> loginLinks = getLoginLinks();
-
-        if (!aSkipAutoLogin && isNotBlank(securityProperties.getAutoLogin())) {
-            var maybeAutoLoginTarget = loginLinks.stream() //
-                    .filter(link -> securityProperties.getAutoLogin()
-                            .equals(link.getRegistrationId()))
-                    .findFirst();
-
-            if (maybeAutoLoginTarget.isPresent()) {
-                throw new RedirectToUrlException(maybeAutoLoginTarget.get().getLoginUrl());
-            }
-        }
-
-        add(new ListView<LoginLink>("clients", loginLinks)
+        add(new ListView<LoginLink>("clients", getLoginLinks())
         {
             private static final long serialVersionUID = 3596608487017547416L;
 
@@ -80,7 +67,26 @@ public class OAuth2LoginPanel
             }
         });
 
-        add(LambdaBehavior.visibleWhen(() -> !loginLinks.isEmpty()));
+        add(LambdaBehavior.visibleWhen(() -> !getLoginLinks().isEmpty()));
+    }
+
+    /**
+     * Perform auto-login via OAuth2 if an auto-login is configured.
+     */
+    public void autoLogin()
+    {
+        if (isBlank(loginProperties.getAutoLogin())) {
+            return;
+        }
+
+        List<LoginLink> loginLinks = getLoginLinks();
+        var maybeAutoLoginTarget = loginLinks.stream() //
+                .filter(link -> loginProperties.getAutoLogin().equals(link.getRegistrationId()))
+                .findFirst();
+
+        if (maybeAutoLoginTarget.isPresent()) {
+            throw new RedirectToUrlException(maybeAutoLoginTarget.get().getLoginUrl());
+        }
     }
 
     /*
