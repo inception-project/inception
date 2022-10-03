@@ -103,6 +103,10 @@ public class EmbeddedDatabaseBackupHandler
                     "backups are created when the application detect that is was upgraded from a",
                     "previous version.", //
                     "", //
+                    "These backups are mainly meant for an emergency recovery of an embedded",
+                    "database that was corrupted due to a system crash, power loss or similary",
+                    "catastrophic event.", //
+                    "", //
                     "Mind that these are backups *only* of the embedded database which *does not*",
                     "contain the annotations themselves, only the project metadata. Thus, if you",
                     "replace a broken 'db' folder with the contents of one of these backups, note",
@@ -113,7 +117,8 @@ public class EmbeddedDatabaseBackupHandler
                     "Be sure to backup the 'db' folder once more yourself before trying to recover",
                     "your system by overwriting it with the contents of one of these backups.", "", //
                     "These backups are not used by the system itself. If you do not want to keep",
-                    "them, you can simply delete them.", "", //
+                    "them, you can simply delete them.", //
+                    "", //
                     "THESE BACKUPS DO NOT REPLACE A PROPER BACKUP THAT YOU SHOULD REGULARLY MAKE",
                     "OF ANY IMPORTANT DATA! It is recommended to regularly export backup archives",
                     "of important annotation projects and/or to regularly fully backup the",
