@@ -47,7 +47,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
-import org.apache.wicket.validation.validator.StringValidator;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -96,7 +95,7 @@ public class UserDetailPanel
         queue(new Label("lastLogin"));
         queue(new Label("created"));
         queue(new EmailTextField("email") //
-                .add(new StringValidator(0, 200)));
+                .add(this::validateEmail));
 
         oldPasswordField = new PasswordTextField("oldPassword");
         oldPasswordField.add(this::validateOldPassword);
@@ -116,7 +115,7 @@ public class UserDetailPanel
         repeatPasswordField.add(this::validatePassword);
         repeatPasswordField.setModel(PropertyModel.of(this, "repeatPassword"));
         repeatPasswordField.setRequired(false);
-        repeatPasswordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
+        repeatPasswordField.add(visibleWhen(this::canChangePassword));
         queue(repeatPasswordField);
 
         queue(new ListMultipleChoice<>("roles", getRoles()) //
@@ -154,9 +153,16 @@ public class UserDetailPanel
         return !userRepository.isCurrentUserAdmin();
     }
 
+    /**
+     * Users that are bound to a project (i.e. the realm is set) or which are external users (i.e.
+     * they have an empty password) cannot change their password.
+     * 
+     * @return if the user can change their password.
+     */
     private boolean canChangePassword()
     {
-        return getModel().map(_u -> _u.getRealm() == null).orElse(false).getObject();
+        return getModel().map(_u -> _u.getRealm() == null && !_u.isExternalUser()).orElse(false)
+                .getObject();
     }
 
     public void setCreatingNewUser(boolean aIsCreate)
@@ -206,14 +212,22 @@ public class UserDetailPanel
         userRepository.validateUsername(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
+    private void validateEmail(IValidatable<String> aValidatable)
+    {
+        userRepository.validateEmail(aValidatable.getValue()).forEach(aValidatable::error);
+    }
+
     private void validateUiName(IValidatable<String> aValidatable)
     {
         User other = userRepository.getUserByRealmAndUiName(getModelObject().getRealm(),
                 aValidatable.getValue());
+
         if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
             aValidatable.error(new ValidationError().addKey("uiName.alreadyExistsError")
                     .setVariable("name", aValidatable.getValue()));
         }
+
+        userRepository.validateUiName(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateEnabled(IValidatable<Boolean> aValidatable)

@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 public interface LoginProperties
 {
+    String getAutoLogin();
+
     long getMaxConcurrentSessions();
 
     String getMessage();

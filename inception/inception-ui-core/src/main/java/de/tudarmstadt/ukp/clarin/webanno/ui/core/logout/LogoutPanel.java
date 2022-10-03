@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import javax.servlet.http.HttpSession;
 
@@ -37,8 +38,10 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
@@ -54,26 +57,30 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    private final PreauthenticationProperties preauthenticationProperties;
+    private @SpringBean PreauthenticationProperties preauthenticationProperties;
+    private @SpringBean LoginProperties securityProperties;
 
-    public LogoutPanel(String id, IModel<User> aUser,
-            PreauthenticationProperties aPreauthenticationProperties)
+    public LogoutPanel(String id, IModel<User> aUser)
     {
         super(id, aUser);
 
-        preauthenticationProperties = aPreauthenticationProperties;
+        var logoutLink = new LambdaStatelessLink("logout", this::actionLogout);
+        logoutLink.add(visibleWhen(() -> isBlank(securityProperties.getAutoLogin())));
+        add(logoutLink);
 
-        add(new LambdaStatelessLink("logout", this::actionLogout));
+        var logoutTimer = new WebMarkupContainer("logoutTimer");
+        logoutTimer.add(visibleWhen(
+                () -> getAutoLogoutTime() > 0 && isBlank(securityProperties.getAutoLogin())));
+        add(logoutTimer);
 
-        BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
-                ManageUsersPage.class, new PageParameters().add(ManageUsersPage.PARAM_USER,
-                        getModel().map(User::getUsername).orElse("").getObject()));
+        var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
+                getModel().map(User::getUsername).orElse("").getObject());
+        var profileLink = new BookmarkablePageLink<>("profile", ManageUsersPage.class,
+                profileLinkParameters);
         profileLink.add(enabledWhen(this::isProfileSelfServiceAllowed));
         profileLink.add(visibleWhen(getModel().isPresent()));
         profileLink.add(new Label("username", getModel().map(User::getUiName)));
         add(profileLink);
-
-        add(new WebMarkupContainer("logoutTimer").add(visibleWhen(() -> getAutoLogoutTime() > 0)));
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
@@ -81,8 +88,8 @@ public class LogoutPanel
 
     private boolean isProfileSelfServiceAllowed()
     {
-        return UserDao.isProfileSelfServiceAllowed()
-                && getModel().map(u -> u.getRealm() == REALM_GLOBAL).orElse(false).getObject();
+        return UserDao.isProfileSelfServiceAllowed() && //
+                getModel().map(u -> u.getRealm() == REALM_GLOBAL).orElse(false).getObject();
     }
 
     @SuppressWarnings("unchecked")
