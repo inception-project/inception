@@ -46,6 +46,7 @@ import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -81,10 +82,12 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,6 +132,14 @@ public class DocumentServiceImpl
     implements DocumentService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final String MSG_DOCUMENT_NAME_TOO_LONG = "document.name.error.too-long";
+    private static final String MSG_DOCUMENT_NAME_EMPTY = "document.name.error.empty";
+    private static final String MSG_DOCUMENT_NAME_ILLEGAL = "document.name.error.illegal";
+    private static final String MVAR_LIMIT = "limit";
+    private static final String MVAR_DETAIL = "detail";
+
+    private static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
 
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
@@ -724,6 +735,11 @@ public class DocumentServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
+        var nameValidationResult = validateDocumentName(aDocument.getName());
+        if (!nameValidationResult.isEmpty()) {
+            throw new IllegalArgumentException(nameValidationResult.get(0).getMessage());
+        }
+
         // Create the metadata record - this also assigns the ID to the document
         createSourceDocument(aDocument);
 
@@ -1518,5 +1534,40 @@ public class DocumentServiceImpl
                 // If there is no CAS file, we do not have to upgrade it. Ignoring.
             }
         }
+    }
+
+    @Override
+    public boolean isValidDocumentName(String aDocumentName)
+    {
+        return validateDocumentName(aDocumentName).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateDocumentName(String aName)
+    {
+        var errors = new ArrayList<ValidationError>();
+
+        if (isBlank(aName)) {
+            errors.add(new ValidationError("Document name cannot be empty.") //
+                    .addKey(MSG_DOCUMENT_NAME_EMPTY));
+        }
+
+        if (StringUtils.containsAny(aName, BAD_FOR_FILENAMES)) {
+            errors.add(new ValidationError("Document name contains illegal characters. It must not"
+                    + "contain any of the following characters [" + BAD_FOR_FILENAMES + "]") //
+                            .addKey(MSG_DOCUMENT_NAME_ILLEGAL)
+                            .setVariable(MVAR_DETAIL, BAD_FOR_FILENAMES));
+        }
+
+        var len = aName.length();
+        int maximumUiNameLength = 200;
+        if (len > maximumUiNameLength) {
+            errors.add(new ValidationError("Document name is too long. It can at most consist of "
+                    + maximumUiNameLength + " characters.") //
+                            .addKey(MSG_DOCUMENT_NAME_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUiNameLength));
+        }
+
+        return errors;
     }
 }

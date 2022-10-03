@@ -198,10 +198,31 @@ public class DocumentImportExportServiceImpl
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, Mode aMode)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
+                null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, Mode aMode, boolean aStripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
+                aStripExtension, aBulkOperationContext);
     }
 
     @Override
