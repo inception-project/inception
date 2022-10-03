@@ -58,31 +58,29 @@ NOTE: The roles added through `auth.user.<username>.roles` properties are *not* 
 | Default
 | Example
       
-| auth.mode
+| `auth.mode`
 | Authentication mode
-| database
-| preauth
+| `database`
+| `preauth`
 
-| auth.preauth.header.principal
+| `auth.preauth.header.principal`
 | Principal header
-| remote_user
+| `remote_user`
 | _some other header_
 
-| auth.preauth.newuser.roles
+| `auth.preauth.newuser.roles`
 | Default roles for new users (comma separated)
 | _<none>_
-| ROLE_PROJECT_CREATOR
+| `ROLE_PROJECT_CREATOR`
 
-| auth.preauth.logoutUrl
+| `auth.preauth.logoutUrl`
 | URL to call after logging out to also sign out of external authentication
 | _<none>_
-| https://your-idp.com/Shibboleth.sso/Logout
+| `https://your-idp.com/Shibboleth.sso/Logout`
 
-| auth.user._<username>_.roles
+| `auth.user._<username>_.roles`
 | Extra roles for user (comma separated)
 | _<none>_
-| ROLE_ADMIN
+| `ROLE_ADMIN`
 
 |===
-
-      

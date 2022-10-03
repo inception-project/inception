@@ -239,6 +239,7 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-versioning</artifactId>
     </dependency>
+    
     <!-- INCEPTION - SPRING WEBSOCKET -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -383,6 +384,10 @@
       <artifactId>inception-sharing</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
@@ -451,6 +456,14 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-core</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
@@ -552,6 +565,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-tomcat</artifactId>
     </dependency>
     <dependency>
@@ -570,6 +587,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-properties-migrator</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
@@ -917,6 +940,8 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-actuator</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-oauth2-client</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-properties-migrator</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Other -->

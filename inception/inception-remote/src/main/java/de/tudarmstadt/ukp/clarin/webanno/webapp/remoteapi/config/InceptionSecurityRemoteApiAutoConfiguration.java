@@ -42,21 +42,21 @@ public class InceptionSecurityRemoteApiAutoConfiguration
         authProvider.setUserDetailsService(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
 
-        // @formatter:off
-        aHttp
-            .antMatcher("/api/**")
-            .csrf().disable()
-            // We hard-wire the internal user DB as the authentication provider here because
-            // because the API shouldn't work with external pre-authentication
-            .authenticationProvider(authProvider)
-            .authorizeRequests()
-                .anyRequest().access("hasAnyRole('ROLE_REMOTE')")
-            .and()
-            .httpBasic()
-            .and()
-            .sessionManagement()
+        aHttp.antMatcher("/api/**");
+        aHttp.csrf().disable();
+
+        // We hard-wire the internal user DB as the authentication provider here because
+        // because the API shouldn't work with external pre-authentication
+        aHttp.authenticationProvider(authProvider);
+
+        aHttp.authorizeRequests() //
+                .anyRequest().access("hasAnyRole('ROLE_REMOTE')");
+
+        aHttp.httpBasic();
+
+        aHttp.sessionManagement() //
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        // @formatter:on
+
         return aHttp.build();
     }
 }

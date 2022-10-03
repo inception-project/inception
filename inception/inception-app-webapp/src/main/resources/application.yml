@@ -38,10 +38,11 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-  resources:
-    cache:
-      cachecontrol:
-        max-age: 31536000
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 31536000
 
   datasource:
     url: ${database.url:${INCEPTION_DB_URL:jdbc:hsqldb:file:${inception.home:${user.home}/.inception}/db/inception;hsqldb.default_table_type=cached}}

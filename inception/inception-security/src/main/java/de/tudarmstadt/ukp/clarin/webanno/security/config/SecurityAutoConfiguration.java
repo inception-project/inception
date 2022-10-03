@@ -48,7 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 
 @Configuration
-@EnableConfigurationProperties({ SecurityPropertiesImpl.class,
+@EnableConfigurationProperties({ //
+        LegacyLoginPropertiesImpl.class, //
+        LoginPropertiesImpl.class, //
+        SecurityPropertiesImpl.class, //
         PreauthenticationPropertiesImpl.class })
 public class SecurityAutoConfiguration
 {

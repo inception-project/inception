@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
 /**
@@ -134,13 +135,13 @@ public class User
         }
     }
 
-    private String encodePassword(String aPassword)
+    private synchronized PasswordEncoder getPasswordEncoder()
     {
         if (passwordEncoder == null) {
             ApplicationContext context = ApplicationContextProvider.getApplicationContext();
             passwordEncoder = context.getBean("passwordEncoder", PasswordEncoder.class);
         }
-        return passwordEncoder.encode(aPassword);
+        return passwordEncoder;
     }
 
     @Override
@@ -186,6 +187,15 @@ public class User
         username = aLogin;
     }
 
+    /**
+     * @return if the user should be considered as an external user - external users have an empty
+     *         password and empty passwords are never allowed for local login.
+     */
+    public boolean isExternalUser()
+    {
+        return getPasswordEncoder().matches(UserDao.EMPTY_PASSWORD, password);
+    }
+
     public String getPassword()
     {
         return password;
@@ -193,7 +203,7 @@ public class User
 
     public void setPassword(String aPassword)
     {
-        password = encodePassword(aPassword);
+        password = getPasswordEncoder().encode(aPassword);
     }
 
     public void setEncodedPassword(String aPassword)

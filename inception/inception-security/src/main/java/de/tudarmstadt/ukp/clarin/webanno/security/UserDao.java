@@ -179,7 +179,25 @@ public interface UserDao
      */
     boolean isValidUsername(String aName);
 
+    /**
+     * @param aName
+     *            a name.
+     * @return if the name meets the user name policy.
+     */
+    boolean isValidUiName(String aName);
+
+    /**
+     * @param aEMail
+     *            an e-mail address.
+     * @return if the name meets the user name policy.
+     */
+    boolean isValidEmail(String aEMail);
+
     List<ValidationError> validatePassword(String aPassword);
 
     List<ValidationError> validateUsername(String aName);
+
+    List<ValidationError> validateEmail(String aEMail);
+
+    List<ValidationError> validateUiName(String aName);
 }
