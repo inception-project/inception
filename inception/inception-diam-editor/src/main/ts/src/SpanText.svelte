@@ -24,11 +24,10 @@
 
     $: begin = span.offsets[0][0]
     $: end = span.offsets[0][1]
+    $: text = data.text.substring(begin, end)
 </script>
 
-<div class="text-truncate">
-    {data.text.substring(begin, end).substring(0, 50)}
-</div>
+<span>{text.substring(0, 50)+(text.length > 50 ? '…' : '')}</span>
 
 <style>
 </style>

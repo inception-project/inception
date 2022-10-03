@@ -41,6 +41,8 @@
 <style>
   .badge {
     font-family: sans-serif;
+    white-space: normal;
+    --bs-badge-padding-y: 0.15rem;
   }
 
   /*

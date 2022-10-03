@@ -17,6 +17,6 @@
 [[sect_workload]]
 = Workload Management
 
-The workload management determines which documents may be accessed and annoated by which users. It
+The workload management determines which documents may be accessed and annotated by which users. It
 also provides an overview which documents have already been annotated and who annotated them. 
 Curators and managers can access workload management. 
