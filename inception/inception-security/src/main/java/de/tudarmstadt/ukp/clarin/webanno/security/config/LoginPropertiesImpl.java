@@ -15,18 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("login")
+@ConfigurationProperties("security.login")
 public class LoginPropertiesImpl
     implements LoginProperties
 {
+    private String autoLogin;
     private long maxConcurrentSessions;
     private String message;
+
+    public void setAutoLogin(String aAutoLogin)
+    {
+        autoLogin = aAutoLogin;
+    }
+
+    @Override
+    public String getAutoLogin()
+    {
+        return autoLogin;
+    }
 
     @Override
     public long getMaxConcurrentSessions()

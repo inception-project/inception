@@ -38,6 +38,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +83,9 @@ public class UserDaoImpl
     private static final String MSG_USERNAME_ERROR_CONTROL_CHARACTERS = "username.error.control-characters";
     private static final String MSG_USERNAME_ERROR_ILLEGAL_SPACE = "username.error.illegal-space";
     private static final String MSG_USERNAME_ERROR_BLANK = "username.error.blank";
+    private static final String MSG_UINAME_ERROR_TOO_LONG = "ui-name.error.too-long";
+    private static final String MSG_EMAIL_INVALID = "email.error.invalid";
+    private static final String MSG_EMAIL_ERROR_TOO_LONG = "email.error.too-long";
 
     private static final String USERNAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![] ";
 
@@ -399,6 +403,46 @@ public class UserDaoImpl
     }
 
     @Override
+    public List<ValidationError> validateEmail(String eMail)
+    {
+
+        var errors = new ArrayList<ValidationError>();
+
+        var len = eMail.length();
+        int maximumUiNameLength = 200;
+        if (len > maximumUiNameLength) {
+            errors.add(new ValidationError("Email address too long. It can at most consist of "
+                    + maximumUiNameLength + " characters.") //
+                            .addKey(MSG_EMAIL_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUiNameLength));
+        }
+
+        if (!EmailValidator.getInstance().isValid(eMail)) {
+            errors.add(new ValidationError("Not a valid email address.") //
+                    .addKey(MSG_EMAIL_INVALID));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public List<ValidationError> validateUiName(String aName)
+    {
+        var errors = new ArrayList<ValidationError>();
+
+        var len = aName.length();
+        int maximumUiNameLength = 200;
+        if (len > maximumUiNameLength) {
+            errors.add(new ValidationError("Display name too long. It can at most consist of "
+                    + maximumUiNameLength + " characters.") //
+                            .addKey(MSG_UINAME_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUiNameLength));
+        }
+
+        return errors;
+    }
+
+    @Override
     public List<ValidationError> validateUsername(String aName)
     {
         var errors = new ArrayList<ValidationError>();
@@ -471,6 +515,18 @@ public class UserDaoImpl
     public boolean isValidUsername(String aName)
     {
         return validateUsername(aName).isEmpty();
+    }
+
+    @Override
+    public boolean isValidEmail(String aEMail)
+    {
+        return validateEmail(aEMail).isEmpty();
+    }
+
+    @Override
+    public boolean isValidUiName(String aName)
+    {
+        return validateUiName(aName).isEmpty();
     }
 
     @Override

@@ -191,4 +191,18 @@ public class LambdaBehavior
             }
         };
     }
+
+    public static Behavior enabledWhenNot(IModel<Boolean> aPredicate)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -689186261780722442L;
+
+            @Override
+            public void onConfigure(Component aComponent)
+            {
+                aComponent.setEnabled(!aPredicate.orElse(false).getObject());
+            }
+        };
+    }
 }

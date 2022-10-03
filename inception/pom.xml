@@ -299,6 +299,13 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Generation of Spring Property Metadata files -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
+
     <!-- JAXB is no longer included with Java 9+ by default -->
     <dependency>
       <groupId>javax.xml.bind</groupId>
@@ -2400,6 +2407,10 @@
               - Dev aids 
               -->
             <dependency>com.google.code.findbugs:jsr305</dependency>
+            <!-- 
+              - Generation of Spring Property Metadata files 
+              -->
+            <dependency>org.springframework.boot:spring-boot-configuration-processor</dependency>
             <!--
               - Common test dependencies
             -->
