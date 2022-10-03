@@ -478,8 +478,8 @@ public class FileSystemCasStorageDriver
                     }
                 }
             }
-            throw new ConcurentCasModificationException("While " + aContextAction
-                    + ", the file system CAS storage detected a concurrent modification to the annotation CAS for user ["
+            throw new ConcurentCasModificationException("While [" + aContextAction
+                    + "], the file system CAS storage detected a concurrent modification to the annotation CAS for user ["
                     + aUser + "] in document " + aDocument + " or project " + aDocument.getProject()
                     + " (expected: " + formatTimestamp(aExpectedTimeStamp) + " actual on storage: "
                     + formatTimestamp(diskLastModified) + ", delta: "
