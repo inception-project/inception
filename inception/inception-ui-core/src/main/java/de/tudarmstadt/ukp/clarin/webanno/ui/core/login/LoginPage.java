@@ -49,6 +49,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.parameter.UrlRequestParametersAdapter;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -78,6 +79,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 public class LoginPage
     extends ApplicationPageBase
 {
+    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutpLogin";
+
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
 
     private static final long serialVersionUID = -333578034707672294L;
@@ -93,7 +96,7 @@ public class LoginPage
     private OAuth2LoginPanel oAuth2LoginPanel;
     private final WebMarkupContainer tooManyUsersLabel;
 
-    public LoginPage()
+    public LoginPage(PageParameters aParameters)
     {
         setStatelessHint(true);
         setVersioned(false);
@@ -102,7 +105,8 @@ public class LoginPage
         localLoginPanel.add(enabledWhen(this::isLoginAllowed));
         queue(localLoginPanel);
 
-        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel");
+        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel",
+                aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false));
         oAuth2LoginPanel.add(enabledWhen(this::isLoginAllowed));
         queue(oAuth2LoginPanel);
 

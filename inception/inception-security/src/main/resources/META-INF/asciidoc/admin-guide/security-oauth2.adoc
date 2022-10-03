@@ -57,3 +57,32 @@ If you want to try this with a local testing instance of Keycloak, you can do th
 When you restart {product-name} and access the login page now, it should offer a login option called
 *Keycloak*. You can change the label of that option by changing the 
 `security.oauth2.client.registration.inception-client.client-name` setting.
+
+== OAuth2 auto-login
+
+When configuring the application for OAuth2, the user will still be required to choose an identity
+provider via the login page (and is also given the opportunity to log in via form-based login there).
+
+If you would like to automatically login through a particular OAuth2 identity provider, you
+can configure this by setting the `security.auto-login` property to the registration ID of the
+respective provider that you configured using the `spring.security.oauth2.client...` properties.
+
+This setting is useful for single-sign-on scenarios where only a single identity provider is used.
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+      
+| `security.auto-login`
+| Auto-login using given identity provider
+| _<none>_
+| `inception-client` (cf. example above)
+
+|===
+
+NOTE: In case it may be necessary to bypass the auto-login, e.g. to allow signing in via credentials,
+      navigate to `.../login.html?skipAutpLogin=true`. Make sure to do this in a fresh browser session that is
+      not yet logged into the application.

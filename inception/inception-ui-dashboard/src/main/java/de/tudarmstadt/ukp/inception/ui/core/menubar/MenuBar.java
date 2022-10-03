@@ -41,7 +41,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -68,7 +67,6 @@ public class MenuBar
 
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
-    private @SpringBean PreauthenticationProperties preauthenticationProperties;
 
     private IModel<User> user;
     private IModel<Project> project;
@@ -89,7 +87,7 @@ public class MenuBar
         project = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
                 .map(ProjectContext::getProject);
 
-        add(new LogoutPanel("logoutPanel", user, preauthenticationProperties));
+        add(new LogoutPanel("logoutPanel", user));
 
         helpLink = new DocLink(CID_HELP_LINK, USER_GUIDE, new ResourceModel("page.help.link", ""));
         helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"

@@ -53,4 +53,6 @@ public interface SecurityProperties
     Pattern getUsernamePattern();
 
     Pattern getPasswordPattern();
+
+    String getAutoLogin();
 }

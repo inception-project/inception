@@ -62,7 +62,7 @@ public class OverridableUserDetailsManager
     }
 
     @Override
-    protected List<GrantedAuthority> loadUserAuthorities(String aUsername)
+    public List<GrantedAuthority> loadUserAuthorities(String aUsername)
     {
         List<GrantedAuthority> authorities = super.loadUserAuthorities(aUsername);
 

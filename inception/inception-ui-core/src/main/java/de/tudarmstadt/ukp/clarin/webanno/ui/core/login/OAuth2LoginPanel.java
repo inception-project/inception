@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 
@@ -30,11 +31,14 @@ import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.request.flow.RedirectToUrlException;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.ResolvableType;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
@@ -43,11 +47,25 @@ public class OAuth2LoginPanel
 {
     private static final long serialVersionUID = -3709147438732584586L;
 
-    public OAuth2LoginPanel(String aId)
+    private @SpringBean SecurityProperties securityProperties;
+
+    public OAuth2LoginPanel(String aId, boolean aSkipAutoLogin)
     {
         super(aId);
 
         List<LoginLink> loginLinks = getLoginLinks();
+
+        if (!aSkipAutoLogin && isNotBlank(securityProperties.getAutoLogin())) {
+            var maybeAutoLoginTarget = loginLinks.stream() //
+                    .filter(link -> securityProperties.getAutoLogin()
+                            .equals(link.getRegistrationId()))
+                    .findFirst();
+
+            if (maybeAutoLoginTarget.isPresent()) {
+                throw new RedirectToUrlException(maybeAutoLoginTarget.get().getLoginUrl());
+            }
+        }
+
         add(new ListView<LoginLink>("clients", loginLinks)
         {
             private static final long serialVersionUID = 3596608487017547416L;
@@ -102,8 +120,8 @@ public class OAuth2LoginPanel
                 if (AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType())) {
                     String authorizationRequestUri = authorizationRequestBaseUri + "/"
                             + registration.getRegistrationId();
-                    loginLinkList.add(
-                            new LoginLink(registration.getClientName(), authorizationRequestUri));
+                    loginLinkList.add(new LoginLink(registration.getRegistrationId(),
+                            registration.getClientName(), authorizationRequestUri));
                 }
             });
 
@@ -120,13 +138,20 @@ public class OAuth2LoginPanel
     {
         private static final long serialVersionUID = 5192419196982922286L;
 
+        private final String registrationId;
         private final String clientName;
         private final String loginUrl;
 
-        public LoginLink(String aClientName, String aLoginUrl)
+        public LoginLink(String aRegistrationId, String aClientName, String aLoginUrl)
         {
+            registrationId = aRegistrationId;
             clientName = aClientName;
             loginUrl = aLoginUrl;
+        }
+
+        public String getRegistrationId()
+        {
+            return registrationId;
         }
 
         public String getClientName()
