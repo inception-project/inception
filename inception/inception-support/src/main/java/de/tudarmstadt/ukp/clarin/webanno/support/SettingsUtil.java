@@ -52,16 +52,41 @@ public class SettingsUtil
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String SETTINGS_YAML_FILE = "settings.yml";
 
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_LOCALE = "locale";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_AUTH_MODE = "auth.mode";
+    @Deprecated
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
+    @Deprecated
     public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
 
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_LINK_PREFIX = "style.header.icon.";
-    public static final String CFG_LINK_URL = ".linkUrl";
-    public static final String CFG_LINK_IMAGE_URL = ".imageUrl";
+    public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
+    public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";
 
     private static Properties versionInfo;
     private static Properties settings;
