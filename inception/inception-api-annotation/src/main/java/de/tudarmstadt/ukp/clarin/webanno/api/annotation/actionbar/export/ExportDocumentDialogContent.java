@@ -24,7 +24,7 @@ import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.commons.compress.utils.FileNameUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -114,8 +114,8 @@ public class ExportDocumentDialogContent
             // Safe-guard for legacy instances where document name validity has not been checked
             // during import.
             if (documentService.isValidDocumentName(s.getDocument().getName())) {
-                name = FileNameUtils.getBaseName(s.getDocument().getName()) + "."
-                        + FileNameUtils.getExtension(exportedFile.getName());
+                name = FilenameUtils.getBaseName(s.getDocument().getName()) + "."
+                        + FilenameUtils.getExtension(exportedFile.getName());
             }
 
             var resource = new InputStreamResourceStream(new FileInputStream(exportedFile), name);

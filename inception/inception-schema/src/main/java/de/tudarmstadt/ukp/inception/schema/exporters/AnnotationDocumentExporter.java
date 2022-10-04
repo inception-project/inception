@@ -35,6 +35,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.io.FileUtils.copyFileToDirectory;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -53,7 +54,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -298,8 +298,7 @@ public class AnnotationDocumentExporter
 
             if (userRepository.isValidUsername(annDoc.getUser())) {
                 // Safe-guard for legacy instances where user name validity has not been checked.
-                var filename = annDoc.getUser() + "."
-                        + FileNameUtils.getExtension(annFile.getName());
+                var filename = annDoc.getUser() + "." + getExtension(annFile.getName());
                 FileUtils.copyFile(annFile, new File(annDocDir, filename));
             }
             else {

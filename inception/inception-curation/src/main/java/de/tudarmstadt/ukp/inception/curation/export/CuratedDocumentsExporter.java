@@ -24,9 +24,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static java.lang.Math.ceil;
 import static java.util.Arrays.asList;
-import static org.apache.commons.compress.utils.FileNameUtils.getExtension;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.io.File;
 import java.io.FileNotFoundException;
