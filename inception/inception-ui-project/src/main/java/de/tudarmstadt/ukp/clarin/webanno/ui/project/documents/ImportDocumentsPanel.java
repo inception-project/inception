@@ -152,8 +152,15 @@ public class ImportDocumentsPanel
         for (FileUpload documentToUpload : uploadedFiles) {
             String fileName = documentToUpload.getClientFileName();
 
+            var nameValidationResult = documentService.validateDocumentName(fileName);
+            if (!nameValidationResult.isEmpty()) {
+                nameValidationResult
+                        .forEach(msg -> error("[" + fileName + "]:" + msg.getMessage()));
+                continue;
+            }
+
             if (existingDocuments.contains(fileName)) {
-                error("Document [" + fileName + "] already uploaded! Delete "
+                error("[" + fileName + "]: already uploaded! Delete "
                         + "the document if you want to upload again");
                 continue;
             }
@@ -177,7 +184,8 @@ public class ImportDocumentsPanel
                 existingDocuments.add(fileName);
             }
             catch (Throwable e) {
-                error("Error while uploading document " + fileName + ": " + getRootCauseMessage(e));
+                error("Error while uploading document [" + fileName + "]: "
+                        + getRootCauseMessage(e));
                 LOG.error(fileName + ": " + e.getMessage(), e);
                 aTarget.addChildren(getPage(), IFeedback.class);
             }

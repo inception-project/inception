@@ -87,12 +87,10 @@ public class UserDaoImpl
     private static final String MSG_EMAIL_INVALID = "email.error.invalid";
     private static final String MSG_EMAIL_ERROR_TOO_LONG = "email.error.too-long";
 
-    private static final String USERNAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![] ";
+    private static final String USERNAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![] .";
 
     private static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER);
-
-    private static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 

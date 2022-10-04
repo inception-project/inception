@@ -201,15 +201,13 @@ public class ProjectExportServiceImpl
             ExportedProject exProjekt = exportProjectToPath(aRequest, aMonitor, exportTempDir);
 
             // all metadata and project settings data from the database as JSON file
-            File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
+            File projectSettings = new File(exportTempDir, EXPORTED_PROJECT + ".json");
             JSONUtil.generatePrettyJson(exProjekt, projectSettings);
-            FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
 
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
             finally {
-                FileUtils.forceDelete(projectSettings);
                 System.gc();
                 FileUtils.forceDelete(exportTempDir);
             }
