@@ -622,6 +622,8 @@ public class AeroRemoteApiController
             exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
             byte[] resource = FileUtils.readFileToByteArray(exportedFile);
 
+            var fileExtension = FilenameUtils.getExtension(exportedFile.getName());
+
             // Send it back to the client
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.length);
@@ -945,7 +947,7 @@ public class AeroRemoteApiController
         byte[] resource;
         try {
             exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
-                    format, doc.getName(), Mode.ANNOTATION);
+                    format, Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
         }
         finally {

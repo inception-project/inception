@@ -31,6 +31,7 @@ import javax.persistence.NoResultException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
@@ -164,8 +165,8 @@ public interface DocumentService
         throws IOException, UIMAException;
 
     /**
-     * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
-     * repository directory. This way we don't need to create the file to a temporary folder
+     * Upload a SourceDocument, obtained as {@link InputStream}, such as from remote API ZIP folder
+     * to a repository directory. This way we don't need to create the file to a temporary folder
      *
      * @param file
      *            the file.
@@ -778,4 +779,8 @@ public interface DocumentService
 
     void exportSourceDocuments(OutputStream aOs, List<SourceDocument> aSelectedDocuments)
         throws IOException;
+
+    boolean isValidDocumentName(String aDocumentName);
+
+    List<ValidationError> validateDocumentName(String aName);
 }

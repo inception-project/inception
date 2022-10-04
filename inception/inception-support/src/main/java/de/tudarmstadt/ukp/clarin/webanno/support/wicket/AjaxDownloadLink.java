@@ -96,6 +96,9 @@ public class AjaxDownloadLink
                             name = ((FileSystemResourceStream) is).getPath().getFileName()
                                     .toString();
                         }
+                        else if (is instanceof InputStreamResourceStream) {
+                            name = ((InputStreamResourceStream) is).getName();
+                        }
                     }
 
                     ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(

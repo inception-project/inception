@@ -53,7 +53,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.converter.GenericMessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -188,7 +187,7 @@ class ExportServiceControllerImplTest
         try {
             session.disconnect();
         }
-        catch (MessageDeliveryException e) {
+        catch (Exception e) {
             // Ignore exceptions during disconnect
         }
 

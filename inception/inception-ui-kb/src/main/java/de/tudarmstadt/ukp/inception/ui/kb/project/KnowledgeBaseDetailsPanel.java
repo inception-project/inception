@@ -92,8 +92,13 @@ public class KnowledgeBaseDetailsPanel
         // set the URL of the KBW to the current SPARQL URL, if dealing with a remote repository
         if (kbw.getKb().getType() == REMOTE) {
             RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
-            String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
-            kbw.setUrl(url);
+            if (cfg != null) {
+                String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
+                kbw.setUrl(url);
+            }
+            else {
+                kbw.setUrl(null);
+            }
         }
 
         // wrap the given knowledge base model, then set it as the default model
