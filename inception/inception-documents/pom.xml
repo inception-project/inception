@@ -67,6 +67,12 @@
       <artifactId>inception-security</artifactId>
     </dependency>
 
+    <!-- Wicket dependencies -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+
     <!-- Spring dependencies -->
 
     <dependency>
