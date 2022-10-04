@@ -136,10 +136,16 @@ public class DocumentServiceImpl
     private static final String MSG_DOCUMENT_NAME_TOO_LONG = "document.name.error.too-long";
     private static final String MSG_DOCUMENT_NAME_EMPTY = "document.name.error.empty";
     private static final String MSG_DOCUMENT_NAME_ILLEGAL = "document.name.error.illegal";
+    private static final String MSG_DOCUMENT_NAME_ILLEGAL_LEADING = "document.name.error.illegal-leading";
     private static final String MVAR_LIMIT = "limit";
     private static final String MVAR_DETAIL = "detail";
 
-    private static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
+    private static final String FILESYSTEM_RESERVED_CHARACTERS = "<>:\"/\\|?*\0";
+    // May be a bit too restrictive to exclude all of these...
+    // private static final String SHELL_SPECIAL_CHARACTERS = "[]()^#%&$!@:+={}'~`";
+    private static final String RELAXED_SHELL_SPECIAL_CHARACTERS = "#%&{}$!:@+'`=";
+    private static final String DOCUMENT_NAME_ILLEGAL_CHARACTERS = FILESYSTEM_RESERVED_CHARACTERS
+            + RELAXED_SHELL_SPECIAL_CHARACTERS;
 
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
@@ -1552,11 +1558,17 @@ public class DocumentServiceImpl
                     .addKey(MSG_DOCUMENT_NAME_EMPTY));
         }
 
-        if (StringUtils.containsAny(aName, BAD_FOR_FILENAMES)) {
+        if (StringUtils.startsWith(aName, ".") || StringUtils.startsWith(aName, "-")) {
+            errors.add(new ValidationError("Document name cannot start with a dot [.] or dash [-].") //
+                    .addKey(MSG_DOCUMENT_NAME_ILLEGAL_LEADING));
+        }
+
+        if (StringUtils.containsAny(aName, DOCUMENT_NAME_ILLEGAL_CHARACTERS)) {
             errors.add(new ValidationError("Document name contains illegal characters. It must not"
-                    + "contain any of the following characters [" + BAD_FOR_FILENAMES + "]") //
+                    + "contain any of the following characters [" + DOCUMENT_NAME_ILLEGAL_CHARACTERS
+                    + "]") //
                             .addKey(MSG_DOCUMENT_NAME_ILLEGAL)
-                            .setVariable(MVAR_DETAIL, BAD_FOR_FILENAMES));
+                            .setVariable(MVAR_DETAIL, DOCUMENT_NAME_ILLEGAL_CHARACTERS));
         }
 
         var len = aName.length();
