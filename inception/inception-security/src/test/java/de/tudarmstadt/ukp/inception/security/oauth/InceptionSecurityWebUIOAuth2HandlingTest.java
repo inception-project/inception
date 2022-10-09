@@ -133,31 +133,31 @@ class InceptionSecurityWebUIOAuth2HandlingTest
         assertThatExceptionOfType(OAuth2AuthenticationException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
-                .withMessageContaining("illegal characters");
+                .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("../escape.zip", oAuth2AccessToken);
         assertThatExceptionOfType(OAuth2AuthenticationException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
-                .withMessageContaining("illegal characters");
+                .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("", oAuth2AccessToken);
         assertThatExceptionOfType(OAuth2AuthenticationException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
-                .withMessageContaining("empty");
+                .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("*".repeat(2000), oAuth2AccessToken);
         assertThatExceptionOfType(OAuth2AuthenticationException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
-                .withMessageContaining("long");
+                .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("mel\0ove", oAuth2AccessToken);
         assertThatExceptionOfType(OAuth2AuthenticationException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
-                .withMessageContaining("control");
+                .withMessageContaining("Illegal username");
 
         assertThat(userService.list()).isEmpty();
     }

@@ -71,7 +71,7 @@ class DocumentServiceImplTest
                 .extracting(ValidationError::getMessage).first().asString() //
                 .contains("cannot contain any control characters");
 
-        assertThat(sut.validateDocumentName("john\u000B")) //
+        assertThat(sut.validateDocumentName("john\u001B")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
                 .contains("control characters");

@@ -177,7 +177,7 @@ class UserDaoImplTest
                 .extracting(ValidationError::getMessage).first().asString() //
                 .contains("contain any of these characters");
 
-        assertThat(userDao.validateUsername("john\u000B")) //
+        assertThat(userDao.validateUsername("john\u001B")) //
                 .hasSize(1) //
                 .extracting(ValidationError::getMessage).first().asString() //
                 .contains("control characters");
