@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -1340,7 +1342,7 @@
         <artifactId>jsr305</artifactId>
         <version>3.0.2</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.pf4j</groupId>
         <artifactId>pf4j</artifactId>
@@ -1570,6 +1572,11 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>oauth2-oidc-sdk</artifactId>
+        <version>9.35</version>
       </dependency>
       
       <!-- Springdoc -->
@@ -2306,6 +2313,19 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.hibernate</groupId>
+              <artifactId>hibernate-jpamodelgen</artifactId>
+              <version>${hibernate.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
@@ -2374,7 +2394,8 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredUnusedDeclaredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies
+            combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
@@ -2967,7 +2988,10 @@
                   <environmentVariables>
                     <DEBUG>license-report*</DEBUG>
                   </environmentVariables>
-                  <arguments>exec -- license-checker --production --out ${project.build.directory}/js/META-INF/NPM-DEPENDENCIES.json --json --customPath ../../../../inception-build/src/main/resources/inception/licenseCheckerCustomFormat.json --excludePrivatePackages</arguments>
+                  <arguments>exec -- license-checker --production --out
+                    ${project.build.directory}/js/META-INF/NPM-DEPENDENCIES.json --json --customPath
+                    ../../../../inception-build/src/main/resources/inception/licenseCheckerCustomFormat.json
+                    --excludePrivatePackages</arguments>
                 </configuration>
               </execution>
               <execution>

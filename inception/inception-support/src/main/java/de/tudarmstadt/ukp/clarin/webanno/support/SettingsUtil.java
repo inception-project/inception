@@ -40,6 +40,9 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
+    public static final String PROFILE_PREAUTH = "auto-mode-preauth";
+    public static final String PROFILE_DATABASE = "auto-mode-builtin";
+
     private static String propApplicationHome = "webanno.home";
     private static String applicationUserHomeSubdir = ".webanno";
 
