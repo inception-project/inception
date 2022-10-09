@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import javax.servlet.http.HttpSession;
 
@@ -59,25 +59,26 @@ public class LogoutPanel
 
     private @SpringBean PreauthenticationProperties preauthenticationProperties;
     private @SpringBean LoginProperties securityProperties;
+    private @SpringBean UserDao userRepository;
 
     public LogoutPanel(String id, IModel<User> aUser)
     {
         super(id, aUser);
 
         var logoutLink = new LambdaStatelessLink("logout", this::actionLogout);
-        logoutLink.add(visibleWhen(() -> isBlank(securityProperties.getAutoLogin())));
+        logoutLink.add(visibleWhen(this::isLogoutEnabled));
         add(logoutLink);
 
         var logoutTimer = new WebMarkupContainer("logoutTimer");
-        logoutTimer.add(visibleWhen(
-                () -> getAutoLogoutTime() > 0 && isBlank(securityProperties.getAutoLogin())));
+        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0 && isLogoutEnabled()));
         add(logoutTimer);
 
         var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
                 getModel().map(User::getUsername).orElse("").getObject());
         var profileLink = new BookmarkablePageLink<>("profile", ManageUsersPage.class,
                 profileLinkParameters);
-        profileLink.add(enabledWhen(this::isProfileSelfServiceAllowed));
+        profileLink.add(enabledWhen(
+                () -> userRepository.isProfileSelfServiceAllowed(getModel().getObject())));
         profileLink.add(visibleWhen(getModel().isPresent()));
         profileLink.add(new Label("username", getModel().map(User::getUiName)));
         add(profileLink);
@@ -86,10 +87,16 @@ public class LogoutPanel
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
     }
 
-    private boolean isProfileSelfServiceAllowed()
+    private boolean isLogoutEnabled()
     {
-        return UserDao.isProfileSelfServiceAllowed() && //
-                getModel().map(u -> u.getRealm() == REALM_GLOBAL).orElse(false).getObject();
+        // Logout is disabled for external (OAuth2) users if autoLogin is enabled.
+        // Pre-authenticated users do not count as external users here as we may have a logout
+        // link from the IdP configured
+        if (startsWith(getModel().getObject().getRealm(), UserDao.REALM_EXTERNAL_PREFIX)) {
+            return isBlank(securityProperties.getAutoLogin());
+        }
+
+        return true;
     }
 
     @SuppressWarnings("unchecked")

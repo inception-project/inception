@@ -20,6 +20,63 @@ This section summarizes important upgrade notes from the release history of INCE
 
 NOTE: It is a good idea to back up your installation and data before an upgrade.
 
+== INCEpTION 25.0
+
+=== Manual intervention for external pre-authentication users
+
+If you use the external pre-authentication feature of {product-name} (i.e. if you run it behind an
+authenticating reverse proxy), you need to perform a manual maintenance step. As of this version,
+all users that are created via external pre-authentication are added to the realm `preauth`. Any
+existing users that were created via pre-authentication need to be moved to this realm manually,
+otherwise they will not be able to log in anymore.
+
+This migration can be performed by invoking {product-name} from the command line as:
+
+[source,shell,indent=0,subs="+attributes"]
+----
+java -jar inception-app-webapp-{revnumber}-standalone.jar users migrate-preauthenticated-users --dry-run
+----
+
+This command only works if {product-name} is configured for external pre-authentication. If you keep
+the `settings.properties` file in a non-standard location, you need to specify the the respective 
+path using `-Dinception.home=/PATH/TO/FOLDER_CONTAINING_SETTINGS_PROPERTIES` **before** the `-jar` in the
+command.
+
+The command will migrate all users that have no password (i.e. the `password` in the database is
+`null` or an empty encrypted password was stored) and which do also not have `ROLE_REMOTE`. A user
+with no password cannot log in via the login form. The remote API does not support external 
+pre-authentication and always uses the database for authentication. So if the user either has a
+password or `ROLE_REMOTE`, it will not be migrated.
+
+The command as shown above will operate in **dry-run** mode and will only print the results of the
+migration without actually performing it. You should look at the results to see if you are ok with
+them. Then, remove the `--dry-run` argument and run the command again to actually perform the
+migration.
+
+The alternative to using this command is to directly update the respective user records in the
+`users` table in the database by setting the `realm` of all externally pre-authenticated users to
+`preauth`. 
+
+=== Configuration property names changed
+
+The following configuration property names from the `settings.properties` file have changed. When you
+start {product-name}, warnings will be logged if the old names are used until you rename the
+respective properties in your `settings.properties` file. In a future version, the old names will
+not be supported anymore and the warnings will be removed.
+
+
+|===
+| Old name | New name | Description
+
+| `login.message`
+| `security.login.message`
+| Custom message to appear on the login page.
+
+| `login.max-concurrent-sessions`
+| `security.login.max-concurrent-sessions`
+| Maximum number of concurrently logged-in users.
+|===
+
 == INCEpTION 24.0
 
 === PDF editor

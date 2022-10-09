@@ -35,12 +35,26 @@
                 <input wicket:id="username" type="text" class="form-control"/>
               </div>
             </div>
+            <div class="row form-row" wicket:enclosure="realm">
+              <label wicket:for="realm" class="col-sm-2 col-form-label">
+                <wicket:label key="realm"/>
+              </label>
+              <div class="col-sm-10">
+                <select wicket:id="realm" class="form-select"/>
+              </div>
+            </div>
             <div class="row form-row">
               <label wicket:for="uiName" class="col-sm-2 col-form-label">
                 <wicket:label key="uiName"/>
               </label>
               <div class="col-sm-10">
                 <input wicket:id="uiName" type="text" class="form-control"/>
+              </div>
+            </div>
+            <div class="row form-row" wicket:id="passwordUnsetNotice">
+              <div class="offset-md-2 col-sm-10">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                Password is unset. User cannot log in until a password is set.
               </div>
             </div>
             <div class="row form-row" wicket:enclosure="oldPassword">

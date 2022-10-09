@@ -30,13 +30,14 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 @EnableWebSecurity
 public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
 
-    @Profile("auto-mode-preauth")
+    @Profile(SettingsUtil.PROFILE_PREAUTH)
     @Bean
     public SecurityFilterChain externalPreAuthenticationFilterChain(HttpSecurity aHttp,
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
@@ -87,7 +88,7 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
     }
 
     @Bean
-    @Profile("auto-mode-preauth")
+    @Profile(SettingsUtil.PROFILE_PREAUTH)
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
             AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository)
         throws Exception
