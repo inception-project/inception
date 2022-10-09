@@ -43,6 +43,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -152,8 +153,8 @@ public class DocumentServiceImpl
     private static final String MVAR_CHARS = "chars";
 
     private static final String DOCUMENT_NAME_ILLEGAL_PREFIX_CHARACTERS = FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
-    private static final String DOCUMENT_NAME_ILLEGAL_CHARACTERS = FILESYSTEM_RESERVED_CHARACTERS
-            + RELAXED_SHELL_SPECIAL_CHARACTERS;
+    private static final String DOCUMENT_NAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
+            RELAXED_SHELL_SPECIAL_CHARACTERS, FILESYSTEM_RESERVED_CHARACTERS);
 
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;

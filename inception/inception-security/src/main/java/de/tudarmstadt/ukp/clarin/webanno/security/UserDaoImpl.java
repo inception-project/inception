@@ -102,7 +102,7 @@ public class UserDaoImpl
 
     private static final String USERNAME_ILLEGAL_PREFIX_CHARACTERS = FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
     private static final String USERNAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
-            "^/\\&*?+$![]" + FILESYSTEM_RESERVED_CHARACTERS);
+            "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     private static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER);
