@@ -15,11 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.inception.security.oauth;
 
-public interface LoginProperties
+import java.util.List;
+
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+public interface OAuth2Adapter
 {
-    long getMaxConcurrentSessions();
+    OAuth2User loadUserOAuth2User(OAuth2UserRequest userRequest);
 
-    String getMessage();
+    OidcUser loadOidcUser(OidcUserRequest userRequest);
+
+    List<ClientRegistration> getOAuthClientRegistrations();
+
 }

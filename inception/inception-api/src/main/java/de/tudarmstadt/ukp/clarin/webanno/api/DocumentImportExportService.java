@@ -224,8 +224,37 @@ public interface DocumentImportExportService
             String fileName, Mode mode)
         throws UIMAException, IOException, ClassNotFoundException;
 
+    /**
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     *
+     * @param document
+     *            The {@link SourceDocument} where we get the id which hosts both the source
+     *            Document and the annotated document
+     * @param user
+     *            the {@link User} who annotates the document.
+     * @param aFormat
+     *            the format.
+     * @param mode
+     *            the mode.
+     * @return a temporary file.
+     * @throws UIMAException
+     *             if there was a conversion error.
+     * @throws IOException
+     *             if there was an I/O error.
+     * @throws ClassNotFoundException
+     *             if the DKPro Core writer could not be found.
+     */
+    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
+            Mode mode)
+        throws UIMAException, IOException, ClassNotFoundException;
+
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode, boolean stripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    File exportAnnotationDocument(SourceDocument aDocument, String aUser, FormatSupport aFormat,
+            Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException, ClassNotFoundException;
 

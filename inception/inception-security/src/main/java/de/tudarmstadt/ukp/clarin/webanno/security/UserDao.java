@@ -17,11 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider.getApplicationContext;
-import static java.util.Arrays.asList;
-
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.wicket.validation.ValidationError;
@@ -29,7 +25,6 @@ import org.apache.wicket.validation.ValidationError;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 /**
  * Provide methods for user management such as create, update, list users
@@ -43,6 +38,8 @@ public interface UserDao
 
     static final String REALM_GLOBAL = null;
     static final String REALM_PROJECT_PREFIX = "project:";
+    static final String REALM_EXTERNAL_PREFIX = "external:";
+    static final String REALM_PREAUTH = "preauth";
 
     User getCurrentUser();
 
@@ -106,7 +103,7 @@ public interface UserDao
      * 
      * @param aUsername
      *            the username.
-     * @return the user.
+     * @return the user or {@code null} if the user does not exist
      */
     User get(String aUsername);
 
@@ -152,17 +149,6 @@ public interface UserDao
 
     List<String> listRealms();
 
-    public static boolean isProfileSelfServiceAllowed()
-    {
-        // If users are allowed to access their profile information, the also need to access the
-        // admin area. Note: access to the users own profile should be handled differently.
-        List<String> activeProfiles = asList(
-                getApplicationContext().getEnvironment().getActiveProfiles());
-        Properties settings = SettingsUtil.getSettings();
-        return !activeProfiles.contains("auto-mode-preauth")
-                && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
-    }
-
     boolean hasRole(User aUser, Role aRole);
 
     /**
@@ -179,7 +165,39 @@ public interface UserDao
      */
     boolean isValidUsername(String aName);
 
+    /**
+     * @param aName
+     *            a name.
+     * @return if the name meets the user name policy.
+     */
+    boolean isValidUiName(String aName);
+
+    /**
+     * @param aEMail
+     *            an e-mail address.
+     * @return if the name meets the user name policy.
+     */
+    boolean isValidEmail(String aEMail);
+
     List<ValidationError> validatePassword(String aPassword);
 
     List<ValidationError> validateUsername(String aName);
+
+    List<ValidationError> validateEmail(String aEMail);
+
+    List<ValidationError> validateUiName(String aName);
+
+    boolean userHasNoPassword(User aUser);
+
+    /**
+     * Users that are bound to a project (i.e. the realm is set) or which are external users (i.e.
+     * they have an empty password) cannot change their password.
+     * 
+     * @param aUser
+     *            a user
+     * @return if the user can change their password.
+     */
+    boolean canChangePassword(User aUser);
+
+    boolean isProfileSelfServiceAllowed(User aUser);
 }

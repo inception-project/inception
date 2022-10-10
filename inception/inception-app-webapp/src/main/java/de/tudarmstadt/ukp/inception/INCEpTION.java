@@ -25,6 +25,7 @@ import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.NONE;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.dkpro.core.api.resources.ResourceObjectProviderBase;
@@ -40,6 +41,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -82,11 +84,19 @@ public class INCEpTION
         // We do not want DKPro Core to try and auto-download anything
         System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
 
+        SettingsUtil.customizeApplication("inception.home", ".inception");
+
+        try {
+            new EmbeddedDatabaseBackupHandler().maybeBackupEmbeddedDatabase();
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Error trying to perform a backup of the embedded database",
+                    e);
+        }
+
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
         aBuilder.headless(false);
-
-        SettingsUtil.customizeApplication("inception.home", ".inception");
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick

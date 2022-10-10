@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static java.lang.Math.min;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -34,6 +35,8 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.copyLarge;
+import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
@@ -94,6 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
@@ -1086,6 +1090,25 @@ public class ProjectServiceImpl
             else {
                 slug = aSlug + suffix;
             }
+        }
+    }
+
+    @Transactional
+    @Override
+    public Realm getRealm(String aRealmId)
+    {
+        if (!startsWith(aRealmId, REALM_PROJECT_PREFIX)) {
+            throw new IllegalArgumentException(
+                    "Project realm must start with [" + REALM_PROJECT_PREFIX + "]");
+        }
+
+        long projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
+        Project project = getProject(projectId);
+        if (project != null) {
+            return new Realm(aRealmId, project.getName());
+        }
+        else {
+            return new Realm(aRealmId, "<Deleted project: " + projectId + ">");
         }
     }
 }

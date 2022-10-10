@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_P
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.ADMIN_DEFAULT_USERNAME;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhenNot;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -46,9 +46,12 @@ import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.parameter.UrlRequestParametersAdapter;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -65,6 +68,7 @@ import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -78,6 +82,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 public class LoginPage
     extends ApplicationPageBase
 {
+    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutpLogin";
+    private static final String PARAM_ERROR = "error";
+
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
 
     private static final long serialVersionUID = -333578034707672294L;
@@ -89,26 +96,58 @@ public class LoginPage
     private @SpringBean SecurityProperties securityProperties;
     private @SpringBean SessionRegistry sessionRegistry;
 
-    private LoginForm form;
-    private final WebMarkupContainer tooManyUsersLabel;
+    private final LoginForm localLoginPanel;
+    private final OAuth2LoginPanel oAuth2LoginPanel;
 
-    public LoginPage()
+    private final WebMarkupContainer tooManyUsersLabel;
+    private final IModel<Boolean> tooManyUsers;
+
+    public LoginPage(PageParameters aParameters)
     {
         setStatelessHint(true);
         setVersioned(false);
 
-        add(form = new LoginForm("loginForm"));
-        form.add(enabledWhen(() -> !isTooManyUsers()));
+        tooManyUsers = LoadableDetachableModel.of(this::isTooManyUsers).orElse(false);
 
-        redirectIfAlreadyLoggedIn();
+        localLoginPanel = new LoginForm("loginForm");
+        localLoginPanel.add(visibleWhen(this::isLoginAllowed));
+        queue(localLoginPanel);
+
+        redirectIfAlreadyLoggedIn(); // Must come after the localLoginPanel is initialized!
+
+        oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel");
+        oAuth2LoginPanel.add(visibleWhen(this::isLoginAllowed));
+        queue(oAuth2LoginPanel);
+
+        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
+                || tooManyUsers.getObject();
+        if (!skipAutoLogin && isLoginAllowed()) {
+            oAuth2LoginPanel.autoLogin();
+        }
+
+        // Failed OAuth2 call this page with the parameter `?error` so we display a message
+        var error = aParameters.getNamedKeys().contains(PARAM_ERROR);
+        if (error) {
+            error("Login failed");
+        }
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
-        tooManyUsersLabel.add(visibleWhen(this::isTooManyUsers));
-        form.add(tooManyUsersLabel);
+        tooManyUsersLabel.add(visibleWhen(tooManyUsers));
+        queue(tooManyUsersLabel);
 
+        maybeInitializeAdminUser();
+    }
+
+    private boolean isLoginAllowed()
+    {
+        return !tooManyUsers.getObject() && !isAdminAccountRecoveryMode();
+    }
+
+    private void maybeInitializeAdminUser()
+    {
         // Reset/recreated default admin account if requested
-        if (System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null) {
-            form.setVisible(false);
+        if (isAdminAccountRecoveryMode()) {
+            localLoginPanel.setVisible(false);
             User admin;
             boolean exists;
             if (userRepository.exists(ADMIN_DEFAULT_USERNAME)) {
@@ -159,6 +198,11 @@ public class LoginPage
 
             userRepository.create(admin);
         }
+    }
+
+    private boolean isAdminAccountRecoveryMode()
+    {
+        return System.getProperty(PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT) != null;
     }
 
     /**
@@ -232,8 +276,9 @@ public class LoginPage
             add(new RequiredTextField<String>("username").setOutputMarkupId(true));
             add(new PasswordTextField("password").setOutputMarkupId(true));
             add(new HiddenField<>("urlfragment"));
-            add(new Button("signInBtn").add(enabledWhen(() -> !isTooManyUsers())));
-            add(new Label("loginMessage", loginProperties.getMessage()).setEscapeModelStrings(false)
+            add(new Button("signInBtn").add(enabledWhenNot(tooManyUsers)));
+            add(new Label("loginMessage", loginProperties.getMessage()) //
+                    .setEscapeModelStrings(false) //
                     .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 
@@ -273,8 +318,9 @@ public class LoginPage
             }
             else {
                 log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
-                if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
-                    Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
+                if (isNotBlank(localLoginPanel.urlfragment)
+                        && localLoginPanel.urlfragment.startsWith("!")) {
+                    Url url = Url.parse("http://dummy?" + localLoginPanel.urlfragment.substring(1));
                     UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
                     LinkedHashMap<String, StringValue> params = new LinkedHashMap<>();
                     for (String name : adapter.getParameterNames()) {
@@ -312,8 +358,8 @@ public class LoginPage
 
         // In case there was a URL fragment in the original URL, append it again to the redirect
         // URL.
-        if (redirectUrl != null && isNotBlank(form.urlfragment)) {
-            redirectUrl += "#" + form.urlfragment;
+        if (redirectUrl != null && isNotBlank(localLoginPanel.urlfragment)) {
+            redirectUrl += "#" + localLoginPanel.urlfragment;
         }
 
         return redirectUrl;

@@ -37,9 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 public class InceptionApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
-    public static final String PROFILE_PREAUTH = "auto-mode-preauth";
-    public static final String PROFILE_DATABASE = "auto-mode-builtin";
-
     private static final String AUTH_MODE_PREAUTH = "preauth";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -69,11 +66,11 @@ public class InceptionApplicationContextInitializer
 
         // Activate bean profile depending on authentication mode
         if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
-            aEnvironment.setActiveProfiles(PROFILE_PREAUTH);
+            aEnvironment.setActiveProfiles(SettingsUtil.PROFILE_PREAUTH);
             log.info("Authentication: pre-auth");
         }
         else {
-            aEnvironment.setActiveProfiles(PROFILE_DATABASE);
+            aEnvironment.setActiveProfiles(SettingsUtil.PROFILE_DATABASE);
             log.info("Authentication: database");
         }
 

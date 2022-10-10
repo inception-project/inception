@@ -15,38 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.inception.cli;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import java.util.concurrent.Callable;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.stereotype.Component;
 
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Spec;
+
+@ConditionalOnNotWebApplication
 @Component
-@ConfigurationProperties("login")
-public class LoginPropertiesImpl
-    implements LoginProperties
+@Command( //
+        name = "users", //
+        description = "commands related to user management", //
+        subcommands = { UsersMigratePreAuthenticatedToRealmCliCommand.class })
+public class UsersCliCommand
+    implements Callable<Integer>
 {
-    private long maxConcurrentSessions;
-    private String message;
+    private @Spec CommandSpec spec;
 
     @Override
-    public long getMaxConcurrentSessions()
+    public Integer call()
     {
-        return maxConcurrentSessions;
-    }
-
-    public void setMaxConcurrentSessions(long aMaxConcurrentSessions)
-    {
-        maxConcurrentSessions = aMaxConcurrentSessions;
-    }
-
-    @Override
-    public String getMessage()
-    {
-        return message;
-    }
-
-    public void setMessage(String aMessage)
-    {
-        message = aMessage;
+        spec.commandLine().usage(System.out);
+        return 0;
     }
 }

@@ -59,11 +59,11 @@ import com.github.rjeschke.txtmark.Processor;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
@@ -239,6 +239,12 @@ public class AcceptInvitePage
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
                 aFormData.username);
+
+        if (existingUser.isPresent() && !existingUser.get().isEnabled()) {
+            error("User deactivated");
+            return null;
+        }
+
         if (invite.getObject().getAskForEMail() != NOT_ALLOWED) {
             String storedEMail = existingUser.map(User::getEmail).orElse(null);
             if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {

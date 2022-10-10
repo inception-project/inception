@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -38,17 +39,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
+import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPointImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2AdapterImpl;
 
 @Configuration
-@EnableConfigurationProperties({ SecurityPropertiesImpl.class,
+@EnableConfigurationProperties({ //
+        LegacyLoginPropertiesImpl.class, //
+        LoginPropertiesImpl.class, //
+        SecurityPropertiesImpl.class, //
         PreauthenticationPropertiesImpl.class })
 public class SecurityAutoConfiguration
 {
@@ -57,7 +65,8 @@ public class SecurityAutoConfiguration
 
     @Bean("userRepository")
     public UserDao userService(SecurityProperties aSecurityProperties,
-            @Autowired(required = false) SessionRegistry aSessionRegistry)
+            @Autowired(required = false) SessionRegistry aSessionRegistry,
+            OAuth2Adapter aOAuth2Adapter)
     {
         return new UserDaoImpl(entityManager, aSecurityProperties, transactionManager,
                 aSessionRegistry);
@@ -107,5 +116,14 @@ public class SecurityAutoConfiguration
         expressionHandler.setApplicationContext(aContext);
         expressionHandler.setPermissionEvaluator(aEvaluator);
         return expressionHandler;
+    }
+
+    @Bean
+    public OAuth2Adapter oAuth2Adapter(@Lazy UserDao aUserRepository,
+            @Lazy OverridableUserDetailsManager aUserDetailsManager,
+            @Lazy Optional<ClientRegistrationRepository> aClientRegistrationRepository)
+    {
+        return new OAuth2AdapterImpl(aUserRepository, aUserDetailsManager,
+                aClientRegistrationRepository);
     }
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static java.io.File.createTempFile;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -168,17 +170,20 @@ public interface FormatSupport
         }
 
         // If the writer produced more than one file, we package it up as a ZIP file
-        File exportFile;
         if (aTargetFolder.listFiles().length > 1) {
-            exportFile = new File(aTargetFolder.getAbsolutePath() + ".zip");
+            File exportFile = createTempFile("inception-document", ".zip");
+            // File exportFile = new File(aTargetFolder.getAbsolutePath() + ".zip");
             zipFolder(aTargetFolder, exportFile);
-        }
-        else {
-            exportFile = new File(aTargetFolder.getParent(),
-                    aTargetFolder.listFiles()[0].getName());
-            copyFile(aTargetFolder.listFiles()[0], exportFile);
+            return exportFile;
         }
 
+        // If the writer produced only a single file, then that is the result
+        File exportFile = createTempFile(
+                FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName()),
+                "." + FilenameUtils.getExtension(aTargetFolder.listFiles()[0].getName()));
+        // File exportFile = new File(aTargetFolder.getParent(),
+        // aTargetFolder.listFiles()[0].getName());
+        copyFile(aTargetFolder.listFiles()[0], exportFile);
         return exportFile;
     }
 }

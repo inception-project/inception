@@ -35,8 +35,10 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.io.FileUtils.copyFileToDirectory;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -52,6 +54,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -249,30 +252,11 @@ public class AnnotationDocumentExporter
                             && !annDoc.getState().equals(AnnotationDocumentState.NEW)
                             && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
 
-                        File annSerDir = new File(aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
-                                + srcDoc.getName());
-                        forceMkdir(annSerDir);
-                        try (OutputStream os = new FileOutputStream(
-                                new File(annSerDir, annDoc.getUser() + ".ser"))) {
-                            documentService.exportCas(srcDoc, annDoc.getUser(), os);
-                        }
+                        exportSerializedCas(aStage, srcDoc, annDoc);
 
                         if (format != null) {
-                            File annDocDir = new File(aStage.getAbsolutePath()
-                                    + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-                            File annFile = null;
-                            try {
-                                annFile = importExportService.exportAnnotationDocument(srcDoc,
-                                        annDoc.getUser(), format, annDoc.getUser(), ANNOTATION,
-                                        false, bulkOperationContext);
-                                forceMkdir(annDocDir);
-                                copyFileToDirectory(annFile, annDocDir);
-                            }
-                            finally {
-                                if (annFile != null) {
-                                    forceDelete(annFile);
-                                }
-                            }
+                            exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
+                                    annDoc);
                         }
 
                         log.info("Exported annotation document content for user [{}] for " //
@@ -284,6 +268,47 @@ public class AnnotationDocumentExporter
 
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 80.0));
             i++;
+        }
+    }
+
+    private void exportSerializedCas(File aStage, SourceDocument srcDoc, AnnotationDocument annDoc)
+        throws IOException, FileNotFoundException
+    {
+        File annSerDir = new File(
+                aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER + srcDoc.getName());
+        forceMkdir(annSerDir);
+        try (OutputStream os = new FileOutputStream(
+                new File(annSerDir, annDoc.getUser() + ".ser"))) {
+            documentService.exportCas(srcDoc, annDoc.getUser(), os);
+        }
+    }
+
+    private void exportAdditionalFormat(File aStage,
+            Map<Pair<Project, String>, Object> bulkOperationContext, SourceDocument srcDoc,
+            FormatSupport format, AnnotationDocument annDoc)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        File annDocDir = new File(
+                aStage.getAbsolutePath() + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
+        File annFile = null;
+        try {
+            annFile = importExportService.exportAnnotationDocument(srcDoc, annDoc.getUser(), format,
+                    annDoc.getUser(), ANNOTATION, false, bulkOperationContext);
+            forceMkdir(annDocDir);
+
+            if (userRepository.isValidUsername(annDoc.getUser())) {
+                // Safe-guard for legacy instances where user name validity has not been checked.
+                var filename = annDoc.getUser() + "." + getExtension(annFile.getName());
+                FileUtils.copyFile(annFile, new File(annDocDir, filename));
+            }
+            else {
+                copyFileToDirectory(annFile, annDocDir);
+            }
+        }
+        finally {
+            if (annFile != null) {
+                forceDelete(annFile);
+            }
         }
     }
 

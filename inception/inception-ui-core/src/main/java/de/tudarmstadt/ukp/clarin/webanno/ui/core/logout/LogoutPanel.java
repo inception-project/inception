@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import javax.servlet.http.HttpSession;
 
@@ -37,8 +38,10 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
@@ -54,35 +57,46 @@ public class LogoutPanel
 {
     private static final long serialVersionUID = 3725185820083021070L;
 
-    private final PreauthenticationProperties preauthenticationProperties;
+    private @SpringBean PreauthenticationProperties preauthenticationProperties;
+    private @SpringBean LoginProperties securityProperties;
+    private @SpringBean UserDao userRepository;
 
-    public LogoutPanel(String id, IModel<User> aUser,
-            PreauthenticationProperties aPreauthenticationProperties)
+    public LogoutPanel(String id, IModel<User> aUser)
     {
         super(id, aUser);
 
-        preauthenticationProperties = aPreauthenticationProperties;
+        var logoutLink = new LambdaStatelessLink("logout", this::actionLogout);
+        logoutLink.add(visibleWhen(this::isLogoutEnabled));
+        add(logoutLink);
 
-        add(new LambdaStatelessLink("logout", this::actionLogout));
+        var logoutTimer = new WebMarkupContainer("logoutTimer");
+        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0 && isLogoutEnabled()));
+        add(logoutTimer);
 
-        BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
-                ManageUsersPage.class, new PageParameters().add(ManageUsersPage.PARAM_USER,
-                        getModel().map(User::getUsername).orElse("").getObject()));
-        profileLink.add(enabledWhen(this::isProfileSelfServiceAllowed));
+        var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
+                getModel().map(User::getUsername).orElse("").getObject());
+        var profileLink = new BookmarkablePageLink<>("profile", ManageUsersPage.class,
+                profileLinkParameters);
+        profileLink.add(enabledWhen(
+                () -> userRepository.isProfileSelfServiceAllowed(getModel().getObject())));
         profileLink.add(visibleWhen(getModel().isPresent()));
         profileLink.add(new Label("username", getModel().map(User::getUiName)));
         add(profileLink);
-
-        add(new WebMarkupContainer("logoutTimer").add(visibleWhen(() -> getAutoLogoutTime() > 0)));
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
     }
 
-    private boolean isProfileSelfServiceAllowed()
+    private boolean isLogoutEnabled()
     {
-        return UserDao.isProfileSelfServiceAllowed()
-                && getModel().map(u -> u.getRealm() == REALM_GLOBAL).orElse(false).getObject();
+        // Logout is disabled for external (OAuth2) users if autoLogin is enabled.
+        // Pre-authenticated users do not count as external users here as we may have a logout
+        // link from the IdP configured
+        if (startsWith(getModel().getObject().getRealm(), UserDao.REALM_EXTERNAL_PREFIX)) {
+            return isBlank(securityProperties.getAutoLogin());
+        }
+
+        return true;
     }
 
     @SuppressWarnings("unchecked")

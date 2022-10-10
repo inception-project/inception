@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.ArrayList;
@@ -32,8 +35,11 @@ import java.util.List;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
@@ -43,21 +49,25 @@ import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
-import org.apache.wicket.validation.validator.StringValidator;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
 public class UserDetailPanel
     extends Panel
@@ -67,6 +77,7 @@ public class UserDetailPanel
     private @SpringBean UserDao userRepository;
     private @SpringBean(required = false) RemoteApiProperties remoteApiProperties;
     private @SpringBean AuthenticationProvider authenticationProvider;
+    private @SpringBean OAuth2Adapter oAuth2Adapter;
 
     private boolean isCreate = false;
     private PasswordTextField oldPasswordField;
@@ -96,9 +107,17 @@ public class UserDetailPanel
         queue(new Label("lastLogin"));
         queue(new Label("created"));
         queue(new EmailTextField("email") //
-                .add(new StringValidator(0, 200)));
+                .add(this::validateEmail));
+
+        var passwordUnsetNotice = new WebMarkupContainer("passwordUnsetNotice");
+        passwordUnsetNotice.setOutputMarkupPlaceholderTag(true);
+        passwordUnsetNotice
+                .add(visibleWhen(() -> userRepository.userHasNoPassword(getModel().getObject())
+                        && userRepository.canChangePassword(getModelObject())));
+        queue(passwordUnsetNotice);
 
         oldPasswordField = new PasswordTextField("oldPassword");
+        oldPasswordField.setOutputMarkupPlaceholderTag(true);
         oldPasswordField.add(this::validateOldPassword);
         oldPasswordField.setModel(PropertyModel.of(this, "oldPassword"));
         oldPasswordField.setRequired(true);
@@ -106,17 +125,20 @@ public class UserDetailPanel
         queue(oldPasswordField);
 
         passwordField = new PasswordTextField("password");
+        passwordField.setOutputMarkupPlaceholderTag(true);
         passwordField.add(this::validatePassword);
         passwordField.setModel(PropertyModel.of(this, "password"));
         passwordField.setRequired(false);
-        passwordField.add(visibleWhen(this::canChangePassword));
+        passwordField.add(visibleWhen(() -> userRepository.canChangePassword(getModelObject())));
         queue(passwordField);
 
         repeatPasswordField = new PasswordTextField("repeatPassword");
+        repeatPasswordField.setOutputMarkupPlaceholderTag(true);
         repeatPasswordField.add(this::validatePassword);
         repeatPasswordField.setModel(PropertyModel.of(this, "repeatPassword"));
         repeatPasswordField.setRequired(false);
-        repeatPasswordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
+        repeatPasswordField
+                .add(visibleWhen(() -> userRepository.canChangePassword(getModelObject())));
         queue(repeatPasswordField);
 
         queue(new ListMultipleChoice<>("roles", getRoles()) //
@@ -135,18 +157,59 @@ public class UserDetailPanel
         var form = new Form<User>("form");
         form.add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
         queue(form);
+
+        var realm = new DropDownChoice<Realm>("realm");
+        realm.setModel(LambdaModelAdapter.of( //
+                () -> new Realm(aModel.getObject().getRealm()), //
+                _realm -> aModel.getObject().setRealm(_realm.getId())));
+        realm.setChoices(LoadableDetachableModel.of(this::listRealms));
+        realm.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        realm.setOutputMarkupId(true);
+        realm.add(enabledWhen(() -> !viewingOwnUserDetails()
+                // Do not permit moving users out of project realms
+                && !Realm.isProjectRealm(aModel.getObject().getRealm())));
+        realm.add(visibleWhen(() -> realm.getChoicesModel().getObject().size() > 1
+                && userRepository.isCurrentUserAdmin()));
+        realm.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            _target.add(oldPasswordField, passwordField, repeatPasswordField, passwordUnsetNotice);
+        }));
+        queue(realm);
+    }
+
+    private List<Realm> listRealms()
+    {
+        var realms = new ArrayList<Realm>();
+
+        userRepository.listRealms().stream() //
+                // Do not permit to move users to project realms
+                .filter(_id -> !startsWith(_id, UserDao.REALM_PROJECT_PREFIX)) //
+                .map(Realm::new) //
+                .forEach(realms::add);
+
+        oAuth2Adapter.getOAuthClientRegistrations()
+                .forEach(reg -> realms.add(Realm.forExternalOAuth(reg)));
+
+        // If there is a choice, then the local realm should always be a part of it
+        if (!realms.isEmpty()) {
+            realms.add(Realm.local());
+        }
+
+        return realms.stream() //
+                .distinct() //
+                .sorted(Realm::compareRealms) //
+                .collect(toList());
     }
 
     private boolean requiresOldPasswordToChange()
     {
         // When creating a user we do not need the old password
         // When a password change is not possible anyway, we also do not need the old password
-        if (isCreate || !canChangePassword()) {
+        if (isCreate || !userRepository.canChangePassword(getModelObject())) {
             return false;
         }
 
         // Always require old password when changing own password - even for admins
-        if (userRepository.getCurrentUsername().equals(getModelObject().getUsername())) {
+        if (viewingOwnUserDetails()) {
             return true;
         }
 
@@ -154,9 +217,9 @@ public class UserDetailPanel
         return !userRepository.isCurrentUserAdmin();
     }
 
-    private boolean canChangePassword()
+    private boolean viewingOwnUserDetails()
     {
-        return getModel().map(_u -> _u.getRealm() == null).orElse(false).getObject();
+        return userRepository.getCurrentUsername().equals(getModelObject().getUsername());
     }
 
     public void setCreatingNewUser(boolean aIsCreate)
@@ -206,14 +269,22 @@ public class UserDetailPanel
         userRepository.validateUsername(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
+    private void validateEmail(IValidatable<String> aValidatable)
+    {
+        userRepository.validateEmail(aValidatable.getValue()).forEach(aValidatable::error);
+    }
+
     private void validateUiName(IValidatable<String> aValidatable)
     {
         User other = userRepository.getUserByRealmAndUiName(getModelObject().getRealm(),
                 aValidatable.getValue());
+
         if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
             aValidatable.error(new ValidationError().addKey("uiName.alreadyExistsError")
                     .setVariable("name", aValidatable.getValue()));
         }
+
+        userRepository.validateUiName(aValidatable.getValue()).forEach(aValidatable::error);
     }
 
     private void validateEnabled(IValidatable<Boolean> aValidatable)

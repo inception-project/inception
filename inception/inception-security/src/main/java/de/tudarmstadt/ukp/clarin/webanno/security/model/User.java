@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
 /**
@@ -79,6 +80,7 @@ public class User
     @Column(nullable = true)
     private String uiName;
 
+    @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -134,13 +136,27 @@ public class User
         }
     }
 
-    private String encodePassword(String aPassword)
+    private User(Builder builder)
+    {
+        this.username = builder.username;
+        this.password = builder.password;
+        this.realm = builder.realm;
+        this.uiName = builder.uiName;
+        this.enabled = builder.enabled;
+        this.lastLogin = builder.lastLogin;
+        this.email = builder.email;
+        this.roles = builder.roles;
+        this.created = builder.created;
+        this.updated = builder.updated;
+    }
+
+    private synchronized PasswordEncoder getPasswordEncoder()
     {
         if (passwordEncoder == null) {
             ApplicationContext context = ApplicationContextProvider.getApplicationContext();
             passwordEncoder = context.getBean("passwordEncoder", PasswordEncoder.class);
         }
-        return passwordEncoder.encode(aPassword);
+        return passwordEncoder;
     }
 
     @Override
@@ -193,7 +209,7 @@ public class User
 
     public void setPassword(String aPassword)
     {
-        password = encodePassword(aPassword);
+        password = getPasswordEncoder().encode(aPassword);
     }
 
     public void setEncodedPassword(String aPassword)
@@ -311,5 +327,99 @@ public class User
     public String toString()
     {
         return "[" + username + "]";
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private String username;
+        private String password;
+        private String realm;
+        private String uiName;
+        private boolean enabled;
+        private Date lastLogin;
+        private String email;
+        private Set<Role> roles = new HashSet<>();
+        private Date created;
+        private Date updated;
+
+        private Builder()
+        {
+        }
+
+        public Builder withUsername(String aUsername)
+        {
+            this.username = aUsername;
+            return this;
+        }
+
+        public Builder withPassword(String aPassword)
+        {
+            this.password = aPassword;
+            return this;
+        }
+
+        public Builder withRealm(String aRealm)
+        {
+            this.realm = aRealm;
+            return this;
+        }
+
+        public Builder withRealm(Realm aRealm)
+        {
+            this.realm = aRealm.getId();
+            return this;
+        }
+
+        public Builder withUiName(String aUiName)
+        {
+            this.uiName = aUiName;
+            return this;
+        }
+
+        public Builder withEnabled(boolean aEnabled)
+        {
+            this.enabled = aEnabled;
+            return this;
+        }
+
+        public Builder withLastLogin(Date aLastLogin)
+        {
+            this.lastLogin = aLastLogin;
+            return this;
+        }
+
+        public Builder withEmail(String aEmail)
+        {
+            this.email = aEmail;
+            return this;
+        }
+
+        public Builder withRoles(Set<Role> aRoles)
+        {
+            this.roles = aRoles;
+            return this;
+        }
+
+        public Builder withCreated(Date aCreated)
+        {
+            this.created = aCreated;
+            return this;
+        }
+
+        public Builder withUpdated(Date aUpdated)
+        {
+            this.updated = aUpdated;
+            return this;
+        }
+
+        public User build()
+        {
+            return new User(this);
+        }
     }
 }

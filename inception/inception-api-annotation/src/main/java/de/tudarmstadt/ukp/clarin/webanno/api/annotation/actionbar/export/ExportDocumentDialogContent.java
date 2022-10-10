@@ -19,10 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
 import static java.util.stream.Collectors.toList;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.wicket.Application;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -33,15 +37,17 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
@@ -55,6 +61,7 @@ public class ExportDocumentDialogContent
     private static final Logger LOG = LoggerFactory.getLogger(ExportDocumentDialogContent.class);
 
     private @SpringBean DocumentImportExportService importExportService;
+    private @SpringBean DocumentService documentService;
 
     private IModel<AnnotatorState> state;
     private IModel<Preferences> preferences;
@@ -82,24 +89,48 @@ public class ExportDocumentDialogContent
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         queue(format);
 
-        queue(new AjaxDownloadLink("confirm", LoadableDetachableModel.of(this::export)));
+        queue(new AjaxDownloadLink("confirm", //
+                LoadableDetachableModel.of(this::export)));
+
         cancelButton = new LambdaAjaxLink("cancel", this::actionCloseDialog);
         cancelButton.setOutputMarkupId(true);
         queue(cancelButton);
+
         queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
     }
 
-    private FileResourceStream export()
+    private IResourceStream export()
     {
+        File exportedFile = null;
         try {
-            return new FileResourceStream(importExportService.exportAnnotationDocument(
-                    state.getObject().getDocument(), state.getObject().getUser().getUsername(),
-                    importExportService.getFormatByName(preferences.getObject().format).get(),
-                    state.getObject().getDocument().getName(), state.getObject().getMode()));
+            AnnotatorState s = state.getObject();
+            FormatSupport format = importExportService
+                    .getFormatByName(preferences.getObject().format).get();
+            exportedFile = importExportService.exportAnnotationDocument(s.getDocument(),
+                    s.getUser().getUsername(), format, s.getMode());
+
+            var name = exportedFile.getName();
+
+            // Safe-guard for legacy instances where document name validity has not been checked
+            // during import.
+            if (documentService.isValidDocumentName(s.getDocument().getName())) {
+                name = FilenameUtils.getBaseName(s.getDocument().getName()) + "."
+                        + FilenameUtils.getExtension(exportedFile.getName());
+            }
+
+            var resource = new InputStreamResourceStream(new FileInputStream(exportedFile), name);
+
+            var cleaner = Application.get().getResourceSettings().getFileCleaner();
+            cleaner.track(exportedFile, resource);
+
+            return resource;
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
             getSession().error("Export failed: " + ExceptionUtils.getRootCauseMessage(e));
+            if (exportedFile != null) {
+                exportedFile.delete();
+            }
             return null;
         }
     }
