@@ -17,26 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_RESERVED_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.wicket.validation.ValidationError;
@@ -48,6 +56,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -57,6 +66,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
@@ -81,13 +93,16 @@ public class UserDaoImpl
     private static final String MSG_USERNAME_ERROR_RESERVED = "username.error.reserved";
     private static final String MSG_USERNAME_ERROR_ILLEGAL_CHARACTERS = "username.error.illegal-characters";
     private static final String MSG_USERNAME_ERROR_CONTROL_CHARACTERS = "username.error.control-characters";
+    private static final String MSG_USERNAME_ILLEGAL_PREFIX = "username.name.error.illegal-prefix";
     private static final String MSG_USERNAME_ERROR_ILLEGAL_SPACE = "username.error.illegal-space";
     private static final String MSG_USERNAME_ERROR_BLANK = "username.error.blank";
     private static final String MSG_UINAME_ERROR_TOO_LONG = "ui-name.error.too-long";
     private static final String MSG_EMAIL_INVALID = "email.error.invalid";
     private static final String MSG_EMAIL_ERROR_TOO_LONG = "email.error.too-long";
 
-    private static final String USERNAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![] .";
+    private static final String USERNAME_ILLEGAL_PREFIX_CHARACTERS = FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+    private static final String USERNAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
+            "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
     private static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER);
@@ -319,10 +334,11 @@ public class UserDaoImpl
     @Transactional
     public List<String> listRealms()
     {
-        String query = "SELECT DISTINCT realm FROM " + User.class.getName();
-
-        return entityManager.createQuery(query, String.class) //
-                .getResultList();
+        var cr = entityManager.getCriteriaBuilder().createQuery(String.class);
+        cr.select(cr.from(User.class) //
+                .get(User_.realm)) //
+                .distinct(true);
+        return entityManager.createQuery(cr).getResultList();
     }
 
     @Override
@@ -456,6 +472,14 @@ public class UserDaoImpl
         if (containsAnyCharacterMatching(aName, Character::isWhitespace)) {
             errors.add(new ValidationError("Username cannot contain a space character") //
                     .addKey(MSG_USERNAME_ERROR_ILLEGAL_SPACE));
+            return errors;
+        }
+
+        if (startsWithMatching(aName, c -> contains(USERNAME_ILLEGAL_PREFIX_CHARACTERS, c))) {
+            errors.add(new ValidationError("Username cannot start with any of these characters: "
+                    + USERNAME_ILLEGAL_PREFIX_CHARACTERS) //
+                            .addKey(MSG_USERNAME_ILLEGAL_PREFIX)
+                            .setVariable(MVAR_CHARS, USERNAME_ILLEGAL_PREFIX_CHARACTERS));
             return errors;
         }
 
@@ -622,5 +646,63 @@ public class UserDaoImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication != null ? authentication.getName() : null;
+    }
+
+    // FIXME: Use DI to get password encoder
+    @Override
+    public boolean userHasNoPassword(User aUser)
+    {
+        var applicationContext = ApplicationContextProvider.getApplicationContext();
+        PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+        return aUser.getPassword() == null
+                || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword());
+    }
+
+    // FIXME: Use DI to get password encoder and environment
+    @Override
+    public boolean canChangePassword(User aUser)
+    {
+        var applicationContext = ApplicationContextProvider.getApplicationContext();
+
+        // Just in case the administrator has not run the user account migration of external
+        // accounts after the upgrade... because if an external user could change their password,
+        // they would be able to log in via form-based login...
+        if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
+                SettingsUtil.PROFILE_PREAUTH)) {
+            PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+            if (aUser.getPassword() == null
+                    || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword())) {
+                return false;
+            }
+        }
+
+        if (aUser.getRealm() == null) {
+            return true; // Local users can change their password
+        }
+
+        return false; // External users and project-bound users cannot
+    }
+
+    private static boolean isProfileSelfServiceEnabled()
+    {
+        Properties settings = SettingsUtil.getSettings();
+        return "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+    }
+
+    @Override
+    public boolean isProfileSelfServiceAllowed(User aUser)
+    {
+        if (!isProfileSelfServiceEnabled()) {
+            return false;
+        }
+
+        if (startsWith(aUser.getRealm(), UserDao.REALM_PROJECT_PREFIX)) {
+            // Project-bound users get no access to their profile. They could at most change their
+            // display name and email, but since those are basically their logins, we don't want
+            // them to be able to do that.
+            return false;
+        }
+
+        return true;
     }
 }

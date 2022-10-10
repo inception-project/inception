@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>25.0-SNAPSHOT</version>
+    <version>26.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-security</artifactId>
   <name>INCEpTION - Core - Security</name>
@@ -124,6 +124,10 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-core</artifactId>
     </dependency>
     
     <!-- Hibernate dependencies -->

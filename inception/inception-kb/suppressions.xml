@@ -22,4 +22,5 @@
 
 <suppressions>
     <suppress files=".*[\\/]src[\\/](test|it)[\\/]" checks="LineLength" />
+    <suppress files=".*[/\\]target[/\\].*" checks=".*"/>
 </suppressions>

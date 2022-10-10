@@ -83,6 +83,7 @@ public class LoginPage
     extends ApplicationPageBase
 {
     private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutpLogin";
+    private static final String PARAM_ERROR = "error";
 
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
 
@@ -122,6 +123,12 @@ public class LoginPage
                 || tooManyUsers.getObject();
         if (!skipAutoLogin && isLoginAllowed()) {
             oAuth2LoginPanel.autoLogin();
+        }
+
+        // Failed OAuth2 call this page with the parameter `?error` so we display a message
+        var error = aParameters.getNamedKeys().contains(PARAM_ERROR);
+        if (error) {
+            error("Login failed");
         }
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");

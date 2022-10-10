@@ -103,8 +103,9 @@ public class EmbeddedDatabaseBackupHandler
                     "backups are created when the application detect that is was upgraded from a",
                     "previous version.", //
                     "", //
-                    "These backups are mainly meant for an emergency recovery of an embedded",
-                    "database that was corrupted due to a system crash, power loss or similary",
+                    "These backups are mainly meant for an emergency recovery of an embedded if ",
+                    "the database migration scripts failed performing a database upgrade, if the ",
+                    "database was corrupted due to a system crash, power loss or similary",
                     "catastrophic event.", //
                     "", //
                     "Mind that these are backups *only* of the embedded database which *does not*",

@@ -19,12 +19,56 @@ package de.tudarmstadt.ukp.inception.support.text;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.function.Predicate;
 
 public class TextUtils
 {
     public static final char SHY = '\u00AD';
     public static final char NBSP = '\u00A0';
+
+    public static String sortAndRemoveDuplicateCharacters(String... aCharacterSets)
+    {
+        if (aCharacterSets.length == 0) {
+            return "";
+        }
+
+        var characters = new HashSet<Character>();
+        for (var characterSet : aCharacterSets) {
+            for (int i = 0; i < characterSet.length(); i++) {
+                characters.add(characterSet.charAt(i));
+            }
+        }
+
+        var sortedCharacters = new ArrayList<>(characters);
+        sortedCharacters.sort(Character::compare);
+
+        StringBuilder result = new StringBuilder();
+        for (char c : sortedCharacters) {
+            result.append(c);
+        }
+
+        return result.toString();
+    }
+
+    public static boolean startsWithMatching(String aValue, Predicate<Character> aPredicate)
+    {
+        if (aValue == null || aValue.isEmpty()) {
+            return false;
+        }
+
+        return aPredicate.test(aValue.charAt(0));
+    }
+
+    public static boolean endsWithMatching(String aValue, Predicate<Character> aPredicate)
+    {
+        if (aValue == null || aValue.isEmpty()) {
+            return false;
+        }
+
+        return aPredicate.test(aValue.charAt(aValue.length() - 1));
+    }
 
     public static boolean containsNoCharacterMatching(String aValue,
             Predicate<Character> aPredicate)

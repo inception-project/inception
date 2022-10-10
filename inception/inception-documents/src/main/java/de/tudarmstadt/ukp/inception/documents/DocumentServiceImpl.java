@@ -35,9 +35,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_RESERVED_CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.RELAXED_SHELL_SPECIAL_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -46,6 +53,8 @@ import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.File;
@@ -82,7 +91,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -121,6 +129,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -135,17 +144,17 @@ public class DocumentServiceImpl
 
     private static final String MSG_DOCUMENT_NAME_TOO_LONG = "document.name.error.too-long";
     private static final String MSG_DOCUMENT_NAME_EMPTY = "document.name.error.empty";
+    private static final String MSG_DOCUMENT_NAME_WHITESPACE = "document.name.error.whitespace";
     private static final String MSG_DOCUMENT_NAME_ILLEGAL = "document.name.error.illegal";
-    private static final String MSG_DOCUMENT_NAME_ILLEGAL_LEADING = "document.name.error.illegal-leading";
+    private static final String MSG_DOCUMENT_NAME_ILLEGAL_PREFIX = "document.name.error.illegal-prefix";
+    private static final String MSG_DOCUMENT_NAME_ERROR_CONTROL_CHARACTERS = "document.name.error.control-characters";
     private static final String MVAR_LIMIT = "limit";
     private static final String MVAR_DETAIL = "detail";
+    private static final String MVAR_CHARS = "chars";
 
-    private static final String FILESYSTEM_RESERVED_CHARACTERS = "<>:\"/\\|?*\0";
-    // May be a bit too restrictive to exclude all of these...
-    // private static final String SHELL_SPECIAL_CHARACTERS = "[]()^#%&$!@:+={}'~`";
-    private static final String RELAXED_SHELL_SPECIAL_CHARACTERS = "#%&{}$!:@+'`=";
-    private static final String DOCUMENT_NAME_ILLEGAL_CHARACTERS = FILESYSTEM_RESERVED_CHARACTERS
-            + RELAXED_SHELL_SPECIAL_CHARACTERS;
+    private static final String DOCUMENT_NAME_ILLEGAL_PREFIX_CHARACTERS = FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+    private static final String DOCUMENT_NAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
+            RELAXED_SHELL_SPECIAL_CHARACTERS, FILESYSTEM_RESERVED_CHARACTERS);
 
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
@@ -167,7 +176,9 @@ public class DocumentServiceImpl
         applicationEventPublisher = aApplicationEventPublisher;
         entityManager = aEntityManager;
 
-        log.info("Document repository path: {}", repositoryProperties.getPath());
+        if (repositoryProperties != null) {
+            log.info("Document repository path: {}", repositoryProperties.getPath());
+        }
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1556,19 +1567,38 @@ public class DocumentServiceImpl
         if (isBlank(aName)) {
             errors.add(new ValidationError("Document name cannot be empty.") //
                     .addKey(MSG_DOCUMENT_NAME_EMPTY));
+            return errors;
         }
 
-        if (StringUtils.startsWith(aName, ".") || StringUtils.startsWith(aName, "-")) {
-            errors.add(new ValidationError("Document name cannot start with a dot [.] or dash [-].") //
-                    .addKey(MSG_DOCUMENT_NAME_ILLEGAL_LEADING));
+        if (startsWithMatching(aName, Character::isWhitespace)
+                || endsWithMatching(aName, Character::isWhitespace)) {
+            errors.add(new ValidationError("Document name cannot start or end with whitespace.") //
+                    .addKey(MSG_DOCUMENT_NAME_WHITESPACE));
+            return errors;
         }
 
-        if (StringUtils.containsAny(aName, DOCUMENT_NAME_ILLEGAL_CHARACTERS)) {
-            errors.add(new ValidationError("Document name contains illegal characters. It must not"
+        if (startsWithMatching(aName, c -> contains(DOCUMENT_NAME_ILLEGAL_PREFIX_CHARACTERS, c))) {
+            errors.add(
+                    new ValidationError("Document name cannot start with any of these characters: "
+                            + DOCUMENT_NAME_ILLEGAL_PREFIX_CHARACTERS) //
+                                    .addKey(MSG_DOCUMENT_NAME_ILLEGAL_PREFIX).setVariable(
+                                            MVAR_CHARS, DOCUMENT_NAME_ILLEGAL_PREFIX_CHARACTERS));
+            return errors;
+        }
+
+        if (containsAnyCharacterMatching(aName, TextUtils::isControlCharacter)) {
+            errors.add(new ValidationError("Username cannot contain any control characters") //
+                    .addKey(MSG_DOCUMENT_NAME_ERROR_CONTROL_CHARACTERS));
+            return errors;
+        }
+
+        if (containsAny(aName, DOCUMENT_NAME_ILLEGAL_CHARACTERS)) {
+            errors.add(new ValidationError("Document name contains illegal characters. It must not "
                     + "contain any of the following characters [" + DOCUMENT_NAME_ILLEGAL_CHARACTERS
                     + "]") //
                             .addKey(MSG_DOCUMENT_NAME_ILLEGAL)
                             .setVariable(MVAR_DETAIL, DOCUMENT_NAME_ILLEGAL_CHARACTERS));
+            return errors;
         }
 
         var len = aName.length();

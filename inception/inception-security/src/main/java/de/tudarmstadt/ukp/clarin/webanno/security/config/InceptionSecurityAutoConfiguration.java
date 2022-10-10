@@ -37,6 +37,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 @EnableWebSecurity
 public class InceptionSecurityAutoConfiguration
@@ -65,7 +66,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile("auto-mode-preauth")
+    @Profile(SettingsUtil.PROFILE_PREAUTH)
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
@@ -77,7 +78,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile("auto-mode-builtin")
+    @Profile(SettingsUtil.PROFILE_DATABASE)
     public DaoAuthenticationProvider internalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
     {

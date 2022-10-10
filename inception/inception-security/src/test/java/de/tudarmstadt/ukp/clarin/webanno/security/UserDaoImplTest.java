@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MAXIMUM_USERNAME_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MINIMUM_PASSWORD_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MINIMUM_USERNAME_LENGTH;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import java.util.regex.Pattern;
 
+import org.apache.wicket.validation.ValidationError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,6 +135,75 @@ class UserDaoImplTest
     }
 
     @Test
+    void testUsernameValidationErrorMessages()
+    {
+        assertThat(userDao.validateUsername("")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("empty");
+
+        assertThat(userDao.validateUsername(" ")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("empty");
+
+        assertThat(userDao.validateUsername(" john")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("cannot contain a space");
+
+        assertThat(userDao.validateUsername("john ")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("cannot contain a space");
+
+        assertThat(userDao.validateUsername("jo hn")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("cannot contain a space");
+
+        assertThat(userDao.validateUsername("jo\thn")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("cannot contain a space");
+
+        assertThat(userDao.validateUsername("john\n")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("cannot contain a space");
+
+        assertThat(userDao.validateUsername("john\0")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("contain any of these characters");
+
+        assertThat(userDao.validateUsername("john\u001B")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("control characters");
+
+        assertThat(userDao.validateUsername("loveme".repeat(2000))) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("too long");
+
+        assertThat(userDao.validateUsername("/etc/passwd")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("contain any of these characters");
+
+        assertThat(userDao.validateUsername("../../bomb.zip")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("start with any of these characters");
+
+        assertThat(userDao.validateUsername(".hidden")) //
+                .hasSize(1) //
+                .extracting(ValidationError::getMessage).first().asString() //
+                .contains("start with any of these characters");
+    }
+
+    @Test
     void thatTooShortAndTooLongUsernamesAreRejected()
     {
         securityProperties.setMinimumUsernameLength(2);
@@ -195,6 +266,28 @@ class UserDaoImplTest
 
         assertThat(userDao.get(username)).isNull();
         assertThat(userDao.get("admin")).isNull();
+    }
+
+    @Test
+    void thatRealmsCanBeListed()
+    {
+        userDao.create(User.builder() //
+                .withUsername("user1") //
+                .withRealm(Realm.local()) //
+                .build());
+
+        userDao.create(User.builder() //
+                .withUsername("user2") //
+                .withRealm(Realm.local()) //
+                .build());
+
+        userDao.create(User.builder() //
+                .withUsername("user3") //
+                .withRealm(new Realm(REALM_EXTERNAL_PREFIX + "client", "My SSO")) //
+                .build());
+
+        assertThat(userDao.listRealms()) //
+                .contains(null, "external:client");
     }
 
     @SpringBootConfiguration

@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 
@@ -563,4 +564,6 @@ public interface ProjectService
     String deriveSlugFromName(String aName);
 
     String deriveUniqueSlug(String aSlug);
+
+    Realm getRealm(String aRealmId);
 }
