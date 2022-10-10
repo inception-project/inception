@@ -21,10 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,31 +31,24 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
-@AutoConfigureAfter(OAuth2ClientAutoConfiguration.class)
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {
-    @Bean
-    public InceptionSecurityWebUIOAuth2Handling inceptionSecurityWebUIOAuth2Handling(
-            UserDao aUserRepository, @Lazy OverridableUserDetailsManager aUserDetailsManager)
-    {
-        return new InceptionSecurityWebUIOAuth2Handling(aUserRepository, aUserDetailsManager);
-    }
-
-    @Profile("auto-mode-builtin")
+    @Profile(SettingsUtil.PROFILE_DATABASE)
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
-            SessionRegistry aSessionRegistry, InceptionSecurityWebUIOAuth2Handling aOAuth2Handling,
+            SessionRegistry aSessionRegistry, OAuth2Adapter aOAuth2Handling,
             Optional<ClientRegistrationRepository> aClientRegistrationRepository)
         throws Exception
     {
         aHttp.csrf().disable();
         aHttp.headers().frameOptions().sameOrigin();
 
-        aHttp.authorizeRequests().antMatchers("/login.html*").permitAll() //
+        aHttp.authorizeRequests() //
+                .antMatchers("/login.html*").permitAll() //
                 // Resources need to be publicly accessible so they don't trigger the login
                 // page. Otherwise it could happen that the user is redirected to a resource
                 // upon login instead of being forwarded to a proper application page.

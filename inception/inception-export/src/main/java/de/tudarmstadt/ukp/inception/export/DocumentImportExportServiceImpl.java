@@ -29,7 +29,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
@@ -45,6 +44,7 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -198,10 +198,31 @@ public class DocumentImportExportServiceImpl
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, Mode aMode)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
+                null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, Mode aMode, boolean aStripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
+                aStripExtension, aBulkOperationContext);
     }
 
     @Override
@@ -482,11 +503,8 @@ public class DocumentImportExportServiceImpl
 
                 addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
-                File exportTempDir = createTempFile("inception", "export");
+                File exportTempDir = Files.createTempDirectory("inception-export").toFile();
                 try {
-                    exportTempDir.delete();
-                    exportTempDir.mkdirs();
-
                     return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
                             aStripExtension);
                 }

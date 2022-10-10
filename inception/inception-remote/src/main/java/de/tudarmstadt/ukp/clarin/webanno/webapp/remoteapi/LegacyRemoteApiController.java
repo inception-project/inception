@@ -706,7 +706,7 @@ public class LegacyRemoteApiController
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDoc, annotatorName,
-                format, annDoc.getName(), Mode.ANNOTATION);
+                format, Mode.ANNOTATION);
 
         try {
             // Set mime type
@@ -828,7 +828,7 @@ public class LegacyRemoteApiController
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDocument,
-                WebAnnoConst.CURATION_USER, format, srcDocument.getName(), Mode.CURATION);
+                WebAnnoConst.CURATION_USER, format, Mode.CURATION);
 
         try {
             // Set mime type

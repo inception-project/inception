@@ -171,7 +171,8 @@ public class ProjectImportPanel
                     IOUtils.copyLarge(is, os);
 
                     if (!ImportUtil.isZipValidWebanno(tempFile)) {
-                        throw new IOException("ZIP file is not a WebAnno project archive");
+                        throw new IOException(
+                                "ZIP file is not an INCEpTION/WebAnno project archive");
                     }
 
                     importedProjects

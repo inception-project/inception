@@ -239,6 +239,12 @@ public class AcceptInvitePage
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
                 aFormData.username);
+
+        if (existingUser.isPresent() && !existingUser.get().isEnabled()) {
+            error("User deactivated");
+            return null;
+        }
+
         if (invite.getObject().getAskForEMail() != NOT_ALLOWED) {
             String storedEMail = existingUser.map(User::getEmail).orElse(null);
             if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {

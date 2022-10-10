@@ -453,7 +453,11 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryConfigException, RepositoryException
     {
         assertRegistration(kb);
-        return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
+        var repositoryConfig = repoManager.getRepositoryConfig(kb.getRepositoryId());
+        if (repositoryConfig == null) {
+            return null;
+        }
+        return repositoryConfig.getRepositoryImplConfig();
     }
 
     @Override

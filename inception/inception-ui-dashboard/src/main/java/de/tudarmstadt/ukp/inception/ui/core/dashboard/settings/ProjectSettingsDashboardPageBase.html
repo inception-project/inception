@@ -19,18 +19,9 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div wicket:id="deleteProjectDialog"/>
     <div wicket:id="menu" class="dashboard-menu"/>
     <div class="flex-content flex-v-container">
       <div class="px-4 border-bottom">
-        <h1 class="float-end">
-          <button wicket:id="delete" class="btn btn-danger">
-            <i class="fas fa-dumpster"></i>
-            <span class="d-none d-lg-inline">
-              <wicket:message key="deleteProject"/>
-            </span>
-          </button>
-        </h1>
         <h1>
           <wicket:container wicket:id="projectName" />
         </h1>

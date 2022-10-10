@@ -17,18 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -42,13 +43,14 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
 /**
  * Manage Application wide Users.
@@ -63,8 +65,9 @@ public class ManageUsersPage
 
     public static final String PARAM_USER = "user";
 
-    private @SpringBean UserDao userRepository;
+    private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean OAuth2Adapter oAuth2Adapter;
 
     private DropDownChoice<Realm> realm;
     private LambdaAjaxLink createButton;
@@ -73,54 +76,51 @@ public class ManageUsersPage
 
     private IModel<User> selectedUser;
 
-    public ManageUsersPage()
-    {
-        commonInit();
-
-        // If the user is not an admin, then pre-load the current user to allow self-service
-        // editing of the profile
-        if (!userRepository.isCurrentUserAdmin() && isProfileSelfServiceAllowed()) {
-            selectedUser.setObject(userRepository.getCurrentUser());
-        }
-    }
-
     public ManageUsersPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
+        selectedUser = Model.of();
+
+        checkAccess(aPageParameters);
+
         commonInit();
+    }
 
+    private void checkAccess(final PageParameters aPageParameters)
+    {
         String username = aPageParameters.get(PARAM_USER).toOptionalString();
-        User user = null;
-        if (StringUtils.isNotBlank(username)) {
-            user = userRepository.get(username);
-        }
 
-        if (userRepository.isCurrentUserAdmin()) {
-            selectedUser.setObject(user);
+        User currentUser = userService.getCurrentUser();
+        User userToOpen = isBlank(username) ? currentUser : userService.get(username);
+
+        // Admins can manage any user
+        if (userService.isCurrentUserAdmin()) {
+            selectedUser.setObject(userToOpen);
         }
-        else if (user != null && isProfileSelfServiceAllowed()
-                && userRepository.getCurrentUsername().equals(user.getUsername())) {
-            selectedUser.setObject(userRepository.getCurrentUser());
+        // Non-admins can only manage themselves if profile self-service is allowed
+        else if (userToOpen.equals(currentUser)
+                && userService.isProfileSelfServiceAllowed(currentUser)) {
+            selectedUser.setObject(currentUser);
         }
+        // Other cases are denied
         else {
             // Make sure a user doesn't try to access the profile of another user via the
             // parameter if self-service is turned on.
-            setResponsePage(getApplication().getHomePage());
+            denyAccess();
         }
+    }
+
+    private void denyAccess()
+    {
+        getSession().error(format("Access to [%s] denied.", getClass().getSimpleName()));
+        throw new RestartResponseException(getApplication().getHomePage());
     }
 
     private void commonInit()
     {
-        // If the user is not an admin and self-service is not allowed, go back to the main page
-        if (!userRepository.isCurrentUserAdmin() && !isProfileSelfServiceAllowed()) {
-            setResponsePage(getApplication().getHomePage());
-        }
-
-        selectedUser = Model.of();
-
         var selectPanel = new WebMarkupContainer("selectPanel");
-        selectPanel.add(LambdaBehavior.visibleWhen(userRepository::isCurrentUserAdmin));
+        selectPanel.add(LambdaBehavior.visibleWhen(userService::isCurrentUserAdmin));
         queue(selectPanel);
 
         realm = new DropDownChoice<>("realm");
@@ -148,35 +148,41 @@ public class ManageUsersPage
         createButton.setOutputMarkupPlaceholderTag(true);
         queue(createButton);
 
-        // Only allow creating accounts in the global realm
+        // Only allow creating accounts in the local realm
         createButton.add(visibleWhen(() -> realm.getModelObject().getId() == null));
     }
 
     private List<Realm> listRealms()
     {
-        return userRepository.listRealms().stream().map(_id -> {
-            if (_id == null) {
-                return new Realm(_id, "<GLOBAL>");
-            }
-            else if (startsWith(_id, REALM_PROJECT_PREFIX)) {
-                long projectId = Long.valueOf(substringAfter(_id, REALM_PROJECT_PREFIX));
-                Project project = projectService.getProject(projectId);
-                if (project != null) {
-                    return new Realm(_id, project.getName());
-                }
-                else {
-                    return new Realm(_id, "<Deleted project: " + _id + ">");
-                }
-            }
-            else {
-                return new Realm(_id, "<" + _id + ">");
-            }
-        }).sorted(this::compareRealms).collect(toList());
+        var realms = new ArrayList<Realm>();
+
+        userService.listRealms().stream() //
+                .map(_id -> {
+                    if (startsWith(_id, REALM_PROJECT_PREFIX)) {
+                        return projectService.getRealm(_id);
+                    }
+                    else {
+                        return new Realm(_id);
+                    }
+                }).forEach(realms::add);
+
+        oAuth2Adapter.getOAuthClientRegistrations()
+                .forEach(reg -> realms.add(Realm.forExternalOAuth(reg)));
+
+        // If there is a choice, then the local realm should always be a part of it
+        if (!realms.isEmpty()) {
+            realms.add(Realm.local());
+        }
+
+        return realms.stream() //
+                .distinct() //
+                .sorted(Realm::compareRealms) //
+                .collect(toList());
     }
 
     private List<User> listUsers()
     {
-        return userRepository.list().stream() //
+        return userService.list().stream() //
                 .filter(u -> Objects.equals(u.getRealm(), realm.getModelObject().getId())) //
                 .collect(toList());
     }
@@ -195,7 +201,7 @@ public class ManageUsersPage
     {
         table.getDataProvider().refresh();
 
-        if (userRepository.isCurrentUserAdmin()) {
+        if (userService.isCurrentUserAdmin()) {
             selectedUser.setObject(null);
         }
 
@@ -210,22 +216,5 @@ public class ManageUsersPage
         selectedUser.setObject(user);
         details.setCreatingNewUser(true);
         aTarget.add(table.getInnerTable(), details);
-    }
-
-    private int compareRealms(Realm aOne, Realm aOther)
-    {
-        if (aOne.getId() == null && aOther.getId() == null) {
-            return 0;
-        }
-
-        if (aOne.getId() == null) {
-            return -1;
-        }
-
-        if (aOther.getId() == null) {
-            return 1;
-        }
-
-        return StringUtils.compare(aOne.getName(), aOther.getName());
     }
 }
