@@ -504,8 +504,7 @@ public abstract class AnnotationDetailEditorPanel
 
                 // FIXME REC I think this whole section which meddles around with the selected
                 // annotation layer should be moved out of there to the place where we originally
-                // set
-                // the annotation layer...!
+                // set the annotation layer...!
 
                 // Fetch the annotation representing the origin endpoint of the relation
                 AnnotationFS originFS = ICasUtil.selectAnnotationByAddr(aCas,
@@ -526,13 +525,11 @@ public abstract class AnnotationDetailEditorPanel
                 AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
 
                 // If we are creating a relation annotation, we have to set the current layer
-                // depending
-                // on the type of relation that is permitted between the source/target span. This is
-                // necessary because we have no separate UI control to set the relation annotation
-                // type.
+                // depending on the type of relation that is permitted between the source/target
+                // span. This is necessary because we have no separate UI control to set the
+                // relation annotation type.
                 // It is possible because currently only a single relation layer is allowed to
-                // attach to
-                // any given span layer.
+                // attach to any given span layer.
 
                 // If we drag an arc in a chain layer, then the arc is of the same layer as the span
                 // Chain layers consist of arcs and spans
@@ -545,8 +542,7 @@ public abstract class AnnotationDetailEditorPanel
                     state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer)
                             .orElseThrow(() -> new IllegalPlacementException(
                                     "No relation annotation allowed on layer ["
-                                            + state.getDefaultAnnotationLayer().getUiName()
-                                            + "]")));
+                                            + originLayer.getUiName() + "]")));
                 }
 
                 state.setDefaultAnnotationLayer(originLayer);
