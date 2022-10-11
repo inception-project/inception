@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
         InceptionSecurityAutoConfiguration.class })
 @EntityScan(basePackages = { //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-class InceptionSecurityWebUIOAuth2HandlingTest
+class OAuth2AdapterImplTest
 {
     private static final String USERNAME = "ThatGuy";
 
@@ -111,6 +111,22 @@ class InceptionSecurityWebUIOAuth2HandlingTest
         assertThat(userService.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
+    }
+
+    @Test
+    void thatLoginWithExistingUserIsPossible()
+    {
+        userService.create(User.builder() //
+                .withUsername(USERNAME) //
+                .withRealm(REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
+                .withRoles(Set.of(Role.ROLE_USER)) //
+                .withEnabled(true) //
+                .build());
+
+        assertThat(userService.get(USERNAME)) //
+                .as("User should exist when test starts").isNotNull();
+
+        sut.loadOidcUser(new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken));
     }
 
     @Test

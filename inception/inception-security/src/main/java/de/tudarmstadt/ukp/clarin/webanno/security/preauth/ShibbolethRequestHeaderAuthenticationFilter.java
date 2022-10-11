@@ -46,10 +46,10 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 
     private UserDao userRepository;
 
-    private void newUserLogin(String aID, HttpServletRequest aRequest)
+    private void newUserLogin(String aUsername)
     {
         User u = new User();
-        u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
+        u.setUsername(aUsername);
         u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
         u.setRealm(UserDao.REALM_PREAUTH);
@@ -85,15 +85,22 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     {
         String username = (String) super.getPreAuthenticatedPrincipal(aRequest);
 
+        return loadUser(username);
+    }
+
+    protected Object loadUser(String username)
+    {
         denyAccessToUsersWithIllegalUsername(username);
 
         User user = userRepository.get(username);
-        if (user == null) {
+        if (user != null) {
             denyAccessOfRealmsDoNotMatch(UserDao.REALM_PREAUTH, user);
             denyAccessToDeactivatedUsers(user);
         }
+        else {
+            newUserLogin(username);
+        }
 
-        newUserLogin(username, aRequest);
         return username;
     }
 
