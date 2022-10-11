@@ -63,7 +63,12 @@ export class RecogitoEditor implements AnnotationEditor {
 
     this.recogito.on('createAnnotation', annotation => this.createSpan(annotation))
     this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation))
+
     element.addEventListener('contextmenu', e => this.openContextMenu(e))
+    // Prevent right-click from triggering a selection event
+    element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
+    element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
+    element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
 
     this.connections = Connections(this.recogito, { disableEditor: true, showLabels: true })
     this.connections.canvas.on('createConnection', annotation => this.createRelation(annotation))
@@ -72,6 +77,15 @@ export class RecogitoEditor implements AnnotationEditor {
     // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
 
     this.loadAnnotations()
+  }
+
+  private cancelRightClick (e: Event): void {
+    if (e instanceof MouseEvent) {
+      if (e.button === 2) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
   }
 
   private openContextMenu (e: Event): void {
