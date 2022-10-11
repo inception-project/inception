@@ -14,7 +14,8 @@
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@recogito/recogito-js": "${recogitojs.version}",
-    "@recogito/recogito-client-core": "${recogitojs.version}"
+    "@recogito/recogito-connections": "${recogito-connections.version}",
+    "@recogito/recogito-client-core": "${recogito-client-core.version}"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
