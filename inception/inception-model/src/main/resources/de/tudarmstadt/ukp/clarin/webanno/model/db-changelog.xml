@@ -1082,7 +1082,7 @@
       defaultNullValue="annotation" />
   </changeSet>  
   
-  <changeSet author="WebAnno Team" id="20181005-2">
+  <changeSet author="WebAnno Team" id="20181005-2a">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="annotation_type" columnName="anchoring_mode"/>
@@ -1093,27 +1093,66 @@
         <constraints nullable="true" />
       </column>
     </addColumn>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20181005-2b" dbms="!postgresql">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
+        <columnExists tableName="annotation_type" columnName="multipleTokens"/>
+      </and>
+    </preConditions>
     <update tableName="annotation_type">
       <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
-      <where>lockToTokenOffset = false and multipleTokens = false</where>
+      <where>lockToTokenOffset = b'0' and multipleTokens = b'0'</where>
     </update>
     <update tableName="annotation_type">
       <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
-      <where>lockToTokenOffset = true and multipleTokens = false</where>
+      <where>lockToTokenOffset = b'1' and multipleTokens = b'0'</where>
     </update>
     <update tableName="annotation_type">
       <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
-      <where>lockToTokenOffset = true and multipleTokens = true</where>
+      <where>lockToTokenOffset = b'1' and multipleTokens = b'1'</where>
     </update>
     <update tableName="annotation_type">
       <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
-      <where>lockToTokenOffset = false and multipleTokens = true</where>
+      <where>lockToTokenOffset = b'0' and multipleTokens = b'1'</where>
     </update>
+  </changeSet>
+  <changeSet author="WebAnno Team" id="20181005-2b-pg" dbms="postgresql">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <columnExists tableName="annotation_type" columnName="lockToTokenOffset"/>
+        <columnExists tableName="annotation_type" columnName="multipleTokens"/>
+      </and>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
+      <where>"lockToTokenOffset" = b'0' and "multipleTokens" = b'0'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>"lockToTokenOffset" = b'1' and "multipleTokens" = b'0'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = b'1' and "multipleTokens" = b'1'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>"lockToTokenOffset" = b'0' and "multipleTokens" = b'1'</where>
+    </update>
+  </changeSet> 
+
+  <changeSet author="WebAnno Team" id="20181005-2c" failOnError="false">
+    <preConditions onFail="MARK_RAN">
+      <changeSetExecuted author="WebAnno Team" id="20181005-2b"/>
+    </preConditions>
     <addNotNullConstraint 
       tableName="annotation_type" 
       columnName="anchoring_mode"
       columnDataType="VARCHAR(255)" />
-  </changeSet>  
+  </changeSet>   
   
   <changeSet author="WebAnno Team" id="20181101-1">
     <preConditions onFail="WARN">
@@ -1148,7 +1187,7 @@
     </update>
   </changeSet>
   
-  <changeSet author="WebAnno Team" id="20190125-1">
+  <changeSet author="WebAnno Team" id="20190125-1a">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="annotation_type" columnName="overlap_mode"/>
@@ -1159,19 +1198,44 @@
         <constraints nullable="true" />
       </column>
     </addColumn>
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="20190125-1b" dbms="!postgresql">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="annotation_type" columnName="allowSTacking"/>
+    </preConditions>
     <update tableName="annotation_type">
       <column name="overlap_mode" type="VARCHAR(255)" value="any"/>
-      <where>allowSTacking = true</where>
+      <where>allowSTacking = b'1'</where>
     </update>
     <update tableName="annotation_type">
       <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
-      <where>allowSTacking = false</where>
+      <where>allowSTacking = b'0'</where>
     </update>
-    <addNotNullConstraint 
+  </changeSet>
+  <changeSet author="WebAnno Team" id="20190125-1b-pg" dbms="postgresql">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="annotation_type" columnName="allowSTacking"/>
+    </preConditions>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="any"/>
+      <where>"allowSTacking" = b'1'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
+      <where>"allowSTacking" = b'0'</where>
+    </update>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20190125-1c" failOnError="false">
+    <preConditions onFail="MARK_RAN">
+      <changeSetExecuted author="WebAnno Team" id="20190125-1b"/>
+    </preConditions>
+    <addNotNullConstraint
       tableName="annotation_type" 
       columnName="overlap_mode"
       columnDataType="VARCHAR(255)" />
-  </changeSet>  
+  </changeSet>
   
   <changeSet author="WebAnno Team" id="20100129-1">
     <preConditions onFail="MARK_RAN">
@@ -1352,5 +1416,13 @@
     <addColumn tableName="annotation_document">
       <column name="annotatorComment" type="LONGTEXT"/>
     </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220930-1" dbms="!postgresql">
+    <modifyDataType tableName="project" columnName="disableExport" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="project" columnName="disableExport" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20220930-1-pg" dbms="postgresql">
+    <sql>ALTER TABLE project ALTER "disableExport" TYPE BOOLEAN USING ("disableExport"::int::bool)</sql>
   </changeSet>
 </databaseChangeLog>
