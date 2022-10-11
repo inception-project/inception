@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,14 +17,14 @@
  */
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-const pjson = require('./package.json');
+const pjson = require('./package.json')
 
-const esbuild = require('esbuild');
+const esbuild = require('esbuild')
 
 const now = new Date()
 
-let banner = `/* 
- * INCEpTION ${pjson.version} (${now.getFullYear()}-${("0" + (now.getMonth() + 1)).slice(-2)}-${("0" + (now.getDate() + 1)).slice(-2)})
+const banner = `/* 
+ * INCEpTION ${pjson.version} (${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + (now.getDate() + 1)).slice(-2)})
  *
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -51,37 +51,37 @@ let banner = `/*
  * Dual licensed under the MIT and GPLv3 licenses.
  * https://github.com/openannotation/annotator/blob/master/LICENSE
  */
-`;
+`
 
-let defaults = {
+const defaults = {
   bundle: true,
   banner: { js: banner, css: banner },
   sourcemap: true,
   minify: false,
-  target: "es6",
-  loader: { 
-    ".ts": "ts",
-    ".png": "dataurl"
+  target: 'es6',
+  loader: {
+    '.ts': 'ts',
+    '.png': 'dataurl'
   },
   logLevel: 'info'
 }
 
-let outbase = "../../../target/js/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/";
+let outbase = '../../../target/js/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/'
 
 const argv = yargs(hideBin(process.argv)).argv
 
 if (argv.live) {
-  defaults['watch'] = {
-    onRebuild(error, result) {
+  defaults.watch = {
+    onRebuild (error, result) {
       if (error) console.error('watch build failed:', error)
       else console.log('watch build succeeded:', result)
-    },
-  };
-  outbase = "../../../target/classes/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/";
+    }
+  }
+  outbase = '../../../target/classes/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/'
 }
 
 esbuild.build(Object.assign({
-  entryPoints: [ "main.ts" ],
+  entryPoints: ['main.ts'],
   outfile: `${outbase}/AnnotatorJsEditor.min.js`,
-  globalName: "AnnotatorJsEditor"
+  globalName: 'AnnotatorJsEditor'
 }, defaults))
