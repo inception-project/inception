@@ -188,4 +188,12 @@
       onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="username"
       referencedTableName="users" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220930-2" dbms="!postgresql">
+    <modifyDataType tableName="users" columnName="enabled" newDataType="BOOLEAN"/>
+    <addNotNullConstraint tableName="users" columnName="enabled" columnDataType="BOOLEAN"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20220930-2-pg" dbms="postgresql">
+    <sql>ALTER TABLE users ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
+  </changeSet>
 </databaseChangeLog>
