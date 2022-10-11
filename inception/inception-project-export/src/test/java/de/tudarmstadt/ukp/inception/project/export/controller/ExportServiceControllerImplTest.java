@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,6 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
@@ -180,10 +180,9 @@ class ExportServiceControllerImplTest
         SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1,
-                TimeUnit.SECONDS);
+        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1, SECONDS);
 
-        responseRecievedLatch.await(20, TimeUnit.SECONDS);
+        responseRecievedLatch.await(20, SECONDS);
         try {
             session.disconnect();
         }
@@ -209,10 +208,9 @@ class ExportServiceControllerImplTest
         SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1,
-                TimeUnit.SECONDS);
+        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
 
-        responseRecievedLatch.await(20, TimeUnit.SECONDS);
+        responseRecievedLatch.await(20, SECONDS);
         session.disconnect();
 
         assertThat(messageRecieved).isTrue();
