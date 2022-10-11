@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.websocket;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.persistence.EntityManager;
@@ -184,8 +184,8 @@ public class WebSocketIntegrationTest
         CountDownLatch latch = new CountDownLatch(1);
         SessionHandler sessionHandler = new SessionHandler(latch, receivedMessages);
 
-        session = stompClient.connect(websocketUrl, sessionHandler).get(1, TimeUnit.SECONDS);
-        latch.await(10, TimeUnit.SECONDS);
+        session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        latch.await(10, SECONDS);
         session.disconnect();
 
         assertThat(receivedMessages.size()).isEqualTo(1);
