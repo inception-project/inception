@@ -135,7 +135,7 @@
 
     <npm-install-command>ci</npm-install-command>
 
-    <node.version>16.16.0</node.version>
+    <node.version>16.17.1</node.version>
     <bootstrap.version>5.2.1</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
@@ -164,7 +164,9 @@
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.0.2</mocha-junit-reporter.version>
     <pdfjs.version>2.14.305</pdfjs.version>
-    <recogitojs.version>^1.7.1</recogitojs.version>
+    <recogitojs.version>1.8.1</recogitojs.version>
+    <recogito-connections.version>0.1.7</recogito-connections.version>
+    <recogito-client-core.version>1.7.7</recogito-client-core.version>
     <sass.version>^1.54.3</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
     <svelte-preprocess.version>^4.10.7</svelte-preprocess.version>

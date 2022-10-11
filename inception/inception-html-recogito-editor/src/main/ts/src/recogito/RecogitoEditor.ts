@@ -17,6 +17,7 @@
  */
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
+import Connections from '@recogito/recogito-connections/src'
 import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
 import './RecogitoEditor.css'
@@ -26,7 +27,7 @@ interface WebAnnotation {
   type: string;
   motivation?: string;
   target: WebAnnotationTextPositionSelector | Array<WebAnnotationAnnotationTarget>;
-  body: Array<WebAnnotationBodyItem>;
+  body: WebAnnotationBodyItem | Array<WebAnnotationBodyItem>;
 }
 
 interface WebAnnotationBodyItem {
@@ -49,6 +50,7 @@ interface WebAnnotationTextPositionSelector {
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax
   private recogito: Recogito
+  private connections: any
 
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
@@ -59,30 +61,21 @@ export class RecogitoEditor implements AnnotationEditor {
       mode: 'pre'
     })
 
-    this.recogito.on('createAnnotation', annotation => this.createAnnotation(annotation))
+    this.recogito.on('createAnnotation', annotation => this.createSpan(annotation))
     this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation))
-
     element.addEventListener('contextmenu', e => this.openContextMenu(e))
 
-    // Prevent right-click from triggering a selection event in RecogitoJS
-    element.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
-    element.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+    this.connections = Connections(this.recogito, { disableEditor: true, showLabels: true })
+    this.connections.canvas.on('createConnection', annotation => this.createRelation(annotation))
+    this.connections.canvas.on('selectConnection', annotation => this.selectAnnotation(annotation))
+    // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
+    // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
 
     this.loadAnnotations()
   }
 
-  private cancelRightClick (e: Event): void {
-    if (e instanceof MouseEvent) {
-      if (e.button === 2) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    }
-  }
-
-  private openContextMenu (e): void {
-    if (!(e instanceof MouseEvent) || !(e.target instanceof Element)) {
+  private openContextMenu (e: Event): void {
+    if (!(e instanceof MouseEvent) || !(e.target instanceof Element)) {
       return
     }
 
@@ -119,6 +112,13 @@ export class RecogitoEditor implements AnnotationEditor {
       }
 
       console.info(`Loaded ${webAnnotations.length} annotations from server`)
+
+      // Workaround for https://github.com/recogito/recogito-connections/issues/16
+      for (const connection of this.connections.canvas.connections) {
+        connection.remove()
+      }
+      this.connections.canvas.connections = []
+
       this.recogito.setAnnotations(webAnnotations)
     })
   }
@@ -128,11 +128,11 @@ export class RecogitoEditor implements AnnotationEditor {
       return {
         id: '#' + span[0],
         type: 'Annotation',
-        body: [{
+        body: {
           type: 'TextualBody',
           purpose: 'tagging',
-          value: span[2].l || ''
-        }],
+          value: span[2]?.l || ''
+        },
         target: {
           selector: { type: 'TextPositionSelector', start: span[1][0][0], end: span[1][0][1] }
         }
@@ -145,11 +145,11 @@ export class RecogitoEditor implements AnnotationEditor {
       return {
         id: '#' + relation[0],
         type: 'Annotation',
-        body: [{
+        body: {
           type: 'TextualBody',
           purpose: 'tagging',
-          value: relation[2].l || ''
-        }],
+          value: relation[2]?.l || ''
+        },
         motivation: 'linking',
         target: [
           { id: '#' + relation[1][0][0] },
@@ -163,21 +163,28 @@ export class RecogitoEditor implements AnnotationEditor {
     this.recogito.destroy()
   }
 
-  private createAnnotation (annotation): void {
+  private createSpan (annotation): void {
     const target = annotation.target
-    let text: string, begin: number, end: number
 
     for (let i = 0; i < target.selector.length; i++) {
-      if (target.selector[i].type === 'TextQuoteSelector') {
-        text = target.selector[i].exact
-      }
       if (target.selector[i].type === 'TextPositionSelector') {
-        begin = target.selector[i].start
-        end = target.selector[i].end
+        const begin = target.selector[i].start
+        const end = target.selector[i].end
+
+        this.ajax.createSpanAnnotation([[begin, end]])
+        return
       }
     }
+  }
 
-    this.ajax.createSpanAnnotation([[begin, end]], text)
+  private createRelation (annotation): void {
+    const target = annotation.target
+
+    // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
+    const sourceId = target[0].id?.substring(1) as VID
+    const targetId = target[1].id?.substring(1) as VID
+
+    this.ajax.createRelationAnnotation(sourceId, targetId)
   }
 
   private selectAnnotation (annotation): void {
