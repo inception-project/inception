@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_USERNAMES;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
@@ -194,6 +195,22 @@ public class AnnotationDocumentExporter
             }
 
             try (CasStorageSession session = CasStorageSession.openNested()) {
+                FormatSupport format = null;
+                if (aRequest.getFormat() != null) {
+                    // Determine which format to use for export
+                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
+                            : aRequest.getFormat();
+
+                    format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
+                        FormatSupport fallbackFormat = importExportService.getFallbackFormat();
+                        aMonitor.addMessage(LogMessage.warn(this, "Annotation: [%s] No writer "
+                                + "found for format [%s] - falling back to exporting as [%s] "
+                                + "instead.", srcDoc.getName(), formatId,
+                                fallbackFormat.getName()));
+                        return fallbackFormat;
+                    });
+                }
+
                 //
                 // Export initial CASes
                 //
@@ -218,28 +235,17 @@ public class AnnotationDocumentExporter
                     documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os);
                 }
 
+                if (format != null) {
+                    exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
+                            INITIAL_CAS_PSEUDO_USER);
+                }
+
                 log.info("Exported annotation document content for user [{}] for source document "
                         + "{} in project {}", INITIAL_CAS_PSEUDO_USER, srcDoc, project);
 
                 //
                 // Export per-user annotation document
                 //
-
-                FormatSupport format = null;
-                if (aRequest.getFormat() != null) {
-                    // Determine which format to use for export
-                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
-                            : aRequest.getFormat();
-
-                    format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
-                        FormatSupport fallbackFormat = importExportService.getFallbackFormat();
-                        aMonitor.addMessage(LogMessage.warn(this, "Annotation: [%s] No writer "
-                                + "found for format [%s] - falling back to exporting as [%s] "
-                                + "instead.", srcDoc.getName(), formatId,
-                                fallbackFormat.getName()));
-                        return fallbackFormat;
-                    });
-                }
 
                 // Export annotations from regular users
                 for (AnnotationDocument annDoc : srcToAnnIdx.computeIfAbsent(srcDoc,
@@ -256,7 +262,7 @@ public class AnnotationDocumentExporter
 
                         if (format != null) {
                             exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
-                                    annDoc);
+                                    annDoc.getUser());
                         }
 
                         log.info("Exported annotation document content for user [{}] for " //
@@ -285,20 +291,21 @@ public class AnnotationDocumentExporter
 
     private void exportAdditionalFormat(File aStage,
             Map<Pair<Project, String>, Object> bulkOperationContext, SourceDocument srcDoc,
-            FormatSupport format, AnnotationDocument annDoc)
+            FormatSupport format, String aUsername)
         throws UIMAException, IOException, ClassNotFoundException
     {
         File annDocDir = new File(
                 aStage.getAbsolutePath() + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
         File annFile = null;
         try {
-            annFile = importExportService.exportAnnotationDocument(srcDoc, annDoc.getUser(), format,
-                    annDoc.getUser(), ANNOTATION, false, bulkOperationContext);
+            annFile = importExportService.exportAnnotationDocument(srcDoc, aUsername, format,
+                    aUsername, ANNOTATION, false, bulkOperationContext);
             forceMkdir(annDocDir);
 
-            if (userRepository.isValidUsername(annDoc.getUser())) {
+            if (userRepository.isValidUsername(aUsername)
+                    || RESERVED_USERNAMES.contains(aUsername)) {
                 // Safe-guard for legacy instances where user name validity has not been checked.
-                var filename = annDoc.getUser() + "." + getExtension(annFile.getName());
+                var filename = aUsername + "." + getExtension(annFile.getName());
                 FileUtils.copyFile(annFile, new File(annDocDir, filename));
             }
             else {
