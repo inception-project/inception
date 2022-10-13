@@ -104,7 +104,7 @@ public class UserDaoImpl
     private static final String USERNAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
             "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
 
-    private static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
+    public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER);
 
     private final Logger log = LoggerFactory.getLogger(getClass());
