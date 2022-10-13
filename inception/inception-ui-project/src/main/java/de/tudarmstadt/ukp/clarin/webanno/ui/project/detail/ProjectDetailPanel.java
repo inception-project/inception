@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -181,6 +182,9 @@ public class ProjectDetailPanel
         else {
             projectService.updateProject(project);
         }
+
+        getSession().success("Project details saved.");
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         if (isNewProject || slugChanged) {
             // After saving a new project we want the URL to reflect the slug
