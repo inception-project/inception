@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.project.export.controller.ExportServiceController.BASE_URL;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -96,7 +97,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             monitor.setState(RUNNING);
-            monitor.setUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
+            monitor.setUrl(format("%s%s/%s", servletContext.getContextPath(), BASE_URL,
                     monitor.getHandle().getRunId()));
 
             File exportedFile = export(request, monitor);

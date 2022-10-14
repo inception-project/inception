@@ -15,31 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.config;
+package de.tudarmstadt.ukp.inception.security.config;
+
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 public class InceptionSecurityActuatorAutoConfiguration
 {
+    public static final String BASE_URL = "/actuator";
+
     @Order(2)
     @Bean
     public SecurityFilterChain actuatorFilterChain(HttpSecurity aHttp) throws Exception
     {
-        // @formatter:off
-        aHttp
-            .antMatcher("/actuator/**")
-            .csrf().disable()
-            .authorizeRequests()
-                .antMatchers("/actuator/health").permitAll()
-                .anyRequest().denyAll()
-            .and()
-            .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        // @formatter:on
+        aHttp.antMatcher(BASE_URL + "/**");
+        aHttp.csrf().disable();
+        aHttp.authorizeRequests() //
+                .antMatchers(BASE_URL + "/health").permitAll() //
+                .anyRequest().denyAll();
+        aHttp.sessionManagement() //
+                .sessionCreationPolicy(STATELESS);
         return aHttp.build();
     }
 }
