@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.inception.project.export.model.RExportLogMessage;
 import io.swagger.v3.oas.annotations.Operation;
 
 @Controller
-@RequestMapping(ExportServiceController.API_BASE)
+@RequestMapping(ExportServiceController.BASE_URL)
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ExportServiceControllerImpl
     implements ExportServiceController
@@ -116,7 +116,7 @@ public class ExportServiceControllerImpl
     }
 
     @Operation(summary = "Fetch export log messages")
-    @GetMapping(value = ("/export/{runId}/log"), produces = { "application/json" })
+    @GetMapping(value = ("/{runId}/log"), produces = { "application/json" })
     public ResponseEntity<List<RExportLogMessage>> projectExportLog(
             @PathVariable("runId") String aRunId)
         throws Exception
@@ -135,7 +135,7 @@ public class ExportServiceControllerImpl
     }
 
     @Operation(summary = "Download a finished export")
-    @GetMapping(value = ("/export/{runId}/data"), produces = { "application/zip" })
+    @GetMapping(value = ("/{runId}/data"), produces = { "application/zip" })
     public ResponseEntity<InputStreamResource> projectExportData(
             @PathVariable("runId") String aRunId)
         throws Exception

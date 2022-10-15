@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
+import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
+
 import java.util.List;
 
 public interface ActivitiesDashletController
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashletController";
+    String BASE_URL = BASE_API_URL + "/activity";
     String LIST_PATH = "/project/{projectId}/list";
 
     String listActivitiesUrl(long aProjectId);

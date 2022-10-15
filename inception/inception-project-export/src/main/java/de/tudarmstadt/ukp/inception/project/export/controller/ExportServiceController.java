@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.controller;
 
+import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
+
 public interface ExportServiceController
 {
-    static final String API_BASE = "/ui";
+    String BASE_URL = BASE_API_URL + "/export";
 }

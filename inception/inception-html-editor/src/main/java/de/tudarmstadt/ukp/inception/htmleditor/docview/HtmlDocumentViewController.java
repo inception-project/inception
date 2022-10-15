@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.htmleditor.docview;
 
+import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_VIEW_URL;
+
 import java.security.Principal;
 
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface HtmlDocumentViewController
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewController";
+    String BASE_URL = BASE_VIEW_URL + "/html";
 
     String getDocumentUrl(SourceDocument aDoc);
 
