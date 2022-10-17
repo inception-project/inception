@@ -45,6 +45,7 @@ public class InceptionSecurityRemoteApiAutoConfiguration
 
         aHttp.antMatcher("/api/**");
         aHttp.csrf().disable();
+        aHttp.cors();
 
         // We hard-wire the internal user DB as the authentication provider here because
         // because the API shouldn't work with external pre-authentication
