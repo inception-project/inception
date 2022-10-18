@@ -2506,7 +2506,7 @@
               -->
               <groupId>org.apache.maven.shared</groupId>
               <artifactId>maven-dependency-analyzer</artifactId>
-              <version>1.12.0</version>
+              <version>1.13.0</version>
             </dependency>
           </dependencies>
         </plugin>
