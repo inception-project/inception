@@ -33,7 +33,7 @@ refer to the link:https://docs.spring.io/spring-security/reference/servlet/oauth
 spring.security.oauth2.client.registration.inception-client.client-name=Keycloak
 spring.security.oauth2.client.registration.inception-client.client-id=inception-client
 spring.security.oauth2.client.registration.inception-client.client-secret=ENCRYPTED_CLIENT_SECRET
-spring.security.oauth2.client.registration.inception-client.scope=openid, profile, roles
+spring.security.oauth2.client.registration.inception-client.scope=openid, profile
 spring.security.oauth2.client.registration.inception-client.authorization-grant-type=authorization_code
 spring.security.oauth2.client.registration.inception-client.redirect-uri=http://localhost:8080/login/oauth2/code/inception-client
 spring.security.oauth2.client.provider.inception-client.issuer-uri=http://localhost:8180/realms/inception-demo 
@@ -76,7 +76,7 @@ This setting is useful for single-sign-on scenarios where only a single identity
 | Default
 | Example
       
-| `security.auto-login`
+| `security.login.auto-login`
 | Auto-login using given identity provider
 | _<none>_
 | `inception-client` (cf. example above)
@@ -84,5 +84,5 @@ This setting is useful for single-sign-on scenarios where only a single identity
 |===
 
 NOTE: In case it may be necessary to bypass the auto-login, e.g. to allow signing in via credentials,
-      navigate to `.../login.html?skipAutpLogin=true`. Make sure to do this in a fresh browser session that is
+      navigate to `.../login.html?skipAutoLogin=true`. Make sure to do this in a fresh browser session that is
       not yet logged into the application.
