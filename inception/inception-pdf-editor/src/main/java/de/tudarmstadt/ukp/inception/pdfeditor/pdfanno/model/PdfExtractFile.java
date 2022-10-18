@@ -366,6 +366,11 @@ public class PdfExtractFile
         URL url = ResourceUtils.resolveLocation(substitutionTable);
         try (InputStream is = url.openStream()) {
             SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd",
+                    false);
             SAXParser saxParser = factory.newSAXParser();
             SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
             saxParser.parse(is, substitutionTableParser);
