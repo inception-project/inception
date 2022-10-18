@@ -111,8 +111,9 @@ public class PDFExtractor
         this.output = output;
 
         String path = "org/apache/pdfbox/resources/glyphlist/additional.txt";
-        InputStream input = GlyphList.class.getClassLoader().getResourceAsStream(path);
-        this.glyphList = new GlyphList(GlyphList.getAdobeGlyphList(), input);
+        try (InputStream input = GlyphList.class.getClassLoader().getResourceAsStream(path)) {
+            this.glyphList = new GlyphList(GlyphList.getAdobeGlyphList(), input);
+        }
 
         this.pageRotation = page.getRotation();
         this.pageSize = page.getCropBox();
