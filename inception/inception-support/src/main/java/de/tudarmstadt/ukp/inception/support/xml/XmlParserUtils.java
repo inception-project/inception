@@ -80,7 +80,6 @@ public class XmlParserUtils
         SAXParser saxParser = newSaxParserFactory().newSAXParser();
         saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
         saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
         return saxParser;
     }
 }
