@@ -30,7 +30,6 @@ import java.util.TreeMap;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
@@ -38,6 +37,7 @@ import org.dkpro.core.api.resources.ResourceUtils;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.inception.pdfeditor.SubstitutionTableParser;
+import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
@@ -364,9 +364,8 @@ public class PdfExtractFile
     {
         String substitutionTable = "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
         URL url = ResourceUtils.resolveLocation(substitutionTable);
+        SAXParser saxParser = XmlParserUtils.newSaxParser();
         try (InputStream is = url.openStream()) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser saxParser = factory.newSAXParser();
             SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
             saxParser.parse(is, substitutionTableParser);
             return substitutionTableParser.getSubstitutionTable();

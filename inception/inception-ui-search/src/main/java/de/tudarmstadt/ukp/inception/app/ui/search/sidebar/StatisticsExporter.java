@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.inception.search.Metrics.DOC_COUNT;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.apache.commons.csv.CSVFormat.MONGODB_TSV;
 
@@ -41,6 +42,9 @@ import de.tudarmstadt.ukp.inception.search.Metrics;
 
 public class StatisticsExporter
 {
+
+    private static final String VIRTUAL_SENTENCE = Metrics.VIRTUAL_LAYER_SEGMENTATION + "."
+            + Metrics.VIRTUAL_FEATURE_SENTENCE;
 
     public InputStream generateFile(List<LayerStatistics> aStatsList, Formats aFormat)
         throws IOException, ExecutionException
@@ -72,29 +76,33 @@ public class StatisticsExporter
         aOut.printRecord(completeList);
 
         for (LayerStatistics ls : aStatsList) {
-
             List<Object> resultsList = new ArrayList<Object>();
             resultsList.add(ls.getFeature().getLayer().getUiName());
             resultsList.add(ls.getFeature().getUiName());
+
+            // Results per document
             for (String metric : Metrics.uiList()) {
-                if (metric == Metrics.DOC_COUNT.uiName) {
+                if (DOC_COUNT.uiName.equals(metric)) {
                     continue;
                 }
+
                 resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), false));
             }
+
+            // Results per sentence
             for (String metric : Metrics.uiList()) {
-                if (metric == Metrics.DOC_COUNT.uiName) {
+                if (DOC_COUNT.uiName.equals(metric)) {
                     continue;
                 }
-                if (ls.getFeature().getUiName() == "sentence") {
+
+                if (VIRTUAL_SENTENCE.equals(ls.getLayerFeatureName())) {
                     resultsList.add("n/a");
                 }
-                else {
-                    resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), true));
-                }
+
+                resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), true));
             }
+
             aOut.printRecord(resultsList);
         }
     }
-
 }

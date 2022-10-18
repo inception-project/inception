@@ -24,6 +24,9 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_SENTENCE;
+import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_TOKEN;
+import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTATION;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
@@ -448,27 +451,27 @@ public class MtasDocumentIndex
             allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
         }
         AnnotationLayer rawText = new AnnotationLayer();
-        rawText.setUiName("Segmentation");
+        rawText.setUiName(VIRTUAL_LAYER_SEGMENTATION);
 
         AnnotationFeature token = new AnnotationFeature();
-        token.setUiName("token");
+        token.setUiName(VIRTUAL_FEATURE_TOKEN);
         token.setLayer(rawText);
 
         AnnotationFeature sentence = new AnnotationFeature();
-        sentence.setUiName("sentence");
+        sentence.setUiName(VIRTUAL_FEATURE_SENTENCE);
         sentence.setLayer(rawText);
 
         LayerStatistics results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
                 fullDocSet);
 
         results.setFeature(token);
-        allStats.put("Segmentation.token", results);
-        nonNullStats.put("Segmentation.token", results);
+        allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
+        nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
 
         results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         results.setFeature(sentence);
-        allStats.put("Segmentation.sentence", results);
-        nonNullStats.put("Segmentation.sentence", results);
+        allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
+        nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
 
         return new StatisticsResult(aStatisticRequest, allStats, nonNullStats,
                 aStatisticRequest.getFeatures());
