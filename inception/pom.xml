@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -74,19 +76,19 @@
 
     <pdfbox.version>2.0.26</pdfbox.version>
 
-    <spring.version>5.3.22</spring.version>
-    <spring.boot.version>2.7.3</spring.boot.version>
-    <spring.security.version>5.7.3</spring.security.version>
-    <springdoc.version>1.6.11</springdoc.version>
-    <swagger.version>2.2.2</swagger.version>
+    <spring.version>5.3.23</spring.version>
+    <spring.boot.version>2.7.4</spring.boot.version>
+    <spring.security.version>5.7.4</spring.security.version>
+    <springdoc.version>1.6.12</springdoc.version>
+    <swagger.version>2.2.4</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
-    <groovy.version>3.0.12</groovy.version>
+    <groovy.version>3.0.13</groovy.version>
 
-    <tomcat.version>9.0.65</tomcat.version>
+    <tomcat.version>9.0.68</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.5</mariadb.driver.version>
@@ -129,14 +131,15 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.3</jackson.version>
+    <jackson.version>2.13.4</jackson.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.2.0</okio.version>
 
     <npm-install-command>ci</npm-install-command>
 
     <node.version>16.16.0</node.version>
-    <bootstrap.version>5.2.1</bootstrap.version>
+    <bootstrap.version>5.2.2</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
@@ -1180,6 +1183,14 @@
             <artifactId>jquery</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery-ui</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquerypp</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
           </exclusion>
@@ -1192,12 +1203,12 @@
             <artifactId>tempusdominus-bootstrap-4</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>org.webjars</groupId>
-            <artifactId>jquerypp</artifactId>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>summernote</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.webjars.bower</groupId>
-            <artifactId>summernote</artifactId>
+            <artifactId>momentjs</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1368,6 +1379,50 @@
         <artifactId>commons-logging</artifactId>
         <version>1.2</version>
       </dependency>
+      
+      <!-- Jena -->
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-fuseki-main</artifactId>
+        <version>${jena.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-text</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-arq</artifactId>
+        <version>${jena.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-tdb</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-core</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.thrift</groupId>
+        <artifactId>libthrift</artifactId>
+        <version>0.17.0</version>
+      </dependency>      
 
       <!-- SLF4J -->
       <dependency>
@@ -1666,6 +1721,18 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}.2</version>
+      </dependency>
+      
+      <!-- Snakeyaml -->
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
+      </dependency>
     
       <!-- Weblicht -->
 
@@ -1789,7 +1856,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.9</version>
+        <version>1.10.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -1916,6 +1983,17 @@
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.rdf4j</groupId>
+        <artifactId>rdf4j-sail-lucene</artifactId>
+        <version>${rdf4j.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.locationtech.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
