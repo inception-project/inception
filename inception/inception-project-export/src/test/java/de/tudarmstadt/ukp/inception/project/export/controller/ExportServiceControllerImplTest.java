@@ -197,8 +197,8 @@ class ExportServiceControllerImplTest
         }
 
         assertThat(messageRecieved).isFalse();
-        assertThat(errorRecieved).isTrue();
         assertThat(sessionHandler.errorMsg).containsIgnoringCase("access is denied");
+        assertThat(errorRecieved).isTrue();
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -220,8 +220,8 @@ class ExportServiceControllerImplTest
         session.disconnect();
 
         assertThat(messageRecieved).isTrue();
-        assertThat(errorRecieved).isFalse();
         assertThat(sessionHandler.errorMsg).isNull();
+        assertThat(errorRecieved).isFalse();
     }
 
     private final class SessionHandler
