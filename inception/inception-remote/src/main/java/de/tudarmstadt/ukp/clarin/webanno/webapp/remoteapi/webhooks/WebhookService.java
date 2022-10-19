@@ -211,6 +211,8 @@ public class WebhookService
 
     private void sendNotification(String topic, Object message, Webhook hook) throws IOException
     {
+        log.trace("Sending webhook message on topic [{}] to [{}]", topic, hook.getUrl());
+
         // Configure rest template without SSL certification check if that is disabled.
         RestTemplate restTemplate;
         if (hook.isVerifyCertificates()) {
