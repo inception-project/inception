@@ -15,40 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.config;
+package de.tudarmstadt.ukp.clarin.webanno.tsv.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
-import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv1FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv2FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
-/**
- * Provides support for an HTML-oriented annotation editor.
- */
-@ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = false)
-public class HtmlAnnotationEditorSupportAutoConfiguration
+public class WebAnnoFormatsAutoConfiguration
 {
     @Bean
-    public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
+    @ConditionalOnProperty(prefix = "format.webanno1", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public WebAnnoTsv1FormatSupport webAnnoTsv1FormatSupport()
     {
-        return new AnnotatorJsHtmlAnnotationEditorFactory();
+        return new WebAnnoTsv1FormatSupport();
     }
 
     @Bean
-    public HtmlDocumentViewFactory htmlDocumentViewFactory()
+    @ConditionalOnProperty(prefix = "format.webanno2", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public WebAnnoTsv2FormatSupport webAnnoTsv2FormatSupport()
     {
-        return new HtmlDocumentViewFactory();
+        return new WebAnnoTsv2FormatSupport();
     }
 
     @Bean
-    public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
+    @ConditionalOnProperty(prefix = "format.webanno3", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public WebAnnoTsv3FormatSupport webAnnoTsv3FormatSupport()
     {
-        return new HtmlDocumentIFrameViewFactory();
+        return new WebAnnoTsv3FormatSupport();
     }
 }

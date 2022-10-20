@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -40,6 +39,7 @@ import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
 public class XmlCas2SaxEvents
     extends Cas2SaxEvents
@@ -65,8 +65,7 @@ public class XmlCas2SaxEvents
 
     public static ContentHandler makeSerializer(Writer out) throws TransformerConfigurationException
     {
-        SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
-        tf.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+        SAXTransformerFactory tf = XmlParserUtils.newTransformerFactory();
         TransformerHandler th = tf.newTransformerHandler();
         th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
         th.getTransformer().setOutputProperty(METHOD, "xml");

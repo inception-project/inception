@@ -15,21 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.xml.config;
+package de.tudarmstadt.ukp.inception.io.html.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 @Configuration
-@ConditionalOnProperty(prefix = "format.xml", name = "enabled", havingValue = "true", matchIfMissing = false)
-public class XmlSupportAutoConfiguration
+public class HtmlSupportAutoConfiguration
 {
     @Bean
-    public XmlFormatSupport xmlFormatSupport()
+    @ConditionalOnProperty(prefix = "format.html", name = "enabled", havingValue = "true", matchIfMissing = false)
+    public HtmlFormatSupport htmlFormatSupport()
     {
-        return new XmlFormatSupport();
+        return new HtmlFormatSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "format.html-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
+    public LegacyHtmlFormatSupport legacyHtmlFormatSupport()
+    {
+        return new LegacyHtmlFormatSupport();
     }
 }

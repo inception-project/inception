@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.xml.config;
+package de.tudarmstadt.ukp.clarin.webanno.tcf.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfFormatSupport;
 
 @Configuration
-@ConditionalOnProperty(prefix = "format.xml", name = "enabled", havingValue = "true", matchIfMissing = false)
-public class XmlSupportAutoConfiguration
+public class TcfFormatsAutoConfiguration
 {
     @Bean
-    public XmlFormatSupport xmlFormatSupport()
+    @ConditionalOnProperty(prefix = "format.tcf", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public TcfFormatSupport tcfFormatSupport()
     {
-        return new XmlFormatSupport();
+        return new TcfFormatSupport();
     }
 }
