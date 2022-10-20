@@ -24,9 +24,8 @@ import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 
-import com.github.rjeschke.txtmark.Processor;
-
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
 
 public class KnowledgeBaseInfoPanel
     extends Panel
@@ -39,7 +38,7 @@ public class KnowledgeBaseInfoPanel
 
         queue(new Label("description",
                 aModel.bind("description")
-                        .map(description -> Processor.process((String) description, true)))
+                        .map(description -> MarkdownUtil.markdownToHtml((String) description)))
                                 .setEscapeModelStrings(false)
                                 .add(visibleWhen(() -> aModel.getObject() != null)));
         queue(new Label("hostInstitutionName", aModel.bind("hostInstitutionName"))
