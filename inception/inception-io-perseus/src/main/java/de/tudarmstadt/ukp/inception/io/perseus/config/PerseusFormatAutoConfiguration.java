@@ -15,7 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides Classes for reading/writing TCF data files.
- */
-package de.tudarmstadt.ukp.clarin.webanno.tcf;
+package de.tudarmstadt.ukp.inception.io.perseus.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.inception.io.perseus.PerseusFormatSupport;
+
+@Configuration
+public class PerseusFormatAutoConfiguration
+{
+    @Bean
+    @ConditionalOnProperty(prefix = "format.perseus", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public PerseusFormatSupport perseusFormatSupport()
+    {
+        return new PerseusFormatSupport();
+    }
+}

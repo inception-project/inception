@@ -27,12 +27,18 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.lif.LifReader;
 import org.dkpro.core.io.lif.LifWriter;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.io.lif.config.LifFormatSupportAutoConfiguration;
 
-@Component
+/**
+ * Support for HTML format.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link LifFormatSupportAutoConfiguration#lifFormatSupport()}.
+ * </p>
+ */
 public class LifFormatSupport
     implements FormatSupport
 {

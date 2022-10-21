@@ -23,7 +23,6 @@ import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
 
 import java.io.OutputStream;
 
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -37,6 +36,8 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
+
+import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
 /**
  * Simple XML write takes the XML annotations for elements, attributes and text nodes and renders
@@ -87,8 +88,7 @@ public class XmlDocumentWriter
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
-            SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
-            tf.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+            SAXTransformerFactory tf = XmlParserUtils.newTransformerFactory();
             TransformerHandler th = tf.newTransformerHandler();
             if (omitXmlDeclaration) {
                 th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");

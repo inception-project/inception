@@ -25,33 +25,19 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
-import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
-import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
  */
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean
     public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
     {
         return new AnnotatorJsHtmlAnnotationEditorFactory();
-    }
-
-    @Bean
-    public HtmlFormatSupport htmlFormatSupport()
-    {
-        return new HtmlFormatSupport();
-    }
-
-    @Bean
-    public LegacyHtmlFormatSupport legacyHtmlFormatSupport()
-    {
-        return new LegacyHtmlFormatSupport();
     }
 
     @Bean

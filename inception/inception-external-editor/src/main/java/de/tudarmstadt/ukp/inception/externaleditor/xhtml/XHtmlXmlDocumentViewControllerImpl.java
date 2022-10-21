@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import java.io.StringWriter;
-import java.io.Writer;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
@@ -107,7 +106,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         CAS cas = documentService.createOrReadInitialCas(doc);
 
-        try (Writer out = new StringWriter()) {
+        try (StringWriter out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;
             if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
                 maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
@@ -170,10 +169,10 @@ public class XHtmlXmlDocumentViewControllerImpl
         }
     }
 
-    private ResponseEntity<String> toResponse(Writer out)
+    private ResponseEntity<String> toResponse(StringWriter aOut)
     {
         return ResponseEntity.ok() //
                 .contentType(MediaType.APPLICATION_XHTML_XML) //
-                .body(out.toString());
+                .body(aOut.toString());
     }
 }
