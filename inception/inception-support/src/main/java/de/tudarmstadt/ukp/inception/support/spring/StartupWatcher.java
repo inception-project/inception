@@ -17,14 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.support.spring;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
 import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -35,8 +34,6 @@ import org.springframework.stereotype.Component;
 public class StartupWatcher
     implements BeanPostProcessor
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private @Autowired ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -61,15 +58,15 @@ public class StartupWatcher
 
         boolean isInterestingForUser = isOurs && name.endsWith("AutoConfiguration");
 
-        if (log.isTraceEnabled() && !isInterestingForUser) {
-            log.trace("Initializing " + name);
+        if (BOOT_LOG.isTraceEnabled() && !isInterestingForUser) {
+            BOOT_LOG.trace("Initializing " + name);
         }
 
         if (isInterestingForUser) {
             name = StringUtils.removeEnd(name, "AutoConfiguration");
             name = lowerCase(join(splitByCharacterTypeCamelCase(name), SPACE));
 
-            log.info("Initializing " + name);
+            BOOT_LOG.info("Initializing " + name);
 
             eventPublisher
                     .publishEvent(new StartupProgressInfoEvent(aBean, "Initializing " + name));

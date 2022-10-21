@@ -55,7 +55,7 @@ public class FileUtils
             }
         }
         catch (IOException e) {
-            log.warn("File [{}] is missing - {}", r.getName(), reason);
+            log.debug("File [{}] is missing - {}", r.getName(), reason);
         }
         return lines;
     }

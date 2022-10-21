@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class MenuItemRegistryImpl
             }
         }
 
-        log.info("Found [{}] menu items", exts.size());
+        BOOT_LOG.info("Found [{}] menu items", exts.size());
 
         extensions = Collections.unmodifiableList(exts);
     }

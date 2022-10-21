@@ -40,7 +40,7 @@ public class RingBufferAppender
     private static final Collection<LogMessage> events = Collections
             .synchronizedCollection(new CircularFifoQueue<>(1000));
 
-    protected RingBufferAppender(String name, Filter filter)
+    public RingBufferAppender(String name, Filter filter)
     {
         super(name, filter, null, false, new Property[0]);
     }

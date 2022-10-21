@@ -34,6 +34,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+
 @Component
 public class AnnotationSidebarRegistryImpl
     implements AnnotationSidebarRegistry
@@ -70,7 +72,7 @@ public class AnnotationSidebarRegistryImpl
             }
         }
 
-        log.info("Found [{}] annotation sidebar extensions", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] annotation sidebar extensions", exts.size());
 
         extensions = unmodifiableList(exts);
     }

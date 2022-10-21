@@ -58,6 +58,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
@@ -135,7 +136,8 @@ public class ConceptLinkingServiceImpl
             }
         }
 
-        log.info("Found [{}] entity ranking feature generators", generators.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] entity ranking feature generators",
+                generators.size());
 
         featureGenerators = unmodifiableList(generators);
     }

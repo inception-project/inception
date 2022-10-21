@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
-import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.DESKTOP;
-import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR;
-import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR_DOCKER;
-import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
-import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.DESKTOP;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_JAR;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_JAR_DOCKER;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode.SERVER_WAR_DOCKER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.isNull;
@@ -54,6 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoCo
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
 /**
  * <p>
@@ -97,6 +99,11 @@ public class TelemetryServiceImpl
         init();
     }
 
+    /**
+     * @deprecated Moved to {@link DeploymentModeServiceImpl}
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     @EventListener
     public void onApplicationEvent(WebServerInitializedEvent aEvt)
     {
@@ -156,12 +163,19 @@ public class TelemetryServiceImpl
 
     /**
      * @return if the embedded server was used (i.e. not running as a WAR).
+     * @deprecated Use {@link DeploymentModeServiceImpl#isEmbeddedServerDeployment()}
      */
+    @Deprecated
     public boolean isEmbeddedServerDeployment()
     {
         return port != -1 && runningFromCommandline;
     }
 
+    /**
+     * @deprecated Use {@link DeploymentModeServiceImpl#isDesktopInstance()}
+     */
+    @Deprecated
+    @SuppressWarnings("javadoc")
     public boolean isDesktopInstance()
     {
         return // The embedded server was used (i.e. not running as a WAR)
@@ -174,7 +188,9 @@ public class TelemetryServiceImpl
 
     /**
      * @return if the embedded server was used (i.e. not running as a WAR) and running in Docker.
+     * @deprecated Use {@link DeploymentModeServiceImpl#isDockerized()}
      */
+    @Deprecated
     public boolean isDockerized()
     {
         final String cgroupPath = "/proc/1/cgroup";
@@ -195,6 +211,10 @@ public class TelemetryServiceImpl
         return false;
     }
 
+    /**
+     * @deprecated Use {@link DeploymentModeServiceImpl#getDeploymentMode()}
+     */
+    @Deprecated
     @Override
     public DeploymentMode getDeploymentMode()
     {
