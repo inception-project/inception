@@ -48,5 +48,4 @@ public interface DeploymentModeService
      * @return if the embedded server was used (i.e. not running as a WAR).
      */
     boolean isEmbeddedServerDeployment();
-
 }
