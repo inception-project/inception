@@ -28,14 +28,16 @@ import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 public class HtmlSupportAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "format.html", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "format.html", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     public HtmlFormatSupport htmlFormatSupport()
     {
         return new HtmlFormatSupport();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "format.html-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "format.html-legacy", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     public LegacyHtmlFormatSupport legacyHtmlFormatSupport()
     {
         return new LegacyHtmlFormatSupport();

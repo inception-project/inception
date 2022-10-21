@@ -27,7 +27,8 @@ import de.tudarmstadt.ukp.inception.io.tei.TeiFormatSupport;
 public class TeiFormatsAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "format.dkpro-core-tei", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "format.dkpro-core-tei", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public TeiFormatSupport teiFormatSupport()
     {
         return new TeiFormatSupport();
