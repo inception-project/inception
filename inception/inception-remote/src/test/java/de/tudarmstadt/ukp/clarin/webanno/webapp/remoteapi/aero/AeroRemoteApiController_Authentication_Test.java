@@ -55,9 +55,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
-@ActiveProfiles("auto-mode-builtin")
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
+@ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_DATABASE)
+@SpringBootTest( //
+        webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true", //
