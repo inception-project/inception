@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 
 @Configuration
+@ConditionalOnProperty(prefix = "format.xml", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class XmlSupportAutoConfiguration
 {
     @Bean

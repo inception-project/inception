@@ -23,6 +23,9 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,16 @@ public class XmlParserUtils
     private XmlParserUtils()
     {
         // No instances
+    }
+
+    public static SAXTransformerFactory newTransformerFactory()
+        throws TransformerConfigurationException
+    {
+        var factory = TransformerFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return (SAXTransformerFactory) factory;
     }
 
     public static SAXParserFactory newSaxParserFactory()
