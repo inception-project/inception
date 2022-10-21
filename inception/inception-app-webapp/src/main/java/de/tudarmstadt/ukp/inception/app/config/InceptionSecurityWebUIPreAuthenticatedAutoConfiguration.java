@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
@@ -30,14 +32,13 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 @EnableWebSecurity
 public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
 
-    @Profile(SettingsUtil.PROFILE_PREAUTH)
+    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     @Bean
     public SecurityFilterChain externalPreAuthenticationFilterChain(HttpSecurity aHttp,
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
@@ -88,7 +89,7 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
     }
 
     @Bean
-    @Profile(SettingsUtil.PROFILE_PREAUTH)
+    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
             AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository)
         throws Exception

@@ -35,6 +35,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 
 @Component
 public class AgreementMeasureSupportRegistryImpl
@@ -72,7 +73,7 @@ public class AgreementMeasureSupportRegistryImpl
             }
         }
 
-        log.info("Found [{}] agreement measure supports", fsp.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] agreement measure supports", fsp.size());
 
         agreementMeasures = unmodifiableList(fsp);
     }

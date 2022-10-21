@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
+
 import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
@@ -37,7 +39,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @EnableWebSecurity
 public class InceptionSecurityAutoConfiguration
@@ -66,7 +68,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(SettingsUtil.PROFILE_PREAUTH)
+    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
@@ -78,7 +80,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(SettingsUtil.PROFILE_DATABASE)
+    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
     public DaoAuthenticationProvider internalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
     {

@@ -42,6 +42,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+
 @Component
 public class DatabaseInfoService
     implements InitializingBean
@@ -122,7 +124,8 @@ public class DatabaseInfoService
                 }
             }
             else {
-                log.info("{}: [{}] {}", rightPad(setting.name, maxSettingNameLength), setting.value,
+                BaseLoggers.BOOT_LOG.info("{}: [{}] {}",
+                        rightPad(setting.name, maxSettingNameLength), setting.value,
                         setting.status());
             }
         }

@@ -31,6 +31,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 
 /**
@@ -75,7 +76,7 @@ public class ExternalSearchProviderRegistryImpl
             }
         }
 
-        log.info("Found [{}] external search providers", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] external search providers", exts.size());
 
         providers = Collections.unmodifiableList(exts);
     }

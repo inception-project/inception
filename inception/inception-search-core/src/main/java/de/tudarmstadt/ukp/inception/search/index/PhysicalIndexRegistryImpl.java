@@ -32,6 +32,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**
@@ -75,7 +76,7 @@ public class PhysicalIndexRegistryImpl
             }
         }
 
-        log.info("Found [{}] index extensions", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] index extensions", exts.size());
 
         extensions = unmodifiableList(exts);
     }

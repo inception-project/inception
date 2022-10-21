@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.inception.app.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.CFG_AUTH_MODE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -32,14 +31,14 @@ import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.util.unit.DataSize;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 public class InceptionApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
     private static final String AUTH_MODE_PREAUTH = "preauth";
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
@@ -50,7 +49,7 @@ public class InceptionApplicationContextInitializer
 
         File settings = SettingsUtil.getSettingsFileLocation();
 
-        log.info("Settings: {} {}", settings,
+        BaseLoggers.BOOT_LOG.info("Settings: {} {}", settings,
                 settings.exists() ? "(file exists)" : "(file does not exist)");
 
         // If settings were found, add them to the environment
@@ -66,15 +65,16 @@ public class InceptionApplicationContextInitializer
 
         // Activate bean profile depending on authentication mode
         if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
-            aEnvironment.setActiveProfiles(SettingsUtil.PROFILE_PREAUTH);
-            log.info("Authentication: pre-auth");
+            aEnvironment.addActiveProfile(DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH);
+            BOOT_LOG.info("Authentication: pre-auth");
         }
         else {
-            aEnvironment.setActiveProfiles(SettingsUtil.PROFILE_DATABASE);
-            log.info("Authentication: database");
+            aEnvironment.addActiveProfile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE);
+            BOOT_LOG.info("Authentication: database");
         }
 
         Runtime rt = Runtime.getRuntime();
-        log.info("Max. application memory: {}MB", DataSize.ofBytes(rt.maxMemory()).toMegabytes());
+        BOOT_LOG.info("Max. application memory: {}MB",
+                DataSize.ofBytes(rt.maxMemory()).toMegabytes());
     }
 }
