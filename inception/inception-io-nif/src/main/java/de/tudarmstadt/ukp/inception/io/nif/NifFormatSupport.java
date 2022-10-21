@@ -30,12 +30,13 @@ import org.dkpro.core.io.nif.NifWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatSupportAutoConfiguration;
 
 /**
  * Support for HTML format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link NifFormatSupportAutoConfiguration#lifFormatSupport()}.
+ * {@link NifFormatSupportAutoConfiguration#nifFormatSupport()}.
  * </p>
  */
 public class NifFormatSupport
