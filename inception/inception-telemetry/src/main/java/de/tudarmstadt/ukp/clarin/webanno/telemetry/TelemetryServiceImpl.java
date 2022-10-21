@@ -102,6 +102,7 @@ public class TelemetryServiceImpl
     /**
      * @deprecated Moved to {@link DeploymentModeServiceImpl}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     @EventListener
     public void onApplicationEvent(WebServerInitializedEvent aEvt)
@@ -162,7 +163,7 @@ public class TelemetryServiceImpl
 
     /**
      * @return if the embedded server was used (i.e. not running as a WAR).
-     * @deprecated Use {@link DeploymentMode#getDeploymentMode}
+     * @deprecated Use {@link DeploymentModeServiceImpl#isEmbeddedServerDeployment()}
      */
     @Deprecated
     public boolean isEmbeddedServerDeployment()
@@ -171,9 +172,10 @@ public class TelemetryServiceImpl
     }
 
     /**
-     * @deprecated Use {@link DeploymentMode#getDeploymentMode}
+     * @deprecated Use {@link DeploymentModeServiceImpl#isDesktopInstance()}
      */
     @Deprecated
+    @SuppressWarnings("javadoc")
     public boolean isDesktopInstance()
     {
         return // The embedded server was used (i.e. not running as a WAR)
@@ -186,7 +188,7 @@ public class TelemetryServiceImpl
 
     /**
      * @return if the embedded server was used (i.e. not running as a WAR) and running in Docker.
-     * @deprecated Use {@link DeploymentMode#getDeploymentMode}
+     * @deprecated Use {@link DeploymentModeServiceImpl#isDockerized()}
      */
     @Deprecated
     public boolean isDockerized()
@@ -210,7 +212,7 @@ public class TelemetryServiceImpl
     }
 
     /**
-     * @deprecated Use {@link DeploymentMode#getDeploymentMode}
+     * @deprecated Use {@link DeploymentModeServiceImpl#getDeploymentMode()}
      */
     @Deprecated
     @Override
