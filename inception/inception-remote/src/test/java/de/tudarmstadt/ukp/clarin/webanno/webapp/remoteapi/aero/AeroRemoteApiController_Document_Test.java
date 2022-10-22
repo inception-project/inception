@@ -51,8 +51,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
-@ActiveProfiles("auto-mode-builtin")
+@ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_DATABASE)
 @SpringBootTest( //
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //

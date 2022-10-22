@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
@@ -66,7 +67,7 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
             }
         }
 
-        log.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
+        BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
         extensionsList = unmodifiableList(extensions);
     }

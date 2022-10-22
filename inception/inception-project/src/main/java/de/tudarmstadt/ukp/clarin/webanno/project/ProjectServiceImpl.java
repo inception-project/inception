@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 
 /**
  * <p>
@@ -806,7 +807,7 @@ public class ProjectServiceImpl
             }
         }
 
-        log.info("Found [{}] project initializers", inits.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] project initializers", inits.size());
 
         initializers = unmodifiableList(inits);
     }

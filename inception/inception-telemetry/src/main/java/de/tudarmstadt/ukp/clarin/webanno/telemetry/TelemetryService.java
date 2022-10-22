@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
 
 public interface TelemetryService
 {

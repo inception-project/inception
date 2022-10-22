@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
@@ -161,7 +162,7 @@ public class DocumentImportExportServiceImpl
             });
         }
 
-        log.info("Found [{}] format supports", formatMap.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] format supports", formatMap.size());
 
         formats = unmodifiableMap(formatMap);
     }

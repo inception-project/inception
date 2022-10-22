@@ -33,6 +33,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
 
 /**
@@ -76,7 +77,7 @@ public class AnnotationEditorRegistryImpl
             }
         }
 
-        log.info("Found [{}] annotation editors", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] annotation editors", exts.size());
 
         extensions = unmodifiableList(exts);
     }

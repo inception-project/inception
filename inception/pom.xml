@@ -98,7 +98,7 @@
 
     <wicket.version>9.11.0</wicket.version>
     <wicketstuff.version>9.11.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.8.1</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M8</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
@@ -164,7 +164,8 @@
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>^3.6.1</jquery.version>
+    <jquery.version>3.6.1</jquery.version>
+    <jquery-ui.version>1.13.2</jquery-ui.version>
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
     <pdfjs.version>2.14.305</pdfjs.version>
@@ -265,6 +266,12 @@
       <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Log4J2 support for Spring Boot and profiles -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-spring-boot</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -1246,6 +1253,16 @@
         <version>1.7.12</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>jquery</artifactId>
+        <version>${jquery.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>jquery-ui</artifactId>
+        <version>${jquery-ui.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.webjars.npm</groupId>
@@ -2212,6 +2229,11 @@
         <artifactId>log4j-slf4j-impl</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-spring-boot</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
 
       <dependency>
         <!-- Import dependency management from DKPro Core -->
@@ -2468,6 +2490,7 @@
               - Logging is used via reflection and cannot be detected by Maven
             -->
             <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
+            <dependency>org.apache.logging.log4j:log4j-spring-boot</dependency>
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>

@@ -55,15 +55,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
 /**
  * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with the
- * {@code auto-mode-preauth} profile enabled. This test should ensure that authentication for the
- * remote API always uses the built-in user database and does not care about the external
- * pre-authentication.
+ * {@link DeploymentModeServiceImpl#PROFILE_AUTH_MODE_EXTERNAL_PREAUTH} profile enabled. This test
+ * should ensure that authentication for the remote API always uses the built-in user database and
+ * does not care about the external pre-authentication.
  */
-@ActiveProfiles("auto-mode-preauth")
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
+@ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
+@SpringBootTest( //
+        webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true", //

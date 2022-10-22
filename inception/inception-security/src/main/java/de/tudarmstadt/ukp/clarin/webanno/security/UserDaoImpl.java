@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
@@ -668,7 +669,7 @@ public class UserDaoImpl
         // accounts after the upgrade... because if an external user could change their password,
         // they would be able to log in via form-based login...
         if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
-                SettingsUtil.PROFILE_PREAUTH)) {
+                PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
             PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
             if (aUser.getPassword() == null
                     || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword())) {

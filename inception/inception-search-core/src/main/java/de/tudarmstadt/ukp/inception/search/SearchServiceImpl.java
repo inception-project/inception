@@ -129,7 +129,7 @@ public class SearchServiceImpl
         preferencesService = aPreferencesService;
 
         properties = aProperties;
-        log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
+        log.debug("Index keep-open time: {}", properties.getIndexKeepOpenTime());
 
         indexClosingScheduler = new ScheduledThreadPoolExecutor(0);
         indexClosingScheduler.scheduleWithFixedDelay(this::closeIdleIndexes, 10, 10, SECONDS);

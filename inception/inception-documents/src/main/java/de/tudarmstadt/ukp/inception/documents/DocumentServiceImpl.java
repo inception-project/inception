@@ -127,6 +127,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
@@ -177,7 +178,8 @@ public class DocumentServiceImpl
         entityManager = aEntityManager;
 
         if (repositoryProperties != null) {
-            log.info("Document repository path: {}", repositoryProperties.getPath());
+            BaseLoggers.BOOT_LOG.info("Document repository path: {}",
+                    repositoryProperties.getPath());
         }
     }
 
