@@ -1411,6 +1411,10 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.json</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
