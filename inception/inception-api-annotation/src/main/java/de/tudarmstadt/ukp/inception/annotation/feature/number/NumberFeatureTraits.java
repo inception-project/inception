@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
@@ -30,14 +31,15 @@ public class NumberFeatureTraits
 {
     private static final long serialVersionUID = -2395185084802071593L;
 
-    public enum EDITOR_TYPE
+    public enum EditorType
     {
+        @JsonEnumDefaultValue
         SPINNER("Spinner"), //
         RADIO_BUTTONS("Radio Buttons");
 
         private final String name;
 
-        EDITOR_TYPE(String name)
+        EditorType(String name)
         {
             this.name = name;
         }
@@ -52,7 +54,7 @@ public class NumberFeatureTraits
     private boolean limited = false;
     private Number minimum = 0;
     private Number maximum = 0;
-    private EDITOR_TYPE editorType = EDITOR_TYPE.SPINNER;
+    private EditorType editorType = EditorType.SPINNER;
 
     public NumberFeatureTraits()
     {
@@ -89,12 +91,12 @@ public class NumberFeatureTraits
         this.maximum = maximum;
     }
 
-    public EDITOR_TYPE getEditorType()
+    public EditorType getEditorType()
     {
         return editorType;
     }
 
-    public void setEditorType(EDITOR_TYPE editorType)
+    public void setEditorType(EditorType editorType)
     {
         this.editorType = editorType;
     }

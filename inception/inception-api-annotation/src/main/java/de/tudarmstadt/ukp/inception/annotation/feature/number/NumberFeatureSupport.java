@@ -105,7 +105,7 @@ public class NumberFeatureSupport
 
         switch (feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
-            if (traits.getEditorType().equals(NumberFeatureTraits.EDITOR_TYPE.RADIO_BUTTONS)) {
+            if (traits.getEditorType().equals(NumberFeatureTraits.EditorType.RADIO_BUTTONS)) {
                 int min = (int) traits.getMinimum();
                 int max = (int) traits.getMaximum();
                 List<Integer> range = IntStream.range(min, max + 1).boxed()
@@ -127,8 +127,11 @@ public class NumberFeatureSupport
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
-        // If the feature is not a string feature, force the tagset to null.
+        // Numeric features cannot have a tagset
         aFeature.setTagset(null);
+
+        // Numeric features cannot be null
+        aFeature.setRequired(true);
     }
 
     // TODO: trait reading/writing needs to be handled in another way to avoid duplicate code

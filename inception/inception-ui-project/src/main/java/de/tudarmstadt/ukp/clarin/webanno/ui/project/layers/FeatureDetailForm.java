@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -50,6 +51,7 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -122,11 +124,15 @@ public class FeatureDetailForm
         required = new CheckBox("required");
         required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
-            boolean relevant = CAS.TYPE_NAME_STRING
-                    .equals(FeatureDetailForm.this.getModelObject().getType());
-            _this.setEnabled(relevant);
-            if (!relevant) {
-                FeatureDetailForm.this.getModelObject().setRequired(false);
+            boolean mandatory = asList(CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT,
+                    CAS.TYPE_NAME_DOUBLE, CAS.TYPE_NAME_BOOLEAN)
+                            .contains(FeatureDetailForm.this.getModelObject().getType());
+            _this.setEnabled(!mandatory);
+            if (mandatory) {
+                required.setModel(Model.of(true));
+            }
+            else {
+                required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
             }
         }));
         add(required);
