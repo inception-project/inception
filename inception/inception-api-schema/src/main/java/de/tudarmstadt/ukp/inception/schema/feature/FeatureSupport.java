@@ -113,7 +113,7 @@ public interface FeatureSupport<T>
             AnnotationFeature aFeature);
 
     /**
-     * Called when the user selects a feature in the feature detail form. It allows the feature
+     * Called when the user saves a feature in the feature detail form. It allows the feature
      * support to fill in settings which are not configurable through the UI, e.g. link feature
      * details.
      * 
