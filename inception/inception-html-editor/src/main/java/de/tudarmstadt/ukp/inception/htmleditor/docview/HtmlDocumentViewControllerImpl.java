@@ -35,7 +35,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 
+/**
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameViewFactory} instead
+ */
+@Deprecated
 @ConditionalOnWebApplication
 @RestController
 @RequestMapping(HtmlDocumentViewController.BASE_URL)

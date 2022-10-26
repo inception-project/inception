@@ -24,7 +24,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameView;
 
+/**
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameView} instead
+ */
+@Deprecated
 public class HtmlDocumentIFrameView
     extends WebMarkupContainer
 {

@@ -35,7 +35,12 @@ import org.xml.sax.SAXException;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 
+/**
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameViewFactory} instead
+ */
+@Deprecated
 public class LegacyHtmlDocumentRenderer
 {
     public String renderHtmlDocumentStructure(CAS aCas)
