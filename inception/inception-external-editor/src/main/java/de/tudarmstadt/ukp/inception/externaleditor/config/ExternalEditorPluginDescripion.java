@@ -22,19 +22,23 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class ExternalEditorPluginDescripion
     implements Serializable
 {
     private static final long serialVersionUID = 4400329006838299692L;
 
     private String id;
-    private Path basePath;
     private String factory;
     private String name;
     private String annotationFormat;
     private String view;
+
     private List<String> scripts = Collections.emptyList();
     private List<String> stylesheets = Collections.emptyList();
+
+    private @JsonIgnore Path basePath;
 
     public void setId(String aId)
     {

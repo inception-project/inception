@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface DocumentImportExportService
 {
@@ -97,6 +98,18 @@ public interface DocumentImportExportService
         FormatSupport formatSupport = maybeFormatSupport.get();
 
         return formatSupport.getCssStylesheets();
+    }
+
+    default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc)
+    {
+        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return Optional.empty();
+        }
+
+        FormatSupport formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getPolicy();
     }
 
     // --------------------------------------------------------------------------------------------

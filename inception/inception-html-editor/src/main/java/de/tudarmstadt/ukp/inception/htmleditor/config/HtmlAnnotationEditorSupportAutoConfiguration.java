@@ -31,22 +31,29 @@ import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
  */
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "ui.html", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
     public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
     {
         return new AnnotatorJsHtmlAnnotationEditorFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.html.legacy-html-view", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
+    @Deprecated
     public HtmlDocumentViewFactory htmlDocumentViewFactory()
     {
         return new HtmlDocumentViewFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.html.legacy-iframe-view", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
+    @Deprecated
     public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
     {
         return new HtmlDocumentIFrameViewFactory();

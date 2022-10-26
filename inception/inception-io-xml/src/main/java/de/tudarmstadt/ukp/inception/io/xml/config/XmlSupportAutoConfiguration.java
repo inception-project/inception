@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 
 @Configuration
-@ConditionalOnProperty(prefix = "format.xml", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "format.generic-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class XmlSupportAutoConfiguration
 {
     @Bean

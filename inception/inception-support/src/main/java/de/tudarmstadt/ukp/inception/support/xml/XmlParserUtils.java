@@ -17,18 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml;
 
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Comparator.comparing;
+import static javax.xml.transform.OutputKeys.INDENT;
+import static javax.xml.transform.OutputKeys.METHOD;
+import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
+
+import java.io.Writer;
 import java.lang.invoke.MethodHandles;
+import java.util.Comparator;
 
 import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
@@ -45,6 +57,32 @@ public class XmlParserUtils
     private XmlParserUtils()
     {
         // No instances
+    }
+
+    public static Comparator<QName> caseInsensitiveQNameComparator()
+    {
+        return comparing(QName::getLocalPart, CASE_INSENSITIVE_ORDER);
+    }
+
+    public static String getQName(QName aElement)
+    {
+        var qName = aElement.getLocalPart();
+        if (!aElement.getPrefix().isEmpty()) {
+            qName = aElement.getPrefix() + ':' + qName;
+        }
+        return qName;
+    }
+
+    public static ContentHandler makeXmlSerializer(Writer aOut)
+        throws TransformerConfigurationException
+    {
+        SAXTransformerFactory tf = newTransformerFactory();
+        TransformerHandler th = tf.newTransformerHandler();
+        th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
+        th.getTransformer().setOutputProperty(METHOD, "xml");
+        th.getTransformer().setOutputProperty(INDENT, "no");
+        th.setResult(new StreamResult(aOut));
+        return th;
     }
 
     public static SAXTransformerFactory newTransformerFactory()
