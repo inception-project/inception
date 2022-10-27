@@ -356,8 +356,8 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, VID aParamId,
-            String aQuery)
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
     {
         List<VLazyDetailResult> result = new ArrayList<>();
 
