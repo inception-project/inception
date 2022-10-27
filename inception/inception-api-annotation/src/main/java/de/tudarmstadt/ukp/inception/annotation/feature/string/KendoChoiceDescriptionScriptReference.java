@@ -104,18 +104,18 @@ public class KendoChoiceDescriptionScriptReference
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
                 // @formatter:off
                 StringBuilder sb = new StringBuilder();
-                sb.append("<div title='#: data.description #' onmouseover='javascript:applyTooltip(this)'>");
+                sb.append("<span title='#: data.description #' onmouseover='javascript:applyTooltip(this)'>");
                 sb.append("# if (data.reordered == 'true') { #");
-                sb.append("  <b>#: data.name #</b>");
+                sb.append("<b>${data.name}</b>");
                 sb.append("# } else { #");
-                sb.append("  #: data.name #");
+                sb.append("${data.name}");
                 sb.append("# } #");
                 sb.append("# if (data.score) { #");
-                sb.append("  <div class='item-description'>");
-                sb.append("    Score: ${ data.score }");
-                sb.append("  </div>");
-                sb.append("# } #");
+                sb.append("<div class='item-description'>");
+                sb.append("Score: ${ data.score }");
                 sb.append("</div>");
+                sb.append("# } #");
+                sb.append("</span>");
                 // @formatter:on
 
                 return sb.toString();
