@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -267,7 +268,8 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
     {
         List<VLazyDetailResult> result = new ArrayList<>();
 
