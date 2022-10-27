@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
@@ -65,9 +67,11 @@ public class LazyDetailsHandler
             final VID paramId = getVid(aRequest);
 
             AnnotatorState state = page.getModelObject();
-            return lazyDetailsLookupService.actionLookupNormData(aRequest.getRequestParameters(),
-                    paramId, casProvider, state.getDocument(), state.getUser(),
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+            var result = lazyDetailsLookupService.actionLookupNormData(
+                    aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
+                    state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
+            attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
+            return result;
         }
         catch (Exception e) {
             return handleError("Unable to load lazy details", e);

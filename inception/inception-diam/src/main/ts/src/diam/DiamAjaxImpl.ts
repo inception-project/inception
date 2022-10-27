@@ -197,6 +197,41 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  loadLazyDetails (id: VID, type: string, database: string, key: string): Promise<any> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'normData',
+      token,
+      id,
+      type,
+      database,
+      key
+    }
+
+    return new Promise((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          const result = DiamAjaxImpl.clearResult(token)
+          if (result === undefined) {
+            reject(new Error('Server did not place result into transport buffer'))
+            return
+          }
+
+          resolve(result)
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to load annotation'))
+        }]
+      })
+    })
+  }
+
   openContextMenu (id: VID, evt: MouseEvent): void {
     let clientX = evt.clientX
     let clientY = evt.clientY
