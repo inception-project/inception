@@ -121,7 +121,7 @@ public class LazyDetailsLookupServiceImpl
         else if (!keyParam.isEmpty()) {
             AnnotationFeature feature = annotationService.getFeature(database, layer);
             featureSupportRegistry.findExtension(feature).orElseThrow()
-                    .renderLazyDetails(feature, keyParam.toString()) //
+                    .renderLazyDetails(aCas.get(), feature, paramId, keyParam.toString()) //
                     .forEach(details::add);
         }
 

@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -210,7 +211,8 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
     {
         return asList(new VLazyDetailResult("<img>", aQuery));
     }

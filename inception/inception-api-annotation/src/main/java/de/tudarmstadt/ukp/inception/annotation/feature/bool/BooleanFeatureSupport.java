@@ -84,8 +84,11 @@ public class BooleanFeatureSupport
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
-        // If the feature is not a string feature, force the tagset to null.
+        // Boolean features cannot have a tagset
         aFeature.setTagset(null);
+
+        // Boolean features cannot be null
+        aFeature.setRequired(true);
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
@@ -37,6 +38,7 @@ public class StringFeatureTraits
 
     public enum EditorType
     {
+        @JsonEnumDefaultValue
         AUTO("Auto (depending on tagset size)"), //
         RADIOGROUP("Radio group (small tagsets)"), //
         COMBOBOX("Combo box (mid-size tagsets)"), //

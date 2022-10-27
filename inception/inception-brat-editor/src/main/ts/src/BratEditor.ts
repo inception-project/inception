@@ -32,8 +32,8 @@ export class BratEditor implements AnnotationEditor {
 
     this.dispatcher = new Dispatcher()
     new Ajax(this.dispatcher, markupId, props.diamAjaxCallbackUrl)
-    this.visualizer = new Visualizer(this.dispatcher, markupId)
-    new VisualizerUI(this.dispatcher)
+    this.visualizer = new Visualizer(this.dispatcher, markupId, ajax)
+    new VisualizerUI(this.dispatcher, ajax)
     new AnnotatorUI(this.dispatcher, this.visualizer.svg, ajax)
     this.dispatcher.post('init')
     element.dispatcher = this.dispatcher
