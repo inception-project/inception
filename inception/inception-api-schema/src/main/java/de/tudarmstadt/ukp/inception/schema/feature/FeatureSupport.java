@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -230,7 +231,6 @@ public interface FeatureSupport<T>
         else {
             return Collections.emptyList();
         }
-
     }
 
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
@@ -253,7 +253,8 @@ public interface FeatureSupport<T>
         return aLabel;
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
     {
         return Collections.emptyList();
     }

@@ -18,9 +18,13 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +53,9 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
@@ -239,5 +246,41 @@ public class MultiValueStringFeatureSupport
         }
 
         return values.stream().collect(Collectors.joining(", "));
+    }
+
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (labelFeature == null) {
+            return null;
+        }
+
+        List<String> values = getFeatureValue(aFeature, aFs);
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+
+        var details = new ArrayList<VLazyDetailQuery>();
+        for (String value : values) {
+            if (isNotBlank(value) && aFeature.getTagset() != null) {
+                details.add(new VLazyDetailQuery(aFeature.getName(), value));
+            }
+        }
+
+        return details;
+    }
+
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
+    {
+        Tag tag = schemaService.getTag(aQuery, aFeature.getTagset());
+        if (tag == null || isBlank(tag.getDescription())) {
+            return emptyList();
+        }
+
+        return asList(new VLazyDetailResult(aQuery, tag.getDescription()));
     }
 }
