@@ -102,10 +102,10 @@ public class NumberFeatureTraitsEditor
         }
         }
 
-        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType = new DropDownChoice<>(
+        DropDownChoice<NumberFeatureTraits.EditorType> editorType = new DropDownChoice<>(
                 CID_EDITOR_TYPE);
         editorType.setModel(PropertyModel.of(traits, "editorType"));
-        editorType.setChoices(Arrays.asList(NumberFeatureTraits.EDITOR_TYPE.values()));
+        editorType.setChoices(Arrays.asList(NumberFeatureTraits.EditorType.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         editorType.add(visibleWhen(() -> isEditorTypeSelectionPossible()));
         form.add(editorType);
@@ -193,7 +193,7 @@ public class NumberFeatureTraitsEditor
         t.setMinimum(traits.getObject().getMinimum());
         t.setMaximum(traits.getObject().getMaximum());
         t.setEditorType(isEditorTypeSelectionPossible() ? traits.getObject().getEditorType()
-                : NumberFeatureTraits.EDITOR_TYPE.SPINNER);
+                : NumberFeatureTraits.EditorType.SPINNER);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -210,7 +210,7 @@ public class NumberFeatureTraitsEditor
         private boolean limited;
         private Number minimum;
         private Number maximum;
-        private NumberFeatureTraits.EDITOR_TYPE editorType;
+        private NumberFeatureTraits.EditorType editorType;
 
         public boolean isLimited()
         {
@@ -242,12 +242,12 @@ public class NumberFeatureTraitsEditor
             this.maximum = maximum;
         }
 
-        public NumberFeatureTraits.EDITOR_TYPE getEditorType()
+        public NumberFeatureTraits.EditorType getEditorType()
         {
             return editorType;
         }
 
-        public void setEditorType(NumberFeatureTraits.EDITOR_TYPE editorType)
+        public void setEditorType(NumberFeatureTraits.EditorType editorType)
         {
             this.editorType = editorType;
         }

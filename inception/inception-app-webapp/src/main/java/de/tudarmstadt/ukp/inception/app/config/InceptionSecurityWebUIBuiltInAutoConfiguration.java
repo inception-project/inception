@@ -31,13 +31,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {
-    @Profile(SettingsUtil.PROFILE_DATABASE)
+    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
             SessionRegistry aSessionRegistry, OAuth2Adapter aOAuth2Handling,

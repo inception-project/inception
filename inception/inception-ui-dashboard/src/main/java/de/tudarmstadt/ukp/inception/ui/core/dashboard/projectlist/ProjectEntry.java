@@ -30,10 +30,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.github.rjeschke.txtmark.Processor;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
 
 public class ProjectEntry
     implements Serializable
@@ -66,7 +65,7 @@ public class ProjectEntry
         }
 
         var shortDescription = substringBefore(project.getDescription(), "\n");
-        var shortDescriptionHtml = Processor.process(shortDescription, true);
+        var shortDescriptionHtml = MarkdownUtil.markdownToTerseHtml(shortDescription);
         shortDescriptionHtml = StringUtils.removeStart(shortDescriptionHtml, "<p>");
         shortDescriptionHtml = StringUtils.removeEnd(shortDescriptionHtml, "</p>");
         return shortDescriptionHtml;

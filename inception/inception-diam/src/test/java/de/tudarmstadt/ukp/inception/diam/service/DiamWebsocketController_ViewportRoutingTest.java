@@ -27,6 +27,7 @@ import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
@@ -60,12 +61,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
@@ -104,6 +108,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
@@ -353,6 +358,20 @@ public class DiamWebsocketController_ViewportRoutingTest
                                     aRequest.getWindowEndOffset()), emptyMap()));
                 }
             };
+        }
+
+        @Order(100)
+        @Bean
+        public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
+        {
+            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeRequests() //
+                    .antMatchers("/**").authenticated() //
+                    .anyRequest().denyAll();
+            aHttp.sessionManagement() //
+                    .sessionCreationPolicy(STATELESS);
+            aHttp.httpBasic();
+            return aHttp.build();
         }
     }
 }

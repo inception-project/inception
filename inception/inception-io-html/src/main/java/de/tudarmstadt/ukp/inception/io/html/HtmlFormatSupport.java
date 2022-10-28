@@ -24,13 +24,14 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.config.HtmlSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.dkprocore.HtmlDocumentReader;
 
 /**
  * Support for HTML format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@code HtmlAnnotationEditorSupportAutoConfiguration#htmlFormatSupport()}.
+ * {@link HtmlSupportAutoConfiguration#htmlFormatSupport()}.
  * </p>
  */
 public class HtmlFormatSupport

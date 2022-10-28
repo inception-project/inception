@@ -28,7 +28,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -42,8 +41,16 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandler;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.SanitizingContentHandler;
 
+/**
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameView} instead
+ */
+@Deprecated
 public class HtmlDocumentRenderer
 {
     private boolean renderOnlyBody = true;
@@ -57,33 +64,33 @@ public class HtmlDocumentRenderer
         throws IOException, TransformerConfigurationException, CASException, SAXException
     {
         try (Writer out = new StringWriter()) {
-            SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
-            tf.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+            SAXTransformerFactory tf = XmlParserUtils.newTransformerFactory();
             TransformerHandler th = tf.newTransformerHandler();
             th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
             th.getTransformer().setOutputProperty(METHOD, "xml");
             th.getTransformer().setOutputProperty(INDENT, "no");
             th.setResult(new StreamResult(out));
 
-            ContentHandler sh = new TextSanitizingContentHandler(th);
+            ContentHandler ch = new TextSanitizingContentHandler(th);
+            ch = new SanitizingContentHandler(ch, new DefaultHtmlDocumentPolicy().getPolicy());
 
             if (!JCasUtil.exists(aCas.getJCas(), XmlDocument.class)) {
                 String text = aCas.getDocumentText();
 
-                sh.startDocument();
-                sh.characters(text.toCharArray(), 0, text.length());
-                sh.endDocument();
+                ch.startDocument();
+                ch.characters(text.toCharArray(), 0, text.length());
+                ch.endDocument();
                 return out.toString();
             }
 
             // The HtmlDocumentReader only extracts text from the body. So here we need to limit
             // rendering to the body so that the text and the annotations align properly. Also,
             // we wouldn't want to render anything outside the body anyway.
-            XmlElement html = selectSingle(aCas.getJCas(), XmlDocument.class).getRoot();
+            var rootElement = selectSingle(aCas.getJCas(), XmlDocument.class).getRoot();
 
-            Cas2SaxEvents serializer = new Cas2SaxEvents(sh);
+            Cas2SaxEvents serializer = new Cas2SaxEvents(ch);
             if (renderOnlyBody) {
-                XmlElement body = html.getChildren().stream() //
+                XmlElement body = rootElement.getChildren().stream() //
                         .filter(e -> e instanceof XmlElement) //
                         .map(e -> (XmlElement) e) //
                         .filter(e -> equalsIgnoreCase("body", e.getQName())) //
@@ -91,8 +98,9 @@ public class HtmlDocumentRenderer
                 serializer.process(body);
             }
             else {
-                serializer.process(html);
+                serializer.process(rootElement);
             }
+
             return out.toString();
         }
     }

@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
@@ -175,7 +176,8 @@ public class CasStorageServiceImpl
             log.info("CAS doctor not available - unable to check/repair CASes");
         }
 
-        log.info("CAS cache size: {} instances", casStorageProperties.getSharedCasCacheSize());
+        BaseLoggers.BOOT_LOG.info("CAS cache size: {} instances",
+                casStorageProperties.getSharedCasCacheSize());
     }
 
     public long getSharedAccessCacheSize()

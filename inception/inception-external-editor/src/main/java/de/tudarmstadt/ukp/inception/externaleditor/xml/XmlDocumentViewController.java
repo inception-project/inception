@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xml;
 
+import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_VIEW_URL;
+
 import java.security.Principal;
 import java.util.Optional;
 
@@ -26,7 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface XmlDocumentViewController
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.htmleditor.docview.XmlDocumentViewController";
+    String BASE_URL = BASE_VIEW_URL + "/xml";
 
     String getDocumentUrl(SourceDocument aDoc);
 

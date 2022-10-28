@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.conll.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,48 +34,64 @@ import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUFormatSupport;
 public class ConllFormatsAutoConfiguration
 {
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2000", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2000FormatSupport conll2000FormatSupport()
     {
         return new Conll2000FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2002", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2002FormatSupport conll2002FormatSupport()
     {
         return new Conll2002FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2003", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2003FormatSupport conll2003FormatSupport()
     {
         return new Conll2003FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2006", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2006FormatSupport conll2006FormatSupport()
     {
         return new Conll2006FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2009", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2009FormatSupport conll2009FormatSupport()
     {
         return new Conll2009FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conll2012", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public Conll2012FormatSupport conll2012FormatSupport()
     {
         return new Conll2012FormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conllcorenlp", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public ConllCoreNlpFormatSupport conllCoreNlpFormatSupport()
     {
         return new ConllCoreNlpFormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.conllu", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public ConllUFormatSupport conllUFormatSupport()
     {
         return new ConllUFormatSupport();

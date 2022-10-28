@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatu
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.COMBOBOX;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -43,6 +45,9 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTrait
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -236,5 +241,36 @@ public class StringFeatureSupport
     {
         StringFeatureTraits traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
+    }
+
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
+    {
+        if (isBlank(aLabel) || aFeature.getTagset() == null) {
+            return emptyList();
+        }
+
+        // Checking here if the tag has a description would be nicer because it would avoid
+        // rendering an emtpy section for every string feature in the popover... but it also
+        // induces a database request for every single string feature on every annotation which
+        // would slow things down quite a bit...
+        // Tag tag = schemaService.getTag(aLabel, aFeature.getTagset());
+        // if (tag == null || isBlank(tag.getDescription())) {
+        // return emptyList();
+        // }
+
+        return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
+    }
+
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
+    {
+        Tag tag = schemaService.getTag(aQuery, aFeature.getTagset());
+        if (tag == null || isBlank(tag.getDescription())) {
+            return emptyList();
+        }
+
+        return asList(new VLazyDetailResult(aQuery, tag.getDescription()));
     }
 }

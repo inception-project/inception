@@ -50,12 +50,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditor;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
 @ConditionalOnWebApplication
 @RestController
 @RequestMapping(XmlDocumentViewController.BASE_URL)
 public class XmlDocumentViewControllerImpl
+    extends XmlDocumentViewControllerImplBase
     implements XmlDocumentViewController
 {
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
@@ -71,8 +75,11 @@ public class XmlDocumentViewControllerImpl
     @Autowired
     public XmlDocumentViewControllerImpl(DocumentService aDocumentService,
             ServletContext aServletContext, AnnotationEditorRegistry aAnnotationEditorRegistry,
-            DocumentImportExportService aFormatRegistry)
+            DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
+            SafetyNetDocumentPolicy aSafetyNetPolicy)
     {
+        super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
+
         documentService = aDocumentService;
         servletContext = aServletContext;
         annotationEditorRegistry = aAnnotationEditorRegistry;
@@ -157,8 +164,11 @@ public class XmlDocumentViewControllerImpl
             }
             else {
                 XmlDocument xml = selectSingle(cas.getJCas(), XmlDocument.class);
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml,
-                        XmlCas2SaxEvents.makeSerializer(out));
+
+                ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+                var sh = applySanitizers(aEditor, doc, ch);
+
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
                 serializer.process(xml);
             }
 

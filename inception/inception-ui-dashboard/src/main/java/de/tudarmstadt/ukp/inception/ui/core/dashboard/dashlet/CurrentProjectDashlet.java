@@ -29,11 +29,10 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import com.github.rjeschke.txtmark.Processor;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
@@ -91,7 +90,7 @@ public class CurrentProjectDashlet
                 return "Project has no description.";
             }
             else {
-                return Processor.process(project.getDescription(), true);
+                return MarkdownUtil.markdownToHtml(project.getDescription());
             }
         }
         else {

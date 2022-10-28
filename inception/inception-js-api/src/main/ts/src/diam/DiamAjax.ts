@@ -40,6 +40,8 @@ export interface DiamAjax {
 
   loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any>;
 
+  loadLazyDetails(id: VID, type: string, database: string, key: string): Promise<any>;
+
   triggerExtensionAction(id: VID): void;
 
   openContextMenu(id: VID, evt: MouseEvent): void;

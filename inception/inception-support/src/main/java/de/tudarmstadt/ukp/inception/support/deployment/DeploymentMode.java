@@ -15,7 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides Classes for reading/writing TCF data files.
- */
-package de.tudarmstadt.ukp.clarin.webanno.tcf;
+package de.tudarmstadt.ukp.inception.support.deployment;
+
+public enum DeploymentMode
+{
+    /**
+     * Probably running as a service based on the standalone JAR using the embedded server in
+     * Docker.
+     */
+    SERVER_JAR_DOCKER,
+
+    /**
+     * Probably running as a service based on the standalone JAR using the embedded server.
+     */
+    SERVER_JAR,
+
+    /**
+     * Probably running as a service based on the WAR file using an external application server in
+     * Docker.
+     */
+    SERVER_WAR_DOCKER,
+
+    /**
+     * Probably running as a service based on the WAR file using an external application server.
+     */
+    SERVER_WAR,
+
+    /**
+     * Probably running as a desktop application.
+     */
+    DESKTOP;
+}

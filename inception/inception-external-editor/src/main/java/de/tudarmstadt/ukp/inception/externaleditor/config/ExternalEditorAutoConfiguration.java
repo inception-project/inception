@@ -17,13 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
+import java.io.IOException;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlDocumentIFrameViewFactory;
 
 @ConditionalOnWebApplication
+@EnableConfigurationProperties(ExternalEditorPropertiesImpl.class)
 public class ExternalEditorAutoConfiguration
 {
     @Bean
@@ -36,5 +42,18 @@ public class ExternalEditorAutoConfiguration
     public XmlDocumentIFrameViewFactory xmlDocumentIFrameViewFactory()
     {
         return new XmlDocumentIFrameViewFactory();
+    }
+
+    @Bean
+    public DefaultHtmlDocumentPolicy defaultHtmlDocumentPolicy() throws IOException
+    {
+        return new DefaultHtmlDocumentPolicy();
+    }
+
+    @Bean
+    public SafetyNetDocumentPolicy safetyNetDocumentPolicy(ExternalEditorProperties aProperties)
+        throws IOException
+    {
+        return new SafetyNetDocumentPolicy(aProperties);
     }
 }

@@ -33,7 +33,12 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameView;
 
+/**
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameView} instead
+ */
+@Deprecated
 public class HtmlDocumentView
     extends Label
 {

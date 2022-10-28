@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import java.io.StringWriter;
-import java.io.Writer;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
@@ -47,6 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
@@ -54,6 +57,7 @@ import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 @RestController
 @RequestMapping(XHtmlXmlDocumentViewController.BASE_URL)
 public class XHtmlXmlDocumentViewControllerImpl
+    extends XmlDocumentViewControllerImplBase
     implements XHtmlXmlDocumentViewController
 {
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
@@ -69,8 +73,12 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     @Autowired
     public XHtmlXmlDocumentViewControllerImpl(DocumentService aDocumentService,
-            ServletContext aServletContext, DocumentImportExportService aFormatRegistry)
+            AnnotationEditorRegistry aAnnotationEditorRegistry, ServletContext aServletContext,
+            DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
+            SafetyNetDocumentPolicy aSafetyNetPolicy)
     {
+        super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
+
         documentService = aDocumentService;
         servletContext = aServletContext;
         formatRegistry = aFormatRegistry;
@@ -107,7 +115,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         CAS cas = documentService.createOrReadInitialCas(doc);
 
-        try (Writer out = new StringWriter()) {
+        try (StringWriter out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;
             if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
                 maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
@@ -157,7 +165,8 @@ public class XHtmlXmlDocumentViewControllerImpl
             }
             else {
                 XmlDocument xml = maybeXmlDocument.get();
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
+                var sh = applySanitizers(aEditor, doc, ch);
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
                 serializer.process(xml.getRoot());
             }
 
@@ -170,10 +179,10 @@ public class XHtmlXmlDocumentViewControllerImpl
         }
     }
 
-    private ResponseEntity<String> toResponse(Writer out)
+    private ResponseEntity<String> toResponse(StringWriter aOut)
     {
         return ResponseEntity.ok() //
                 .contentType(MediaType.APPLICATION_XHTML_XML) //
-                .body(out.toString());
+                .body(aOut.toString());
     }
 }

@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -49,6 +50,7 @@ import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
 {
@@ -87,6 +89,11 @@ public interface FormatSupport
     default List<CssResourceReference> getCssStylesheets()
     {
         return Collections.emptyList();
+    }
+
+    default Optional<PolicyCollection> getPolicy()
+    {
+        return Optional.empty();
     }
 
     /**
