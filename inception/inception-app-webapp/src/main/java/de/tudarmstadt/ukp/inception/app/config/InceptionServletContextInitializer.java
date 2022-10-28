@@ -93,6 +93,7 @@ public class InceptionServletContextInitializer
                 HttpServletResponse response = (HttpServletResponse) aServletResponse;
                 response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
                 response.setHeader("Cross-Origin-Resource-Policy", "same-site");
+                response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
                 aFilterChain.doFilter(aServletRequest, aServletResponse);
             }
         });

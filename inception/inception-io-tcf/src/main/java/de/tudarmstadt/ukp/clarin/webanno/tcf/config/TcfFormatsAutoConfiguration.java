@@ -15,9 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.tcf.config;
 
- /* This would be required for recogito connections
- body {
-  line-height: 300%;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfFormatSupport;
+
+@Configuration
+public class TcfFormatsAutoConfiguration
+{
+    @Bean
+    @ConditionalOnProperty(prefix = "format.tcf", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public TcfFormatSupport tcfFormatSupport()
+    {
+        return new TcfFormatSupport();
+    }
 }
-*/

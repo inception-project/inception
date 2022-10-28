@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +43,10 @@ public class JSONUtil
     static {
         OBJECT_MAPPER = new ObjectMapper();
         OBJECT_MAPPER.registerModule(new JavaTimeModule());
+        // Used mainly by traits e.g. when switching from a string to a number trait or back where
+        // the editortype property has different ranges
+        OBJECT_MAPPER.configure(READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true);
+
     }
 
     /**

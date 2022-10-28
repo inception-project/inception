@@ -27,12 +27,18 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.nif.NifReader;
 import org.dkpro.core.io.nif.NifWriter;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatSupportAutoConfiguration;
 
-@Component
+/**
+ * Support for HTML format.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link NifFormatSupportAutoConfiguration#nifFormatSupport()}.
+ * </p>
+ */
 public class NifFormatSupport
     implements FormatSupport
 {

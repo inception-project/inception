@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
 import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.JSON_FORMAT;
 import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.TAB_FORMAT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,7 +30,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -230,15 +230,11 @@ public class TagSetEditorPanel
             catch (IOException e1) {
                 error("Unable to create temporary File!!");
             }
-            OutputStream os;
-            OutputStreamWriter osw;
-            BufferedWriter bw;
-            try {
+
+            try (var bw = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(exportFile), UTF_8))) {
                 String tagSetDescription = tagSet.getDescription() == null ? ""
                         : tagSet.getDescription();
-                os = new FileOutputStream(exportFile);
-                osw = new OutputStreamWriter(os, "UTF-8");
-                bw = new BufferedWriter(osw);
                 bw.write(tagSet.getName() + "\t" + tagSetDescription.replace("\n", "\\n") + "\n");
                 bw.write(tagSet.getLanguage() + "\t" + " \n");
                 for (Tag tag : annotationSchemaService.listTags(tagSet)) {
@@ -246,9 +242,6 @@ public class TagSetEditorPanel
                             : tag.getDescription();
                     bw.write(tag.getName() + "\t" + tagDescription.replace("\n", "\\n") + "\n");
                 }
-
-                bw.flush();
-                bw.close();
             }
             catch (FileNotFoundException e) {
                 error("The file for export not found " + ExceptionUtils.getRootCauseMessage(e));

@@ -36,6 +36,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -83,7 +84,7 @@ public class AnnotationEditorExtensionRegistryImpl
             }
         }
 
-        log.info("Found [{}] annotation editor extensions", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] annotation editor extensions", exts.size());
 
         extensions = unmodifiableList(exts);
     }

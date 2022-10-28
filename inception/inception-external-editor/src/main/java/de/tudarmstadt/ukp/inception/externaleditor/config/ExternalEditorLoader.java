@@ -78,6 +78,7 @@ public class ExternalEditorLoader
                         ExternalEditorPluginDescripion.class, is);
                 desc.setId(pluginJsonFile.getParent().getFileName().toString());
                 desc.setBasePath(pluginJsonFile.getParent());
+
                 registerEditorPlugin(aRegistry, desc);
                 descriptions.add(desc);
             }

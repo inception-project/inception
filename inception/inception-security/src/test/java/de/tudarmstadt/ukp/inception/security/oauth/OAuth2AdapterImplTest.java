@@ -51,10 +51,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @Transactional
-@ActiveProfiles(SettingsUtil.PROFILE_DATABASE)
+@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
 @DataJpaTest( //
         showSql = false, //
         properties = { //
@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
         InceptionSecurityAutoConfiguration.class })
 @EntityScan(basePackages = { //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-class InceptionSecurityWebUIOAuth2HandlingTest
+class OAuth2AdapterImplTest
 {
     private static final String USERNAME = "ThatGuy";
 
@@ -111,6 +111,22 @@ class InceptionSecurityWebUIOAuth2HandlingTest
         assertThat(userService.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
+    }
+
+    @Test
+    void thatLoginWithExistingUserIsPossible()
+    {
+        userService.create(User.builder() //
+                .withUsername(USERNAME) //
+                .withRealm(REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
+                .withRoles(Set.of(Role.ROLE_USER)) //
+                .withEnabled(true) //
+                .build());
+
+        assertThat(userService.get(USERNAME)) //
+                .as("User should exist when test starts").isNotNull();
+
+        sut.loadOidcUser(new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken));
     }
 
     @Test

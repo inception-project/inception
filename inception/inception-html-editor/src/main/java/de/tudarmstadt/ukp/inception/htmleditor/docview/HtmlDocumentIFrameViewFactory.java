@@ -22,6 +22,7 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
+import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 
@@ -30,7 +31,10 @@ import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
  * This class is exposed as a Spring Component via
  * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlDocumentIFrameViewFactory}.
  * </p>
+ * 
+ * @deprecated Use {@link XHtmlXmlDocumentIFrameViewFactory} instead
  */
+@Deprecated
 public class HtmlDocumentIFrameViewFactory
     implements DocumentViewFactory
 {

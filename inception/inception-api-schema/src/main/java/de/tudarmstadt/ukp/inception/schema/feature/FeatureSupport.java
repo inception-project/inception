@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -113,7 +114,7 @@ public interface FeatureSupport<T>
             AnnotationFeature aFeature);
 
     /**
-     * Called when the user selects a feature in the feature detail form. It allows the feature
+     * Called when the user saves a feature in the feature detail form. It allows the feature
      * support to fill in settings which are not configurable through the UI, e.g. link feature
      * details.
      * 
@@ -230,7 +231,6 @@ public interface FeatureSupport<T>
         else {
             return Collections.emptyList();
         }
-
     }
 
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
@@ -253,7 +253,8 @@ public interface FeatureSupport<T>
         return aLabel;
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
+            VID aParamId, String aQuery)
     {
         return Collections.emptyList();
     }

@@ -29,6 +29,10 @@ public enum Metrics
     MAX("max", "Maximum"), MEAN("mean", "Mean"), MEDIAN("median", "Median"),
     STANDARD_DEVIATION("standarddeviation", "Standard Deviation");
 
+    public static final String VIRTUAL_FEATURE_SENTENCE = "sentence";
+    public static final String VIRTUAL_FEATURE_TOKEN = "token";
+    public static final String VIRTUAL_LAYER_SEGMENTATION = "Segmentation";
+
     private static final Map<String, Metrics> MTAS_TO_INTERNAL = new HashMap<String, Metrics>();
     private static final Map<Metrics, String> INTERNAL_TO_MTAS = new HashMap<Metrics, String>();
     private static final Map<String, Metrics> UI_TO_INTERNAL = new HashMap<String, Metrics>();

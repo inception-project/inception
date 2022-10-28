@@ -15,34 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.telemetry;
+package de.tudarmstadt.ukp.inception.io.perseus.config;
 
-public enum DeploymentMode
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.inception.io.perseus.PerseusFormatSupport;
+
+@Configuration
+public class PerseusFormatAutoConfiguration
 {
-    /**
-     * Probably running as a service based on the standalone JAR using the embedded server in
-     * Docker.
-     */
-    SERVER_JAR_DOCKER,
-
-    /**
-     * Probably running as a service based on the standalone JAR using the embedded server.
-     */
-    SERVER_JAR,
-
-    /**
-     * Probably running as a service based on the WAR file using an external application server in
-     * Docker.
-     */
-    SERVER_WAR_DOCKER,
-
-    /**
-     * Probably running as a service based on the WAR file using an external application server.
-     */
-    SERVER_WAR,
-
-    /**
-     * Probably running as a desktop application.
-     */
-    DESKTOP;
+    @Bean
+    @ConditionalOnProperty(prefix = "format.perseus", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public PerseusFormatSupport perseusFormatSupport()
+    {
+        return new PerseusFormatSupport();
+    }
 }

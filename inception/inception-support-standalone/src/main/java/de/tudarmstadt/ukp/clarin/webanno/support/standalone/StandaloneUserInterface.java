@@ -75,7 +75,6 @@ import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
 
 public class StandaloneUserInterface
@@ -152,6 +151,7 @@ public class StandaloneUserInterface
         contentPanel.add(info);
 
         JTextArea logArea = new JTextArea(20, 80);
+        logArea.setTabSize(2);
         logArea.setEditable(false);
         // Set text before setting the caret policy so we start in follow mode
         logArea.setText(getLog());
@@ -223,7 +223,8 @@ public class StandaloneUserInterface
     private static String getLog()
     {
         return RingBufferAppender.events().stream() //
-                .map(LogMessage::getMessage) //
+                .map(msg -> "[" + msg.level + "]: "
+                        + msg.getMessage().replace("↩", "").replace("\n", "↩\n\t")) //
                 .collect(Collectors.joining("\n"));
     }
 

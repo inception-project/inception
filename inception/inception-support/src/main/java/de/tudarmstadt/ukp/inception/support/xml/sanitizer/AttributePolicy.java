@@ -1,0 +1,91 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
+
+import java.util.Optional;
+
+import javax.xml.namespace.QName;
+
+public class AttributePolicy
+{
+    public static final AttributePolicy UNDEFINED = new AttributePolicy(null, null);
+
+    private final AttributeAction action;
+    private final QName qName;
+
+    public AttributePolicy(QName aQName, AttributeAction aAction)
+    {
+        action = aAction;
+        qName = aQName;
+    }
+
+    public QName getQName()
+    {
+        return qName;
+    }
+
+    public AttributeAction getAction()
+    {
+        return action;
+    }
+
+    public Optional<AttributeAction> apply(String aValue)
+    {
+        return Optional.ofNullable(action);
+    }
+
+    @Override
+    public String toString()
+    {
+        if (action == null) {
+            return "UNDEFINED";
+        }
+
+        return action.toString();
+    }
+
+    public static boolean isUndefined(AttributePolicy aPolicy)
+    {
+        if (aPolicy == null) {
+            return true;
+        }
+
+        if (aPolicy.action == null) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // public static AttributePolicy forAction(AttributeAction aAction)
+    // {
+    // if (aAction == null) {
+    // return UNDEFINED;
+    // }
+    //
+    // if (aAction == AttributeAction.PASS) {
+    // return PASS;
+    // }
+    //
+    // if (aAction == AttributeAction.DROP) {
+    // return DROP;
+    // }
+    //
+    // throw new IllegalArgumentException("Unsupported attribute action [" + aAction + "]");
+    // }
+}

@@ -95,10 +95,89 @@ and CSS stylesheet files required are then injected into this IFrame as well.
 Currently supported views are:
 
 * `cas+html` (deprecated): Renders HTML contained in the CAS directly into the editor area.
-* `iframe:cas+html`: Renders HTML contained in the CAS into a HTML IFrame in the editor area.
+* `iframe:cas+html` (deprecated): Renders HTML contained in the CAS into a HTML IFrame in the editor area.
 * `iframe:cas+xml`: Renders XML contained in the CAS into a generic XML IFrame in the editor area.
 * `iframe:cas+xhtml+xml`: Renders XML contained in the CAS into an XHTML+XML IFrame in the editor area.
 HTML head and body elements are added automatically. The XML is rendered into the body.
+
+== Policies
+
+Every editor should provide a `policy.yaml` right next to the `plugin.json`. The `policy.yaml` declares
+all elements and attributes that are supported by the editor. This policy file should be written as
+a **safelist**, i.e. it should say exactly what is permitted instead of saying what is not allowed.
+Allowing the wrong elements and attributes may cause security problems, e.g. if they can contain
+executable JavaScript or load data from remote locations.
+
+There are several elements like `script`, `meta`, `applet`, `link`, `iframe` as well as `a` which are
+and JavaScript event attributes always filtered out.
+
+If an editor does not provide a `policy.yaml` file, a default built-in policy is used which allows
+most HTML formatting elements.
+
+.Example `policy.yaml` file
+[source,yaml]
+----
+name: Example policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: DROP
+default_element_action: DROP
+debug: false
+policies:
+  - { elements: ["html"], action: "PASS" }
+  - { elements: ["p", "div"], action: "PASS" }
+  - { elements: ["tr", "th"], action: "PASS" }
+  - { attributes: ["class"], action: "PASS" }
+  - { attributes: ["style"], action: "DROP" }
+  - {
+      attributes: ["title"],
+      matching: "[a-zA-Z0-9]*",
+      on_elements: ["div"],
+      action: "PASS",
+    }
+----
+
+There are two types of policies: **element policies**, and **attribute policies**.
+
+=== Element policies
+An element policy must contain the key `elements` which takes a list of element names and the key
+`action` which can be either `PASS` or `DROP`. If an element is dropped, all child elements are
+also dropped. Text within the child elements is replaced by an equivalent amount of space such that
+offsets are not affected.
+
+Note that the root element of your documents should always be allowed to `PASS`, otherwise the
+document may fail to render.
+
+It is possible to preserve elements within dropped elements by explicitly allowing the nested
+elements to `PASS`.
+
+[source,yaml]
+----
+policies:
+  - { elements: ["root", "child2"], action: "PASS" }
+  - { elements: ["child1"], action: "DROP" }
+----
+
+Using this policy, a document `<root><child1><child2>text</child2></child1/></root>` will be transformed
+to `<root><child2>text</child2></root>`.
+
+=== Attribute policies
+An attribute policy must contain the key `attributes` which takes a list of attribute names, 
+and the key `action` which can be either `PASS` or `DROP`. Optionally it may contain the the key 
+`onElements` which takes a list of element names. If this key is present, the policy only affects
+the attributes on the given elements, otherwise the policy affects all elements globally. Also, the
+key `matching` can be optionally included to affect only attributes whose value matches the regular
+expression provided as the value to `matching`.
+
+When declaring attribute policies, the order matters. E.g. you should declare more specific policies
+(e.g. such having a `onElements` or `matching` key) before less specific or global policies.
+
+=== Debugging
+To debug the rules, you can set the key `debug` to `true` and reload your editor in the browser.
+Restarting the whole application is not required. When inspecting the content of the editor IFrame
+in the browser's developer tools, you will see that elements and attributes matched by a `DROP`
+policy have been prefixed with `MASKED-` instead of being fully dropped. Do not forget to set
+debug back to `false` or to remove the key for actual use.
 
 == Editor implementation
 

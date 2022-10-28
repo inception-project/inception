@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
@@ -160,7 +161,7 @@ public class ProjectExportServiceImpl
             }
         }
 
-        log.info("Found [{}] project exporters", exps.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] project exporters", exps.size());
 
         exporters = unmodifiableList(exps);
     }

@@ -26,9 +26,10 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import com.github.rjeschke.txtmark.Processor;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.CustomTooltipBehavior;
+
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
 
 public class DescriptionTooltipBehavior
     extends CustomTooltipBehavior
@@ -97,7 +98,7 @@ public class DescriptionTooltipBehavior
             switch (aModel.getObject().mode) {
             case MARKDOWN: {
                 Label label = new Label("description",
-                        Model.of(Processor.process(aModel.getObject().description, true)));
+                        Model.of(MarkdownUtil.markdownToHtml(aModel.getObject().description)));
                 label.setEscapeModelStrings(false);
                 add(label);
                 break;

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,18 +29,24 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 public class TextFormatsAutoConfiguration
 {
     @Bean
+    @ConditionalOnProperty(prefix = "format.text", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public TextFormatSupport textFormatSupport()
     {
         return new TextFormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.text-line-oriented", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public LineOrientedTextFormatSupport lineOrientedTextFormatSupport()
     {
         return new LineOrientedTextFormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.text-pretokenized", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     public PretokenizedTextFormatSupport pretokenizedTextFormatSupport()
     {
         return new PretokenizedTextFormatSupport();

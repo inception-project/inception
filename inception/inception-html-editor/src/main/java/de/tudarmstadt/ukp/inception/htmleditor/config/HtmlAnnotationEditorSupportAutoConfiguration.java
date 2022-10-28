@@ -25,42 +25,35 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
-import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
-import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
  */
 @ConditionalOnWebApplication
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "ui.html", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
     public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
     {
         return new AnnotatorJsHtmlAnnotationEditorFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.html.legacy-html-view", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
-    public HtmlFormatSupport htmlFormatSupport()
-    {
-        return new HtmlFormatSupport();
-    }
-
-    @Bean
-    public LegacyHtmlFormatSupport legacyHtmlFormatSupport()
-    {
-        return new LegacyHtmlFormatSupport();
-    }
-
-    @Bean
+    @Deprecated
     public HtmlDocumentViewFactory htmlDocumentViewFactory()
     {
         return new HtmlDocumentViewFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.html.legacy-iframe-view", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
     @Bean
+    @Deprecated
     public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
     {
         return new HtmlDocumentIFrameViewFactory();

@@ -115,6 +115,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
@@ -199,7 +200,7 @@ public class KnowledgeBaseServiceImpl
         repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
                 .newPerThreadSslCheckingHttpClientBuilder().build());
 
-        log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
+        BaseLoggers.BOOT_LOG.info("Knowledge base repository path: {}", kbRepositoriesRoot);
     }
 
     private LoadingCache<QueryKey, List<KBHandle>> createQueryCache(

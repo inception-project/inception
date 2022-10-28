@@ -4,6 +4,7 @@ set -e
 MVN=${MVN:-'mvn'}
 TS_MODULES="./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
+./inception-diam-editor/src/main/ts
 ./inception-ui-kb/src/main/ts
 ./inception-html-recogito-editor/src/main/ts
 ./inception-bootstrap/src/main/ts

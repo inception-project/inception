@@ -40,6 +40,8 @@ public abstract class EditorAjaxRequestHandlerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    public static final String PARAM_TOKEN = "token";
+
     @Override
     public String getId()
     {
@@ -73,6 +75,13 @@ public abstract class EditorAjaxRequestHandlerBase
         IRequestParameters requestParameters = aRequest.getRequestParameters();
 
         return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
+    }
+
+    protected void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)
+    {
+        String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
+        aTarget.prependJavaScript(
+                "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
     }
 
     protected DefaultAjaxResponse handleError(String aMessage, Exception e)

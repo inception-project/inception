@@ -325,7 +325,6 @@ public class LayerDetailForm
         confirmationDialog.setChallengeModel(new StringResourceModel("DeleteLayerDialog.text", this)
                 .setParameters(escapeMarkup(getModelObject().getName())));
         confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
-        confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
             annotationService.removeLayer(getModelObject());
@@ -342,6 +341,8 @@ public class LayerDetailForm
 
             _target.add(getPage());
         });
+
+        confirmationDialog.show(aTarget);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)

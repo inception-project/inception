@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.websocket;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.persistence.EntityManager;
@@ -55,6 +56,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -62,8 +64,10 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
@@ -89,6 +93,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
@@ -184,8 +189,8 @@ public class WebSocketIntegrationTest
         CountDownLatch latch = new CountDownLatch(1);
         SessionHandler sessionHandler = new SessionHandler(latch, receivedMessages);
 
-        session = stompClient.connect(websocketUrl, sessionHandler).get(1, TimeUnit.SECONDS);
-        latch.await(10, TimeUnit.SECONDS);
+        session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        latch.await(10, SECONDS);
         session.disconnect();
 
         assertThat(receivedMessages.size()).isEqualTo(1);
@@ -279,6 +284,20 @@ public class WebSocketIntegrationTest
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
+        }
+
+        @Order(100)
+        @Bean
+        public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
+        {
+            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeRequests() //
+                    .antMatchers("/**").authenticated() //
+                    .anyRequest().denyAll();
+            aHttp.sessionManagement() //
+                    .sessionCreationPolicy(STATELESS);
+            aHttp.httpBasic();
+            return aHttp.build();
         }
     }
 }
