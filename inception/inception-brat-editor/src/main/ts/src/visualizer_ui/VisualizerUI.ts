@@ -44,7 +44,7 @@ import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { DocumentData } from '../visualizer/DocumentData'
 import { RelationTypeDto, EntityTypeDto, VID, CommentType } from '../protocol/Protocol'
-import { Offsets } from '@inception-project/inception-js-api'
+import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import { Entity } from '../visualizer/Entity'
 
 export class VisualizerUI {
@@ -61,9 +61,12 @@ export class VisualizerUI {
   private commentDisplayed = false
   private displayCommentTimer = null
 
-  constructor (dispatcher: Dispatcher) {
+  private ajax: DiamAjax
+
+  constructor (dispatcher: Dispatcher, ajax: DiamAjax) {
     console.debug('Setting up brat visualizer-ui module...')
 
+    this.ajax = ajax
     this.commentPopup = $('#commentpopup')
     this.dispatcher = dispatcher
     this.dispatcher
@@ -263,13 +266,8 @@ export class VisualizerUI {
     const dbName = normq[0]
     const dbKey = normq[1]
     const infoSeqId = normq[2]
-    this.dispatcher.post('ajax', [{
-      action: 'normData',
-      database: dbName,
-      key: dbKey,
-      id,
-      type
-    }, (response) => {
+
+    this.ajax.loadLazyDetails(id, type, dbName, dbKey).then(response => {
       if (response.exception) {
         // TODO: response to error
       } else if (!response.results) {
@@ -315,7 +313,7 @@ export class VisualizerUI {
           console.log('norm info drop point not found!') // TODO XXX
         }
       }
-    }])
+    })
   }
 
   hideComment () {

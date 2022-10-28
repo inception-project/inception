@@ -48,7 +48,6 @@ public class LoadAnnotationsHandler
     public static final String COMMAND = "loadAnnotations";
 
     public static final String PARAM_FORMAT = "format";
-    public static final String PARAM_TOKEN = "token";
     public static final String PARAM_BEGIN = "begin";
     public static final String PARAM_END = "end";
     public static final String PARAM_TEXT = "text";
@@ -82,13 +81,6 @@ public class LoadAnnotationsHandler
         catch (Exception e) {
             return handleError("Unable to load annotations", e);
         }
-    }
-
-    private void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)
-    {
-        String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
-        aTarget.prependJavaScript(
-                "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
     }
 
     private RenderRequest prepareRenderRequest(Request aRequest) throws IOException

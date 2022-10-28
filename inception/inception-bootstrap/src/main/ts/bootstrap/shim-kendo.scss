@@ -61,10 +61,10 @@
 }
 
 // Avoid comboboxes getting two borders
-.k-combobox.form-control {
-	border: none;
-	width: 100% !important;
-}
+//.k-combobox.form-control {
+//	border: none;
+//	width: 100% !important;
+//}
 
 // Avoid Kendo split panel assumptions messing with Bootstrap layout assumptions
 .k-splitter .k-pane {
@@ -75,4 +75,18 @@
   }
 }
 
+// Expand the items in Kendo auto-complete fields and combo boxes such that the description tooltip
+// appears when hovering anywhere over the item and not only when hovering over the label text
+.k-list-item-text {
+  width: 100%;
+  > span {
+    display: inline-block;
+    width: 100%;
+  }
+}
 
+.k-list-footer {
+  padding: 0px 5px 0px 5px;
+  border-top: 1px solid var(--bs-border-color);
+  background-color: var(--bs-light);
+}
