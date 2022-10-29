@@ -39,7 +39,7 @@ public class DefaultHtmlDocumentPolicy
 
     private final WatchedResourceFile<PolicyCollection> policyOverrideFile;
 
-    public DefaultHtmlDocumentPolicy()
+    public DefaultHtmlDocumentPolicy() throws IOException
     {
         defaultPolicy = makeDefaultPolicy();
 
