@@ -17,24 +17,31 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtClaimNames;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
 public class InceptionSecurityRemoteApiAutoConfiguration
 {
     @Order(1)
     @Bean
     public SecurityFilterChain remoteApiFilterChain(PasswordEncoder aPasswordEncoder,
-            UserDetailsManager aUserDetailsService, HttpSecurity aHttp)
+            UserDetailsManager aUserDetailsService, HttpSecurity aHttp,
+            RemoteApiProperties aProperties, OAuth2Adapter aOAuth2Handling)
         throws Exception
     {
         // The remote API should always authenticate against the built-in user-database and
@@ -54,7 +61,36 @@ public class InceptionSecurityRemoteApiAutoConfiguration
         aHttp.authorizeRequests() //
                 .anyRequest().access("hasAnyRole('ROLE_REMOTE')");
 
-        aHttp.httpBasic();
+        if (aProperties.getHttpBasic().isEnabled()) {
+            aHttp.httpBasic();
+        }
+
+        var oauth2Properties = aProperties.getOauth2();
+        if (oauth2Properties != null && oauth2Properties.isEnabled()) {
+            if (StringUtils.isBlank(oauth2Properties.getRealm())) {
+                throw new IllegalArgumentException(
+                        "No realm set for remote API OAuth authentication");
+            }
+
+            var authCon = new JwtAuthenticationConverter();
+            String principalClaimName;
+            if (isNotBlank(oauth2Properties.getUserNameAttribute())) {
+                principalClaimName = oauth2Properties.getUserNameAttribute();
+            }
+            else {
+                principalClaimName = JwtClaimNames.SUB;
+            }
+            authCon.setPrincipalClaimName(principalClaimName);
+
+            authCon.setJwtGrantedAuthoritiesConverter(jwt -> aOAuth2Handling.loadAuthorities(jwt,
+                    oauth2Properties.getRealm(), principalClaimName));
+            aHttp.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwt -> {
+                var token = authCon.convert(jwt);
+                aOAuth2Handling.validateToken(token,
+                        REALM_EXTERNAL_PREFIX + oauth2Properties.getRealm());
+                return token;
+            });
+        }
 
         aHttp.sessionManagement() //
                 .sessionCreationPolicy(STATELESS);
