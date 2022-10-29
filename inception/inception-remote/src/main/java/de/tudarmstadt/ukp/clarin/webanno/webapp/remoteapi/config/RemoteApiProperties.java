@@ -23,6 +23,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RemoteApiProperties
 {
     private boolean enabled = false;
+    private HttpBasicProperties httpBasic = new HttpBasicProperties();
+    private OAuth2Properties oauth2 = null;
 
     public boolean isEnabled()
     {
@@ -35,5 +37,77 @@ public class RemoteApiProperties
     public void setEnabled(boolean aRemoteApiEnabled)
     {
         enabled = aRemoteApiEnabled;
+    }
+
+    public HttpBasicProperties getHttpBasic()
+    {
+        return httpBasic;
+    }
+
+    public void setHttpBasic(HttpBasicProperties aHttpBasic)
+    {
+        httpBasic = aHttpBasic;
+    }
+
+    public OAuth2Properties getOauth2()
+    {
+        return oauth2;
+    }
+
+    public void setOauth2(OAuth2Properties aOauth2)
+    {
+        oauth2 = aOauth2;
+    }
+
+    public static class HttpBasicProperties
+    {
+        private boolean enabled = true;
+
+        public boolean isEnabled()
+        {
+            return enabled;
+        }
+
+        public void setEnabled(boolean aEnabled)
+        {
+            enabled = aEnabled;
+        }
+    }
+
+    public static class OAuth2Properties
+    {
+        private boolean enabled = false;
+        private String userNameAttribute;
+        private String realm;
+
+        public boolean isEnabled()
+        {
+            return enabled;
+        }
+
+        public void setEnabled(boolean aEnabled)
+        {
+            enabled = aEnabled;
+        }
+
+        public String getUserNameAttribute()
+        {
+            return userNameAttribute;
+        }
+
+        public void setUserNameAttribute(String aUserNameAttribute)
+        {
+            userNameAttribute = aUserNameAttribute;
+        }
+
+        public void setRealm(String aRealm)
+        {
+            realm = aRealm;
+        }
+
+        public String getRealm()
+        {
+            return realm;
+        }
     }
 }

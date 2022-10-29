@@ -23,6 +23,7 @@ import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.ACCESS_D
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -50,6 +52,7 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -100,6 +103,32 @@ public class OAuth2AdapterImpl
                 .getUserInfoEndpoint().getUserNameAttributeName();
         return new DefaultOidcUser(authorities, externalUser.getIdToken(),
                 externalUser.getUserInfo(), userNameAttributeName);
+    }
+
+    @Override
+    public AbstractAuthenticationToken validateToken(AbstractAuthenticationToken aToken,
+            String aRealm)
+    {
+        User u = userRepository.get(aToken.getName());
+        if (u == null) {
+            LOG.info("Prevented login of non-existing user [{}]", aToken.getName());
+            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "User does not exist", null);
+            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+        }
+
+        denyAccessToDeactivatedUsers(u);
+        denyAccessOfRealmsDoNotMatch(aRealm, u);
+        return aToken;
+    }
+
+    @Override
+    public Collection<GrantedAuthority> loadAuthorities(Jwt jwt, String aRealm,
+            String aUserNameAttribute)
+    {
+        var authorities = new LinkedHashSet<GrantedAuthority>();
+        var userName = jwt.getClaimAsString(aUserNameAttribute);
+        authorities.addAll(userDetailsManager.loadUserAuthorities(userName));
+        return authorities;
     }
 
     private LinkedHashSet<GrantedAuthority> loadAuthorities(OAuth2User externalUser, User user)

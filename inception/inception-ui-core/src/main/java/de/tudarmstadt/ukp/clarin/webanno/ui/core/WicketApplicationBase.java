@@ -39,6 +39,7 @@ import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.IPackageResourceGuard;
 import org.apache.wicket.markup.html.SecurePackageResourceGuard;
+import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -97,6 +98,11 @@ public abstract class WicketApplicationBase
         // getCspSettings().reporting().unsafeInline().reportBack();
         // }
 
+        // CSRF
+        getRequestCycleListeners().add(new ResourceIsolationRequestCycleListener());
+
+        installSpringSecurityContextPropagationRequestCycleListener();
+
         // Enforce COEP while inheriting any exemptions that might already have been set e.g. via
         // WicketApplicationInitConfiguration beans
         getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING,
@@ -114,9 +120,8 @@ public abstract class WicketApplicationBase
     {
         super.validateInit();
 
+        // COEP - Do this late so we can override the default set by Wicket
         installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener();
-
-        installSpringSecurityContextPropagationRequestCycleListener();
     }
 
     private void installSpringSecurityContextPropagationRequestCycleListener()
