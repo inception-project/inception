@@ -310,19 +310,16 @@
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-api</artifactId>
-      <version>0.11.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-impl</artifactId>
-      <version>0.11.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-gson</artifactId>
-      <version>0.11.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -341,6 +338,8 @@
               <!--
                - Test dependencies used via auto-configuration and reflection
                -->
+              <ignoredDependency>io.jsonwebtoken:jjwt-impl</ignoredDependency>
+              <ignoredDependency>io.jsonwebtoken:jjwt-gson</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-project</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-documents</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-schema</ignoredDependency>
