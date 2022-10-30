@@ -25,6 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.write;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -122,23 +123,29 @@ class SafetyNetDocumentPolicyTest
         var properties = new ExternalEditorPropertiesImpl();
         var sut = new SafetyNetDocumentPolicy(properties);
 
+        assertThat(policyFile).doesNotExist();
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
-
+        assertThat(policyFile).exists();
+        waitForMTimeToBePast(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
+        assertThat(policyFile).exists();
+        waitForMTimeToBePast(policyFile);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
+        Files.delete(policyFile);
+        assertThat(policyFile).doesNotExist();
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+    }
+
+    private void waitForMTimeToBePast(Path policyFile) throws IOException, InterruptedException
+    {
         var mtime = Files.getLastModifiedTime(policyFile).toInstant();
         while (!Instant.now().isAfter(mtime)) {
             Thread.sleep(100);
         }
-
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
-
-        Files.delete(policyFile);
-
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
     }
 }
