@@ -41,13 +41,11 @@ class DefaultHtmlDocumentPolicyTest
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        var p1 = sut.getPolicy();
-        assertThat(p1.getElementPolicies()).hasSize(72);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
 
-        var p2 = sut.getPolicy();
-        assertThat(p2.getElementPolicies()).isEmpty();
+        assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
 
@@ -56,12 +54,10 @@ class DefaultHtmlDocumentPolicyTest
             Thread.sleep(100);
         }
 
-        var p3 = sut.getPolicy();
-        assertThat(p3.getElementPolicies()).hasSize(1);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
         Files.delete(policyFile);
 
-        var p4 = sut.getPolicy();
-        assertThat(p4.getElementPolicies()).hasSize(72);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
     }
 }
