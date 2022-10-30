@@ -91,7 +91,7 @@ public interface FormatSupport
         return Collections.emptyList();
     }
 
-    default Optional<PolicyCollection> getPolicy()
+    default Optional<PolicyCollection> getPolicy() throws IOException
     {
         return Optional.empty();
     }

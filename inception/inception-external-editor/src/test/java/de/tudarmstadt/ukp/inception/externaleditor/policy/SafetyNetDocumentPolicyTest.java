@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -114,7 +115,7 @@ class SafetyNetDocumentPolicyTest
     }
 
     @Test
-    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws IOException
+    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
         Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
@@ -122,22 +123,29 @@ class SafetyNetDocumentPolicyTest
         var properties = new ExternalEditorPropertiesImpl();
         var sut = new SafetyNetDocumentPolicy(properties);
 
-        var p1 = sut.getPolicy();
-        assertThat(p1.getElementPolicies()).hasSize(12);
+        assertThat(policyFile).doesNotExist();
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
-
-        var p2 = sut.getPolicy();
-        assertThat(p2.getElementPolicies()).isEmpty();
+        assertThat(policyFile).exists();
+        waitForMTimeToBePast(policyFile);
+        assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
-
-        var p3 = sut.getPolicy();
-        assertThat(p3.getElementPolicies()).hasSize(1);
+        assertThat(policyFile).exists();
+        waitForMTimeToBePast(policyFile);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
         Files.delete(policyFile);
+        assertThat(policyFile).doesNotExist();
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+    }
 
-        var p4 = sut.getPolicy();
-        assertThat(p4.getElementPolicies()).hasSize(12);
+    private void waitForMTimeToBePast(Path policyFile) throws IOException, InterruptedException
+    {
+        var mtime = Files.getLastModifiedTime(policyFile).toInstant();
+        while (!Instant.now().isAfter(mtime)) {
+            Thread.sleep(100);
+        }
     }
 }

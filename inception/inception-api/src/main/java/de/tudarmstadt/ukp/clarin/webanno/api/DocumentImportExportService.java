@@ -100,7 +100,7 @@ public interface DocumentImportExportService
         return formatSupport.getCssStylesheets();
     }
 
-    default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc)
+    default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc) throws IOException
     {
         Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
