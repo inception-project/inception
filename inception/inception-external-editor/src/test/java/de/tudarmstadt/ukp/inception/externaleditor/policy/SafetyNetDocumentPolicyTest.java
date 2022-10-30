@@ -25,10 +25,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.write;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -114,7 +114,7 @@ class SafetyNetDocumentPolicyTest
     }
 
     @Test
-    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws IOException
+    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
         Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
@@ -131,6 +131,11 @@ class SafetyNetDocumentPolicyTest
         assertThat(p2.getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
+
+        var mtime = Files.getLastModifiedTime(policyFile).toInstant();
+        while (!Instant.now().isAfter(mtime)) {
+            Thread.sleep(100);
+        }
 
         var p3 = sut.getPolicy();
         assertThat(p3.getElementPolicies()).hasSize(1);
