@@ -40,8 +40,8 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
-    private static String propApplicationHome = "webanno.home";
-    private static String applicationUserHomeSubdir = ".webanno";
+    private static String propApplicationHome = "inception.home";
+    private static String applicationUserHomeSubdir = ".inception";
 
     public static final String PROP_BUILD_NUMBER = "buildNumber";
     public static final String PROP_TIMESTAMP = "timestamp";

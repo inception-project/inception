@@ -38,10 +38,10 @@ import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
@@ -106,8 +106,6 @@ public class INCEpTION
         // We do not want DKPro Core to try and auto-download anything
         System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
 
-        SettingsUtil.customizeApplication("inception.home", ".inception");
-
         try {
             new EmbeddedDatabaseBackupHandler().maybeBackupEmbeddedDatabase();
         }
@@ -132,6 +130,17 @@ public class INCEpTION
      * Called when deployed using the internal server.
      */
     protected static void run(String[] args, Class<?>... aSources)
+    {
+        var context = start(args, INCEpTION.class);
+        if (isCliCommandMode(args)) {
+            context.close();
+        }
+    }
+
+    /**
+     * Called when deployed using the internal server.
+     */
+    protected static ConfigurableApplicationContext start(String[] args, Class<?>... aSources)
     {
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
 
@@ -165,9 +174,7 @@ public class INCEpTION
         builder.listeners(event -> splash.ifPresent(_splash -> _splash.handleEvent(event)));
         var context = builder.run(args);
 
-        if (isCliCommandMode(args)) {
-            context.close();
-        }
+        return context;
     }
 
     private static boolean isCliCommandMode(String[] args)
