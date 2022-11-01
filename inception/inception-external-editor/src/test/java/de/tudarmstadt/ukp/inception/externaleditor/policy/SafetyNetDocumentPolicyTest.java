@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.SanitizingContentHandler;
@@ -117,6 +118,7 @@ class SafetyNetDocumentPolicyTest
     @Test
     void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
+        LoggerFactory.getLogger(getClass()).info("Starting thatOverrideFileIsPickedUp...");
         Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 

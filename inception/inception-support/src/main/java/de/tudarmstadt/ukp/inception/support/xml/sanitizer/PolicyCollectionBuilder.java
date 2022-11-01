@@ -201,7 +201,7 @@ public class PolicyCollectionBuilder
         var oldPolicy = globalAttributePolicies.put(aPolicy.getQName(), newPolicy);
         if (!AttributePolicy.isUndefined(oldPolicy)) {
             log.warn("Globally overriding policy for attribute [{}]: [{}] -> [{}]",
-                    aPolicy.getQName(), oldPolicy, newPolicy, new Throwable());
+                    aPolicy.getQName(), oldPolicy, newPolicy);
         }
     }
 
