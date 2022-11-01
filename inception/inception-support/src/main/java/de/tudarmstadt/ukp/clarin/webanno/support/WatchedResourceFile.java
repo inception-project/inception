@@ -89,21 +89,29 @@ public class WatchedResourceFile<T>
                                 resourceLocation);
                     }
                     else {
-                        log.trace("Updatable resource [{}] has changed - reloading resource...",
-                                resourceLocation);
+                        log.trace(
+                                "Updatable resource [{}] has changed at [{}] - reloading resource...",
+                                resourceLocation, mtime);
                     }
+
+                    resourceMTime = mtime;
 
                     try (var is = Files.newInputStream(resourcePath)) {
                         resource = loader.apply(is);
                     }
                 }
 
-                resourceMTime = mtime;
-
                 return Optional.of(resource);
             }
 
-            log.trace("Updatable resource [{}] does not exist", resourceLocation);
+            if (resourceMTime != null) {
+                log.trace("Updatable resource [{}] last changed at [{}] has disappeared",
+                        resourceLocation, resourceMTime);
+            }
+            else {
+                log.trace("Updatable resource [{}] does not exist", resourceLocation);
+            }
+
             resourceMTime = null;
             resource = null;
             return Optional.empty();
