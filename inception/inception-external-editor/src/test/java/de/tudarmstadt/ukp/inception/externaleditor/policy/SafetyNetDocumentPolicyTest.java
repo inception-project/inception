@@ -32,14 +32,23 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.SanitizingContentHandler;
 
 class SafetyNetDocumentPolicyTest
 {
+    @BeforeEach
+    void setup(TestInfo aTestInfo)
+    {
+        LoggerFactory.getLogger(getClass()).info("=== Starting: {}", aTestInfo.getDisplayName());
+    }
+
     @Test
     void thatScriptBlockIsDropped() throws Exception
     {
@@ -128,11 +137,14 @@ class SafetyNetDocumentPolicyTest
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
+        var mtime1 = Files.getLastModifiedTime(policyFile).toInstant();
         waitForMTimeToBePast(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
         assertThat(policyFile).exists();
+        var mtime2 = Files.getLastModifiedTime(policyFile).toInstant();
+        assertThat(mtime2).isAfter(mtime1);
         waitForMTimeToBePast(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
@@ -144,8 +156,10 @@ class SafetyNetDocumentPolicyTest
     private void waitForMTimeToBePast(Path policyFile) throws IOException, InterruptedException
     {
         var mtime = Files.getLastModifiedTime(policyFile).toInstant();
+        LoggerFactory.getLogger(getClass()).info("[{}] mtime: {}", policyFile, mtime);
         while (!Instant.now().isAfter(mtime)) {
             Thread.sleep(100);
+            LoggerFactory.getLogger(getClass()).info("waiting...", policyFile, mtime);
         }
     }
 }

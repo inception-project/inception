@@ -32,7 +32,6 @@ import java.io.File;
 import java.util.Date;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -92,7 +91,6 @@ class AeroRemoteApiController_Authentication_Jwt_Test
     static final String REALM = "test";
 
     private static final long EXPIRATIONTIME = 864_000_000; // 10 days
-    private static final byte[] SECRET = RandomUtils.nextBytes(64);
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
     private String token;
