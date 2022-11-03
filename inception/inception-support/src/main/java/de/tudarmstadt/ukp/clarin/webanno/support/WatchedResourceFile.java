@@ -100,6 +100,11 @@ public class WatchedResourceFile<T>
                         resource = loader.apply(is);
                     }
                 }
+                else {
+                    log.trace(
+                            "Updatable resource [{}] has not changed since [{}] [{}] - using already loaded resource",
+                            resourceLocation, resourceMTime, mtime);
+                }
 
                 return Optional.of(resource);
             }
