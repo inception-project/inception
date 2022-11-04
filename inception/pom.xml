@@ -75,8 +75,8 @@
     <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.23</spring.version>
-    <spring.boot.version>2.7.4</spring.boot.version>
-    <spring.security.version>5.7.4</spring.security.version>
+    <spring.boot.version>2.7.5</spring.boot.version>
+    <spring.security.version>5.7.5</spring.security.version>
     <springdoc.version>1.6.12</springdoc.version>
     <swagger.version>2.2.4</swagger.version>
 
