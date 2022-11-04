@@ -137,15 +137,11 @@ class SafetyNetDocumentPolicyTest
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
-        var mtime1 = Files.getLastModifiedTime(policyFile).toInstant();
-        waitForMTimeToBePast(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
         assertThat(policyFile).exists();
-        var mtime2 = Files.getLastModifiedTime(policyFile).toInstant();
-        assertThat(mtime2).isAfter(mtime1);
-        waitForMTimeToBePast(policyFile);
+        touch(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
         Files.delete(policyFile);
@@ -153,13 +149,14 @@ class SafetyNetDocumentPolicyTest
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
     }
 
-    private void waitForMTimeToBePast(Path policyFile) throws IOException, InterruptedException
+    static void touch(Path policyFile) throws IOException, InterruptedException
     {
-        var mtime = Files.getLastModifiedTime(policyFile).toInstant();
-        LoggerFactory.getLogger(getClass()).info("[{}] mtime: {}", policyFile, mtime);
-        while (!Instant.now().isAfter(mtime)) {
-            Thread.sleep(100);
-            LoggerFactory.getLogger(getClass()).info("waiting...", policyFile, mtime);
+        Instant mtime1 = Files.getLastModifiedTime(policyFile).toInstant();
+        Instant mtime2;
+        do {
+            policyFile.toFile().setLastModified(Instant.now().toEpochMilli());
+            mtime2 = Files.getLastModifiedTime(policyFile).toInstant();
         }
+        while (!mtime2.isAfter(mtime1));
     }
 }

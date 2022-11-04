@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy.DEFAULT_POLICY_YAML;
+import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest.touch;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.write;
@@ -26,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,20 +44,16 @@ class DefaultHtmlDocumentPolicyTest
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
-
+        assertThat(policyFile).exists();
         assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
-
-        var mtime = Files.getLastModifiedTime(policyFile).toInstant();
-        while (!Instant.now().isAfter(mtime)) {
-            Thread.sleep(100);
-        }
-
+        assertThat(policyFile).exists();
+        touch(policyFile);
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
         Files.delete(policyFile);
-
+        assertThat(policyFile).doesNotExist();
         assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
     }
 }
