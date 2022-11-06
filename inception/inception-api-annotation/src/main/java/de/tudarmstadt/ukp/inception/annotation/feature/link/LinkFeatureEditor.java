@@ -349,44 +349,30 @@ public class LinkFeatureEditor
         add(constraintsInUseIndicator);
 
         // Add a new empty slot with the specified role
-        content.add(new LambdaAjaxLink("add", this::actionAdd)
-        {
-            private static final long serialVersionUID = 1L;
+        var addButton = new LambdaAjaxLink("add", this::actionAdd);
+        addButton.add(visibleWhen(() -> {
+            AnnotatorState state = stateModel.getObject();
+            return !(state.isSlotArmed()
+                    && getModelObject().feature.equals(state.getArmedFeature().feature));
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-                setVisible(!(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                        .equals(state.getArmedFeature().feature)));
-            }
-        });
+        }));
+        content.add(addButton);
 
         // Allows user to update slot
-        LambdaAjaxLink setBtn = new LambdaAjaxLink("set", this::actionSet);
-        setBtn.add(visibleWhen(
-                () -> traits.isEnableRoleLabels() && stateModel.getObject().isSlotArmed()
-                        && LinkFeatureEditor.this.getModelObject().feature
-                                .equals(stateModel.getObject().getArmedFeature().feature)));
-        content.add(setBtn);
+        var setButton = new LambdaAjaxLink("set", this::actionSet);
+        setButton.add(visibleWhen(() -> traits.isEnableRoleLabels()
+                && stateModel.getObject().isSlotArmed() && getModelObject().feature
+                        .equals(stateModel.getObject().getArmedFeature().feature)));
+        content.add(setButton);
 
         // Add a new empty slot with the specified role
-        content.add(new LambdaAjaxLink("del", this::actionDel)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                        .equals(state.getArmedFeature().feature));
-            }
-        });
+        var delButton = new LambdaAjaxLink("del", this::actionDel);
+        delButton.add(visibleWhen(() -> {
+            AnnotatorState state = stateModel.getObject();
+            return state.isSlotArmed()
+                    && getModelObject().feature.equals(state.getArmedFeature().feature);
+        }));
+        content.add(delButton);
     }
 
     private AbstractTextComponent makeAutoComplete(String aId)
@@ -397,7 +383,7 @@ public class LinkFeatureEditor
 
     private AbstractTextComponent makeComboBox(String aId)
     {
-        return new StyledComboBox<Tag>(aId, PropertyModel.of(this, "newRole"),
+        var combobox = new StyledComboBox<Tag>(aId, PropertyModel.of(this, "newRole"),
                 PropertyModel.of(getModel(), "tagset"))
         {
             private static final long serialVersionUID = 1L;
@@ -448,6 +434,7 @@ public class LinkFeatureEditor
                 }
             }
         };
+        return combobox;
     }
 
     private void removeAutomaticallyAddedUnusedEntries()
