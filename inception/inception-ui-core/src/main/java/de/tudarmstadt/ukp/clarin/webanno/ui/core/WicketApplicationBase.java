@@ -53,8 +53,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
@@ -262,7 +264,9 @@ public abstract class WicketApplicationBase
     protected void addKendoComponentsDisabledLookFix()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof ComboBox || component instanceof AutoCompleteTextField) {
+            if (component instanceof ComboBox || component instanceof AutoCompleteTextField
+                    || component instanceof TextField || component instanceof MultiSelect
+                    || component instanceof com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect) {
                 component.add(new KendoFixDisabledInputComponentStylingBehavior());
             }
         });
