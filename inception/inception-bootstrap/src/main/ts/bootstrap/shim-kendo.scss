@@ -90,3 +90,8 @@
   border-top: 1px solid var(--bs-border-color);
   background-color: var(--bs-light);
 }
+
+.k-input:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
