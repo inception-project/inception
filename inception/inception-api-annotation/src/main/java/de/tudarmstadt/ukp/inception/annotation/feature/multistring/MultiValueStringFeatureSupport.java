@@ -254,12 +254,12 @@ public class MultiValueStringFeatureSupport
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
 
         if (labelFeature == null) {
-            return null;
+            return emptyList();
         }
 
         List<String> values = getFeatureValue(aFeature, aFs);
         if (values == null || values.isEmpty()) {
-            return null;
+            return emptyList();
         }
 
         var details = new ArrayList<VLazyDetailQuery>();

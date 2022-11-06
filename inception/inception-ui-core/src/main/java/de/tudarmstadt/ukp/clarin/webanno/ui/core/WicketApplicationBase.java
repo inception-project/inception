@@ -54,6 +54,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+import com.googlecode.wicket.kendo.ui.form.TextField;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
@@ -61,6 +65,7 @@ import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.kendo.KendoFixDisabledInputComponentStylingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
@@ -204,6 +209,8 @@ public abstract class WicketApplicationBase
 
         addKendoResourcesToAllPages();
 
+        addKendoComponentsDisabledLookFix();
+
         addJQueryUIResourcesToAllPages();
 
         addFontAwesomeToAllPages();
@@ -255,6 +262,17 @@ public abstract class WicketApplicationBase
             if (component instanceof Page) {
                 component.add(new KendoResourceBehavior());
                 component.add(new WicketJQueryFocusPatchBehavior());
+            }
+        });
+    }
+
+    protected void addKendoComponentsDisabledLookFix()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof ComboBox || component instanceof AutoCompleteTextField
+                    || component instanceof TextField || component instanceof MultiSelect
+                    || component instanceof com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect) {
+                component.add(new KendoFixDisabledInputComponentStylingBehavior());
             }
         });
     }

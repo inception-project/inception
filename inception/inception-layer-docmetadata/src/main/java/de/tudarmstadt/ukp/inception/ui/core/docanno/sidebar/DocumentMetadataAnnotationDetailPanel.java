@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -120,7 +121,8 @@ public class DocumentMetadataAnnotationDetailPanel
         super.onConfigure();
 
         add(visibleWhen(this::isVisible));
-        setEnabled(annotationPage.isEditable());
+        setEnabled(annotationPage.isEditable()
+                && !getLayer().map(AnnotationLayer::isReadonly).orElse(true));
     }
 
     public VID getModelObject()
@@ -190,6 +192,32 @@ public class DocumentMetadataAnnotationDetailPanel
                 item.add(editor);
             }
         };
+    }
+
+    private Optional<AnnotationLayer> getLayer()
+    {
+        VID vid = getModelObject();
+        Project proj = project.getObject();
+
+        CAS cas;
+        try {
+            cas = jcasProvider.get();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load CAS", e);
+            return Optional.empty();
+        }
+
+        FeatureStructure fs;
+        try {
+            fs = ICasUtil.selectFsByAddr(cas, vid.getId());
+        }
+        catch (Exception e) {
+            LOG.error("Unable to locate annotation with ID {}", vid);
+            return Optional.empty();
+        }
+
+        return Optional.of(annotationService.findLayer(proj, fs));
     }
 
     private List<FeatureState> listFeatures()
