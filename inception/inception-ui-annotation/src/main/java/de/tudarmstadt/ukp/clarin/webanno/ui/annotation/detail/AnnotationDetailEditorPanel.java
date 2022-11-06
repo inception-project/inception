@@ -997,7 +997,7 @@ public abstract class AnnotationDetailEditorPanel
     public void actionClear(AjaxRequestTarget aTarget) throws AnnotationException
     {
         reset(aTarget);
-
+        aTarget.add(this);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
@@ -1429,8 +1429,8 @@ public abstract class AnnotationDetailEditorPanel
     {
         LambdaAjaxLink link = new LambdaAjaxLink("clear", this::actionClear);
         link.setOutputMarkupPlaceholderTag(true);
-        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
-                && editorPage.isEditable()));
+        link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         return link;
     }
 
