@@ -30,7 +30,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ public class ProjectDangerZonePanel
 
     private @SpringBean ProjectService projectService;
 
-    private ChallengeResponseDialog deleteProjectDialog;
+    private ChallengeResponseDialog deleteDialog;
 
     public ProjectDangerZonePanel(String id, IModel<Project> aModel)
     {
@@ -59,12 +58,12 @@ public class ProjectDangerZonePanel
         add(deleteButton);
 
         IModel<String> projectNameModel = PropertyModel.of(getModel(), "name");
-        add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-                new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this).setModel(getModel())
-                        .setParameters(projectNameModel.map(Strings::escapeMarkup)),
-                projectNameModel));
-        deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
+        deleteDialog = new ChallengeResponseDialog("deleteProjectDialog");
+        deleteDialog.setTitleModel(new StringResourceModel("DeleteProjectDialog.title", this));
+        deleteDialog.setMessageModel(new StringResourceModel("DeleteProjectDialog.text", this));
+        deleteDialog.setExpectedResponseModel(projectNameModel);
+        deleteDialog.setConfirmAction(this::actionDeletePerform);
+        add(deleteDialog);
     }
 
     @SuppressWarnings("unchecked")
@@ -75,7 +74,7 @@ public class ProjectDangerZonePanel
 
     private void actionDelete(AjaxRequestTarget aTarget)
     {
-        deleteProjectDialog.show(aTarget);
+        deleteDialog.show(aTarget);
     }
 
     private void actionDeletePerform(AjaxRequestTarget aTarget)

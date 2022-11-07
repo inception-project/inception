@@ -39,7 +39,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.Strings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -91,13 +90,14 @@ public class MatrixWorkflowActionBarItemGroup
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this) //
-                        .setModel(page.getModel()) //
-                        .setParameters(documentNameModel.map(Strings::escapeMarkup)),
-                documentNameModel));
+        resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog");
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setExpectedResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
+        add(resetDocumentDialog);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));

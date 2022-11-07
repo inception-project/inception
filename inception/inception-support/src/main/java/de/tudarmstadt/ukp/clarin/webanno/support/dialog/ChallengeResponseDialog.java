@@ -39,19 +39,8 @@ public class ChallengeResponseDialog
 
     public ChallengeResponseDialog(String aId)
     {
-        this(aId, null, null, null);
-    }
-
-    public ChallengeResponseDialog(String aId, StringResourceModel aTitle,
-            StringResourceModel aMessage, IModel<String> aExpectedResponse)
-    {
         super(aId);
-
         trapFocus();
-
-        titleModel = aTitle;
-        messageModel = aMessage;
-        expectedResponseModel = aExpectedResponse;
     }
 
     public void show(AjaxRequestTarget aTarget)
