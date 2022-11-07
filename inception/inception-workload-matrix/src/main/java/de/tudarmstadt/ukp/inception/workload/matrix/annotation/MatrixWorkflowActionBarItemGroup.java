@@ -90,13 +90,14 @@ public class MatrixWorkflowActionBarItemGroup
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this) //
-                        .setModel(page.getModel()) //
-                        .setParameters(documentNameModel),
-                documentNameModel));
+        resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog");
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
+        resetDocumentDialog
+                .setTitleModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setExpectedResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
+        add(resetDocumentDialog);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));
