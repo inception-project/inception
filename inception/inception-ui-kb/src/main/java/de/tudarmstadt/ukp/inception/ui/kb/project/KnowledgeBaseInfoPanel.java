@@ -25,7 +25,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
-import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class KnowledgeBaseInfoPanel
     extends Panel
@@ -36,11 +36,8 @@ public class KnowledgeBaseInfoPanel
     {
         super(aId, aModel);
 
-        queue(new Label("description",
-                aModel.bind("description")
-                        .map(description -> MarkdownUtil.markdownToHtml((String) description)))
-                                .setEscapeModelStrings(false)
-                                .add(visibleWhen(() -> aModel.getObject() != null)));
+        queue(new MarkdownLabel("description", aModel.bind("description"))
+                .add(visibleWhen(() -> aModel.getObject() != null)));
         queue(new Label("hostInstitutionName", aModel.bind("hostInstitutionName"))
                 .add(visibleWhen(() -> aModel.getObject() != null)));
         queue(new Label("authorName", aModel.bind("authorName"))
