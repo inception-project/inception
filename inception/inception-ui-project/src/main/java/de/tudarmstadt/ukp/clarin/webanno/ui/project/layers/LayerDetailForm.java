@@ -25,7 +25,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,7 +53,6 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -322,9 +320,8 @@ public class LayerDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog.setChallengeModel(new StringResourceModel("DeleteLayerDialog.text", this)
-                .setParameters(escapeMarkup(getModelObject().getName())));
-        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
+        confirmationDialog.setMessageModel(new StringResourceModel("DeleteLayerDialog.text", this));
+        confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationLayer::getName));
 
         confirmationDialog.setConfirmAction((_target) -> {
             annotationService.removeLayer(getModelObject());

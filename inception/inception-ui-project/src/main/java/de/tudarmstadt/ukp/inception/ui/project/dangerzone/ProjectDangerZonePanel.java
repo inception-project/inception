@@ -30,6 +30,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class ProjectDangerZonePanel
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                 new StringResourceModel("DeleteProjectDialog.title", this),
                 new StringResourceModel("DeleteProjectDialog.text", this).setModel(getModel())
-                        .setParameters(projectNameModel),
+                        .setParameters(projectNameModel.map(Strings::escapeMarkup)),
                 projectNameModel));
         deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
     }

@@ -44,6 +44,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -195,7 +196,7 @@ public class ProjectSettingsPage
         add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                 new StringResourceModel("DeleteProjectDialog.title", this),
                 new StringResourceModel("DeleteProjectDialog.text", this).setModel(selectedProject)
-                        .setParameters(projectNameModel),
+                        .setParameters(projectNameModel.map(Strings::escapeMarkup)),
                 projectNameModel));
         deleteProjectDialog.setConfirmAction((target) -> {
             try {

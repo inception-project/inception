@@ -32,7 +32,6 @@ import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -236,9 +235,8 @@ public class FeatureDetailForm
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         confirmationDialog
-                .setChallengeModel(new StringResourceModel("DeleteFeatureDialog.text", this)
-                        .setParameters(escapeMarkup(getModelObject().getName())));
-        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
+                .setMessageModel(new StringResourceModel("DeleteFeatureDialog.text", this));
+        confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationFeature::getName));
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {

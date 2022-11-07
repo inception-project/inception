@@ -39,6 +39,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.Strings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -94,7 +95,7 @@ public class MatrixWorkflowActionBarItemGroup
                 new StringResourceModel("ResetDocumentDialog.title", this),
                 new StringResourceModel("ResetDocumentDialog.text", this) //
                         .setModel(page.getModel()) //
-                        .setParameters(documentNameModel),
+                        .setParameters(documentNameModel.map(Strings::escapeMarkup)),
                 documentNameModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 

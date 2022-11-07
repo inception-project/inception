@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
@@ -29,8 +30,8 @@ public class ChallengeResponseDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
-    private IModel<String> titleModel;
-    private IModel<String> challengeModel;
+    private StringResourceModel titleModel;
+    private StringResourceModel messageModel;
     private IModel<String> expectedResponseModel;
 
     private AjaxCallback confirmAction;
@@ -41,15 +42,15 @@ public class ChallengeResponseDialog
         this(aId, null, null, null);
     }
 
-    public ChallengeResponseDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
-            IModel<String> aExpectedResponse)
+    public ChallengeResponseDialog(String aId, StringResourceModel aTitle,
+            StringResourceModel aMessage, IModel<String> aExpectedResponse)
     {
         super(aId);
 
         trapFocus();
 
         titleModel = aTitle;
-        challengeModel = aChallenge;
+        messageModel = aMessage;
         expectedResponseModel = aExpectedResponse;
     }
 
@@ -59,38 +60,38 @@ public class ChallengeResponseDialog
         contentPanel.setConfirmAction(confirmAction);
         contentPanel.setCancelAction(cancelAction);
         contentPanel.setTitleModel(titleModel);
-        contentPanel.setChallengeModel(challengeModel);
+        contentPanel.setMessageModel(messageModel);
         contentPanel.setExpectedResponseModel(expectedResponseModel);
         contentPanel.onShow(aTarget);
         open(contentPanel, aTarget);
     }
 
-    public IModel<String> getTitleModel()
+    public StringResourceModel getTitleModel()
     {
         return titleModel;
     }
 
-    public void setTitleModel(IModel<String> aTitleModel)
+    public void setTitleModel(StringResourceModel aTitleModel)
     {
         titleModel = aTitleModel;
     }
 
-    public IModel<String> getChallengeModel()
+    public void setMessageModel(StringResourceModel aMessageModel)
     {
-        return challengeModel;
+        messageModel = aMessageModel;
     }
 
-    public void setChallengeModel(IModel<String> aChallengeModel)
+    public StringResourceModel getMessageModel()
     {
-        challengeModel = aChallengeModel;
+        return messageModel;
     }
 
-    public IModel<String> getResponseModel()
+    public IModel<String> getExpectedResponseModel()
     {
         return expectedResponseModel;
     }
 
-    public void setResponseModel(IModel<String> aExpectedResponseModel)
+    public void setExpectedResponseModel(IModel<String> aExpectedResponseModel)
     {
         expectedResponseModel = aExpectedResponseModel;
     }
