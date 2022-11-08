@@ -22,13 +22,14 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
 
 /**
  * Permission levels for a project. {@link PermissionLevel#ANNOTATOR} is an annotator while
  * {@link PermissionLevel#MANAGER} is a project administrator
  */
 public enum PermissionLevel
-    implements PersistentEnum, Serializable
+    implements PersistentEnum, Serializable, HasSymbol
 {
     // We keep the legacy values for the project export/import for compatibility reasons
     @JsonProperty("USER")
@@ -60,6 +61,7 @@ public enum PermissionLevel
         symbol = aSymbol;
     }
 
+    @Override
     public String symbol()
     {
         return symbol;
