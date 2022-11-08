@@ -24,13 +24,13 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 
 public class UserStateFilterPanel
     extends Panel
@@ -58,8 +58,7 @@ public class UserStateFilterPanel
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
-                link.add(new Label(MID_LABEL, aItem.getModel().map( //
-                        UserState::symbol).orElse("")).setEscapeModelStrings(false));
+                link.add(new SymbolLabel(MID_LABEL, aItem.getModel()));
                 link.add(new AttributeAppender("class",
                         () -> aModel.getObject().contains(aItem.getModelObject()) ? "active" : "",
                         " "));

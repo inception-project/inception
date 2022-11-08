@@ -47,7 +47,7 @@ public class ProjectDangerZonePanel
 
     private @SpringBean ProjectService projectService;
 
-    private ChallengeResponseDialog deleteProjectDialog;
+    private ChallengeResponseDialog deleteDialog;
 
     public ProjectDangerZonePanel(String id, IModel<Project> aModel)
     {
@@ -58,12 +58,12 @@ public class ProjectDangerZonePanel
         add(deleteButton);
 
         IModel<String> projectNameModel = PropertyModel.of(getModel(), "name");
-        add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-                new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this).setModel(getModel())
-                        .setParameters(projectNameModel),
-                projectNameModel));
-        deleteProjectDialog.setConfirmAction(this::actionDeletePerform);
+        deleteDialog = new ChallengeResponseDialog("deleteProjectDialog");
+        deleteDialog.setTitleModel(new StringResourceModel("DeleteProjectDialog.title", this));
+        deleteDialog.setMessageModel(new StringResourceModel("DeleteProjectDialog.text", this));
+        deleteDialog.setExpectedResponseModel(projectNameModel);
+        deleteDialog.setConfirmAction(this::actionDeletePerform);
+        add(deleteDialog);
     }
 
     @SuppressWarnings("unchecked")
@@ -74,7 +74,7 @@ public class ProjectDangerZonePanel
 
     private void actionDelete(AjaxRequestTarget aTarget)
     {
-        deleteProjectDialog.show(aTarget);
+        deleteDialog.show(aTarget);
     }
 
     private void actionDeletePerform(AjaxRequestTarget aTarget)

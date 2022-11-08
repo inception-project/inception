@@ -61,8 +61,7 @@ public class CuratorColumn
         SourceDocumentState state = srcDocument.map(SourceDocument::getState).orElse(NEW)
                 .getObject();
 
-        Label stateLabel = new Label(aComponentId, stateSymbol(state));
-        stateLabel.setEscapeModelStrings(false);
+        Label stateLabel = new CurationStateSymbolLabel(aComponentId, state);
         stateLabel.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
         stateLabel.add(onEvent("click", //
                 _target -> stateLabel.send(stateLabel, BUBBLE,
@@ -87,16 +86,5 @@ public class CuratorColumn
         });
 
         aItem.add(stateLabel);
-    }
-
-    private String stateSymbol(SourceDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case CURATION_IN_PROGRESS:
-        case CURATION_FINISHED:
-            return aDocState.symbol();
-        default:
-            return SourceDocumentState.NEW.symbol();
-        }
     }
 }

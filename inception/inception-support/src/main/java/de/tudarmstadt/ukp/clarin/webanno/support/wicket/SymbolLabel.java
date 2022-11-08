@@ -15,37 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.IModel;
 
-public enum UserState
-    implements HasSymbol
+public class SymbolLabel
+    extends Label
 {
-    ENABLED("<i class=\"fas fa-user\"></i>"), //
-    DEACTIVATED("<i class=\"fas fa-user-lock\"></i>");
+    private static final long serialVersionUID = -4797458000441245430L;
 
-    private final String symbol;
-
-    private UserState(String aSymbol)
+    public SymbolLabel(String aId, IModel<? extends HasSymbol> aModel)
     {
-        symbol = aSymbol;
+        super(aId, aModel.map(HasSymbol::symbol));
     }
 
-    public static UserState of(User aUser)
+    public SymbolLabel(String aId, HasSymbol aLabel)
     {
-        if (aUser.isEnabled()) {
-            return ENABLED;
-        }
-        else {
-            return DEACTIVATED;
-        }
+        super(aId, aLabel.symbol());
     }
 
     @Override
-    public String symbol()
+    protected void onInitialize()
     {
-        return symbol;
+        super.onInitialize();
+        setEscapeModelStrings(false);
     }
 }

@@ -148,8 +148,12 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
-        add(deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog",
-                new StringResourceModel("DeleteDialog.title", this, null)));
+        deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog");
+        deleteAnnotationDialog
+                .setTitleModel(new StringResourceModel("DeleteDialog.title", this, null));
+        deleteAnnotationDialog.setContentModel(Model.of());
+        add(deleteAnnotationDialog);
+
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));

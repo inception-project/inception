@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.AjaxEditableLabel;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
@@ -32,7 +31,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
@@ -67,8 +66,8 @@ public class CurrentProjectDashlet
         name.setEnabled(isManager);
         add(name);
 
-        add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
-                .setEscapeModelStrings(false));
+        add(new MarkdownLabel("description",
+                LoadableDetachableModel.of(this::getProjectDescription)));
     }
 
     public Project getModelObject()
@@ -85,16 +84,15 @@ public class CurrentProjectDashlet
     private String getProjectDescription()
     {
         Project project = getModelObject();
-        if (project != null) {
-            if (StringUtils.isBlank(project.getDescription())) {
-                return "Project has no description.";
-            }
-            else {
-                return MarkdownUtil.markdownToHtml(project.getDescription());
-            }
-        }
-        else {
+
+        if (project == null) {
             return "Please select a project from the drop-down list above.";
         }
+
+        if (isBlank(project.getDescription())) {
+            return "Project has no description.";
+        }
+
+        return project.getDescription();
     }
 }

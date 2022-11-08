@@ -15,37 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
-
-public enum UserState
-    implements HasSymbol
+public interface HasSymbol
 {
-    ENABLED("<i class=\"fas fa-user\"></i>"), //
-    DEACTIVATED("<i class=\"fas fa-user-lock\"></i>");
-
-    private final String symbol;
-
-    private UserState(String aSymbol)
-    {
-        symbol = aSymbol;
-    }
-
-    public static UserState of(User aUser)
-    {
-        if (aUser.isEnabled()) {
-            return ENABLED;
-        }
-        else {
-            return DEACTIVATED;
-        }
-    }
-
-    @Override
-    public String symbol()
-    {
-        return symbol;
-    }
+    String symbol();
 }
