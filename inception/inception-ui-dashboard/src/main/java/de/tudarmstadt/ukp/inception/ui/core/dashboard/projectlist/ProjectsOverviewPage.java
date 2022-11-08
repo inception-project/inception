@@ -38,7 +38,6 @@ import static org.apache.wicket.authroles.authorization.strategies.role.metadata
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -184,9 +183,10 @@ public class ProjectsOverviewPage
         nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
         queue(nameFilter);
 
-        queue(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                new StringResourceModel("leaveDialog.title", this),
-                new StringResourceModel("leaveDialog.text", this)));
+        confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE);
+        confirmLeaveDialog.setTitleModel(new StringResourceModel("leaveDialog.title", this));
+        confirmLeaveDialog.setContentModel(new StringResourceModel("leaveDialog.text", this));
+        queue(confirmLeaveDialog);
     }
 
     @Override
@@ -454,7 +454,6 @@ public class ProjectsOverviewPage
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
         var levels = aProjectEntry.getLevels();
-        Collections.reverse(levels);
         return new ListView<PermissionLevel>(MID_ROLE, levels)
         {
             private static final long serialVersionUID = -96472758076828409L;

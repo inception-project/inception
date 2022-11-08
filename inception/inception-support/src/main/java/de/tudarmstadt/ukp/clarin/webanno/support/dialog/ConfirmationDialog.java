@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
@@ -39,24 +38,10 @@ public class ConfirmationDialog
 
     public ConfirmationDialog(String aId)
     {
-        this(aId, null, null);
+        super(aId);
         titleModel = new StringResourceModel("title", this, null);
         contentModel = new StringResourceModel("text", this, null);
-    }
-
-    public ConfirmationDialog(String aId, IModel<String> aTitle)
-    {
-        this(aId, aTitle, Model.of());
-    }
-
-    public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aContent)
-    {
-        super(aId);
-
         trapFocus();
-
-        titleModel = aTitle;
-        contentModel = aContent;
     }
 
     public void show(AjaxRequestTarget aTarget)

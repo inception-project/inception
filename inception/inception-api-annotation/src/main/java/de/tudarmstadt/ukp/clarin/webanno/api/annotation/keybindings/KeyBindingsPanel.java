@@ -129,8 +129,7 @@ public class KeyBindingsPanel
                     }
                 });
 
-                aItem.add(new Label("keyCombo", aItem.getModelObject().asHtml())
-                        .setEscapeModelStrings(false));
+                aItem.add(new KeybindingLabel("keyCombo", aItem.getModel()));
 
                 link.add(new Label("value", fs.renderFeatureValue(feature, value)));
                 aItem.add(link);
