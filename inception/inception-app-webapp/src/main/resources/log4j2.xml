@@ -11,7 +11,7 @@
       <property name="pattern">%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n</property>
     </SpringProfile>
     <SpringProfile name="cli">
-      <property name="pattern">%highlight{[%level{length=5}] %msg}{FATAL=red bold, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}%n</property>
+      <property name="pattern">%highlight{[%level{length=5}] %msg}%n</property>
     </SpringProfile>
   </properties>
   
