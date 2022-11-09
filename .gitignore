@@ -25,3 +25,4 @@ dependency-reduced-pom.xml
 **/node_modules
 **/src/main/ts/package.json
 **/src/main/ts/package-lock.json
+local
