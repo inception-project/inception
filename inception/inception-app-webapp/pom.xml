@@ -630,11 +630,6 @@
       <artifactId>mock-oauth2-server</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.nimbusds</groupId>
-      <artifactId>nimbus-jose-jwt</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -855,6 +850,13 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
+              <!-- 
+               This we need for testing only in this module, but actually we need it at runtime as
+               well. Somehow the plugin does not detect that we need it at runtime and suggests we
+               add it as a test dependency. However, then it does not get included into the 
+               uber-JAR and we get ClassNotFoundExceptions at runtime.
+               -->
+              <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
               <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
                 - for the moment, completely ignore it in the dependency checking.
