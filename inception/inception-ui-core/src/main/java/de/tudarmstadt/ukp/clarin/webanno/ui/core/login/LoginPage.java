@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 public class LoginPage
     extends ApplicationPageBase
 {
-    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutpLogin";
+    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutoLogin";
     private static final String PARAM_ERROR = "error";
 
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
