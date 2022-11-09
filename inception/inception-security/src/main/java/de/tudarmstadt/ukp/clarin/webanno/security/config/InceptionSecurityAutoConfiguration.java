@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 
 import javax.sql.DataSource;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProv
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
+@ConditionalOnWebApplication
 @EnableWebSecurity
 public class InceptionSecurityAutoConfiguration
 {

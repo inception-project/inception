@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.app.config;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -33,6 +34,7 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
 
+@ConditionalOnWebApplication
 @EnableWebSecurity
 public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
 {
