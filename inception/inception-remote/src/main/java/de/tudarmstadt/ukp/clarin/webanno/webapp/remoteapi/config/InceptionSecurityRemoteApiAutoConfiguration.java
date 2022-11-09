@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -35,6 +36,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
+@ConditionalOnWebApplication
 public class InceptionSecurityRemoteApiAutoConfiguration
 {
     @Order(1)
