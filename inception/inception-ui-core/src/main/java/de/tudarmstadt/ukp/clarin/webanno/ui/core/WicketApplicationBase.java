@@ -22,6 +22,22 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
+import static org.apache.wicket.csp.CSPDirective.BASE_URI;
+import static org.apache.wicket.csp.CSPDirective.CHILD_SRC;
+import static org.apache.wicket.csp.CSPDirective.CONNECT_SRC;
+import static org.apache.wicket.csp.CSPDirective.DEFAULT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FONT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FRAME_SRC;
+import static org.apache.wicket.csp.CSPDirective.IMG_SRC;
+import static org.apache.wicket.csp.CSPDirective.MANIFEST_SRC;
+import static org.apache.wicket.csp.CSPDirective.SCRIPT_SRC;
+import static org.apache.wicket.csp.CSPDirective.STYLE_SRC;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONCE;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONE;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.STRICT_DYNAMIC;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.UNSAFE_EVAL;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.UNSAFE_INLINE;
 import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
 import java.io.File;
@@ -36,6 +52,7 @@ import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
+import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.IPackageResourceGuard;
 import org.apache.wicket.markup.html.SecurePackageResourceGuard;
@@ -96,12 +113,18 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
-        getCspSettings().blocking().disabled();
-
-        // if (DEVELOPMENT == getConfigurationType()) {
-        // getCspSettings().reporting().strict().reportBack();
-        // getCspSettings().reporting().unsafeInline().reportBack();
-        // }
+        getCspSettings().blocking().clear() //
+                .add(DEFAULT_SRC, NONE) //
+                .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
+                // .add(STYLE_SRC, NONCE) //
+                .add(STYLE_SRC, SELF, UNSAFE_INLINE) //
+                .add(IMG_SRC, SELF, new FixedCSPValue("data:")) //
+                .add(CONNECT_SRC, SELF) //
+                .add(FONT_SRC, SELF) //
+                .add(MANIFEST_SRC, SELF) //
+                .add(CHILD_SRC, SELF) //
+                .add(FRAME_SRC, SELF) //
+                .add(BASE_URI, SELF); //
 
         // CSRF
         getRequestCycleListeners().add(new ResourceIsolationRequestCycleListener());
