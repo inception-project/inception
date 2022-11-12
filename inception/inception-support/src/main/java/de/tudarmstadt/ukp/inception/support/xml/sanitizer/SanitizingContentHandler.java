@@ -255,9 +255,11 @@ public class SanitizingContentHandler
         String localName = aLocalName;
 
         // Workaround bug: localname may contain prefix
-        var li = localName.indexOf(':');
-        if (li >= 0) {
-            localName = localName.substring(li + 1);
+        if (localName != null) {
+            var li = localName.indexOf(':');
+            if (li >= 0) {
+                localName = localName.substring(li + 1);
+            }
         }
 
         var qi = aQName.indexOf(':');
