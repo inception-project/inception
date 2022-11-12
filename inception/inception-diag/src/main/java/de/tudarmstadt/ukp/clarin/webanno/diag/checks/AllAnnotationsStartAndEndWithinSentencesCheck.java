@@ -70,6 +70,11 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
                 continue;
             }
 
+            if (!aCas.getTypeSystem().subsumes(aCas.getAnnotationType(), type)) {
+                // Skip non-annotation types
+                continue;
+            }
+
             for (AnnotationFS ann : select(aCas, type)) {
                 var startsOutside = aCas.select(Sentence._TypeName)
                         .covering(ann.getBegin(), ann.getBegin()).isEmpty();
