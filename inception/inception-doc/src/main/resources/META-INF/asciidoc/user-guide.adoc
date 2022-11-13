@@ -217,6 +217,11 @@ include::{include-dir}faq.adoc[leveloffset=+1]
 <<<
 
 [appendix]
+include::{include-dir}editors.adoc[leveloffset=+1]
+
+<<<
+
+[appendix]
 include::{include-dir}formats.adoc[leveloffset=+1]
 
 For your convenience, the following table provides an overview over all the available formats. 
