@@ -50,6 +50,10 @@ include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}logging.adoc[]
+
+<<<
+
 include::{include-dir}metrics_monitoring.adoc[]
 
 <<<
