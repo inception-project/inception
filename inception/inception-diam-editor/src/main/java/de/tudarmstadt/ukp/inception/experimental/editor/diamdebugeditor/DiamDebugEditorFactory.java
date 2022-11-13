@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 @ConditionalOnExpression("${websocket.enabled:true}")
+@ConditionalOnProperty(prefix = "ui.diam-debugger", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Component("diamDebugEditor")
 public class DiamDebugEditorFactory
     extends AnnotationEditorFactoryImplBase

@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
 @Configuration
 public class UimaJsonCasSupportAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "ui.json-cas-legacy", name = "enabled", //
+    @ConditionalOnProperty(prefix = "format.json-cas-legacy", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
     @Bean
     public LegacyUimaJsonFormatSupport legacyUimaJsonFormatSupport()
@@ -36,7 +36,7 @@ public class UimaJsonCasSupportAutoConfiguration
         return new LegacyUimaJsonFormatSupport();
     }
 
-    @ConditionalOnProperty(prefix = "ui.json-cas", name = "enabled", //
+    @ConditionalOnProperty(prefix = "format.json-cas", name = "enabled", //
             havingValue = "true", matchIfMissing = true)
     @Bean
     public UimaJsonCasFormatSupport uimaJsonCasFormatSupport(
