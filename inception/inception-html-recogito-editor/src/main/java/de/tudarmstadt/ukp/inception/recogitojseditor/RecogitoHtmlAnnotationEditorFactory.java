@@ -40,7 +40,7 @@ public class RecogitoHtmlAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        return "HTML (Recogito)";
+        return "HTML (RecogitoJS)";
     }
 
     @Override

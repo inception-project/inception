@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_external_editors]]
 = External Editors
 
 This section introduces the mechanism for registering external editors in INCEpTION. An external

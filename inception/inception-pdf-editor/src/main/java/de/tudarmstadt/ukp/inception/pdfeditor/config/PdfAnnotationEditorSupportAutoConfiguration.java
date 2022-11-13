@@ -34,22 +34,24 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFacto
 @Configuration
 public class PdfAnnotationEditorSupportAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
     public PdfAnnotationEditorFactory pdfAnnotationEditorFactory()
     {
         return new PdfAnnotationEditorFactory();
     }
 
-    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
-    @Bean
-    public PdfFormatSupport pdfFormatSupport()
-    {
-        return new PdfFormatSupport();
-    }
-
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
     public PdfDocumentIFrameViewFactory pdfDocumentIFrameViewFactory()
     {
         return new PdfDocumentIFrameViewFactory();
+    }
+
+    @ConditionalOnProperty(prefix = "format.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public PdfFormatSupport pdfFormatSupport()
+    {
+        return new PdfFormatSupport();
     }
 }
