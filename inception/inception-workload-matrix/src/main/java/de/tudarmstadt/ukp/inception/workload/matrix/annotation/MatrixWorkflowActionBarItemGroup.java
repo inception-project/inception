@@ -94,7 +94,7 @@ public class MatrixWorkflowActionBarItemGroup
         resetDocumentDialog
                 .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
         resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetDocumentDialog.text", this));
+                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
         resetDocumentDialog.setExpectedResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
         add(resetDocumentDialog);
