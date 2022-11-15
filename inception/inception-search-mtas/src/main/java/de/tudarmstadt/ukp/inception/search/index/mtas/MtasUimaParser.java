@@ -301,8 +301,20 @@ public class MtasUimaParser
     {
         int mtasId = aMtasId;
         int fsAddress = ICasUtil.getAddr(aAnnotation);
-        if (aAnnotation.getEnd() - aAnnotation.getBegin() > OVERSIZED_ANNOTATION_LIMIT) {
-            LOG.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
+
+        int length = aAnnotation.getEnd() - aAnnotation.getBegin();
+
+        if (length < 0) {
+            LOG.warn(
+                    "Skipping indexing of annotation with negative length: {} {} characters at [{}-{}]",
+                    aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
+                    aAnnotation.getBegin(), aAnnotation.getEnd());
+
+            return mtasId;
+        }
+
+        if (length > OVERSIZED_ANNOTATION_LIMIT) {
+            LOG.debug("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
                     aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
                     aAnnotation.getBegin(), aAnnotation.getEnd());
 
