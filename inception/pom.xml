@@ -3025,7 +3025,7 @@
             <artifactId>frontend-maven-plugin</artifactId>
             <configuration>
               <workingDirectory>src/main/ts</workingDirectory>
-              <installDirectory>../node</installDirectory>
+              <installDirectory>../nodejs</installDirectory>
               <nodeVersion>v${node.version}</nodeVersion>
             </configuration>
             <executions>
