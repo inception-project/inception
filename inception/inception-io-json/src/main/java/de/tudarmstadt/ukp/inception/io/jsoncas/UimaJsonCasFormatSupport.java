@@ -78,6 +78,12 @@ public class UimaJsonCasFormatSupport
     }
 
     @Override
+    public boolean isProneToInconsistencies()
+    {
+        return true;
+    }
+
+    @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException

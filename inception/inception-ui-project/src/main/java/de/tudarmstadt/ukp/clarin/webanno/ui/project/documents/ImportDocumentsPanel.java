@@ -47,10 +47,12 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -184,9 +186,17 @@ public class ImportDocumentsPanel
                 existingDocuments.add(fileName);
             }
             catch (Throwable e) {
-                error("Error while uploading document [" + fileName + "]: "
-                        + getRootCauseMessage(e));
-                LOG.error(fileName + ": " + e.getMessage(), e);
+                if (e.getCause() instanceof CasDoctorException) {
+                    var ex = (CasDoctorException) e.getCause();
+                    error("Document [" + fileName + "] contains inconsistent data.");
+                    ex.getDetails().stream().filter(msg -> msg.level == LogLevel.ERROR)
+                            .forEachOrdered(msg -> error(msg.message));
+                }
+                else {
+                    error("Error while uploading document [" + fileName + "]: "
+                            + getRootCauseMessage(e));
+                    LOG.error(fileName + ": " + e.getMessage(), e);
+                }
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
         }

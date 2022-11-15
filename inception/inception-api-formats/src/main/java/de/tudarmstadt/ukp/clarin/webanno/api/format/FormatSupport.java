@@ -84,6 +84,17 @@ public interface FormatSupport
     }
 
     /**
+     * @return whether the format is prone to inconsistencies. Formats that offer a much flexibility
+     *         to the user (e.g. CAS XMI) are also prone to letting the user import inconsistent
+     *         data. When importing documents from such formats, the CAS Doctor should be applied to
+     *         check for inconsistencies.
+     */
+    default boolean isProneToInconsistencies()
+    {
+        return true;
+    }
+
+    /**
      * @return format-specific CSS style-sheets that styleable editors should load.
      */
     default List<CssResourceReference> getCssStylesheets()

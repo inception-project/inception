@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectLogExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
@@ -44,10 +46,12 @@ public class DocumentImportExportServiceAutoConfiguration
             RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
-            DocumentImportExportServiceProperties aServiceProperties)
+            DocumentImportExportServiceProperties aServiceProperties,
+            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
     {
         return new DocumentImportExportServiceImpl(aRepositoryProperties, aFormats,
-                aCasStorageService, aAnnotationService, aServiceProperties);
+                aCasStorageService, aAnnotationService, aServiceProperties, aChecksRegistry,
+                aRepairsRegistry);
     }
 
     @Bean

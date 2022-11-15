@@ -61,6 +61,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -68,6 +69,8 @@ import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -91,6 +94,8 @@ public class DocumentImportExportServiceImplTest
 {
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
+    private @Mock ChecksRegistry checksRegistry;
+    private @Mock RepairsRegistry repairsRegistry;
 
     public @TempDir File testFolder;
 
@@ -120,7 +125,8 @@ public class DocumentImportExportServiceImplTest
                 null, null);
 
         sut = new DocumentImportExportServiceImpl(repositoryProperties,
-                List.of(new XmiFormatSupport()), storageService, schemaService, properties);
+                List.of(new XmiFormatSupport()), storageService, schemaService, properties,
+                checksRegistry, repairsRegistry);
         sut.onContextRefreshedEvent();
 
         doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
