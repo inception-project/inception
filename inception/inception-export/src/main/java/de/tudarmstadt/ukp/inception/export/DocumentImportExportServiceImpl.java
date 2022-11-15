@@ -132,7 +132,6 @@ public class DocumentImportExportServiceImpl
 
     private final TypeSystemDescription schemaTypeSystem;
 
-    @Autowired
     public DocumentImportExportServiceImpl(RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,

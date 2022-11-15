@@ -43,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -62,7 +63,11 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 
 @Transactional
-@DataJpaTest(showSql = false)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "debug.cas-doctor.force-release-behavior=true", //
+                "document-import.run-cas-doctor-on-import=OFF" })
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
@@ -70,6 +75,7 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
                 PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
                 AnnotationSchemaServiceAutoConfiguration.class, //
+                CasDoctorAutoConfiguration.class, //
                 DocumentServiceAutoConfiguration.class, //
                 CasStorageServiceAutoConfiguration.class, //
                 DocumentImportExportServiceAutoConfiguration.class, //
