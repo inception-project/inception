@@ -2973,7 +2973,7 @@
         <ts-build-phase>generate-resources</ts-build-phase>
         <ts-test-phase>generate-test-resources</ts-test-phase>
         <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
-        <ts-link-phase>install</ts-link-phase>
+        <ts-link-phase>package</ts-link-phase>
       </properties>
       <build>
         <plugins>
