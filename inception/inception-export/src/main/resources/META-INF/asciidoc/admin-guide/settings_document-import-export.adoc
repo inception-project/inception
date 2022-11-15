@@ -1,0 +1,49 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Document Im-/Export
+
+Control the importing and exporting of documents.
+
+The `run-cas-doctor-on-import` is by default set to `AUTO` which enables running the CAS Doctor on 
+certain file formats which give the user a lot of flexibility but also have great protential for
+importing inconsistent data. It can be set to `OFF` to disable all checks on import or to `ON` to
+check all formats, even the more rigid ones which give little opportunity for inconsistent data.
+
+.Document import/export settings in the `settings.properties` file
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `document-import.max-tokens`
+| Token-count limit for imported documents
+| `2000000`
+| `0` _(no limit)_
+
+| `document-import.max-sentences`
+| Sentence-count limit for imported documents
+| `20000`
+| `0` _(no limit)_
+
+| `document-import.run-cas-doctor-on-import` 
+| Whether to run the CAS Doctor on every imported document
+| `AUTO`
+| `OFF` (faster), `ON` (check all formats) 
+|===
+

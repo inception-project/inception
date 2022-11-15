@@ -53,6 +53,7 @@ import org.springframework.util.FileSystemUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -74,7 +75,9 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         properties = { //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + VersioningServiceImplTest.TEST_OUTPUT_FOLDER, //
-                "versioning.enabled=true" })
+                "versioning.enabled=true", //
+                "debug.cas-doctor.force-release-behavior=true", //
+                "document-import.run-cas-doctor-on-import=OFF" })
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model",
@@ -86,6 +89,7 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         UimaFormatsAutoConfiguration.class, //
+        CasDoctorAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //

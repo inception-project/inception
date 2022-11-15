@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -105,7 +106,9 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "repository.path=" + MtasDocumentIndexTest.TEST_OUTPUT_FOLDER })
+                "repository.path=" + MtasDocumentIndexTest.TEST_OUTPUT_FOLDER, //
+                "debug.cas-doctor.force-release-behavior=true", //
+                "document-import.run-cas-doctor-on-import=OFF" })
 // REC: Not particularly clear why Propagation.NEVER is required, but if it is not there, the test
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
@@ -114,6 +117,7 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         TextFormatsAutoConfiguration.class, //
         ConllFormatsAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
+        CasDoctorAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         ProjectInitializersAutoConfiguration.class, //

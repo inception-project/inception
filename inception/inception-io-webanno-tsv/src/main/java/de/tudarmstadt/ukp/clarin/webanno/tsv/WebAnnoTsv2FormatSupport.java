@@ -57,6 +57,12 @@ public class WebAnnoTsv2FormatSupport
     }
 
     @Override
+    public boolean isProneToInconsistencies()
+    {
+        return true;
+    }
+
+    @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
