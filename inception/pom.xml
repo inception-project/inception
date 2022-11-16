@@ -3014,6 +3014,7 @@
         <ts-test-phase>generate-test-resources</ts-test-phase>
         <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
         <ts-link-phase>package</ts-link-phase>
+        <ts-pack-phase>package</ts-pack-phase>
       </properties>
       <build>
         <plugins>
@@ -3144,6 +3145,16 @@
                   <arguments>link</arguments>
                 </configuration>
               </execution>
+              <execution>
+                <id>npm pack</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>${ts-pack-phase}</phase>
+                <configuration>
+                  <arguments>pack --pack-destination=../../../target</arguments>
+                </configuration>
+              </execution>
             </executions>
           </plugin>
           <plugin>
@@ -3162,6 +3173,22 @@
                       <directory>target/js</directory>
                     </resource>
                   </resources>
+                </configuration>
+              </execution>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>${ts-pack-phase}</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>${project.build.directory}/inception-project-${project.artifactId}-${semver}.tgz</file>
+                      <classifier>npm</classifier>
+                      <type>tgz</type>
+                    </artifact>
+                  </artifacts>
                 </configuration>
               </execution>
             </executions>
