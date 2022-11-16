@@ -2436,6 +2436,28 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>clean nodejs lib folder</id>
+            <phase>clean</phase>
+            <inherited>false</inherited>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>nodejs/lib</directory>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <annotationProcessorPaths>
@@ -2991,7 +3013,7 @@
         <ts-build-phase>generate-resources</ts-build-phase>
         <ts-test-phase>generate-test-resources</ts-test-phase>
         <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
-        <ts-link-phase>install</ts-link-phase>
+        <ts-link-phase>package</ts-link-phase>
         <ts-pack-phase>package</ts-pack-phase>
       </properties>
       <build>
