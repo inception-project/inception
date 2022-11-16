@@ -3152,7 +3152,7 @@
                 </goals>
                 <phase>${ts-pack-phase}</phase>
                 <configuration>
-                  <arguments>pack --pack-destination=${project.build.directory}</arguments>
+                  <arguments>pack --pack-destination=../../../target</arguments>
                 </configuration>
               </execution>
             </executions>
