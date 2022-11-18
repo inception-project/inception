@@ -114,6 +114,7 @@ public class DefaultPreferenceExporterTest
         throws IOException
     {
         DefaultProjectPreference defaultPreference = new DefaultProjectPreference();
+        defaultPreference.setProject(project);
         defaultPreference.setName(aKey);
         defaultPreference.setTraits(JSONUtil.toJsonString(aTraits));
         return defaultPreference;
