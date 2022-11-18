@@ -31,6 +31,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -114,5 +116,13 @@ public class DefaultProjectPreference
     public int hashCode()
     {
         return Objects.hash(project, name);
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("id", id)
+                .append("project", project).append("name", name).append("traits", traits)
+                .toString();
     }
 }
