@@ -40,26 +40,24 @@
             </div>
           </div>
         </div>
-        <div class="card-footer small">
-          <div style="display: table;">
-            <div style="display: table-cell; width: 100%;">
-              <input wicket:id="newRole" style="width: 100%;" placeholder="Enter role name..."></input>
-            </div>
-            <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
-              <button wicket:id="add" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus"></i>&nbsp;
-                Add
+        <div class="card-footer small flex-h-container">
+          <div class="flex-content">
+            <input wicket:id="newRole" style="width: 100%;" placeholder="Enter role name..."></input>
+          </div>
+          <div class="text-nowrap">
+            <button wicket:id="add" class="btn btn-sm btn-primary ms-3">
+              <i class="fas fa-plus"></i>&nbsp;
+              Add
+            </button>
+            <div class="btn-group ms-3" role="group" wicket:enclosure="del">
+              <button wicket:id="del" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i>&nbsp;
+                Del
               </button>
-              <div class="btn-group" role="group">
-                <button wicket:id="del" class="btn btn-sm btn-danger">
-                  <i class="fas fa-trash"></i>&nbsp;
-                  Del
-                </button>
-                <button wicket:id="set" class="btn btn-sm btn-secondary">
-                  <i class="fas fa-check"></i>&nbsp;
-                  Set
-                </button>
-              </div>
+              <button wicket:id="set" class="btn btn-sm btn-secondary">
+                <i class="fas fa-check"></i>&nbsp;
+                Set
+              </button>
             </div>
           </div>
         </div>

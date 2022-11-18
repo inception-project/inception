@@ -34,10 +34,10 @@ import org.apache.wicket.model.IModel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
@@ -66,10 +66,8 @@ public class AnnotatorStateCell
 
         var state = new WebMarkupContainer("state");
 
-        Label stateLabel = new Label("stateSymbol", columnModel //
-                .map(AnnotationDocumentState::symbol) //
-                .orElse(NEW.symbol()));
-        stateLabel.setEscapeModelStrings(false);
+        Label stateLabel = new SymbolLabel("stateSymbol",
+                columnModel.map(AnnotationDocument::getState).orElse(NEW));
 
         state.add(new LambdaAjaxEventBehavior("click",
                 _t -> actionClickCell(rowModel, stateLabel, _t)).setPreventDefault(true));

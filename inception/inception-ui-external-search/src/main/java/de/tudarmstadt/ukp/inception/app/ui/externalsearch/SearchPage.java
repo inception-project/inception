@@ -221,8 +221,9 @@ public class SearchPage
                 StringBuilder sb = new StringBuilder();
                 sb.append("<ul>");
                 for (ExternalSearchHighlight h : result.getHighlights()) {
-                    sb.append("<li>").append(Utilities.cleanHighlight(h.getHighlight()))
-                            .append("</li>");
+                    sb.append("<li>");
+                    sb.append(Utilities.cleanHighlight(h.getHighlight()));
+                    sb.append("</li>");
                 }
                 sb.append("</ul>");
                 highlight = sb.toString();

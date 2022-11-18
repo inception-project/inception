@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
 
 /**
  * Variables for the different states of a {@link SourceDocument} workflow.
  */
 public enum SourceDocumentState
-    implements PersistentEnum
+    implements PersistentEnum, HasSymbol
 {
     /**
      * No annotation document has been created for this document
@@ -86,6 +87,7 @@ public enum SourceDocumentState
         return color;
     }
 
+    @Override
     public String symbol()
     {
         return symbol;

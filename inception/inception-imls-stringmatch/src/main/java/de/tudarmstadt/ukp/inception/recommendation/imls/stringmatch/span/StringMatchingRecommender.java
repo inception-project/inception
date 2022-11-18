@@ -137,6 +137,7 @@ public class StringMatchingRecommender
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
+            aContext.info("Loaded [%d] entries from gazeteer", aData.size());
         }
 
         aContext.put(KEY_MODEL, dict);
@@ -157,7 +158,9 @@ public class StringMatchingRecommender
                     pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
-                    log.info(
+                    aContext.error("Unable to load gazeteer [%s]: %s", gaz.getName(),
+                            e.getMessage());
+                    log.error(
                             "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
                             gaz.getName(), gaz.getRecommender().getName(),
                             gaz.getRecommender().getId(),

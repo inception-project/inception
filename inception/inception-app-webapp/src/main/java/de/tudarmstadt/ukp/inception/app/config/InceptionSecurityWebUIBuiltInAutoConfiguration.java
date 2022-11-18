@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,6 +35,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
+@ConditionalOnWebApplication
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {

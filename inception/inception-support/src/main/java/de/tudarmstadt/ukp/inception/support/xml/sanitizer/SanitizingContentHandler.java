@@ -18,15 +18,23 @@
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.getQName;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -37,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
 public class SanitizingContentHandler
     extends ContentHandlerAdapter
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private static final String MASKED = "MASKED-";
 
     private final PolicyCollection policies;
@@ -44,6 +54,9 @@ public class SanitizingContentHandler
     private final Stack<Frame> stack;
 
     private char filteredCharacter = ' ';
+
+    private Set<QName> maskedElements = new HashSet<>();
+    private Map<QName, Set<QName>> maskedAttributes = new HashMap<>();
 
     public SanitizingContentHandler(ContentHandler aDelegate, PolicyCollection aPolicies)
     {
@@ -81,7 +94,7 @@ public class SanitizingContentHandler
         QName element = aElement;
 
         if (aAction == ElementAction.DROP && policies.isDebug()) {
-            element = mask(element);
+            element = maskElement(element);
         }
 
         stack.push(new Frame(element, aPolicy, aAction));
@@ -99,6 +112,18 @@ public class SanitizingContentHandler
         if (frame.action == ElementAction.PASS || policies.isDebug()) {
             var qName = getQName(frame.element);
             super.endElement(frame.element.getNamespaceURI(), frame.element.getLocalPart(), qName);
+        }
+
+        if (stack.isEmpty()) {
+            if (policies.isDebug() && log.isDebugEnabled()) {
+                log.debug("Masked elements: {}", maskedElements.stream()
+                        .sorted(comparing(QName::getLocalPart)).collect(toList()));
+                for (var element : maskedAttributes.keySet().stream()
+                        .sorted(comparing(QName::getLocalPart)).collect(toList())) {
+                    log.debug("Masked attributes on {}: {}", element, maskedAttributes.get(element)
+                            .stream().sorted(comparing(QName::getLocalPart)).collect(toList()));
+                }
+            }
         }
     }
 
@@ -166,13 +191,17 @@ public class SanitizingContentHandler
         var action = policies.forAttribute(aElement, attribute, type, value)
                 .orElse(policies.getDefaultAttributeAction());
 
+        if (qName.startsWith("xmlns:")) {
+            action = AttributeAction.PASS;
+        }
+
         switch (action) {
         case PASS:
             aSanitizedAttributes.addAttribute(uri, localName, qName, type, value);
             break;
         case DROP:
             if (policies.isDebug()) {
-                attribute = mask(attribute);
+                attribute = maskAttribute(aElement, attribute);
                 aSanitizedAttributes.addAttribute(attribute.getNamespaceURI(),
                         attribute.getLocalPart(), getQName(attribute), type, value);
             }
@@ -202,6 +231,18 @@ public class SanitizingContentHandler
         }
     }
 
+    private QName maskElement(QName aElement)
+    {
+        maskedElements.add(aElement);
+        return mask(aElement);
+    }
+
+    private QName maskAttribute(QName aElement, QName aAttribute)
+    {
+        maskedAttributes.computeIfAbsent(aElement, k -> new HashSet<>()).add(aAttribute);
+        return mask(aAttribute);
+    }
+
     private QName mask(QName element)
     {
         return new QName(element.getNamespaceURI(), MASKED + element.getLocalPart(),
@@ -214,9 +255,11 @@ public class SanitizingContentHandler
         String localName = aLocalName;
 
         // Workaround bug: localname may contain prefix
-        var li = localName.indexOf(':');
-        if (li >= 0) {
-            localName = localName.substring(li + 1);
+        if (localName != null) {
+            var li = localName.indexOf(':');
+            if (li >= 0) {
+                localName = localName.substring(li + 1);
+            }
         }
 
         var qi = aQName.indexOf(':');

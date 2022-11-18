@@ -41,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -69,6 +71,8 @@ public class AnnotationDocumentsExporterTest
 
     private @Mock DocumentService documentService;
     private @Mock AnnotationSchemaService schemaService;
+    private @Mock ChecksRegistry checksRegistry;
+    private @Mock RepairsRegistry repairsRegistry;
 
     private Project project;
     private File workFolder;
@@ -96,7 +100,8 @@ public class AnnotationDocumentsExporterTest
                 null, schemaService);
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
+                asList(new XmiFormatSupport()), casStorageService, schemaService, properties,
+                checksRegistry, repairsRegistry);
 
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);

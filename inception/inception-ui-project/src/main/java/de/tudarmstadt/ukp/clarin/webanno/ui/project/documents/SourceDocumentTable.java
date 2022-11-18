@@ -271,9 +271,8 @@ public class SourceDocumentTable
         confirmationDialog
                 .setTitleModel(new StringResourceModel("DeleteDocumentDialog.title", this));
         confirmationDialog
-                .setChallengeModel(new StringResourceModel("DeleteDocumentDialog.text", this)
-                        .setParameters(documentNameModel));
-        confirmationDialog.setResponseModel(documentNameModel);
+                .setMessageModel(new StringResourceModel("DeleteDocumentDialog.text", this));
+        confirmationDialog.setExpectedResponseModel(documentNameModel);
         confirmationDialog
                 .setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
         confirmationDialog.show(aTarget);
@@ -295,9 +294,9 @@ public class SourceDocumentTable
         confirmationDialog
                 .setTitleModel(new StringResourceModel("BulkDeleteDocumentDialog.title", this));
         confirmationDialog
-                .setChallengeModel(new StringResourceModel("BulkDeleteDocumentDialog.text", this)
-                        .setParameters(selectedDocuments.size(), projectNameModel));
-        confirmationDialog.setResponseModel(projectNameModel);
+                .setMessageModel(new StringResourceModel("BulkDeleteDocumentDialog.text", this)
+                        .setParameters(selectedDocuments.size()));
+        confirmationDialog.setExpectedResponseModel(projectNameModel);
         confirmationDialog
                 .setConfirmAction($ -> actionConfirmDeleteDocuments($, selectedDocuments));
         confirmationDialog.show(aTarget);

@@ -69,6 +69,12 @@ public class XmiXml11FormatSupport
     }
 
     @Override
+    public boolean isProneToInconsistencies()
+    {
+        return true;
+    }
+
+    @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {

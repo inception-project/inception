@@ -64,13 +64,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
@@ -149,18 +149,19 @@ public abstract class BratSuggestionVisualizer
 
         add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
 
-        add(stateChangeConfirmationDialog = new ConfirmationDialog("stateChangeConfirmationDialog",
-                new StringResourceModel("StateChangeConfirmationDialog.title", this, null),
-                new StringResourceModel("StateChangeConfirmationDialog.text", this, null)));
+        stateChangeConfirmationDialog = new ConfirmationDialog("stateChangeConfirmationDialog");
+        stateChangeConfirmationDialog.setTitleModel(
+                new StringResourceModel("StateChangeConfirmationDialog.title", this, null));
+        stateChangeConfirmationDialog.setContentModel(
+                new StringResourceModel("StateChangeConfirmationDialog.text", this, null));
         stateChangeConfirmationDialog.setConfirmAction(this::actionToggleAnnotationDocumentState);
+        add(stateChangeConfirmationDialog);
 
         var annDoc = LoadableDetachableModel.of(this::getAnnotationDocument);
 
         var stateToggle = new LambdaAjaxLink("stateToggle", stateChangeConfirmationDialog::show);
         stateToggle.setOutputMarkupId(true);
-        stateToggle.add(new Label("state",
-                annDoc.map(AnnotationDocument::getState).map(AnnotationDocumentState::symbol))
-                        .setEscapeModelStrings(false));
+        stateToggle.add(new SymbolLabel("state", annDoc.map(AnnotationDocument::getState)));
         add(stateToggle);
 
         Icon commentSymbol = new Icon("commentSymbol", FontAwesome5IconType.comment_s);

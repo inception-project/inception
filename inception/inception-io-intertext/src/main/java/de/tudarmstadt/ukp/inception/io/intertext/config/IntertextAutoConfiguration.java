@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.io.intertext.IntertextFormatSupport;
 
 @Configuration
-@ConditionalOnProperty(prefix = "ui.intertext", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "format.intertext", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class IntertextAutoConfiguration
 {
     @Bean

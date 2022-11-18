@@ -201,6 +201,7 @@ public class MergeDialog
             queue(new Form<>("form", aModel));
             queue(new Label("title", titleModel));
             queue(new Label("challenge", challengeModel).setEscapeModelStrings(false));
+            queue(new Label("expectedResponse", expectedResponseModel));
             queue(new Label("feedback"));
             queue(new TextField<>("response"));
             queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));

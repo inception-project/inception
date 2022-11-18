@@ -23,8 +23,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DocumentImportExportServicePropertiesImpl
     implements DocumentImportExportServiceProperties
 {
+    private CasDoctorOnImportPolicy runCasDoctorOnImport = CasDoctorOnImportPolicy.AUTO;
     private int maxTokens = 2_000_000;
     private int maxSentences = 20_000;
+
+    @Override
+    public CasDoctorOnImportPolicy getRunCasDoctorOnImport()
+    {
+        return runCasDoctorOnImport;
+    }
+
+    public void setRunCasDoctorOnImport(CasDoctorOnImportPolicy aRunCasDoctorOnImport)
+    {
+        runCasDoctorOnImport = aRunCasDoctorOnImport;
+    }
 
     @Override
     public int getMaxTokens()

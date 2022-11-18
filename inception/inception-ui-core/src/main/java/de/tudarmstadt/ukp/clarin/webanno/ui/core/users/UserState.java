@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
 
 public enum UserState
+    implements HasSymbol
 {
     ENABLED("<i class=\"fas fa-user\"></i>"), //
     DEACTIVATED("<i class=\"fas fa-user-lock\"></i>");
@@ -41,6 +43,7 @@ public enum UserState
         }
     }
 
+    @Override
     public String symbol()
     {
         return symbol;

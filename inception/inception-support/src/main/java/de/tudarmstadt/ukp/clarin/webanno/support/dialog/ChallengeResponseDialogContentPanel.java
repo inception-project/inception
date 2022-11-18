@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
@@ -42,12 +43,13 @@ public class ChallengeResponseDialogContentPanel
 
     private Form<State> form;
     private Label title;
-    private Label challenge;
+    private Label message;
+    private Label expectedResponse;
     private TextField<String> responseField;
     private LambdaAjaxLink cancel;
 
-    private IModel<String> titleModel;
-    private IModel<String> challengeModel;
+    private StringResourceModel titleModel;
+    private StringResourceModel messageModel;
     private IModel<String> expectedResponseModel;
 
     private AjaxCallback confirmAction;
@@ -58,23 +60,30 @@ public class ChallengeResponseDialogContentPanel
         super(aId);
 
         form = new Form<>("form", CompoundPropertyModel.of(new State()));
+
         title = new Label("title", titleModel);
-        challenge = new Label("challenge");
-        challenge.setEscapeModelStrings(false);
+
+        message = new Label("message", messageModel);
+        message.setEscapeModelStrings(false);
+
+        expectedResponse = new Label("expectedResponse", expectedResponseModel);
+
         responseField = new TextField<>("response");
+
         cancel = new LambdaAjaxLink("cancel", this::onCancelInternal);
         cancel.setOutputMarkupId(true);
 
         queue(new Label("feedback"));
         queue(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
         queue(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
-        queue(title, challenge, responseField, cancel, form);
+        queue(title, message, expectedResponse, responseField, cancel, form);
     }
 
     public void onShow(AjaxRequestTarget aTarget)
     {
         title.setDefaultModel(titleModel);
-        challenge.setDefaultModel(challengeModel);
+        message.setDefaultModel(messageModel);
+        expectedResponse.setDefaultModel(expectedResponseModel);
 
         State state = new State();
         state.feedback = null;
@@ -133,24 +142,24 @@ public class ChallengeResponseDialogContentPanel
         findParent(ModalDialog.class).close(aTarget);
     }
 
-    public IModel<String> getTitleModel()
+    public StringResourceModel getTitleModel()
     {
         return titleModel;
     }
 
-    public void setTitleModel(IModel<String> aTitleModel)
+    public void setTitleModel(StringResourceModel aTitleModel)
     {
         titleModel = aTitleModel;
     }
 
-    public IModel<String> getChallengetModel()
+    public void setMessageModel(StringResourceModel aMessageModel)
     {
-        return challengeModel;
+        messageModel = aMessageModel;
     }
 
-    public void setChallengeModel(IModel<String> aChallengeModel)
+    public StringResourceModel getMessageModel()
     {
-        challengeModel = aChallengeModel;
+        return messageModel;
     }
 
     public void setExpectedResponseModel(IModel<String> aExpectedResponseModel)

@@ -23,11 +23,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.MetaDataHeaderItem;
+import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -43,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.csrf.CsrfToken;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
@@ -163,6 +169,24 @@ public abstract class ApplicationPageBase
             return true;
         });
         add(feedbackPanel);
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // Actually, this is pretty pointless because we disable Spring Security CSRF for the
+        // Wicket URLs...
+        var containerRequest = RequestCycle.get().getRequest().getContainerRequest();
+        if (containerRequest instanceof HttpServletRequest) {
+            var httpRequest = (HttpServletRequest) containerRequest;
+            var csrfToken = (CsrfToken) httpRequest.getAttribute(CsrfToken.class.getName());
+            if (csrfToken != null) {
+                aResponse.render(new PriorityHeaderItem(
+                        MetaDataHeaderItem.forMetaTag("csrftoken", csrfToken.getToken())));
+            }
+        }
     }
 
     public FeedbackPanel getFeedbackPanel()

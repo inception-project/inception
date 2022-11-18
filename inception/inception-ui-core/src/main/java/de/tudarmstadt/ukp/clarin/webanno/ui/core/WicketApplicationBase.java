@@ -22,6 +22,22 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
+import static org.apache.wicket.csp.CSPDirective.BASE_URI;
+import static org.apache.wicket.csp.CSPDirective.CHILD_SRC;
+import static org.apache.wicket.csp.CSPDirective.CONNECT_SRC;
+import static org.apache.wicket.csp.CSPDirective.DEFAULT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FONT_SRC;
+import static org.apache.wicket.csp.CSPDirective.FRAME_SRC;
+import static org.apache.wicket.csp.CSPDirective.IMG_SRC;
+import static org.apache.wicket.csp.CSPDirective.MANIFEST_SRC;
+import static org.apache.wicket.csp.CSPDirective.SCRIPT_SRC;
+import static org.apache.wicket.csp.CSPDirective.STYLE_SRC;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONCE;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.NONE;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.STRICT_DYNAMIC;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.UNSAFE_EVAL;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.UNSAFE_INLINE;
 import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
 import java.io.File;
@@ -36,9 +52,11 @@ import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
+import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.IPackageResourceGuard;
 import org.apache.wicket.markup.html.SecurePackageResourceGuard;
+import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -53,6 +71,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+import com.googlecode.wicket.kendo.ui.form.TextField;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
@@ -60,6 +82,7 @@ import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.kendo.KendoFixDisabledInputComponentStylingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
@@ -90,12 +113,23 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
-        getCspSettings().blocking().disabled();
+        getCspSettings().blocking().clear() //
+                .add(DEFAULT_SRC, NONE) //
+                .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
+                // .add(STYLE_SRC, NONCE) //
+                .add(STYLE_SRC, SELF, UNSAFE_INLINE) //
+                .add(IMG_SRC, SELF, new FixedCSPValue("data:")) //
+                .add(CONNECT_SRC, SELF) //
+                .add(FONT_SRC, SELF) //
+                .add(MANIFEST_SRC, SELF) //
+                .add(CHILD_SRC, SELF) //
+                .add(FRAME_SRC, SELF) //
+                .add(BASE_URI, SELF); //
 
-        // if (DEVELOPMENT == getConfigurationType()) {
-        // getCspSettings().reporting().strict().reportBack();
-        // getCspSettings().reporting().unsafeInline().reportBack();
-        // }
+        // CSRF
+        getRequestCycleListeners().add(new ResourceIsolationRequestCycleListener());
+
+        installSpringSecurityContextPropagationRequestCycleListener();
 
         // Enforce COEP while inheriting any exemptions that might already have been set e.g. via
         // WicketApplicationInitConfiguration beans
@@ -114,9 +148,8 @@ public abstract class WicketApplicationBase
     {
         super.validateInit();
 
+        // COEP - Do this late so we can override the default set by Wicket
         installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener();
-
-        installSpringSecurityContextPropagationRequestCycleListener();
     }
 
     private void installSpringSecurityContextPropagationRequestCycleListener()
@@ -199,6 +232,8 @@ public abstract class WicketApplicationBase
 
         addKendoResourcesToAllPages();
 
+        addKendoComponentsDisabledLookFix();
+
         addJQueryUIResourcesToAllPages();
 
         addFontAwesomeToAllPages();
@@ -250,6 +285,17 @@ public abstract class WicketApplicationBase
             if (component instanceof Page) {
                 component.add(new KendoResourceBehavior());
                 component.add(new WicketJQueryFocusPatchBehavior());
+            }
+        });
+    }
+
+    protected void addKendoComponentsDisabledLookFix()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof ComboBox || component instanceof AutoCompleteTextField
+                    || component instanceof TextField || component instanceof MultiSelect
+                    || component instanceof com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect) {
+                component.add(new KendoFixDisabledInputComponentStylingBehavior());
             }
         });
     }

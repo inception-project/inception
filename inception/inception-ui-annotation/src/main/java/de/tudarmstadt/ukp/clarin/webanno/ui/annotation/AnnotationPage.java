@@ -472,7 +472,7 @@ public class AnnotationPage
         rightSidebar.setOutputMarkupPlaceholderTag(true);
 
         rightSidebar.add(detailEditor);
-        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getSelectableLayers)
+        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getAnnotationLayers)
                 .map(List::isEmpty).map(b -> !b)));
         return rightSidebar;
     }

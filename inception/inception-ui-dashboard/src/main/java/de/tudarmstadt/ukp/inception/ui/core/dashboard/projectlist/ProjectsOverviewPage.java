@@ -38,7 +38,6 @@ import static org.apache.wicket.authroles.authorization.strategies.role.metadata
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")
@@ -183,9 +183,10 @@ public class ProjectsOverviewPage
         nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
         queue(nameFilter);
 
-        queue(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                new StringResourceModel("leaveDialog.title", this),
-                new StringResourceModel("leaveDialog.text", this)));
+        confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE);
+        confirmLeaveDialog.setTitleModel(new StringResourceModel("leaveDialog.title", this));
+        confirmLeaveDialog.setContentModel(new StringResourceModel("leaveDialog.text", this));
+        queue(confirmLeaveDialog);
     }
 
     @Override
@@ -380,8 +381,8 @@ public class ProjectsOverviewPage
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                aItem.add(new Label(MID_DESCRIPTION, aItem.getModelObject().getShortDescription())
-                        .setEscapeModelStrings(false));
+                aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
+                        aItem.getModelObject().getShortDescription()));
 
                 Label createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
@@ -453,7 +454,6 @@ public class ProjectsOverviewPage
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
         var levels = aProjectEntry.getLevels();
-        Collections.reverse(levels);
         return new ListView<PermissionLevel>(MID_ROLE, levels)
         {
             private static final long serialVersionUID = -96472758076828409L;
