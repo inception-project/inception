@@ -33,6 +33,7 @@ import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -116,15 +117,29 @@ public class SanitizingContentHandler
 
         if (stack.isEmpty()) {
             if (policies.isDebug() && log.isDebugEnabled()) {
-                log.debug("Masked elements: {}", maskedElements.stream()
-                        .sorted(comparing(QName::getLocalPart)).collect(toList()));
+                log.debug("Masked elements: {}",
+                        maskedElements.stream().sorted(comparing(QName::getLocalPart)) //
+                                .map(this::toPrefixedForm) //
+                                .collect(toList()));
                 for (var element : maskedAttributes.keySet().stream()
                         .sorted(comparing(QName::getLocalPart)).collect(toList())) {
-                    log.debug("Masked attributes on {}: {}", element, maskedAttributes.get(element)
-                            .stream().sorted(comparing(QName::getLocalPart)).collect(toList()));
+                    log.debug("Masked attributes on {}: {}", element,
+                            maskedAttributes.get(element).stream()
+                                    .sorted(comparing(QName::getLocalPart)) //
+                                    .map(this::toPrefixedForm) //
+                                    .collect(toList()));
                 }
             }
         }
+    }
+
+    private String toPrefixedForm(QName aQName)
+    {
+        if (Strings.isEmpty(aQName.getPrefix())) {
+            return aQName.getLocalPart();
+        }
+
+        return aQName.getPrefix() + ":" + aQName.getLocalPart();
     }
 
     @Override
@@ -191,7 +206,7 @@ public class SanitizingContentHandler
         var action = policies.forAttribute(aElement, attribute, type, value)
                 .orElse(policies.getDefaultAttributeAction());
 
-        if (qName.startsWith("xmlns:")) {
+        if ("xmlns".equals(attribute.getPrefix())) {
             action = AttributeAction.PASS;
         }
 
