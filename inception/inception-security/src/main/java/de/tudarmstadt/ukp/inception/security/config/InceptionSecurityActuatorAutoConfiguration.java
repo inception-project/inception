@@ -35,7 +35,6 @@ public class InceptionSecurityActuatorAutoConfiguration
     public SecurityFilterChain actuatorFilterChain(HttpSecurity aHttp) throws Exception
     {
         aHttp.antMatcher(BASE_URL + "/**");
-        aHttp.csrf().disable();
         aHttp.authorizeRequests() //
                 .antMatchers(BASE_URL + "/health").permitAll() //
                 .anyRequest().denyAll();
