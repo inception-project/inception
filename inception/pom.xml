@@ -75,11 +75,12 @@
 
     <pdfbox.version>2.0.26</pdfbox.version>
 
-    <spring.version>5.3.23</spring.version>
+    <spring.version>5.3.24</spring.version>
     <spring.boot.version>2.7.5</spring.boot.version>
+    <spring.data.version>2.7.6</spring.data.version>
     <spring.security.version>5.7.5</spring.security.version>
-    <springdoc.version>1.6.12</springdoc.version>
-    <swagger.version>2.2.6</swagger.version>
+    <springdoc.version>1.6.13</springdoc.version>
+    <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
@@ -87,7 +88,7 @@
 
     <groovy.version>3.0.13</groovy.version>
 
-    <tomcat.version>9.0.68</tomcat.version>
+    <tomcat.version>9.0.69</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.7</mariadb.driver.version>
@@ -138,7 +139,7 @@
 
     <npm-install-command>ci</npm-install-command>
 
-    <node.version>16.17.1</node.version>
+    <node.version>16.18.1</node.version>
     <bootstrap.version>5.2.2</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
@@ -1266,7 +1267,7 @@
       <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino-runtime</artifactId>
-        <version>1.7.12</version>
+        <version>1.7.14</version>
       </dependency>
 
       <dependency>
@@ -1524,6 +1525,11 @@
       </dependency>
       <dependency>
         <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-jcache</artifactId>
+        <version>${hibernate.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hibernate</groupId>
         <artifactId>hibernate-validator</artifactId>
         <version>${hibernate.validator.version}</version>
       </dependency>
@@ -1538,6 +1544,11 @@
         <version>${hibernate.validator.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.ehcache</groupId>
+        <artifactId>ehcache</artifactId>
+        <version>3.10.8</version>
+      </dependency>
+      <dependency>
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>2.0.1.Final</version>
@@ -1550,12 +1561,12 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.29.0-GA</version>
+        <version>3.29.2-GA</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.18</version>
+        <version>1.12.19</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1566,75 +1577,24 @@
       <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-core</artifactId>
+        <artifactId>spring-framework-bom</artifactId>
         <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-web</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-webmvc</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-orm</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-oxm</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-tx</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-jdbc</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-beans</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-aop</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-expression</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-test</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-aspects</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context-support</artifactId>
-        <version>${spring.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
+      <!-- SPRING DATA -->
+      <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-jpa</artifactId>
+        <version>${spring.data.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-commons</artifactId>
+        <version>${spring.data.version}</version>
+      </dependency>
+      
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>
@@ -2031,7 +1991,7 @@
       <dependency>
         <groupId>com.github.jsonld-java</groupId>
         <artifactId>jsonld-java</artifactId>
-        <version>0.13.2</version>
+        <version>0.13.4</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.httpcomponents</groupId>
