@@ -108,13 +108,13 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm build:recogito</id>
+            <id>npm build</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>${ts-build-phase}</phase>
             <configuration>
-              <arguments>run build:recogito</arguments>
+              <arguments>run build</arguments>
             </configuration>
           </execution>
         </executions>

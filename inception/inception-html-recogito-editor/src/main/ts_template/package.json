@@ -9,13 +9,14 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build:recogito": "node build.mjs"
+    "build": "node build.mjs"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@recogito/recogito-js": "${recogitojs.version}",
     "@recogito/recogito-connections": "${recogito-connections.version}",
-    "@recogito/recogito-client-core": "${recogito-client-core.version}"
+    "@recogito/recogito-client-core": "${recogito-client-core.version}",
+    "color-convert": "${color-convert.version}"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",

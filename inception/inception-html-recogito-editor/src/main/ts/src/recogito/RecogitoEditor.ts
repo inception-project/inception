@@ -18,17 +18,13 @@
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
 import Connections from '@recogito/recogito-connections/src'
-import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
+import { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
-import './RecogitoEditor.css'
-
-interface WebAnnotation {
-  id: string;
-  type: string;
-  motivation?: string;
-  target: WebAnnotationTextPositionSelector | Array<WebAnnotationAnnotationTarget>;
-  body: WebAnnotationBodyItem | Array<WebAnnotationBodyItem>;
-}
+import './RecogitoEditor.scss'
+import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
+import { calculateStartOffset, offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
+import convert from 'color-convert'
 
 interface WebAnnotationBodyItem {
   type: string;
@@ -47,13 +43,25 @@ interface WebAnnotationTextPositionSelector {
   }
 }
 
+interface WebAnnotation {
+  id: string;
+  type: string;
+  motivation?: string;
+  target: WebAnnotationTextPositionSelector | Array<WebAnnotationAnnotationTarget>;
+  body: WebAnnotationBodyItem | Array<WebAnnotationBodyItem>;
+}
+
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax
   private recogito: Recogito
   private connections: any
+  private root: Element
+  private annotations: WebAnnotation[]
+  private tracker: ViewportTracker
 
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
+    this.root = element
 
     this.recogito = new Recogito({
       content: element,
@@ -76,9 +84,46 @@ export class RecogitoEditor implements AnnotationEditor {
     // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
     // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
 
-    this.loadAnnotations()
+    this.installColorRenderingPatch(this.recogito)
+
+    this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
   }
 
+  /**
+   * Recogito does not support rendering annotations with a custom color. This is a workaround.
+   */
+  private installColorRenderingPatch (recogito: Recogito) {
+    const _setAnnotations = recogito.setAnnotations
+    recogito.setAnnotations = annotations => {
+      // Set annotations on instance first
+      return _setAnnotations(annotations).then(() => {
+        for (const annotation of annotations) {
+          for (const element of this.root.querySelectorAll(`[data-id="${annotation.id}"]`)) {
+            const c = convert.hex.rgb(annotation.body.color)
+
+            // Span annotation
+            if (element instanceof HTMLElement) {
+              element.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.2)`
+              element.style.borderBottomColor = annotation.body.color
+            }
+
+            // Relation annotation
+            if (element instanceof SVGElement) {
+              element.querySelectorAll('.r6o-connections-edge-path-inner').forEach(path => {
+                if (path instanceof SVGElement) {
+                  path.style.stroke = annotation.body.color
+                }
+              })
+            }
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * Prevent right click from triggering a selection event.
+   */
   private cancelRightClick (e: Event): void {
     if (e instanceof MouseEvent) {
       if (e.button === 2) {
@@ -109,52 +154,87 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public loadAnnotations (): void {
-    this.ajax.loadAnnotations().then((doc: CompactAnnotatedText) => {
-      if (!this.recogito) {
-        console.error('It seems RecogitoJS has not yet been initialized', this)
+    this.loadView(this.root, this.tracker?.currentRange).then(() => this.renderDocument())
+  }
+
+  public loadView (view?: Element, range? : [number, number]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!view || !range) {
+        resolve()
         return
       }
 
-      const webAnnotations: Array<WebAnnotation> = []
+      console.log(`loadView(${range})`)
 
-      if (doc.spans) {
-        webAnnotations.push(...this.compactSpansToWebAnnotation(doc.spans))
+      const options: DiamLoadAnnotationsOptions = {
+        range,
+        includeText: false
       }
 
-      if (doc.relations) {
-        webAnnotations.push(...this.compactRelationsToWebAnnotation(doc.relations))
-      }
-
-      console.info(`Loaded ${webAnnotations.length} annotations from server`)
-
-      // Workaround for https://github.com/recogito/recogito-connections/issues/16
-      for (const connection of this.connections.canvas.connections) {
-        connection.remove()
-      }
-      this.connections.canvas.connections = []
-
-      this.recogito.setAnnotations(webAnnotations)
+      this.ajax.loadAnnotations(options)
+        .then((doc: CompactAnnotatedText) => this.convertAnnotations(doc, view || this.root))
+        .then(() => resolve())
     })
   }
 
-  private compactSpansToWebAnnotation (spans: Array<CompactSpan>): Array<WebAnnotation> {
+  private renderDocument (): void {
+    console.log('renderDocument')
+
+    if (!this.recogito) {
+      console.error('It seems RecogitoJS has not yet been initialized', this)
+      return
+    }
+
+    console.info(`Rendering ${this.annotations.length} annotations`)
+
+    // Workaround for https://github.com/recogito/recogito-connections/issues/16
+    for (const connection of this.connections.canvas.connections) {
+      connection.remove()
+    }
+    this.connections.canvas.connections = []
+
+    this.recogito.setAnnotations(this.annotations)
+  }
+
+  private convertAnnotations (doc: CompactAnnotatedText, view: Element) {
+    const webAnnotations: Array<WebAnnotation> = []
+
+    if (doc.spans) {
+      webAnnotations.push(...this.compactSpansToWebAnnotation(doc))
+    }
+
+    if (doc.relations) {
+      webAnnotations.push(...this.compactRelationsToWebAnnotation(doc))
+    }
+
+    this.annotations = webAnnotations
+
+    console.info(`Loaded ${webAnnotations.length} annotations from server (${doc.spans?.length || 0} spans and ${doc.relations?.length || 0} relations)`)
+  }
+
+  private compactSpansToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
+    const offset = doc.window[0]
+    const spans = doc.spans as Array<CompactSpan>
     return spans.map(span => {
+      // console.log(`From ${span[1][0][0]}-${span[1][0][1]} +${offset}`, this.root)
       return {
         id: '#' + span[0],
         type: 'Annotation',
         body: {
           type: 'TextualBody',
           purpose: 'tagging',
+          color: span[2]?.c || '#000000',
           value: span[2]?.l || ''
         },
         target: {
-          selector: { type: 'TextPositionSelector', start: span[1][0][0], end: span[1][0][1] }
+          selector: { type: 'TextPositionSelector', start: offset + span[1][0][0], end: offset + span[1][0][1] }
         }
       }
     })
   }
 
-  private compactRelationsToWebAnnotation (relations: Array<CompactRelation>): Array<WebAnnotation> {
+  private compactRelationsToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
+    const relations = doc.relations as Array<CompactRelation>
     return relations.map(relation => {
       return {
         id: '#' + relation[0],
@@ -162,6 +242,7 @@ export class RecogitoEditor implements AnnotationEditor {
         body: {
           type: 'TextualBody',
           purpose: 'tagging',
+          color: relation[2]?.c || '#000000',
           value: relation[2]?.l || ''
         },
         motivation: 'linking',
@@ -174,6 +255,7 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public destroy (): void {
+    this.connections.destroy()
     this.recogito.destroy()
   }
 
@@ -204,5 +286,13 @@ export class RecogitoEditor implements AnnotationEditor {
   private selectAnnotation (annotation): void {
     // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
     this.ajax.selectAnnotation(annotation.id.substring('1'))
+  }
+
+  scrollTo (args: { offset: number; position: string; }): void {
+    console.log('Implement scrollTo')
+    const range = offsetToRange(this.root, args.offset, args.offset)
+    if (!range) return
+    range.startContainer?.parentElement?.scrollIntoView(
+      { behavior: 'auto', block: 'center', inline: 'nearest' })
   }
 }
