@@ -56,11 +56,8 @@ export class RecogitoEditor implements AnnotationEditor {
   private recogito: Recogito
   private connections: any
   private root: Element
-  private annotations: Record<string, WebAnnotation[]> = {}
-  private leftView?: Element
-  private rightView?: Element
-  private leftTracker?: ViewportTracker
-  private rightTracker?: ViewportTracker
+  private annotations: WebAnnotation[]
+  private tracker: ViewportTracker
 
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
@@ -89,15 +86,7 @@ export class RecogitoEditor implements AnnotationEditor {
 
     this.installColorRenderingPatch(this.recogito)
 
-    this.leftView = element.querySelector('.view-left') || undefined
-    if (this.leftView) {
-      this.leftTracker = new ViewportTracker(this.leftView, () => this.loadAnnotations())
-    }
-
-    this.rightView = element.querySelector('.view-right') || undefined
-    if (this.rightView) {
-      this.rightTracker = new ViewportTracker(this.rightView, () => this.loadAnnotations())
-    }
+    this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
   }
 
   /**
@@ -165,13 +154,7 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public loadAnnotations (): void {
-    console.log('loadAnnotations')
-    Promise.all([
-      this.loadView(this.rightView, this.rightTracker?.currentRange),
-      this.loadView(this.leftView, this.leftTracker?.currentRange)
-    ]).then(() => {
-      this.renderDocument()
-    })
+    this.loadView(this.root, this.tracker?.currentRange).then(() => this.renderDocument())
   }
 
   public loadView (view?: Element, range? : [number, number]): Promise<void> {
@@ -181,8 +164,7 @@ export class RecogitoEditor implements AnnotationEditor {
         return
       }
 
-      const offset = calculateStartOffset(this.root, view)
-      range = [range[0] + offset, range[1] + offset]
+      console.log(`loadView(${range})`)
 
       const options: DiamLoadAnnotationsOptions = {
         range,
@@ -203,12 +185,7 @@ export class RecogitoEditor implements AnnotationEditor {
       return
     }
 
-    const allAnnotations: Array<WebAnnotation> = []
-    for (const key in this.annotations) {
-      allAnnotations.push(...this.annotations[key])
-    }
-
-    console.info(`Rendering ${allAnnotations.length} annotations`)
+    console.info(`Rendering ${this.annotations.length} annotations`)
 
     // Workaround for https://github.com/recogito/recogito-connections/issues/16
     for (const connection of this.connections.canvas.connections) {
@@ -216,7 +193,7 @@ export class RecogitoEditor implements AnnotationEditor {
     }
     this.connections.canvas.connections = []
 
-    this.recogito.setAnnotations(allAnnotations)
+    this.recogito.setAnnotations(this.annotations)
   }
 
   private convertAnnotations (doc: CompactAnnotatedText, view: Element) {
@@ -230,8 +207,7 @@ export class RecogitoEditor implements AnnotationEditor {
       webAnnotations.push(...this.compactRelationsToWebAnnotation(doc))
     }
 
-    const viewId = view.classList.contains('view-left') ? 'left' : 'right'
-    this.annotations[viewId] = webAnnotations
+    this.annotations = webAnnotations
 
     console.info(`Loaded ${webAnnotations.length} annotations from server (${doc.spans?.length || 0} spans and ${doc.relations?.length || 0} relations)`)
   }
