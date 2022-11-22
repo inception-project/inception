@@ -139,7 +139,7 @@
 
     <npm-install-command>ci</npm-install-command>
 
-    <node.version>16.17.1</node.version>
+    <node.version>16.18.1</node.version>
     <bootstrap.version>5.2.2</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
