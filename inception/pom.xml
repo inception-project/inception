@@ -2580,7 +2580,7 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.14</version>
+          <version>0.15</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -2797,13 +2797,14 @@
                     <exclude>README</exclude>
                     <exclude>README.txt</exclude>
                     <exclude>README.md</exclude>
+                    <exclude>src/main/docker/**/*</exclude>
                     <exclude>src/main/resources/**/*</exclude>
                     <exclude>src/test/resources/**/*</exclude>
                     <exclude>**/cache/**/*</exclude>
-                    <exclude>src/main/docker/**/*</exclude>
                     <exclude>**/*.example</exclude>
                     <exclude>doc/*.json</exclude>
                     <exclude>licenses/**/*</exclude>
+                    <exclude>**/mocha-test-report.xml</exclude>
                   </excludes>
                 </configuration>
               </execution>
