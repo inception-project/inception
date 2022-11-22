@@ -21,3 +21,29 @@ body {
   line-height: 300%;
 }
 
+svg.r6o-connections-canvas {
+  .r6o-connections-edge {
+    .r6o-connections-edge-label tspan {
+      pointer-events: none !important;
+    }
+
+    // .r6o-connections-edge-path {
+    //   pointer-events: bounding-box;
+    // }
+
+    .r6o-connections-edge-path:hover {
+      .r6o-connections-edge-path-inner {
+        stroke-width: 3px;
+      }
+
+      .r6o-connections-edge-base,
+      .r6o-connections-edge-head {
+        stroke-width: 3px;
+      }
+
+      .r6o-connections-edge-path-buffer {
+        stroke: rgba(235, 170, 19, 0.7) !important;
+      }
+    }
+  }
+}

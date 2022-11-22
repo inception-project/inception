@@ -143,6 +143,7 @@
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
+    <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.4</dayjs.version>
     <esbuild.version>^0.14.53</esbuild.version>
     <esbuild-sass-plugin.version>^2.3.3</esbuild-sass-plugin.version>
@@ -169,7 +170,7 @@
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
     <pdfjs.version>2.14.305</pdfjs.version>
     <recogitojs.version>1.8.1</recogitojs.version>
-    <recogito-connections.version>0.1.7</recogito-connections.version>
+    <recogito-connections.version>0.1.10</recogito-connections.version>
     <recogito-client-core.version>1.7.7</recogito-client-core.version>
     <sass.version>^1.55.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
