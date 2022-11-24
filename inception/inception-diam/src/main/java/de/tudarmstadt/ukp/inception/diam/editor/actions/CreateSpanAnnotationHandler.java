@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
+
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
@@ -29,9 +31,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRange;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -76,23 +78,21 @@ public class CreateSpanAnnotationHandler
 
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
-        CompactRange userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
+        var userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
 
         AnnotatorState state = page.getModelObject();
-        Selection selection = state.getSelection();
-
         if (state.isSlotArmed()) {
             // When filling a slot, the current selection is *NOT* changed. The
             // Span annotation which owns the slot that is being filled remains
             // selected!
             page.getAnnotationActionHandler().actionFillSlot(aTarget, aCas,
                     userSelectedSpan.getBegin(), userSelectedSpan.getEnd(), VID.NONE_ID);
+            return;
         }
-        else {
-            selection.selectSpan(aCas, userSelectedSpan.getBegin(), userSelectedSpan.getEnd());
 
-            page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
-        }
+        Selection selection = state.getSelection();
+        selection.selectSpan(aCas, userSelectedSpan.getBegin(), userSelectedSpan.getEnd());
+        page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
     }
 
     /**
@@ -100,8 +100,8 @@ public class CreateSpanAnnotationHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private CompactRange getOffsetsFromRequest(AjaxRequestTarget aTarget,
-            IRequestParameters request, CAS aCas)
+    private Range getOffsetsFromRequest(AjaxRequestTarget aTarget, IRequestParameters request,
+            CAS aCas)
         throws IOException
     {
         // Create new span annotation - in this case we get the offset information from the
@@ -116,6 +116,7 @@ public class CreateSpanAnnotationHandler
                 + offsetLists.get(0).getBegin();
         int annotationEnd = page.getModelObject().getWindowBeginOffset()
                 + offsetLists.get(offsetLists.size() - 1).getEnd();
-        return new CompactRange(annotationBegin, annotationEnd);
+
+        return rangeClippedToDocument(aCas, annotationBegin, annotationEnd);
     }
 }
