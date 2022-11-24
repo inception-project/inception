@@ -92,7 +92,7 @@
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.7</mariadb.driver.version>
-    <postgres.driver.version>42.5.0</postgres.driver.version>
+    <postgres.driver.version>42.5.1</postgres.driver.version>
     <hibernate.version>5.6.14.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
