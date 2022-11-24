@@ -75,12 +75,12 @@ public class CreateSpanAnnotationHandler
         throws IOException, AnnotationException
     {
         AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+        AnnotatorState state = getAnnotatorState();
 
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
-        var userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
+        var userSelectedSpan = getOffsetsFromRequest(state, aRequestParameters, aCas);
 
-        AnnotatorState state = page.getModelObject();
         if (state.isSlotArmed()) {
             // When filling a slot, the current selection is *NOT* changed. The
             // Span annotation which owns the slot that is being filled remains
@@ -100,8 +100,7 @@ public class CreateSpanAnnotationHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private Range getOffsetsFromRequest(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas)
+    Range getOffsetsFromRequest(AnnotatorState aState, IRequestParameters request, CAS aCas)
         throws IOException
     {
         // Create new span annotation - in this case we get the offset information from the
@@ -111,10 +110,8 @@ public class CreateSpanAnnotationHandler
         CompactRangeList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
                 CompactRangeList.class);
 
-        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-        int annotationBegin = page.getModelObject().getWindowBeginOffset()
-                + offsetLists.get(0).getBegin();
-        int annotationEnd = page.getModelObject().getWindowBeginOffset()
+        int annotationBegin = aState.getWindowBeginOffset() + offsetLists.get(0).getBegin();
+        int annotationEnd = aState.getWindowBeginOffset()
                 + offsetLists.get(offsetLists.size() - 1).getEnd();
 
         return rangeClippedToDocument(aCas, annotationBegin, annotationEnd);

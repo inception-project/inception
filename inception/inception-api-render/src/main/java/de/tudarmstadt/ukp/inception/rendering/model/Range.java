@@ -114,7 +114,7 @@ public class Range
         var end = max(aBegin, aEnd);
 
         var clippedBegin = max(0, begin);
-        var clippedEnd = max(aCas.getDocumentText().length(), end);
+        var clippedEnd = min(aCas.getDocumentText().length(), end);
 
         if (clippedBegin != begin || clippedEnd != end) {
             LOG.warn("Range [{}-{}] clipped to [{}-{}]", begin, end, clippedBegin, clippedEnd);
