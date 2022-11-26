@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
@@ -36,6 +37,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class Selection
@@ -78,7 +80,7 @@ public class Selection
         Feature targetFeat = depType.getFeatureByBaseName(FEAT_REL_TARGET);
         AnnotationFS originFS = (AnnotationFS) aFS.getFeatureValue(originFeat);
         AnnotationFS targetFS = (AnnotationFS) aFS.getFeatureValue(targetFeat);
-        selectArc(new VID(aFS), originFS, targetFS);
+        selectArc(VID.builder().forAnnotation(aFS).build(), originFS, targetFS);
     }
 
     public void selectArc(AnnotationFS aOriginFs, AnnotationFS aTargetFs)
@@ -92,8 +94,13 @@ public class Selection
         text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
         originText = aOriginFs.getCoveredText();
         targetText = aTargetFs.getCoveredText();
-        beginOffset = Math.min(aOriginFs.getBegin(), aTargetFs.getBegin());
-        endOffset = Math.max(aOriginFs.getEnd(), aTargetFs.getEnd());
+
+        var clippedRange = rangeClippedToDocument(aOriginFs.getCAS(),
+                Math.min(aOriginFs.getBegin(), aTargetFs.getBegin()),
+                Math.max(aOriginFs.getEnd(), aTargetFs.getEnd()));
+
+        beginOffset = clippedRange.getBegin();
+        endOffset = clippedRange.getEnd();
 
         // Properties used when an arc is selected
         originSpanId = getAddr(aOriginFs);
@@ -106,15 +113,18 @@ public class Selection
 
     public void selectSpan(AnnotationFS aFS)
     {
-        selectSpan(new VID(aFS), aFS.getCAS(), aFS.getBegin(), aFS.getEnd());
+        selectSpan(VID.builder().forAnnotation(aFS).build(), aFS.getCAS(), aFS.getBegin(),
+                aFS.getEnd());
     }
 
     public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
     {
+        var clippedRange = Range.rangeClippedToDocument(aCAS, aBegin, aEnd);
+
         selectedAnnotationId = aVid;
         text = aCAS.getDocumentText().substring(aBegin, aEnd);
-        beginOffset = aBegin;
-        endOffset = aEnd;
+        beginOffset = clippedRange.getBegin();
+        endOffset = clippedRange.getEnd();
 
         // Properties used when an arc is selected
         originSpanId = -1;

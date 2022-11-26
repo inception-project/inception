@@ -88,6 +88,9 @@ public class VID
         this.extensionPayload = builder.extensionPayload;
     }
 
+    /**
+     * @deprecated Use {@link #builder()}
+     */
     @Deprecated
     public VID(FeatureStructure aFS)
     {
