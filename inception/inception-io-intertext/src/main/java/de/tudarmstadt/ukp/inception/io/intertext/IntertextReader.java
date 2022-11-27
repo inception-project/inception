@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.io.intertext;
 
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.getAttributeValue;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.hasAttributeWithValue;
+
 import java.io.IOException;
-import java.util.Optional;
 
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.jcas.JCas;
-import org.dkpro.core.api.xml.type.XmlAttribute;
 import org.dkpro.core.api.xml.type.XmlElement;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -50,24 +51,5 @@ public class IntertextReader
         getAttributeValue(aElement, "data-it-id").ifPresent(sentence::setId);
 
         sentence.addToIndexes();
-    }
-
-    private boolean hasAttributeWithValue(XmlElement e, String aAttribute, String aValue)
-    {
-        return getAttributeValue(e, aAttribute).map(v -> aValue.equals(v)).orElse(false);
-    }
-
-    private Optional<String> getAttributeValue(XmlElement aElement, String aString)
-    {
-        var attributes = aElement.getAttributes();
-
-        if (attributes == null) {
-            return Optional.empty();
-        }
-
-        return attributes.select(XmlAttribute.class) //
-                .filter(a -> aString.equals(a.getQName())) //
-                .findFirst() //
-                .map(XmlAttribute::getValue);
     }
 }

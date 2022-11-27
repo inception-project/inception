@@ -95,7 +95,7 @@ public class Cas2SaxEvents
         return attrs;
     }
 
-    private void process(XmlTextNode aChild) throws SAXException
+    public void process(XmlTextNode aChild) throws SAXException
     {
         char[] text;
 

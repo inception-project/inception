@@ -75,6 +75,9 @@ public class PolicyCollectionIOUtils
         var policies = policyCollectionBuilder.build();
         policies.setDebug(externalCollection.isDebug());
 
+        policies.setName(externalCollection.getName());
+        policies.setVersion(externalCollection.getVersion());
+
         return policies;
 
     }
