@@ -50,7 +50,6 @@ public class TextSanitizingContentHandler
             // Replace newline characters before sending to the browser to avoid the character
             // offsets in the browser to get out-of-sync with the server-side offsets. E.g. some
             // browsers tend to completely discard the `\r`.
-            // case '\n':
             case '\r':
                 chars[i] = ' ';
                 break;

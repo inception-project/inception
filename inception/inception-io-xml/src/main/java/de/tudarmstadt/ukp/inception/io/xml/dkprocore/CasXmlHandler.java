@@ -123,8 +123,6 @@ public class CasXmlHandler
 
         attachToParent(element);
 
-        listeners.forEach(l -> l.startElement(element));
-
         boolean capture;
         StackFrame parentFrame = stack.peek();
         if (parentFrame != null) {
@@ -135,6 +133,8 @@ public class CasXmlHandler
         }
 
         stack.push(new StackFrame(element, capture));
+
+        listeners.forEach(l -> l.startElement(element));
     }
 
     @Override

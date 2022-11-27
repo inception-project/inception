@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.rendering.model;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -110,11 +111,18 @@ public class Range
 
     public static Range rangeClippedToDocument(CAS aCas, int aBegin, int aEnd)
     {
+        var length = aCas.getDocumentText().length();
+
         var begin = min(aBegin, aEnd);
         var end = max(aBegin, aEnd);
 
         var clippedBegin = max(0, begin);
-        var clippedEnd = min(aCas.getDocumentText().length(), end);
+        var clippedEnd = min(length, end);
+
+        if (clippedBegin > length || clippedEnd > length) {
+            throw new IllegalArgumentException(format(
+                    "Range [%d-%d] is fully outside the document [%d-%d]", begin, end, 0, length));
+        }
 
         if (clippedBegin != begin || clippedEnd != end) {
             LOG.warn("Range [{}-{}] clipped to [{}-{}]", begin, end, clippedBegin, clippedEnd);
