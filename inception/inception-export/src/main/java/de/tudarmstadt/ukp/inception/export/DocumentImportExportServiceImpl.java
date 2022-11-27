@@ -310,8 +310,6 @@ public class DocumentImportExportServiceImpl
         CAS cas = WebAnnoCasUtil.createCas(tsd);
         format.read(WebAnnoCasUtil.getRealCas(cas), aFile);
 
-        runCasDoctorOnImport(aDocument, format, cas);
-
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
         splitSenencesIfNecssaryAndCheckQuota(cas, format);
@@ -320,6 +318,8 @@ public class DocumentImportExportServiceImpl
         log.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
                 cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
+
+        runCasDoctorOnImport(aDocument, format, cas);
 
         return cas;
     }
