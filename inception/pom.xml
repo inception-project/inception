@@ -759,6 +759,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-feature-lookup</artifactId>
+        <version>27.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-image</artifactId>
         <version>27.0-SNAPSHOT</version>
       </dependency>
@@ -2348,6 +2353,7 @@
     <module>inception-review-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
+    <module>inception-feature-lookup</module>
     <module>inception-image</module>
     <!-- Recommendation system -->
     <module>inception-recommendation-api</module>

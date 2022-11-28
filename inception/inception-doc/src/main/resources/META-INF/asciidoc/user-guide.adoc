@@ -127,6 +127,8 @@ include::{include-dir}projects_documents.adoc[leveloffset=+2]
 
 include::{include-dir}projects_layers.adoc[leveloffset=+2]
 
+include::{include-dir}projects_layers_feature_lookup.adoc[leveloffset=+4]
+
 include::{include-dir}projects_annotation.adoc[leveloffset=+2]
 
 include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
