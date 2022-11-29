@@ -24,7 +24,8 @@ public class AnnotationDetailEditorJSResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final AnnotationDetailEditorJSResourceReference INSTANCE = new AnnotationDetailEditorJSResourceReference();
+    private static final AnnotationDetailEditorJSResourceReference INSTANCE = //
+            new AnnotationDetailEditorJSResourceReference();
 
     /**
      * Gets the instance of the resource reference
