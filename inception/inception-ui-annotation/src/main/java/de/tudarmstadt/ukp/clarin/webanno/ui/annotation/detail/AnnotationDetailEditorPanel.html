@@ -17,49 +17,6 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-<wicket:head>
-  <script>
-  $(document).ready(function() {
-    // Based on this accepted answer of so
-    // http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
-    
-    function moveToNextInput(current) {
-      var inputs = $(current).parents("#annotationFeatureForm").eq(0).find(":input");
-      var idx = inputs.index(current);
-      if (idx == inputs.length - 1) {
-        inputs[idx].blur();
-      } else {
-        inputs[idx + 1].focus(); //  handles submit buttons
-        inputs[idx + 1].select();
-      }
-    }
-    
-    function manageEnter() {
-      $("#annotationFeatureForm :input").keydown(function(e) {
-        if (e.which == 13) {
-          // On a textarea, we consider the enter as a submit only if CTRL or CMD is pressed
-          if ($(this).is("textarea") && !(e.ctrlKey || e.metaKey)) {
-            return true;
-          }
-          
-          // Avoid Kendo Comboboxes submitting their value twice
-          if ($(this).attr('role') == 'combobox') {
-            return true;
-          }
-      
-          e.preventDefault();
-          moveToNextInput(this);
-          return false;
-        }
-      });    
-    }
-    $(document).on("keypress", manageEnter);
-    manageEnter();
-  });
-  </script>
-</wicket:head>
-</head>
 <body>
   <wicket:panel>
     <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
@@ -69,7 +26,7 @@
         <div class="flex-content panel card">
           <div class="card-header">
             <div class="clearfix">
-            Annotation
+              <wicket:message key="annotation"/>
               <div wicket:id="buttonContainer" class="actions">
                 <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
                   <i class="fas fa-trash"></i>
