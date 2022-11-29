@@ -32,18 +32,18 @@ public class LookupEntry
     implements Serializable
 {
     private static final long serialVersionUID = -5686362017417313135L;
-    
+
     private static final String ID = "id";
     private static final String LABEL = "l";
     private static final String DESCRIPTION = "d";
 
-    private final @JsonProperty(ID) String id;
-    private final @JsonProperty(LABEL) String uiLabel;
-    private final @JsonProperty(DESCRIPTION) String description;
+    private final String id;
+    private final String uiLabel;
+    private final String description;
 
     @JsonCreator
     public LookupEntry( //
-            @JsonProperty(ID) String aId,  //
+            @JsonProperty(ID) String aId, //
             @JsonProperty(LABEL) String aUiLabel, //
             @JsonProperty(DESCRIPTION) String aDescription)
     {
@@ -52,21 +52,24 @@ public class LookupEntry
         description = aDescription;
     }
 
+    @JsonProperty(ID)
     public String getIdentifier()
     {
         return id;
     }
 
+    @JsonProperty(LABEL)
     public String getUiLabel()
     {
         return uiLabel;
     }
 
+    @JsonProperty(DESCRIPTION)
     public String getDescription()
     {
         return description;
     }
-    
+
     @Override
     public boolean equals(final Object other)
     {
