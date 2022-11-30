@@ -1,22 +1,6 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *  
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
+package de.tudarmstadt.ukp.inception.security.saml;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -32,11 +16,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @Transactional
-@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
+@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
 @DataJpaTest( //
         showSql = false, //
         properties = { //
@@ -61,19 +41,16 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
         InceptionSecurityAutoConfiguration.class })
 @EntityScan(basePackages = { //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-class ShibbolethRequestHeaderAuthenticationFilterTest
+class Saml2AdapterImplTest
 {
     private static final String USERNAME = "ThatGuy";
+    private static final String CLIENT_REGISTRATION_ID = "saml";
 
     @Autowired
     UserDao userService;
 
     @Autowired
-    ShibbolethRequestHeaderAuthenticationFilter sut;
-
-    ClientRegistration clientRegistration;
-    OAuth2AccessToken oAuth2AccessToken;
-    OidcIdToken oidcIdToken;
+    Saml2Adapter sut;
 
     @BeforeEach
     void setup()
@@ -87,16 +64,17 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
         assertThat(userService.get(USERNAME)) //
                 .as("User should not exist when test starts").isNull();
 
-        sut.loadUser(USERNAME);
+        sut.loadSamlUser(USERNAME, CLIENT_REGISTRATION_ID);
 
         User autoCreatedUser = userService.get(USERNAME);
         assertThat(autoCreatedUser) //
-                .as("User should have been created as part of the authentication")
+                .as("User should have been created as part of the OAuth2 authentication")
                 .usingRecursiveComparison() //
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(UserDao.REALM_PREAUTH).withRoles(Set.of(Role.ROLE_USER)) //
+                        .withRealm(REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
+                        .withRoles(Set.of(Role.ROLE_USER)) //
                         .withEnabled(true) //
                         .build());
 
@@ -110,7 +88,7 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
     {
         userService.create(User.builder() //
                 .withUsername(USERNAME) //
-                .withRealm(UserDao.REALM_PREAUTH) //
+                .withRealm(REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
                 .withRoles(Set.of(Role.ROLE_USER)) //
                 .withEnabled(true) //
                 .build());
@@ -118,7 +96,8 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
         assertThat(userService.get(USERNAME)) //
                 .as("User should exist when test starts").isNotNull();
 
-        assertThatNoException().isThrownBy(() -> sut.loadUser(USERNAME));
+        assertThatNoException()
+                .isThrownBy(() -> sut.loadSamlUser(USERNAME, CLIENT_REGISTRATION_ID));
     }
 
     @Test
@@ -129,32 +108,31 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
                 .withEnabled(false) //
                 .build());
 
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser(USERNAME)) //
-                .withMessageContaining("Realm mismatch");
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser(USERNAME, CLIENT_REGISTRATION_ID));
     }
 
     @Test
     void thatUserWithFunkyUsernameIsDeniedAccess()
     {
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser("/etc/passwd")) //
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser("/etc/passwd", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser("../escape.zip")) //
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser("../escape.zip", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser("")) //
-                .withMessageContaining("Username cannot be empty");
-
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser("*".repeat(2000))) //
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser("", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(BadCredentialsException.class) //
-                .isThrownBy(() -> sut.loadUser("mel\0ove")) //
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser("*", CLIENT_REGISTRATION_ID))
+                .withMessageContaining("Illegal username");
+
+        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+                .isThrownBy(() -> sut.loadSamlUser("mel\0ove", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
         assertThat(userService.list()).isEmpty();
@@ -168,17 +146,6 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
         ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
-        }
-
-        @Bean
-        ShibbolethRequestHeaderAuthenticationFilter ShibbolethRequestHeaderAuthenticationFilter(
-                UserDao aUserService, AuthenticationConfiguration aAuthenticationConfiguration)
-            throws Exception
-        {
-            var sut = new ShibbolethRequestHeaderAuthenticationFilter();
-            sut.setUserRepository(aUserService);
-            sut.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
-            return sut;
         }
     }
 }

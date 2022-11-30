@@ -22,6 +22,7 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
 
@@ -126,7 +127,8 @@ class OAuth2AdapterImplTest
         assertThat(userService.get(USERNAME)) //
                 .as("User should exist when test starts").isNotNull();
 
-        sut.loadOidcUser(new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken));
+        assertThatNoException().isThrownBy(() -> sut.loadOidcUser(
+                new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)));
     }
 
     @Test

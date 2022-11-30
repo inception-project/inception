@@ -25,14 +25,10 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +52,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
 
 public class OAuth2AdapterImpl
     implements OAuth2Adapter
@@ -159,12 +154,12 @@ public class OAuth2AdapterImpl
 
     private User materializeUser(OAuth2User user, String username, String realm)
     {
-        User u;
-        u = new User();
+        var u = new User();
         u.setUsername(username);
         u.setPassword(UserDao.EMPTY_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
+        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
 
         String email = user.getAttribute("email");
         if (email != null) {
@@ -185,24 +180,6 @@ public class OAuth2AdapterImpl
 
             u.setUiName(uiName);
         }
-
-        Set<Role> s = new HashSet<>();
-        s.add(Role.ROLE_USER);
-        Properties settings = SettingsUtil.getSettings();
-
-        String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
-        if (StringUtils.isNotBlank(extraRoles)) {
-            for (String role : extraRoles.split(",")) {
-                try {
-                    s.add(Role.valueOf(role.trim()));
-                }
-                catch (IllegalArgumentException e) {
-                    LOG.debug("Ignoring unknown default role [" + role + "] for user ["
-                            + u.getUsername() + "]");
-                }
-            }
-        }
-        u.setRoles(s);
 
         userRepository.create(u);
 

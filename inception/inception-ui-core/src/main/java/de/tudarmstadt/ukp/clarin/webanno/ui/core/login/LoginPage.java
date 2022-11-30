@@ -98,6 +98,7 @@ public class LoginPage
 
     private final LoginForm localLoginPanel;
     private final OAuth2LoginPanel oAuth2LoginPanel;
+    private final Saml2LoginPanel saml2LoginPanel;
 
     private final WebMarkupContainer tooManyUsersLabel;
     private final IModel<Boolean> tooManyUsers;
@@ -118,6 +119,10 @@ public class LoginPage
         oAuth2LoginPanel = new OAuth2LoginPanel("oauth2LoginPanel");
         oAuth2LoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(oAuth2LoginPanel);
+
+        saml2LoginPanel = new Saml2LoginPanel("saml2LoginPanel");
+        saml2LoginPanel.add(visibleWhen(this::isLoginAllowed));
+        queue(saml2LoginPanel);
 
         var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
                 || tooManyUsers.getObject();

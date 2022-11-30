@@ -24,15 +24,25 @@ import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider;
+import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter;
+import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @ConditionalOnWebApplication
@@ -43,7 +53,9 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
             SessionRegistry aSessionRegistry, OAuth2Adapter aOAuth2Handling,
-            Optional<ClientRegistrationRepository> aClientRegistrationRepository)
+            Saml2Adapter aSaml2Handling,
+            Optional<ClientRegistrationRepository> aClientRegistrationRepository,
+            Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
         throws Exception
     {
         aHttp.csrf().disable();
@@ -85,6 +97,48 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                     .userInfoEndpoint() //
                     .oidcUserService(aOAuth2Handling::loadOidcUser) //
                     .userService(aOAuth2Handling::loadUserOAuth2User);
+        }
+
+        if (aRelyingPartyRegistrationRepository.isPresent()) {
+            RelyingPartyRegistrationResolver relyingPartyRegistrationResolver = new DefaultRelyingPartyRegistrationResolver(
+                    aRelyingPartyRegistrationRepository.get());
+            Saml2MetadataFilter filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
+                    new OpenSamlMetadataResolver());
+            aHttp.addFilterBefore(filter, Saml2WebSsoAuthenticationFilter.class);
+
+            aHttp.saml2Login(c -> {
+                c.loginPage("/login.html");
+                c.withObjectPostProcessor(new ObjectPostProcessor<Object>()
+                {
+                    @Override
+                    public <O> O postProcess(O aObject)
+                    {
+                        if (aObject instanceof OpenSamlAuthenticationProvider) {
+                            var provider = (OpenSamlAuthenticationProvider) aObject;
+                            var converter = OpenSamlAuthenticationProvider
+                                    .createDefaultResponseAuthenticationConverter();
+                            provider.setResponseAuthenticationConverter(token -> {
+                                var authentication = converter.convert(token);
+                                authentication = aSaml2Handling.process(token, authentication);
+                                return authentication;
+                            });
+                        }
+
+                        if (aObject instanceof OpenSaml4AuthenticationProvider) {
+                            var provider = (OpenSaml4AuthenticationProvider) aObject;
+                            var converter = OpenSaml4AuthenticationProvider
+                                    .createDefaultResponseAuthenticationConverter();
+                            provider.setResponseAuthenticationConverter(token -> {
+                                var authentication = converter.convert(token);
+                                authentication = aSaml2Handling.process(token, authentication);
+                                return authentication;
+                            });
+                        }
+
+                        return aObject;
+                    }
+                });
+            });
         }
 
         aHttp.sessionManagement()

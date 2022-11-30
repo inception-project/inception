@@ -14,27 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_segmentation]]
-= Editable Segmentation Settings
+[[sect_security_authentication]]
+= Authentication
 
-====
-CAUTION: Experimental feature. Highly experimental. Expect strange things to happen if you start
-adding/removing/changing segmentation annotations (i.e. sentences or tokens).
-====
-
-This section describes the global settings related to the support for editable segmentation annotations (i.e. sentences or tokens).
-
-.Knowledge base settings overview
-[cols="4*", options="header"]
-|===
-| Setting
-| Description
-| Default
-| Example
-
-
-| ui.sentence-layer-editable=true
-| Enable/disable editing sentences
-| false
-| true
-|===
+This section describes the different authentication mechanisms supported by {product-name}.
