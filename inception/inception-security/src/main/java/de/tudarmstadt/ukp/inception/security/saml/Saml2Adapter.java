@@ -30,8 +30,8 @@ public interface Saml2Adapter
 
     Saml2Authentication process(ResponseToken aToken, Saml2Authentication aAuthentication);
 
-    Saml2Authentication process(
-            org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken aToken,
+    Saml2Authentication process(org.springframework.security.saml2.provider.service. //
+            authentication.OpenSaml4AuthenticationProvider.ResponseToken aToken,
             Saml2Authentication aAuthentication);
 
     User loadSamlUser(String aUsername, String aRegistrationId);

@@ -83,8 +83,8 @@ public class Saml2AdapterImpl
 
         Map<String, String> idps = new LinkedHashMap<>();
         if (relyingPartyRegistrationRepository.get() instanceof Iterable) {
-            Iterable<RelyingPartyRegistration> repo = (Iterable<RelyingPartyRegistration>) relyingPartyRegistrationRepository
-                    .get();
+            Iterable<RelyingPartyRegistration> repo = (Iterable<RelyingPartyRegistration>) //
+            relyingPartyRegistrationRepository.get();
             repo.forEach((p) -> idps.put(authenticationRequestUri + p.getRegistrationId(),
                     p.getRegistrationId()));
         }
@@ -100,8 +100,8 @@ public class Saml2AdapterImpl
     }
 
     @Override
-    public Saml2Authentication process(
-            org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider.ResponseToken aToken,
+    public Saml2Authentication process(org.springframework.security.saml2.provider.service. //
+            authentication.OpenSamlAuthenticationProvider.ResponseToken aToken,
             Saml2Authentication aAuthentication)
     {
 

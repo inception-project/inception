@@ -100,8 +100,9 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         }
 
         if (aRelyingPartyRegistrationRepository.isPresent()) {
-            RelyingPartyRegistrationResolver relyingPartyRegistrationResolver = new DefaultRelyingPartyRegistrationResolver(
-                    aRelyingPartyRegistrationRepository.get());
+            RelyingPartyRegistrationResolver relyingPartyRegistrationResolver = //
+                    new DefaultRelyingPartyRegistrationResolver(
+                            aRelyingPartyRegistrationRepository.get());
             Saml2MetadataFilter filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
                     new OpenSamlMetadataResolver());
             aHttp.addFilterBefore(filter, Saml2WebSsoAuthenticationFilter.class);
