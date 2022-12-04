@@ -19,15 +19,15 @@ package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,12 +37,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 
 @ExtendWith(MockitoExtension.class)
 public class MultiValueStringFeatureSupportTest
@@ -75,33 +73,34 @@ public class MultiValueStringFeatureSupportTest
     }
 
     @Test
-    public void thatUsingOutOfTagsetValueInClosedTagsetProducesException() throws Exception
+    public void thatCreationOfMissingFeaturesIsAttempted() throws Exception
     {
-        final List<String> values = asList("TAG-NOT-IN-LIST");
+        var tag1 = "tag1";
+        var tag2 = "tag2";
 
         valueFeature.setTagset(valueTagset);
-        valueTagset.setCreateTag(false);
 
-        when(schemaService.existsTag(values.get(0), valueTagset)).thenReturn(false);
+        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS),
+                asList(tag1, tag2));
 
-        assertThatExceptionOfType(IllegalFeatureValueException.class) //
-                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature,
-                        ICasUtil.getAddr(spanFS), values))
-                .withMessageContaining("is not in the tag list");
+        verify(schemaService).createMissingTag(valueFeature, tag1);
+        verify(schemaService).createMissingTag(valueFeature, tag2);
     }
 
     @Test
-    public void thatUsingOutOfTagsetValueInOpenTagsetAddsNewValue() throws Exception
+    public void thatFeatureValueIsSet() throws Exception
     {
-        final List<String> values = asList("TAG-NOT-IN-LIST");
+        var values = asList("value1", "value2");
 
         valueFeature.setTagset(valueTagset);
         valueTagset.setCreateTag(true);
 
-        when(schemaService.existsTag(values.get(0), valueTagset)).thenReturn(false);
-
         sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS), values);
 
-        verify(schemaService).createTag(new Tag(valueTagset, values.get(0)));
+        assertThat(FSUtil.getFeature(spanFS, valueFeature.getName(), String[].class))
+                .containsExactlyElementsOf(values);
+
+        assertThat((List<String>) sut.getFeatureValue(valueFeature, spanFS)) //
+                .containsExactlyElementsOf(values);
     }
 }

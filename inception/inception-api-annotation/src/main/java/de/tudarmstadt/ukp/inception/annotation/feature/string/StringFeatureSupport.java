@@ -110,7 +110,7 @@ public class StringFeatureSupport
         throws AnnotationException
     {
         if (schemaService != null) {
-            schemaService.createMissingTag(aFeature, getId());
+            schemaService.createMissingTag(aFeature, (String) aValue);
         }
 
         super.setFeatureValue(aCas, aFeature, aAddress, aValue);
