@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.versioning.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +31,8 @@ import de.tudarmstadt.ukp.inception.versioning.VersioningService;
 import de.tudarmstadt.ukp.inception.versioning.VersioningServiceImpl;
 import de.tudarmstadt.ukp.inception.versioning.ui.VersioningMenuItem;
 import de.tudarmstadt.ukp.inception.versioning.ui.VersioningSettingsPanelFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @ConditionalOnProperty(prefix = "versioning", name = "enabled", havingValue = "true", matchIfMissing = false)

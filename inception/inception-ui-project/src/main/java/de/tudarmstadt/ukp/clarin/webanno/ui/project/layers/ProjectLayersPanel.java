@@ -38,8 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -103,6 +101,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
+import jakarta.persistence.NoResultException;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page

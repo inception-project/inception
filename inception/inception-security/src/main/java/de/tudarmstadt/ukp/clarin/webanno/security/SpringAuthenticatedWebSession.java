@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
@@ -44,6 +42,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}

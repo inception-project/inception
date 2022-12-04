@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.documents.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +31,8 @@ import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 public class DocumentServiceAutoConfiguration

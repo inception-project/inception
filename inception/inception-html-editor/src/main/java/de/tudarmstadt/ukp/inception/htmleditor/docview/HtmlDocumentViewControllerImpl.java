@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.htmleditor.docview;
 
 import java.security.Principal;
 
-import javax.servlet.ServletContext;
-
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
+import jakarta.servlet.ServletContext;
 
 /**
  * @deprecated Use {@link XHtmlXmlDocumentIFrameViewFactory} instead

@@ -42,8 +42,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -76,6 +74,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import jakarta.persistence.EntityManager;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
 @EnableAutoConfiguration

@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 public class ProjectServiceAutoConfiguration

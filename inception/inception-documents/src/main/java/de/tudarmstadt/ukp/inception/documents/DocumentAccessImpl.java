@@ -24,8 +24,6 @@ import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

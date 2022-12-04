@@ -48,8 +48,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -112,6 +110,7 @@ import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import jakarta.persistence.NoResultException;
 import wicket.contrib.input.events.key.KeyType;
 
 /**

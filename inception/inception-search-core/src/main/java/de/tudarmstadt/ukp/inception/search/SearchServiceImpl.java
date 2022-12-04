@@ -42,9 +42,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +83,8 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocum
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>

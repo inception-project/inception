@@ -22,8 +22,6 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.stream.Stream;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.core.util.lang.WicketObjects;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import jakarta.persistence.NoResultException;
 
 public abstract class ProjectPageBase
     extends ApplicationPageBase

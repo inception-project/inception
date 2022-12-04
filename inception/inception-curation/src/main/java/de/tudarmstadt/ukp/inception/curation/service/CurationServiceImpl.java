@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static java.util.Objects.isNull;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +28,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPoint;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

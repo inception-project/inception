@@ -49,26 +49,26 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         aHttp.csrf().disable();
         aHttp.headers().frameOptions().sameOrigin();
 
-        aHttp.authorizeRequests() //
-                .antMatchers("/login.html*").permitAll() //
+        aHttp.authorizeHttpRequests() //
+                .requestMatchers("/login.html*").permitAll() //
                 // Resources need to be publicly accessible so they don't trigger the login
                 // page. Otherwise it could happen that the user is redirected to a resource
                 // upon login instead of being forwarded to a proper application page.
-                .antMatchers("/favicon.ico").permitAll() //
-                .antMatchers("/favicon.png").permitAll() //
-                .antMatchers("/assets/**").permitAll() //
-                .antMatchers("/images/**").permitAll() //
-                .antMatchers("/resources/**").permitAll() //
-                .antMatchers("/whoops").permitAll() //
-                .antMatchers("/about/**").permitAll() //
-                .antMatchers("/wicket/resource/**").permitAll() //
-                .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll() //
-                .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')") //
-                .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')") //
-                .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')") //
+                .requestMatchers("/favicon.ico").permitAll() //
+                .requestMatchers("/favicon.png").permitAll() //
+                .requestMatchers("/assets/**").permitAll() //
+                .requestMatchers("/images/**").permitAll() //
+                .requestMatchers("/resources/**").permitAll() //
+                .requestMatchers("/whoops").permitAll() //
+                .requestMatchers("/about/**").permitAll() //
+                .requestMatchers("/wicket/resource/**").permitAll() //
+                .requestMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll() //
+                .requestMatchers("/swagger-ui/**").hasAnyRole("ROLE_REMOTE") //
+                .requestMatchers("/swagger-ui.html").hasAnyRole("ROLE_REMOTE") //
+                .requestMatchers("/v3/**").hasAnyRole("ROLE_REMOTE") //
+                .requestMatchers("/admin/**").hasAnyRole("ROLE_ADMIN") //
+                .requestMatchers("/doc/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER") //
+                .requestMatchers("/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER") //
                 .anyRequest().denyAll();
 
         // Must use "defaultAuthenticationEntryPointFor" instead of "formLogin" because

@@ -51,9 +51,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -115,6 +112,8 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

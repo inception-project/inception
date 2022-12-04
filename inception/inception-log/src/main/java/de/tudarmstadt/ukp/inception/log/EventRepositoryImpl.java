@@ -28,10 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,6 +39,9 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 
 /**
  * <p>

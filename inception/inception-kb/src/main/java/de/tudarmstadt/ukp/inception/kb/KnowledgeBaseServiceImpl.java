@@ -43,12 +43,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.io.FileUtils;
@@ -140,6 +134,11 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.MemoryOAuthSessio
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAuthenticationClientImpl;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 
 /**
  * <p>

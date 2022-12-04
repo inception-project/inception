@@ -22,8 +22,6 @@ import static java.util.Objects.isNull;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceCli
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAccessTokenResponse;
+import jakarta.persistence.EntityManager;
 
 public class ElgServiceImpl
     implements ElgService

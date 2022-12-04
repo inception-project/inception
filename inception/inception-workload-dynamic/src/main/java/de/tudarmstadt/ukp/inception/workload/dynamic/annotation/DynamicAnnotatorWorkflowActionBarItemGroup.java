@@ -25,8 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
@@ -58,6 +56,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * This is only enabled for annotators of a project with the dynamic workload enabled. An annotator

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.footer;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -31,6 +29,7 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceR
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.EnjoyHintJsReference;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.TutorialJavascriptReference;
+import jakarta.servlet.ServletContext;
 
 public class TutorialFooterPanel
     extends Panel

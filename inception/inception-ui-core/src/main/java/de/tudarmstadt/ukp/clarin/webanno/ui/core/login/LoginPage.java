@@ -28,8 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
@@ -72,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * The login page.

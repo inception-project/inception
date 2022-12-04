@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorPropert
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources.AnnotatorJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources.AnnotatorJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import jakarta.servlet.ServletContext;
 
 public class AnnotatorJsHtmlAnnotationEditor
     extends ExternalAnnotationEditorBase

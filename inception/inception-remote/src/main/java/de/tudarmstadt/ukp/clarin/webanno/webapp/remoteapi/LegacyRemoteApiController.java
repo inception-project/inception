@@ -34,8 +34,8 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.persistence.NoResultException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.persistence.NoResultException;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;

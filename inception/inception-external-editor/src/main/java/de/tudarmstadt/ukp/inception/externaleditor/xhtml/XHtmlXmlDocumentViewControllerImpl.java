@@ -23,8 +23,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
-
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
@@ -52,6 +50,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPol
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController

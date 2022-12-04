@@ -23,8 +23,6 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
@@ -37,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitiali
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
+import jakarta.persistence.NoResultException;
 
 /**
  * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.

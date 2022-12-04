@@ -33,8 +33,6 @@ import java.security.Principal;
 import java.time.Duration;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +80,7 @@ import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.

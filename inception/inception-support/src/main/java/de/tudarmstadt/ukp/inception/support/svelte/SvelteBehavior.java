@@ -21,8 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretable
 
 import java.io.IOException;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -37,6 +35,7 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import jakarta.servlet.ServletContext;
 
 public class SvelteBehavior
     extends Behavior

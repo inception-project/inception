@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExten
 import java.io.Serializable;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -42,6 +40,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import jakarta.persistence.EntityManager;
 
 /**
  * This is only enabled for annotators of a project with the dynamic workload enabled. Upon entering

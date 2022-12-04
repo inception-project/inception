@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.schema.config;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -66,6 +63,8 @@ import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @EnableConfigurationProperties({ //

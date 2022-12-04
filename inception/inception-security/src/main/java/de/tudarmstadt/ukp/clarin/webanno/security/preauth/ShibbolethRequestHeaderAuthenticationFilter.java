@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ShibbolethRequestHeaderAuthenticationFilter
     extends RequestHeaderAuthenticationFilter

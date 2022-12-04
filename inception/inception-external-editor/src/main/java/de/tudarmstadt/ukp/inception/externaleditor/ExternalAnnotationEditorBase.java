@@ -30,8 +30,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
@@ -73,6 +71,7 @@ import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import jakarta.servlet.ServletContext;
 
 public abstract class ExternalAnnotationEditorBase
     extends AnnotationEditorBase

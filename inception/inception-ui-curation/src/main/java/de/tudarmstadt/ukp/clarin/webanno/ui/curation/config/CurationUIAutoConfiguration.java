@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.config;
 
-import javax.servlet.ServletContext;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @Configuration

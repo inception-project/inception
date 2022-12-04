@@ -23,8 +23,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketController;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
+import jakarta.servlet.ServletContext;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
 public class LoggedEventFooterPanel

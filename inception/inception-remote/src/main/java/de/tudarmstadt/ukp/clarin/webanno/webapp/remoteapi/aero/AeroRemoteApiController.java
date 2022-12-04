@@ -51,8 +51,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -128,6 +126,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.persistence.NoResultException;
 
 /**
  * <p>

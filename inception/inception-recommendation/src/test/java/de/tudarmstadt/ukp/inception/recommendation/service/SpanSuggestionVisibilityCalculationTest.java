@@ -28,8 +28,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -51,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class SpanSuggestionVisibilityCalculationTest

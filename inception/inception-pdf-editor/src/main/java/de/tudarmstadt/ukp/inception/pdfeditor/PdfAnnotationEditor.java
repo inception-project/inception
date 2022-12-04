@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -66,6 +64,7 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import jakarta.servlet.ServletContext;
 
 /**
  * @deprecated Superseded by the new PDF editor

@@ -31,8 +31,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import java.io.File;
 import java.nio.channels.ClosedByInterruptException;
 
-import javax.servlet.ServletContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -47,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
+import jakarta.servlet.ServletContext;
 
 public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>
     implements ProjectExportTask<R>, InitializingBean

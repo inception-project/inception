@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -59,6 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapab
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.

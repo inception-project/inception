@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
@@ -55,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPane
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
+import jakarta.servlet.http.HttpServletRequest;
 
 public abstract class ApplicationPageBase
     extends WebPage

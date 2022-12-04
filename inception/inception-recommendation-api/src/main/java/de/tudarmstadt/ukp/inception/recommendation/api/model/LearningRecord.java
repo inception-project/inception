@@ -22,16 +22,6 @@ import java.util.Date;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -40,6 +30,16 @@ import org.hibernate.annotations.Type;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "learning_record")
@@ -83,15 +83,15 @@ public class LearningRecord
     private String tokenText;
     private String annotation;
 
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserActionType")
+    @Type(LearningRecordUserActionType.class)
     private LearningRecordType userAction;
 
     private String user;
 
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocationType")
+    @Type(LearningRecordChangeLocationType.class)
     private LearningRecordChangeLocation changeLocation;
 
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionTypeWrapper")
+    @Type(SuggestionTypeWrapper.class)
     private SuggestionType suggestionType;
 
     @Temporal(TemporalType.TIMESTAMP)

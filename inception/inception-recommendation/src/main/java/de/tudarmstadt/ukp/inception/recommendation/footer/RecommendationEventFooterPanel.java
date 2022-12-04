@@ -21,8 +21,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.authorization.Action;
@@ -41,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
+import jakarta.servlet.ServletContext;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class RecommendationEventFooterPanel

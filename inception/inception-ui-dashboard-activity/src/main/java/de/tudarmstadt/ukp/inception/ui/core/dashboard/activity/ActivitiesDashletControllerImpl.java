@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +57,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
 @RestController

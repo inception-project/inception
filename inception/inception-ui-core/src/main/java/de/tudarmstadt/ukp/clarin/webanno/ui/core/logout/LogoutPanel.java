@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -47,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * A wicket panel for logout.

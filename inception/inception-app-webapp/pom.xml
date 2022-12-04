@@ -30,8 +30,8 @@
   <packaging>war</packaging>
   <dependencies>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
   
@@ -513,8 +513,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
     </dependency>
 
     <dependency>
@@ -929,7 +929,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
-              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>

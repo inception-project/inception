@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -55,8 +57,8 @@
   </distributionManagement>
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>11</maven.compiler.target>
-    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
@@ -69,34 +71,34 @@
     <xmlunit.version>1.6</xmlunit.version>
 
     <dkpro.version>2.2.0</dkpro.version>
-    <uima.version>3.3.1</uima.version>
-    <uimafit.version>3.3.0</uimafit.version>
+    <uima.version>3.4.0-SNAPSHOT</uima.version>
+    <uimafit.version>3.4.0-SNAPSHOT</uimafit.version>
     <uima-json.version>0.4.0</uima-json.version>
 
     <pdfbox.version>2.0.26</pdfbox.version>
 
-    <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.5</spring.boot.version>
-    <spring.data.version>2.7.6</spring.data.version>
-    <spring.security.version>5.7.5</spring.security.version>
+    <spring.version>6.0.2</spring.version>
+    <spring.boot.version>3.0.0</spring.boot.version>
+    <spring.data.version>3.0.0</spring.data.version>
+    <spring.security.version>6.0.0</spring.security.version>
     <springdoc.version>1.6.13</springdoc.version>
     <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.18.0</log4j2.version>
+    <log4j2.version>2.19.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
     <groovy.version>3.0.13</groovy.version>
 
-    <tomcat.version>9.0.69</tomcat.version>
-    <servlet-api.version>4.0.1</servlet-api.version>
+    <tomcat.version>10.1.1</tomcat.version>
+    <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>2.7.7</mariadb.driver.version>
     <postgres.driver.version>42.5.1</postgres.driver.version>
-    <hibernate.version>5.6.14.Final</hibernate.version>
-    <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
+    <hibernate.version>6.1.5.Final</hibernate.version>
+    <hibernate.validator.version>8.0.0.Final</hibernate.validator.version>
 
-    <wicket.version>9.11.0</wicket.version>
+    <wicket.version>10.0.0-M1-SNAPSHOT</wicket.version>
     <wicketstuff.version>9.11.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M8</wicket-bootstrap.version>
@@ -233,34 +235,19 @@
       </snapshots>
     </repository>
     -->
-    <!-- For Apache UIMA release candidates -->
-    <!--
     <repository>
-      <id>ext-staging</id>
-      <url>https://repository.apache.org/content/repositories/orgapacheuima-1261</url>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </releases>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
-    -->
   </repositories>
-  <pluginRepositories>
-    <!--
-    <pluginRepository>
-      <id>ext-staging</id>
-      <url>https://repository.apache.org/content/repositories/orgapacheuima-1261</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-    -->
-  </pluginRepositories>
+
   <dependencies>
     <!-- The logging subsystem used by INCEpTION -->
     <dependency>
@@ -1485,8 +1472,8 @@
       </dependency>
 
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
         <version>${servlet-api.version}</version>
       </dependency>
 
@@ -1521,11 +1508,6 @@
       </dependency>
       <dependency>
         <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-entitymanager</artifactId>
-        <version>${hibernate.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hibernate</groupId>
         <artifactId>hibernate-validator</artifactId>
         <version>${hibernate.validator.version}</version>
       </dependency>
@@ -1545,9 +1527,9 @@
         <version>2.0.1.Final</version>
       </dependency>
       <dependency>
-        <groupId>javax.persistence</groupId>
-        <artifactId>javax.persistence-api</artifactId>
-        <version>2.2</version>
+        <groupId>jakarta.persistence</groupId>
+        <artifactId>jakarta.persistence-api</artifactId>
+        <version>3.1.0</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
@@ -1813,9 +1795,18 @@
       </dependency>
       <dependency>
         <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-core</artifactId>
+        <version>${solr.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
         <artifactId>solr-test-framework</artifactId>
         <version>${solr.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.textexploration.mtas</groupId>
@@ -2413,7 +2404,7 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
-              <groupId>org.hibernate</groupId>
+              <groupId>org.hibernate.orm</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
             </path>
@@ -2490,7 +2481,8 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredUnusedDeclaredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies
+            combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->

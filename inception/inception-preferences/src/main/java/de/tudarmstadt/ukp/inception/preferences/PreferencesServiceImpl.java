@@ -23,10 +23,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +35,9 @@ import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoCon
 import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * <p>

@@ -22,8 +22,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -38,6 +36,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import jakarta.servlet.ServletContext;
 
 public class VueBehavior
     extends Behavior

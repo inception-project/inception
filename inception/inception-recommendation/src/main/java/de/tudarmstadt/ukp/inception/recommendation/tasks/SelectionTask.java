@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
@@ -55,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationRe
 import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current

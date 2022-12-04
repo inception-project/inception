@@ -62,16 +62,8 @@ public class ExtensibleClasspathEnabledWarLauncher
     @Override
     protected Iterator<Archive> getClassPathArchivesIterator() throws Exception
     {
-        return getClassPathArchives().iterator();
-    }
-
-    @Deprecated
-    @Override
-    protected List<Archive> getClassPathArchives() throws Exception
-    {
         List<Archive> archives = new ArrayList<>();
-        archive.getNestedArchives(this::isNestedArchive, candidateArchive -> true)
-                .forEachRemaining(archives::add);
+        super.getClassPathArchivesIterator().forEachRemaining(archives::add);
 
         Path extraLibPath = Paths.get(getApplicationHome() + EXTRA_LIB);
 
@@ -88,7 +80,7 @@ public class ExtensibleClasspathEnabledWarLauncher
                     + "] - path does not exist");
         }
 
-        return archives;
+        return archives.iterator();
     }
 
     protected boolean isNestedArchive(Archive.Entry entry)

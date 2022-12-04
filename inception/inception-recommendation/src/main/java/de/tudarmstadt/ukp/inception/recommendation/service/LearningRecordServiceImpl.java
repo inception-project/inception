@@ -22,9 +22,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionTy
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +39,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
 /**
  * <p>

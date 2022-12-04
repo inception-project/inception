@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.config;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,6 +31,8 @@ import de.tudarmstadt.ukp.inception.sharing.project.InviteProjectSettingsPanelFa
 import de.tudarmstadt.ukp.inception.sharing.project.ProjectSharingMenuItem;
 import de.tudarmstadt.ukp.inception.sharing.project.exporters.ProjectInviteExporter;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @EnableConfigurationProperties(InviteServicePropertiesImpl.class)

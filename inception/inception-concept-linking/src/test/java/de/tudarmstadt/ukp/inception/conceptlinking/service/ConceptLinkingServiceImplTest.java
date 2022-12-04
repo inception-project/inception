@@ -26,8 +26,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -82,7 +80,7 @@ public class ConceptLinkingServiceImplTest
         RepositoryProperties repoProps = new RepositoryProperties();
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        EntityManager entityManager = testEntityManager.getEntityManager();
+        var entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingPropertiesImpl(), repoProps,

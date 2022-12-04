@@ -93,6 +93,5 @@
       <artifactId>solr-core</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 </project>

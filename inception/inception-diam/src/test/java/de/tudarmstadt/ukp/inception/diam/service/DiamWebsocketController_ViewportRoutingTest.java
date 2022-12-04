@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.EntityManager;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,6 +110,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -364,9 +363,9 @@ public class DiamWebsocketController_ViewportRoutingTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

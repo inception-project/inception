@@ -36,8 +36,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import javax.persistence.EntityManager;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,6 +94,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -290,9 +289,9 @@ public class WebSocketIntegrationTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
             aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

@@ -24,8 +24,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,6 +36,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
+import jakarta.servlet.ServletContext;
 
 public class DiamDebugEditorComponent
     extends VueComponent

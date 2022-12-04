@@ -42,8 +42,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.JCas;
@@ -75,6 +73,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
+import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest

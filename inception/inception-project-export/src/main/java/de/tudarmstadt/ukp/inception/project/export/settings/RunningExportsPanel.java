@@ -22,8 +22,6 @@ import static java.lang.String.format;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -33,6 +31,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import jakarta.servlet.ServletContext;
 
 public class RunningExportsPanel
     extends WebMarkupContainer

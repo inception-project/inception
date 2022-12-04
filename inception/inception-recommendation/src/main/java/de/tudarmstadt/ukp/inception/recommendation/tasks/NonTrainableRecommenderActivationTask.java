@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 /**
  * This task activates all non-trainable recommenders.
