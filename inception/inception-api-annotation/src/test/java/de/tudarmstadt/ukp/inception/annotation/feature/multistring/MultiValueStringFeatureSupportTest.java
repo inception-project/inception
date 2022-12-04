@@ -87,6 +87,7 @@ public class MultiValueStringFeatureSupportTest
         verify(schemaService).createMissingTag(valueFeature, tag2);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void thatFeatureValueIsSet() throws Exception
     {
