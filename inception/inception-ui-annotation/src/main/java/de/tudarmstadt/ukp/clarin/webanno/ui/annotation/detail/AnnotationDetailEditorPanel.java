@@ -64,6 +64,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -177,6 +179,15 @@ public abstract class AnnotationDetailEditorPanel
         navContainer.add(createNextAnnotationButton());
         navContainer.add(createPreviousAnnotationButton());
         add(navContainer);
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(AnnotationDetailEditorJSResourceReference.get()));
     }
 
     private LambdaAjaxLink createNextAnnotationButton()

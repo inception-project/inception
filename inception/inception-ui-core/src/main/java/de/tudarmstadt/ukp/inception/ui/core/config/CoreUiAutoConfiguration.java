@@ -15,32 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
+package de.tudarmstadt.ukp.inception.ui.core.config;
 
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-public class IllegalFeatureValueException
-    extends AnnotationException
+@Configuration
+@EnableConfigurationProperties(CspPropertiesImpl.class)
+public class CoreUiAutoConfiguration
 {
-    private static final long serialVersionUID = -5120144780593360107L;
-
-    public IllegalFeatureValueException()
-    {
-        super();
-    }
-
-    public IllegalFeatureValueException(String message)
-    {
-        super(message);
-    }
-
-    public IllegalFeatureValueException(String aMessage, Throwable aCause)
-    {
-        super(aMessage, aCause);
-    }
-
-    public IllegalFeatureValueException(Throwable aCause)
-    {
-        super(aCause);
-    }
+    // No beans yet
 }

@@ -197,7 +197,7 @@ class ExportServiceControllerImplTest
         }
 
         assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("access is denied");
+        assertThat(sessionHandler.errorMsg).containsIgnoringCase("AccessDeniedException");
         assertThat(errorRecieved).isTrue();
     }
 

@@ -109,19 +109,8 @@ public class StringFeatureSupport
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws AnnotationException
     {
-        if (aValue != null && schemaService != null && aFeature.getTagset() != null
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                && !schemaService.existsTag((String) aValue, aFeature.getTagset())) {
-            if (!aFeature.getTagset().isCreateTag()) {
-                throw new IllegalArgumentException("[" + aValue
-                        + "] is not in the tag list. Please choose from the existing tags");
-            }
-            else {
-                Tag selectedTag = new Tag();
-                selectedTag.setName((String) aValue);
-                selectedTag.setTagSet(aFeature.getTagset());
-                schemaService.createTag(selectedTag);
-            }
+        if (schemaService != null) {
+            schemaService.createMissingTag(aFeature, (String) aValue);
         }
 
         super.setFeatureValue(aCas, aFeature, aAddress, aValue);

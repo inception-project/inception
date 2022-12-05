@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
@@ -52,6 +53,7 @@ import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
+import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.IPackageResourceGuard;
@@ -69,6 +71,7 @@ import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 import com.googlecode.wicket.kendo.ui.form.TextField;
@@ -94,6 +97,7 @@ import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
+import de.tudarmstadt.ukp.inception.ui.core.config.CspProperties;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -104,6 +108,8 @@ public abstract class WicketApplicationBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private @Autowired CspProperties cspProperties;
+
     @Override
     protected void init()
     {
@@ -113,12 +119,17 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
+        var imgSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        cspProperties.getAllowedImageSources().stream() //
+                .map(FixedCSPValue::new) //
+                .forEachOrdered(imgSrcValue::add);
+
         getCspSettings().blocking().clear() //
                 .add(DEFAULT_SRC, NONE) //
                 .add(SCRIPT_SRC, NONCE, STRICT_DYNAMIC, UNSAFE_EVAL) //
                 // .add(STYLE_SRC, NONCE) //
                 .add(STYLE_SRC, SELF, UNSAFE_INLINE) //
-                .add(IMG_SRC, SELF, new FixedCSPValue("data:")) //
+                .add(IMG_SRC, imgSrcValue.toArray(CSPRenderable[]::new)) //
                 .add(CONNECT_SRC, SELF) //
                 .add(FONT_SRC, SELF) //
                 .add(MANIFEST_SRC, SELF) //

@@ -33,6 +33,9 @@ public class PolicyCollection
 
     private boolean debug = false;
 
+    private String name;
+    private String version;
+
     public PolicyCollection(Map<QName, ElementPolicy> aElementPolicies,
             Map<QName, AttributePolicy> aGlobalAttributePolicies,
             ElementAction aDefaultElementAction, AttributeAction aDefaultAttributeAction)
@@ -96,5 +99,25 @@ public class PolicyCollection
     public void setDebug(boolean aDebug)
     {
         debug = aDebug;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String aName)
+    {
+        name = aName;
+    }
+
+    public String getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(String aVersion)
+    {
+        version = aVersion;
     }
 }

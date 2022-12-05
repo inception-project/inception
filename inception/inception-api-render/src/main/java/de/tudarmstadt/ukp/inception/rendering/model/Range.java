@@ -17,33 +17,53 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.model;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.String.format;
+
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Range
     implements Serializable
 {
     private static final long serialVersionUID = -6261188569647696831L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final String BEGIN = "begin";
+    private static final String END = "end";
+
     public static final Range UNDEFINED = new Range(-1, -1);
 
-    private final int begin;
-    private final int end;
+    private final @JsonProperty(BEGIN) int begin;
+    private final @JsonProperty(END) int end;
 
+    @JsonCreator
+    public Range(@JsonProperty(BEGIN) int aBegin, @JsonProperty(END) int aEnd)
+    {
+        begin = aBegin;
+        end = aEnd;
+    }
+
+    /**
+     * @deprecated Use {@link #rangeCoveringDocument} instead.
+     */
+    @Deprecated
     public Range(CAS aCas)
     {
         begin = 0;
         end = aCas.getDocumentText().length();
-    }
-
-    public Range(int aBegin, int aEnd)
-    {
-        begin = aBegin;
-        end = aEnd;
     }
 
     public Range(AnnotationFS aAnnotation)
@@ -52,6 +72,10 @@ public class Range
         end = aAnnotation.getEnd();
     }
 
+    /**
+     * @deprecated Use {@link #rangeCoveringAnnotations(Iterable)} instead.
+     */
+    @Deprecated
     public Range(Iterable<AnnotationFS> aAnnotations)
     {
         Iterator<AnnotationFS> i = aAnnotations.iterator();
@@ -67,8 +91,8 @@ public class Range
 
         while (i.hasNext()) {
             current = i.next();
-            b = Math.min(current.getBegin(), b);
-            e = Math.max(current.getEnd(), e);
+            b = min(current.getBegin(), b);
+            e = max(current.getEnd(), e);
         }
 
         begin = b;
@@ -83,6 +107,38 @@ public class Range
     public int getEnd()
     {
         return end;
+    }
+
+    public static Range rangeClippedToDocument(CAS aCas, int aBegin, int aEnd)
+    {
+        var length = aCas.getDocumentText().length();
+
+        var begin = min(aBegin, aEnd);
+        var end = max(aBegin, aEnd);
+
+        var clippedBegin = max(0, begin);
+        var clippedEnd = min(length, end);
+
+        if (clippedBegin > length || clippedEnd > length) {
+            throw new IllegalArgumentException(format(
+                    "Range [%d-%d] is fully outside the document [%d-%d]", begin, end, 0, length));
+        }
+
+        if (clippedBegin != begin || clippedEnd != end) {
+            LOG.warn("Range [{}-{}] clipped to [{}-{}]", begin, end, clippedBegin, clippedEnd);
+        }
+
+        return new Range(clippedBegin, clippedEnd);
+    }
+
+    public static Range rangeCoveringDocument(CAS aCas)
+    {
+        return new Range(aCas);
+    }
+
+    public static Range rangeCoveringAnnotations(Iterable<AnnotationFS> aAnnotations)
+    {
+        return new Range(aAnnotations);
     }
 
     @Override

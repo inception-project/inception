@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.app.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToApplication;
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToRemoteApiAndSwagger;
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToStaticResources;
 
 import java.util.Optional;
 
@@ -49,27 +52,13 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         aHttp.csrf().disable();
         aHttp.headers().frameOptions().sameOrigin();
 
-        aHttp.authorizeRequests() //
-                .antMatchers("/login.html*").permitAll() //
-                // Resources need to be publicly accessible so they don't trigger the login
-                // page. Otherwise it could happen that the user is redirected to a resource
-                // upon login instead of being forwarded to a proper application page.
-                .antMatchers("/favicon.ico").permitAll() //
-                .antMatchers("/favicon.png").permitAll() //
-                .antMatchers("/assets/**").permitAll() //
-                .antMatchers("/images/**").permitAll() //
-                .antMatchers("/resources/**").permitAll() //
-                .antMatchers("/whoops").permitAll() //
-                .antMatchers("/about/**").permitAll() //
-                .antMatchers("/wicket/resource/**").permitAll() //
-                .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll() //
-                .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')") //
-                .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')") //
-                .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')") //
-                .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')") //
-                .anyRequest().denyAll();
+        var authorizations = aHttp.authorizeRequests();
+        authorizations.antMatchers("/login.html*").permitAll();
+        accessToStaticResources(authorizations);
+        accessToRemoteApiAndSwagger(authorizations);
+        authorizations.antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll();
+        accessToApplication(authorizations);
+        authorizations.anyRequest().denyAll();
 
         // Must use "defaultAuthenticationEntryPointFor" instead of "formLogin" because
         // if we use formLogin, Spring will handle the form submit and we want the Wicket

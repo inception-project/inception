@@ -109,6 +109,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -1573,5 +1574,29 @@ public class AnnotationSchemaServiceImpl
         catch (NoResultException e) {
             return false;
         }
+    }
+
+    @Override
+    @Transactional
+    public void createMissingTag(AnnotationFeature aFeature, String aValue)
+        throws IllegalFeatureValueException
+    {
+        if (aValue == null || aFeature.getTagset() == null) {
+            return;
+        }
+
+        if (existsTag(aValue, aFeature.getTagset())) {
+            return;
+        }
+
+        if (!aFeature.getTagset().isCreateTag()) {
+            throw new IllegalFeatureValueException("[" + aValue
+                    + "] is not in the tag list. Please choose from the existing tags");
+        }
+
+        Tag selectedTag = new Tag();
+        selectedTag.setName(aValue);
+        selectedTag.setTagSet(aFeature.getTagset());
+        createTag(selectedTag);
     }
 }

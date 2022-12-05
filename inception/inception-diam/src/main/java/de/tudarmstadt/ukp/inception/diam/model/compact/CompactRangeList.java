@@ -17,12 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when
  * converting an array of offsets from JSON to Java.
  */
+@JsonSerialize
 public class CompactRangeList
     extends ArrayList<CompactRange>
 {
@@ -30,4 +35,14 @@ public class CompactRangeList
     // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
 
     private static final long serialVersionUID = 1441338116416225186L;
+
+    public CompactRangeList()
+    {
+        // Needed for deserialization
+    }
+
+    public CompactRangeList(CompactRange... aRanges)
+    {
+        super(asList(aRanges));
+    }
 }
