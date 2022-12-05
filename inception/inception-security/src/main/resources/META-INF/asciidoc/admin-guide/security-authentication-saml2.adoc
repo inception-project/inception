@@ -19,7 +19,8 @@
 
 {product-name} can authenticate a user against a SAML2-compatible identity provider. SAML
 providers can be configured alongside the usual form-based login and OAuth2. 
-It is **not** compatible with the <<sect_security_preauth,external pre-authentication>> and does not require setting the `auth.mode` property.
+It is **not** compatible with the <<sect_security_authentication_preauth,external pre-authentication>>
+and does not require setting the `auth.mode` property.
 
 The following example configuration declares a SAML2 service connection named `inception-client`
 which uses a Keycloak instance configured for SAML2 running at 
@@ -30,7 +31,7 @@ refer to the link:https://docs.spring.io/spring-security/reference/servlet/saml2
 .Example: Authenticate against a local Keycloak
 ----
 spring.security.saml2.relyingparty.registration.keycloak.assertingparty.entity-id=http://localhost:8180/realms/inception-demo
-spring.security.saml2.relyingparty.registration.keycloak.assertingparty.verification.credentials.certificate-location=file:/srv/inception/keycloak-saml-idp.crt
+spring.security.saml2.relyingparty.registration.keycloak.assertingparty.verification.credentials[0].certificate-location=file:/srv/inception/keycloak-saml-idp.crt
 spring.security.saml2.relyingparty.registration.keycloak.assertingparty.singlesignon.url=http://localhost:8180/realms/inception-demo/protocol/saml
 spring.security.saml2.relyingparty.registration.keycloak.assertingparty.singlesignon.sign-request=false
 ----
@@ -70,3 +71,36 @@ Save this file at the location indicated by the `....verification.credentials.ce
 When you restart {product-name} and access the login page now, it should offer a login option called
 *keycloak*. The SAML authentication does not allow defining the provider name shown on the login page independently from the registration ID. The registration ID (here `keycloak`) is defined inbetween the `registration`
 and `assertingparty` parts of the configuration keys.
+
+== Client certificate (optional)
+
+You can provide {product-name} with a certificate so the IdP can verify that authentication requests are
+really coming from it.
+
+* First, we generate a certificate and a key file using (we are using a 2048-bit key here, but you might care
+to use a longer key)
++ 
+----
+openssl req -x509 -newkey rsa:2048 -keyout /srv/inception/inception.key -out /srv/inception/inception.crt -sha256 -days 365 -nodes -subj "/CN=inception-demo"
+----
+* In order to upload these, both need to be in one PEM file, so we concatenate the two files:
++
+----
+cat /srv/inception/inception-saml.key /srv/inception/inception-saml.crt > /srv/inception/inception-saml.pem
+----
+* Open the previously defined client in Keycloak (e.g. `http://localhost:8080/saml2/service-provider-metadata/keycloak`)
+* Set *Client signature Required* to `Off` and save the settings
+* Now a new tab *Keys* should appear at the top. Switch to it.
+* Click on *Import* and select *PEM* as the format, then upload the file `/srv/inception/inception.pem`
+* Enable request signing in the `settings.properties` file
++
+----
+spring.security.saml2.relyingparty.registration.keycloak.assertingparty.singlesignon.sign-request=true
+----
+* Configure the certificates for {product-name} to sign its requests
++
+----
+spring.security.saml2.relyingparty.registration.keycloak.signing.credentials[0].private-key-location=file:/srv/inception/inception-saml.key
+spring.security.saml2.relyingparty.registration.keycloak.signing.credentials[0].certificate-location=file:/srv/inception/inception-saml.crt
+----
+

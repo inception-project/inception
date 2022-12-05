@@ -246,6 +246,16 @@
       </snapshots>
     </repository>
     -->
+    <repository>
+      <id>shiboleth-releases</id>
+      <url>https://build.shibboleth.net/maven/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -1631,7 +1641,7 @@
       <dependency>
         <groupId>org.opensaml</groupId>
         <artifactId>opensaml-bom</artifactId>
-        <version>4.0.1</version>
+        <version>4.2.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
