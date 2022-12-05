@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -35,7 +33,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -55,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
@@ -295,7 +293,8 @@ public class DocumentMetadataAnnotationDetailPanel
             findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
         }
         catch (Exception e) {
-            handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
+            WicketExceptionUtil.handleException(LOG, DocumentMetadataAnnotationDetailPanel.this,
+                    aTarget, e);
         }
     }
 
@@ -330,30 +329,6 @@ public class DocumentMetadataAnnotationDetailPanel
         }
     }
 
-    protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-            Exception aException)
-    {
-        if (aTarget != null) {
-            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
-        }
-
-        try {
-            throw aException;
-        }
-        catch (AnnotationException e) {
-            aComponent.error("Error: " + e.getMessage());
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        catch (UIMAException e) {
-            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        catch (Exception e) {
-            aComponent.error("Error: " + e.getMessage());
-            LOG.error("Error: " + e.getMessage(), e);
-        }
-    }
-
     private static final class IsSidebarAction
         extends MetaDataKey<Boolean>
     {
@@ -384,7 +359,8 @@ public class DocumentMetadataAnnotationDetailPanel
             }
         }
         catch (IOException | AnnotationException e) {
-            handleException(this, target, e);
+            WicketExceptionUtil.handleException(LOG, DocumentMetadataAnnotationDetailPanel.this,
+                    target, e);
         }
     }
 

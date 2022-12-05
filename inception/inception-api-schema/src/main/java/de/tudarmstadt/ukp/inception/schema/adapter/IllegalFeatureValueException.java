@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
-
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+package de.tudarmstadt.ukp.inception.schema.adapter;
 
 public class IllegalFeatureValueException
     extends AnnotationException
