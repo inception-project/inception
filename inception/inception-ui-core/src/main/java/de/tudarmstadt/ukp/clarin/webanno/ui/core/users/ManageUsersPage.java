@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 
 /**
  * Manage Application wide Users.
@@ -68,6 +69,7 @@ public class ManageUsersPage
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
     private @SpringBean OAuth2Adapter oAuth2Adapter;
+    private @SpringBean Saml2Adapter saml2Adapter;
 
     private DropDownChoice<Realm> realm;
     private LambdaAjaxLink createButton;
@@ -166,8 +168,14 @@ public class ManageUsersPage
                     }
                 }).forEach(realms::add);
 
+        // Add the realms from the external authentication providers. Note that multiple providers
+        // might use the same registration. E.g. the saml IdP might be registered as an OAuth and
+        // simultaneously as a SAML2 provider. It does not make much sense to be honest, but it
+        // is possible.
         oAuth2Adapter.getOAuthClientRegistrations()
                 .forEach(reg -> realms.add(Realm.forExternalOAuth(reg)));
+        saml2Adapter.getSamlRelyingPartyRegistrations()
+                .forEach(((uri, regId) -> realms.add(Realm.forExternalSaml(uri, regId))));
 
         // If there is a choice, then the local realm should always be a part of it
         if (!realms.isEmpty()) {

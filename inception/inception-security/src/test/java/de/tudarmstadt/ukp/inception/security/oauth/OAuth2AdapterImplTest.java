@@ -37,10 +37,11 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,7 +140,7 @@ class OAuth2AdapterImplTest
                 .withEnabled(false) //
                 .build());
 
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(DisabledException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)));
     }
@@ -148,31 +149,31 @@ class OAuth2AdapterImplTest
     void thatUserWithFunkyUsernameIsDeniedAccess()
     {
         oidcIdToken = oidcIdToken("/etc/passwd", oAuth2AccessToken);
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
                 .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("../escape.zip", oAuth2AccessToken);
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
                 .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("", oAuth2AccessToken);
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
                 .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("*".repeat(2000), oAuth2AccessToken);
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
                 .withMessageContaining("Illegal username");
 
         oidcIdToken = oidcIdToken("mel\0ove", oAuth2AccessToken);
-        assertThatExceptionOfType(OAuth2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadOidcUser(
                         new OidcUserRequest(clientRegistration, oAuth2AccessToken, oidcIdToken)))
                 .withMessageContaining("Illegal username");

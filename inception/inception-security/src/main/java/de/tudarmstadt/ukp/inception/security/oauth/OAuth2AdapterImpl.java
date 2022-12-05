@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -194,8 +196,7 @@ public class OAuth2AdapterImpl
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
             LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "Illegal username", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Illegal username");
         }
     }
 
@@ -204,8 +205,7 @@ public class OAuth2AdapterImpl
         if (!aExpectedRealm.equals(aUser.getRealm())) {
             LOG.info("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
                     aUser.getRealm(), aExpectedRealm);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "Realm mismatch", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Realm mismatch");
         }
     }
 
@@ -213,8 +213,7 @@ public class OAuth2AdapterImpl
     {
         if (!aUser.isEnabled()) {
             LOG.info("Prevented login of locally deactivated user {}", aUser);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "User deactivated", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new DisabledException("User deactivated");
         }
     }
 

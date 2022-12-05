@@ -24,8 +24,13 @@ import org.springframework.security.saml2.provider.service.authentication.Saml2A
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
+@SuppressWarnings("deprecation")
 public interface Saml2Adapter
 {
+    /**
+     * @return map containing the authentication request URI as the key and the registration ID as
+     *         the value.
+     */
     Map<String, String> getSamlRelyingPartyRegistrations();
 
     Saml2Authentication process(ResponseToken aToken, Saml2Authentication aAuthentication);

@@ -33,7 +33,8 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,30 +126,30 @@ class Saml2AdapterImplTest
                 .withEnabled(false) //
                 .build());
 
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(DisabledException.class) //
                 .isThrownBy(() -> sut.loadSamlUser(USERNAME, CLIENT_REGISTRATION_ID));
     }
 
     @Test
     void thatUserWithFunkyUsernameIsDeniedAccess()
     {
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadSamlUser("/etc/passwd", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadSamlUser("../escape.zip", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadSamlUser("", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadSamlUser("*", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 
-        assertThatExceptionOfType(Saml2AuthenticationException.class) //
+        assertThatExceptionOfType(BadCredentialsException.class) //
                 .isThrownBy(() -> sut.loadSamlUser("mel\0ove", CLIENT_REGISTRATION_ID))
                 .withMessageContaining("Illegal username");
 

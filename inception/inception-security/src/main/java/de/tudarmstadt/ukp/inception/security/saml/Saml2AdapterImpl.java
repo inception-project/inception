@@ -19,27 +19,26 @@ package de.tudarmstadt.ukp.inception.security.saml;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static java.util.stream.Collectors.joining;
-import static org.springframework.security.saml2.core.Saml2ErrorCodes.INVALID_REQUEST;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.saml2.core.Saml2Error;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
-import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationException;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 
@@ -113,11 +112,14 @@ public class Saml2AdapterImpl
     {
         User u = loadSamlUser(aAuthentication.getName(), aRegistrationId);
 
-        Collection<? extends GrantedAuthority> authorities = u.getRoles().stream() //
+        Set<GrantedAuthority> allAuthorities = new HashSet<>();
+        u.getRoles().stream() //
                 .map(r -> new SimpleGrantedAuthority(r.toString())) //
-                .collect(Collectors.toList());
+                .forEach(allAuthorities::add);
+        allAuthorities.addAll(userDetailsManager.loadUserAuthorities(u.getUsername()));
+
         return new Saml2Authentication((AuthenticatedPrincipal) aAuthentication.getPrincipal(),
-                aAuthentication.getSaml2Response(), authorities);
+                aAuthentication.getSaml2Response(), allAuthorities);
     }
 
     @Override
@@ -134,7 +136,8 @@ public class Saml2AdapterImpl
             return u;
         }
 
-        return materializeUser(aUsername, realm);
+        var user = materializeUser(aUsername, realm);
+        return user;
     }
 
     private User materializeUser(String username, String realm)
@@ -145,7 +148,6 @@ public class Saml2AdapterImpl
         u.setEnabled(true);
         u.setRealm(realm);
         u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
-
         userRepository.create(u);
 
         return u;
@@ -159,8 +161,7 @@ public class Saml2AdapterImpl
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
             LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
-            Saml2Error oauth2Error = new Saml2Error(INVALID_REQUEST, "Illegal username");
-            throw new Saml2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Illegal username");
         }
     }
 
@@ -169,8 +170,7 @@ public class Saml2AdapterImpl
         if (!aExpectedRealm.equals(aUser.getRealm())) {
             LOG.info("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
                     aUser.getRealm(), aExpectedRealm);
-            Saml2Error oauth2Error = new Saml2Error(INVALID_REQUEST, "Realm mismatch");
-            throw new Saml2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Realm mismatch");
         }
     }
 
@@ -178,8 +178,7 @@ public class Saml2AdapterImpl
     {
         if (!aUser.isEnabled()) {
             LOG.info("Prevented login of locally deactivated user {}", aUser);
-            Saml2Error oauth2Error = new Saml2Error(INVALID_REQUEST, "User deactivated");
-            throw new Saml2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new DisabledException("User deactivated");
         }
     }
 }
