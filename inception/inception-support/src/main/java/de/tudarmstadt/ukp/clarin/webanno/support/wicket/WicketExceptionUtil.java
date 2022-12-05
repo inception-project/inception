@@ -29,6 +29,12 @@ import org.slf4j.Logger;
 public final class WicketExceptionUtil
 {
     public static void handleException(Logger aLog, IFeedbackContributor aFeedbackTarget,
+            Exception aException)
+    {
+        handleException(aLog, aFeedbackTarget, null, aException);
+    }
+
+    public static void handleException(Logger aLog, IFeedbackContributor aFeedbackTarget,
             AjaxRequestTarget aTarget, Exception aException)
     {
         if (aException instanceof ReplaceHandlerException) {

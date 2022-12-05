@@ -87,10 +87,9 @@ public class XHtmlXmlDocumentViewControllerImpl
     @Override
     public String getDocumentUrl(SourceDocument aDoc)
     {
-        return servletContext.getContextPath() + BASE_URL
-                + GET_DOCUMENT_PATH
-                        .replace("{projectId}", String.valueOf(aDoc.getProject().getId()))
-                        .replace("{documentId}", String.valueOf(aDoc.getId()));
+        return servletContext.getContextPath() + BASE_URL + GET_DOCUMENT_PATH //
+                .replace("{projectId}", String.valueOf(aDoc.getProject().getId()))
+                .replace("{documentId}", String.valueOf(aDoc.getId()));
     }
 
     private void renderXmlStylesheet(ContentHandler ch, String aStylesheetUrl) throws SAXException
