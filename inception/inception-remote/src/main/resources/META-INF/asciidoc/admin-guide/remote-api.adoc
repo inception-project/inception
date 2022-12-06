@@ -78,9 +78,9 @@ then token has been created before in {product-name}. Contrary to OAuth2 logins 
 logins to the remote API do **not** automatically create users.
 
 Let's consider you are using Keycloak as the OAuth2 provider. First, you would set up a realm in 
-Keycloak as described in <<sect_security_oauth2>>. Assuming you followed the example, you would
-now open the `inception-client` client in the **clients** panel of the **inception-demo** realm. There,
-you have to enable the **Service Accounts** toggle and save.
+Keycloak as described in <<sect_security_authentication_oauth2>>. Assuming you followed the example,
+you would now open the `inception-client` client in the **clients** panel of the **inception-demo**
+realm. There, you have to enable the **Service Accounts** toggle and save.
 
 In the `settings.properties` file, you need to add the following settings to enable OAuth2 login to 
 the remote API:
