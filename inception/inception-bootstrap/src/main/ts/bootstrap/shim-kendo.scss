@@ -90,3 +90,14 @@
   border-top: 1px solid var(--bs-border-color);
   background-color: var(--bs-light);
 }
+
+.k-input:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+  padding: 6px 12px;
+}
+
+// Remove double focus shadow in composite components like combo boxes
+.k-input-inner.k-input:focus {
+  box-shadow: none;  
+}

@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>26.0-SNAPSHOT</version>
+    <version>27.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -441,6 +441,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
     </dependency>
 
@@ -460,6 +464,10 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-saml2-service-provider</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
@@ -515,14 +523,6 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-jcache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.ehcache</groupId>
-      <artifactId>ehcache</artifactId>
     </dependency>
 
     <dependency>
@@ -623,6 +623,12 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli-spring-boot-starter</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>no.nav.security</groupId>
+      <artifactId>mock-oauth2-server</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -845,6 +851,13 @@
           <configuration>
             <ignoredDependencies>
               <!-- 
+               This we need for testing only in this module, but actually we need it at runtime as
+               well. Somehow the plugin does not detect that we need it at runtime and suggests we
+               add it as a test dependency. However, then it does not get included into the 
+               uber-JAR and we get ClassNotFoundExceptions at runtime.
+               -->
+              <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
+              <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
                 - for the moment, completely ignore it in the dependency checking.
                 -->
@@ -925,11 +938,9 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>org.hibernate:hibernate-jcache</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
-              <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>

@@ -19,7 +19,14 @@ package de.tudarmstadt.ukp.inception.export.config;
 
 public interface DocumentImportExportServiceProperties
 {
+    CasDoctorOnImportPolicy getRunCasDoctorOnImport();
+
     int getMaxTokens();
 
     int getMaxSentences();
+
+    public static enum CasDoctorOnImportPolicy
+    {
+        AUTO, OFF, ON
+    }
 }

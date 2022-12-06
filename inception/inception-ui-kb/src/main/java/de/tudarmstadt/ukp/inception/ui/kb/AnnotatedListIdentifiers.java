@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -123,9 +124,11 @@ public class AnnotatedListIdentifiers
         List<String> searchResultList = new ArrayList<String>();
         for (SearchResult x : searchResults.getObject()) {
             if (x.getDocumentTitle().equals(documentTitle)) {
-                String sentence = x.getLeftContext() + "<strong>" + x.getText() + "</strong>"
-                        + x.getRightContext();
-
+                String sentence = escapeMarkup(x.getLeftContext()) + //
+                        "<strong>" + //
+                        escapeMarkup(x.getText()) + //
+                        "</strong>" + //
+                        escapeMarkup(x.getRightContext());
                 searchResultList.add(sentence);
                 LOG.debug("Sentence search : {}", sentence);
             }

@@ -37,7 +37,6 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
@@ -65,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
-import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/join-project/${"
@@ -142,8 +141,8 @@ public class AcceptInvitePage
                         && inviteServiceProperties.isGuestsEnabled() && user == null))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                         _target -> _target.add(form))));
-        form.add(new Label("invitationText", LoadableDetachableModel.of(this::getInvitationText))
-                .setEscapeModelStrings(false));
+        form.add(new MarkdownLabel("invitationText",
+                LoadableDetachableModel.of(this::getInvitationText)));
 
         tooManyUsersNotice = new WebMarkupContainer("tooManyUsersNotice");
         tooManyUsersNotice.add(visibleWhen(this::isTooManyUsers));
@@ -185,7 +184,7 @@ public class AcceptInvitePage
             invitationText = invite.getObject().getInvitationText();
         }
 
-        return MarkdownUtil.markdownToHtml(invitationText);
+        return invitationText;
     }
 
     private String getInviteId()

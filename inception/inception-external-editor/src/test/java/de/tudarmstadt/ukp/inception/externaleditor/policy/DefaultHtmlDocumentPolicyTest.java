@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy.DEFAULT_POLICY_YAML;
+import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest.touch;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.write;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -34,29 +34,26 @@ import org.junit.jupiter.api.io.TempDir;
 class DefaultHtmlDocumentPolicyTest
 {
     @Test
-    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws IOException
+    void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
         Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        var p1 = sut.getPolicy();
-        assertThat(p1.getElementPolicies()).hasSize(72);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
-
-        var p2 = sut.getPolicy();
-        assertThat(p2.getElementPolicies()).isEmpty();
+        assertThat(policyFile).exists();
+        assertThat(sut.getPolicy().getElementPolicies()).isEmpty();
 
         write(policyFile.toFile(), "policies: [ {elements: [a], action: PASS}]", UTF_8);
-
-        var p3 = sut.getPolicy();
-        assertThat(p3.getElementPolicies()).hasSize(1);
+        assertThat(policyFile).exists();
+        touch(policyFile);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(1);
 
         Files.delete(policyFile);
-
-        var p4 = sut.getPolicy();
-        assertThat(p4.getElementPolicies()).hasSize(72);
+        assertThat(policyFile).doesNotExist();
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(72);
     }
 }

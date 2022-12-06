@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
 @Configuration
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "ui.html", name = "enabled", //
+    @ConditionalOnProperty(prefix = "ui.html-annotatorjs", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
     @Bean
     public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()

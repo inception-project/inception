@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.inception.security.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
+@ConditionalOnWebApplication
 public class InceptionSecurityActuatorAutoConfiguration
 {
     public static final String BASE_URL = "/actuator";
@@ -33,7 +35,6 @@ public class InceptionSecurityActuatorAutoConfiguration
     public SecurityFilterChain actuatorFilterChain(HttpSecurity aHttp) throws Exception
     {
         aHttp.antMatcher(BASE_URL + "/**");
-        aHttp.csrf().disable();
         aHttp.authorizeRequests() //
                 .antMatchers(BASE_URL + "/health").permitAll() //
                 .anyRequest().denyAll();

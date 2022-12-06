@@ -32,7 +32,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.markdown.MarkdownUtil;
 
 public class ProjectEntry
     implements Serializable
@@ -64,11 +63,7 @@ public class ProjectEntry
             return null;
         }
 
-        var shortDescription = substringBefore(project.getDescription(), "\n");
-        var shortDescriptionHtml = MarkdownUtil.markdownToTerseHtml(shortDescription);
-        shortDescriptionHtml = StringUtils.removeStart(shortDescriptionHtml, "<p>");
-        shortDescriptionHtml = StringUtils.removeEnd(shortDescriptionHtml, "</p>");
-        return shortDescriptionHtml;
+        return substringBefore(project.getDescription(), "\n");
     }
 
     public Project getProject()

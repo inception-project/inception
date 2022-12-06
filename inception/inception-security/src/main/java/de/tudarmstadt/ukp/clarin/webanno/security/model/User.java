@@ -399,6 +399,12 @@ public class User
             return this;
         }
 
+        public Builder withRoles(Role... aRoles)
+        {
+            this.roles = Set.of(aRoles);
+            return this;
+        }
+
         public Builder withRoles(Set<Role> aRoles)
         {
             this.roles = aRoles;

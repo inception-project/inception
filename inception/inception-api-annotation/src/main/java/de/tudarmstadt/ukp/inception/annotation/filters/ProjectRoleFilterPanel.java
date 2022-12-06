@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -34,6 +33,7 @@ import org.apache.wicket.model.ResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 
 public class ProjectRoleFilterPanel
     extends Panel
@@ -65,8 +65,7 @@ public class ProjectRoleFilterPanel
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, role)));
 
-                link.add(new Label(MID_LABEL, aItem.getModel().map( //
-                        PermissionLevel::symbol).orElse("")).setEscapeModelStrings(false));
+                link.add(new SymbolLabel(MID_LABEL, aItem.getModel()));
                 link.add(new AttributeAppender("class",
                         () -> aModel.getObject().contains(role) ? "active" : "", " "));
                 link.add(AttributeModifier.replace("title",

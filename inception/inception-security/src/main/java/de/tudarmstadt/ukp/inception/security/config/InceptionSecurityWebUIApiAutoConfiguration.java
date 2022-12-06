@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.security.config;
 
+import static java.lang.String.join;
 import static org.springframework.security.config.http.SessionCreationPolicy.NEVER;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,6 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+@ConditionalOnWebApplication
 public class InceptionSecurityWebUIApiAutoConfiguration
 {
     public static final String BASE_URL = "/ui";
@@ -47,7 +50,21 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     {
         aHttp.antMatcher(BASE_VIEW_URL + "/**");
         // Views render data that we generally want to display in an IFrame on the editor page
-        aHttp.headers().frameOptions().sameOrigin();
+        aHttp.headers() //
+                .frameOptions().sameOrigin()//
+                .contentSecurityPolicy(csp -> {
+                    csp.policyDirectives(join(";", //
+                            "default-src 'none'", //
+                            "script-src 'strict-dynamic' 'unsafe-eval'", //
+                            "style-src 'self' 'unsafe-inline'", //
+                            "img-src 'self' data:", //
+                            "connect-src 'self'", //
+                            "font-src 'self'", //
+                            "manifest-src 'self'", //
+                            "child-src 'self'", //
+                            "base-uri 'self'", //
+                            "frame-src 'self' 'self'"));
+                });
         commonConfiguration(aHttp);
         return aHttp.build();
     }

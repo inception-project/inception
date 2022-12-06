@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToApplication;
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToRemoteApiAndSwagger;
+import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToStaticResources;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -33,6 +37,7 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
 
+@ConditionalOnWebApplication
 @EnableWebSecurity
 public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
 {
@@ -49,28 +54,15 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             .rememberMe()
             .and()
             .csrf().disable()
-            .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class)
-            .authorizeRequests()
-                // Resources need to be publicly accessible so they don't trigger the login
-                // page. Otherwise it could happen that the user is redirected to a resource
-                // upon login instead of being forwarded to a proper application page.
-                .antMatchers("/favicon.ico").permitAll()
-                .antMatchers("/favicon.png").permitAll()
-                .antMatchers("/assets/**").permitAll()
-                .antMatchers("/images/**").permitAll()
-                .antMatchers("/resources/**").permitAll()
-                .antMatchers("/whoops").permitAll()
-                .antMatchers("/about/**").permitAll()
-                .antMatchers("/wicket/resource/**").permitAll()
-                .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
-                .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
-                .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')")
-                .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')")
-                .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                .anyRequest().denyAll()
-            .and()
-            .exceptionHandling()
+            .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class);
+        
+        var authorizations = aHttp.authorizeRequests();
+        accessToStaticResources(authorizations);
+        accessToRemoteApiAndSwagger(authorizations);
+        accessToApplication(authorizations);
+        authorizations.anyRequest().denyAll();
+
+        aHttp.exceptionHandling()
                 .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
             .and()
                 .headers().frameOptions().sameOrigin()

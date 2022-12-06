@@ -716,13 +716,12 @@ public class DynamicWorkloadManagementPage
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        IModel<String> documentNameModel = Model.of(aDocument.getName());
         resetDocumentDialog
                 .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
         resetDocumentDialog
-                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setParameters(documentNameModel, aUser.getUiName()));
-        resetDocumentDialog.setResponseModel(documentNameModel);
+                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setExpectedResponseModel(
+                Model.of(aUser.getUiName() + " / " + aDocument.getName()));
         resetDocumentDialog.setConfirmAction(_target -> {
             documentService.resetAnnotationCas(aDocument, aUser);
 

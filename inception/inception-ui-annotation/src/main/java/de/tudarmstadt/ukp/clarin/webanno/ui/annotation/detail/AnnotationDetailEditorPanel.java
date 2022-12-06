@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectAnnotationByAddr;
@@ -65,6 +64,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -149,8 +150,12 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
-        add(deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog",
-                new StringResourceModel("DeleteDialog.title", this, null)));
+        deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog");
+        deleteAnnotationDialog
+                .setTitleModel(new StringResourceModel("DeleteDialog.title", this, null));
+        deleteAnnotationDialog.setContentModel(Model.of());
+        add(deleteAnnotationDialog);
+
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));
@@ -174,6 +179,15 @@ public abstract class AnnotationDetailEditorPanel
         navContainer.add(createNextAnnotationButton());
         navContainer.add(createPreviousAnnotationButton());
         add(navContainer);
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(AnnotationDetailEditorJSResourceReference.get()));
     }
 
     private LambdaAjaxLink createNextAnnotationButton()
@@ -997,7 +1011,7 @@ public abstract class AnnotationDetailEditorPanel
     public void actionClear(AjaxRequestTarget aTarget) throws AnnotationException
     {
         reset(aTarget);
-
+        aTarget.add(this);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
@@ -1173,7 +1187,9 @@ public abstract class AnnotationDetailEditorPanel
         setVisible(getModelObject() != null && getModelObject().getDocument() != null);
 
         // Set read only if annotation is finished or the user is viewing other's work
-        setEnabled(editorPage.isEditable());
+        var selectedLayerIsReadOnly = getModel().map(AnnotatorState::getSelectedAnnotationLayer)
+                .map(AnnotationLayer::isReadonly).orElse(true).getObject();
+        setEnabled(editorPage.isEditable() && !selectedLayerIsReadOnly);
     }
 
     /**
@@ -1429,8 +1445,8 @@ public abstract class AnnotationDetailEditorPanel
     {
         LambdaAjaxLink link = new LambdaAjaxLink("clear", this::actionClear);
         link.setOutputMarkupPlaceholderTag(true);
-        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
-                && editorPage.isEditable()));
+        link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         return link;
     }
 
@@ -1445,10 +1461,6 @@ public abstract class AnnotationDetailEditorPanel
                     state.getSelection().getAnnotation().isSet() && state.getSelection().isArc()
                             && RELATION_TYPE.equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
-
-            // Avoid reversing in read-only layers
-            _this.setEnabled(state.getSelectedAnnotationLayer() != null
-                    && !state.getSelectedAnnotationLayer().isReadonly());
         }));
         return link;
     }
@@ -1459,9 +1471,6 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));
-        // Avoid deleting in read-only layers
-        link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
-                && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
         link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
     }
@@ -1481,10 +1490,17 @@ public abstract class AnnotationDetailEditorPanel
 
     public void refresh(AjaxRequestTarget aTarget)
     {
+        // Old code that caused a bug not setting the enabled state properly when switching from
+        // one (editable) annotation to another (non-editable) annotation
         // featureEditorListPanel is in a wicket:container, so we cannot refresh it directly. It
         // is in a wicket:container for the no-data-notice to lay out properly
-        featureEditorListPanel.stream().forEach(aTarget::add);
-        aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel, relationListPanel);
+        // featureEditorListPanel.stream().forEach(aTarget::add);
+        // aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel,
+        // relationListPanel);
+
+        // We need to add the entire ADEP because we set the enabled state of the whole ADEP
+        // hierarchy in its configure method for read-only layers or documents
+        aTarget.add(this);
     }
 
     @OnEvent(stop = true)

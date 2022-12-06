@@ -33,6 +33,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.dkpro.core.api.xml.type.XmlNode;
+import org.dkpro.core.api.xml.type.XmlTextNode;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -101,5 +102,15 @@ public class XmlCas2SaxEvents
             attrs.addAttribute(null, null, DATA_CAPTURE_ROOT, null, "");
         }
         return attrs;
+    }
+
+    @Override
+    public void process(XmlTextNode aChild) throws SAXException
+    {
+        // Contrary to the default behavior, we only want to send captured text to the browser
+        if (aChild.getCaptured()) {
+            var text = aChild.getCoveredText().toCharArray();
+            handler.characters(text, 0, text.length);
+        }
     }
 }

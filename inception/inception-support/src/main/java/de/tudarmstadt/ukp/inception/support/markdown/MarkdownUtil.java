@@ -54,12 +54,20 @@ public class MarkdownUtil
 
     public static String markdownToTerseHtml(String aMarkdown)
     {
+        if (aMarkdown == null) {
+            return null;
+        }
+
         var html = Processor.process(aMarkdown, true);
         return TERSE_POLICY.sanitize(html);
     }
 
     public static String markdownToHtml(String aMarkdown)
     {
+        if (aMarkdown == null) {
+            return null;
+        }
+
         var html = Processor.process(aMarkdown, true);
         return DEFAULT_POLICY.sanitize(html);
     }

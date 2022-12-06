@@ -126,9 +126,9 @@ public class DocumentMetadataAnnotationSelectionPanel
         username = aUsername;
         jcasProvider = aCasProvider;
         project = aProject;
-        selectedLayer = Model.of(selectableMetadataLayers().stream().findFirst().orElse(null));
+        selectedLayer = Model.of(listCreatableMetadataLayers().stream().findFirst().orElse(null));
         IModel<List<AnnotationLayer>> availableLayers = LoadableDetachableModel
-                .of(this::selectableMetadataLayers);
+                .of(this::listCreatableMetadataLayers);
         actionHandler = aActionHandler;
         state = aState;
         annotations = LoadableDetachableModel.of(this::listAnnotations);
@@ -325,7 +325,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                 aItem.add(new LambdaAjaxLink(CID_DELETE,
                         _target -> actionDelete(_target, detailPanel))
                                 .add(visibleWhen(() -> !aItem.getModelObject().singleton))
-                                .add(enabledWhen(annotationPage::isEditable))
+                                .add(enabledWhen(() -> annotationPage.isEditable()
+                                        && !aItem.getModelObject().layer.isReadonly()))
                                 .add(AttributeAppender.append("class",
                                         () -> annotationPage.isEditable() ? "" : "disabled")));
 
@@ -342,9 +343,10 @@ public class DocumentMetadataAnnotationSelectionPanel
                 .collect(Collectors.toList());
     }
 
-    private List<AnnotationLayer> selectableMetadataLayers()
+    private List<AnnotationLayer> listCreatableMetadataLayers()
     {
-        return listMetadataLayers().stream()
+        return listMetadataLayers().stream() //
+                .filter(layer -> !layer.isReadonly()) //
                 .filter(layer -> !getLayerSupport(layer).readTraits(layer).isSingleton())
                 .collect(toList());
     }

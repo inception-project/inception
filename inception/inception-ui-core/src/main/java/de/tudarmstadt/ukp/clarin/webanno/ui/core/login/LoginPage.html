@@ -27,6 +27,7 @@
               Welcome!
             </h5>
             <div wicket:id="oauth2LoginPanel" class="mb-4"/>
+            <div wicket:id="saml2LoginPanel" class="mb-4"/>
             
             <form wicket:id="loginForm">
               <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
@@ -34,11 +35,11 @@
                 Log in using credentials
               </h6>
               <div class="row mb-3 form-floating">
-                <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus/>
+                <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus autocomplete="username"/>
                 <label wicket:for="username">User ID</label>
               </div>
               <div class="row mb-3 form-floating">
-                <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+                <input wicket:id="password" type="password" class="form-control" placeholder="Password" autocomplete="current-password"/>
                 <label wicket:for="password">Password</label>
               </div>
               <div class="row justify-content-md-center">

@@ -28,10 +28,13 @@
         <div class="row">
           <div class="col-sm-12">
             <p>
-              <wicket:container wicket:id="challenge" />
+              <wicket:container wicket:id="message" />
+            </p>
+            <p class="text-center rounded border border-danger p-2">
+              <wicket:container wicket:id="expectedResponse" />
             </p>
             <div>
-              <input wicket:id="response" class="form-control" />
+              <input wicket:id="response" class="form-control" placeholder="Enter value here..."/>
             </div>
             <p>
               <span wicket:id="feedback"></span>
@@ -41,7 +44,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button wicket:id="confirm" class="btn btn-primary">
+      <button wicket:id="confirm" class="btn btn-danger">
         <i class="fas fa-check"></i>&nbsp;
         <wicket:message key="confirm.label" />
       </button>

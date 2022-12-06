@@ -64,9 +64,6 @@ public class TagSetSelectionPanel
         add(new LambdaAjaxLink("create", this::actionCreate));
 
         tagSetImportPanel = new TagSetImportPanel("importPanel", selectedProject);
-        tagSetImportPanel.setImportCompleteAction(target -> {
-            target.add(findParent(ProjectTagSetsPanel.class));
-        });
         add(tagSetImportPanel);
     }
 

@@ -79,12 +79,11 @@ public abstract class XmlDocumentViewControllerImplBase
             return Optional.empty();
         }
 
-        var factory = (ExternalAnnotationEditorFactory) annotationEditorRegistry
-                .getEditorFactory(aEditor.get());
-        if (factory == null) {
-            return Optional.empty();
+        var factory = annotationEditorRegistry.getEditorFactory(aEditor.get());
+        if (factory instanceof ExternalAnnotationEditorFactory) {
+            return ((ExternalAnnotationEditorFactory) factory).getPolicy();
         }
 
-        return factory.getPolicy();
+        return Optional.empty();
     }
 }

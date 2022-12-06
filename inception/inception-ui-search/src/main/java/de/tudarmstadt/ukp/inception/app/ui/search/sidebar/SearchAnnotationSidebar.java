@@ -28,6 +28,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -882,11 +883,11 @@ public class SearchAnnotationSidebar
                     selected.setVisible(!result.isReadOnly());
                     aItem.add(selected);
 
-                    String sentence = new String();
-
-                    sentence = sentence + aItem.getModel().getObject().getLeftContext() + "<mark>"
-                            + aItem.getModel().getObject().getText() + "</mark>"
-                            + aItem.getModel().getObject().getRightContext();
+                    String sentence = escapeMarkup(aItem.getModel().getObject().getLeftContext()) + //
+                            "<mark>" + //
+                            escapeMarkup(aItem.getModel().getObject().getText()) + //
+                            "</mark>" + //
+                            escapeMarkup(aItem.getModel().getObject().getRightContext());
 
                     lambdaAjaxLink
                             .add(new Label("sentence", sentence).setEscapeModelStrings(false));

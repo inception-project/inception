@@ -23,20 +23,20 @@ import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.ACCESS_D
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -50,12 +50,12 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
 
 public class OAuth2AdapterImpl
     implements OAuth2Adapter
@@ -102,6 +102,32 @@ public class OAuth2AdapterImpl
                 externalUser.getUserInfo(), userNameAttributeName);
     }
 
+    @Override
+    public AbstractAuthenticationToken validateToken(AbstractAuthenticationToken aToken,
+            String aRealm)
+    {
+        User u = userRepository.get(aToken.getName());
+        if (u == null) {
+            LOG.info("Prevented login of non-existing user [{}]", aToken.getName());
+            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "User does not exist", null);
+            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+        }
+
+        denyAccessToDeactivatedUsers(u);
+        denyAccessOfRealmsDoNotMatch(aRealm, u);
+        return aToken;
+    }
+
+    @Override
+    public Collection<GrantedAuthority> loadAuthorities(Jwt jwt, String aRealm,
+            String aUserNameAttribute)
+    {
+        var authorities = new LinkedHashSet<GrantedAuthority>();
+        var userName = jwt.getClaimAsString(aUserNameAttribute);
+        authorities.addAll(userDetailsManager.loadUserAuthorities(userName));
+        return authorities;
+    }
+
     private LinkedHashSet<GrantedAuthority> loadAuthorities(OAuth2User externalUser, User user)
     {
         var authorities = new LinkedHashSet<GrantedAuthority>();
@@ -130,12 +156,12 @@ public class OAuth2AdapterImpl
 
     private User materializeUser(OAuth2User user, String username, String realm)
     {
-        User u;
-        u = new User();
+        var u = new User();
         u.setUsername(username);
         u.setPassword(UserDao.EMPTY_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
+        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
 
         String email = user.getAttribute("email");
         if (email != null) {
@@ -157,24 +183,6 @@ public class OAuth2AdapterImpl
             u.setUiName(uiName);
         }
 
-        Set<Role> s = new HashSet<>();
-        s.add(Role.ROLE_USER);
-        Properties settings = SettingsUtil.getSettings();
-
-        String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
-        if (StringUtils.isNotBlank(extraRoles)) {
-            for (String role : extraRoles.split(",")) {
-                try {
-                    s.add(Role.valueOf(role.trim()));
-                }
-                catch (IllegalArgumentException e) {
-                    LOG.debug("Ignoring unknown default role [" + role + "] for user ["
-                            + u.getUsername() + "]");
-                }
-            }
-        }
-        u.setRoles(s);
-
         userRepository.create(u);
 
         return u;
@@ -188,8 +196,7 @@ public class OAuth2AdapterImpl
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
             LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "Illegal username", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Illegal username");
         }
     }
 
@@ -198,8 +205,7 @@ public class OAuth2AdapterImpl
         if (!aExpectedRealm.equals(aUser.getRealm())) {
             LOG.info("Prevented login of user {} from realm [{}] via realm [{}]", aUser,
                     aUser.getRealm(), aExpectedRealm);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "Realm mismatch", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new BadCredentialsException("Realm mismatch");
         }
     }
 
@@ -207,8 +213,7 @@ public class OAuth2AdapterImpl
     {
         if (!aUser.isEnabled()) {
             LOG.info("Prevented login of locally deactivated user {}", aUser);
-            OAuth2Error oauth2Error = new OAuth2Error(ACCESS_DENIED, "User deactivated", null);
-            throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
+            throw new DisabledException("User deactivated");
         }
     }
 

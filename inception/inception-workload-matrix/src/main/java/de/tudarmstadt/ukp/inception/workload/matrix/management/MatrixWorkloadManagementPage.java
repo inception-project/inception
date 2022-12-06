@@ -308,13 +308,12 @@ public class MatrixWorkloadManagementPage
                 .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
                 .collect(Collectors.toList());
 
-        IModel<String> projectNameModel = Model.of(getProject().getName());
         resetDocumentDialog
                 .setTitleModel(new StringResourceModel("BulkResetDocumentDialog.title", this));
         resetDocumentDialog
-                .setChallengeModel(new StringResourceModel("BulkResetDocumentDialog.text", this)
-                        .setParameters(selectedDocuments.size(), projectNameModel));
-        resetDocumentDialog.setResponseModel(projectNameModel);
+                .setMessageModel(new StringResourceModel("BulkResetDocumentDialog.text", this)
+                        .setParameters(selectedDocuments.size()));
+        resetDocumentDialog.setExpectedResponseModel(Model.of(getProject().getName()));
         resetDocumentDialog.setConfirmAction(_target -> {
             Map<String, User> userCache = new HashMap<>();
             for (AnnotationDocument document : selectedDocuments) {
@@ -335,13 +334,12 @@ public class MatrixWorkloadManagementPage
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        IModel<String> documentNameModel = Model.of(aDocument.getName());
         resetDocumentDialog
                 .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
         resetDocumentDialog
-                .setChallengeModel(new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setParameters(documentNameModel, aUser.getUiName()));
-        resetDocumentDialog.setResponseModel(documentNameModel);
+                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setExpectedResponseModel(
+                Model.of(aUser.getUiName() + " / " + aDocument.getName()));
         resetDocumentDialog.setConfirmAction(_target -> {
             documentService.resetAnnotationCas(aDocument, aUser);
 
@@ -357,13 +355,11 @@ public class MatrixWorkloadManagementPage
 
     private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        IModel<String> documentNameModel = Model.of(aDocument.getName());
         resetDocumentDialog.setTitleModel( //
                 new StringResourceModel("ResetCurationDocumentDialog.title", this));
-        resetDocumentDialog.setChallengeModel( //
-                new StringResourceModel("ResetCurationDocumentDialog.text", this)
-                        .setParameters(documentNameModel));
-        resetDocumentDialog.setResponseModel(documentNameModel);
+        resetDocumentDialog.setMessageModel( //
+                new StringResourceModel("ResetCurationDocumentDialog.text", this));
+        resetDocumentDialog.setExpectedResponseModel(Model.of(aDocument.getName()));
         resetDocumentDialog.setConfirmAction(_target -> {
             curationService.deleteCurationCas(aDocument);
             documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);

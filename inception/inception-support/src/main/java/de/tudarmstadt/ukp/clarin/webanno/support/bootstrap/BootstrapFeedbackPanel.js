@@ -16,7 +16,10 @@
  * limitations under the License.
  */
  function bootstrapFeedbackPanelCloseAll() {
-  $('.alert').each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
+  $('.alert').each((i, e) => {
+    console.log("Closing", e);
+    bootstrap.Alert.getOrCreateInstance(e).close();
+   });
  }
  
 function bootstrapFeedbackPanelFade() {

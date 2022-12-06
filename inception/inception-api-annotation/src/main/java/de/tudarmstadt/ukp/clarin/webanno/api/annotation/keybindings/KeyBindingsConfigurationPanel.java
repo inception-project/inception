@@ -117,7 +117,7 @@ public class KeyBindingsConfigurationPanel
 
                 KeyBinding keyBinding = aItem.getModelObject();
 
-                aItem.add(new Label("keyCombo", keyBinding.asHtml()).setEscapeModelStrings(false));
+                aItem.add(new KeybindingLabel("keyCombo", keyBinding));
 
                 aItem.add(
                         new Label("value", fs.renderFeatureValue(feature, keyBinding.getValue())));

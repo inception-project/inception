@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.security.oauth;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 public interface OAuth2Adapter
 {
@@ -33,4 +37,8 @@ public interface OAuth2Adapter
 
     List<ClientRegistration> getOAuthClientRegistrations();
 
+    Collection<GrantedAuthority> loadAuthorities(Jwt aJwt, String aRealm,
+            String aUserNameAttribute);
+
+    AbstractAuthenticationToken validateToken(AbstractAuthenticationToken aToken, String aRealm);
 }

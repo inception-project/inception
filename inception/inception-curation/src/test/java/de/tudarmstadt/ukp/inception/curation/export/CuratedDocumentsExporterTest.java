@@ -45,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -72,6 +74,8 @@ public class CuratedDocumentsExporterTest
 
     private @Mock DocumentService documentService;
     private @Mock AnnotationSchemaService schemaService;
+    private @Mock ChecksRegistry checksRegistry;
+    private @Mock RepairsRegistry repairsRegistry;
 
     private Project project;
     private File workFolder;
@@ -100,7 +104,8 @@ public class CuratedDocumentsExporterTest
                 new CasStorageCachePropertiesImpl(), null, schemaService));
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
+                asList(new XmiFormatSupport()), casStorageService, schemaService, properties,
+                checksRegistry, repairsRegistry);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

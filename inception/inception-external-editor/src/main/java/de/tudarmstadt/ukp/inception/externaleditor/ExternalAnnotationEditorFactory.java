@@ -17,37 +17,40 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
-import static de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils.loadPolicies;
-import static java.nio.file.Files.exists;
-import static java.nio.file.Files.getLastModifiedTime;
-import static java.nio.file.Files.newInputStream;
-
 import java.io.IOException;
-import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
 public class ExternalAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     private final ExternalEditorPluginDescripion description;
 
-    private PolicyCollection policy;
-    private FileTime policyMTime;
+    private WatchedResourceFile<PolicyCollection> policyResource;
 
     public ExternalAnnotationEditorFactory(ExternalEditorPluginDescripion aDescription)
     {
         description = aDescription;
+        var policyFile = getDescription().getBasePath().resolve("policy.yaml");
+        try {
+            policyResource = new WatchedResourceFile<>(policyFile,
+                    PolicyCollectionIOUtils::loadPolicies);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -77,18 +80,6 @@ public class ExternalAnnotationEditorFactory
 
     public Optional<PolicyCollection> getPolicy() throws IOException
     {
-        var policyFile = getDescription().getBasePath().resolve("policy.yaml");
-        if (exists(policyFile)) {
-            synchronized (this) {
-                FileTime lastModifiedTime = getLastModifiedTime(policyFile);
-                if (policyMTime == null || lastModifiedTime.compareTo(policyMTime) > 0) {
-                    try (var is = newInputStream(policyFile)) {
-                        policy = loadPolicies(is);
-                        policyMTime = lastModifiedTime;
-                    }
-                }
-            }
-        }
-        return Optional.ofNullable(policy);
+        return policyResource.get();
     }
 }

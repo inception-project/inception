@@ -79,6 +79,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -86,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
@@ -94,6 +98,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
@@ -119,23 +124,27 @@ public class DocumentImportExportServiceImpl
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
     private final DocumentImportExportServiceProperties properties;
+    private final ChecksRegistry checksRegistry;
+    private final RepairsRegistry repairsRegistry;
 
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
 
     private final TypeSystemDescription schemaTypeSystem;
 
-    @Autowired
     public DocumentImportExportServiceImpl(RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
-            DocumentImportExportServiceProperties aServiceProperties)
+            DocumentImportExportServiceProperties aServiceProperties,
+            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         formatsProxy = aFormats;
         properties = aServiceProperties;
+        checksRegistry = aChecksRegistry;
+        repairsRegistry = aRepairsRegistry;
 
         schemaTypeSystem = createTypeSystemDescription(
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/schema-types");
@@ -310,7 +319,27 @@ public class DocumentImportExportServiceImpl
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
                 cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
 
+        runCasDoctorOnImport(aDocument, format, cas);
+
         return cas;
+    }
+
+    private void runCasDoctorOnImport(SourceDocument aDocument, FormatSupport aFormat, CAS aCas)
+    {
+        if (properties.getRunCasDoctorOnImport() == CasDoctorOnImportPolicy.OFF) {
+            return;
+        }
+
+        if (properties.getRunCasDoctorOnImport() == CasDoctorOnImportPolicy.AUTO
+                && !aFormat.isProneToInconsistencies()) {
+            return;
+        }
+
+        var messages = new ArrayList<LogMessage>();
+        CasDoctor casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        casDoctor.setActiveChecks(
+                checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
+        casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
     }
 
     private void splitTokensIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)

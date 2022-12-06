@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -41,6 +42,9 @@ public class CreateSpanAnnotationRequest
     private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
             SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
     {
+        Validate.isTrue(aBegin <= aEnd, "Annotation begin [%d] must smaller or equal to end [%d]",
+                aBegin, aEnd);
+
         originalRequest = aOriginal;
         document = aDocument;
         username = aUsername;
