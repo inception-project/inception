@@ -102,19 +102,18 @@
                   <i class="fas fa-download"></i>&nbsp;
                   <wicket:message key="export"/>
                 </button>
-                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
-                  <div class="container">
-                    <div class="row">
-                      <div wicket:id="exportMode" class="small"></div>
-                    </div>
-                    <div class="row">
-                      <button wicket:id="export" class="btn btn-sm btn-primary col-sm-12">
-                        <i class="fas fa-download"></i>&nbsp;
-                        <wicket:message key="export"/>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <ul class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+                  <li>
+                    <a wicket:id="exportLayersAsJson" class="dropdown-item">
+                      <wicket:message key="exportLayersAsJson"/>
+                    </a>
+                  </li>
+                  <li>
+                    <a wicket:id="exportLayersAsUima" class="dropdown-item">
+                      <wicket:message key="exportLayersAsUima"/>
+                    </a>
+                  </li>
+                </ul>
               </span>
               <button wicket:id="save" class="btn btn-primary">
                 <i class="fas fa-save"></i>&nbsp;

@@ -205,7 +205,8 @@ public class LayerDetailForm
         exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
         add(exportModeChoice);
 
-        add(new AjaxDownloadLink("export", this::exportLayer));
+        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerJson));
+        add(new AjaxDownloadLink("exportLayersAsUima", this::exportUimaTypeSystem));
 
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
@@ -405,18 +406,6 @@ public class LayerDetailForm
 
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
-    }
-
-    private IResourceStream exportLayer()
-    {
-        switch (exportMode) {
-        case JSON:
-            return exportLayerJson();
-        case UIMA:
-            return exportUimaTypeSystem();
-        default:
-            throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
-        }
     }
 
     private IResourceStream exportUimaTypeSystem()
