@@ -82,6 +82,13 @@ include::{include-dir}settings_database.adoc[leveloffset=+1]
 
 include::{include-dir}settings_server.adoc[leveloffset=+1]
 
+include::{include-dir}security-authentication.adoc[leveloffset=+1]
+include::{include-dir}security-authentication-oauth2.adoc[leveloffset=+2]
+include::{include-dir}security-authentication-saml2.adoc[leveloffset=+2]
+include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+2]
+include::{include-dir}security-authentication-preauth.adoc[leveloffset=+2]
+include::{include-dir}security-authentication-policy.adoc[leveloffset=+2]
+
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
 include::{include-dir}settings_cas-storage.adoc[leveloffset=+1]
@@ -93,22 +100,13 @@ include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
 include::{include-dir}settings_theming.adoc[leveloffset=+1]
 
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
-
-include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+1]
-
-include::{include-dir}settings_annotation-editor_pdf_legacy.adoc[leveloffset=+1]
-
-include::{include-dir}security-policy.adoc[leveloffset=+1]
-
-include::{include-dir}security-oauth2.adoc[leveloffset=+1]
-
-include::{include-dir}security-preauth.adoc[leveloffset=+1]
+include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+2]
+include::{include-dir}settings_annotation-editor_pdf_legacy.adoc[leveloffset=+2]
+include::{include-dir}settings_segmentation.adoc[leveloffset=+2]
 
 include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]
 
 include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
-
-include::{include-dir}settings_segmentation.adoc[leveloffset=+1]
 
 include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 

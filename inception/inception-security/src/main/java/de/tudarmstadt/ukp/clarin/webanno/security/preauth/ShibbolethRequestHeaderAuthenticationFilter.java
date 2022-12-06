@@ -21,9 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.invoke.MethodHandles;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,9 +32,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 public class ShibbolethRequestHeaderAuthenticationFilter
     extends RequestHeaderAuthenticationFilter
@@ -53,24 +48,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
         u.setRealm(UserDao.REALM_PREAUTH);
-
-        Set<Role> s = new HashSet<>();
-        s.add(Role.ROLE_USER);
-
-        Properties settings = SettingsUtil.getSettings();
-        String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
-        if (StringUtils.isNotBlank(extraRoles)) {
-            for (String role : extraRoles.split(",")) {
-                try {
-                    s.add(Role.valueOf(role.trim()));
-                }
-                catch (IllegalArgumentException e) {
-                    LOG.debug("Ignoring unknown default role [" + role + "] for user ["
-                            + u.getUsername() + "]");
-                }
-            }
-        }
-        u.setRoles(s);
+        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
 
         userRepository.create(u);
     }
