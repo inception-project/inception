@@ -330,6 +330,10 @@
           <configuration>
             <ignoredDependencies>
               <!--
+                - Needed but somehow the dependency checker does not grok it 
+                -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-export</ignoredDependency>
+              <!--
                - Need this for auto-configuration 
                -->
               <ignoredDependency>org.springdoc:springdoc-openapi-ui</ignoredDependency>

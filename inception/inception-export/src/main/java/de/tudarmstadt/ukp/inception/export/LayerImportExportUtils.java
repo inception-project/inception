@@ -20,22 +20,21 @@ package de.tudarmstadt.ukp.inception.export;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -46,22 +45,36 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * This class contains Utility methods that can be used in Project settings.
  */
-public class ImportUtil
+public class LayerImportExportUtils
 {
-    public static final String META_INF = "META-INF";
-    public static final String SOURCE = "source";
-    public static final String TRAIN = "train";
-    public static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
-    public static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
-    public static final String GUIDELINE = "guideline";
-    public static final String EXPORTED_PROJECT = "exportedproject";
-    public static final String CONSTRAINTS = "constraints";
+    public static String exportLayerToJson(AnnotationSchemaService aSchemaService,
+            AnnotationLayer layer)
+        throws IOException
+    {
+        var exLayers = new ArrayList<ExportedAnnotationLayer>();
+
+        var exMainLayer = exportLayerDetails(null, null, layer, aSchemaService);
+        exLayers.add(exMainLayer);
+
+        // If the layer is attached to another layer, then we also have to export
+        // that, otherwise we would be missing it during re-import.
+        if (layer.getAttachType() != null) {
+            var attachLayer = layer.getAttachType();
+            var exAttachLayer = exportLayerDetails(null, null, attachLayer, aSchemaService);
+            exMainLayer
+                    .setAttachType(new ExportedAnnotationLayerReference(exAttachLayer.getName()));
+            exLayers.add(exAttachLayer);
+        }
+
+        return JSONUtil.toPrettyJsonString(exLayers);
+    }
 
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
@@ -89,39 +102,9 @@ public class ImportUtil
         return tags;
     }
 
-    /**
-     * Check if the zip file is webanno compatible
-     * 
-     * @param aZipFile
-     *            the file.
-     * @return if it is valid.
-     * @throws ZipException
-     *             if the ZIP file is corrupt.
-     * @throws IOException
-     *             if an I/O error occurs.
-     *
-     */
-    @SuppressWarnings({ "rawtypes" })
-    public static boolean isZipValidWebanno(File aZipFile) throws IOException
-    {
-
-        boolean isZipValidWebanno = false;
-        try (ZipFile zip = new ZipFile(aZipFile)) {
-            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
-                        && entry.toString().replace("/", "").endsWith(".json")) {
-                    isZipValidWebanno = true;
-                    break;
-                }
-            }
-        }
-        return isZipValidWebanno;
-    }
-
     @Deprecated
-    public static void createTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject,
-            User aUser, AnnotationSchemaService aAnnotationService)
+    private static void createTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject,
+            AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         aTagSet.setCreateTag(aExTagSet.isCreateTag());
@@ -145,8 +128,8 @@ public class ImportUtil
     }
 
     @Deprecated
-    public static void setLayer(AnnotationSchemaService aAnnotationService, AnnotationLayer aLayer,
-            ExportedAnnotationLayer aExLayer, Project aProject, User aUser)
+    private static void setLayer(AnnotationSchemaService aAnnotationService, AnnotationLayer aLayer,
+            ExportedAnnotationLayer aExLayer, Project aProject)
         throws IOException
     {
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
@@ -178,10 +161,88 @@ public class ImportUtil
         aAnnotationService.createOrUpdateLayer(aLayer);
     }
 
+    public static AnnotationLayer importLayerFile(AnnotationSchemaService annotationService,
+            User user, Project project, InputStream aIS)
+        throws IOException
+    {
+        String text = IOUtils.toString(aIS, "UTF-8");
+
+        ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
+                ExportedAnnotationLayer[].class);
+
+        // First import the layers but without setting the attach-layers/features
+        Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
+        Map<String, AnnotationLayer> layersMap = new HashMap<>();
+        for (ExportedAnnotationLayer exLayer : exLayers) {
+            AnnotationLayer layer = createLayer(annotationService, project, exLayer);
+            layersMap.put(layer.getName(), layer);
+            exLayersMap.put(layer.getName(), exLayer);
+        }
+
+        // Second fill in the attach-layer and attach-feature information
+        for (AnnotationLayer layer : layersMap.values()) {
+            ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
+            if (exLayer.getAttachType() != null) {
+                layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
+            }
+            if (exLayer.getAttachFeature() != null) {
+                AnnotationLayer attachLayer = annotationService.findLayer(project,
+                        exLayer.getAttachType().getName());
+                AnnotationFeature attachFeature = annotationService
+                        .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
+                layer.setAttachFeature(attachFeature);
+            }
+            annotationService.createOrUpdateLayer(layer);
+        }
+
+        return layersMap.get(exLayers[0].getName());
+    }
+
+    private static AnnotationLayer createLayer(AnnotationSchemaService annotationService,
+            Project project, ExportedAnnotationLayer aExLayer)
+        throws IOException
+    {
+        AnnotationLayer layer;
+
+        if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
+            layer = annotationService.findLayer(project, aExLayer.getName());
+            setLayer(annotationService, layer, aExLayer, project);
+        }
+        else {
+            layer = new AnnotationLayer();
+            setLayer(annotationService, layer, aExLayer, project);
+        }
+
+        for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
+            ExportedTagSet exTagset = exfeature.getTagSet();
+            TagSet tagSet = null;
+            if (exTagset != null && annotationService.existsTagSet(exTagset.getName(), project)) {
+                tagSet = annotationService.getTagSet(exTagset.getName(), project);
+                createTagSet(tagSet, exTagset, project, annotationService);
+            }
+            else if (exTagset != null) {
+                tagSet = new TagSet();
+                createTagSet(tagSet, exTagset, project, annotationService);
+            }
+            if (annotationService.existsFeature(exfeature.getName(), layer)) {
+                AnnotationFeature feature = annotationService.getFeature(exfeature.getName(),
+                        layer);
+                feature.setTagset(tagSet);
+                setFeature(annotationService, feature, exfeature, project);
+                continue;
+            }
+            AnnotationFeature feature = new AnnotationFeature();
+            feature.setLayer(layer);
+            feature.setTagset(tagSet);
+            setFeature(annotationService, feature, exfeature, project);
+        }
+
+        return layer;
+    }
+
     @Deprecated
-    public static void setFeature(AnnotationSchemaService aAnnotationService,
-            AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature, Project aProject,
-            User aUser)
+    private static void setFeature(AnnotationSchemaService aAnnotationService,
+            AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature, Project aProject)
     {
         aFeature.setDescription(aExFeature.getDescription());
         aFeature.setEnabled(aExFeature.isEnabled());

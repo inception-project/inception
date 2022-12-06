@@ -2586,14 +2586,17 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.3.0</version>
+          <!-- 
+            - Updating to 3.4.0 does not work because we get the error that an API incompatibility
+            - was encountered while executing org.apache.maven.plugins:maven-dependency-plugin:3.4.0
+            - :analyze-only: java.lang.NoSuchMethodError: 'java.util.Map org.apache.maven.shared.
+            - dependency.analyzer.ProjectDependencyAnalysis.getUsedUndeclaredArtifactsWithClasses()'
+            -->
           <dependencies>
             <dependency>
               <!--
                 - Required to use the dependency plugin on newer Java versions.
                 - See: https://issues.apache.org/jira/browse/MDEP-613
-                -
-                - Updating to more recent versions doesn't work because we get a 
-                - "Unsupported api 524288" error in inception-boot-loader
               -->
               <groupId>org.apache.maven.shared</groupId>
               <artifactId>maven-dependency-analyzer</artifactId>
