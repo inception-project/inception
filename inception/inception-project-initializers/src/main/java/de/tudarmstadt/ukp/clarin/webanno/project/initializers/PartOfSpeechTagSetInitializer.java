@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil.importTagSetFromJson;
+import static de.tudarmstadt.ukp.inception.export.JsonImportUtil.importTagSetFromJson;
 
 import java.io.IOException;
 import java.util.Collections;
