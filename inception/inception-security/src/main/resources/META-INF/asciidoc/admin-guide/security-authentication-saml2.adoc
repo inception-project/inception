@@ -58,7 +58,7 @@ in Keycloak, you can access `http://localhost:8180/realms/inception-demo/protoco
 an XML file which contains the certificate in the `ds:X509Certificate` element. You need to copy this
 certificate string (usually staring with `MIIC` into a text file with the following structure:
 
-.Certificat file structure
+.Certificate file structure
 ----
 -----BEGIN CERTIFICATE-----
 MIIC...
@@ -69,7 +69,7 @@ Save this file at the location indicated by the `....verification.credentials.ce
 (here `/srv/inception/keycloak-saml-idp.crt`).
 
 When you restart {product-name} and access the login page now, it should offer a login option called
-*keycloak*. The SAML authentication does not allow defining the provider name shown on the login page independently from the registration ID. The registration ID (here `keycloak`) is defined inbetween the `registration`
+*inception-client*. The SAML authentication does not allow defining the provider name shown on the login page independently from the registration ID. The registration ID (here `inception-client`) is defined in between the `registration`
 and `assertingparty` parts of the configuration keys.
 
 == Client certificate (optional)

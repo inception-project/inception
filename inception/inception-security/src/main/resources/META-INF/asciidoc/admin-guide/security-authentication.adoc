@@ -18,3 +18,9 @@
 = Authentication
 
 This section describes the different authentication mechanisms supported by {product-name}.
+
+NOTE: A user can only log in through one mechanism, either as a local user or an external user.
+      If you are using SAML/OAuth2, then the users are bound to one particular IdP. If a user with the same
+      name tries to log in via another mechanism or IdP, the login will be rejected. If you plan to use
+      multiple login mechanisms or IdPs at the same time, you must ensure that the user IDs are unique
+      across all the mechanisms and IdPs or that a given user always uses the same login mechanism.
