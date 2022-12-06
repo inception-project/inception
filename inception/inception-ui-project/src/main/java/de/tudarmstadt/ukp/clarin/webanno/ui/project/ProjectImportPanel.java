@@ -58,8 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
 
 public class ProjectImportPanel
     extends Panel
@@ -170,9 +170,9 @@ public class ProjectImportPanel
                     }
                     IOUtils.copyLarge(is, os);
 
-                    if (!ImportUtil.isZipValidWebanno(tempFile)) {
+                    if (!ProjectImportExportUtils.isValidProjectArchive(tempFile)) {
                         throw new IOException(
-                                "ZIP file is not an INCEpTION/WebAnno project archive");
+                                "Uploaded file is not an INCEpTION/WebAnno project archive");
                     }
 
                     importedProjects

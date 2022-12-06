@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class TagSetImportPanel
@@ -139,7 +139,7 @@ public class TagSetImportPanel
                 try {
                     tagInputStream = tagFile.getInputStream();
                     String text = IOUtils.toString(tagInputStream, "UTF-8");
-                    Map<String, String> tabbedTagsetFromFile = ImportUtil.getTagSetFromFile(text);
+                    Map<String, String> tabbedTagsetFromFile = LayerImportExportUtils.getTagSetFromFile(text);
 
                     Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
                     int i = 0;
