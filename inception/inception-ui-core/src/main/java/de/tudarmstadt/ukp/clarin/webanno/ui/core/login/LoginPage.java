@@ -126,14 +126,18 @@ public class LoginPage
 
         var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
                 || tooManyUsers.getObject();
-        if (!skipAutoLogin && isLoginAllowed()) {
-            oAuth2LoginPanel.autoLogin();
-        }
 
-        // Failed OAuth2 call this page with the parameter `?error` so we display a message
+        // Failed OAuth2/SAML call this page with the parameter `?error` so we display a message
         var error = aParameters.getNamedKeys().contains(PARAM_ERROR);
         if (error) {
-            error("Login failed");
+            error("Login with SSO service failed. You might try logging out of your SSO service "
+                    + "before trying to log in here again.");
+            skipAutoLogin = true;
+        }
+
+        if (!skipAutoLogin && isLoginAllowed()) {
+            oAuth2LoginPanel.autoLogin();
+            saml2LoginPanel.autoLogin();
         }
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
