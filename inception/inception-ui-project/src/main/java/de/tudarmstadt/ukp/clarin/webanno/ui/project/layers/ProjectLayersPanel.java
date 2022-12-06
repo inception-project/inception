@@ -400,8 +400,8 @@ public class ProjectLayersPanel
                     }
                     else {
                         User user = userRepository.getCurrentUser();
-                        var layer = LayerImportExportUtils.importLayerFile(annotationService, user, project,
-                                bis);
+                        var layer = LayerImportExportUtils.importLayerFile(annotationService, user,
+                                project, bis);
                         layerDetailForm.setModelObject(layer);
                     }
                 }
@@ -424,11 +424,6 @@ public class ProjectLayersPanel
 
             annotationService.importUimaTypeSystem(project, tsd);
         }
-    }
-
-    static enum LayerExportMode
-    {
-        JSON, UIMA
     }
 
     public class FeatureSelectionForm

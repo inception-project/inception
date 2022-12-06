@@ -42,7 +42,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -50,12 +49,10 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -63,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -71,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
@@ -108,8 +103,6 @@ public class LayerDetailForm
 
     private WebMarkupContainer traitsContainer;
     private final ChallengeResponseDialog confirmationDialog;
-
-    private LayerExportMode exportMode = LayerExportMode.JSON;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
@@ -197,13 +190,6 @@ public class LayerDetailForm
 
         // Behaviors of layers
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
-
-        BootstrapRadioChoice<LayerExportMode> exportModeChoice = new BootstrapRadioChoice<>(
-                "exportMode", asList(LayerExportMode.values()));
-        exportModeChoice.setModel(new PropertyModel<LayerExportMode>(this, "exportMode"));
-        exportModeChoice.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
-        add(exportModeChoice);
 
         add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerJson));
         add(new AjaxDownloadLink("exportLayersAsUima", this::exportUimaTypeSystem));
