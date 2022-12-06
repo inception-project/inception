@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -655,4 +656,7 @@ public interface AnnotationSchemaService
     boolean isSentenceLayerEditable(Project aProject);
 
     boolean isTokenLayerEditable(Project aProject);
+
+    void createMissingTag(AnnotationFeature aFeature, String aValue)
+        throws IllegalFeatureValueException;
 }

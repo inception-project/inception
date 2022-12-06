@@ -121,8 +121,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -409,8 +409,9 @@ public class AeroRemoteApiController
 
             IOUtils.copyLarge(is, os);
 
-            if (!ImportUtil.isZipValidWebanno(tempFile)) {
-                throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
+            if (!ProjectImportExportUtils.isValidProjectArchive(tempFile)) {
+                throw new UnsupportedFormatException(
+                        "Uploaded file is not an INCEpTION/WebAnno project archive");
             }
 
             ProjectImportRequest request = new ProjectImportRequest(aCreateMissingUsers);

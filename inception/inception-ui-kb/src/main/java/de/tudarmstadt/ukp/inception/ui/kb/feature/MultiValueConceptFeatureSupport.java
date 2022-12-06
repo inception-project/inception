@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;

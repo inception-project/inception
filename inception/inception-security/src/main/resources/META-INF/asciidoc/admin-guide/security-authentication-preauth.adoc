@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_security_preauth]]
+[[sect_security_authentication_preauth]]
 = External pre-authentication
 
 {product-name} can be used in conjunction with header-based external per-authentication. In this mode,

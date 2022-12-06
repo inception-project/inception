@@ -25,42 +25,41 @@
         <wicket:message key="tagset.details"/>
         <div class="actions">
           <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-            <button class="btn btn-secondary btn-action dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
-              <i class="fas fa-download"></i>&nbsp;
+            <button class="btn btn-secondary btn-action dropdown-toggle text-nowrap" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-download pe-1"/>
               <wicket:message key="export"/>
             </button>
-            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
-              <div class="container">
-                <div class="row form-row">
-                  <div wicket:id="format" class="small"></div>
-                </div>
-                <div class="row form-row">
-                  <button wicket:id="export" class="btn btn-sm btn-primary col-sm-12">
-                    <i class="fas fa-download"></i>&nbsp;
-                    <wicket:message key="export"/>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ul class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+              <li>
+                <a wicket:id="exportTagsetAsJson" class="dropdown-item">
+                  <wicket:message key="exportTagsetAsJson"/>
+                </a>
+              </li>
+              <li>
+                <a wicket:id="exportTagsetAsTabSeparated" class="dropdown-item">
+                  <wicket:message key="exportTagsetAsTabSeparated"/>
+                </a>
+              </li>
+            </ul>
           </span>
-          <button wicket:id="save" class="btn btn-primary">
-            <i class="fas fa-save"></i>&nbsp;
+          <button wicket:id="save" class="btn btn-primary text-nowrap">
+            <i class="fas fa-save pe-1"/>
             <wicket:message key="save"/>
           </button>
-          <button wicket:id="cancel" class="btn btn-secondary">
-            <i class="fas fa-times"></i>&nbsp;
+          <button wicket:id="cancel" class="btn btn-secondary text-nowrap">
+            <i class="fas fa-times pe-1"/>
             <wicket:message key="cancel"/>
           </button>
           <span class="dropdown" aria-haspopup="true" aria-expanded="false">
             <button class="btn btn-action dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
-              <i class="fas fa-ellipsis-v"></i>
+              <i class="fas fa-ellipsis-v"/>
             </button>
             <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
               <li>
                 <button wicket:id="delete" class="dropdown-item" type="button">
                   <wicket:message key="delete"/>
                   <span class="float-end badge badge-pill bg-danger">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash"/>
                   </span>
                 </button>
               </li>
@@ -98,7 +97,7 @@
             <div class="form-check">
               <input class="form-check-input" type="checkbox" wicket:id="createTag">
               <label class="form-check-label" wicket:for="createTag">
-                Annotators may add new tags
+                <wicket:message key="allowTagCreation"/>
               </label>
             </div>
           </div>

@@ -23,26 +23,6 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 public class ExportedTagSetConstant
 {
     /**
-     * Export/import tagsets in JSON format
-     */
-    public static final String JSON_FORMAT = "JSON";
-
-    /**
-     * Export/Import TagSets in TAB separated format where the first five lines are information
-     * about the tagsets such as tagsetname, tagsetdescrition and the remaining lines are tag with
-     * optional tag descriptions. The format looks like:<br>
-     * 
-     * <pre>
-     * tagSetName   TAGSETNAME
-     * tagSetDescription    DESCRIPTION
-     * ...
-     * TAG1 &lt;optional&gt;TAG1Description
-     * ....
-     * </pre>
-     */
-    public static final String TAB_FORMAT = "TAB-sep";
-
-    /**
      * The key for the tagsetNAme
      */
     public static final String TAGSETNAME = "tagset name";

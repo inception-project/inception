@@ -76,9 +76,9 @@
     <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.5</spring.boot.version>
+    <spring.boot.version>2.7.6</spring.boot.version>
     <spring.data.version>2.7.6</spring.data.version>
-    <spring.security.version>5.7.5</spring.security.version>
+    <spring.security.version>5.8.0</spring.security.version>
     <springdoc.version>1.6.13</springdoc.version>
     <swagger.version>2.2.7</swagger.version>
 
@@ -246,6 +246,16 @@
       </snapshots>
     </repository>
     -->
+    <repository>
+      <id>shiboleth-releases</id>
+      <url>https://build.shibboleth.net/maven/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -1590,6 +1600,20 @@
         <artifactId>spring-data-commons</artifactId>
         <version>${spring.data.version}</version>
       </dependency>
+
+      <!-- Jackson (has to come before OpenSAML to avoid OpenSAML picking an older Jackson) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}.2</version>
+      </dependency>
       
       <!-- SPRING SECURITY -->
       <dependency>
@@ -1618,6 +1642,13 @@
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-gson</artifactId>
         <version>0.11.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-bom</artifactId>
+        <version>4.2.0</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       
       <!-- Springdoc -->
@@ -1700,21 +1731,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-  
-      <!-- Jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}.2</version>
-      </dependency>
-      
+        
       <!-- Snakeyaml -->
       <dependency>
         <groupId>org.yaml</groupId>
@@ -2592,14 +2609,17 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.3.0</version>
+          <!-- 
+            - Updating to 3.4.0 does not work because we get the error that an API incompatibility
+            - was encountered while executing org.apache.maven.plugins:maven-dependency-plugin:3.4.0
+            - :analyze-only: java.lang.NoSuchMethodError: 'java.util.Map org.apache.maven.shared.
+            - dependency.analyzer.ProjectDependencyAnalysis.getUsedUndeclaredArtifactsWithClasses()'
+            -->
           <dependencies>
             <dependency>
               <!--
                 - Required to use the dependency plugin on newer Java versions.
                 - See: https://issues.apache.org/jira/browse/MDEP-613
-                -
-                - Updating to more recent versions doesn't work because we get a 
-                - "Unsupported api 524288" error in inception-boot-loader
               -->
               <groupId>org.apache.maven.shared</groupId>
               <artifactId>maven-dependency-analyzer</artifactId>

@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
@@ -283,7 +283,7 @@ public class VersioningServiceImpl
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
 
-            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null, layer,
+            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null, null, layer,
                     annotationService);
             exLayers.add(exMainLayer);
 
@@ -291,7 +291,7 @@ public class VersioningServiceImpl
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
                 AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null, null,
+                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils.exportLayerDetails(null, null,
                         attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
