@@ -40,6 +40,7 @@ import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
@@ -51,6 +52,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2AdapterImpl;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2AdapterImpl;
 
 @Configuration
 @EnableConfigurationProperties({ //
@@ -65,8 +68,7 @@ public class SecurityAutoConfiguration
 
     @Bean("userRepository")
     public UserDao userService(SecurityProperties aSecurityProperties,
-            @Autowired(required = false) SessionRegistry aSessionRegistry,
-            OAuth2Adapter aOAuth2Adapter)
+            @Autowired(required = false) SessionRegistry aSessionRegistry)
     {
         return new UserDaoImpl(entityManager, aSecurityProperties, transactionManager,
                 aSessionRegistry);
@@ -125,5 +127,14 @@ public class SecurityAutoConfiguration
     {
         return new OAuth2AdapterImpl(aUserRepository, aUserDetailsManager,
                 aClientRegistrationRepository);
+    }
+
+    @Bean
+    public Saml2Adapter saml2Adapter(@Lazy UserDao aUserRepository,
+            @Lazy OverridableUserDetailsManager aUserDetailsManager,
+            @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
+    {
+        return new Saml2AdapterImpl(aUserRepository, aUserDetailsManager,
+                aRelyingPartyRegistrationRepository);
     }
 }

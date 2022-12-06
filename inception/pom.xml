@@ -76,9 +76,9 @@
     <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.5</spring.boot.version>
+    <spring.boot.version>2.7.6</spring.boot.version>
     <spring.data.version>2.7.6</spring.data.version>
-    <spring.security.version>5.7.5</spring.security.version>
+    <spring.security.version>5.8.0</spring.security.version>
     <springdoc.version>1.6.13</springdoc.version>
     <swagger.version>2.2.7</swagger.version>
 
@@ -246,6 +246,16 @@
       </snapshots>
     </repository>
     -->
+    <repository>
+      <id>shiboleth-releases</id>
+      <url>https://build.shibboleth.net/maven/releases/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -1585,6 +1595,20 @@
         <artifactId>spring-data-commons</artifactId>
         <version>${spring.data.version}</version>
       </dependency>
+
+      <!-- Jackson (has to come before OpenSAML to avoid OpenSAML picking an older Jackson) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}.2</version>
+      </dependency>
       
       <!-- SPRING SECURITY -->
       <dependency>
@@ -1613,6 +1637,13 @@
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-gson</artifactId>
         <version>0.11.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-bom</artifactId>
+        <version>4.2.0</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       
       <!-- Springdoc -->
@@ -1695,21 +1726,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-  
-      <!-- Jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}.2</version>
-      </dependency>
-      
+        
       <!-- Snakeyaml -->
       <dependency>
         <groupId>org.yaml</groupId>

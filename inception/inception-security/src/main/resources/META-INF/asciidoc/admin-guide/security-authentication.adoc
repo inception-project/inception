@@ -14,27 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_segmentation]]
-= Editable Segmentation Settings
+[[sect_security_authentication]]
+= Authentication
 
-====
-CAUTION: Experimental feature. Highly experimental. Expect strange things to happen if you start
-adding/removing/changing segmentation annotations (i.e. sentences or tokens).
-====
+This section describes the different authentication mechanisms supported by {product-name}.
 
-This section describes the global settings related to the support for editable segmentation annotations (i.e. sentences or tokens).
-
-.Knowledge base settings overview
-[cols="4*", options="header"]
-|===
-| Setting
-| Description
-| Default
-| Example
-
-
-| ui.sentence-layer-editable=true
-| Enable/disable editing sentences
-| false
-| true
-|===
+NOTE: A user can only log in through one mechanism, either as a local user or an external user.
+      If you are using SAML/OAuth2, then the users are bound to one particular IdP. If a user with the same
+      name tries to log in via another mechanism or IdP, the login will be rejected. If you plan to use
+      multiple login mechanisms or IdPs at the same time, you must ensure that the user IDs are unique
+      across all the mechanisms and IdPs or that a given user always uses the same login mechanism.

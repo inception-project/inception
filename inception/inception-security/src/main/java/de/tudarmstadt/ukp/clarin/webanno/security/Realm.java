@@ -115,6 +115,11 @@ public class Realm
                 aClientRegistration.getClientName());
     }
 
+    public static Realm forExternalSaml(String aAuthenticationUri, String aRegistrationId)
+    {
+        return new Realm(REALM_EXTERNAL_PREFIX + aRegistrationId, aRegistrationId);
+    }
+
     public static Realm local()
     {
         return LOCAL_REALM;
