@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
@@ -206,9 +205,7 @@ public class LayerDetailForm
         exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
         add(exportModeChoice);
 
-        add(new AjaxDownloadLink("export",
-                new LambdaModel<>(this::getExportLayerFileName).autoDetaching(),
-                this::exportLayer));
+        add(new AjaxDownloadLink("export", this::exportLayer));
 
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
@@ -410,18 +407,6 @@ public class LayerDetailForm
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private String getExportLayerFileName()
-    {
-        switch (exportMode) {
-        case JSON:
-            return "layer.json";
-        case UIMA:
-            return "typesystem.xml";
-        default:
-            throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
-        }
-    }
-
     private IResourceStream exportLayer()
     {
         switch (exportMode) {
@@ -439,7 +424,8 @@ public class LayerDetailForm
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
             tsd.toXML(bos);
-            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()));
+            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
+                    "typesystem.xml");
         }
         catch (Exception e) {
             WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
@@ -450,8 +436,10 @@ public class LayerDetailForm
     private IResourceStream exportLayerJson()
     {
         try {
-            String json = LayerImportExportUtils.exportLayerToJson(annotationService, getModelObject());
-            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")));
+            String json = LayerImportExportUtils.exportLayerToJson(annotationService,
+                    getModelObject());
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")),
+                    "layer.json");
         }
         catch (Exception e) {
             WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
