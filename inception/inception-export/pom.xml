@@ -123,6 +123,12 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    
+    
     <!-- TEST DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
