@@ -21,12 +21,11 @@ import esbuildSvelte from 'esbuild-svelte'
 import sveltePreprocess from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
-import { sassPlugin } from 'esbuild-sass-plugin'
 import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-const packagePath = 'de/tudarmstadt/ukp/inception/experimental/editor/diamdebugeditor'
+const packagePath = 'de/tudarmstadt/ukp/inception/recommendation/footer'
 
 let outbase = `../../../target/js/${packagePath}`
 
@@ -34,14 +33,13 @@ const defaults = {
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
   plugins: [
-    sassPlugin(),
     esbuildSvelte({
       compilerOptions: { dev: argv.live },
       preprocess: sveltePreprocess()
     })
   ],
   bundle: true,
-  sourcemap: true,
+  sourcemap: false,
   minify: !argv.live,
   target: 'es6',
   loader: { '.ts': 'ts' },
@@ -50,7 +48,7 @@ const defaults = {
 
 if (argv.live) {
   defaults.watch = {
-    onRebuild(error, result) {
+    onRebuild (error, result) {
       if (error) console.error('watch build failed:', error)
       else console.log('watch build succeeded:', result)
     }
@@ -62,7 +60,7 @@ if (argv.live) {
 fs.mkdirsSync(`${outbase}`)
 
 esbuild.build(Object.assign({
-  entryPoints: ['src/DiamAnnotationBrowser.svelte'],
-  outfile: `${outbase}/DiamAnnotationBrowser.min.js`
+  entryPoints: ['src/RecommendationEventFooterPanel.svelte'],
+  outfile: `${outbase}/RecommendationEventFooterPanel.min.js`
 }, defaults))
-  .catch(() => process.exit(1))
+.catch(() => process.exit(1))

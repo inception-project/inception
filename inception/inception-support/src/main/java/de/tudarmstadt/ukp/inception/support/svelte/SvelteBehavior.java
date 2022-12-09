@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.support.svelte;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import javax.servlet.ServletContext;
 
@@ -35,6 +36,8 @@ import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandle
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
@@ -43,10 +46,13 @@ public class SvelteBehavior
 {
     private static final long serialVersionUID = -5776151696499243799L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @SpringBean ServletContext context;
 
     private ResourceReference jsRef;
     private ResourceReference cssRef;
+    private Component host;
 
     public SvelteBehavior()
     {
@@ -61,6 +67,12 @@ public class SvelteBehavior
     @Override
     public void bind(Component aComponent)
     {
+        if (host != null && host != aComponent) {
+            throw new IllegalStateException("Behavior already bound to another component");
+        }
+
+        host = aComponent;
+
         aComponent.setOutputMarkupId(true);
 
         var componentClass = aComponent.getClass();
@@ -82,12 +94,17 @@ public class SvelteBehavior
         if (cssRef != null) {
             aResponse.render(CssReferenceHeaderItem.forReference(cssRef));
         }
+
+        LOG.trace("Sending initialization code for Svelte component [{}] to frontend",
+                host.getClass().getName());
         aResponse.render(OnDomReadyHeaderItem.forScript(initScript(aComponent)));
     }
 
     @Override
     public void onRemove(Component aComponent)
     {
+        LOG.trace("Sending destruction code for Svelte component [{}] to frontend",
+                host.getClass().getName());
         aComponent.getRequestCycle().find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.prependJavaScript(destroyScript(aComponent)));
 
@@ -107,21 +124,34 @@ public class SvelteBehavior
             throw new RuntimeException(e);
         }
 
+        String id = aComponent.getMarkupId();
         return String.join("\n", //
-                "import('" + url + "')", //
-                "  .then(module => { ", //
-                "    new module.default({", //
-                "      target: document.querySelector('#" + aComponent.getMarkupId() + "'),", //
-                "      props: " + propsJson, //
-                "    });", //
-                "  })"//
+                "{", //
+                "  let element = document.getElementById('" + id + "');", //
+                // " if (Object.hasOwn(element, '$destroy')) {", //
+                // " element.$destroy();", //
+                // " delete element.$destroy;", //
+                // " console.log('Svelte component on element [" + id + "] was destroyed');", //
+                // " }", //
+                "  import('" + url + "')", //
+                "    .then(module => { ", //
+                "      let component = new module.default({", //
+                "        target: element,", //
+                "        props: " + propsJson, //
+                "      });", //
+                "      element.$destroy = () => component.$destroy()", //
+                "    })", //
+                "}" //
         );
     }
 
     private CharSequence destroyScript(Component aComponent)
     {
-        return WicketUtil.wrapInTryCatch("document.getElementById('" + aComponent.getMarkupId()
-                + "').$destroy(); console.log('Svelte component " + aComponent.getMarkupId()
-                + " destroyed');");
+        String id = aComponent.getMarkupId();
+        return WicketUtil.wrapInTryCatch(String.join("\n", //
+                "let element = document.getElementById('" + id + "');", //
+                "element.$destroy();", //
+                "delete element.$destroy;", //
+                "console.log('Svelte component on element [" + id + "] was destroyed');"));
     }
 }

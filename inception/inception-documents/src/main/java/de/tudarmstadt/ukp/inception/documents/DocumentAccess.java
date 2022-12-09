@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 
 /**
@@ -26,6 +27,7 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
  * </p>
  */
 public interface DocumentAccess
+    extends AccessCheckingBean
 {
     boolean canViewAnnotationDocument(String aProjectId, String aDocumentId, String aUser);
 

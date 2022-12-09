@@ -27,7 +27,7 @@ for module in $TS_MODULES ; do
   popd
 
   pushd "$module/../../.."
-  ${MVN} clean generate-resources -Dnpm-install-command=install
+  ${MVN} clean generate-resources -Dnpm-install-command=install -Dts-link-phase=generate-resources
   
   ORIG_VERSION=$(${MVN} help:evaluate -Dexpression=project.version -q -DforceStdout)
   SEMVER="$(echo "$ORIG_VERSION" | cut -d'-' -f1).0-SNAPSHOT"

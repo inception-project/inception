@@ -17,17 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
+import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
-import org.apache.wicket.authorization.Action;
-import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
-import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -35,78 +40,77 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
 
-@AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")
 public class RecommendationEventFooterPanel
-    extends VueComponent
+    extends WebMarkupContainer
 {
-    private static final Logger log = LoggerFactory.getLogger(RecommendationEventFooterPanel.class);
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -9006607500867612027L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private @SpringBean ServletContext servletContext;
+    private @SpringBean UserDao userService;
 
     private FeedbackPanelExtensionBehavior feedback;
-    private @SpringBean ServletContext servletContext;
 
     public RecommendationEventFooterPanel(String aId)
     {
-        super(aId, "RecommendationEventFooterPanel.vue");
+        super(aId);
+        setOutputMarkupPlaceholderTag(true);
         feedback = new FeedbackPanelExtensionBehavior();
         add(feedback);
-
+        add(new SvelteBehavior());
     }
 
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        // model will be added as props to vue component
-        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), "topicChannel",
-                RecommendationEventWebsocketControllerImpl.REC_EVENTS, "feedbackPanelId",
-                feedback.retrieveFeedbackPanelId(this), "projectId", getProjectId())));
+
+        var maybeProject = getProject();
+
+        if (maybeProject.isPresent()) {
+            setVisible(maybeProject.isPresent());
+            setDefaultModel(Model.ofMap(Map.of( //
+                    "wsEndpointUrl", constructEndpointUrl(), //
+                    "topicChannel",
+                    TOPIC_ELEMENT_PROJECT + getProject().get().getId() + TOPIC_ELEMENT_USER
+                            + userService.getCurrentUsername() + TOPIC_RECOMMENDER, //
+                    "feedbackPanelId", feedback.retrieveFeedbackPanelId(this))));
+        }
+        else {
+            setVisible(false);
+            setDefaultModel(Model.ofMap(emptyMap()));
+        }
     }
 
-    private long getProjectId()
+    private Optional<Project> getProject()
     {
         Page page = null;
         try {
             page = getPage();
         }
         catch (WicketRuntimeException e) {
-            log.debug("No page yet.");
+            LOG.debug("No page yet.");
         }
 
         if (page == null || !(page instanceof ProjectPageBase)) {
-            return -1;
+            return Optional.empty();
         }
 
-        Project project = ((ProjectPageBase) page).getProject();
-        if (project == null) {
-            return -1;
-        }
-
-        return project.getId();
+        return Optional.ofNullable(((ProjectPageBase) page).getProject());
     }
 
     private String constructEndpointUrl()
     {
-        Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
-                WebsocketConfig.WS_ENDPOINT));
+        Url endPointUrl = Url.parse(format("%s%s", servletContext.getContextPath(), WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
         String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
         return fullUrl;
     }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
-                "webstomp-client/current/dist/webstomp.min.js")));
-    }
-
 }

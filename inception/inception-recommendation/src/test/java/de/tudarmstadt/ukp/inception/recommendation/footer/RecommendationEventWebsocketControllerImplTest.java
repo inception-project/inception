@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.controller;
+package de.tudarmstadt.ukp.inception.recommendation.footer;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -29,13 +28,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
-import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.persistence.EntityManager;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,16 +48,13 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
-import org.springframework.messaging.converter.GenericMessageConverter;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,12 +75,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketSessionTestHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
@@ -95,7 +89,8 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "websocket.enabled=true" })
+                "websocket.enabled=true", //
+                "websocket.recommender-events.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
                 LiquibaseAutoConfiguration.class })
@@ -104,16 +99,13 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
         WebsocketSecurityConfig.class, //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
-        ProjectExportServiceAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
-        CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.inception.log.model" })
-class ExportServiceControllerImplTest
+class RecommendationEventWebsocketControllerImplTest
 {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -128,6 +120,7 @@ class ExportServiceControllerImplTest
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     // temporarily store data for test project
     private static @TempDir File repositoryDir;
@@ -145,7 +138,7 @@ class ExportServiceControllerImplTest
                 WS_AUTHENTICATION_USER_NAME, USER, //
                 WS_AUTHENTICATION_PASSWORD, PASS));
         stompClient = new WebSocketStompClient(wsClient);
-        stompClient.setMessageConverter(new GenericMessageConverter());
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         setupOnce();
     }
@@ -179,16 +172,14 @@ class ExportServiceControllerImplTest
     {
         projectService.revokeRole(project, user, PermissionLevel.MANAGER);
 
-        CountDownLatch responseRecievedLatch = new CountDownLatch(1);
-        AtomicBoolean messageRecieved = new AtomicBoolean(false);
-        AtomicBoolean errorRecieved = new AtomicBoolean(false);
+        var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
+                user.getUsername());
+        var sessionHandler = WebSocketSessionTestHandler.builder() //
+                .subscribe(channel) //
+                .build();
 
-        SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
-                errorRecieved);
-
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1, SECONDS);
-
-        responseRecievedLatch.await(20, SECONDS);
+        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         try {
             session.disconnect();
         }
@@ -196,9 +187,31 @@ class ExportServiceControllerImplTest
             // Ignore exceptions during disconnect
         }
 
-        assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("AccessDeniedException");
-        assertThat(errorRecieved).isTrue();
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
+    }
+
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
+    @Test
+    void thatSubscriptionAsOtherUserIsRejected() throws Exception
+    {
+        var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
+                "USER_WITHOUT_ACCESS");
+        var sessionHandler = WebSocketSessionTestHandler.builder() //
+                .subscribe(channel) //
+                .build();
+
+        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
+
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("AccessDeniedException"));
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -207,89 +220,28 @@ class ExportServiceControllerImplTest
     {
         projectService.assignRole(project, user, PermissionLevel.MANAGER);
 
-        CountDownLatch responseRecievedLatch = new CountDownLatch(1);
-        AtomicBoolean messageRecieved = new AtomicBoolean(false);
-        AtomicBoolean errorRecieved = new AtomicBoolean(false);
-
-        SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
-                errorRecieved);
+        var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
+                user.getUsername());
+        var sessionHandler = WebSocketSessionTestHandler.builder() //
+                .subscribe(channel) //
+                .afterConnected(this::sendTestMessage)
+                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
+                    assertThat(msg.getMessage()).isEqualTo("Test message");
+                }).build();
 
         StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
-
-        responseRecievedLatch.await(20, SECONDS);
+        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         session.disconnect();
 
-        assertThat(messageRecieved).isTrue();
-        assertThat(sessionHandler.errorMsg).isNull();
-        assertThat(errorRecieved).isFalse();
+        sessionHandler.assertSuccess();
     }
 
-    private final class SessionHandler
-        extends StompSessionHandlerAdapter
+    private void sendTestMessage()
     {
-        private final AtomicBoolean errorRecieved;
-        private final AtomicBoolean messageRecieved;
-        private final CountDownLatch responseRecievedLatch;
-
-        private String errorMsg;
-
-        private SessionHandler(CountDownLatch aResponseRecievedLatch,
-                AtomicBoolean aMessageRecieved, AtomicBoolean aErrorRecieved)
-        {
-            responseRecievedLatch = aResponseRecievedLatch;
-            messageRecieved = aMessageRecieved;
-            errorRecieved = aErrorRecieved;
-        }
-
-        @Override
-        public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
-        {
-            aSession.subscribe("/app" + NS_PROJECT + "/" + project.getId() + "/exports",
-                    new StompFrameHandler()
-                    {
-                        @Override
-                        public Type getPayloadType(StompHeaders aHeaders)
-                        {
-                            return Object.class;
-                        }
-
-                        @Override
-                        public void handleFrame(StompHeaders aHeaders, Object aPayload)
-                        {
-                            LOG.info("GOT MESSAGE: {}", aPayload);
-                            responseRecievedLatch.countDown();
-                            messageRecieved.set(true);
-                        }
-                    });
-        }
-
-        @Override
-        public void handleFrame(StompHeaders aHeaders, Object aPayload)
-        {
-            LOG.error("Error: {}", aHeaders.get("message"));
-            errorMsg = aHeaders.getFirst("message");
-            errorRecieved.set(true);
-            responseRecievedLatch.countDown();
-        }
-
-        @Override
-        public void handleException(StompSession aSession, StompCommand aCommand,
-                StompHeaders aHeaders, byte[] aPayload, Throwable aException)
-        {
-            LOG.error("Exception: {}", aException.getMessage(), aException);
-            errorMsg = aException.getMessage();
-            errorRecieved.set(true);
-            responseRecievedLatch.countDown();
-        }
-
-        @Override
-        public void handleTransportError(StompSession aSession, Throwable aException)
-        {
-            LOG.error("Transport error: {}", aException.getMessage(), aException);
-            errorMsg = aException.getMessage();
-            errorRecieved.set(true);
-            responseRecievedLatch.countDown();
-        }
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, project, user.getUsername()) //
+                        .withMessage(LogMessage.info(this, "Test message")) //
+                        .build());
     }
 
     @Configuration
@@ -328,8 +280,8 @@ class ExportServiceControllerImplTest
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
             aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

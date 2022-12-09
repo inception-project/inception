@@ -268,6 +268,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-websocket</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
@@ -290,6 +295,11 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-syntax-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-testing</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
