@@ -15,42 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
+package de.tudarmstadt.ukp.inception.diam.sidebar;
 
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamEditorBase;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
-public class DiamDebugEditor
-    extends DiamEditorBase
+public class DiamSidebar
+    extends AnnotationSidebar_ImplBase
 {
-    private static final long serialVersionUID = -1268868680331594105L;
+    private static final long serialVersionUID = -3062641971181309172L;
 
-    public DiamDebugEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+    private DiamAnnotationBrowser browser;
+
+    public DiamSidebar(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        add(new DiamDebugEditorComponent("vis", aModel));
+        add(browser = new DiamAnnotationBrowser("vis"));
     }
 
-    @Override
-    protected void render(AjaxRequestTarget aTarget)
+    @OnEvent
+    public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
-        // Nothing to do - the editor is not updated via AJAX.
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        aResponse.render(forReference(DiamJavaScriptReference.get()));
+        browser = (DiamAnnotationBrowser) browser.replaceWith(new DiamAnnotationBrowser("vis"));
     }
 }

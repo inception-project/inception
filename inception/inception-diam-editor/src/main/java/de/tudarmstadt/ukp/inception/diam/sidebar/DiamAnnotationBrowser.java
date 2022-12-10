@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
+package de.tudarmstadt.ukp.inception.diam.sidebar;
 
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
@@ -111,5 +111,4 @@ public class DiamAnnotationBrowser
     {
         aResponse.render(forReference(DiamJavaScriptReference.get()));
     }
-
 }
