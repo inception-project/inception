@@ -23,6 +23,7 @@ import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 
 @ConfigurationProperties("event-logging")
 public class EventLoggingPropertiesImpl
@@ -32,8 +33,12 @@ public class EventLoggingPropertiesImpl
 
     private Set<String> excludeEvents = Set.of( //
             // Do not log this by default - hardly any information value
-            AfterCasWrittenEvent.class.getSimpleName(),
-            AvailabilityChangeEvent.class.getSimpleName());
+            AfterCasWrittenEvent.class.getSimpleName(), //
+            AvailabilityChangeEvent.class.getSimpleName(), //
+            "RecommenderTaskNotificationEvent", //
+            BeforeDocumentOpenedEvent.class.getSimpleName(), //
+            "BrokerAvailabilityEvent", //
+            "ShutdownDialogAvailableEvent");
 
     @Override
     public boolean isEnabled()

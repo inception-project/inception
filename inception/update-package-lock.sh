@@ -15,6 +15,7 @@ TS_MODULES="./inception-js-api/src/main/ts
 ./inception-ui-dashboard-activity/src/main/ts
 ./inception-brat-editor/src/main/ts
 ./inception-ui-search/src/main/ts
+./inception-recommendation/src/main/ts
 ./inception-project-export/src/main/ts"
 
 for module in $TS_MODULES ; do
@@ -27,7 +28,7 @@ for module in $TS_MODULES ; do
   popd
 
   pushd "$module/../../.."
-  ${MVN} clean generate-resources -Dnpm-install-command=install
+  ${MVN} clean generate-resources -Dnpm-install-command=install -Dts-link-phase=generate-resources
   
   ORIG_VERSION=$(${MVN} help:evaluate -Dexpression=project.version -q -DforceStdout)
   SEMVER="$(echo "$ORIG_VERSION" | cut -d'-' -f1).0-SNAPSHOT"

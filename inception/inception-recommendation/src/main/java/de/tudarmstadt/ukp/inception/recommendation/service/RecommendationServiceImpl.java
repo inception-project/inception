@@ -150,7 +150,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
@@ -1405,8 +1405,11 @@ public class RecommendationServiceImpl
                     + "skipping recommender", recommender, aUser, aDocument, aDocument.getProject(),
                     e);
 
-            applicationEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                    aUser.getUsername(), e.getMessage(), recommender));
+            applicationEventPublisher.publishEvent(
+                    RecommenderTaskNotificationEvent.builder(this, project, aUser.getUsername()) //
+                            .withMessage(LogMessage.error(this, "Recommender [%s] failed: %s",
+                                    recommender.getName(), e.getMessage())) //
+                            .build());
 
             // If there was a previous successful run of the recommender, inherit
             // its suggestions to avoid that all the suggestions of the recommender
