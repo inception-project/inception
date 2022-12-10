@@ -176,6 +176,10 @@ class RecommendationEventWebsocketControllerImplTest
                 user.getUsername());
         var sessionHandler = WebSocketSessionTestHandler.builder() //
                 .subscribe(channel) //
+                .afterConnected(this::sendTestMessage) //
+                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
+                    assertThat(msg.getMessage()).isEqualTo("Test message");
+                }) //
                 .build();
 
         StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
@@ -199,6 +203,10 @@ class RecommendationEventWebsocketControllerImplTest
                 "USER_WITHOUT_ACCESS");
         var sessionHandler = WebSocketSessionTestHandler.builder() //
                 .subscribe(channel) //
+                .afterConnected(this::sendTestMessage) //
+                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
+                    assertThat(msg.getMessage()).isEqualTo("Test message");
+                }) //
                 .build();
 
         StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
@@ -227,7 +235,8 @@ class RecommendationEventWebsocketControllerImplTest
                 .afterConnected(this::sendTestMessage)
                 .expect(RRecommenderLogMessage.class, (headers, msg) -> {
                     assertThat(msg.getMessage()).isEqualTo("Test message");
-                }).build();
+                }) //
+                .build();
 
         StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
