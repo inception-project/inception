@@ -51,11 +51,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>webstomp-client</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
@@ -244,13 +239,6 @@
               <ignoredDependency>org.springframework.boot:spring-boot-starter-web</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
             </ignoredDependencies>
-            <usedDependencies>
-              <!--
-                - Maven doesn't detect the the webjar dependencies because there is
-                - no actual code dependency
-              -->
-              <usedDependency>org.webjars.npm:webstomp-client</usedDependency>
-            </usedDependencies>
           </configuration>
         </plugin>
       </plugins>
