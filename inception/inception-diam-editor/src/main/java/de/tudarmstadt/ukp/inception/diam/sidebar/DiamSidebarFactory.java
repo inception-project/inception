@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
+package de.tudarmstadt.ukp.inception.diam.sidebar;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
