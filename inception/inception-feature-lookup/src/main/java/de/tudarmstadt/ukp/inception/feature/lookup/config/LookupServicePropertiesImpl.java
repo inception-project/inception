@@ -135,7 +135,7 @@ public class LookupServicePropertiesImpl
     {
         cacheRefreshDelay = aCacheRefreshDelay;
     }
-    
+
     @Override
     public Duration getConnectTimeout()
     {

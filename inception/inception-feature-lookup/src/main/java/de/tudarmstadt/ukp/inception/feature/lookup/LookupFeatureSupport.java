@@ -35,6 +35,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -158,8 +159,7 @@ public class LookupFeatureSupport
             String identifier = (String) aValue;
             String label = renderFeatureValue(aFeature, identifier);
             LookupFeatureTraits traits = readTraits(aFeature);
-            String description = labelCache.get(aFeature, traits, identifier)
-                    .getDescription();
+            String description = labelCache.get(aFeature, traits, identifier).getDescription();
 
             return new LookupEntry(identifier, label, description);
         }

@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import static de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServicePropertiesImpl.*;
+import static de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServicePropertiesImpl.HARD_QUERY_CONTEXT_LENGTH;
+import static de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServicePropertiesImpl.HARD_QUERY_LENGTH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -72,7 +73,7 @@ public class LookupServiceImpl
                         aTraits.getRemoteUrl() + "?" + urlEncodeParameters(queryParameters))) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout()).GET();
-        
+
         applyAuthenticationHeaderIfRequired(aTraits, requestBuilder);
 
         HttpRequest request = requestBuilder.build();
@@ -95,7 +96,8 @@ public class LookupServiceImpl
         }
     }
 
-    private void applyAuthenticationHeaderIfRequired(LookupFeatureTraits aTraits, Builder requestBuilder)
+    private void applyAuthenticationHeaderIfRequired(LookupFeatureTraits aTraits,
+            Builder requestBuilder)
     {
         if (aTraits.getAuthenticationType() == AuthenticationType.HEADER) {
             HeaderAuthenticationTraits authTraits = (HeaderAuthenticationTraits) aTraits
@@ -119,7 +121,7 @@ public class LookupServiceImpl
             queryParameters.put(PARAM_QUERY_CONTEXT, queryContext);
         }
 
-        var requestBuilder =  HttpRequest.newBuilder() //
+        var requestBuilder = HttpRequest.newBuilder() //
                 .uri(URI.create(
                         aTraits.getRemoteUrl() + "?" + urlEncodeParameters(queryParameters))) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //

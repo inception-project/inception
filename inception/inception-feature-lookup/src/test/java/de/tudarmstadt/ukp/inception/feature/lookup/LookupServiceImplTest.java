@@ -65,7 +65,7 @@ public class LookupServiceImplTest
         var response = sut.lookup(traits, entry.getIdentifier());
 
         assertThat(response).get() //
-            .isEqualTo(entry);
+                .isEqualTo(entry);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class LookupServiceImplTest
 
         var traits = new LookupFeatureTraits();
         traits.setRemoteUrl(remoteLookupService.url("/").toString());
-        
+
         var response = sut.query(traits, "Item", null);
 
         assertThat(response).isEqualTo(entries);

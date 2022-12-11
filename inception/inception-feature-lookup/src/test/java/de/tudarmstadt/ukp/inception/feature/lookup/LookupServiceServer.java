@@ -19,8 +19,9 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_ID;
-import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.*;
+import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_LIMIT;
 import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_QUERY;
+import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_QUERY_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
@@ -109,7 +110,7 @@ public class LookupServiceServer
                 if (!"GET".equals(aRequest.getMethod())) {
                     throw new HttpException("Unsupported method: " + aRequest.getMethod());
                 }
-                
+
                 System.out.printf("Headers: %s%n", asList(aRequest.getHeaders()));
 
                 try {

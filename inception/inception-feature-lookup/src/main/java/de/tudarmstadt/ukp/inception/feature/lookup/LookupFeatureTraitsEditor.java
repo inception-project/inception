@@ -106,7 +106,7 @@ public class LookupFeatureTraitsEditor
                 CheckBox includeQueryContext = new CheckBox("includeQueryContext");
                 includeQueryContext.setOutputMarkupId(true);
                 queue(includeQueryContext);
-                
+
                 authenticationTraitsEditor = updateAuthenticationPanel();
             }
 

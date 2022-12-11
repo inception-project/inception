@@ -100,7 +100,7 @@ public class LookupCache
         {
             return feature;
         }
-        
+
         public LookupFeatureTraits getTraits()
         {
             return traits;
@@ -113,8 +113,7 @@ public class LookupCache
                 return false;
             }
             Key castOther = (Key) other;
-            return Objects.equals(feature, castOther.feature)
-                    && Objects.equals(id, castOther.id);
+            return Objects.equals(feature, castOther.feature) && Objects.equals(id, castOther.id);
         }
 
         @Override
