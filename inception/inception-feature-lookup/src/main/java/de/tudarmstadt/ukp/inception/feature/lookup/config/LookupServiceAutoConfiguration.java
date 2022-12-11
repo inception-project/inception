@@ -26,8 +26,6 @@ import de.tudarmstadt.ukp.inception.feature.lookup.LookupCache;
 import de.tudarmstadt.ukp.inception.feature.lookup.LookupFeatureSupport;
 import de.tudarmstadt.ukp.inception.feature.lookup.LookupService;
 import de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl;
-import de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceProperties;
-import de.tudarmstadt.ukp.inception.feature.lookup.LookupServicePropertiesImpl;
 
 @ConditionalOnProperty(prefix = "annotation.feature-support.lookup", //
         name = "enabled", havingValue = "true", matchIfMissing = false)
@@ -36,9 +34,10 @@ import de.tudarmstadt.ukp.inception.feature.lookup.LookupServicePropertiesImpl;
 public class LookupServiceAutoConfiguration
 {
     @Bean
-    public LookupFeatureSupport lookupFeatureSupport(LookupCache aCache)
+    public LookupFeatureSupport lookupFeatureSupport(LookupCache aCache,
+            LookupServiceProperties aProperties)
     {
-        return new LookupFeatureSupport(aCache);
+        return new LookupFeatureSupport(aCache, aProperties);
     }
 
     @Bean

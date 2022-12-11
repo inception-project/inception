@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.inception.security.client.auth;
 
 import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
 
 public enum AuthenticationType
 {
     BASIC(BasicAuthenticationTraits.TYPE_ID), //
+    HEADER(HeaderAuthenticationTraits.TYPE_ID), //
     OAUTH_CLIENT_CREDENTIALS(OAuthClientCredentialsAuthenticationTraits.TYPE_ID);
 
     private final String id;

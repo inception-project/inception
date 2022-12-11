@@ -32,7 +32,8 @@ A remote lookup service must support a **lookup** and a **query** functionality:
 | *Produces*    | application/json;charset=UTF-8
 | *URL params*
 a|
-* `q` - query (mandatory)
+* `q` - query (max. 200 characters, mandatory)
+* `qc` - query context: the text of the selected annotation (max. 200 characters, optional)
 * `l` - limit - maximum number of results to return (mandatory)
 | *Data params* | none
 | *Success response*

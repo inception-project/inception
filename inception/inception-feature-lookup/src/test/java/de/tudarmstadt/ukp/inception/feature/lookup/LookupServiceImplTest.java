@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServicePropertiesImpl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -58,7 +59,10 @@ public class LookupServiceImplTest
                 .setResponseCode(200) //
                 .setBody(toJsonString(entry)));
 
-        var response = sut.lookup(remoteLookupService.url("/").toString(), entry.getIdentifier());
+        var traits = new LookupFeatureTraits();
+        traits.setRemoteUrl(remoteLookupService.url("/").toString());
+
+        var response = sut.lookup(traits, entry.getIdentifier());
 
         assertThat(response).get() //
             .isEqualTo(entry);
@@ -70,7 +74,10 @@ public class LookupServiceImplTest
         remoteLookupService.enqueue(new MockResponse() //
                 .setResponseCode(404));
 
-        var response = sut.lookup(remoteLookupService.url("/").toString(), "does-not-exist");
+        var traits = new LookupFeatureTraits();
+        traits.setRemoteUrl(remoteLookupService.url("/").toString());
+
+        var response = sut.lookup(traits, "does-not-exist");
 
         assertThat(response).isEmpty();
     }
@@ -89,7 +96,10 @@ public class LookupServiceImplTest
                 .setResponseCode(200) //
                 .setBody(toJsonString(entries)));
 
-        var response = sut.query(remoteLookupService.url("/").toString(), "Item", 100);
+        var traits = new LookupFeatureTraits();
+        traits.setRemoteUrl(remoteLookupService.url("/").toString());
+        
+        var response = sut.query(traits, "Item", null);
 
         assertThat(response).isEqualTo(entries);
     }

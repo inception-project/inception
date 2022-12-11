@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class LookupFeatureEditor
     extends FeatureEditor
@@ -101,7 +102,14 @@ public class LookupFeatureEditor
 
         add(focusComponent = new AutoCompleteField(MID_VALUE, _query -> {
             try {
-                return lookupService.query(traits.getRemoteUrl(), _query, 100);
+                // If there is a selection, we try obtaining its text from the CAS and use it as an
+                // additional item in the query. Note that there is not always a mention, e.g. when
+                // the feature is used in a document-level annotations.
+                String mention = aStateModel != null
+                        ? aStateModel.getObject().getSelection().getText()
+                        : null;
+
+                return lookupService.query(traits, _query, mention);
             }
             catch (Exception e) {
                 error("An error occurred while retrieving entity candidates: " + e.getMessage());
@@ -203,27 +211,11 @@ public class LookupFeatureEditor
             aBehavior.setOption("footerTemplate",
                     Options.asString("#: instance.dataSource.total() # items found"));
 
-            // Use one-third of the browser width but not less than 300 pixels. This is better than
-            // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
-            aBehavior.setOption("height", "Math.max($(window).height()*0.5,200)");
-            aBehavior.setOption("open", String.join(" ", "function(e) {",
-                    "  e.sender.list.width(Math.max($(window).width()*0.3,300));", "}"));
+            KendoStyleUtils.autoDropdownHeight(aBehavior);
+            KendoStyleUtils.autoDropdownWidth(aBehavior);
+            KendoStyleUtils.resetDropdownSelectionOnOpen(aBehavior);
+            KendoStyleUtils.keepDropdownVisibleWhenScrolling(aBehavior);
 
-            // Reset the values in the dropdown listbox to avoid that when opening the dropdown the next
-            // time ALL items with the same label as the selected item appear as selected
-            aBehavior.setOption("filtering",
-                    String.join(" ", "function(e) {", "  e.sender.listView.value([]);", "}"));
-
-            // Prevent scrolling action from closing the dropdown while the focus is on the input field
-            // The solution we use here is a NASTY hack, but I didn't find any other way to cancel out
-            // only the closing triggered by scrolling the browser window without having other adverse
-            // side effects such as mouse clicks or enter no longer selecting and closing the dropdown.
-            // See: https://github.com/inception-project/inception/issues/1517
-            aBehavior.setOption("close",
-                    String.join(" ", "function(e) {",
-                            "  if (new Error().stack.toString().includes('_resize')) {",
-                            "    e.preventDefault();", "  }", "}"));
-            
             // We need to explicitly trigger the change event on the input element in order to
             // trigger the Wicket AJAX update (if there is one). If we do not do this, then Kendo
             // will "forget" to trigger a change event if the label of the newly selected item is
@@ -345,7 +337,7 @@ public class LookupFeatureEditor
                 }
             };
         }
-        
+
         @Override
         protected IJQueryTemplate newTemplate()
         {

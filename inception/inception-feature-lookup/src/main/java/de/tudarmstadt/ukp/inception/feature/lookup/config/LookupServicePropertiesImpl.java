@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.feature.lookup;
+package de.tudarmstadt.ukp.inception.feature.lookup.config;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -30,6 +30,8 @@ import org.springframework.boot.convert.DurationUnit;
 public class LookupServicePropertiesImpl
     implements LookupServiceProperties
 {
+    public static final int HARD_QUERY_LENGTH = 200;
+    public static final int HARD_QUERY_CONTEXT_LENGTH = 200;
     public static final int HARD_MIN_RESULTS = 10;
 
     private int defaultMaxResults = 1_000;

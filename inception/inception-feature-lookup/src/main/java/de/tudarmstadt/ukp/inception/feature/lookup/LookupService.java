@@ -23,7 +23,8 @@ import java.util.Optional;
 
 public interface LookupService
 {
-    Optional<LookupEntry> lookup(String aRemoteUrl, String aId) throws IOException;
+    Optional<LookupEntry> lookup(LookupFeatureTraits aTraits, String aId) throws IOException;
 
-    List<LookupEntry> query(String aRemoteUrl, String aQuery, int aLimit) throws IOException;
+    List<LookupEntry> query(LookupFeatureTraits aTraits, String aQuery, String aQueryContext)
+        throws IOException;
 }

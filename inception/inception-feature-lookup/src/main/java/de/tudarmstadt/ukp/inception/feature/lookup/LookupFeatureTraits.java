@@ -21,6 +21,9 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
+
 /**
  * Traits for lookup features.
  */
@@ -31,7 +34,10 @@ public class LookupFeatureTraits
     private static final long serialVersionUID = -8450181605003189055L;
 
     private String remoteUrl;
-    private String authorizationToken;
+    private int limit = 100;
+    private boolean includeQueryContext = true;
+    private AuthenticationType authenticationType;
+    private AuthenticationTraits authentication;
 
     public void setRemoteUrl(String aRemoteUrl)
     {
@@ -43,13 +49,43 @@ public class LookupFeatureTraits
         return remoteUrl;
     }
 
-    public String getAuthorizationToken()
+    public AuthenticationType getAuthenticationType()
     {
-        return authorizationToken;
+        return authenticationType;
     }
 
-    public void setAuthorizationToken(String aAuthorizationToken)
+    public void setAuthenticationType(AuthenticationType aAuthenticationType)
     {
-        authorizationToken = aAuthorizationToken;
+        authenticationType = aAuthenticationType;
+    }
+
+    public AuthenticationTraits getAuthentication()
+    {
+        return authentication;
+    }
+
+    public void setAuthentication(AuthenticationTraits aAuthentication)
+    {
+        authentication = aAuthentication;
+    }
+
+    public int getLimit()
+    {
+        return limit;
+    }
+
+    public void setLimit(int aLimit)
+    {
+        limit = aLimit;
+    }
+
+    public boolean isIncludeQueryContext()
+    {
+        return includeQueryContext;
+    }
+
+    public void setIncludeQueryContext(boolean aIncludeQueryContext)
+    {
+        includeQueryContext = aIncludeQueryContext;
     }
 }

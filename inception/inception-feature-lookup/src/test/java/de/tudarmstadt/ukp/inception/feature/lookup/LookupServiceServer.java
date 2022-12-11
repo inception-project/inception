@@ -19,9 +19,10 @@ package de.tudarmstadt.ukp.inception.feature.lookup;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_ID;
-import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_LIMIT;
+import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.*;
 import static de.tudarmstadt.ukp.inception.feature.lookup.LookupServiceImpl.PARAM_QUERY;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
@@ -77,14 +78,22 @@ public class LookupServiceServer
         }
     }
 
-    private static List<LookupEntry> handleQuery(String aQuery, int aLimit)
+    private static List<LookupEntry> handleQuery(String aQuery, String aQueryContext, int aLimit)
     {
+        System.out.printf("Query:[%s] context:[%s] limit:[%d]%n", aQuery, aQueryContext, aLimit);
+
+        if ("error".equals(aQuery)) {
+            System.out.println("Generating error as requested");
+            throw new IllegalStateException("Error requested");
+        }
+
         List<LookupEntry> result = new ArrayList<>();
         for (int i = 0; i < aLimit; i++) {
             result.add(new LookupEntry(String.valueOf(i), //
-                    "Item + " + i + ": " + aQuery, //
+                    "Item " + i + ": " + aQuery + " (" + aQueryContext + ")", //
                     "Description " + i + ": " + aQuery));
         }
+
         return result;
     }
 
@@ -100,6 +109,8 @@ public class LookupServiceServer
                 if (!"GET".equals(aRequest.getMethod())) {
                     throw new HttpException("Unsupported method: " + aRequest.getMethod());
                 }
+                
+                System.out.printf("Headers: %s%n", asList(aRequest.getHeaders()));
 
                 try {
                     URIBuilder uri = new URIBuilder(aRequest.getRequestUri());
@@ -113,6 +124,7 @@ public class LookupServiceServer
 
                     if (params.containsKey(PARAM_QUERY)) {
                         response = handleQuery(params.get(PARAM_QUERY),
+                                params.get(PARAM_QUERY_CONTEXT),
                                 Integer.valueOf(params.get(PARAM_LIMIT)));
                     }
 

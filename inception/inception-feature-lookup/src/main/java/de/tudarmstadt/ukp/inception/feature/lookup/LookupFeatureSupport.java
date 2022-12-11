@@ -35,12 +35,12 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@code LookupServiceAutoConfiguration#lookupFeatureSupport}.
+ * {@link LookupServiceAutoConfiguration#lookupFeatureSupport}.
  * </p>
  */
 public class LookupFeatureSupport
@@ -66,13 +66,14 @@ public class LookupFeatureSupport
     private static final Logger LOG = LoggerFactory.getLogger(LookupFeatureSupport.class);
 
     private final LookupCache labelCache;
+    private final LookupServiceProperties properties;
 
     private String featureSupportId;
 
-    @Autowired
-    public LookupFeatureSupport(LookupCache aLabelCache)
+    public LookupFeatureSupport(LookupCache aLabelCache, LookupServiceProperties aProperties)
     {
         labelCache = aLabelCache;
+        properties = aProperties;
     }
 
     @Override
@@ -124,7 +125,7 @@ public class LookupFeatureSupport
         }
 
         LookupFeatureTraits traits = readTraits(aFeature);
-        return labelCache.get(aFeature, traits.getRemoteUrl(), aId).getUiLabel();
+        return labelCache.get(aFeature, traits, aId).getUiLabel();
     }
 
     @SuppressWarnings("unchecked")
@@ -157,7 +158,7 @@ public class LookupFeatureSupport
             String identifier = (String) aValue;
             String label = renderFeatureValue(aFeature, identifier);
             LookupFeatureTraits traits = readTraits(aFeature);
-            String description = labelCache.get(aFeature, traits.getRemoteUrl(), identifier)
+            String description = labelCache.get(aFeature, traits, identifier)
                     .getDescription();
 
             return new LookupEntry(identifier, label, description);
@@ -212,6 +213,7 @@ public class LookupFeatureSupport
 
         if (traits == null) {
             traits = new LookupFeatureTraits();
+            traits.setLimit(properties.getDefaultMaxResults());
         }
 
         return traits;
@@ -252,7 +254,7 @@ public class LookupFeatureSupport
         List<VLazyDetailResult> result = new ArrayList<>();
 
         LookupFeatureTraits traits = readTraits(aFeature);
-        LookupEntry handle = labelCache.get(aFeature, traits.getRemoteUrl(), aQuery);
+        LookupEntry handle = labelCache.get(aFeature, traits, aQuery);
 
         result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
 

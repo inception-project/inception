@@ -17,22 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.feature.lookup;
 
+import static de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServicePropertiesImpl.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 
+import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
+import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.support.http.HttpClientImplBase;
 
 public class LookupServiceImpl
@@ -40,6 +48,7 @@ public class LookupServiceImpl
     implements LookupService
 {
     static final String PARAM_QUERY = "q";
+    static final String PARAM_QUERY_CONTEXT = "qc";
     static final String PARAM_LIMIT = "l";
     static final String PARAM_ID = "id";
 
@@ -53,15 +62,20 @@ public class LookupServiceImpl
     }
 
     @Override
-    public Optional<LookupEntry> lookup(String aRemoteUrl, String aId) throws IOException
+    public Optional<LookupEntry> lookup(LookupFeatureTraits aTraits, String aId) throws IOException
     {
         var queryParameters = Map.of( //
                 PARAM_ID, aId);
 
-        HttpRequest request = HttpRequest.newBuilder() //
-                .uri(URI.create(aRemoteUrl + "?" + urlEncodeParameters(queryParameters))) //
+        var requestBuilder = HttpRequest.newBuilder() //
+                .uri(URI.create(
+                        aTraits.getRemoteUrl() + "?" + urlEncodeParameters(queryParameters))) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-                .timeout(properties.getReadTimeout()).GET().build();
+                .timeout(properties.getReadTimeout()).GET();
+        
+        applyAuthenticationHeaderIfRequired(aTraits, requestBuilder);
+
+        HttpRequest request = requestBuilder.build();
 
         try {
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString(UTF_8));
@@ -81,19 +95,39 @@ public class LookupServiceImpl
         }
     }
 
-    @Override
-    public List<LookupEntry> query(String aRemoteUrl, String aQuery, int aLimit) throws IOException
+    private void applyAuthenticationHeaderIfRequired(LookupFeatureTraits aTraits, Builder requestBuilder)
     {
-        var limit = Math.min(properties.getHardMaxResults(), aLimit);
+        if (aTraits.getAuthenticationType() == AuthenticationType.HEADER) {
+            HeaderAuthenticationTraits authTraits = (HeaderAuthenticationTraits) aTraits
+                    .getAuthentication();
+            requestBuilder.header(authTraits.getHeader(), authTraits.getValue());
+        }
+    }
 
-        var queryParameters = Map.of( //
-                PARAM_QUERY, aQuery, //
-                PARAM_LIMIT, Integer.toString(limit));
+    @Override
+    public List<LookupEntry> query(LookupFeatureTraits aTraits, String aQuery, String aQueryContext)
+        throws IOException
+    {
+        var limit = Math.min(properties.getHardMaxResults(), aTraits.getLimit());
+        var query = abbreviate(aQuery, "", HARD_QUERY_LENGTH);
 
-        HttpRequest request = HttpRequest.newBuilder() //
-                .uri(URI.create(aRemoteUrl + "?" + urlEncodeParameters(queryParameters))) //
+        var queryParameters = new LinkedHashMap<String, String>();
+        queryParameters.put(PARAM_QUERY, query);
+        queryParameters.put(PARAM_LIMIT, Integer.toString(limit));
+        if (!isBlank(aQueryContext) && aTraits.isIncludeQueryContext()) {
+            var queryContext = abbreviate(aQueryContext, "", HARD_QUERY_CONTEXT_LENGTH);
+            queryParameters.put(PARAM_QUERY_CONTEXT, queryContext);
+        }
+
+        var requestBuilder =  HttpRequest.newBuilder() //
+                .uri(URI.create(
+                        aTraits.getRemoteUrl() + "?" + urlEncodeParameters(queryParameters))) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
-                .timeout(properties.getReadTimeout()).GET().build();
+                .timeout(properties.getReadTimeout()).GET();
+
+        applyAuthenticationHeaderIfRequired(aTraits, requestBuilder);
+
+        HttpRequest request = requestBuilder.build();
 
         HttpResponse<String> response = sendRequest(request);
 

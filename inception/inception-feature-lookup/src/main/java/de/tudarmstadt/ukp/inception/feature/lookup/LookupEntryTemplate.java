@@ -31,17 +31,8 @@ final class LookupEntryTemplate
     public String getText()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div>");
-        sb.append("  <div class=\"item-title\">");
-        sb.append("    ${ data.uiLabel }");
-        sb.append("  </div>");
-        sb.append("  <div class=\"item-identifier\">");
-        sb.append("    ${ data.identifier }");
-        sb.append("  </div>");
-        sb.append("  <div class=\"item-description\">");
-        sb.append("    ${ data.description }");
-        sb.append("  </div>");
-        sb.append("</div>");
+        sb.append("<span class='item-title'>${ data.uiLabel }</span>");
+        sb.append("<div class='item-description'>${ data.description }</div>");
         return sb.toString();
     }
 

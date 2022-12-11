@@ -29,6 +29,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;
 
 /**
  * <p>
@@ -54,16 +55,16 @@ public class LookupCache
                 .build(key -> loadLabelValue(key));
     }
 
-    public LookupEntry get(AnnotationFeature aFeature, String aRemoteUrl, String aId)
+    public LookupEntry get(AnnotationFeature aFeature, LookupFeatureTraits aTraits, String aId)
     {
-        return labelCache.get(new Key(aFeature, aRemoteUrl, aId));
+        return labelCache.get(new Key(aFeature, aTraits, aId));
     }
 
     private LookupEntry loadLabelValue(Key aKey)
     {
         try {
             // Use the concept from a particular knowledge base
-            Optional<LookupEntry> lookupItem = lookupService.lookup(aKey.getRemoteUrl(), aKey.getId());
+            Optional<LookupEntry> lookupItem = lookupService.lookup(aKey.getTraits(), aKey.getId());
             return lookupItem.orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
@@ -79,14 +80,14 @@ public class LookupCache
     private class Key
     {
         private final AnnotationFeature feature;
-        private final String remoteUrl;
         private final String id;
+        private final LookupFeatureTraits traits;
 
-        public Key(AnnotationFeature aFeature, String aRemoteUrl, String aId)
+        public Key(AnnotationFeature aFeature, LookupFeatureTraits aTraits, String aId)
         {
             feature = aFeature;
-            remoteUrl = aRemoteUrl;
             id = aId;
+            traits = aTraits;
         }
 
         public String getId()
@@ -94,14 +95,15 @@ public class LookupCache
             return id;
         }
 
+        @SuppressWarnings("unused")
         public AnnotationFeature getAnnotationFeature()
         {
             return feature;
         }
-
-        public String getRemoteUrl()
+        
+        public LookupFeatureTraits getTraits()
         {
-            return remoteUrl;
+            return traits;
         }
 
         @Override
@@ -112,14 +114,13 @@ public class LookupCache
             }
             Key castOther = (Key) other;
             return Objects.equals(feature, castOther.feature)
-                    && Objects.equals(remoteUrl, castOther.remoteUrl)
                     && Objects.equals(id, castOther.id);
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(feature, remoteUrl, id);
+            return Objects.hash(feature, id);
         }
     }
 }
