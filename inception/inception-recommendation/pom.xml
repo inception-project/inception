@@ -151,6 +151,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-websocket</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-messaging</artifactId>
     </dependency>
     <dependency>
@@ -186,10 +190,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-auth-roles</artifactId>
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -268,6 +268,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-websocket</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
@@ -283,6 +288,21 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-crypto</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
@@ -290,6 +310,16 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-syntax-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -301,6 +331,10 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredDependencies>
+              <!-- Needed but the dependency plugin doesn't get it -->
+              <ignoredDependency>org.springframework:spring-websocket</ignoredDependency>
+            </ignoredDependencies>
             <usedDependencies>
               <!--
                 - Maven doesn't detect the the webjar dependencies because there is

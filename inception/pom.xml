@@ -148,7 +148,7 @@
     <dayjs.version>^1.11.4</dayjs.version>
     <esbuild.version>^0.14.53</esbuild.version>
     <esbuild-sass-plugin.version>^2.3.3</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>^0.7.1</esbuild-svelte.version>
+    <esbuild-svelte.version>^0.7.3</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.25.0</eslint.version>
     <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
@@ -175,6 +175,7 @@
     <recogito-client-core.version>1.7.7</recogito-client-core.version>
     <sass.version>^1.55.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
+    <svelte.version>^3.54.0</svelte.version>
     <svelte-preprocess.version>^4.10.7</svelte-preprocess.version>
     <svgdotjs-svg-js.version>^3.1.2</svgdotjs-svg-js.version>
     <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>

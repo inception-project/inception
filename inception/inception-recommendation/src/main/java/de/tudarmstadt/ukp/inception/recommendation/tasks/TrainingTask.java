@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -56,7 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
@@ -166,10 +167,13 @@ public class TrainingTask
                                     getId(), user.getUsername(), r.getRecommender().getName());
                             error("Recommender [%s] configured with invalid layer or feature - skipping recommender.",
                                     r.getRecommender().getName());
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                    user.getUsername(),
-                                    "Recommender configured with invalid layer or feature - skipping training recommender.",
-                                    recommender));
+                            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                                    .builder(this, getProject(), user.getUsername()) //
+                                    .withMessage(LogMessage.error(this,
+                                            "Recommender [%s] configured with invalid layer or "
+                                                    + "feature - skipping training recommender.",
+                                            recommender.getName()))
+                                    .build());
                             continue;
                         }
 
@@ -264,10 +268,13 @@ public class TrainingTask
                                 user.getUsername(), recommender.getName(),
                                 (System.currentTimeMillis() - startTime), e);
                         error("Training failed (%d ms): %s", duration, getRootCauseMessage(e));
-                        appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                user.getUsername(), String.format("Training failed (%d ms) with %s",
-                                        duration, e.getMessage()),
-                                recommender));
+                        appEventPublisher
+                                .publishEvent(RecommenderTaskNotificationEvent
+                                        .builder(this, getProject(), user.getUsername()) //
+                                        .withMessage(LogMessage.error(this,
+                                                "Training failed (%d ms) with %s", duration,
+                                                e.getMessage()))
+                                        .build());
                     }
                 }
             }

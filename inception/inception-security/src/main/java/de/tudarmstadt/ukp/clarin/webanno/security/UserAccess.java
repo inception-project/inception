@@ -15,14 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project;
+package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
-
-public interface ProjectAccess
+public interface UserAccess
     extends AccessCheckingBean
 {
-    boolean canManageProject(String aProjectId);
-
-    boolean canAccessProject(String aProjectId);
+    boolean isUser(String aUsername);
 }
