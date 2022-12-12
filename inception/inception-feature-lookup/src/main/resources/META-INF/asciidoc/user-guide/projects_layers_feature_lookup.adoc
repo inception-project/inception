@@ -17,6 +17,10 @@
 [[sect_layers_feature_lookup]]
 = Remote Lookup Feature
 
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `annotation.feature-support.lookup.enabled=true` to the `settings.properties` file.
+====
+
 A remote lookup feature is basically a string feature, but it can query an external service for
 possible values. The feature editor is a auto-complete field. When the user starts entering a 
 value into that field, it is sent to a configurable remote URL as a query. The expectation is that
