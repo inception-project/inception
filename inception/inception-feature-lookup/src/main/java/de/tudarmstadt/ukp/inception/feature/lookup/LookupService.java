@@ -15,33 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.security.client.auth;
+package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
-public enum AuthenticationType
+public interface LookupService
 {
-    BASIC(BasicAuthenticationTraits.TYPE_ID), //
-    HEADER(HeaderAuthenticationTraits.TYPE_ID), //
-    OAUTH_CLIENT_CREDENTIALS(OAuthClientCredentialsAuthenticationTraits.TYPE_ID);
+    Optional<LookupEntry> lookup(LookupFeatureTraits aTraits, String aId) throws IOException;
 
-    private final String id;
-
-    AuthenticationType(String aId)
-    {
-        id = aId;
-    }
-
-    public String getId()
-    {
-        return id;
-    }
-
-    @Override
-    public String toString()
-    {
-        return id;
-    }
+    List<LookupEntry> query(LookupFeatureTraits aTraits, String aQuery, String aQueryContext)
+        throws IOException;
 }

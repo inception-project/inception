@@ -34,6 +34,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
@@ -97,17 +98,19 @@ public class StringFeatureTraitsEditor
         add(form);
 
         NumberTextField<Integer> collapsedRows = new NumberTextField<>("collapsedRows",
-                Integer.class);
+                Integer.class, new Options().set("format", "'#'"));
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
+        collapsedRows.setMaximum(100);
         collapsedRows.add(visibleWhen(
                 () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(collapsedRows);
 
-        NumberTextField<Integer> expandedRows = new NumberTextField<>("expandedRows",
-                Integer.class);
+        NumberTextField<Integer> expandedRows = new NumberTextField<>("expandedRows", Integer.class,
+                new Options().set("format", "'#'"));
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
+        collapsedRows.setMaximum(100);
         expandedRows.add(visibleWhen(
                 () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);

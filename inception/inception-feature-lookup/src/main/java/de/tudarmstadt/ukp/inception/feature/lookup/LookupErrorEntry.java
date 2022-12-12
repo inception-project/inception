@@ -15,33 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.security.client.auth;
+package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
-
-public enum AuthenticationType
+public class LookupErrorEntry
+    extends LookupEntry
 {
-    BASIC(BasicAuthenticationTraits.TYPE_ID), //
-    HEADER(HeaderAuthenticationTraits.TYPE_ID), //
-    OAUTH_CLIENT_CREDENTIALS(OAuthClientCredentialsAuthenticationTraits.TYPE_ID);
+    private static final long serialVersionUID = -7618542727988178918L;
 
-    private final String id;
+    public static final String ERROR_ID = "<<<ERROR>>>";
 
-    AuthenticationType(String aId)
+    public LookupErrorEntry(String aMessage, Throwable aException)
     {
-        id = aId;
-    }
-
-    public String getId()
-    {
-        return id;
-    }
-
-    @Override
-    public String toString()
-    {
-        return id;
+        super(ERROR_ID, "Error: " + aMessage, aMessage);
     }
 }

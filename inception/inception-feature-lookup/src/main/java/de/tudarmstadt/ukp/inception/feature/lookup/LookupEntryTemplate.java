@@ -15,33 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.security.client.auth;
+package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
+import java.util.ArrayList;
+import java.util.List;
 
-public enum AuthenticationType
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+
+final class LookupEntryTemplate
+    implements IJQueryTemplate
 {
-    BASIC(BasicAuthenticationTraits.TYPE_ID), //
-    HEADER(HeaderAuthenticationTraits.TYPE_ID), //
-    OAUTH_CLIENT_CREDENTIALS(OAuthClientCredentialsAuthenticationTraits.TYPE_ID);
+    private static final long serialVersionUID = 8656996525796349138L;
 
-    private final String id;
-
-    AuthenticationType(String aId)
+    @Override
+    public String getText()
     {
-        id = aId;
-    }
-
-    public String getId()
-    {
-        return id;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<span class='item-title'>${ data.uiLabel }</span>");
+        sb.append("<div class='item-description'>${ data.description }</div>");
+        return sb.toString();
     }
 
     @Override
-    public String toString()
+    public List<String> getTextProperties()
     {
-        return id;
+        List<String> properties = new ArrayList<>();
+        properties.add("identifier");
+        properties.add("description");
+        return properties;
     }
 }
