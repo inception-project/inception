@@ -91,13 +91,35 @@
   background-color: var(--bs-light);
 }
 
-.k-input:disabled {
-  background-color: #e9ecef;
-  opacity: 1;
-  padding: 6px 12px;
+.k-input {
+  &:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+    padding: 6px 12px;
+  }
+
+  &.form-control {
+    // Bootstrap form-control overrides the Kendo style, so we need to restore it
+    display: inline-flex !important;
+  }
 }
 
-// Remove double focus shadow in composite components like combo boxes
-.k-input-inner.k-input:focus {
-  box-shadow: none;  
+
+.k-input-inner {
+  &.k-input:focus {
+    // Remove double focus shadow in composite components like combo boxes
+    box-shadow: none;  
+  }
+  
+  &.form-control {
+    // Bootstrap form-control overrides the Kendo style, so we need to restore it
+    display: inline-flex !important;
+    padding: 0px;
+  }
+}
+
+.k-list-container > .k-footer {
+  background-color: #eeeeee;
+  border-top: 1px solid #bbb;
+  padding: 3px 10px;
 }
