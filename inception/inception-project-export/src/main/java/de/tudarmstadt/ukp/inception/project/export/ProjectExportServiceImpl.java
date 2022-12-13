@@ -52,6 +52,7 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -171,7 +172,10 @@ public class ProjectExportServiceImpl
     public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
-        File projectZipFile = File.createTempFile(aRequest.getProject().getSlug(), ".zip");
+        String filename = aRequest.getProject().getSlug();
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File projectZipFile = File.createTempFile(filename, ".zip");
         boolean success = false;
         try {
             exportProject(aRequest, aMonitor, projectZipFile);
