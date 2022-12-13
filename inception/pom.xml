@@ -63,7 +63,7 @@
 
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
     <junit-platform.version>1.9.1</junit-platform.version>
-    <mockito.version>4.6.1</mockito.version>
+    <mockito.version>4.9.0</mockito.version>
     <assertj.version>3.23.1</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
     <xmlunit.version>1.6</xmlunit.version>
@@ -83,7 +83,7 @@
     <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.18.0</log4j2.version>
+    <log4j2.version>2.19.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
     <groovy.version>3.0.13</groovy.version>
@@ -96,8 +96,8 @@
     <hibernate.version>5.6.14.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
-    <wicket.version>9.11.0</wicket.version>
-    <wicketstuff.version>9.11.0</wicketstuff.version>
+    <wicket.version>9.12.0</wicket.version>
+    <wicketstuff.version>9.12.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M8</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
@@ -120,8 +120,8 @@
     <opensearch.version>1.3.6</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
 
-    <rdf4j.version>4.1.3</rdf4j.version> 
-    <!-- * 4.1.x depends on Lucene 8.5.1 -->
+    <rdf4j.version>4.2.2</rdf4j.version> 
+    <!-- * 4.2.x depends on Lucene 8.5.1 -->
 
     <jena.version>4.6.1</jena.version>
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
@@ -132,7 +132,7 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.4</jackson.version>
+    <jackson.version>2.14.1</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.2.0</okio.version>
@@ -1299,11 +1299,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>axios</artifactId>
-        <version>0.24.0</version>
-      </dependency>
-      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.15.4</version>
@@ -1627,7 +1622,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>oauth2-oidc-sdk</artifactId>
-        <version>9.35</version>
+        <version>9.43.1</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
@@ -1872,7 +1867,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.21</version>
+        <version>1.22</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
@@ -2176,12 +2171,12 @@
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
-        <version>4.6.3</version>
+        <version>4.7.0</version>
       </dependency>
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli-spring-boot-starter</artifactId>
-        <version>4.6.3</version>
+        <version>4.7.0</version>
       </dependency>
 
       <dependency>
