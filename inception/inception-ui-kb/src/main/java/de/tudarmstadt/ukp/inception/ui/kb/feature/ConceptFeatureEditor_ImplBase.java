@@ -75,8 +75,7 @@ public abstract class ConceptFeatureEditor_ImplBase
     private @SpringBean EntityLinkingProperties entityLinkingProperties;
 
     public ConceptFeatureEditor_ImplBase(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel, IModel<AnnotatorState> aStateModel,
-            AnnotationActionHandler aHandler)
+            IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 

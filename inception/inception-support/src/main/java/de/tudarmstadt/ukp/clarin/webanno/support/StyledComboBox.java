@@ -86,10 +86,11 @@ public class StyledComboBox<T>
                 // Some docs on how the templates work in Kendo, in case we need
                 // more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                return "# if (data.reordered == 'true') { #"
-                        + "<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n"
-                        + "# } else { #"
-                        + "<div title=\"#: data.description #\">#: data.name #</div>\n" + "# } #";
+                return "# if (data.reordered == 'true') { #" //
+                        + "<span title=\"#: data.description #\"><b>#: data.name #</b></span>\n" //
+                        + "# } else { #" //
+                        + "<span title=\"#: data.description #\">#: data.name #</span>\n" //
+                        + "# } #";
             }
 
             @Override

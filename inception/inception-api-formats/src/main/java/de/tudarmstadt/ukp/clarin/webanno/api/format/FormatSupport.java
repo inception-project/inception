@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -196,8 +197,10 @@ public interface FormatSupport
         }
 
         // If the writer produced only a single file, then that is the result
-        File exportFile = createTempFile(
-                FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName()),
+        String filename = FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName());
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File exportFile = createTempFile(filename,
                 "." + FilenameUtils.getExtension(aTargetFolder.listFiles()[0].getName()));
         // File exportFile = new File(aTargetFolder.getParent(),
         // aTargetFolder.listFiles()[0].getName());

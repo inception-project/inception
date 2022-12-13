@@ -182,7 +182,10 @@ public class LegacyRemoteApiController
 
         // If the current filename does not start with "." and is in the root folder of the ZIP,
         // import it as a source document
-        File zipFile = File.createTempFile(aFile.getOriginalFilename(), ".zip");
+        String filename = aFile.getOriginalFilename();
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File zipFile = File.createTempFile(filename, ".zip");
         aFile.transferTo(zipFile);
         ZipFile zip = new ZipFile(zipFile);
 
@@ -191,8 +194,7 @@ public class LegacyRemoteApiController
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // If it is the zip name, ignore it
-            if ((FilenameUtils.removeExtension(aFile.getOriginalFilename()) + "/")
-                    .equals(entry.toString())) {
+            if ((FilenameUtils.removeExtension(filename) + "/").equals(entry.toString())) {
                 continue;
             }
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it as

@@ -36,12 +36,11 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class FileUploadDownloadHelper
 {
+    private static final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final IFileCleaner fileTracker;
-
-    private final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
 
     public FileUploadDownloadHelper(Application application)
     {

@@ -78,10 +78,6 @@ public class MultiSelectTextFeatureEditor
         add(new ConstraintsInUseIndicator(CID_TEXT_INDICATOR, getModel()));
     }
 
-    /**
-     * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
-     * feature doesn't match any constraint rule
-     */
     @SuppressWarnings("unchecked")
     @Override
     public void onConfigure()
@@ -94,6 +90,8 @@ public class MultiSelectTextFeatureEditor
             field = (FormComponent<ReorderableTag>) field.replaceWith(createInput());
         }
 
+        // Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied
+        // and feature doesn't match any constraint rule
         // if enabled and constraints rule execution returns anything other than green
         var featState = getModelObject();
         setVisible(!featState.feature.isHideUnconstraintFeature() || //
