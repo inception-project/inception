@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { AnnotationMarker } from '@inception-project/inception-js-api'
 import { AnnotatedText, Offsets, VID } from '..'
 import { CompactAnnotationMarker, unpackCompactAnnotationMarker } from './CompactAnnotationMarker'
 import { CompactLayer, unpackCompactLayer } from './CompactLayer'
@@ -61,11 +62,11 @@ export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): Annotate
  * @param markerList a list of {@link CompactAnnotationMarker}s
  * @returns the map
  */
-export function makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
-  const markerMap = new Map<VID, Array<T>>()
+export function makeMarkerMap<AnnotationMarker> (markerList: AnnotationMarker[] | undefined): Map<VID, Array<AnnotationMarker>> {
+  const markerMap = new Map<VID, Array<AnnotationMarker>>()
   if (markerList) {
     markerList.forEach(marker => {
-      marker[1].forEach(vid => {
+      marker.vid.forEach(vid => {
         let ms = markerMap.get(vid)
         if (!ms) {
           ms = []
