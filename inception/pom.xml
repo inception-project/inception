@@ -83,7 +83,7 @@
     <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.19.0</log4j2.version>
+    <log4j2.version>2.18.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
     <groovy.version>3.0.13</groovy.version>
