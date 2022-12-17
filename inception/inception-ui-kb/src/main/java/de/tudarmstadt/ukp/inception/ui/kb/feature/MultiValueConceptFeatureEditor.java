@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class MultiValueConceptFeatureEditor
     extends ConceptFeatureEditor_ImplBase
@@ -120,10 +121,12 @@ public class MultiValueConceptFeatureEditor
 
     private void styleMultiSelect(JQueryBehavior aBehavior)
     {
-        aBehavior.setOption("autoWidth", true);
+        // aBehavior.setOption("autoWidth", true);
+        KendoStyleUtils.autoDropdownWidth(aBehavior);
+        // aBehavior.setOption("height", 300);
+        KendoStyleUtils.autoDropdownHeight(aBehavior);
         aBehavior.setOption("animation", false);
         aBehavior.setOption("delay", 250);
-        aBehavior.setOption("height", 300);
     }
 
     @Override
@@ -186,6 +189,7 @@ public class MultiValueConceptFeatureEditor
             // aBehavior.setOption("autoBind", false);
             // aBehavior.setOption("minLength", 1);
             // aBehavior.setOption("enforceMinLength", true);
+
             aBehavior.setOption("tagTemplate",
                     Options.asString(
                             "<span title=\"#: data.description + '\\n\\n' + data.identifier #\" "
