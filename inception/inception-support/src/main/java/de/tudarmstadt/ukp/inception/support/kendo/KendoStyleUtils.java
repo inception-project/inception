@@ -35,7 +35,7 @@ public class KendoStyleUtils
         aBehavior.setOption("open", join(" ", //
                 "function(e) {", //
                 "  var listContainer = e.sender.list.closest('.k-popup');", //
-                "  listContainer.width(Math.max($(window).width()*0.3+kendo.support.scrollbar(),300))", //
+                "  listContainer.width(Math.max(window.innerWidth*0.3+kendo.support.scrollbar(),300))", //
                 "}"));
     }
 
@@ -49,7 +49,8 @@ public class KendoStyleUtils
     public static void autoDropdownHeight(JQueryBehavior aBehavior)
     {
         //
-        aBehavior.setOption("height", "Math.max($(window).height()*0.5,200)");
+        aBehavior.setOption("height", join(" ", //
+                "Math.max(window.innerHeight*0.5,200)"));
     }
 
     /**
