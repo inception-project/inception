@@ -78,7 +78,7 @@ public class CurationDocumentTableDataProvider
         }
     }
 
-    public List<SourceDocument> filter(List<SourceDocument> aData)
+    private List<SourceDocument> filter(List<SourceDocument> aData)
     {
         Stream<SourceDocument> docStream = aData.stream();
 

@@ -65,7 +65,7 @@ public class AnnotationQueueOverviewDataProvider
     public Iterator<AnnotationQueueItem> iterator(long aFirst, long aCount)
     {
         // Apply Filter
-        List<AnnotationQueueItem> newList = filterTable(annotationQueueItems);
+        List<AnnotationQueueItem> newList = filter(annotationQueueItems);
 
         // Apply sorting
         newList.sort((o1, o2) -> {
@@ -109,7 +109,7 @@ public class AnnotationQueueOverviewDataProvider
     @Override
     public long size()
     {
-        return filterTable(annotationQueueItems).size();
+        return filter(annotationQueueItems).size();
     }
 
     @Override
@@ -118,7 +118,7 @@ public class AnnotationQueueOverviewDataProvider
         return Model.of(aAnnotationQueueItem);
     }
 
-    public List<AnnotationQueueItem> filterTable(List<AnnotationQueueItem> aData)
+    private List<AnnotationQueueItem> filter(List<AnnotationQueueItem> aData)
     {
         // AnnotationDocuments are created lazily, so we may not have one for every combination of
         // user and SourceDocument or even one for every SourceDocument. But if any of the filters

@@ -15,31 +15,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { isConstructorDeclaration, textChangeRangeIsUnchanged } from 'typescript'
 import { calculateEndOffset, calculateStartOffset } from './OffsetUtils'
 
 export type ViewportTrackerCallback = (range: [number, number]) => void
 
 export class ViewportTracker {
+  private _visibleElements = new Set<Element>()
+  private _currentRange: [number, number] = [0, 0]
+
   private root: Element
-  private visibleElements = new Set<Element>()
   private observer: IntersectionObserver
+
+  private initialized = false
   private redrawTimeoutId: ReturnType<typeof setTimeout>
   private debounceDelay = 250
   private callback: ViewportTrackerCallback
-  private _currentRange: [number, number] = [0, 0]
 
-  public constructor (element: Element, callback: ViewportTrackerCallback) {
+  private sectionSelector?: string
+
+  /**
+   * @param element the element containing the elemnts to track
+   * @param callback the callback to invoke when the visible elements change
+   * @param sectionSelector optional CSS selector indicating which elements are considered sections
+   * and should be tracked as a whole
+   */
+  public constructor(element: Element, callback: ViewportTrackerCallback, sectionSelector?: string) {
     this.root = element
     this.callback = callback
+    this.sectionSelector = sectionSelector
 
     this.initializeElementTracking(this.root)
   }
 
-  public get currentRange (): [number, number] {
+  public get currentRange(): [number, number] {
     return this._currentRange
   }
 
-  private shouldTrack (element: Element): boolean {
+  public get visibleElements(): Set<Element> {
+    return this.visibleElements;
+  }
+
+  private shouldTrack(element: Element): boolean {
     const style = getComputedStyle(element)
     if (!style.display) {
       return false
@@ -47,18 +64,25 @@ export class ViewportTracker {
     return !style.display.startsWith('inline')
   }
 
-  private initializeElementTracking (element: Element): void {
+  private initializeElementTracking(element: Element): void {
     const startTime = new Date().getTime()
     if (this.observer) {
       this.observer.disconnect()
     }
 
     let leafTrackingCandidates: Set<Element>
-    const trackingCandidates = Array.from(element.querySelectorAll('*'))
+    let trackingCandidates = Array.from(element.querySelectorAll('*'))
       .filter(e => this.shouldTrack(e))
     console.debug(`Found ${trackingCandidates.length} tracking candidates`)
 
     if (trackingCandidates.length > 0) {
+      trackingCandidates = trackingCandidates.map(e => {
+        if (!this.sectionSelector || e.matches(this.sectionSelector)) {
+          return e
+        }
+
+        return e.closest(this.sectionSelector) || e
+      })
       leafTrackingCandidates = new Set<Element>([...trackingCandidates])
       trackingCandidates.map(e => e.parentElement && leafTrackingCandidates.delete(e.parentElement))
     } else {
@@ -80,19 +104,29 @@ export class ViewportTracker {
     console.log(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
   }
 
-  private handleIntersectRange (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
+  private handleIntersectRange(entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
+    // Avoid triggering the callback if no new elements have become visible
+    let visibleElementsAdded = 0
+
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        this.visibleElements.add(entry.target)
+        this._visibleElements.add(entry.target)
+        visibleElementsAdded++
       } else {
-        this.visibleElements.delete(entry.target)
+        this._visibleElements.delete(entry.target)
       }
     })
 
-    this.initiateAction()
+    if (visibleElementsAdded || !this.initialized) {
+      console.log(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
+      // the first time the callback is called, we want to make sure that the annotations are 
+      // loaded at least once
+      this.initialized = true
+      this.initiateAction()
+    }
   }
 
-  private initiateAction (): void {
+  private initiateAction(): void {
     clearTimeout(this.redrawTimeoutId)
     this.redrawTimeoutId = setTimeout(() => {
       this._currentRange = this.calculateWindowRange()
@@ -100,17 +134,17 @@ export class ViewportTracker {
     }, this.debounceDelay)
   }
 
-  private calculateWindowRange (): [number, number] {
+  private calculateWindowRange(): [number, number] {
     const startTime = new Date().getTime()
     let begin = Number.MAX_SAFE_INTEGER
     let end = Number.MIN_SAFE_INTEGER
-    this.visibleElements.forEach(el => {
+    this._visibleElements.forEach(el => {
       begin = Math.min(begin, calculateStartOffset(this.root, el))
       end = Math.max(end, calculateEndOffset(this.root, el))
     })
     const endTime = new Date().getTime()
 
-    console.log(`Visible: ${begin}-${end} (${this.visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
+    console.log(`Visible: ${begin}-${end} (${this._visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
     return [begin, end]
   }
 }

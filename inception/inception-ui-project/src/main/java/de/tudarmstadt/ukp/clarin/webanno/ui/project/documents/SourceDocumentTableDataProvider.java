@@ -35,7 +35,8 @@ import org.apache.wicket.model.Model;
 
 public class SourceDocumentTableDataProvider
     extends SortableDataProvider<SourceDocumentTableRow, SourceDocumentTableSortKeys>
-    implements IFilterStateLocator<SourceDocumentTableFilterState>, Serializable
+    implements IFilterStateLocator<SourceDocumentTableFilterState>, Serializable,
+    Iterable<SourceDocumentTableRow>
 {
     private static final long serialVersionUID = -8262950880527423715L;
 
@@ -58,6 +59,14 @@ public class SourceDocumentTableDataProvider
     public void refresh()
     {
         data = Model.ofList(source.getObject());
+    }
+
+    @Override
+    public Iterator<SourceDocumentTableRow> iterator()
+    {
+        var filteredData = filter(data.getObject());
+        filteredData.sort(this::comparator);
+        return filteredData.iterator();
     }
 
     @Override
@@ -91,7 +100,7 @@ public class SourceDocumentTableDataProvider
         }
     }
 
-    public List<SourceDocumentTableRow> filter(List<SourceDocumentTableRow> aData)
+    private List<SourceDocumentTableRow> filter(List<SourceDocumentTableRow> aData)
     {
         Stream<SourceDocumentTableRow> docStream = aData.stream();
 

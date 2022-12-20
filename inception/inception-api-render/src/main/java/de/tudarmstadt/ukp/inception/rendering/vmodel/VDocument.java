@@ -173,18 +173,19 @@ public class VDocument
         return emptyList();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Collection<VObject> objects(long aLayerId)
     {
+        var allObjects = new ArrayList<VObject>();
+
         if (spansByLayer.containsKey(aLayerId)) {
-            return unmodifiableList((List) spansByLayer.get(aLayerId));
+            allObjects.addAll(spansByLayer.get(aLayerId));
         }
 
         if (arcsByLayer.containsKey(aLayerId)) {
-            return unmodifiableList((List) arcsByLayer.get(aLayerId));
+            allObjects.addAll(arcsByLayer.get(aLayerId));
         }
 
-        return emptyList();
+        return unmodifiableList(allObjects);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
