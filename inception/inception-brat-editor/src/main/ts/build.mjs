@@ -53,11 +53,11 @@ fs.mkdirsSync(`${outbase}`)
 esbuild.build(Object.assign({
   entryPoints: ['src/brat.ts'],
   outfile: `${outbase}/brat.min.js`,
-  globalName: 'Brat',
+  globalName: 'Brat'
 }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ['src/brat_curation.ts'],
   outfile: `${outbase}/brat_curation.min.js`,
-  globalName: 'BratCuration',
+  globalName: 'BratCuration'
 }, defaults))

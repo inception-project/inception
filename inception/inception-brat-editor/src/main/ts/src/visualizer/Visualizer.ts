@@ -1951,7 +1951,7 @@ export class Visualizer {
 
             let border: number
             if (refChunk.row.index === rowIndex) {
-              border = refChunk.translation.x + leftSpan.fragments[refSpan.fragments.length - 1].right
+              border = refChunk.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right
             } else {
               if (this.rtlmode) {
                 border = 0
