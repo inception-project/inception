@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.util.stream.StreamSupport;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
@@ -69,8 +71,9 @@ public class SourceDocumentSelectColumn
 
         Fragment frag = new Fragment(aComponentId, "select-column-header", fragmentContainer);
 
-        var anyRowSelected = LoadableDetachableModel.of(() -> dataProvider.getModel().getObject()
-                .stream().allMatch(SourceDocumentTableRow::isSelected));
+        var anyRowSelected = LoadableDetachableModel
+                .of(() -> StreamSupport.stream(dataProvider.spliterator(), false)
+                        .allMatch(SourceDocumentTableRow::isSelected));
 
         CheckBox checkbox = new CheckBox("allSelected", anyRowSelected);
         checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> checkbox.send(
