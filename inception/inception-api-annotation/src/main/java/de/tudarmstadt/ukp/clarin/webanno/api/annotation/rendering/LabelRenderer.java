@@ -51,6 +51,10 @@ public class LabelRenderer
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VObject vobj : aVDoc.objects(layer.getId())) {
+                if (vobj.getLabelHint() != null) {
+                    // Label hint was already set earlier - do not overwrite it!
+                    continue;
+                }
                 vobj.setLabelHint(getUiLabelText(vobj));
             }
         }
