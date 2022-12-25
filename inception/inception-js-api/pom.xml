@@ -26,4 +26,11 @@
   <artifactId>inception-js-api</artifactId>
   <name>INCEpTION - JavaScript API</name>
   <description>JavaScript APIs for INCEpTION</description>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+  </dependencies>
 </project>

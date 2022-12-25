@@ -9,7 +9,7 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build": "esbuild --bundle index.ts --outdir=dist --minify --sourcemap"
+    "build": "node build.mjs"
   },
   "dependencies": {
     "@stomp/stompjs": "${stomp-stompjs.version}",
