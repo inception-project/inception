@@ -37,6 +37,7 @@ public class RenderRequest
     private final int windowBeginOffset;
     private final int windowEndOffset;
     private final boolean includeText;
+    private final boolean clipSpans;
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
@@ -47,6 +48,7 @@ public class RenderRequest
         this.windowBeginOffset = builder.windowBeginOffset;
         this.windowEndOffset = builder.windowEndOffset;
         this.includeText = builder.includeText;
+        this.clipSpans = builder.clipSpans;
         this.state = builder.state;
         this.sourceDocument = builder.sourceDocument;
         this.annotationUser = builder.annotationUser;
@@ -74,6 +76,11 @@ public class RenderRequest
     public boolean isIncludeText()
     {
         return includeText;
+    }
+
+    public boolean isClipSpans()
+    {
+        return clipSpans;
     }
 
     public User getAnnotationUser()
@@ -128,6 +135,7 @@ public class RenderRequest
         private int windowBeginOffset;
         private int windowEndOffset;
         private boolean includeText = true;
+        private boolean clipSpans = true;
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
@@ -159,6 +167,12 @@ public class RenderRequest
             visibleLayers = aState.getAnnotationLayers();
             sourceDocument = state.getDocument();
             annotationUser = state.getUser();
+            return this;
+        }
+
+        public Builder withClipSpans(boolean aFlag)
+        {
+            clipSpans = aFlag;
             return this;
         }
 

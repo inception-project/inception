@@ -164,6 +164,10 @@ export class DiamAjaxImpl implements DiamAjax {
         params.text = options.includeText
       }
 
+      if (options.clipSpans === false) {
+        params.clip = options.clipSpans
+      }
+
       if (options.format) {
         params.format = options.format
       }
