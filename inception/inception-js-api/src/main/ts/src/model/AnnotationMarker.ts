@@ -22,3 +22,26 @@ export class AnnotationMarker {
   type: MarkerType
   vid: Array<VID>
 }
+
+/**
+ * Groups the given markers by the VID to which they apply.
+ *
+ * @param markerList a list of markers.
+ * @returns the grouped markers.
+ */
+export function groupMarkers<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
+  const markerMap = new Map<VID, Array<T>>()
+  if (markerList) {
+    markerList.forEach(marker => {
+      marker[1].forEach(vid => {
+        let ms = markerMap.get(vid)
+        if (!ms) {
+          ms = []
+          markerMap.set(vid, ms)
+        }
+        ms.push(marker)
+      })
+    })
+  }
+  return markerMap
+}

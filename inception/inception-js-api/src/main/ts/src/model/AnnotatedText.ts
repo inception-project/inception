@@ -22,6 +22,7 @@ import { Relation } from './Relation'
 import { Span } from './Span'
 import { TextMarker } from './TextMarker'
 import { Layer } from './Layer'
+import { MarkerType } from './Marker'
 
 export class AnnotatedText {
   window: Offsets
@@ -30,6 +31,7 @@ export class AnnotatedText {
   relations: Map<VID, Relation> = new Map<VID, Relation>()
   spans: Map<VID, Span> = new Map<VID, Span>()
   annotationMarkers: Map<VID, AnnotationMarker[]>
+  markedAnnotations: Map<MarkerType, VID[]>
   textMarkers: TextMarker[]
 
   __getOrCreateLayer (id: number): Layer {
