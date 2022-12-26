@@ -31,23 +31,39 @@ public class VRange
 
     private final int begin;
     private final int end;
-    private final boolean clippedAtBegin;
-    private final boolean clippedAtEnd;
+    private final int originalBegin;
+    private final int originalEnd;
 
-    public VRange(int aBegin, int aEnd)
+    /**
+     * @param aAdjustedBegin
+     *            begin adjusted to the viewport (can be negative).
+     * @param aAdjustedEnd
+     *            end adjusted to the viewport (can be negative).
+     */
+    public VRange(int aAdjustedBegin, int aAdjustedEnd)
     {
-        begin = aBegin;
-        end = aEnd;
-        clippedAtBegin = false;
-        clippedAtEnd = false;
+        begin = aAdjustedBegin;
+        end = aAdjustedEnd;
+        originalBegin = aAdjustedBegin;
+        originalEnd = aAdjustedEnd;
     }
 
-    private VRange(int aBegin, int aEnd, boolean aClippedAtBegin, boolean aClippedAtEnd)
+    /**
+     * @param aAdjustedBegin
+     *            begin adjusted to the viewport (can be negative).
+     * @param aAdjustedEnd
+     *            end adjusted to the viewport (can be negative).
+     * @param aClippedBegin
+     *            begin clipped to the viewport.
+     * @param aClippedEnd
+     *            end clipped to the viewport.
+     */
+    private VRange(int aAdjustedBegin, int aAdjustedEnd, int aClippedBegin, int aClippedEnd)
     {
-        begin = aBegin;
-        end = aEnd;
-        clippedAtBegin = aClippedAtBegin;
-        clippedAtEnd = aClippedAtEnd;
+        originalBegin = aAdjustedBegin;
+        originalEnd = aAdjustedEnd;
+        begin = aClippedBegin;
+        end = aClippedEnd;
     }
 
     public int getBegin()
@@ -60,14 +76,24 @@ public class VRange
         return end;
     }
 
+    public int getOriginalBegin()
+    {
+        return originalBegin;
+    }
+
+    public int getOriginalEnd()
+    {
+        return originalEnd;
+    }
+
     public boolean isClippedAtBegin()
     {
-        return clippedAtBegin;
+        return originalBegin != begin;
     }
 
     public boolean isClippedAtEnd()
     {
-        return clippedAtEnd;
+        return originalEnd != end;
     }
 
     public static Optional<VRange> clippedRange(int aViewportBegin, int aViewPortEnd,
@@ -110,21 +136,17 @@ public class VRange
         }
 
         int begin = aBegin - aViewportBegin;
-        boolean clippedAtBegin = false;
         if (begin < 0) {
             begin = 0;
-            clippedAtBegin = true;
         }
 
         int end = aEnd;
-        boolean clippedAtEnd = false;
         if (end > aViewPortEnd) {
             end = aViewPortEnd;
-            clippedAtEnd = true;
         }
         end = end - aViewportBegin;
 
-        return Optional.of(new VRange(begin, end, clippedAtBegin, clippedAtEnd));
+        return Optional.of(new VRange(aBegin - aViewportBegin, aEnd - aViewportBegin, begin, end));
     }
 
     @Override

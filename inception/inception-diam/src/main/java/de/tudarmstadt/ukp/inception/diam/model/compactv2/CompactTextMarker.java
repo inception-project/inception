@@ -24,7 +24,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
@@ -44,13 +43,6 @@ public class CompactTextMarker
     {
         offsets = aVid;
         type = aType;
-    }
-
-    public CompactTextMarker(VTextMarker aTextMarker)
-    {
-        var range = aTextMarker.getRange();
-        offsets = asList(new CompactRange(range.getBegin(), range.getEnd()));
-        type = aTextMarker.getType();
     }
 
     public void setOffsets(List<CompactRange> aVid)
