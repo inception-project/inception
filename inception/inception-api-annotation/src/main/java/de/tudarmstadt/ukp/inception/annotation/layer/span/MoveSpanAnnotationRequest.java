@@ -18,28 +18,37 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class CreateSpanAnnotationRequest
-    extends SpanAnnotationRequest_ImplBase<CreateSpanAnnotationRequest>
+public class MoveSpanAnnotationRequest
+    extends SpanAnnotationRequest_ImplBase<MoveSpanAnnotationRequest>
 {
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
-            int aBegin, int aEnd)
+    private final AnnotationFS annotation;
+
+    public MoveSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationFS aAnnotation, int aBegin, int aEnd)
     {
-        this(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        this(null, aDocument, aUsername, aCas, aAnnotation, aBegin, aEnd);
     }
 
-    private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
+    private MoveSpanAnnotationRequest(MoveSpanAnnotationRequest aOriginal, SourceDocument aDocument,
+            String aUsername, CAS aCas, AnnotationFS aAnnotation, int aBegin, int aEnd)
     {
         super(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        annotation = aAnnotation;
+    }
+
+    public AnnotationFS getAnnotation()
+    {
+        return annotation;
     }
 
     @Override
-    public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
+    public MoveSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new CreateSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(), aBegin,
-                aEnd);
+        return new MoveSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(),
+                getAnnotation(), aBegin, aEnd);
     }
 }

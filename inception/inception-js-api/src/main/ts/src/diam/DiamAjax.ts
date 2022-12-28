@@ -37,6 +37,8 @@ export interface DiamAjax {
 
   createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void;
 
+  moveSpanAnnotation(id: VID, offsets: Array<Offsets>): void;
+
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
 
   loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any>;

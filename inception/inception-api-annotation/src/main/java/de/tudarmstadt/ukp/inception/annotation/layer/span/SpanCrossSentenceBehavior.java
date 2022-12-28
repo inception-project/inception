@@ -72,6 +72,21 @@ public class SpanCrossSentenceBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    @Override
+    public MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
+            MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    private <T extends SpanAnnotationRequest_ImplBase<T>> T onRequest(TypeAdapter aAdapter,
+            T aRequest)
+        throws AnnotationException
+    {
         if (aAdapter.getLayer().isCrossSentence()) {
             return aRequest;
         }

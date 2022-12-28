@@ -17,29 +17,36 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationCreatedEvent;
 
-public class CreateSpanAnnotationRequest
-    extends SpanAnnotationRequest_ImplBase<CreateSpanAnnotationRequest>
+public class SpanMovedEvent
+    extends SpanEvent
+    implements AnnotationCreatedEvent
 {
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
-            int aBegin, int aEnd)
+    private static final long serialVersionUID = 4144074959212391974L;
+
+    private int oldBegin;
+    private int oldEnd;
+
+    public SpanMovedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aAnnotation, int aOldBegin, int aOldEnd)
     {
-        this(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        oldBegin = aOldBegin;
+        oldEnd = aOldEnd;
     }
 
-    private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
+    public int getOldBegin()
     {
-        super(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        return oldBegin;
     }
 
-    @Override
-    public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
+    public int getOldEnd()
     {
-        return new CreateSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(), aBegin,
-                aEnd);
+        return oldEnd;
     }
 }

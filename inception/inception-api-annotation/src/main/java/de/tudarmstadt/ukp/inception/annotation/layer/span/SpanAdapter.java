@@ -79,7 +79,7 @@ public class SpanAdapter
     }
 
     /**
-     * Add new span annotation into the CAS and return the the id of the span annotation
+     * Create a new span annotation.
      *
      * @param aDocument
      *            the document to which the CAS belongs
@@ -91,7 +91,7 @@ public class SpanAdapter
      *            the begin offset.
      * @param aEnd
      *            the end offset.
-     * @return the ID.
+     * @return the new annotation.
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
@@ -106,6 +106,8 @@ public class SpanAdapter
     {
         CreateSpanAnnotationRequest request = aRequest;
 
+        // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
+        // reject the creation (e.g. reject cross-sentence annotations)
         for (SpanLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
@@ -120,8 +122,53 @@ public class SpanAdapter
     }
 
     /**
-     * A Helper method to add annotation to CAS
+     * Move a span annotation.
+     *
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
+     * @param aCas
+     *            the CAS.
+     * @param aAnnotation
+     *            the annotation to move.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
+     * @return the new annotation
+     * @throws AnnotationException
+     *             if the annotation cannot be created/updated.
      */
+    public AnnotationFS move(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationFS aAnnotation, int aBegin, int aEnd)
+        throws AnnotationException
+    {
+        return handle(new MoveSpanAnnotationRequest(aDocument, aUsername, aCas, aAnnotation, aBegin,
+                aEnd));
+    }
+
+    public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
+    {
+        MoveSpanAnnotationRequest request = aRequest;
+
+        // Adjust the move request (e.g. adjust offsets to the configured granularity) or
+        // reject the request (e.g. reject cross-sentence annotations)
+        for (SpanLayerBehavior behavior : behaviors) {
+            request = behavior.onMove(this, request);
+        }
+
+        int oldBegin = request.getAnnotation().getBegin();
+        int oldEnd = request.getAnnotation().getBegin();
+        moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
+                request.getEnd());
+
+        publishEvent(new SpanMovedEvent(this, request.getDocument(), request.getUsername(),
+                getLayer(), request.getAnnotation(), oldBegin, oldEnd));
+
+        return request.getAnnotation();
+    }
+
     private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
@@ -140,6 +187,26 @@ public class SpanAdapter
         aCas.addFsToIndexes(newAnnotation);
 
         return newAnnotation;
+    }
+
+    private AnnotationFS moveSpanAnnotation(CAS aCas, AnnotationFS aAnnotation, int aBegin,
+            int aEnd)
+    {
+        var oldCoveredText = aAnnotation.getCoveredText();
+        var oldBegin = aAnnotation.getBegin();
+        var oldEnd = aAnnotation.getEnd();
+
+        aCas.removeFsFromIndexes(aAnnotation);
+        aAnnotation.setBegin(aBegin);
+        aAnnotation.setEnd(aEnd);
+
+        log.trace("Moved span annotation from {}-{} [{}] to {}-{} [{}]", oldBegin, oldEnd,
+                oldCoveredText, aAnnotation.getBegin(), aAnnotation.getEnd(),
+                aAnnotation.getCoveredText());
+
+        aCas.addFsToIndexes(aAnnotation);
+
+        return aAnnotation;
     }
 
     @Override
