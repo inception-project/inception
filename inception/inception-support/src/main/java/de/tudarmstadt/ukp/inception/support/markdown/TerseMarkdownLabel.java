@@ -49,7 +49,7 @@ public class TerseMarkdownLabel
     protected void onInitialize()
     {
         super.onInitialize();
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE - SPECIAL HTML-SANITIZING COMPONENT
     }
 
     @Override

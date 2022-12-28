@@ -44,8 +44,11 @@
 </body>
 <wicket:fragment wicket:id="resultGroup">
   <tr wicket:id="results" style="display: table-row;">
-    <td style="text-align: center;"><span
-        wicket:id="sentence"></span></td>
+    <td style="text-align: center;">
+      <span wicket:id="leftContext"/>
+      <span class="fw-bold" wicket:id="match"/>
+      <span wicket:id="rightContext"/>
+    </td>
   </tr>
 </wicket:fragment>
 </html>

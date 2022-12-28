@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,21 +117,17 @@ public class AnnotatedListIdentifiers
         add(new Label("count", searchResults.map(List::size)));
     }
 
-    public List<String> getSearchResultsFormattedForDocument(
+    private List<SearchResult> getSearchResultsFormattedForDocument(
             IModel<List<SearchResult>> searchResults, String documentTitle)
     {
-        List<String> searchResultList = new ArrayList<String>();
+        List<SearchResult> searchResultList = new ArrayList<>();
+
         for (SearchResult x : searchResults.getObject()) {
             if (x.getDocumentTitle().equals(documentTitle)) {
-                String sentence = escapeMarkup(x.getLeftContext()) + //
-                        "<strong>" + //
-                        escapeMarkup(x.getText()) + //
-                        "</strong>" + //
-                        escapeMarkup(x.getRightContext());
-                searchResultList.add(sentence);
-                LOG.debug("Sentence search : {}", sentence);
+                searchResultList.add(x);
             }
         }
+
         return searchResultList;
     }
 
@@ -167,23 +162,26 @@ public class AnnotatedListIdentifiers
         private static final long serialVersionUID = 3540041356505975132L;
 
         public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-                List<String> aResultList)
+                List<SearchResult> aResultList)
         {
             super(aId, aMarkupId, aMarkupProvider);
 
-            ListView<String> statementList = new ListView<String>("results")
+            ListView<SearchResult> results = new ListView<SearchResult>("results")
             {
                 private static final long serialVersionUID = 5811425707843441458L;
 
                 @Override
-                protected void populateItem(ListItem<String> aItem)
+                protected void populateItem(ListItem<SearchResult> aItem)
                 {
-                    aItem.add(new Label("sentence", aItem.getModelObject())
-                            .setEscapeModelStrings(false));
+                    var result = aItem.getModelObject();
+                    aItem.add(new Label("leftContext", result.getLeftContext()));
+                    aItem.add(new Label("match", result.getText()));
+                    aItem.add(new Label("rightContext", result.getRightContext()));
                 }
             };
-            statementList.setList(aResultList);
-            add(statementList);
+
+            results.setList(aResultList);
+            add(results);
         }
     }
 
