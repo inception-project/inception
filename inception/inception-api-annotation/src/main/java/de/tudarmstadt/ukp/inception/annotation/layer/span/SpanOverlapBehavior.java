@@ -72,6 +72,27 @@ public class SpanOverlapBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    @Override
+    public MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
+            MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        try {
+            aRequest.getCas().removeFsFromIndexes(aRequest.getAnnotation());
+            return onRequest(aAdapter, aRequest);
+        }
+        finally {
+            aRequest.getCas().addFsToIndexes(aRequest.getAnnotation());
+        }
+    }
+
+    private <T extends SpanAnnotationRequest_ImplBase<T>> T onRequest(TypeAdapter aAdapter,
+            T aRequest)
+        throws AnnotationException
+    {
         final CAS aCas = aRequest.getCas();
         final int aBegin = aRequest.getBegin();
         final int aEnd = aRequest.getEnd();
@@ -284,7 +305,7 @@ public class SpanOverlapBehavior
                 || (aFS1.getBegin() < aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
     }
 
-    private static boolean stacking(CreateSpanAnnotationRequest aRequest, AnnotationFS aSpan)
+    private static boolean stacking(SpanAnnotationRequest_ImplBase<?> aRequest, AnnotationFS aSpan)
     {
         return stacking(aRequest.getBegin(), aRequest.getEnd(), aSpan.getBegin(), aSpan.getEnd());
     }

@@ -41,6 +41,10 @@ public abstract class SpanLayerBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException;
 
+    public abstract MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
+            MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException;
+
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
     {

@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithNewAnnotatio
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
@@ -78,6 +79,13 @@ public class DiamAutoConfig
     public CreateSpanAnnotationHandler createSpanAnnotationHandler()
     {
         return new CreateSpanAnnotationHandler();
+    }
+
+    @Bean
+    public MoveSpanAnnotationHandler moveSpanAnnotationHandler(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new MoveSpanAnnotationHandler(aAnnotationService);
     }
 
     @Bean
