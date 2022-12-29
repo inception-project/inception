@@ -17,15 +17,54 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils;
 
+import java.io.Serializable;
+
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.IModel;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 
-public class Utilities
+public class HighlightLabel
+    extends Label
 {
+    private static final long serialVersionUID = -8785304729150866166L;
+
     private static final String MARK = "mark";
     private static final String EM = "em";
+
+    public HighlightLabel(String aId, IModel<?> aModel)
+    {
+        super(aId, aModel);
+    }
+
+    public HighlightLabel(String aId, Serializable aLabel)
+    {
+        super(aId, aLabel);
+    }
+
+    public HighlightLabel(String aId)
+    {
+        super(aId);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+        setEscapeModelStrings(false); // SAFE - SPECIAL HTML-SANITIZING COMPONENT
+    }
+
+    @Override
+    public void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
+    {
+        String highlightString = getDefaultModelObjectAsString();
+        String htmlString = cleanHighlight(highlightString);
+        replaceComponentTagBody(markupStream, openTag, htmlString);
+    }
 
     public static String cleanHighlight(String aHighlight)
     {

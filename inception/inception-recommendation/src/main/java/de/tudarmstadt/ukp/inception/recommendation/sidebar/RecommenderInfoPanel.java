@@ -105,7 +105,7 @@ public class RecommenderInfoPanel
                     aModel.getObject().getProject());
             return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
-        })).setEscapeModelStrings(false));
+        })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
 
         WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);

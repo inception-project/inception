@@ -39,6 +39,6 @@ public class SymbolLabel
     protected void onInitialize()
     {
         super.onInitialize();
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE - RENDERING ICON FROM CONTROLLED SET
     }
 }
