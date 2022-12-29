@@ -760,6 +760,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-tutorial</artifactId>
+        <version>27.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-testing</artifactId>
         <version>27.0-SNAPSHOT</version>
       </dependency>
@@ -2306,6 +2311,7 @@
     <module>inception-api-schema</module>
     <module>inception-export</module>
     <module>inception-diag</module>
+    <module>inception-tutorial</module>
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>

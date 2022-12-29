@@ -100,6 +100,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-tagsets</artifactId>
     </dependency>
+    <!--
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-tutorial</artifactId>
+    </dependency>
+    -->
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>

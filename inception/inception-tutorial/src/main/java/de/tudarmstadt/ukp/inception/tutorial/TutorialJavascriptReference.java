@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.footer.resources;
+package de.tudarmstadt.ukp.inception.tutorial;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class EnjoyHintJsReference
+public class TutorialJavascriptReference
     extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final EnjoyHintJsReference INSTANCE = new EnjoyHintJsReference();
+    private static final TutorialJavascriptReference INSTANCE = new TutorialJavascriptReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static EnjoyHintJsReference get()
+    public static TutorialJavascriptReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class EnjoyHintJsReference
     /**
      * Private constructor
      */
-    private EnjoyHintJsReference()
+    private TutorialJavascriptReference()
     {
-        super(EnjoyHintJsReference.class, "enjoyhint.js");
+        super(TutorialJavascriptReference.class, "tutorial.js");
     }
 }
