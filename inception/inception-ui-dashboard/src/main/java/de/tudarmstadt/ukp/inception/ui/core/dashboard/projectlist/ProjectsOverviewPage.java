@@ -349,6 +349,7 @@ public class ProjectsOverviewPage
     {
         LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
+        startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
         startTutorialLink.add(visibleWhen(() -> {
             return userRepository.isAdministrator(currentUser.getObject())
                     || userRepository.isProjectCreator(currentUser.getObject());
@@ -357,6 +358,17 @@ public class ProjectsOverviewPage
         add(startTutorialLink);
 
         return startTutorialLink;
+    }
+
+    private boolean isTutorialAvailable()
+    {
+        try {
+            Class.forName("de.tudarmstadt.ukp.inception.tutorial.TutorialFooterItem");
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private void startTutorial(AjaxRequestTarget aTarget)

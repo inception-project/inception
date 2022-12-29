@@ -15,32 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.footer.resources;
+package de.tudarmstadt.ukp.inception.tutorial;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import org.apache.wicket.Component;
+import org.springframework.core.annotation.Order;
 
-public class TutorialJavascriptReference
-    extends JavaScriptResourceReference
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+
+@Order(100)
+@org.springframework.stereotype.Component
+public class TutorialFooterItem
+    implements FooterItem
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final TutorialJavascriptReference INSTANCE = new TutorialJavascriptReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static TutorialJavascriptReference get()
+    @Override
+    public Component create(String aId)
     {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private TutorialJavascriptReference()
-    {
-        super(TutorialJavascriptReference.class, "tutorial.js");
+        return new TutorialFooterPanel(aId);
     }
 }

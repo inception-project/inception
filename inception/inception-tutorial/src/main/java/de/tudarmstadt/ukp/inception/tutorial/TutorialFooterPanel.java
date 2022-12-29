@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.footer;
+package de.tudarmstadt.ukp.inception.tutorial;
 
 import javax.servlet.ServletContext;
 
@@ -29,8 +29,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
-import de.tudarmstadt.ukp.inception.ui.core.footer.resources.EnjoyHintJsReference;
-import de.tudarmstadt.ukp.inception.ui.core.footer.resources.TutorialJavascriptReference;
 
 public class TutorialFooterPanel
     extends Panel

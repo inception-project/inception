@@ -15,21 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.footer;
+package de.tudarmstadt.ukp.inception.tutorial;
 
-import org.apache.wicket.Component;
-import org.springframework.core.annotation.Order;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-
-@Order(100)
-@org.springframework.stereotype.Component
-public class TutorialFooterItem
-    implements FooterItem
+public class EnjoyHintJsReference
+    extends JavaScriptResourceReference
 {
-    @Override
-    public Component create(String aId)
+    private static final long serialVersionUID = 1L;
+
+    private static final EnjoyHintJsReference INSTANCE = new EnjoyHintJsReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static EnjoyHintJsReference get()
     {
-        return new TutorialFooterPanel(aId);
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private EnjoyHintJsReference()
+    {
+        super(EnjoyHintJsReference.class, "enjoyhint.js");
     }
 }
