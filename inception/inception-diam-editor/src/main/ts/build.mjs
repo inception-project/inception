@@ -26,7 +26,7 @@ import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-const packagePath = 'de/tudarmstadt/ukp/inception/experimental/editor/diamdebugeditor'
+const packagePath = 'de/tudarmstadt/ukp/inception/diam/sidebar'
 
 let outbase = `../../../target/js/${packagePath}`
 
@@ -36,6 +36,7 @@ const defaults = {
   plugins: [
     sassPlugin(),
     esbuildSvelte({
+      compilerOptions: { dev: argv.live },
       preprocess: sveltePreprocess()
     })
   ],

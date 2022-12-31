@@ -90,6 +90,20 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  moveSpanAnnotation (id: VID, offsets: Array<Offsets>): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'moveSpan',
+          id,
+          offsets: JSON.stringify(offsets)
+        }
+      })
+    })
+  }
+
   createRelationAnnotation (originSpanId: VID, targetSpanId: VID): void {
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({
@@ -162,6 +176,10 @@ export class DiamAjaxImpl implements DiamAjax {
     } else if (options) {
       if (options.includeText === false) {
         params.text = options.includeText
+      }
+
+      if (options.clipSpans === false) {
+        params.clip = options.clipSpans
       }
 
       if (options.format) {

@@ -17,6 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
+
+import java.lang.invoke.MethodHandles;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +35,7 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 
 @ConditionalOnWebApplication
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.recommender-events.enabled:true}")
@@ -39,11 +43,7 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 public class RecommendationEventWebsocketControllerImpl
     implements RecommendationEventWebsocketController
 {
-    private final Logger log = LoggerFactory
-            .getLogger(RecommendationEventWebsocketControllerImpl.class);
-
-    public static final String REC_EVENTS = "/recEvents";
-    public static final String REC_EVENTS_TOPIC = "/queue" + REC_EVENTS;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final SimpMessagingTemplate msgTemplate;
 
@@ -54,22 +54,22 @@ public class RecommendationEventWebsocketControllerImpl
 
     @EventListener
     @Override
-    public void onRecommenderErrorEvent(RecommenderTaskEvent aEvent)
+    public void onRecommenderTaskEvent(RecommenderTaskNotificationEvent aEvent)
     {
-        String errorMsg = aEvent.getErrorMsg();
-        if (errorMsg == null) {
-            return;
-        }
-        Recommender recommender = aEvent.getRecommender();
-        Project project = recommender.getProject();
-        LoggedEventMessage eventMsg = new LoggedEventMessage(aEvent.getUser(), project.getName(),
-                aEvent.getTimestamp(), aEvent.getClass().getSimpleName());
-        eventMsg.setEventMsg("[" + recommender.getName() + "] " + errorMsg);
+        Project project = aEvent.getProject();
+        RRecommenderLogMessage eventMsg = new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
+                aEvent.getMessage().getMessage());
+        String channel = getChannel(project, aEvent.getUser());
 
-        String channel = REC_EVENTS_TOPIC + "/" + project.getId();
-        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
-                eventMsg.getEventMsg(), channel);
-        msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
+        LOG.debug("Sending event to [{}]: {}", channel, eventMsg);
+
+        msgTemplate.convertAndSend("/topic" + channel, eventMsg);
+    }
+
+    static String getChannel(Project project, String aUsername)
+    {
+        return TOPIC_ELEMENT_PROJECT + project.getId() + TOPIC_ELEMENT_USER + aUsername
+                + TOPIC_RECOMMENDER;
     }
 
     @Override

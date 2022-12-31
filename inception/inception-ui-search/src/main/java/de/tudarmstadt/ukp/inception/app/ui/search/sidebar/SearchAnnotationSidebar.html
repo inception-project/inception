@@ -234,11 +234,18 @@
 
 <wicket:fragment wicket:id="resultGroup">
   <tr wicket:id="results" style="display: table-row;">
-    <td class="ssb-result-control"><label wicket:for="selected">
+    <td class="ssb-result-control">
+      <label wicket:for="selected">
         <input wicket:id="selected" type="checkbox">
-    </label></td>
-    <td class="ssb-result-text"><a wicket:id="showSelectedDocument"><span
-        wicket:id="sentence"></span></a></td>
+      </label>
+    </td>
+    <td class="ssb-result-text">
+      <a wicket:id="showSelectedDocument" class="text-decoration-none">
+        <span wicket:id="leftContext"/>
+        <mark><span wicket:id="match"/></mark>
+        <span wicket:id="rightContext"/>
+      </a>
+    </td>
   </tr>
 </wicket:fragment>
 

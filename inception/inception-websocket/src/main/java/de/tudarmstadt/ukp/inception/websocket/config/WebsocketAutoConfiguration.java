@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.websocket.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,8 +28,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
 
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketController;
-import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -40,14 +37,6 @@ import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
 @EnableConfigurationProperties(CsrfAttacksPreventionProperties.class)
 public class WebsocketAutoConfiguration
 {
-    @ConditionalOnBean(LoggedEventsWebsocketController.class)
-    @ConditionalOnProperty(name = "websocket.loggedevent.enabled", havingValue = "true")
-    @Bean
-    public LoggedEventFooterItem loggedEventFooterItem()
-    {
-        return new LoggedEventFooterItem();
-    }
-
     @Bean
     public WebsocketConfig websocketConfig(CsrfAttacksPreventionProperties aCsrfProperties)
     {

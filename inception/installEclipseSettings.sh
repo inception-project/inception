@@ -109,6 +109,7 @@ installPrefs inception-support
 installPrefs inception-support-standalone
 installPrefs inception-telemetry
 installPrefs inception-testing
+installPrefs inception-tutorial
 installPrefs inception-ui-agreement
 installPrefs inception-ui-annotation
 installPrefs inception-ui-core

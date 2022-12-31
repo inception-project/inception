@@ -221,6 +221,9 @@ public class SourceDocumentTable
     public void onDocumentRowSelectionChangedEvent(
             SourceDocumentTableRowSelectionChangedEvent aEvent)
     {
+        var selected = getSelectedDocuments().size();
+        info("Now " + selected + " documents are selected.");
+        aEvent.getTarget().addChildren(getPage(), IFeedback.class);
         aEvent.getTarget().add(table);
     }
 
@@ -236,15 +239,22 @@ public class SourceDocumentTable
             SourceDocumentTableToggleSelectAllEvent aEvent)
     {
         int changed = 0;
+        int selected = 0;
         boolean targetValue = aEvent.isSelectAll();
-        for (var row : dataProvider.getModel().getObject()) {
+
+        for (var row : dataProvider) {
+            if (row.isSelected()) {
+                selected++;
+            }
+
             if (row.isSelected() != targetValue) {
                 changed++;
                 row.setSelected(targetValue);
             }
         }
 
-        info(changed + " documents have been " + (targetValue ? "selected" : "unselected"));
+        info((changed + " documents have been " + (targetValue ? "selected" : "unselected"))
+                + ". Now " + selected + " documents are selected.");
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
         aEvent.getTarget().add(table);
     }

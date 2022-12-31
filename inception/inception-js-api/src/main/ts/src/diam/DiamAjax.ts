@@ -23,6 +23,7 @@ export type DiamLoadAnnotationsOptions = {
   format?: string,
   range?: Offsets,
   includeText?: boolean
+  clipSpans?: boolean
 }
 
 export type DiamSelectAnnotationOptions = {
@@ -35,6 +36,8 @@ export interface DiamAjax {
   deleteAnnotation(id: VID): void;
 
   createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void;
+
+  moveSpanAnnotation(id: VID, offsets: Array<Offsets>): void;
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
 

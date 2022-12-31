@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <form wicket:id="form">
+    <div class="row form-row" wicket:enclosure="remoteUrl">
+      <label wicket:for="remoteUrl" class="col-sm-4 col-form-label">
+        <wicket:label key="remoteUrl" />
+      </label>
+      <div class="col-sm-8">
+        <input wicket:id="remoteUrl" class="form-control" type="text" />
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="includeQueryContext">
+      <div class="col-sm-8 offset-sm-4">
+        <div class="form-check">
+          <input wicket:id="includeQueryContext" class="form-check-input" type="checkbox">
+          <label wicket:for="includeQueryContext" class="form-check-label">
+            <wicket:label key="includeQueryContext" />
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="limit">
+      <label wicket:for="limit" class="col-sm-4 col-form-label">
+        <wicket:label key="limit" />
+      </label>
+      <div class="col-sm-8">
+        <input type="number" class="w-100" wicket:id="limit" />
+      </div>
+    </div>
+    <div class="row form-row">
+      <label wicket:for="authenticationType" class="col-form-label col-sm-4">
+        <wicket:message key="authenticationType" />
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="authenticationType" class="form-select" />
+      </div>
+    </div>
+    <div wicket:id="authenticationTraitsEditor"/>
+  </form>
+</wicket:panel>
+</html>

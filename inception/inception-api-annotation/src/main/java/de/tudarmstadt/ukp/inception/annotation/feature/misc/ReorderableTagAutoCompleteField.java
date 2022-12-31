@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class ReorderableTagAutoCompleteField
     extends AutoCompleteTextField<ReorderableTag>
@@ -71,21 +72,20 @@ public class ReorderableTagAutoCompleteField
     }
 
     @Override
-    public void onConfigure(JQueryBehavior behavior)
+    public void onConfigure(JQueryBehavior aBehavior)
     {
-        super.onConfigure(behavior);
+        super.onConfigure(aBehavior);
 
-        behavior.setOption("delay", 500);
-        behavior.setOption("animation", false);
-        behavior.setOption("footerTemplate",
+        aBehavior.setOption("delay", 500);
+        aBehavior.setOption("animation", false);
+        aBehavior.setOption("footerTemplate",
                 Options.asString("#: instance.dataSource.total() # items found"));
-        // Prevent scrolling action from closing the dropdown while the focus is on the
-        // input field
-        behavior.setOption("close",
-                String.join(" ", "function(e) {",
-                        "  if (document.activeElement == e.sender.element[0]) {",
-                        "    e.preventDefault();" + "  }", "}"));
-        behavior.setOption("select", " function (e) { this.trigger('change'); }");
+
+        KendoStyleUtils.keepDropdownVisibleWhenScrolling(aBehavior);
+        KendoStyleUtils.autoDropdownHeight(aBehavior);
+        // KendoStyleUtils.autoDropdownWidth(aBehavior);
+
+        aBehavior.setOption("select", " function (e) { this.trigger('change'); }");
     }
 
     /*

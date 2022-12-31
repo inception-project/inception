@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HttpClientImplBase
 {
     public static final int HTTP_BAD_REQUEST = 400;
+    public static final int HTTP_NOT_FOUND = 404;
 
     public static final String CONTENT_TYPE = "Content-Type";
 
@@ -59,20 +60,26 @@ public class HttpClientImplBase
     {
         try {
             HttpResponse<String> response = client.send(aRequest, BodyHandlers.ofString(UTF_8));
-
-            // If the response indicates that the request was not successful,
-            // then it does not make sense to go on and try to decode the XMI
-            if (response.statusCode() >= HTTP_BAD_REQUEST) {
-                String responseBody = getResponseBody(response);
-                String msg = format("Request was not successful: [%d] - [%s]",
-                        response.statusCode(), responseBody);
-                throw new IOException(msg);
-            }
-
+            handleBadRequest(response);
             return response;
         }
-        catch (IOException | InterruptedException e) {
+        catch (IOException e) {
+            throw e;
+        }
+        catch (InterruptedException e) {
             throw new IOException("Error while sending request: " + e.getMessage(), e);
+        }
+    }
+
+    protected void handleBadRequest(HttpResponse<String> response) throws IOException
+    {
+        // If the response indicates that the request was not successful,
+        // then it does not make sense to go on and try to decode the XMI
+        if (response.statusCode() >= HTTP_BAD_REQUEST) {
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
+                    responseBody);
+            throw new IOException(msg);
         }
     }
 

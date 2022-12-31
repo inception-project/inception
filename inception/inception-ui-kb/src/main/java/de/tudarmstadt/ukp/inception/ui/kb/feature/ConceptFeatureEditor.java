@@ -80,7 +80,7 @@ public class ConceptFeatureEditor
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
-        super(aId, aItem, aModel, aStateModel, aHandler);
+        super(aId, aItem, aModel);
 
         AnnotationFeature feat = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feat);

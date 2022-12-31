@@ -24,7 +24,7 @@
     } from "@inception-project/inception-js-api";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels, uniqueOffsets } from "./Utils";
+    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels } from "./Utils";
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;

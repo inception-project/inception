@@ -48,6 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPointImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserAccess;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
@@ -136,5 +138,11 @@ public class SecurityAutoConfiguration
     {
         return new Saml2AdapterImpl(aUserRepository, aUserDetailsManager,
                 aRelyingPartyRegistrationRepository);
+    }
+
+    @Bean
+    public UserAccess userAccess(UserDao aUserService)
+    {
+        return new UserAccessImpl(aUserService);
     }
 }

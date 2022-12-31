@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Offsets, VID } from '..'
+import { AnnotatedText, Offsets, VID, AnnotationMarker } from '..'
+import { MarkerType } from '../Marker'
 import { CompactAnnotationMarker, unpackCompactAnnotationMarker } from './CompactAnnotationMarker'
 import { CompactLayer, unpackCompactLayer } from './CompactLayer'
 import { CompactRelation, unpackCompactRelation } from './CompactRelation'
@@ -50,8 +51,26 @@ export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): Annotate
 
   const annotationMarkers = raw.annotationMarkers?.map(unpackCompactAnnotationMarker)
   cooked.annotationMarkers = makeMarkerMap(annotationMarkers)
+  cooked.markedAnnotations = makeMarkedAnnotationsMap(annotationMarkers)
   cooked.textMarkers = raw.textMarkers?.map(unpackCompactTextMarker) || []
   return cooked
+}
+
+function makeMarkedAnnotationsMap (annotationMarkers?: AnnotationMarker[]) : Map<MarkerType, VID[]> {
+  const markedAnnotations = new Map<MarkerType, VID[]>()
+  if (annotationMarkers) {
+    for (const marker of annotationMarkers) {
+      for (const vid of marker.vid) {
+        let ms = markedAnnotations.get(marker.type)
+        if (!ms) {
+          ms = []
+          markedAnnotations.set(marker.type, ms)
+        }
+        ms.push(vid)
+      }
+    }
+  }
+  return markedAnnotations
 }
 
 /**
@@ -61,11 +80,11 @@ export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): Annotate
  * @param markerList a list of {@link CompactAnnotationMarker}s
  * @returns the map
  */
-export function makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
-  const markerMap = new Map<VID, Array<T>>()
+export function makeMarkerMap (markerList: AnnotationMarker[] | undefined): Map<VID, Array<AnnotationMarker>> {
+  const markerMap = new Map<VID, Array<AnnotationMarker>>()
   if (markerList) {
     markerList.forEach(marker => {
-      marker[1].forEach(vid => {
+      marker.vid.forEach(vid => {
         let ms = markerMap.get(vid)
         if (!ms) {
           ms = []

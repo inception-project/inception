@@ -39,6 +39,6 @@ public class KeybindingLabel
     protected void onInitialize()
     {
         super.onInitialize();
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE - RENDERING ONLY CONTROLLED SET OF KEYS
     }
 }

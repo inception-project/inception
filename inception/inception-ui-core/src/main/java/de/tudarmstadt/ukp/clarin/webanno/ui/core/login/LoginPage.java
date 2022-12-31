@@ -39,7 +39,6 @@ import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 /**
  * The login page.
@@ -286,8 +286,7 @@ public class LoginPage
             add(new PasswordTextField("password").setOutputMarkupId(true));
             add(new HiddenField<>("urlfragment"));
             add(new Button("signInBtn").add(enabledWhenNot(tooManyUsers)));
-            add(new Label("loginMessage", loginProperties.getMessage()) //
-                    .setEscapeModelStrings(false) //
+            add(new MarkdownLabel("loginMessage", loginProperties.getMessage()) //
                     .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 

@@ -92,7 +92,7 @@ public class UserTableDataProvider
         }
     }
 
-    public List<User> filter(List<User> aData)
+    private List<User> filter(List<User> aData)
     {
         Stream<User> userStream = aData.stream();
 

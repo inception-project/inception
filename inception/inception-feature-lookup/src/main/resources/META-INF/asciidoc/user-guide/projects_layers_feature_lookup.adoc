@@ -1,0 +1,91 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_layers_feature_lookup]]
+= Remote Lookup Feature
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `annotation.feature-support.lookup.enabled=true` to the `settings.properties` file.
+====
+
+A remote lookup feature is basically a string feature, but it can query an external service for
+possible values. The feature editor is a auto-complete field. When the user starts entering a 
+value into that field, it is sent to a configurable remote URL as a query. The expectation is that
+the response from the remote service is a JSON structure that contains possible completions.
+
+A remote lookup service must support a **lookup** and a **query** functionality:
+
+[cols="1,2"]
+|===
+| *Title*       | Query
+| *Method*      | GET
+| *Consumes*    | none
+| *Produces*    | application/json;charset=UTF-8
+| *URL params*
+a|
+* `q` - query (max. 200 characters, mandatory)
+* `qc` - query context: the text of the selected annotation (max. 200 characters, optional)
+* `l` - limit - maximum number of results to return (mandatory)
+| *Data params* | none
+| *Success response*
+a|
+Code 200 - OK::
++
+.Example
+[source,json,l]
+----
+[
+  {
+    "id":"1",
+    "l":"Item 1",
+    "d":"Description 1"
+  },
+  {
+    "id":"2",
+    "l":"Item 2",
+    "d":"Description 2"
+  }
+]
+----
+|=== 
+
+[cols="1,2"]
+|===
+| *Title*       | Lookup
+| *Method*      | GET
+| *Consumes*    | none
+| *Produces*    | application/json;charset=UTF-8
+| *URL params*
+a|
+* `id` - item ID (mandatory)
+| *Data params* | none
+| *Success response*
+a|
+Code 200 - OK::
++
+.Example
+[source,json,l]
+----
+{
+  "id":"1",
+  "l":"Item 1",
+  "d":"Description 1"
+}
+----
+| *Error response*
+a| 
+Code 404 - Item not found:: no body
+|=== 
