@@ -40,10 +40,9 @@
 import { Dispatcher } from '../dispatcher/Dispatcher'
 import { Box, Svg, SVGTypeMapping, Point } from '@svgdotjs/svg.js'
 import { DocumentData } from '../visualizer/DocumentData'
-import { Entity } from '../visualizer/Entity'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
+import { DiamAjax } from '@inception-project/inception-js-api'
 import { EntityTypeDto } from '../protocol/Protocol'
 
 export class AnnotatorUI {
@@ -58,10 +57,10 @@ export class AnnotatorUI {
   private dragStartedAt?: MouseEvent & { target: Element }
   private selectionInProgress = false
 
-  private spanOptions?: { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
-  private arcOptions?: { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
-  private editedSpan: Entity
-  private editedFragment: string | null = null
+  // private spanOptions?: { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
+  private arcOptions?: { type?: string, old_target?: string, origin?: string, target?: string }
+  // private editedSpan: Entity
+  // private editedFragment: string | null = null
   private spanTypes: Record<string, EntityTypeDto>
   private selRect: SVGRectElement[] | null = null
   private lastStartRec = null
@@ -69,13 +68,10 @@ export class AnnotatorUI {
 
   private draggedArcHeight = 30
 
-  // for normalization: appropriate DBs per type
-  private normDbsByType = {}
-
   private svg: Svg
   private dispatcher: Dispatcher
 
-  private svgPosition: JQueryCoordinates
+  private svgPosition?: Coordinates
 
   private clickCount = 0
   private clickTimer: number | null = null
@@ -120,10 +116,8 @@ export class AnnotatorUI {
   private clearSelection () {
     window.getSelection()?.removeAllRanges()
 
-    if (this.selRect != null) {
-      for (let s = 0; s !== this.selRect.length; s++) {
-        this.selRect[s].parentNode.removeChild(this.selRect[s])
-      }
+    if (this.selRect) {
+      this.selRect.forEach(rect => rect.remove())
       this.selRect = null
       this.lastStartRec = null
       this.lastEndRec = null
@@ -183,22 +177,15 @@ export class AnnotatorUI {
   private handleExtensionAction (evt: MouseEvent) : void {
     if (!(evt.target instanceof Element)) return
 
-    const spanId = evt.target.getAttribute('data-span-id')
-    if (spanId) {
+    const id = evt.target.getAttribute('data-span-id') || evt.target.getAttribute('data-arc-ed')
+    if (id) {
       evt.preventDefault()
-      this.ajax.triggerExtensionAction(spanId)
-      return
-    }
-
-    const arcId = evt.target.getAttribute('data-arc-ed')
-    if (arcId) {
-      evt.preventDefault()
-      this.ajax.triggerExtensionAction(arcId)
+      this.ajax.triggerExtensionAction(id)
     }
   }
 
   private selectAnnotation (evt: MouseEvent & { target: Element }) {
-    // must not be creating an arc
+    // Prevent selection of annotation while creating an arc
     if (this.arcDragOrigin) return
 
     if (evt.target.getAttribute('data-arc-role')) {
@@ -217,21 +204,21 @@ export class AnnotatorUI {
     const targetSpanId = evt.target.getAttribute('data-arc-target')
     const type = evt.target.getAttribute('data-arc-role')
     this.arcOptions = {
-      action: 'createArc',
+      // action: 'createArc',
       origin: originSpanId !== null ? originSpanId : undefined,
       target: targetSpanId !== null ? targetSpanId : undefined,
       old_target: targetSpanId !== null ? targetSpanId : undefined,
-      type: type !== null ? type : undefined,
-      old_type: type !== null ? type : undefined
+      type: type !== null ? type : undefined
+      // old_type: type !== null ? type : undefined
     }
 
     const eventDescId = evt.target.getAttribute('data-arc-ed')
     if (eventDescId) {
-      const eventDesc = this.data.eventDescs[eventDescId]
-      if (eventDesc.equiv) {
-        this.arcOptions.left = eventDesc.leftSpans.join(',')
-        this.arcOptions.right = eventDesc.rightSpans.join(',')
-      }
+      // const eventDesc = this.data.eventDescs[eventDescId]
+      // if (eventDesc.equiv) {
+      //   this.arcOptions.left = eventDesc.leftSpans.join(',')
+      //   this.arcOptions.right = eventDesc.rightSpans.join(',')
+      // }
 
       this.ajax.selectAnnotation(eventDescId)
     }
@@ -240,21 +227,20 @@ export class AnnotatorUI {
   private selectSpanAnnotation (evt: MouseEvent) {
     if (!(evt.target instanceof Element)) return
 
-    const target = evt.target
-    const id = target.getAttribute('data-span-id')
+    const id = evt.target.getAttribute('data-span-id')
 
     if (id) {
       this.clearSelection()
-      this.editedSpan = this.data.spans[id]
-      this.editedFragment = target.getAttribute('data-fragment-id')
-      const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets
+      // this.editedSpan = this.data.spans[id]
+      // this.editedFragment = target.getAttribute('data-fragment-id')
+      // const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets
 
-      this.spanOptions = {
-        action: 'createSpan',
-        offsets,
-        type: this.editedSpan.type,
-        id
-      }
+      // this.spanOptions = {
+      //   action: 'createSpan',
+      //   offsets,
+      //   type: this.editedSpan.type,
+      //   id
+      // }
 
       this.ajax.selectAnnotation(id)
     }
@@ -709,7 +695,7 @@ export class AnnotatorUI {
           this.dispatcher.post('ajax', [this.arcOptions, 'edited'])
         } else {
           this.arcOptions = {
-            action: 'createArc',
+            // action: 'createArc',
             origin: originSpan.id,
             target: targetSpan.id
           }
@@ -821,15 +807,15 @@ export class AnnotatorUI {
           return
         }
 
-        this.spanOptions = {
-          action: 'createSpan',
-          offsets: [[selectedFrom, selectedTo]]
-        }
+        // this.spanOptions = {
+        //   action: 'createSpan',
+        //   offsets: [[selectedFrom, selectedTo]]
+        // }
 
         // normal span select in standard annotation mode or reselect: show selector
         this.spanDragJustStarted = false
         const spanText = this.data.text.substring(selectedFrom, selectedTo)
-        this.ajax.createSpanAnnotation(this.spanOptions.offsets, spanText)
+        this.ajax.createSpanAnnotation([[selectedFrom, selectedTo]], spanText)
       }
     }
   }
