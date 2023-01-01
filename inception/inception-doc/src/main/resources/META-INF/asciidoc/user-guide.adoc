@@ -279,9 +279,9 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `imscwb`
 | `format.imscwb.enabled`
 
-| <<sect_formats_lif>>
-| `lif`
-| `format.lif.enabled`
+// | <<sect_formats_lif>>
+// | `lif`
+// | `format.lif.enabled`
 
 | <<sect_formats_nif>>
 | `nif`
@@ -379,7 +379,7 @@ include::{include-dir}formats-htmldoc.adoc[leveloffset=+2]
 
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
-include::{include-dir}formats-lif.adoc[leveloffset=+2]
+// include::{include-dir}formats-lif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
