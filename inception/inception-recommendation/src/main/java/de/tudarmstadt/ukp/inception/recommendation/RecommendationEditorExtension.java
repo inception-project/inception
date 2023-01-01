@@ -337,10 +337,6 @@ public class RecommendationEditorExtension
         // Trigger a re-rendering of the document
         Page page = aTarget.getPage();
         page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
-
-        // Send a UI event that the suggestion has been rejected
-        page.send(page, Broadcast.BREADTH,
-                new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
 
     @Override
