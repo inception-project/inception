@@ -60,8 +60,8 @@ export class AnnotatorUI {
   private arcOptions?: { type?: string, old_target?: string, origin?: string, target?: string }
   private spanTypes: Record<string, EntityTypeDto>
   private selRect: SVGRectElement[] | null = null
-  private lastStartRec = null
-  private lastEndRec = null
+  private lastStartRec : DOMRect | null = null
+  private lastEndRec : DOMRect | null = null
 
   private draggedArcHeight = 30
 
@@ -211,7 +211,7 @@ export class AnnotatorUI {
     }
   }
 
-  private startArcDrag (originId) {
+  private startArcDrag (originId: string) {
     this.clearSelection()
 
     if (!this.data.spans[originId]) {
@@ -233,7 +233,7 @@ export class AnnotatorUI {
     this.arcDragJustStarted = true
   }
 
-  private getValidArcTypesForDrag (targetId, targetType): string[] {
+  private getValidArcTypesForDrag (targetId: string, targetType: string): string[] {
     const arcType = this.arcOptions && this.arcOptions.type
     if (!this.arcDragOrigin || targetId === this.arcDragOrigin) return []
 
@@ -303,7 +303,7 @@ export class AnnotatorUI {
     this.spanDragJustStarted = false
   }
 
-  private onMouseMoveArcCreation(evt: MouseEvent) {
+  private onMouseMoveArcCreation (evt: MouseEvent) {
     if (this.arcDragJustStarted) {
       this.initializeArcDragTargets(evt)
     }
@@ -320,6 +320,8 @@ export class AnnotatorUI {
   }
 
   private initializeArcDragTargets (evt: MouseEvent) : void {
+    if (!this.arcDragOrigin) return
+
     // show the possible targets
     const span = this.data.spans[this.arcDragOrigin]
     const spanDesc = this.spanTypes[span.type]
@@ -363,9 +365,7 @@ export class AnnotatorUI {
 
     // if not, then is it span selection? (ctrl key cancels)
     const sel = window.getSelection()
-    if (sel === null) {
-      return
-    }
+    if (sel === null) return
 
     let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id')
     let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id')
@@ -430,7 +430,7 @@ export class AnnotatorUI {
       endRec.y += 2
 
       // If nothing has changed then stop here
-      if (this.lastStartRec != null && this.lastStartRec.x == startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
+      if (this.lastStartRec != null && this.lastStartRec.x === startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
         return
       }
 
@@ -464,11 +464,11 @@ export class AnnotatorUI {
         }
 
         // Start has moved
-        const flip = !(startRec.x === this.lastStartRec.x && startRec.y === this.lastStartRec.y)
+        const flip = !(startRec.x === this.lastStartRec?.x && startRec.y === this.lastStartRec.y)
         // If the height of the start or end changed we need to check whether
         // to remove multi line highlights no longer needed if the user went back towards their start line
         // and whether to create new ones if we moved to a newline
-        if (((endRec.y !== this.lastEndRec.y)) || ((startRec.y !== this.lastStartRec.y))) {
+        if (((endRec.y !== this.lastEndRec?.y)) || ((startRec.y !== this.lastStartRec?.y))) {
           // First check if we have to remove the first highlights because we are moving towards the end on a different line
           let ss = 0
           for (; ss !== this.selRect.length; ss++) {
@@ -487,7 +487,7 @@ export class AnnotatorUI {
           let trunc = false
           if (ss < this.selRect.length) {
             for (let s2 = 0; s2 !== ss; s2++) {
-              this.selRect[s2].parentNode.removeChild(this.selRect[s2])
+              this.selRect[s2].remove()
               es--
               trunc = true
             }
@@ -495,7 +495,7 @@ export class AnnotatorUI {
           }
           if (es > -1) {
             for (let s2 = this.selRect.length - 1; s2 !== es; s2--) {
-              this.selRect[s2].parentNode.removeChild(this.selRect[s2])
+              this.selRect[s2].remove()
               trunc = true
             }
             this.selRect = this.selRect.slice(0, es + 1)
@@ -595,8 +595,8 @@ export class AnnotatorUI {
         target = $('.badTarget')
       }
       target.removeClass('badTarget')
-      this.arcDragOriginGroup.removeClass('highlight')
       target?.parent().removeClass('highlight')
+      this.arcDragOriginGroup.removeClass('highlight')
       this.arcDragArc?.remove()
       this.arcDragOrigin = undefined
       if (this.arcOptions) {
@@ -638,7 +638,7 @@ export class AnnotatorUI {
       const targetValid = target.hasClass('reselectTarget')
       this.stopArcDrag(target)
       let id
-      if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
+      if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin !== id)) {
         const originSpan = this.data.spans[origin]
         const targetSpan = this.data.spans[id]
 
@@ -668,7 +668,7 @@ export class AnnotatorUI {
 
       // If using the selection was not successful, try using the ranges instead. This should
       // work on Firefox.
-      if ((anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) && sel.type != 'None') {
+      if ((anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) && sel.type !== 'None') {
         anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]')
         anchorOffset = sel.getRangeAt(0).startOffset
         focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]')
