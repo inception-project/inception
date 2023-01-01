@@ -63,7 +63,7 @@ export class AnnotatorUI {
   private editedSpan: Entity
   private editedFragment: string | null = null
   private spanTypes: Record<string, EntityTypeDto>
-  private selRect: SVGRectElement[]
+  private selRect: SVGRectElement[] | null = null
   private lastStartRec = null
   private lastEndRec = null
 
@@ -155,9 +155,9 @@ export class AnnotatorUI {
 
     const singleClickAction = Configuration.singleClickEdit
       ? this.selectAnnotation
-      : this.customAction
+      : this.handleExtensionAction
     const doubleClickAction = Configuration.singleClickEdit
-      ? this.customAction
+      ? this.handleExtensionAction
       : this.selectAnnotation
 
     if (this.clickCount === 1) {
@@ -180,63 +180,21 @@ export class AnnotatorUI {
     }
   }
 
-  private customAction (evt: MouseEvent & { target: Element }) {
-    if (evt.target.getAttribute('data-span-id')) {
-      this.customSpanAction(evt)
+  private handleExtensionAction (evt: MouseEvent) : void {
+    if (!(evt.target instanceof Element)) return
+
+    const spanId = evt.target.getAttribute('data-span-id')
+    if (spanId) {
+      evt.preventDefault()
+      this.ajax.triggerExtensionAction(spanId)
       return
     }
 
-    if (evt.target.getAttribute('data-arc-ed')) {
-      this.customArcAction(evt)
-    }
-  }
-
-  private customArcAction (evt: MouseEvent) {
-    if (!(evt.target instanceof Element)) return
-
-    const id = evt.target.getAttribute('data-arc-ed')
-    const type = evt.target.getAttribute('data-arc-role')
-    const attrOrigin = evt.target.getAttribute('data-arc-origin')
-    const attrTarget = evt.target.getAttribute('data-arc-target')
-
-    if (id && type && attrOrigin && attrTarget) {
-      const originSpan = this.data.spans[attrOrigin]
-      const targetSpan = this.data.spans[attrTarget]
-      this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan)
-    }
-  }
-
-  private sendTriggerCustomArcAction (id: string, type: string, originSpan: Entity, targetSpan: Entity) {
-    this.dispatcher.post('ajax', [{
-      action: 'doAction',
-      arcId: id,
-      arcType: type,
-      originSpanId: originSpan.id,
-      originType: originSpan.type,
-      targetSpanId: targetSpan.id,
-      targetType: targetSpan.type
-    }])
-  }
-
-  private customSpanAction (evt: MouseEvent & { target: Element }) {
-    const id = evt.target.getAttribute('data-span-id')
-
-    if (id) {
+    const arcId = evt.target.getAttribute('data-arc-ed')
+    if (arcId) {
       evt.preventDefault()
-      this.editedSpan = this.data.spans[id]
-      this.editedFragment = evt.target.getAttribute('data-fragment-id')
-      this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets)
+      this.ajax.triggerExtensionAction(arcId)
     }
-  }
-
-  private sendTriggerCustomSpanAction (id: string, offsets: ReadonlyArray<Offsets>) {
-    this.dispatcher.post('ajax', [{
-      action: 'doAction',
-      offsets: JSON.stringify(offsets),
-      id,
-      labelText: this.editedSpan.labelText,
-      type: this.editedSpan.type
-    }])
   }
 
   private selectAnnotation (evt: MouseEvent & { target: Element }) {
@@ -343,7 +301,7 @@ export class AnnotatorUI {
     return result
   }
 
-  onMouseDown (evt: MouseEvent & { target: Element }) {
+  private onMouseDown (evt: MouseEvent & { target: Element }) {
     if (!(evt.target instanceof Element)) return
 
     // Instead of calling startArcDrag() immediately, we defer this to onMouseMove
@@ -364,7 +322,7 @@ export class AnnotatorUI {
     }
   }
 
-  onMouseMove (evt: MouseEvent) {
+  private onMouseMove (evt: MouseEvent) {
     if (!evt.buttons && this.selectionInProgress) {
       this.dispatcher.post('selectionEnded')
     }
@@ -674,7 +632,7 @@ export class AnnotatorUI {
     }
   }
 
-  stopArcDrag (target?: JQuery) {
+  private stopArcDrag (target?: JQuery) {
     // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
     // Clear the dragStartAt saved event
     this.dragStartedAt = undefined
@@ -705,7 +663,7 @@ export class AnnotatorUI {
     $('.reselectTarget').removeClass('reselectTarget')
   }
 
-  onMouseUp (evt: MouseEvent) {
+  private onMouseUp (evt: MouseEvent) {
     if (!evt.buttons && this.selectionInProgress) {
       this.dispatcher.post('selectionEnded')
     }
@@ -876,33 +834,17 @@ export class AnnotatorUI {
     }
   }
 
-  toggleCollapsible ($el, state?) {
-    const opening = state !== undefined ? state : !$el.hasClass('open')
-    const $collapsible = $el.parent().find('.collapsible:first')
-    if (opening) {
-      $collapsible.addClass('open')
-      $el.addClass('open')
-    } else {
-      $collapsible.removeClass('open')
-      $el.removeClass('open')
-    }
-  }
-
-  collapseHandler (evt) {
-    this.toggleCollapsible($(evt.target))
-  }
-
-  rememberData (data: DocumentData) {
+  private rememberData (data: DocumentData) {
     if (data && !data.exception) {
       this.data = data
     }
   }
 
-  spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
+  private spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes
   }
 
-  contextMenu (evt: MouseEvent) {
+  private contextMenu (evt: MouseEvent) {
     if (evt.target instanceof Element) {
       // If the user shift-right-clicks, open the normal browser context menu. This is useful
       // e.g. during debugging / developing
@@ -920,7 +862,7 @@ export class AnnotatorUI {
     }
   }
 
-  isReloadOkay () {
+  private isReloadOkay () {
     // do not reload while the user is in the middle of editing
     return this.arcDragOrigin == null
   }
