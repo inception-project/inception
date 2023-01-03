@@ -3740,18 +3740,22 @@ export class Visualizer {
       this.highlight = []
     }
 
-    if (this.highlightArcs) {
-      for (const arc of this.highlightArcs) {
-        arc.removeClass('highlight')
-      }
-    }
+    this.svg.node.querySelectorAll('.highlight').forEach(e => e.classList.remove('highlight'))
+    this.highlightSpans = undefined
+    this.highlightArcs = undefined
 
-    if (this.highlightSpans) {
-      for (const arc of this.highlightSpans) {
-        arc.removeClass('highlight')
-      }
-      this.highlightSpans = undefined
-    }
+    // if (this.highlightArcs) {
+    //   for (const arc of this.highlightArcs) {
+    //     arc.removeClass('highlight')
+    //   }
+    // }
+
+    // if (this.highlightSpans) {
+    //   for (const arc of this.highlightSpans) {
+    //     arc.removeClass('highlight')
+    //   }
+    //   this.highlightSpans = undefined
+    // }
   }
 
   onSelectionStarted () {
