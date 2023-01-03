@@ -59,7 +59,7 @@ import '@svgdotjs/svg.filter.js'
 import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { Offsets } from '@inception-project/inception-js-api'
+import { Offsets, VID } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
@@ -127,13 +127,13 @@ export class Visualizer {
   private fontZoom = 100
 
   svg: Svg
-  private svgContainer: HTMLElement
+  svgContainer: HTMLElement
   private highlightGroup: SVGTypeMapping<SVGGElement>
 
   private baseCanvasWidth = 0
   private canvasWidth = 0
 
-  private data?: DocumentData
+  readonly data?: DocumentData
   private sourceData?: SourceData
   private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
 
@@ -3448,7 +3448,6 @@ export class Visualizer {
     // We are sure not to be drawing anymore, reset the state
       this.drawing = false
       console.error('Rendering terminated due to: ' + e, e.stack)
-      this.dispatcher.post('renderError: Fatal', [sourceData, e])
     }
   }
 
@@ -4063,6 +4062,123 @@ export class Visualizer {
       })
       .addTo(fragment.group)
   }
+
+  getHighlightsForSpan (id: VID): ArrayLike<Element> {
+    return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
+  }
+
+  selectionToOffsets (sel: Selection | null) : Offsets | null {
+    if (!sel) return null
+
+    const anchorNode = sel.getRangeAt(0).startContainer
+    const anchorOffset = sel.getRangeAt(0).startOffset
+    const focusNode = sel.getRangeAt(sel.rangeCount - 1).endContainer
+    const focusOffset = sel.getRangeAt(sel.rangeCount - 1).endOffset
+
+    if (!anchorNode || !focusNode) return null
+
+    const range = new Range()
+    range.setStart(anchorNode, anchorOffset)
+    range.setEnd(focusNode, focusOffset)
+
+    return this.rangeToOffsets(range)
+  }
+
+  rangeToOffsets (range: Range | null) : Offsets | null {
+    if (!range || !this.data) return null
+
+    let anchorNode = closestChunk(range.startContainer)
+    let anchorOffset = range.startOffset
+    let focusNode = closestChunk(range.endContainer)
+    let focusOffset = range.endOffset
+
+    // If neither approach worked, give up - the user didn't click on selectable text.
+    if (!anchorNode || !focusNode) {
+      return null
+    }
+
+    let chunkIndexFrom = anchorNode.getAttribute('data-chunk-id')
+    let chunkIndexTo = focusNode.getAttribute('data-chunk-id')
+
+    // Is it a zero-width annotation?
+    if (focusNode === anchorNode && focusNode.classList.contains('spacing')) {
+      if (anchorOffset === 0) {
+        // Move anchor to the end of the previous node
+        anchorNode = focusNode = anchorNode.previousElementSibling
+        anchorOffset = focusOffset = anchorNode?.textContent?.length || 0
+        chunkIndexFrom = chunkIndexTo = anchorNode?.getAttribute('data-chunk-id') || null
+      } else {
+        // Move anchor to the beginning of the next node
+        anchorNode = focusNode = anchorNode.nextElementSibling
+        anchorOffset = focusOffset = 0
+        chunkIndexFrom = chunkIndexTo = anchorNode?.getAttribute('data-chunk-id') || null
+      }
+    } else {
+      // If we hit a spacing element, then we shift the anchors left or right, depending on
+      // the direction of the selected range.
+      if (anchorNode.classList.contains('spacing')) {
+        if (Number(chunkIndexFrom) < Number(chunkIndexTo)) {
+          anchorNode = anchorNode.nextElementSibling || null
+          anchorOffset = 0
+          chunkIndexFrom = anchorNode?.getAttribute('data-chunk-id') || null
+        } else if (anchorNode.classList.contains('row-initial')) {
+          anchorNode = anchorNode.nextElementSibling || null
+          anchorOffset = 0
+        } else {
+          anchorNode = anchorNode.previousElementSibling || null
+          anchorOffset = anchorNode?.textContent?.length || 0
+        }
+      }
+      if (focusNode.classList.contains('spacing')) {
+        if (Number(chunkIndexFrom) > Number(chunkIndexTo)) {
+          focusNode = focusNode.nextElementSibling || null
+          focusOffset = 0
+          chunkIndexTo = focusNode?.getAttribute('data-chunk-id') || null
+        } else if (focusNode.classList.contains('row-initial')) {
+          focusNode = focusNode.nextElementSibling || null
+          focusOffset = 0
+        } else {
+          focusNode = focusNode.previousElementSibling || null
+          focusOffset = focusNode?.textContent?.length || 0
+        }
+      }
+    }
+
+    if (chunkIndexFrom === null || chunkIndexTo === null) return null
+
+    const chunkFrom = this.data.chunks[Number(chunkIndexFrom)]
+    const chunkTo = this.data.chunks[Number(chunkIndexTo)]
+    let selectedFrom = chunkFrom.from + anchorOffset
+    let selectedTo = chunkTo.from + focusOffset
+
+    if (selectedFrom > selectedTo) {
+      const tmp = selectedFrom; selectedFrom = selectedTo; selectedTo = tmp
+    }
+
+    // trim
+    while (selectedFrom < selectedTo && ' \n\t'.indexOf(this.data.text.substr(selectedFrom, 1)) !== -1) selectedFrom++
+    while (selectedFrom < selectedTo && ' \n\t'.indexOf(this.data.text.substr(selectedTo - 1, 1)) !== -1) selectedTo--
+
+    return [selectedFrom, selectedTo]
+  }
+}
+
+/**
+ * Utility function to find the closest highlight element to the given target.
+ *
+ * @param target a DOM node.
+ * @returns the closest highlight element or null if none is found.
+ */
+export function closestChunk (target: Node | null): Element | null {
+  if (target instanceof Text) {
+    target = target.parentElement
+  }
+
+  if (target instanceof Element) {
+    return target.closest('[data-chunk-id]')
+  }
+
+  return null
 }
 
 function isRTL (charCode: number): boolean {

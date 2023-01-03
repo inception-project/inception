@@ -46,11 +46,12 @@ import { DocumentData } from '../visualizer/DocumentData'
 import { RelationTypeDto, EntityTypeDto, VID, CommentType } from '../protocol/Protocol'
 import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import { Entity } from '../visualizer/Entity'
+import { AttributeType } from '../visualizer/AttributeType'
 
 export class VisualizerUI {
-  private spanTypes: Record<string, EntityTypeDto> = null
-  private relationTypesHash:Record<string, RelationTypeDto> = null
-  private data: DocumentData = null
+  private spanTypes: Record<string, EntityTypeDto> | null = null
+  private relationTypesHash: Record<string, RelationTypeDto> | null = null
+  private data: DocumentData | null = null
 
   // normalization: server-side DB by norm DB name
   private normServerDbByNormDbName = {}
@@ -160,7 +161,7 @@ export class VisualizerUI {
 
   displaySpanComment (evt, target, spanId, spanType, mods, spanText, hoverText,
     commentText, commentType, normalizations) {
-    let immediately = false
+    const immediately = false
     let comment = ('<div><span class="comment_type_id_wrapper">' +
       '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(this.spanTypes, spanType)) + '</span>' + ' ' +
       '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>')
@@ -174,16 +175,6 @@ export class VisualizerUI {
       comment += ('<div class="comment_text">' + Util.escapeHTML(hoverText) + '</div>')
     } else if (spanText) {
       comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>')
-    }
-
-    const validArcTypesForDrag = this.dispatcher.post('getValidArcTypesForDrag', [spanId, spanType])
-    if (validArcTypesForDrag && validArcTypesForDrag[0]) {
-      if (validArcTypesForDrag[0].length) {
-        comment += '<div>' + validArcTypesForDrag[0].join(', ') + '</div>'
-      } else {
-        $('rect[data-span-id="' + spanId + '"]').addClass('badTarget')
-      }
-      immediately = true
     }
 
     // process normalizations
@@ -276,7 +267,7 @@ export class VisualizerUI {
         // extend comment popup with normalization data
         let norminfo = ''
         // flatten outer (name, attr, info) array (idx for sort)
-        let infos : [string, string, number][] = []
+        let infos: [string, string, number][] = []
         let idx = 0
         for (let j = 0; j < response.results.length; j++) {
           const label = response.results[j][0] as string
@@ -452,10 +443,9 @@ export class VisualizerUI {
           .animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing' })
       }
     }
-    this.dispatcher.post('allowReloadByURL')
   }
 
-  resizerTimeout : number
+  resizerTimeout: number
   onResize (evt: Event) {
     if (evt.target === window) {
       clearTimeout(this.resizerTimeout)
@@ -486,7 +476,9 @@ export class VisualizerUI {
     }])
   }
 
-  spanAndAttributeTypesLoaded (_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
+  spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>,
+    _entityAttributeTypes: Record<string, AttributeType>, _eventAttributeTypes,
+    _relationTypesHash: Record<string, RelationTypeDto>) {
     this.spanTypes = _spanTypes
     this.relationTypesHash = _relationTypesHash
   }

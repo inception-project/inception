@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Cr
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteRelationAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteSpanAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.MoveSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UpdateFeatureValueAnnotationAction;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEve
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import wicket.contrib.input.events.key.KeyType;
@@ -87,6 +89,7 @@ public class UndoPanel
 
         registerHandler(SpanCreatedEvent.class, CreateSpanAnnotationAction::new);
         registerHandler(SpanDeletedEvent.class, DeleteSpanAnnotationAction::new);
+        registerHandler(SpanMovedEvent.class, MoveSpanAnnotationAction::new);
         registerHandler(RelationCreatedEvent.class, CreateRelationAnnotationAction::new);
         registerHandler(RelationDeletedEvent.class, DeleteRelationAnnotationAction::new);
         registerHandler(ChainSpanCreatedEvent.class, CreateChainSpanAnnotationAction::new);

@@ -159,7 +159,7 @@ public class SpanAdapter
         }
 
         int oldBegin = request.getAnnotation().getBegin();
-        int oldEnd = request.getAnnotation().getBegin();
+        int oldEnd = request.getAnnotation().getEnd();
         moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
                 request.getEnd());
 

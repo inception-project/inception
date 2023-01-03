@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.LowLevelException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -140,8 +141,15 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(cas,
-                selection.getAnnotation().getId());
+        AnnotationFS annoFs;
+        try {
+            annoFs = ICasUtil.selectAnnotationByAddr(cas, selection.getAnnotation().getId());
+        }
+        catch (LowLevelException e) {
+            LOG.error("Annotation with ID [{}] not found", selection.getAnnotation().getId());
+            return Collections.emptyList();
+        }
+
         VID localVid = new VID(annoFs);
 
         List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
