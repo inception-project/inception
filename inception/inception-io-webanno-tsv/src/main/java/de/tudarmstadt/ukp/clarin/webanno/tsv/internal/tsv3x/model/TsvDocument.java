@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,7 +90,11 @@ public class TsvDocument
      */
     public TsvUnit findIdDefiningUnit(AnnotationFS aFS)
     {
-        return fs2unitIndex.get(aFS);
+        TsvUnit unit = fs2unitIndex.get(aFS);
+        if (unit == null) {
+            throw new NoSuchElementException("No ID-defining unit found for annotation: " + aFS);
+        }
+        return unit;
     }
 
     public void mapFS2Unit(AnnotationFS aFS, TsvUnit aUnit)

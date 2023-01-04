@@ -17,6 +17,11 @@
 [[sect_formats_webannotsv3]]
 = WebAnno TSV 3.x
 
+====
+CAUTION: Legacy feature. This format does not support all of the layer and feature configurations of {product-name}. For example, multi-value features are not supported. Using this format when exporting documents or projects with layer configurations not supported by this file format may generate errors or may simply omit unsupported information from the export. Please consider switching your post-processing workflows to
+the <<sect_formats_uimaxmi,CAS XMI (XML 1.0)>> format.
+====
+
 The file format used by WebAnno version 3.
 
 [cols="2,1,1,1,3"]
