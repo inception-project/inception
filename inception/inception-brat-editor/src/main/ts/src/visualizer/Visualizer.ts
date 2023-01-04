@@ -1812,7 +1812,7 @@ export class Visualizer {
       }
 
       chunk.group = this.svg.group().addTo(row.group)
-      chunk.highlightGroup = this.svg.group().addTo(chunk.group)
+      chunk.highlightGroup = this.svg.group().addClass('chunk-highlights').addTo(chunk.group)
 
       let y = 0
       let hasLeftArcs = false
@@ -2417,6 +2417,7 @@ export class Visualizer {
 
           // Render highlight
           this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+            .addClass('chunk-highlight')
             .move(fragment.highlightPos.x, fragment.highlightPos.y)
             .attr({
               fill: lightBgColor,
@@ -3367,7 +3368,7 @@ export class Visualizer {
       const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
         .addClass('sentnum').addClass('unselectable')
 
-      this.highlightGroup = this.svg.group().addClass('highlight')
+      this.highlightGroup = this.svg.group().addClass('highlights')
 
       const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
         .addClass('text')
@@ -3950,6 +3951,7 @@ export class Visualizer {
 
   renderSpanMarkedRect (yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect(bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize)
+      .addClass('marked-rect')
       .move(bx - this.markedSpanSize, yy - this.markedSpanSize - Configuration.visual.margin.y - fragment.span.floor)
       .attr({
         filter: 'url(#Gaussian_Blur)',
@@ -3962,6 +3964,7 @@ export class Visualizer {
 
   renderFragmentShadowRect (yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect()
+      .addClass('fragment-shadow')
       .move(bx - this.rectShadowSize, yy - this.rectShadowSize - Configuration.visual.margin.y - fragment.span.floor)
       .width(bw + 2 * this.rectShadowSize)
       .height(bh + 2 * this.rectShadowSize)
@@ -4002,6 +4005,7 @@ export class Visualizer {
 
     return this.svg.polygon(poly)
       .addClass(rectClass)
+      .addClass('fragment')
       .fill(bgColor)
       .stroke({
         color: borderColor,
@@ -4063,12 +4067,17 @@ export class Visualizer {
       .addTo(fragment.group)
   }
 
+  /**
+   * @returns the highlights for the given span id. Those are the elements representing the label
+   *  bubbles above the text.
+   * @param id the span id
+   */
   getHighlightsForSpan (id: VID): ArrayLike<Element> {
     return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
   }
 
   selectionToOffsets (sel: Selection | null) : Offsets | null {
-    if (!sel) return null
+    if (!sel || !sel.rangeCount) return null
 
     const anchorNode = sel.getRangeAt(0).startContainer
     const anchorOffset = sel.getRangeAt(0).startOffset
