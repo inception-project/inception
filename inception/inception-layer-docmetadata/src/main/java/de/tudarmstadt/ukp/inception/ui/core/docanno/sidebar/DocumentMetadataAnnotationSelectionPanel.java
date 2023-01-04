@@ -296,8 +296,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                     }
                 });
 
-                detailPanel.add(visibleWhen(
-                        () -> selectedAnnotation == container || aItem.getModelObject().singleton));
+                detailPanel.add(visibleWhen(() -> isExpanded(aItem, container)));
 
                 if (createdAnnotationAddress == vid.getId()) {
                     createdAnnotationAddress = -1;
@@ -306,14 +305,12 @@ public class DocumentMetadataAnnotationSelectionPanel
                 }
 
                 WebMarkupContainer close = new WebMarkupContainer("close");
-                close.add(visibleWhen(
-                        () -> !detailPanel.isVisible() && !aItem.getModelObject().singleton));
+                close.add(visibleWhen(() -> isExpanded(aItem, container)));
                 close.setOutputMarkupId(true);
                 container.add(close);
 
                 WebMarkupContainer open = new WebMarkupContainer("open");
-                open.add(visibleWhen(
-                        () -> detailPanel.isVisible() && !aItem.getModelObject().singleton));
+                open.add(visibleWhen(() -> !isExpanded(aItem, container)));
                 open.setOutputMarkupId(true);
                 container.add(open);
 
@@ -331,6 +328,12 @@ public class DocumentMetadataAnnotationSelectionPanel
                                         () -> annotationPage.isEditable() ? "" : "disabled")));
 
                 aItem.setOutputMarkupId(true);
+            }
+
+            private boolean isExpanded(ListItem<AnnotationListItem> aItem,
+                    WebMarkupContainer container)
+            {
+                return selectedAnnotation == container || aItem.getModelObject().singleton;
             }
         };
     }
