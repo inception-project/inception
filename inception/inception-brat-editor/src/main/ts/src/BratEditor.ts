@@ -22,10 +22,12 @@ import { Dispatcher, Message } from './dispatcher/Dispatcher'
 import { Visualizer } from './visualizer/Visualizer'
 import { VisualizerUI } from './visualizer_ui/VisualizerUI'
 import './style-vis.scss'
+import { ResizeManager } from './annotator_ui/ResizeManager'
 
 export class BratEditor implements AnnotationEditor {
   dispatcher: Dispatcher
   visualizer: Visualizer
+  resizer: ResizeManager
 
   public constructor (element: Element, ajax: DiamAjax, props: AnnotationEditorProperties) {
     const markupId = element.getAttribute('id')
@@ -34,10 +36,12 @@ export class BratEditor implements AnnotationEditor {
     new Ajax(this.dispatcher, markupId, props.diamAjaxCallbackUrl)
     this.visualizer = new Visualizer(this.dispatcher, markupId, ajax)
     new VisualizerUI(this.dispatcher, ajax)
-    new AnnotatorUI(this.dispatcher, this.visualizer.svg, ajax)
+    new AnnotatorUI(this.dispatcher, this.visualizer, ajax)
     this.dispatcher.post('init')
     element.dispatcher = this.dispatcher
     element.visualizer = this.visualizer
+
+    this.resizer = new ResizeManager(this.dispatcher, this.visualizer, ajax)
   }
 
   post (command: Message, data: any) : void {

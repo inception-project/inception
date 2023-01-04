@@ -279,10 +279,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-lif</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-imscwb</artifactId>
     </dependency>
     <dependency>
@@ -931,7 +927,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-lif</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>
