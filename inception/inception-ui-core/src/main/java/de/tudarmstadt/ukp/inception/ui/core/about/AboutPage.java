@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.time.Year;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.StringResourceModel;
@@ -95,10 +96,10 @@ public class AboutPage
         }
 
         add(new Label("dependencies", buf));
-        add(new Label("copyright",
-                new StringResourceModel("copyright")
-                        .setParameters(Integer.toString(Year.now().getValue())))
-                                .setEscapeModelStrings(false));
+        Component copyright = new Label("copyright", new StringResourceModel("copyright")
+                .setParameters(Integer.toString(Year.now().getValue())));
+        copyright.setEscapeModelStrings(false); // SAFE - I18N STRING WITH NO USER-CONTROLLABLE DATA
+        add(copyright);
         add(new BookmarkablePageLink<>("home", getApplication().getHomePage()));
     }
 }

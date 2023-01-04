@@ -17,22 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import java.util.Optional;
-
-import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CreateSpanAnnotationRequest
+    extends SpanAnnotationRequest_ImplBase<CreateSpanAnnotationRequest>
 {
-    private final SourceDocument document;
-    private final String username;
-    private final CAS cas;
-    private final int begin;
-    private final int end;
-    private final CreateSpanAnnotationRequest originalRequest;
-
     public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
             int aBegin, int aEnd)
     {
@@ -42,49 +33,13 @@ public class CreateSpanAnnotationRequest
     private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
             SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
     {
-        Validate.isTrue(aBegin <= aEnd, "Annotation begin [%d] must smaller or equal to end [%d]",
-                aBegin, aEnd);
-
-        originalRequest = aOriginal;
-        document = aDocument;
-        username = aUsername;
-        cas = aCas;
-        begin = aBegin;
-        end = aEnd;
+        super(null, aDocument, aUsername, aCas, aBegin, aEnd);
     }
 
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-
-    public String getUsername()
-    {
-        return username;
-    }
-
-    public CAS getCas()
-    {
-        return cas;
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
-    }
-
-    public Optional<CreateSpanAnnotationRequest> getOriginalRequest()
-    {
-        return Optional.ofNullable(originalRequest);
-    }
-
+    @Override
     public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new CreateSpanAnnotationRequest(this, document, username, cas, aBegin, aEnd);
+        return new CreateSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(), aBegin,
+                aEnd);
     }
 }

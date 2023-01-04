@@ -58,6 +58,20 @@ public class SpanAnchoringModeBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    public MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
+            MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    private <T extends SpanAnnotationRequest_ImplBase<T>> T onRequest(TypeAdapter aAdapter,
+            T aRequest)
+        throws AnnotationException
+    {
         if (aRequest.getBegin() == aRequest.getEnd()) {
             if (!aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed()) {
                 throw new IllegalPlacementException(
@@ -77,6 +91,7 @@ public class SpanAnchoringModeBehavior
         else {
             return aRequest.changeSpan(adjustedRange[0], adjustedRange[1]);
         }
+
     }
 
     public static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange)

@@ -51,6 +51,7 @@ public class LoadAnnotationsHandler
     public static final String PARAM_BEGIN = "begin";
     public static final String PARAM_END = "end";
     public static final String PARAM_TEXT = "text";
+    public static final String PARAM_CLIP = "clip";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -94,12 +95,15 @@ public class LoadAnnotationsHandler
                 .toInt(state.getWindowEndOffset());
         boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
                 .toBoolean(true);
+        boolean clipSpans = aRequest.getRequestParameters().getParameterValue(PARAM_CLIP)
+                .toBoolean(true);
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
                 .withCas(page.getEditorCas()) //
                 .withWindow(begin, end) //
                 .withText(includeText) //
+                .withClipSpans(clipSpans) //
                 .withVisibleLayers(state.getAnnotationLayers()) //
                 .build();
         return request;

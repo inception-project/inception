@@ -127,6 +127,8 @@ include::{include-dir}projects_documents.adoc[leveloffset=+2]
 
 include::{include-dir}projects_layers.adoc[leveloffset=+2]
 
+include::{include-dir}projects_layers_feature_lookup.adoc[leveloffset=+4]
+
 include::{include-dir}projects_annotation.adoc[leveloffset=+2]
 
 include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
@@ -277,9 +279,9 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `imscwb`
 | `format.imscwb.enabled`
 
-| <<sect_formats_lif>>
-| `lif`
-| `format.lif.enabled`
+// | <<sect_formats_lif>>
+// | `lif`
+// | `format.lif.enabled`
 
 | <<sect_formats_nif>>
 | `nif`
@@ -377,7 +379,7 @@ include::{include-dir}formats-htmldoc.adoc[leveloffset=+2]
 
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
-include::{include-dir}formats-lif.adoc[leveloffset=+2]
+// include::{include-dir}formats-lif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 

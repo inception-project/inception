@@ -74,6 +74,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-feature-lookup</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
     <dependency>
@@ -96,6 +100,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-tagsets</artifactId>
     </dependency>
+    <!--
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-tutorial</artifactId>
+    </dependency>
+    -->
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -266,10 +276,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-nif</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-lif</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -905,6 +911,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-lookup</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
@@ -920,7 +927,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-lif</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>

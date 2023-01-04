@@ -41,7 +41,7 @@ public class CurationStateSymbolLabel
     protected void onInitialize()
     {
         super.onInitialize();
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE AS WE ONLY RENDER A CONTROLLED SET OF ICONS
     }
 
     private static String stateSymbol(SourceDocumentState aDocState)

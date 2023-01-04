@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 
 public interface RecommendationEventWebsocketController
 {
     String handleException(Throwable exception);
 
-    void onRecommenderErrorEvent(RecommenderTaskEvent aEvent);
+    void onRecommenderTaskEvent(RecommenderTaskNotificationEvent aEvent);
 }

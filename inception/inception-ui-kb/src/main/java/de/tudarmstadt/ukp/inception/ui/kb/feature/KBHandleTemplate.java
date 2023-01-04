@@ -35,29 +35,25 @@ final class KBHandleTemplate
     public String getText()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div>");
-        sb.append("  <div class=\"item-title\">");
+        sb.append("<span class=\"item-title\">");
         // We cannot use && here because that causes an XML parse error in the browser - so we nest
         // the if clauses...
         sb.append("  # if (data.rank) { if (data.rank != '0') { #");
-        sb.append("  <span class=\"item-rank\">");
-        sb.append("    [${ data.rank }]");
-        sb.append("  </span>");
+        sb.append("    <span class=\"item-rank\">[${ data.rank }]</span>");
         sb.append("  # } } #");
-        sb.append("    ${ data.uiLabel }");
-        sb.append("  </div>");
-        sb.append("  <div class=\"item-identifier\">");
-        sb.append("    ${ data.identifier }");
-        sb.append("  </div>");
-        sb.append("  <div class=\"item-description\">");
-        sb.append("    ${ data.description }");
-        sb.append("  </div>");
-        if (DEVELOPMENT.equals(Application.get().getConfigurationType())) {
-            sb.append("  <div class=\"item-description\">");
-            sb.append("    ${ data.debugInfo }");
-            sb.append("  </div>");
-        }
+        sb.append("  ${ data.uiLabel }");
+        sb.append("</span>");
+        sb.append("<div class=\"item-identifier\">");
+        sb.append("  ${ data.identifier }");
         sb.append("</div>");
+        sb.append("<div class=\"item-description\">");
+        sb.append("  ${ data.description }");
+        sb.append("</div>");
+        if (DEVELOPMENT.equals(Application.get().getConfigurationType())) {
+            sb.append("<div class=\"item-description\">");
+            sb.append("  ${ data.debugInfo }");
+            sb.append("</div>");
+        }
         return sb.toString();
     }
 

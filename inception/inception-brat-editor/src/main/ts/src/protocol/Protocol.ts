@@ -18,7 +18,7 @@
 
 import { Offsets } from '@inception-project/inception-js-api'
 
-export type VID = string
+export type VID = string | number
 export type CommentType = 'AnnotatorNotes' | 'EditHighlight' | 'AnnotationError'
   | 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
   | 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'

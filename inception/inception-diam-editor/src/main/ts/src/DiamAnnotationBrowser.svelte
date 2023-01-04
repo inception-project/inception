@@ -18,6 +18,7 @@
      */
 
     import { onMount, onDestroy } from "svelte"
+    import { get_current_component } from 'svelte/internal'
     import { AnnotatedText, unpackCompactAnnotatedTextV2 } from "@inception-project/inception-js-api"
     import { factory } from "@inception-project/inception-diam"
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte"
@@ -26,7 +27,10 @@
     export let wsEndpointUrl: string
     export let topicChannel: string
     export let ajaxEndpointUrl: string
-    export let connected = false
+    
+    let connected = false
+    let element = null;
+    let self = get_current_component()
 
     let mode = 'Group by position';
 	let modes = [
@@ -36,16 +40,23 @@
 
     let data: AnnotatedText
 
-    let wsClient = factory().createWebsocketClient();
-    wsClient.onConnect = () => wsClient.subscribeToViewport(topicChannel, d => {
-        data = unpackCompactAnnotatedTextV2(d)
-    })
+    let wsClient = factory().createWebsocketClient()
+    wsClient.onConnect = () => wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d))
 
     let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl)
 
+    export function messageRecieved(d) {
+        if (!document.body.contains(element)) {
+            console.debug("Element is not part of the DOM anymore. Disconnecting and suiciding.")
+            self.$destroy()
+            return
+        }
+
+        data = unpackCompactAnnotatedTextV2(d)
+    }
+
     export function connect(): void {
         if (connected) return
-        console.log("Connecting to " + wsEndpointUrl)
         wsClient.connect(wsEndpointUrl)
     }
 
@@ -60,7 +71,7 @@
     onDestroy(async () => disconnect())
 </script>
 
-<div class="flex-content flex-v-container">
+<div class="flex-content flex-v-container" bind:this={element}>
     <select bind:value={mode} class="form-select">
         {#each modes as value}<option {value}>{value}</option>{/each}
     </select>

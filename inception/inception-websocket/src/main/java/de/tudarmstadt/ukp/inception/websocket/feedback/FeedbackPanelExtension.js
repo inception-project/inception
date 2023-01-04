@@ -35,6 +35,13 @@ class FeedbackPanelExtension {
   /**
    * @param {string} msg   message that will be added as error type to the panel
    */
+  addWarningToFeedbackPanel(msg) {
+    this.addMsgToFeedbackPanel(msg, 'alert-warning');
+  }
+ 
+  /**
+   * @param {string} msg   message that will be added as error type to the panel
+   */
   addErrorToFeedbackPanel(msg) {
     this.addMsgToFeedbackPanel(msg, 'alert-danger');
   }

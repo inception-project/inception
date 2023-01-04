@@ -90,7 +90,7 @@ public class ProjectListDataProvider
         }
     }
 
-    public List<ProjectEntry> filter(List<ProjectEntry> aData)
+    private List<ProjectEntry> filter(List<ProjectEntry> aData)
     {
         Stream<ProjectEntry> projectStream = aData.stream();
 

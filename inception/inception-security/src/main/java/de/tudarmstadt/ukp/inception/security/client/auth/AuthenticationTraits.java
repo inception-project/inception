@@ -25,12 +25,15 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ //
         @Type(value = BasicAuthenticationTraits.class, //
                 name = BasicAuthenticationTraits.TYPE_ID),
+        @Type(value = HeaderAuthenticationTraits.class, //
+                name = HeaderAuthenticationTraits.TYPE_ID),
         @Type(value = OAuthClientCredentialsAuthenticationTraits.class, //
                 name = OAuthClientCredentialsAuthenticationTraits.TYPE_ID) })
 @JsonIgnoreProperties(ignoreUnknown = true)

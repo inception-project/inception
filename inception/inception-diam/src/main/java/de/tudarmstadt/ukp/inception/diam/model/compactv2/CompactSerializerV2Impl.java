@@ -69,12 +69,13 @@ public class CompactSerializerV2Impl
 
         renderText(aVDoc, aResponse, aRequest);
 
-        renderLayers(aResponse, aVDoc);
+        renderLayers(aRequest, aResponse, aVDoc);
 
         return aResponse;
     }
 
-    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc)
+    private void renderLayers(RenderRequest aRequest, CompactAnnotatedText aResponse,
+            VDocument aVDoc)
     {
         var layers = new ArrayList<CompactLayer>();
 
@@ -92,18 +93,30 @@ public class CompactSerializerV2Impl
             layers.add(new CompactLayer(layer.getId(), layer.getUiName()));
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                List<CompactRange> offsets = vspan.getRanges().stream()
-                        .map(range -> new CompactRange(range.getBegin(), range.getEnd()))
-                        .collect(toList());
+                CompactSpan cspan;
+                if (aRequest.isClipSpans()) {
+                    List<CompactRange> offsets = vspan.getRanges().stream()
+                            .map(range -> new CompactRange(range.getBegin(), range.getEnd()))
+                            .collect(toList());
 
-                CompactSpan entity = new CompactSpan(vspan.getLayer(), vspan.getVid(), offsets,
-                        vspan.getLabelHint(), vspan.getColorHint());
-                entity.getAttributes()
-                        .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
-                entity.getAttributes().setClippedAtEnd(
-                        vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+                    cspan = new CompactSpan(vspan.getLayer(), vspan.getVid(), offsets,
+                            vspan.getLabelHint(), vspan.getColorHint());
+                    cspan.getAttributes()
+                            .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
+                    cspan.getAttributes().setClippedAtEnd(
+                            vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
+                }
+                else {
+                    List<CompactRange> offsets = vspan.getRanges().stream()
+                            .map(range -> new CompactRange(range.getOriginalBegin(),
+                                    range.getOriginalEnd()))
+                            .collect(toList());
 
-                aResponse.addSpan(entity);
+                    cspan = new CompactSpan(vspan.getLayer(), vspan.getVid(), offsets,
+                            vspan.getLabelHint(), vspan.getColorHint());
+                }
+
+                aResponse.addSpan(cspan);
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -122,7 +135,16 @@ public class CompactSerializerV2Impl
                         new CompactAnnotationMarker((VAnnotationMarker) marker));
             }
             else if (marker instanceof VTextMarker) {
-                aResponse.addTextMarker(new CompactTextMarker((VTextMarker) marker));
+                var range = ((VTextMarker) marker).getRange();
+                List<CompactRange> offsets;
+                if (aRequest.isClipSpans()) {
+                    offsets = asList(new CompactRange(range.getBegin(), range.getEnd()));
+                }
+                else {
+                    offsets = asList(
+                            new CompactRange(range.getOriginalBegin(), range.getOriginalEnd()));
+                }
+                aResponse.addTextMarker(new CompactTextMarker(offsets, marker.getType()));
             }
         }
     }
