@@ -50,7 +50,7 @@ import { timeStamp } from 'console'
 export class AnnotatorUI {
   private data: DocumentData
 
-  private arcDragOrigin?: string
+  private arcDragOrigin?: VID
   private arcDragOriginBox: Box
   private arcDragOriginGroup: SVGTypeMapping<SVGGElement>
   private arcDragArc: SVGTypeMapping<SVGPathElement>
@@ -263,6 +263,13 @@ export class AnnotatorUI {
   private onMouseMove (evt: MouseEvent) : void {
     if (!evt.buttons && this.selectionInProgress) {
       this.dispatcher.post('selectionEnded')
+    }
+
+    if (this.arcDragOrigin && !evt.buttons) {
+      // Mouse button was released outside the event scope - cancel arc drag
+      this.stopArcDrag()
+      this.arcDragJustStarted = false
+      return
     }
 
     if (!this.arcDragOrigin && this.dragStartedAt) {
@@ -644,15 +651,15 @@ export class AnnotatorUI {
     this.ajax.createSpanAnnotation([offsets])
   }
 
-  private endArcCreation (evt: MouseEvent, targetSpanId: string | null) {
+  private endArcCreation (evt: MouseEvent, targetSpanId: VID | null) {
     if (!(evt.target instanceof Element) || !this.arcDragOrigin) return
 
-    const origin = this.arcDragOrigin
-    const targetValid = evt.target.classList.contains('reselectTarget')
     this.stopArcDrag(evt.target)
-    let id: string | null
-    if ((id = targetSpanId) && targetValid && (evt.shiftKey || origin !== id)) {
-      const originSpan = this.data.spans[origin]
+
+    const targetValid = evt.target.classList.contains('reselectTarget')
+    let id: VID | null
+    if ((id = targetSpanId) && targetValid && (evt.shiftKey || this.arcDragOrigin !== id)) {
+      const originSpan = this.data.spans[this.arcDragOrigin]
       const targetSpan = this.data.spans[id]
 
       if (this.arcOptions && this.arcOptions.old_target) {
