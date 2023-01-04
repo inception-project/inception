@@ -76,17 +76,17 @@
     <pdfbox.version>2.0.26</pdfbox.version>
 
     <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.6</spring.boot.version>
+    <spring.boot.version>2.7.7</spring.boot.version>
     <spring.data.version>2.7.6</spring.data.version>
     <spring.security.version>5.8.0</spring.security.version>
-    <springdoc.version>1.6.13</springdoc.version>
+    <springdoc.version>1.6.14</springdoc.version>
     <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
-    <groovy.version>3.0.13</groovy.version>
+    <groovy.version>3.0.14</groovy.version>
 
     <tomcat.version>9.0.69</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -102,7 +102,7 @@
     <wicket-bootstrap.version>6.0.0</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
-    <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
+    <wicket-spring-boot.version>3.1.7</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -112,12 +112,12 @@
     <mtas.version>8.11.1.0</mtas.version> 
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
 
-    <elasticsearch.version>7.17.7</elasticsearch.version> 
+    <elasticsearch.version>7.17.8</elasticsearch.version> 
     <!--   7.10.2   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.1   depends on Lucene 8.11.1 -->
     <!--   8.1.1    depends on Lucene 9.0.0 -->
 
-    <opensearch.version>1.3.6</opensearch.version>
+    <opensearch.version>1.3.7</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
 
     <rdf4j.version>4.2.2</rdf4j.version> 
@@ -1096,7 +1096,7 @@
       <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
-        <version>0.5.6</version>
+        <version>0.5.7</version>
         <scope>test</scope>
         <exclusions>
           <exclusion>
@@ -1533,7 +1533,7 @@
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.9</version>
+        <version>8.5.11</version>
       </dependency>
 
       <dependency>
@@ -1585,7 +1585,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.19</version>
+        <version>1.12.20</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1899,7 +1899,7 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.1</version>
+        <version>3.1.2</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
