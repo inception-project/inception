@@ -88,7 +88,7 @@
 
     <groovy.version>3.0.14</groovy.version>
 
-    <tomcat.version>9.0.69</tomcat.version>
+    <tomcat.version>9.0.70</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.7</mariadb.driver.version>
@@ -102,7 +102,7 @@
     <wicket-bootstrap.version>6.0.0</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
-    <wicket-spring-boot.version>3.1.7</wicket-spring-boot.version>
+    <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
