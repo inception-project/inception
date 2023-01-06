@@ -95,6 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
@@ -1204,26 +1205,36 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    @OnEvent
-    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    private boolean isAnnotationEventRelevant(AnnotationEvent aEvent)
     {
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
         if (selection.getAnnotation().isNotSet()) {
-            return;
+            return false;
         }
 
         if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @OnEvent
+    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    {
+        if (!isAnnotationEventRelevant(aEvent)) {
             return;
         }
 
         try {
+            Selection selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
             boolean annotationStillExists = getEditorCas().select(Annotation.class) //
                     .at(selection.getBegin(), selection.getEnd()) //
                     .anyMatch(ann -> ann._id() == id);
             if (!annotationStillExists) {
-                state.getSelection().clear();
+                selection.clear();
                 refresh(aEvent.getRequestTarget());
 
             }

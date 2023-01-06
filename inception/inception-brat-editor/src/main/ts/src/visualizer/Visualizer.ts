@@ -4109,7 +4109,8 @@ export class Visualizer {
     let chunkIndexFrom = anchorNode.getAttribute('data-chunk-id')
     let chunkIndexTo = focusNode.getAttribute('data-chunk-id')
 
-    // Is it a zero-width annotation?
+    // Is the selection fully contained in a single spacing element?
+    // If yes, move it to the begin or end of the previous or next chunk.
     if (focusNode === anchorNode && focusNode.classList.contains('spacing')) {
       if (anchorOffset === 0) {
         // Move anchor to the end of the previous node
@@ -4123,6 +4124,7 @@ export class Visualizer {
         chunkIndexFrom = chunkIndexTo = anchorNode?.getAttribute('data-chunk-id') || null
       }
     } else {
+      // Is the selection partially contained in a spacing element?
       // If we hit a spacing element, then we shift the anchors left or right, depending on
       // the direction of the selected range.
       if (anchorNode.classList.contains('spacing')) {
