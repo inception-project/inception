@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperatio
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.StandardProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.empty.EmptyProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
@@ -181,5 +182,11 @@ public class ProjectInitializersAutoConfiguration
     public SentenceLayerInitializer sentenceLayerInitializer(AnnotationSchemaService aSchemaService)
     {
         return new SentenceLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public EmptyProjectInitializer emptyProjectInitializer()
+    {
+        return new EmptyProjectInitializer();
     }
 }
