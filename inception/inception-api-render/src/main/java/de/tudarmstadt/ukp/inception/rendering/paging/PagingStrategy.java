@@ -31,6 +31,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
 public interface PagingStrategy
     extends Serializable
@@ -53,7 +54,13 @@ public interface PagingStrategy
 
     Component createPageNavigator(String aId, Page aPage);
 
-    void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos);
+    default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos)
+    {
+        moveToOffset(aState, aCas, aOffset, null, aPos);
+    }
+
+    void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
+            FocusPosition aPos);
 
     default void recalculatePage(AnnotatorViewState aState, CAS aCas)
     {

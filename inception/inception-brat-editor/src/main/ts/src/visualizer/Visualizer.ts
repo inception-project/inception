@@ -283,18 +283,25 @@ export class Visualizer {
     // Object.seal(this);
   }
 
-  scrollTo (args: { offset: number; position: string }): void {
-    const chunk = this.data?.chunks?.find(
-      chunk => chunk.from <= args.offset && args.offset < chunk.to)
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
+    const chunk = this.getChunkAtOffset(args.offset - (this.sourceData?.windowBegin || 0))
 
     if (!chunk) {
+      console.warn('Could not find chunk at offset', args.offset)
       return
     }
 
-    const scrollTarget = this.svgContainer.querySelector(`text[data-chunk-id='${chunk.index}']`)
-    if (scrollTarget) {
-      console.log('Scrolling to ', scrollTarget)
-      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const chunkElement = this.getChunkElementWithId(chunk.index)
+    if (chunkElement) {
+      console.log('Scrolling to ', chunkElement)
+      chunkElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      this.svg.node.querySelectorAll('.ping').forEach((ping) => ping.remove())
+      const ping = this.svg.rect(this.data?.sizes.texts.widths[chunk.text], this.data?.sizes.texts.height)
+        .addClass('ping')
+        .move(chunk.textX, chunk.row.textY + (this.data?.sizes.texts.y || 0))
+        .addTo(this.highlightGroup)
+      ping.animate(5000, 0, 'now').attr({ opacity: 0 }).after(() => ping.remove())
     }
   }
 
@@ -3475,7 +3482,7 @@ export class Visualizer {
       setSourceDataDefaults(sourceData)
     }
 
-    setTimeout(() => { this.renderDataReal(sourceData) }, 0)
+    this.renderDataReal(sourceData)
   }
 
   /**
@@ -4067,12 +4074,20 @@ export class Visualizer {
       .addTo(fragment.group)
   }
 
+  getChunkAtOffset (offset: number) : Chunk | null {
+    return this.data?.chunks?.find(chunk => chunk.from <= offset && offset < chunk.to) || null
+  }
+
+  getChunkElementWithId (id: VID): Element | null {
+    return this.svg.node.querySelector(`text:not(.spacing)[data-chunk-id="${id}"]`)
+  }
+
   /**
    * @returns the highlights for the given span id. Those are the elements representing the label
    *  bubbles above the text.
    * @param id the span id
    */
-  getHighlightsForSpan (id: VID): ArrayLike<Element> {
+  getHighlightElementsForSpan (id: VID): ArrayLike<Element> {
     return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
   }
 

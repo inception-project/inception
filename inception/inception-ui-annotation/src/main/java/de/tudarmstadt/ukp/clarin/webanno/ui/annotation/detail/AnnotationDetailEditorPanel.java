@@ -471,8 +471,15 @@ public abstract class AnnotationDetailEditorPanel
     public void actionJump(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException
     {
-        actionJump(aTarget,
-                ICasUtil.selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+        actionJump(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(), aBegin,
+                aEnd);
     }
 
     @Deprecated
