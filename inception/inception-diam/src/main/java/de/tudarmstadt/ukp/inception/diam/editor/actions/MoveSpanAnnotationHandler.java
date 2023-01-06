@@ -92,6 +92,9 @@ public class MoveSpanAnnotationHandler
         adapter.move(state.getDocument(), state.getUser().getUsername(), aCas, annoFs,
                 aRange.getBegin(), aRange.getEnd());
 
-        // state.getSelection().selectSpan(annoFs);
+        var sel = state.getSelection();
+        if (sel.isSet() && sel.getAnnotation().getId() == aVid.getId()) {
+            state.getSelection().selectSpan(annoFs);
+        }
     }
 }
