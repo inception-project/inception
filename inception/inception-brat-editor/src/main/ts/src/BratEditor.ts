@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { AnnotationEditor, AnnotationEditorProperties, DiamAjax } from '@inception-project/inception-js-api'
+import type { AnnotationEditor, AnnotationEditorProperties, DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import { Ajax } from './ajax/Ajax'
 import { AnnotatorUI } from './annotator_ui/AnnotatorUI'
 import { Dispatcher, Message } from './dispatcher/Dispatcher'
@@ -54,7 +54,7 @@ export class BratEditor implements AnnotationEditor {
     this.dispatcher.post('loadAnnotations', [])
   }
 
-  scrollTo (args: { offset: number; position: string }): void {
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
     this.visualizer.scrollTo(args)
   }
 

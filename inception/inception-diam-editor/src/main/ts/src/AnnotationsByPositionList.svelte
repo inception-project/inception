@@ -18,6 +18,7 @@
      */
     import {
         AnnotatedText,
+        Annotation,
         DiamAjax,
         Offsets,
         Relation,
@@ -37,6 +38,14 @@
     $: groupedSpans = groupSpansByPosition(data)
     $: groupedRelations = groupRelationsByPosition(data)
     $: sortedSpanOffsets = uniqueOffsets(data)  
+
+    function scrollToSpan (span: Span) {
+        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
+    }
+
+    function scrollToRelation (relation: Relation) {
+        ajaxClient.scrollTo({ id: relation.vid });
+    }
 </script>
 
 <div class="flex-content fit-child-snug">
@@ -45,8 +54,9 @@
             {#each sortedSpanOffsets as offsets}
                 {@const spans = groupedSpans[`${offsets}`]}
                 {@const firstSpan = spans[0]}
-                <li class="list-group-item p-0">
-                    <div class="flex-grow-1 py-1 px-2">
+                <li class="list-group-item list-group-item-action p-0">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(firstSpan)}>
                         <div class="float-end">
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
@@ -60,11 +70,12 @@
                 {#if relations} 
                     {#each relations as relation}
                         {@const target = relation.arguments[1].target}
-                        <li class="list-group-item p-0 d-flex">
+                        <li class="list-group-item list-group-item-action p-0 d-flex">
                             <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
                                 <span>↳</span>
                             </div>
-                            <div class="flex-grow-1 py-1 px-2">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={relation} {ajaxClient} />
                                 </div>
@@ -79,5 +90,6 @@
     {/if}
 </div>
 
-<style>
+<style lang="scss">
 </style>
+  

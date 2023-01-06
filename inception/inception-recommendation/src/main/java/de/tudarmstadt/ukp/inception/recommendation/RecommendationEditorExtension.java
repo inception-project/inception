@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
@@ -148,12 +149,9 @@ public class RecommendationEditorExtension
 
         // Create annotation
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
-            Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                    aState.getProject());
-            SourceDocument document = aState.getDocument();
             VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-            Optional<AnnotationSuggestion> prediction = predictions //
-                    .getPredictionByVID(document, recommendationVid);
+            var prediction = getPrediction(aState, recommendationVid);
+            SourceDocument document = aState.getDocument();
 
             if (prediction.isEmpty()) {
                 log.error("Could not find annotation in [{}] with id [{}]", document,
@@ -176,6 +174,32 @@ public class RecommendationEditorExtension
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
+        else if (ScrollToHandler.COMMAND.equals(aAction)) {
+            VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+            var prediction = getPrediction(aState, recommendationVid);
+            var page = (AnnotationPageBase) aTarget.getPage();
+            if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
+                var suggestion = (SpanSuggestion) prediction.get();
+                page.getAnnotationActionHandler().actionJump(aTarget, suggestion.getBegin(),
+                        suggestion.getEnd());
+            }
+            if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
+                var suggestion = (RelationSuggestion) prediction.get();
+                var position = suggestion.getPosition();
+                page.getAnnotationActionHandler().actionJump(aTarget, position.getSourceBegin(),
+                        position.getSourceEnd());
+            }
+        }
+    }
+
+    private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
+    {
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+                aState.getProject());
+        SourceDocument document = aState.getDocument();
+        Optional<AnnotationSuggestion> prediction = predictions //
+                .getPredictionByVID(document, aRecVid);
+        return prediction;
     }
 
     /**

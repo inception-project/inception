@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
@@ -272,7 +273,8 @@ public abstract class AnnotationPageBase
         AnnotatorState state = getModelObject();
 
         CAS cas = getEditorCas();
-        state.getPagingStrategy().moveToOffset(state, cas, aBegin, CENTERED);
+        state.getPagingStrategy().moveToOffset(state, cas, aBegin, new VRange(aBegin, aEnd),
+                CENTERED);
 
         if (!switched && state.getPagingStrategy() instanceof NoPagingStrategy) {
             return;

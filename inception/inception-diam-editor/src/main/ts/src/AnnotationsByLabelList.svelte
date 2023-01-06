@@ -20,6 +20,7 @@
     import {
         AnnotatedText,
         DiamAjax,
+        Relation,
         Span,
     } from "@inception-project/inception-js-api";
     import LabelBadge from "./LabelBadge.svelte";
@@ -35,6 +36,14 @@
     $: groupedSpans = groupSpansByLabel(data);
     $: groupedRelations = groupRelationsByLabel(data);
     $: sortedLabels = uniqueLabels(data);
+
+    function scrollToSpan (span: Span) {
+        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
+    }
+
+    function scrollToRelation (relation: Relation) {
+        ajaxClient.scrollTo({ id: relation.vid });
+    }
 </script>
 
 <div class="flex-content fit-child-snug">
@@ -49,7 +58,8 @@
                     </div>
                     <ul class="ps-3 pe-0">
                         {#each spans as span}
-                            <li class="list-group-item py-1 px-2">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <li class="list-group-item list-group-item-action py-1 px-2" on:click={() => scrollToSpan(span)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={span} {ajaxClient} />
                                 </div>
@@ -58,7 +68,8 @@
                             </li>
                         {/each}
                         {#each relations as relation}
-                            <li class="list-group-item py-1 px-2">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <li class="list-group-item list-group-item-action py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={relation} {ajaxClient} />
                                 </div>
@@ -73,5 +84,7 @@
     {/if}
 </div>
 
-<style>
+<style lang="scss">
+
 </style>
+  

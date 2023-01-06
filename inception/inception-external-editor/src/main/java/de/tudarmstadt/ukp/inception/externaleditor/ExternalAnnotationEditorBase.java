@@ -163,10 +163,11 @@ public abstract class ExternalAnnotationEditorBase
     }
 
     @OnEvent
-    public void onJumpTo(ScrollToEvent aEvent)
+    public void onScrollTo(ScrollToEvent aEvent)
     {
-        QueuedEditorCommandsMetaDataKey.get()
-                .add(new ScrollToCommand(aEvent.getOffset(), aEvent.getPosition()));
+        var command = new ScrollToCommand(aEvent.getOffset(), aEvent.getPosition());
+        command.setPingRange(aEvent.getPingRange());
+        QueuedEditorCommandsMetaDataKey.get().add(command);
 
         // Do not call our requestRender because we do not want to unnecessarily add the
         // LoadAnnotationsCommand

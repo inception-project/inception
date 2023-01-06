@@ -32,7 +32,7 @@
     let element = null;
     let self = get_current_component()
 
-    let mode = 'Group by position';
+    let mode = 'Group by label';
 	let modes = [
 		'Group by position',
 		'Group by label'

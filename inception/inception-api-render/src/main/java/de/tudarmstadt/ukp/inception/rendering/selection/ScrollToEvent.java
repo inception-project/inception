@@ -19,17 +19,22 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+
 public class ScrollToEvent
 {
     private final AjaxRequestTarget requestHandler;
     private final int offset;
+    private final VRange pingRange;
     private final FocusPosition position;
 
-    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, FocusPosition aPos)
+    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, VRange aPingRange,
+            FocusPosition aPos)
     {
         requestHandler = aRequestHandler;
         offset = aOffset;
         position = aPos;
+        pingRange = aPingRange;
     }
 
     public AjaxRequestTarget getRequestHandler()
@@ -40,6 +45,11 @@ public class ScrollToEvent
     public int getOffset()
     {
         return offset;
+    }
+
+    public VRange getPingRange()
+    {
+        return pingRange;
     }
 
     public FocusPosition getPosition()

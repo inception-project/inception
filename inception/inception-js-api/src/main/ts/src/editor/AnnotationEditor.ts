@@ -15,10 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Offsets } from "@inception-project/inception-js-api"
+
 export interface AnnotationEditor {
   loadAnnotations(): void
 
-  scrollTo(args: { offset: number, position: string }): void
+  /**
+   * Editor should scroll to the given offset. The offset is given in relation to the entire
+   * doocument, not to the viewport. So if the editor is showing only a part of the document in 
+   * its viewport, the offset should be adjusted accordingly.
+   */
+  scrollTo(args: { offset: number, position?: string, pingRanges?: Offsets[] }): void
 
   destroy(): void
 }

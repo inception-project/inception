@@ -25,15 +25,18 @@
 
     $: backgroundColor = annotation.color || "var(--bs-secondary)";
     $: textColor = bgToFgColor(backgroundColor);
+
+    function handleClick (ev: MouseEvent) {
+      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <span
     class="badge border border-dark ms-1 fw-normal"
-    on:click={(ev) =>
-        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })}
+    on:click={handleClick}
     title={`${annotation.vid}@${annotation.layer.name}`}
-    role="button"
-    style="color: {textColor}; background-color: {backgroundColor}"
+    role="button" style="color: {textColor}; background-color: {backgroundColor}"
 >
     {annotation.label || "No label"}
 </span>
@@ -44,10 +47,4 @@
     white-space: normal;
     --bs-badge-padding-y: 0.15rem;
   }
-
-  /*
-  .marker-focus {
-    box-shadow: 0px 0px 5px 2px orange;
-  }
-  */
 </style>

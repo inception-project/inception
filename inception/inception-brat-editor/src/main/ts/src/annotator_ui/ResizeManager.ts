@@ -81,7 +81,7 @@ export class ResizeManager {
     if (this.id) this.hide()
     this.id = id
 
-    const highlights = Array.from(this.visualizer.getHighlightsForSpan(id))
+    const highlights = Array.from(this.visualizer.getHighlightElementsForSpan(id))
     if (!highlights.length) return
     this.beginHandle.highlight = highlights[0]
     this.endHandle.highlight = highlights[highlights.length - 1]
