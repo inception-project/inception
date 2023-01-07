@@ -145,10 +145,10 @@ public class RecommendationEditorExtension
             return;
         }
 
-        ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
-
         // Create annotation
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
+            ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
+
             VID recommendationVid = VID.parse(aVID.getExtensionPayload());
             var prediction = getPrediction(aState, recommendationVid);
             SourceDocument document = aState.getDocument();
@@ -172,6 +172,8 @@ public class RecommendationEditorExtension
             }
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
+            ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
+
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {

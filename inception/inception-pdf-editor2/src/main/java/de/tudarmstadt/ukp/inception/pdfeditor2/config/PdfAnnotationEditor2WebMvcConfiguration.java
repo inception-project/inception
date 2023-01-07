@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.config;
 
+import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_VIEW_URL;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -29,10 +31,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class PdfAnnotationEditor2WebMvcConfiguration
     implements WebMvcConfigurer
 {
+    public static final String BASE_URL = BASE_VIEW_URL + "/pdfeditor2";
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
     {
-        aRegistry.addResourceHandler("/resources/pdfanno2/**") //
+        aRegistry.addResourceHandler(BASE_URL + "/**") //
                 .addResourceLocations(
                         "classpath:/de/tudarmstadt/ukp/inception/pdfeditor2/resources/");
     }

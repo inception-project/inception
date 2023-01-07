@@ -85,7 +85,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
 }
 
 function onPageRendered (ev) {
-  console.log('pagerendered:', ev.pageNumber)
+  // console.log('pagerendered:', ev.pageNumber)
 
   // No action, if the viewer is closed.
   if (!globalThis.PDFViewerApplication.pdfViewer.getPageView(0)) {
@@ -98,7 +98,6 @@ function onPageRendered (ev) {
 }
 
 function onScaleChange (ev) {
-  console.log('scalechanged')
   adjustPageGaps()
   removeAnnoLayer()
   renderAnno()
