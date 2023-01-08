@@ -18,7 +18,6 @@
      */
     import {
         AnnotatedText,
-        Annotation,
         DiamAjax,
         Offsets,
         Relation,

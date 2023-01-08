@@ -22,6 +22,7 @@
 
     export let annotation: Annotation;
     export let ajaxClient: DiamAjax;
+    export let showText: boolean = true;
 
     $: backgroundColor = annotation.color || "var(--bs-secondary)";
     $: textColor = bgToFgColor(backgroundColor);
@@ -38,7 +39,7 @@
     title={`${annotation.vid}@${annotation.layer.name}`}
     role="button" style="color: {textColor}; background-color: {backgroundColor}"
 >
-    {annotation.label || "No label"}
+    {showText ? annotation.label || "No label" : "\u00A0"}
 </span>
 
 <style>

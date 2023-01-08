@@ -52,29 +52,39 @@
             {#each sortedLabels as label}
                 {@const spans = groupedSpans[`${label}`] || []}
                 {@const relations = groupedRelations[`${label}`] || []}
-                <li class="list-group-item py-1 px-0">
-                    <div class="px-2 py-1 bg.-light fw-bold">
+                <li class="list-group-item py-1 px-0 border-0">
+                    <div class="px-2 py-1 bg.-light fw-bold sticky-top bg-body">
                         {label || 'No label'}
                     </div>
                     <ul class="ps-3 pe-0">
                         {#each spans as span}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <li class="list-group-item list-group-item-action py-1 px-2" on:click={() => scrollToSpan(span)}>
-                                <div class="float-end">
-                                    <LabelBadge annotation={span} {ajaxClient} />
+                            <li class="list-group-item list-group-item-action p-0 d-flex">
+                                <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
+                                    <div class="annotation-type-marker">␣</div>
                                 </div>
-            
-                                <SpanText {data} span={span} />
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(span)}>
+                                    <div class="float-end">
+                                        <LabelBadge annotation={span} {ajaxClient} showText={false} />
+                                    </div>
+                
+                                    <SpanText {data} span={span} />
+                                </div>
                             </li>
                         {/each}
                         {#each relations as relation}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <li class="list-group-item list-group-item-action py-1 px-2" on:click={() => scrollToRelation(relation)}>
-                                <div class="float-end">
-                                    <LabelBadge annotation={relation} {ajaxClient} />
+                            <li class="list-group-item list-group-item-action p-0 d-flex">
+                                <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
+                                    <div class="annotation-type-marker">→</div>
                                 </div>
-            
-                                <SpanText {data} span={relation.arguments[0].target} />
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
+                                    <div class="float-end">
+                                        <LabelBadge annotation={relation} {ajaxClient} showText={false} />
+                                    </div>
+
+                                    <SpanText {data} span={relation.arguments[0].target} />
+                                </div>
                             </li>
                         {/each}
                     </ul>
@@ -85,6 +95,9 @@
 </div>
 
 <style lang="scss">
-
+    .annotation-type-marker {
+        width: 1em;
+        text-align: center;
+    }
 </style>
   
