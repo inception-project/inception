@@ -24,10 +24,14 @@
 
     $: begin = span.offsets[0][0]
     $: end = span.offsets[0][1]
-    $: text = data.text.substring(begin, end)
+    $: text = data.text.substring(begin, end).trim()
 </script>
 
+{#if text.length === 0}
+<span class="text-muted">(empty span)</span>
+{:else}
 <span>{text.substring(0, 50)+(text.length > 50 ? '…' : '')}</span>
+{/if}
 
 <style>
 </style>
