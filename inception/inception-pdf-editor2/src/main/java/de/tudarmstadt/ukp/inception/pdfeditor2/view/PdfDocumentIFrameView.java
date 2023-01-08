@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
+import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -162,8 +163,7 @@ public class PdfDocumentIFrameView
     protected void onComponentTag(ComponentTag aTag)
     {
         UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
-
-        String viewerUrl = urlRenderer.renderContextRelativeUrl("resources/pdfanno2/viewer.html");
+        String viewerUrl = urlFor(PdfJsViewerPage.class, null).toString();
         String pdfUrl = urlRenderer.renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
         String vModelUrl = urlRenderer.renderFullUrl(Url.parse(vModelProvider.getCallbackUrl()));
 
