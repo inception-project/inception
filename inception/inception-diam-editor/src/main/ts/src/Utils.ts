@@ -31,7 +31,6 @@ export function uniqueLabels (data: AnnotatedText): string[] {
     }
   }
 
-  console.log(sortedLabels)
   return sortedLabels
 }
 

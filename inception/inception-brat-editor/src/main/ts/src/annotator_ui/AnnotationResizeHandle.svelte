@@ -22,7 +22,7 @@
   import { createEventDispatcher, onMount } from 'svelte'
   import { closestChunk } from '../visualizer/Visualizer'
 
-  export let highlight: Element
+  export let highlight: Element = undefined
   export let position: 'begin' | 'end'
   export let handle: Element
   export let marker: Element
