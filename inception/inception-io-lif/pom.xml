@@ -72,4 +72,21 @@
       <artifactId>groovy-xml</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <ignoredDependency>org.apache.groovy:groovy</ignoredDependency>
+              <ignoredDependency>org.apache.groovy:groovy-xml</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
