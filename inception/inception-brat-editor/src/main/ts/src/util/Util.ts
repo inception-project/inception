@@ -37,6 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { DiamAjax } from '@inception-project/inception-js-api'
 import { Box } from '@svgdotjs/svg.js'
 import { Dispatcher } from '../dispatcher/Dispatcher'
 import { EntityTypeDto, RelationTypeDto } from '../protocol/Protocol'
@@ -493,13 +494,13 @@ export class Util {
   // docData: the document data (in the format of the result of
   //   http://.../brat/ajax.cgi?action=getDocument&collection=...&document=...
   // returns the embedded visualizer's dispatcher object
-  embed (container: string, collData, docData) {
+  embed (container: string, ajax: DiamAjax, collData, docData) {
     const dispatcher = new Dispatcher()
 
     // eslint-disable-next-line no-new
     new Visualizer(dispatcher, container)
     // eslint-disable-next-line no-new
-    new VisualizerUI(dispatcher)
+    new VisualizerUI(dispatcher, ajax)
     docData.collection = null
     dispatcher.post('collectionLoaded', [collData])
     dispatcher.post('requestRenderData', [docData])
@@ -513,11 +514,11 @@ export class Util {
   //   simple `embed` instead)
   // callback: optional; the callback to call afterwards; it will be
   //   passed the embedded visualizer's dispatcher object
-  embedByURL (container: string | JQuery, collDataURL: string, docDataURL: string, callback?: Function) {
+  embedByURL (container: string | JQuery, ajax: DiamAjax, collDataURL: string, docDataURL: string, callback?: Function) {
     let collData, docData
     const handler = () => {
       if (collData && docData) {
-        const dispatcher = this.embed(container, collData, docData)
+        const dispatcher = this.embed(container, ajax, collData, docData)
         if (callback) callback(dispatcher)
       }
     }
