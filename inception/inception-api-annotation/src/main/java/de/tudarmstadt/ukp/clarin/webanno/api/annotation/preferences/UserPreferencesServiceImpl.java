@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
@@ -328,6 +329,14 @@ public class UserPreferencesServiceImpl
         private static final long serialVersionUID = 8809856241481077303L;
 
         private int defaultPageSize = 10;
+
+        public BratAnnotationEditorManagerPrefs()
+        {
+            AnnotationEditorDefaultPreferencesProperties defaults = ApplicationContextProvider
+                    .getApplicationContext()
+                    .getBean(AnnotationEditorDefaultPreferencesProperties.class);
+            defaultPageSize = defaults.getPageSize();
+        }
 
         public int getDefaultPageSize()
         {
