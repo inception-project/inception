@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +45,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -75,8 +78,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -171,46 +178,9 @@ public abstract class BratSuggestionVisualizer
                 AjaxEventBehavior.onEvent("click", _t -> actionShowAnnotatorComment(_t, annDoc)));
         queue(commentSymbol);
 
-        controller = new AbstractDefaultAjaxBehavior()
-        {
-            private static final long serialVersionUID = 1133593826878553307L;
-
-            @Override
-            protected void respond(AjaxRequestTarget aTarget)
-            {
-                try {
-                    final IRequestParameters request = getRequest().getPostParameters();
-                    String action = BratRequestUtils.getActionFromRequest(request);
-                    final VID paramId = BratRequestUtils.getVidFromRequest(request);
-
-                    if (LazyDetailsHandler.COMMAND.equals(action)) {
-                        AnnotatorSegmentState segment = getModelObject();
-                        AnnotatorState state = segment.getAnnotatorState();
-                        CasProvider casProvider = () -> documentService.readAnnotationCas(
-                                segment.getAnnotatorState().getDocument(),
-                                segment.getUser().getUsername());
-                        var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
-                                casProvider, state.getDocument(), segment.getUser(),
-                                state.getWindowBeginOffset(), state.getWindowEndOffset());
-
-                        try {
-                            BratRequestUtils.attachResponse(aTarget, vis, result);
-                        }
-                        catch (IOException e) {
-                            handleError("Unable to produce JSON response", e);
-                        }
-                    }
-                    else {
-                        onClientEvent(aTarget);
-                    }
-                }
-                catch (Exception e) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    error("Error: " + e.getMessage());
-                }
-            }
-
-        };
+        controller = new DiamAjaxBehavior().setGlobalHandlersEnabled(false)
+                .addPriorityHandler(new CurationLazyDetailsHandler())
+                .addPriorityHandler(new CurationActionAjaxRequestHandler());
         add(controller);
     }
 
@@ -393,4 +363,70 @@ public abstract class BratSuggestionVisualizer
     }
 
     protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;
+
+    private final class CurationLazyDetailsHandler
+        extends EditorAjaxRequestHandlerBase
+        implements Serializable
+    {
+        private static final long serialVersionUID = -5651753631846550817L;
+
+        @Override
+        public String getCommand()
+        {
+            return LazyDetailsHandler.COMMAND;
+        }
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            try {
+                final IRequestParameters request = getRequest().getPostParameters();
+                final VID paramId = BratRequestUtils.getVidFromRequest(request);
+
+                AnnotatorSegmentState segment = getModelObject();
+                AnnotatorState state = segment.getAnnotatorState();
+                CasProvider casProvider = () -> documentService.readAnnotationCas(
+                        segment.getAnnotatorState().getDocument(), segment.getUser().getUsername());
+                var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
+                        casProvider, state.getDocument(), segment.getUser(),
+                        state.getWindowBeginOffset(), state.getWindowEndOffset());
+                attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
+                return result;
+            }
+            catch (Exception e) {
+                return handleError("Unable to load lazy details", e);
+            }
+        }
+    }
+
+    private final class CurationActionAjaxRequestHandler
+        extends EditorAjaxRequestHandlerBase
+        implements Serializable
+    {
+        private static final long serialVersionUID = 8053988681869772378L;
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            try {
+                onClientEvent(aTarget);
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+            catch (Exception e) {
+                return handleError("Unable to scroll to annotation", e);
+            }
+        }
+
+        @Override
+        public String getCommand()
+        {
+            return "clientEvent";
+        }
+
+        @Override
+        public boolean accepts(Request aRequest)
+        {
+            return true;
+        }
+    }
 }
