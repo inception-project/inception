@@ -23,7 +23,12 @@
     <version>27.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-io-lif</artifactId>
-  <name>INCEpTION - IO - LIF</name>
+  <name>INCEpTION - IO - LIF (deprecated)</name>
+
+  <properties>
+    <groovy.version>4.0.7</groovy.version>
+  </properties>  
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -72,6 +77,18 @@
       <artifactId>groovy-xml</artifactId>
     </dependency>
   </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>${groovy.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <pluginManagement>
