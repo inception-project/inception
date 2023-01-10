@@ -42,10 +42,9 @@ import { Box, Svg, SVGTypeMapping, Point } from '@svgdotjs/svg.js'
 import { DocumentData } from '../visualizer/DocumentData'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
+import { DiamAjax } from '@inception-project/inception-js-api'
 import { EntityTypeDto, VID } from '../protocol/Protocol'
-import { closestChunk, Visualizer } from '../visualizer/Visualizer'
-import { timeStamp } from 'console'
+import { findClosestChunkElement, Visualizer } from '../visualizer/Visualizer'
 
 export class AnnotatorUI {
   private data: DocumentData
@@ -363,8 +362,8 @@ export class AnnotatorUI {
 
     // let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id')
     // let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id')
-    let chunkIndexFrom = closestChunk(sel.anchorNode)?.getAttribute('data-chunk-id')
-    let chunkIndexTo = closestChunk(sel.focusNode)?.getAttribute('data-chunk-id')
+    let chunkIndexFrom = findClosestChunkElement(sel.anchorNode)?.getAttribute('data-chunk-id')
+    let chunkIndexTo = findClosestChunkElement(sel.focusNode)?.getAttribute('data-chunk-id')
     // fallback for firefox (at least):
     // it's unclear why, but for firefox the anchor and focus node parents are always undefined,
     // the the anchor and focus nodes themselves do (often) have the necessary chunk ID. However,
