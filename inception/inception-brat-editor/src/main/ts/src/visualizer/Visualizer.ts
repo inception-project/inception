@@ -4111,9 +4111,9 @@ export class Visualizer {
   rangeToOffsets (range: Range | null) : Offsets | null {
     if (!range || !this.data) return null
 
-    let anchorNode = closestChunk(range.startContainer)
+    let anchorNode = findClosestChunkElement(range.startContainer)
     let anchorOffset = range.startOffset
-    let focusNode = closestChunk(range.endContainer)
+    let focusNode = findClosestChunkElement(range.endContainer)
     let focusOffset = range.endOffset
 
     // If neither approach worked, give up - the user didn't click on selectable text.
@@ -4195,13 +4195,13 @@ export class Visualizer {
  * @param target a DOM node.
  * @returns the closest highlight element or null if none is found.
  */
-export function closestChunk (target: Node | null): Element | null {
+export function findClosestChunkElement (target: Node | null): Element | null {
   if (target instanceof Text) {
     target = target.parentElement
   }
 
   if (target instanceof Element) {
-    return target.closest('[data-chunk-id]')
+    return target.closest(':not(.spacing)[data-chunk-id]')
   }
 
   return null
