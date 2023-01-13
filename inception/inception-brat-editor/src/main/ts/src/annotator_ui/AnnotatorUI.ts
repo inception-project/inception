@@ -653,25 +653,28 @@ export class AnnotatorUI {
   private endArcCreation (evt: MouseEvent, targetSpanId: VID | null) {
     if (!(evt.target instanceof Element) || !this.arcDragOrigin) return
 
-    this.stopArcDrag(evt.target)
+    try {
+      const targetValid = evt.target.classList.contains('reselectTarget')
+      let id: VID | null
+      if ((id = targetSpanId) && targetValid && (evt.shiftKey || this.arcDragOrigin !== id)) {
+        const originSpan = this.data.spans[this.arcDragOrigin]
+        const targetSpan = this.data.spans[id]
 
-    const targetValid = evt.target.classList.contains('reselectTarget')
-    let id: VID | null
-    if ((id = targetSpanId) && targetValid && (evt.shiftKey || this.arcDragOrigin !== id)) {
-      const originSpan = this.data.spans[this.arcDragOrigin]
-      const targetSpan = this.data.spans[id]
+        if (this.arcOptions && this.arcOptions.old_target) {
+          this.arcOptions.target = targetSpan.id
+          this.dispatcher.post('ajax', [this.arcOptions, 'edited'])
+        } else {
+          this.arcOptions = {
+            origin: originSpan.id,
+            target: targetSpan.id
+          }
 
-      if (this.arcOptions && this.arcOptions.old_target) {
-        this.arcOptions.target = targetSpan.id
-        this.dispatcher.post('ajax', [this.arcOptions, 'edited'])
-      } else {
-        this.arcOptions = {
-          origin: originSpan.id,
-          target: targetSpan.id
+          this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id)
         }
-
-        this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id)
       }
+    }
+    finally {
+      this.stopArcDrag(evt.target)
     }
   }
 
