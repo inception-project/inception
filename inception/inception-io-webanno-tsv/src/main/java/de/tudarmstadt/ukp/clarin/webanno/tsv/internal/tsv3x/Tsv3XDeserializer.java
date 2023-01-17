@@ -356,6 +356,7 @@ public class Tsv3XDeserializer
         List<TsvColumn> headerColumns = aDoc.getSchema()
                 .getHeaderColumns(aDoc.getSchema().getColumns());
 
+        int lineNo = 1;
         String line = aIn.readLine();
         try {
             while (!Tsv3XParserState.END.equals(state)) {
@@ -379,6 +380,12 @@ public class Tsv3XDeserializer
                 }
                 else {
                     fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
+                    int expectedFieldCount = headerColumns.size() + 3;
+                    if (fields.length != expectedFieldCount) {
+                        throw new IOException("Unable to parse line [" + lineNo + "] as [" + state
+                                + "]: [" + line + "] - expected [" + expectedFieldCount
+                                + "] fields but only found [" + fields.length + "]");
+                    }
 
                     // Get token metadata
                     id = fields[0];
@@ -495,6 +502,7 @@ public class Tsv3XDeserializer
 
                 prevState = state;
                 line = aIn.readLine();
+                lineNo++;
             }
 
             aDoc.getJCas().setDocumentText(text.toString());
@@ -519,8 +527,12 @@ public class Tsv3XDeserializer
             }
             fses.forEach(cas::addFsToIndexes);
         }
+        catch (IOException e) {
+            throw e;
+        }
         catch (Exception e) {
-            throw new IOException("Unable to parse line as [" + state + "]: [" + line + "]", e);
+            throw new IOException(
+                    "Unable to parse line [" + lineNo + "] as [" + state + "]: [" + line + "]", e);
         }
     }
 
