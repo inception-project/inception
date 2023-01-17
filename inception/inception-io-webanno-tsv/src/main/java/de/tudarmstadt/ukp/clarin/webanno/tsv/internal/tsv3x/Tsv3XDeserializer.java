@@ -381,7 +381,7 @@ public class Tsv3XDeserializer
                 else {
                     fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
                     int expectedFieldCount = headerColumns.size() + 3;
-                    if (fields.length != expectedFieldCount) {
+                    if (fields.length < expectedFieldCount) {
                         throw new IOException("Unable to parse line [" + lineNo + "] as [" + state
                                 + "]: [" + line + "] - expected [" + expectedFieldCount
                                 + "] fields but only found [" + fields.length + "]");
