@@ -39,6 +39,13 @@ public class ProjectImportRequest
     private final boolean importPermissions;
     private final User manager;
 
+    private ProjectImportRequest(Builder builder)
+    {
+        this.createMissingUsers = builder.createMissingUsers;
+        this.importPermissions = builder.importPermissions;
+        this.manager = builder.manager;
+    }
+
     /**
      * Request the import of a project, optionally creating any users referenced in the project but
      * missing in the current instance.
@@ -95,5 +102,44 @@ public class ProjectImportRequest
     public Optional<User> getManager()
     {
         return Optional.ofNullable(manager);
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private boolean createMissingUsers;
+        private boolean importPermissions;
+        private User manager;
+
+        private Builder()
+        {
+        }
+
+        public Builder withCreateMissingUsers(boolean aCreateMissingUsers)
+        {
+            this.createMissingUsers = aCreateMissingUsers;
+            return this;
+        }
+
+        public Builder withImportPermissions(boolean aImportPermissions)
+        {
+            this.importPermissions = aImportPermissions;
+            return this;
+        }
+
+        public Builder withManager(User aManager)
+        {
+            this.manager = aManager;
+            return this;
+        }
+
+        public ProjectImportRequest build()
+        {
+            return new ProjectImportRequest(this);
+        }
     }
 }
