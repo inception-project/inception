@@ -20,12 +20,14 @@ package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -137,6 +139,14 @@ public class MultiSelectTextFeatureEditor
             private static final long serialVersionUID = 7769511105678209462L;
 
             @Override
+            public void renderHead(IHeaderResponse aResponse)
+            {
+                super.renderHead(aResponse);
+
+                aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+            }
+
+            @Override
             protected List<ReorderableTag> getChoices(String aInput)
             {
                 return MultiSelectTextFeatureEditor.this
@@ -182,6 +192,9 @@ public class MultiSelectTextFeatureEditor
         aBehavior.setOption("animation", false);
         aBehavior.setOption("delay", 250);
         aBehavior.setOption("height", 300);
+        aBehavior.setOption("open", KendoChoiceDescriptionScriptReference.applyTooltipScript());
+        aBehavior.setOption("dataBound",
+                KendoChoiceDescriptionScriptReference.applyTooltipScript());
     }
 
     @SuppressWarnings("rawtypes")
