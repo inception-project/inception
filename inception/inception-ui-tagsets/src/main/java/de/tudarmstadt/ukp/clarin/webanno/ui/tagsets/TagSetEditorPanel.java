@@ -37,7 +37,6 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.validation.IValidatable;
@@ -53,7 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
@@ -71,7 +70,7 @@ public class TagSetEditorPanel
 
     private @SpringBean AnnotationSchemaService annotationSchemaService;
 
-    private ConfirmationDialog confirmationDialog;
+    private BootstrapModalDialog confirmationDialog;
 
     private IModel<Project> selectedProject;
     private IModel<TagSet> selectedTagSet;
@@ -101,13 +100,13 @@ public class TagSetEditorPanel
         queue(new LambdaAjaxButton<>("save", this::actionSave));
         queue(new LambdaAjaxLink("delete", this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(aTagSet.getObject().getId() != null)));
-        queue(new LambdaAjaxLink("cancel", this::actionCancel));
+        queue(new LambdaAjaxLink("cancel", this::actionClearSelectedTagset));
 
         queue(new AjaxDownloadLink("exportTagsetAsJson", this::exportTagsetAsJson));
         queue(new AjaxDownloadLink("exportTagsetAsTabSeparated", this::exportTagsetAsTabSeparated));
 
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
+        confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+        confirmationDialog.trapFocus();
         add(confirmationDialog);
     }
 
@@ -131,9 +130,10 @@ public class TagSetEditorPanel
 
     private void actionDelete(AjaxRequestTarget aTarget)
     {
-        confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
-                .setParameters(selectedTagSet.getObject().getName()));
-        confirmationDialog.setConfirmAction((_target) -> {
+        var dialogContent = new TagsetDeletionConfirmationDialogPanel(
+                BootstrapModalDialog.CONTENT_ID, selectedTagSet);
+
+        dialogContent.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
             for (AnnotationFeature ft : annotationSchemaService
@@ -147,12 +147,13 @@ public class TagSetEditorPanel
             annotationSchemaService.removeTagSet(selectedTagSet.getObject());
 
             _target.add(getPage());
-            actionCancel(_target);
+            actionClearSelectedTagset(_target);
         });
-        confirmationDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
-    private void actionCancel(AjaxRequestTarget aTarget)
+    private void actionClearSelectedTagset(AjaxRequestTarget aTarget)
     {
         selectedTagSet.setObject(null);
         selectedTag.setObject(null);

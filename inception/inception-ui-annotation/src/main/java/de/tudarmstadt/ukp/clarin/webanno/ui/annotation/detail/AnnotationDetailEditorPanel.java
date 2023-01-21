@@ -71,7 +71,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -90,7 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
@@ -138,7 +137,7 @@ public abstract class AnnotationDetailEditorPanel
     private final AttachedAnnotationListPanel relationListPanel;
 
     // Components
-    private final ConfirmationDialog deleteAnnotationDialog;
+    private final BootstrapModalDialog confirmationDialog;
     private final AnnotationPageBase editorPage;
 
     public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
@@ -151,11 +150,9 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
-        deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog");
-        deleteAnnotationDialog
-                .setTitleModel(new StringResourceModel("DeleteDialog.title", this, null));
-        deleteAnnotationDialog.setContentModel(Model.of());
-        add(deleteAnnotationDialog);
+        confirmationDialog = new BootstrapModalDialog("deleteAnnotationDialog");
+        confirmationDialog.trapFocus();
+        add(confirmationDialog);
 
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
@@ -816,11 +813,10 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
-            deleteAnnotationDialog.setContentModel(
-                    new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
-                            .setParameters(attachStatus.attachCount));
-            deleteAnnotationDialog.setConfirmAction(_target -> doDelete(_target, layer, vid));
-            deleteAnnotationDialog.show(aTarget);
+            var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
+            dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
+            confirmationDialog.open(dialogContent, aTarget);
             return;
         }
 
@@ -1536,9 +1532,17 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private static class AttachStatus
+    static class AttachStatus
+        implements Serializable
     {
+        private static final long serialVersionUID = -8359575377186677974L;
+
         boolean readOnlyAttached;
         int attachCount;
+
+        public int getAttachCount()
+        {
+            return attachCount;
+        }
     }
 }

@@ -33,8 +33,8 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.Statement;
@@ -42,7 +42,7 @@ import org.eclipse.rdf4j.model.Statement;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -77,7 +77,7 @@ public abstract class AbstractInfoPanel<T extends KBObject>
     protected IModel<? extends KBObject> handleModel;
     protected IModel<KnowledgeBase> kbModel;
 
-    private ConfirmationDialog confirmationDialog;
+    private BootstrapModalDialog confirmationDialog;
     private SubclassCreationDialog createSubclassDialog;
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
@@ -113,7 +113,8 @@ public abstract class AbstractInfoPanel<T extends KBObject>
         }
         add(content);
 
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+        confirmationDialog.trapFocus();
         add(confirmationDialog);
     }
 
@@ -270,26 +271,17 @@ public abstract class AbstractInfoPanel<T extends KBObject>
      */
     private void confirmActionDelete(AjaxRequestTarget aTarget)
     {
-        confirmationDialog
-                .setTitleModel(new StringResourceModel("kbobject.delete.confirmation.title", this));
-
         // find out whether there are statements that reference the object
         List<Statement> statementsWithReference = kbService
                 .listStatementsWithPredicateOrObjectReference(kbModel.getObject(),
                         kbObjectModel.getObject().getIdentifier());
 
-        if (statementsWithReference.isEmpty()) {
-            confirmationDialog.setContentModel(new StringResourceModel(
-                    "kbobject.delete.confirmation.content", this, handleModel));
-        }
-        else {
-            confirmationDialog.setContentModel(
-                    new StringResourceModel("kbobject.delete.confirmation.extendedContent", this,
-                            handleModel).setParameters(statementsWithReference.size()));
+        var dialogContent = new DeleteKBObjectConfirmationDialogPanel(
+                BootstrapModalDialog.CONTENT_ID, handleModel, Model.of(statementsWithReference));
 
-        }
-        confirmationDialog.setConfirmAction(this::actionDelete);
-        confirmationDialog.show(aTarget);
+        dialogContent.setConfirmAction(this::actionDelete);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionCreateSubclass(AjaxRequestTarget aTarget)

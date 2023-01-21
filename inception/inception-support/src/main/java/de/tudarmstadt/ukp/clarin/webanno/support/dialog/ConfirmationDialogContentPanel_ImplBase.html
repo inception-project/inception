@@ -27,9 +27,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-sm-12">
-            <p>
-              <wicket:container wicket:id="content" />
-            </p>
+            <wicket:child />
             <p>
               <span wicket:id="feedback"></span>
             </p>
@@ -40,11 +38,11 @@
     <div class="modal-footer">
       <button wicket:id="confirm" class="btn btn-primary">
         <i class="fas fa-check"></i>&nbsp;
-        <wicket:message key="confirm.label" />
+        <wicket:message key="confirm" />
       </button>
       <button wicket:id="cancel" class="btn btn-secondary">
         <i class="fas fa-times"></i>&nbsp;
-        <wicket:message key="cancel.label" />
+        <wicket:message key="cancel" />
       </button>
     </div>
   </form>

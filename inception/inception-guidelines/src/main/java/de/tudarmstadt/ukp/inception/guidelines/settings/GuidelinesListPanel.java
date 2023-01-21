@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
@@ -46,6 +46,7 @@ public class GuidelinesListPanel
 
     private @SpringBean GuidelinesService guidelinesService;
 
+    private BootstrapModalDialog confirmationDialog;
     private OverviewListChoice<String> overviewList;
     private IModel<Project> project;
     private IModel<String> guideline;
@@ -67,12 +68,20 @@ public class GuidelinesListPanel
         overviewList.setChoices(LoadableDetachableModel.of(this::listGuidelines));
         form.add(overviewList);
 
-        ConfirmationDialog confirmationDialog = new ConfirmationDialog("confirmationDialog");
-        confirmationDialog.setConfirmAction(this::actionDelete);
+        confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+        confirmationDialog.trapFocus();
         add(confirmationDialog);
 
-        LambdaAjaxButton<Void> delete = new LambdaAjaxButton<>("delete",
-                (t, f) -> confirmationDialog.show(t));
+        LambdaAjaxButton<Void> delete = new LambdaAjaxButton<>("delete", (t, f) -> {
+            if (!guideline.isPresent().getObject()) {
+                return;
+            }
+
+            var dialogContent = new DeleteGuidelinesConfirmationDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, guideline);
+            dialogContent.setConfirmAction(this::actionDelete);
+            confirmationDialog.open(dialogContent, t);
+        });
         form.add(delete);
     }
 
