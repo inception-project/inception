@@ -65,7 +65,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -86,7 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -140,7 +138,7 @@ public class MatrixWorkloadManagementPage
     private WebMarkupContainer actionContainer;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
-    private ChallengeResponseDialog resetDocumentDialog;
+    private ModalDialog confirmationDialog;
     private ModalDialog modalDialog;
     private ContextMenu contextMenu;
 
@@ -213,7 +211,7 @@ public class MatrixWorkloadManagementPage
         bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
 
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
+        add(confirmationDialog = new BootstrapModalDialog("resetDocumentDialog").trapFocus());
         add(contextMenu = new ContextMenu("contextMenu"));
     }
 
@@ -304,17 +302,30 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkResetDocument(AjaxRequestTarget aTarget)
     {
-        Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments().stream()
+        List<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments().stream()
                 .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
                 .collect(Collectors.toList());
 
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("BulkResetDocumentDialog.title", this));
-        resetDocumentDialog
-                .setMessageModel(new StringResourceModel("BulkResetDocumentDialog.text", this)
-                        .setParameters(selectedDocuments.size()));
-        resetDocumentDialog.setExpectedResponseModel(Model.of(getProject().getName()));
-        resetDocumentDialog.setConfirmAction(_target -> {
+        if (selectedDocuments.isEmpty()) {
+            info("No documents have been selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var dialogContent = new ResetAnnotationDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID, Model.of(selectedDocuments));
+
+        if (selectedDocuments.size() == 1) {
+            var annDoc = selectedDocuments.get(0);
+            var user = userRepository.get(annDoc.getUser());
+            dialogContent.setExpectedResponseModel(
+                    Model.of(user.getUiName() + " / " + annDoc.getName()));
+        }
+        else {
+            dialogContent.setExpectedResponseModel(Model.of(getProject().getName()));
+        }
+
+        dialogContent.setConfirmAction(_target -> {
             Map<String, User> userCache = new HashMap<>();
             for (AnnotationDocument document : selectedDocuments) {
                 User user = userCache.computeIfAbsent(document.getUser(),
@@ -328,19 +339,19 @@ public class MatrixWorkloadManagementPage
             reloadMatrixData();
             _target.add(documentMatrix);
         });
-        resetDocumentDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
-        resetDocumentDialog
-                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
-        resetDocumentDialog.setExpectedResponseModel(
+        var dialogContent = new ResetAnnotationDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID);
+
+        dialogContent.setExpectedResponseModel(
                 Model.of(aUser.getUiName() + " / " + aDocument.getName()));
-        resetDocumentDialog.setConfirmAction(_target -> {
+        dialogContent.setConfirmAction(_target -> {
             documentService.resetAnnotationCas(aDocument, aUser);
 
             success(format("The annotations of document [%s] for user [%s] have been set reset.",
@@ -350,17 +361,17 @@ public class MatrixWorkloadManagementPage
             reloadMatrixData();
             _target.add(documentMatrix);
         });
-        resetDocumentDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        resetDocumentDialog.setTitleModel( //
-                new StringResourceModel("ResetCurationDocumentDialog.title", this));
-        resetDocumentDialog.setMessageModel( //
-                new StringResourceModel("ResetCurationDocumentDialog.text", this));
-        resetDocumentDialog.setExpectedResponseModel(Model.of(aDocument.getName()));
-        resetDocumentDialog.setConfirmAction(_target -> {
+        var dialogContent = new ResetCurationDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID);
+
+        dialogContent.setExpectedResponseModel(Model.of(aDocument.getName()));
+        dialogContent.setConfirmAction(_target -> {
             curationService.deleteCurationCas(aDocument);
             documentService.setSourceDocumentState(aDocument, ANNOTATION_IN_PROGRESS);
 
@@ -371,7 +382,8 @@ public class MatrixWorkloadManagementPage
             reloadMatrixData();
             _target.add(documentMatrix);
         });
-        resetDocumentDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionBulkOpen(AjaxRequestTarget aTarget)

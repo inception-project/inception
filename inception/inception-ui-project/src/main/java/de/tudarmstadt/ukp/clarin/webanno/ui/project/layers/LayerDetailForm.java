@@ -49,7 +49,7 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
@@ -203,7 +203,7 @@ public class LayerDetailForm
         add(new LambdaAjaxLink("cancel", this::actionCancel));
 
         confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new StringResourceModel("DeleteLayerDialog.title", this));
+        confirmationDialog.setTitleModel(new ResourceModel("DeleteLayerDialog.title"));
         add(confirmationDialog);
     }
 
@@ -298,7 +298,7 @@ public class LayerDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog.setMessageModel(new StringResourceModel("DeleteLayerDialog.text", this));
+        confirmationDialog.setMessageModel(new ResourceModel("DeleteLayerDialog.text"));
         confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationLayer::getName));
 
         confirmationDialog.setConfirmAction((_target) -> {

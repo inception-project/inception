@@ -43,7 +43,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -71,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -106,7 +104,7 @@ public abstract class BratSuggestionVisualizer
 
     private final WebMarkupContainer vis;
     private final ModalDialog modalDialog;
-    private final ConfirmationDialog stateChangeConfirmationDialog;
+    private final BootstrapModalDialog confirmationDialog;
     private final AbstractDefaultAjaxBehavior controller;
     private final AbstractAjaxBehavior collProvider;
     private final AbstractAjaxBehavior docProvider;
@@ -156,17 +154,18 @@ public abstract class BratSuggestionVisualizer
 
         add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
 
-        stateChangeConfirmationDialog = new ConfirmationDialog("stateChangeConfirmationDialog");
-        stateChangeConfirmationDialog.setTitleModel(
-                new StringResourceModel("StateChangeConfirmationDialog.title", this, null));
-        stateChangeConfirmationDialog.setContentModel(
-                new StringResourceModel("StateChangeConfirmationDialog.text", this, null));
-        stateChangeConfirmationDialog.setConfirmAction(this::actionToggleAnnotationDocumentState);
-        add(stateChangeConfirmationDialog);
+        confirmationDialog = new BootstrapModalDialog("stateChangeConfirmationDialog");
+        confirmationDialog.trapFocus();
+        add(confirmationDialog);
 
         var annDoc = LoadableDetachableModel.of(this::getAnnotationDocument);
 
-        var stateToggle = new LambdaAjaxLink("stateToggle", stateChangeConfirmationDialog::show);
+        var stateToggle = new LambdaAjaxLink("stateToggle", _target -> {
+            var dialogContent = new StateChangeConfirmationDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, getModel().map(this::maybeAnonymizeUsername));
+            dialogContent.setConfirmAction(this::actionToggleAnnotationDocumentState);
+            confirmationDialog.open(dialogContent, _target);
+        });
         stateToggle.setOutputMarkupId(true);
         stateToggle.add(new SymbolLabel("state", annDoc.map(AnnotationDocument::getState)));
         add(stateToggle);

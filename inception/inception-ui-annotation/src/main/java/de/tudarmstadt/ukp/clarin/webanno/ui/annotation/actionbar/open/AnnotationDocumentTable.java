@@ -46,7 +46,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentStateFilterPanel;
@@ -70,8 +70,8 @@ public class AnnotationDocumentTable
         dataProvider = new AnnotationDocumentTableDataProvider(aModel);
 
         var columns = new ArrayList<IColumn<AnnotationDocument, AnnotationDocumentTableSortKeys>>();
-        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState().symbol()));
+        columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> item.getState()));
         columns.add(new AnnotationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
 

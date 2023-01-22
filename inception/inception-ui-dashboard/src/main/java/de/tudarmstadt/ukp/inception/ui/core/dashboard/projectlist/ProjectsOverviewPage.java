@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitia
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -135,7 +135,7 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private DataView<ProjectEntry> projectList;
     private PagingNavigator navigator;
-    private ConfirmationDialog confirmLeaveDialog;
+    private BootstrapModalDialog confirmationDialog;
     private Label noProjectsNotice;
     private TextField<String> nameFilter;
 
@@ -183,10 +183,9 @@ public class ProjectsOverviewPage
         nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
         queue(nameFilter);
 
-        confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE);
-        confirmLeaveDialog.setTitleModel(new StringResourceModel("leaveDialog.title", this));
-        confirmLeaveDialog.setContentModel(new StringResourceModel("leaveDialog.text", this));
-        queue(confirmLeaveDialog);
+        confirmationDialog = new BootstrapModalDialog(MID_CONFIRM_LEAVE);
+        confirmationDialog.trapFocus();
+        queue(confirmationDialog);
     }
 
     @Override
@@ -200,7 +199,6 @@ public class ProjectsOverviewPage
     @OnEvent
     public void onProjectRoleFilterStateChanged(ProjectRoleFilterStateChanged aEvent)
     {
-
         actionApplyFilter(aEvent.getTarget());
     }
 
@@ -454,13 +452,19 @@ public class ProjectsOverviewPage
 
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
-        confirmLeaveDialog.setConfirmAction((_target) -> {
+        var dialogContent = new LeaveProjectConfirmationDialogPanel(BootstrapModalDialog.CONTENT_ID,
+                Model.of(aProject));
+
+        dialogContent.setConfirmAction((_target) -> {
             projectService.revokeAllRoles(aProject, currentUser.getObject());
-            _target.add(projectListContainer);
+            allAccessibleProjects.detach();
+            dataProvider.refresh();
+            actionApplyFilter(_target);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");
         });
-        confirmLeaveDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)

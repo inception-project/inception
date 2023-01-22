@@ -38,7 +38,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -95,10 +95,8 @@ public class MatrixWorkflowActionBarItemGroup
 
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog");
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
-        resetDocumentDialog
-                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setTitleModel(new ResourceModel("ResetDocumentDialog.title"));
+        resetDocumentDialog.setMessageModel(new ResourceModel("ResetDocumentDialog.text"));
         resetDocumentDialog.setExpectedResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
         add(resetDocumentDialog);
