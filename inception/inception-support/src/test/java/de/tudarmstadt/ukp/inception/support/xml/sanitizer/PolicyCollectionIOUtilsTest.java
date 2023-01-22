@@ -25,9 +25,6 @@ import javax.xml.namespace.QName;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction;
-
 class PolicyCollectionIOUtilsTest
 {
     @Test

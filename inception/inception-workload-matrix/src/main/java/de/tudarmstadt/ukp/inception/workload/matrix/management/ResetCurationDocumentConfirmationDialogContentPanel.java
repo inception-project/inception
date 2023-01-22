@@ -15,20 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dkpro.core.io.nif.internal;
+package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
-/**
- * ITS vocabulary.
- * 
- * @see <a href="https://www.w3.org/TR/its20/">Internationalization Tag Set (ITS) Version 2.0</a>
- */
-public class ITS
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.ResourceModel;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialogContentPanel_ImplBase;
+
+public class ResetCurationDocumentConfirmationDialogContentPanel
+    extends ChallengeResponseDialogContentPanel_ImplBase
 {
-    public static final String PREFIX_ITS = "itsrdf";
+    private static final long serialVersionUID = -943392917974988048L;
 
-    public static final String NS_ITS = "http://www.w3.org/2005/11/its/rdf#";
-
-    public static final String PROP_TA_IDENT_REF = NS_ITS + "taIdentRef";
-
-    public static final String PROP_TA_CLASS_REF = NS_ITS + "taClassRef";
+    public ResetCurationDocumentConfirmationDialogContentPanel(String aId)
+    {
+        super(aId, new ResourceModel("title"));
+        queue(new Label("message", new ResourceModel("message")));
+    }
 }

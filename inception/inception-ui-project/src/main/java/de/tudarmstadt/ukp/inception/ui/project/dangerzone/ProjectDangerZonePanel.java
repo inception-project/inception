@@ -28,7 +28,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +59,8 @@ public class ProjectDangerZonePanel
 
         IModel<String> projectNameModel = PropertyModel.of(getModel(), "name");
         deleteDialog = new ChallengeResponseDialog("deleteProjectDialog");
-        deleteDialog.setTitleModel(new StringResourceModel("DeleteProjectDialog.title", this));
-        deleteDialog.setMessageModel(new StringResourceModel("DeleteProjectDialog.text", this));
+        deleteDialog.setTitleModel(new ResourceModel("DeleteProjectDialog.title"));
+        deleteDialog.setMessageModel(new ResourceModel("DeleteProjectDialog.text"));
         deleteDialog.setExpectedResponseModel(projectNameModel);
         deleteDialog.setConfirmAction(this::actionDeletePerform);
         add(deleteDialog);

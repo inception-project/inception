@@ -54,18 +54,16 @@ import eu.openminted.share.annotations.api.DocumentationResource;
  */
 @ResourceMetaData(name = "NLP Interchange Format (NIF) Reader")
 @DocumentationResource("${docbase}/format-reference.html#format-${command}")
-@MimeTypeCapability({MimeTypes.APPLICATION_X_NIF_TURTLE})
-@TypeCapability(
-        outputs = { 
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
-                "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem",
-                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity" })
+@MimeTypeCapability({ MimeTypes.APPLICATION_X_NIF_TURTLE })
+@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
+        "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem",
+        "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity" })
 public class NifReader
     extends JCasResourceCollectionReader_ImplBase
 {
@@ -82,35 +80,32 @@ public class NifReader
      * Enable/disable type mapping.
      */
     public static final String PARAM_MAPPING_ENABLED = ComponentParameters.PARAM_MAPPING_ENABLED;
-    @ConfigurationParameter(name = PARAM_MAPPING_ENABLED, mandatory = true, defaultValue = 
-            ComponentParameters.DEFAULT_MAPPING_ENABLED)
+    @ConfigurationParameter(name = PARAM_MAPPING_ENABLED, mandatory = true, defaultValue = ComponentParameters.DEFAULT_MAPPING_ENABLED)
     protected boolean mappingEnabled;
 
     /**
-     * Load the part-of-speech tag to UIMA type mapping from this location instead of locating
-     * the mapping automatically.
+     * Load the part-of-speech tag to UIMA type mapping from this location instead of locating the
+     * mapping automatically.
      */
-    public static final String PARAM_POS_MAPPING_LOCATION = 
-            ComponentParameters.PARAM_POS_MAPPING_LOCATION;
+    public static final String PARAM_POS_MAPPING_LOCATION = ComponentParameters.PARAM_POS_MAPPING_LOCATION;
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     private String posMappingLocation;
-    
+
     private MappingProvider posMappingProvider;
-    
+
     private Resource res;
     private Model model;
     private StmtIterator contextIterator;
     private int inFileCount;
-    
+
     @Override
-    public void initialize(UimaContext aContext)
-        throws ResourceInitializationException
+    public void initialize(UimaContext aContext) throws ResourceInitializationException
     {
         super.initialize(aContext);
-        
+
         posMappingProvider = createPosMappingProvider(this, posMappingLocation, posTagset,
                 getLanguage());
-        
+
         // Seek first article
         try {
             step();
@@ -119,7 +114,7 @@ public class NifReader
             throw new ResourceInitializationException(e);
         }
     }
-    
+
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
@@ -146,29 +141,28 @@ public class NifReader
         inFileCount++;
         step();
     }
-    
+
     private void closeAll()
     {
         res = null;
         contextIterator = null;
     }
-    
+
     @Override
     public void destroy()
     {
         closeAll();
         super.destroy();
     }
-    
+
     @Override
-    public boolean hasNext()
-        throws IOException, CollectionException
+    public boolean hasNext() throws IOException, CollectionException
     {
         // If there is still an iterator, then there is still data. This requires that we call
         // step() already during initialization.
         return contextIterator != null;
     }
-    
+
     /**
      * Seek article in file. Stop once article element has been found without reading it.
      */
@@ -188,7 +182,7 @@ public class NifReader
                         RDFDataMgr.read(model, is, RDFLanguages.filenameToLang(
                                 CompressionUtils.stripCompressionExtension(res.getLocation())));
                     }
-                    contextIterator = model.listStatements(null, RDF.type, 
+                    contextIterator = model.listStatements(null, RDF.type,
                             model.createResource(NIF.TYPE_CONTEXT));
                 }
                 else {
@@ -196,11 +190,11 @@ public class NifReader
                     return;
                 }
             }
-            
+
             if (contextIterator.hasNext()) {
                 return;
             }
-            
+
             // End of file reached
             closeAll();
         }

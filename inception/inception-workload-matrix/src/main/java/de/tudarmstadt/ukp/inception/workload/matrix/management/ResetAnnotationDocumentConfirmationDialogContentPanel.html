@@ -18,8 +18,14 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
-  <p>
+  <p class="text-center rounded border border-danger p-2">
     <wicket:container wicket:id="message" />
+  </p>
+  <p class="text-muted vw-50">
+    <wicket:message key="explanation" />
+  </p>
+  <p class="vw-50">
+    <wicket:container wicket:id="challenge" />
   </p>
 </wicket:extend>
 </html>

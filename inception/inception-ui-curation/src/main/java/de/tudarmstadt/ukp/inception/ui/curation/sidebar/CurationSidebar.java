@@ -161,9 +161,7 @@ public class CurationSidebar
         IModel<String> documentNameModel = PropertyModel.of(getAnnotationPage().getModel(),
                 "document.name");
         add(mergeConfirm = new MergeDialog("mergeConfirmDialog",
-                new StringResourceModel("mergeConfirmTitle", this),
-                new StringResourceModel("mergeConfirmText", this)
-                        .setModel(getAnnotationPage().getModel()).setParameters(documentNameModel),
+                new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
                 documentNameModel, curationWorkflowModel));
         mainContainer.add(mergeConfirm);
 
