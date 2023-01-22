@@ -140,9 +140,8 @@ public class BratSerializerImpl
                         }) //
                         .collect(toList());
 
-                Entity entity = new Entity(vspan.getVid(), getBratTypeName(vspan.getLayer()),
-                        offsets, vspan.getLabelHint(), vspan.getColorHint(),
-                        vspan.isActionButtons());
+                Entity entity = new Entity(vspan.getVid(), getBratTypeName(vspan.getLayer()), offsets,
+                        vspan.getLabelHint(), vspan.getColorHint(), vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
                     // we simply set the popup to the empty string here.

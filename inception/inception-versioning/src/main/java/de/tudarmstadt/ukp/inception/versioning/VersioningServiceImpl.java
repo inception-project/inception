@@ -283,16 +283,16 @@ public class VersioningServiceImpl
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
 
-            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null,
-                    null, layer, annotationService);
+            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null, null, layer,
+                    annotationService);
             exLayers.add(exMainLayer);
 
             // If the layer is attached to another layer, then we also have to export
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
                 AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils
-                        .exportLayerDetails(null, null, attachLayer, annotationService);
+                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils.exportLayerDetails(null, null,
+                        attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
                 exLayers.add(exAttachLayer);
