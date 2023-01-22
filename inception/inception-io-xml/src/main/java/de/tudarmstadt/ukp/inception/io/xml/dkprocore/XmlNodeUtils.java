@@ -50,19 +50,21 @@ public class XmlNodeUtils
                 .map(XmlAttribute::getValue);
     }
 
-    public static void removeFromTree(XmlElement aElement)
+    public static void removeFromTree(XmlElement... aElement)
     {
-        ArrayList<XmlNode> newSiblings = new ArrayList<>();
-        var parent = aElement.getParent();
-        var siblings = parent.getChildren().toArray(new XmlNode[parent.getChildren().size()]);
-        var i = indexOf(siblings, aElement);
-        asList(subarray(siblings, 0, i)).forEach(newSiblings::add);
-        aElement.getChildren().forEach(child -> {
-            child.setParent(parent);
-            newSiblings.add(child);
-        });
-        asList(subarray(siblings, i + 1, siblings.length)).forEach(newSiblings::add);
-        parent.setChildren(createFSArray(aElement.getJCas(), newSiblings));
-        aElement.removeFromIndexes();
+        for (var e : aElement) {
+            ArrayList<XmlNode> newSiblings = new ArrayList<>();
+            var parent = e.getParent();
+            var siblings = parent.getChildren().toArray(new XmlNode[parent.getChildren().size()]);
+            var i = indexOf(siblings, e);
+            asList(subarray(siblings, 0, i)).forEach(newSiblings::add);
+            e.getChildren().forEach(child -> {
+                child.setParent(parent);
+                newSiblings.add(child);
+            });
+            asList(subarray(siblings, i + 1, siblings.length)).forEach(newSiblings::add);
+            parent.setChildren(createFSArray(e.getJCas(), newSiblings));
+            e.removeFromIndexes();
+        }
     }
 }
