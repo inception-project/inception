@@ -30,9 +30,27 @@
     function handleClick (ev: MouseEvent) {
       ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
     }
+
+    function handleAccept (ev: MouseEvent) {
+      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
+
+    function handleReject (ev: MouseEvent) {
+      ajaxClient.triggerExtensionAction(annotation.vid);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+{#if annotation.vid.toString().startsWith('rec:')}
+<div class="btn-group" role="group" aria-label="Basic example">
+  <button type="button" class="btn btn-success py-0 px-1" on:click={handleAccept} title="Accept">
+    <i class="far fa-check-circle"></i>
+  </button>
+  <button type="button" class="btn btn-danger py-0 px-1"  on:click={handleReject} title="Reject">
+    <i class="far fa-times-circle"></i>
+  </button>
+</div>
+{:else}  
 <span
     class="badge border border-dark ms-1 fw-normal"
     on:click={handleClick}
@@ -41,6 +59,7 @@
 >
     {showText ? annotation.label || "No label" : "\u00A0"}
 </span>
+{/if}
 
 <style>
   .badge {
