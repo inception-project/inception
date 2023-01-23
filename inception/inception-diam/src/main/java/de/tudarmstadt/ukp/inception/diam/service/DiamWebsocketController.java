@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -197,6 +198,13 @@ public class DiamWebsocketController
     public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
     {
         sendUpdate(aEvent.getDocument());
+    }
+
+    @EventListener
+    public void onRecommendationRejected(TransientAnnotationStateChangedEvent aEvent)
+    {
+        var doc = aEvent.getDocument();
+        sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);
     }
 
     @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
