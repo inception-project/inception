@@ -22,10 +22,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-/**
- * @deprecated Need to check if we want to keep this for DIAM
- */
-@Deprecated
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "label", "value" })
 public class LazyDetailQuery

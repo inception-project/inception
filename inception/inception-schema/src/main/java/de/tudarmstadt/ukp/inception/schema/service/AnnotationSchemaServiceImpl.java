@@ -313,26 +313,28 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public Tag getTag(String aTagName, TagSet aTagSet)
+    public Optional<Tag> getTag(String aTagName, TagSet aTagSet)
     {
-        return entityManager
-                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet = :tagSet", Tag.class)
-                .setParameter("name", aTagName) //
-                .setParameter("tagSet", aTagSet) //
-                .getSingleResult();
+        try {
+            return Optional.of(entityManager
+                    .createQuery("FROM Tag WHERE name = :name AND tagSet = :tagSet", Tag.class)
+                    .setParameter("name", aTagName) //
+                    .setParameter("tagSet", aTagSet) //
+                    .getSingleResult());
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
+    /**
+     * @deprecated Use {@code getTag(name, tagset).isPresent()}.
+     */
+    @Deprecated
     @Override
     public boolean existsTag(String aTagName, TagSet aTagSet)
     {
-
-        try {
-            getTag(aTagName, aTagSet);
-            return true;
-        }
-        catch (NoResultException e) {
-            return false;
-        }
+        return getTag(aTagName, aTagSet).isPresent();
     }
 
     @Override

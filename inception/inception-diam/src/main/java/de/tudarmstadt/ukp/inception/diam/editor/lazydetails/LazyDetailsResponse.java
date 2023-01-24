@@ -27,10 +27,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
  * 
  * This is essentially present in brat, but there {@code results} would be a member of an array
  * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
- * 
- * @deprecated Need to check if we want to keep this for DIAM
  */
-@Deprecated
 public class LazyDetailsResponse
     extends AjaxResponse
 {

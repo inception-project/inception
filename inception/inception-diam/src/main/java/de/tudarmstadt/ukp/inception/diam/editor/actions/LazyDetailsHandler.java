@@ -67,7 +67,7 @@ public class LazyDetailsHandler
             final VID paramId = getVid(aRequest);
 
             AnnotatorState state = page.getModelObject();
-            var result = lazyDetailsLookupService.actionLookupNormData(
+            var result = lazyDetailsLookupService.lookupLazyDetails(
                     aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
                     state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
             attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
