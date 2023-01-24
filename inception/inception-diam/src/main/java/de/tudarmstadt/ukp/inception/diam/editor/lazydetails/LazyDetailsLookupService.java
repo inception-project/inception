@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public interface LazyDetailsLookupService
 {
-    LazyDetailsResponse actionLookupNormData(IRequestParameters request, VID paramId,
+    LazyDetailsResponse lookupLazyDetails(IRequestParameters request, VID paramId,
             CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
             int windowEndOffset)
         throws AnnotationException, IOException;

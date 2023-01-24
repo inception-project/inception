@@ -386,7 +386,7 @@ public abstract class BratSuggestionVisualizer
                 AnnotatorState state = segment.getAnnotatorState();
                 CasProvider casProvider = () -> documentService.readAnnotationCas(
                         segment.getAnnotatorState().getDocument(), segment.getUser().getUsername());
-                var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
+                var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         casProvider, state.getDocument(), segment.getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());
                 attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
