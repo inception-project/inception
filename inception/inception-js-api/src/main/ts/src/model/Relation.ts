@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, VID } from '.'
-import { Argument } from './Argument'
-import { Layer } from './Layer'
+import { Annotation, VID, Argument, Layer, Comment } from '.'
 
 export class Relation implements Annotation {
   layer: Layer
   vid: VID
   color?: string
   label?: string
+  comments?: Comment[]
   arguments: Array<Argument>
 }

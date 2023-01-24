@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, Offsets, VID } from '.'
+import { Annotation, Offsets, VID, Comment } from '.'
 import { Layer } from './Layer'
 
 export type ClippingStatus = undefined | 's' | 'e' | 'se'
@@ -26,9 +26,22 @@ export class Span implements Annotation {
   offsets: Array<Offsets>
   color?: string
   label?: string
+  comments?: Comment[]
 
   /**
    * Clipping status (optional)
    */
   clippingFlags?: ClippingStatus
+
+  constructor (other?: Span) {
+    if (other) {
+      this.layer = other.layer
+      this.vid = other.vid
+      this.offsets = other.offsets
+      this.color = other.color
+      this.label = other.label
+      this.comments = other.comments
+      this.clippingFlags = other.clippingFlags
+    }
+  }
 }

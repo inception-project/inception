@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { CompactComment } from '.'
+
 export interface CompactAnnotationAttributes {
   /**
    * Label (optional)
@@ -25,4 +27,9 @@ export interface CompactAnnotationAttributes {
    * Color (optional)
    */
   c: string;
+
+  /**
+   * Comments (optional)
+   */
+  cm: CompactComment[];
 }

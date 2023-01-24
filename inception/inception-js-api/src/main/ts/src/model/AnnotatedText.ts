@@ -48,4 +48,12 @@ export class AnnotatedText {
     yield * this.spans.values()
     yield * this.relations.values()
   }
+
+  public addAnnotation (annotation: Span | Relation) {
+    if (annotation instanceof Span) {
+      this.spans.set(annotation.vid, annotation)
+    } else if (annotation instanceof Relation) {
+      this.relations.set(annotation.vid, annotation)
+    }
+  }
 }

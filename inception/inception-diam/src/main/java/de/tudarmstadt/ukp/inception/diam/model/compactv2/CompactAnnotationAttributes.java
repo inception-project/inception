@@ -17,15 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonInclude(Include.NON_EMPTY)
 public class CompactAnnotationAttributes
 {
     public static final String ATTR_LABEL = "l";
     public static final String ATTR_COLOR = "c";
+    public static final String ATTR_COMMENTS = "cm";
 
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
+    private @JsonProperty(ATTR_COMMENTS) List<CompactComment> comments;
 
     public void setLabelText(String aLabelText)
     {
@@ -45,5 +53,19 @@ public class CompactAnnotationAttributes
     public void setColor(String aColor)
     {
         color = aColor;
+    }
+
+    public List<CompactComment> getComments()
+    {
+        if (comments == null) {
+            comments = new ArrayList<>();
+        }
+
+        return comments;
+    }
+
+    public void setComments(List<CompactComment> aComments)
+    {
+        comments = aComments;
     }
 }
