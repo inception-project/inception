@@ -120,6 +120,14 @@ public class MultiSelectTextFeatureEditor
             private static final long serialVersionUID = 1L;
 
             @Override
+            public void renderHead(IHeaderResponse aResponse)
+            {
+                super.renderHead(aResponse);
+
+                aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+            }
+
+            @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
                 super.onConfigure(aBehavior);
