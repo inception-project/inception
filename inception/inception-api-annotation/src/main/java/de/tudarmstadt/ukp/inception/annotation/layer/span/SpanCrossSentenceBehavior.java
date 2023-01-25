@@ -130,7 +130,7 @@ public class SpanCrossSentenceBehavior
             }
 
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
-                aResponse.add(new VComment(new VID(fs), ERROR,
+                aResponse.add(new VComment(VID.of(fs), ERROR,
                         "Crossing sentence boundaries is not permitted."));
             }
         }

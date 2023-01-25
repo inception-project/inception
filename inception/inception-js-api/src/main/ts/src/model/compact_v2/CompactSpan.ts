@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import { Offsets, Span, VID, AnnotatedText } from '..'
+import { unpackCompactComments } from './CompactComment'
 import { CompactSpanAttributes } from './CompactSpanAttributes'
 
 export type CompactSpan = [
@@ -33,5 +34,6 @@ export function unpackCompactSpan (doc: AnnotatedText, raw: CompactSpan): Span {
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   cooked.clippingFlags = raw[3]?.cl
+  cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked
 }
