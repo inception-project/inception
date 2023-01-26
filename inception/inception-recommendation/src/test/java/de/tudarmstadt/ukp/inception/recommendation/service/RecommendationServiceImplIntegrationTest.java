@@ -20,7 +20,10 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.getOffsetsAnchoredOnTokens;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.JCasFactory.createJCas;
+import static org.apache.uima.fit.factory.JCasFactory.createText;
 import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,9 +37,10 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
-import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,8 +60,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -179,7 +186,7 @@ public class RecommendationServiceImplIntegrationTest
     public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            JCas jCas = JCasFactory.createText("I am text CAS", "de");
+            JCas jCas = createText("I am text CAS", "de");
             session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
 
             when(annoService.getFullProjectTypeSystem(project))
@@ -197,6 +204,34 @@ public class RecommendationServiceImplIntegrationTest
                     .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
                     .contains(FEATURE_NAME_IS_PREDICTION);
         }
+    }
+
+    @Test
+    void thatZeroWithAnnotationsAreCorretlyAnchoredOnTokens() throws Exception
+    {
+        JCas jCas = createJCas();
+        TokenBuilder.create(Token.class, Sentence.class).buildTokens(jCas, "  This is  a test.  ");
+        var textLength = jCas.getDocumentText().length();
+        var tokens = jCas.select(Token.class).asList();
+        var firstTokenBegin = tokens.get(0).getBegin();
+        var lastTokenEnd = tokens.get(tokens.size() - 1).getEnd();
+
+        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 0, 0))).get()
+                .as("Zero-width annotation before first token snaps to first token start")
+                .isEqualTo(new Offset(firstTokenBegin, firstTokenBegin));
+
+        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(),
+                new Annotation(jCas, textLength, textLength))).get()
+                        .as("Zero-width annotation after last token snaps to last token end")
+                        .isEqualTo(new Offset(lastTokenEnd, lastTokenEnd));
+
+        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 4, 4))).get()
+                .as("Zero-width annotation within token remains") //
+                .isEqualTo(new Offset(4, 4));
+
+        assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 10, 10))).get()
+                .as("Zero-width annotation between tokens snaps to end of previous") //
+                .isEqualTo(new Offset(9, 9));
     }
 
     // Helper
