@@ -138,12 +138,7 @@ function renderAnno () {
   }
 
   // Check already exists.
-  if (
-  //    document.getElementById(svgLayerId) &&
-    document.getElementById(annoLayer2Id)
-  ) {
-    return
-  }
+  if (document.getElementById(annoLayer2Id)) return
 
   const viewer = document.getElementById('viewer')
   if (!viewer) {
@@ -167,18 +162,21 @@ function renderAnno () {
   const height = viewer.clientHeight
   const width = pageElement.clientWidth
 
-  // TODO no need ?
-  // Add an annotation layer.
-  // let annoLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  // annoLayer.classList.add('annoLayer')
-  // annoLayer.id = svgLayerId
-  // annoLayer.style.position= 'absolute'
-  // annoLayer.style.top= '0px'
-  // annoLayer.style.left= `${leftMargin}px`
-  // annoLayer.style.width= `${width}px`
-  // annoLayer.style.height= `${height}px`
-  // annoLayer.style.visibility= 'hidden'
-  // annoLayer.style.zIndex = '2'
+  let markerLayer = document.getElementById('markerLayer')
+  if (!markerLayer) {
+    markerLayer = document.createElement('div')
+    markerLayer.id = 'markerLayer'
+    markerLayer.classList.add('markerLayer')
+    markerLayer.style.position = 'absolute'
+    markerLayer.style.top = '0px'
+    markerLayer.style.visibility = 'hidden'
+    markerLayer.style.overflow = 'hidden'
+    markerLayer.style.zIndex = '3'
+    viewer.appendChild(markerLayer)
+  }
+  markerLayer.style.left = `${leftMargin}px`
+  markerLayer.style.width = `${width}px`
+  markerLayer.style.height = `${height}px`
 
   const annoLayer2 = document.createElement('div')
   annoLayer2.id = annoLayer2Id
@@ -192,7 +190,6 @@ function renderAnno () {
   annoLayer2.style.zIndex = '2'
 
   viewer.style.position = 'relative'
-  // viewer.appendChild(annoLayer)
   viewer.appendChild(annoLayer2)
 
   dispatchWindowEvent('annotationlayercreated')
@@ -225,9 +222,9 @@ export function scrollTo (offset: number, position: string): void {
   }
 
   const rectangles = mapToDocumentCoordinates(getGlyphsInRange([offset, offset + 1]).map(g => g.bbox))
-  const annoLayer = document.getElementById('annoLayer2')
-  if (!annoLayer) {
-    console.error('No annoLayer found.')
+  const markerLayer = document.getElementById('markerLayer')
+  if (!markerLayer) {
+    console.error('No marker layer found.')
     return
   }
 
@@ -237,16 +234,20 @@ export function scrollTo (offset: number, position: string): void {
     return
   }
 
+  markerLayer.querySelectorAll('.ping').forEach((ping) => ping.remove())
+
   let base: HTMLElement = document.createElement('div')
-  base.classList.add('anno-span')
+  base.classList.add('anno-span', 'ping')
   base.style.zIndex = '10'
   const child = createRect(rectangles[0])
+  child.classList.add('ping')
   base.appendChild(child)
 
   const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
-  base = transform(annoLayer, base, viewport)
-  annoLayer.appendChild(base)
+  base = transform(markerLayer, base, viewport)
+  markerLayer.appendChild(base)
   child.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
+  child.animate([{ opacity: 0.75, width: child.style.width }, { opacity: 0, width: '50px' }], { duration: 5000, iterations: 1 })
   setTimeout(() => base.remove(), 5000) // Need to defer so scrolling can complete
 }
 
