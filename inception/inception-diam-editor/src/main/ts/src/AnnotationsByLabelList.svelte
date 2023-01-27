@@ -44,8 +44,21 @@
     function scrollToRelation (relation: Relation) {
         ajaxClient.scrollTo({ id: relation.vid });
     }
+
+    function handleDelete (ev: MouseEvent) {
+      ajaxClient.deleteAnnotation(annotation.vid)
+    }
 </script>
 
+{#if !data}
+<div class="mt-5 d-flex flex-column justify-content-center">
+    <div class="d-flex flex-row justify-content-center">
+        <div class="spinner-border text-muted" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+</div>
+{:else}
 <div class="flex-content fit-child-snug">
     {#if sortedLabels || sortedLabels?.length}
         <ul class="scrolling flex-content list-group list-group-flush">
@@ -66,6 +79,9 @@
                                 <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(span)}>
                                     <div class="float-end">
                                         <LabelBadge annotation={span} {ajaxClient} showText={false} />
+                                        <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                 
                                     <SpanText {data} span={span} />
@@ -81,6 +97,9 @@
                                 <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                     <div class="float-end">
                                         <LabelBadge annotation={relation} {ajaxClient} showText={false} />
+                                        <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
 
                                     <SpanText {data} span={relation.arguments[0].target} />
@@ -93,6 +112,7 @@
         </ul>
     {/if}
 </div>
+{/if}
 
 <style lang="scss">
     .annotation-type-marker {
