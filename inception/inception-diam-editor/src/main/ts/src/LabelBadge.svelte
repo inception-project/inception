@@ -16,57 +16,102 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    import { Annotation, DiamAjax } from "@inception-project/inception-js-api"
-    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring"
+    import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
+    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
 
-    export let annotation: Annotation
-    export let ajaxClient: DiamAjax
-    export let showText: boolean = true
+    export let annotation: Annotation;
+    export let ajaxClient: DiamAjax;
+    export let showText: boolean = true;
 
-    $: backgroundColor = annotation.color || "var(--bs-secondary)"
-    $: textColor = bgToFgColor(backgroundColor)
+    $: backgroundColor = annotation.color || "var(--bs-secondary)";
+    $: textColor = bgToFgColor(backgroundColor);
 
-    function handleClick (ev: MouseEvent) {
-      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })
+    function handleSelect(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
     }
 
-    function handleAccept (ev: MouseEvent) {
-      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })
+    function handleAccept(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
     }
 
-    function handleReject (ev: MouseEvent) {
-      ajaxClient.triggerExtensionAction(annotation.vid)
+    function handleReject(ev: MouseEvent) {
+        ajaxClient.triggerExtensionAction(annotation.vid);
+    }
+
+    function handleDelete(ev: MouseEvent) {
+        ajaxClient.deleteAnnotation(annotation.vid);
+    }
+
+    function handleScrollTo(ev: MouseEvent) {
+        ajaxClient.scrollTo({ id: annotation.vid });
     }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-{#if annotation.vid.toString().startsWith('rec:')}
-{#if annotation.score}
-<span class="text-muted small">{annotation.score}</span>
-{/if}
-<div class="btn-group" role="group">
-  <button type="button" class="btn btn-success py-0 px-1" on:click={handleAccept} title="Accept">
-    <i class="far fa-check-circle"></i>
-  </button>
-  <button type="button" class="btn btn-danger py-0 px-1"  on:click={handleReject} title="Reject">
-    <i class="far fa-times-circle"></i>
-  </button>
-</div>
-{:else}  
-<span
-    class="badge border border-dark ms-1 fw-normal"
-    on:click={handleClick}
-    title={`${annotation.vid}@${annotation.layer.name}`}
-    role="button" style="color: {textColor}; background-color: {backgroundColor}"
->
-  {showText ? annotation.label || "No label" : "\u00A0"}
-</span>
+{#if annotation.vid.toString().startsWith("rec:")}
+    <div class="btn-group mb-0 ms-1" role="group">
+        <!-- {#if showText}
+            <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm py-0 px-1 "
+                on:click={handleScrollTo}
+                title="Scroll to suggestion"
+            >
+                <i class="fas fa-crosshairs" />
+            </button>
+        {/if} -->
+        <button
+            type="button"
+            class="btn btn-outline-success btn-sm py-0 px-1"
+            on:click={handleAccept}
+            title="Accept"
+        >
+            <i class="far fa-check-circle" />
+            {#if showText}
+                {annotation.label || "No label"}
+            {/if}
+            {#if annotation.score}
+                <span class="text-muted small">{annotation.score}</span>
+            {/if}
+        </button>
+        <button
+            type="button"
+            class="btn btn-outline-danger btn-sm py-0 px-1"
+            on:click={handleReject}
+            title="Reject"
+        >
+            <i class="far fa-times-circle" />
+        </button>
+    </div>
+{:else}
+    <div class="btn-group mb-0 ms-1" role="group">
+        <button
+            type="button"
+            class="btn btn-colored btn-sm py-0 px-1 border-dark"
+            style="color: {textColor}; background-color: {backgroundColor}"
+            on:click={handleSelect}
+            title="Select"
+        >
+            {#if showText}
+                {annotation.label || "No label"}
+            {:else}
+                <i class="fas fa-crosshairs" />
+            {/if}
+        </button>
+        <button
+            type="button"
+            class="btn btn-colored btn-sm py-0 px-1 border-dark"
+            style="color: {textColor}; background-color: {backgroundColor}"
+            on:click={handleDelete}
+            title="Delete"
+        >
+            <i class="far fa-times-circle" />
+        </button>
+    </div>
 {/if}
 
-<style>
-  .badge {
-    font-family: sans-serif;
-    white-space: normal;
-    --bs-badge-padding-y: 0.15rem;
-  }
+<style lang="scss">
+    .btn-colored:hover {
+        filter: brightness(0.8);
+    }
 </style>
