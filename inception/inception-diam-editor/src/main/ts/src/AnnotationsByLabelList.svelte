@@ -22,31 +22,27 @@
         DiamAjax,
         Relation,
         Span,
-    } from "@inception-project/inception-js-api";
-    import LabelBadge from "./LabelBadge.svelte";
-    import SpanText from "./SpanText.svelte";
-    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels } from "./Utils";
+    } from "@inception-project/inception-js-api"
+    import LabelBadge from "./LabelBadge.svelte"
+    import SpanText from "./SpanText.svelte"
+    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels } from "./Utils"
 
-    export let ajaxClient: DiamAjax;
-    export let data: AnnotatedText;
+    export let ajaxClient: DiamAjax
+    export let data: AnnotatedText
 
-    let groupedSpans: Record<string, Span[]>;
-    let sortedLabels: string[];
+    let groupedSpans: Record<string, Span[]>
+    let sortedLabels: string[]
 
-    $: groupedSpans = groupSpansByLabel(data);
-    $: groupedRelations = groupRelationsByLabel(data);
-    $: sortedLabels = uniqueLabels(data);
+    $: groupedSpans = groupSpansByLabel(data)
+    $: groupedRelations = groupRelationsByLabel(data)
+    $: sortedLabels = uniqueLabels(data)
 
     function scrollToSpan (span: Span) {
-        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
+        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] })
     }
 
     function scrollToRelation (relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid });
-    }
-
-    function handleDelete (ev: MouseEvent) {
-      ajaxClient.deleteAnnotation(annotation.vid)
+        ajaxClient.scrollTo({ id: relation.vid })
     }
 </script>
 
@@ -65,11 +61,11 @@
             {#each sortedLabels as label}
                 {@const spans = groupedSpans[`${label}`] || []}
                 {@const relations = groupedRelations[`${label}`] || []}
-                <li class="list-group-item py-1 px-0 border-0">
-                    <div class="px-2 py-1 bg.-light fw-bold sticky-top bg-body">
+                <li class="list-group-item py-0 px-0 border-0">
+                    <div class="px-2 py-1 bg.-light fw-bold sticky-top bg-light border-top border-bottom">
                         {label || 'No label'}
                     </div>
-                    <ul class="ps-3 pe-0">
+                    <ul class="px-0 list-group list-group-flush">
                         {#each spans as span}
                             <li class="list-group-item list-group-item-action p-0 d-flex">
                                 <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
@@ -79,9 +75,6 @@
                                 <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(span)}>
                                     <div class="float-end">
                                         <LabelBadge annotation={span} {ajaxClient} showText={false} />
-                                        <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
-                                            <i class="fas fa-times"></i>
-                                        </button>
                                     </div>
                 
                                     <SpanText {data} span={span} />
@@ -97,9 +90,6 @@
                                 <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                     <div class="float-end">
                                         <LabelBadge annotation={relation} {ajaxClient} showText={false} />
-                                        <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
-                                            <i class="fas fa-times"></i>
-                                        </button>
                                     </div>
 
                                     <SpanText {data} span={relation.arguments[0].target} />
