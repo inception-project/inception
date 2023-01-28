@@ -33,6 +33,7 @@ export function unpackCompactSpan (doc: AnnotatedText, raw: CompactSpan): Span {
   cooked.offsets = raw[2]
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
+  cooked.score = raw[3]?.s
   cooked.clippingFlags = raw[3]?.cl
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked

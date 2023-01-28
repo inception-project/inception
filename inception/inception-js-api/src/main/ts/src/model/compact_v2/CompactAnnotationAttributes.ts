@@ -21,15 +21,20 @@ export interface CompactAnnotationAttributes {
   /**
    * Label (optional)
    */
-  l: string;
+  l: string
 
   /**
    * Color (optional)
    */
-  c: string;
+  c: string
 
   /**
    * Comments (optional)
    */
-  cm: CompactComment[];
+  cm: CompactComment[]
+
+  /**
+   * Score (optional)
+   */
+  s: number
 }

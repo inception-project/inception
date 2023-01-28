@@ -66,6 +66,7 @@ public class CompactSerializerV2ImplTest
         vdoc.add(span1);
         var span2 = new VSpan(spanLayer, new VID(2), new VRange(5, 7), Map.of(), "000000");
         span2.setLabelHint("span2");
+        span2.setScore(10.3123d);
         vdoc.add(span2);
         var span3 = new VSpan(spanLayer, new VID(3), VRange.clippedRange(vdoc, 0, 100).get(),
                 Map.of(), "000000");

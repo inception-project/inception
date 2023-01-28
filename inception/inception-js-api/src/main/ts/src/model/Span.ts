@@ -26,6 +26,7 @@ export class Span implements Annotation {
   offsets: Array<Offsets>
   color?: string
   label?: string
+  score?: number
   comments?: Comment[]
 
   /**

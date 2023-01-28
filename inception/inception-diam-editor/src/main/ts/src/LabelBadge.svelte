@@ -41,6 +41,9 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith('rec:')}
+{#if annotation.score}
+<span class="text-muted small">{annotation.score}</span>
+{/if}
 <div class="btn-group" role="group">
   <button type="button" class="btn btn-success py-0 px-1" on:click={handleAccept} title="Accept">
     <i class="far fa-check-circle"></i>

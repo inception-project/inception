@@ -33,6 +33,11 @@ export interface Annotation {
     label?: string
 
     /**
+     * Score (optional)
+     */
+    score?: number
+
+    /**
      * Comments
      */
     comments?: Comment[]
