@@ -27,8 +27,8 @@
     import SpanText from "./SpanText.svelte"
     import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"
 
-    export let ajaxClient: DiamAjax;
-    export let data: AnnotatedText;
+    export let ajaxClient: DiamAjax
+    export let data: AnnotatedText
 
     let groupedSpans: Record<string, Span[]>
     let groupedRelations: Record<string, Relation[]>
@@ -44,10 +44,6 @@
 
     function scrollToRelation (relation: Relation) {
         ajaxClient.scrollTo({ id: relation.vid });
-    }
-
-    function handleDelete (ev: MouseEvent) {
-      ajaxClient.deleteAnnotation(annotation.vid)
     }
 </script>
 
@@ -73,9 +69,6 @@
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
                             {/each}
-                            <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
-                                <i class="fas fa-times"></i>
-                            </button>
                         </div>
                         <SpanText {data} span={firstSpan} />
                     </div>
@@ -93,9 +86,6 @@
                             <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={relation} {ajaxClient} />
-                                    <button class="btn btn-outline-danger border border-0 btn-sm ms-1 fw-normal" on:click={handleDelete} title="Delete">
-                                        <i class="fas fa-times"></i>
-                                    </button>
                                 </div>
 
                                 <SpanText {data} span={target} />
