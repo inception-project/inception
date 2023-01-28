@@ -22,6 +22,7 @@ export class Relation implements Annotation {
   vid: VID
   color?: string
   label?: string
+  score?: number
   comments?: Comment[]
   arguments: Array<Argument>
 }

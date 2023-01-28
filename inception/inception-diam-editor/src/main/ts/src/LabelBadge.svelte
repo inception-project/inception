@@ -42,7 +42,7 @@
         ajaxClient.deleteAnnotation(annotation.vid);
     }
 
-    function handleScrollTo (ev: MouseEvent) {
+    function handleScrollTo(ev: MouseEvent) {
         ajaxClient.scrollTo({ id: annotation.vid });
     }
 </script>
@@ -68,9 +68,12 @@
         >
             <i class="far fa-check-circle" />
             {#if showText}
-              {annotation.label || "No label"}
+                {annotation.label || "No label"}
             {/if}
-          </button>
+            {#if annotation.score}
+                <span class="text-muted small">{annotation.score}</span>
+            {/if}
+        </button>
         <button
             type="button"
             class="btn btn-outline-danger btn-sm py-0 px-1"
