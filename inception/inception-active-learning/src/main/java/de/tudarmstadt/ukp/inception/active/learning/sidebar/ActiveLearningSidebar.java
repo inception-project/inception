@@ -1382,7 +1382,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestHandler().add(alMainContainer);
+            aEvent.getRequestTarget().add(alMainContainer);
             return;
         }
 
@@ -1391,11 +1391,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestHandler());
+            moveToNextSuggestion(aEvent.getRequestTarget());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestHandler());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
     }
 
     private void refreshCurrentSuggestionOrMoveToNextSuggestion(AjaxRequestTarget aTarget)

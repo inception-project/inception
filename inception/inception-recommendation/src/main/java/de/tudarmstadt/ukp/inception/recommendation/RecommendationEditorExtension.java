@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.Collections.emptyList;
-import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +45,6 @@ import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -387,9 +385,7 @@ public class RecommendationEditorExtension
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
         if (switched) {
-            RequestCycle.get().find(AjaxRequestTarget.class)
-                    .ifPresent(_target -> _target.getPage().send(_target.getPage(), BREADTH,
-                            new PredictionsSwitchedEvent(_target, aState)));
+            applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
         }
     }
 
