@@ -25,7 +25,6 @@
     } from "@inception-project/inception-js-api"
     import LabelBadge from "./LabelBadge.svelte"
     import SpanText from "./SpanText.svelte"
-    import DeleteButton from "./DeleteButton.svelte"
     import { groupRelationsByPosition, groupSpansByPosition, uniqueOffsets } from "./Utils"
 
     export let ajaxClient: DiamAjax
@@ -69,7 +68,6 @@
                         <div class="float-end">
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
-                                <DeleteButton annotation={span} {ajaxClient} />
                             {/each}
                         </div>
                         <SpanText {data} span={firstSpan} />
@@ -88,7 +86,6 @@
                             <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={relation} {ajaxClient} />
-                                    <DeleteButton annotation={relation} {ajaxClient} />
                                 </div>
 
                                 <SpanText {data} span={target} />
