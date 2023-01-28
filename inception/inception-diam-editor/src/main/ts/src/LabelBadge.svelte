@@ -16,33 +16,32 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
+    import { Annotation, DiamAjax } from "@inception-project/inception-js-api"
+    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring"
 
-    import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
-    import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
+    export let annotation: Annotation
+    export let ajaxClient: DiamAjax
+    export let showText: boolean = true
 
-    export let annotation: Annotation;
-    export let ajaxClient: DiamAjax;
-    export let showText: boolean = true;
-
-    $: backgroundColor = annotation.color || "var(--bs-secondary)";
-    $: textColor = bgToFgColor(backgroundColor);
+    $: backgroundColor = annotation.color || "var(--bs-secondary)"
+    $: textColor = bgToFgColor(backgroundColor)
 
     function handleClick (ev: MouseEvent) {
-      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })
     }
 
     function handleAccept (ev: MouseEvent) {
-      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+      ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })
     }
 
     function handleReject (ev: MouseEvent) {
-      ajaxClient.triggerExtensionAction(annotation.vid);
+      ajaxClient.triggerExtensionAction(annotation.vid)
     }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith('rec:')}
-<div class="btn-group" role="group" aria-label="Basic example">
+<div class="btn-group" role="group">
   <button type="button" class="btn btn-success py-0 px-1" on:click={handleAccept} title="Accept">
     <i class="far fa-check-circle"></i>
   </button>
@@ -57,7 +56,7 @@
     title={`${annotation.vid}@${annotation.layer.name}`}
     role="button" style="color: {textColor}; background-color: {backgroundColor}"
 >
-    {showText ? annotation.label || "No label" : "\u00A0"}
+  {showText ? annotation.label || "No label" : "\u00A0"}
 </span>
 {/if}
 
