@@ -145,6 +145,7 @@ public class RecommendationSpanRenderer
                 featureAnnotation.put(ao.getFeature(), annotation);
 
                 VSpan v = new VSpan(layer, vid, range.get(), featureAnnotation, COLOR);
+                v.setScore(ao.getScore());
 
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 

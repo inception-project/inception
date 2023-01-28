@@ -34,6 +34,7 @@ export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation)
   cooked.arguments = raw[2].map(arg => unpackCompactArgument(doc, arg))
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
+  cooked.score = raw[3]?.s
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked
 }

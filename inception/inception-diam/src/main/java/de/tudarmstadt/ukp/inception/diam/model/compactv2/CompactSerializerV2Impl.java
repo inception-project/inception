@@ -118,6 +118,7 @@ public class CompactSerializerV2Impl
         CompactRelation carc = new CompactRelation(varc.getLayer(), varc.getVid(),
                 getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                 varc.getColorHint());
+        carc.getAttributes().setScore(varc.getScore());
         return carc;
     }
 
@@ -143,6 +144,7 @@ public class CompactSerializerV2Impl
             cspan = new CompactSpan(vspan.getLayer(), vspan.getVid(), offsets, vspan.getLabelHint(),
                     vspan.getColorHint());
         }
+        cspan.getAttributes().setScore(vspan.getScore());
         return cspan;
     }
 
