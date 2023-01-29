@@ -21,21 +21,27 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.validator.UrlValidator;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 
-public class InputFieldTextFeatureEditor
+public class InputFieldStringFeatureEditor
     extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    public InputFieldTextFeatureEditor(String aId, MarkupContainer aItem,
+    private ExternalLink openIri;
+    private UrlValidator urlValidator = new UrlValidator(new String[] { "http", "https" });
+
+    public InputFieldStringFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
@@ -43,9 +49,16 @@ public class InputFieldTextFeatureEditor
         AnnotationFeature feat = getModelObject().feature;
         StringFeatureTraits traits = readFeatureTraits(feat);
 
+        var featureValueAsString = aModel.map(FeatureState::getValue).map(Object::toString);
+
+        openIri = new ExternalLink("openIri", featureValueAsString);
+        openIri.add(visibleWhen(featureValueAsString.map(urlValidator::isValid)));
+        openIri.setOutputMarkupPlaceholderTag(true);
+        queue(openIri);
+
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
-                // editor is used in a "normal" context and not e.g. in the keybindings
+                // editor is used in a "normal" context and not e.g. in the key bindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
@@ -54,6 +67,11 @@ public class InputFieldTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new TextField<>("value");
+
+        var textField = new TextField<>("value");
+        textField.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            t.add(openIri);
+        }));
+        return textField;
     }
 }

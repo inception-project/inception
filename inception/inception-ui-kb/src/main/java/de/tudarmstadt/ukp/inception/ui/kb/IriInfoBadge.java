@@ -57,4 +57,9 @@ public class IriInfoBadge
     {
         return (String) getDefaultModelObject();
     }
+
+    public IModel<String> getModel()
+    {
+        return (IModel<String>) getDefaultModel();
+    }
 }

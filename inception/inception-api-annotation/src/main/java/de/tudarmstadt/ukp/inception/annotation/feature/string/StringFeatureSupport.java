@@ -152,7 +152,7 @@ public class StringFeatureSupport
             }
             else {
                 // Otherwise use a simple input field
-                return new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+                return new InputFieldStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
             }
         }
 
