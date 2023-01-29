@@ -49,7 +49,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith("rec:")}
-    <div class="btn-group mb-0 ms-1" role="group">
+    <div class="btn-group mb-0 ms-1 btn-group-recommendation" role="group">
         <!-- {#if showText}
             <button
                 type="button"
@@ -62,7 +62,7 @@
         {/if} -->
         <button
             type="button"
-            class="btn btn-outline-success btn-sm py-0 px-1"
+            class="btn btn-outline-success btn-sm py-0 px-1 btn-accept"
             on:click={handleAccept}
             title="Accept"
         >
@@ -71,12 +71,14 @@
                 {annotation.label || "No label"}
             {/if}
             {#if annotation.score}
-                <span class="text-muted small font-monospace">{annotation.score.toFixed(2)}</span>
+                <span class="small font-monospace score"
+                    >{annotation.score.toFixed(2)}</span
+                >
             {/if}
         </button>
         <button
             type="button"
-            class="btn btn-outline-danger btn-sm py-0 px-1"
+            class="btn btn-outline-danger btn-sm py-0 px-1 btn-reject"
             on:click={handleReject}
             title="Reject"
         >
@@ -113,5 +115,16 @@
 <style lang="scss">
     .btn-colored:hover {
         filter: brightness(0.8);
+    }
+
+    .btn-group-recommendation {
+        .btn-accept {
+            .score {
+                color: var(--bs-secondary);
+                &:hover {
+                    color: var(--bs-white);
+                }
+            }
+        }
     }
 </style>
