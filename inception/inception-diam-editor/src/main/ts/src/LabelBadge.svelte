@@ -71,7 +71,7 @@
                 {annotation.label || "No label"}
             {/if}
             {#if annotation.score}
-                <span class="text-muted small">{annotation.score}</span>
+                <span class="text-muted small font-monospace">{annotation.score.toFixed(2)}</span>
             {/if}
         </button>
         <button
