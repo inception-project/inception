@@ -43,6 +43,7 @@ import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.convert.IConverter;
 import org.apache.wicket.util.string.StringValue;
+import org.apache.wicket.validation.validator.UrlValidator;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -76,6 +77,7 @@ public class ConceptFeatureEditor
     private Label description;
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
+    private UrlValidator urlValidator = new UrlValidator(new String[] { "http", "https" });
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
@@ -89,7 +91,7 @@ public class ConceptFeatureEditor
 
         iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
         iriBadge.setOutputMarkupPlaceholderTag(true);
-        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
+        iriBadge.add(visibleWhen(iriBadge.getModel().map(urlValidator::isValid)));
         add(iriBadge);
 
         openIriLink = new ExternalLink("openIri", iriModel);
