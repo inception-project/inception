@@ -18,7 +18,12 @@
 package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
 import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.uima.fit.util.JCasUtil.selectSingle;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.xml.type.XmlAttribute;
@@ -32,11 +37,22 @@ import org.xml.sax.helpers.AttributesImpl;
 
 public class Cas2SaxEvents
 {
+    private static final String XMLNS = "xmlns";
+    private static final String XMLNS_PREFIX = "xmlns:";
+
     protected final ContentHandler handler;
+    private final LinkedHashMap<String, String> namespaceMappings = new LinkedHashMap<>();
+
+    private boolean namespaces = false;
 
     public Cas2SaxEvents(ContentHandler aHandler)
     {
         handler = aHandler;
+    }
+
+    public void setNamespaces(boolean aNamespaces)
+    {
+        namespaces = aNamespaces;
     }
 
     public void process(JCas aJCas) throws SAXException
@@ -48,6 +64,7 @@ public class Cas2SaxEvents
 
     public void process(XmlDocument aDoc) throws SAXException
     {
+        namespaceMappings.clear();
         handler.startDocument();
 
         if (aDoc.getRoot() == null) {
@@ -61,6 +78,18 @@ public class Cas2SaxEvents
 
     public void process(XmlElement aElement) throws SAXException
     {
+        var localMappings = new LinkedHashMap<String, String>();
+
+        if (namespaces) {
+            for (Entry<String, String> xmlns : prefixMappings(aElement).entrySet()) {
+                var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
+                if (oldValue == null) {
+                    localMappings.put(xmlns.getKey(), xmlns.getValue());
+                    handler.startPrefixMapping(xmlns.getKey(), xmlns.getValue());
+                }
+            }
+        }
+
         AttributesImpl attributes = attributes(aElement);
         String uri = defaultString(aElement.getUri());
         String localName = defaultString(aElement.getLocalName());
@@ -80,10 +109,36 @@ public class Cas2SaxEvents
         }
 
         handler.endElement(uri, localName, qName);
+
+        if (namespaces) {
+            for (Entry<String, String> xmlns : localMappings.entrySet()) {
+                handler.endPrefixMapping(xmlns.getKey());
+                localMappings.remove(xmlns.getKey());
+            }
+        }
+    }
+
+    public Map<String, String> prefixMappings(XmlElement aElement)
+    {
+        var mappings = new LinkedHashMap<String, String>();
+        if (aElement.getAttributes() != null) {
+            for (XmlAttribute attr : aElement.getAttributes()) {
+                if (XMLNS.equals(attr.getQName())) {
+                    mappings.put("", attr.getValue());
+                }
+                if (startsWith(attr.getQName(), XMLNS_PREFIX)) {
+                    mappings.put(attr.getQName().substring(XMLNS_PREFIX.length()), attr.getValue());
+                }
+            }
+        }
+        return mappings;
     }
 
     public AttributesImpl attributes(XmlElement aElement)
     {
+        // FIXME: SAX parsers would skip xmlns attributes if namespace support is enabled. Maybe
+        // we should do the same?
+
         AttributesImpl attrs = new AttributesImpl();
         if (aElement.getAttributes() != null) {
             for (XmlAttribute attr : aElement.getAttributes()) {

@@ -18,7 +18,10 @@
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.makeXmlSerializer;
+import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.newSaxParser;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringWriter;
@@ -31,6 +34,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import de.tudarmstadt.ukp.inception.support.xml.DefaultHandlerToContentHandlerAdapter;
 
 public class SanitizingContentHandlerTest
 {
@@ -251,5 +256,25 @@ public class SanitizingContentHandlerTest
         sut.endDocument();
 
         assertThat(buffer.toString()).isEqualTo("<ROOT><child attr1=\"x\">    </child></ROOT>");
+    }
+
+    @Test
+    void thatSanitizingDefaultXmlParserWorks() throws Exception
+    {
+        QName root = new QName("http://namespace.org", "ROOT");
+
+        var buffer = new StringWriter();
+        var policy = PolicyCollectionBuilder.caseSensitive() //
+                .allowElements(root) //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        String xml = "<ns:ROOT xmlns:ns='http://namespace.org'/>";
+
+        var parser = newSaxParser();
+        parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));
+
+        assertThat(buffer.toString()).isEqualTo("<ns:ROOT xmlns:ns=\"http://namespace.org\"/>");
     }
 }
