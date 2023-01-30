@@ -86,7 +86,7 @@ public class PolicyCollectionIOUtils
             ExternalPolicy policy)
     {
         var attributes = policy.getAttributes().stream() //
-                .map(s -> new QName(s)) //
+                .map(s -> QName.valueOf(s)) //
                 .toArray(QName[]::new);
         var action = AttributeAction.valueOf(policy.getAction());
         var attrBuilder = new AttributePolicyBuilder(policyCollectionBuilder, action, attributes);
@@ -97,7 +97,7 @@ public class PolicyCollectionIOUtils
 
         if (policy.getOnElements() != null) {
             var elements = policy.getOnElements().stream() //
-                    .map(s -> new QName(s)) //
+                    .map(s -> QName.valueOf(s)) //
                     .toArray(QName[]::new);
             attrBuilder.onElements(elements);
         }
@@ -110,7 +110,7 @@ public class PolicyCollectionIOUtils
             ExternalPolicy policy)
     {
         var elements = policy.getElements().stream() //
-                .map(s -> new QName(s)) //
+                .map(s -> QName.valueOf(s)) //
                 .toArray(QName[]::new);
         var action = ElementAction.valueOf(policy.getAction());
         for (var element : elements) {
