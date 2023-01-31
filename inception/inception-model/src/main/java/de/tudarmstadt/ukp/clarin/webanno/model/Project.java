@@ -305,7 +305,7 @@ public class Project
     }
 
     /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * Check if the name is valid. Special characters are not allowed as a project/user name as it
      * will conflict with file naming system
      * 
      * @param aName

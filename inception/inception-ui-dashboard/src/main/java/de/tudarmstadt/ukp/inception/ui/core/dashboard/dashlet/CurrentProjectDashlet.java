@@ -25,7 +25,7 @@ import org.apache.wicket.extensions.ajax.markup.html.AjaxEditableLabel;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -41,23 +41,34 @@ public class CurrentProjectDashlet
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
 
+    private IModel<String> nameModel;
+
     public CurrentProjectDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId, aCurrentProject);
 
-        AjaxEditableLabel<String> name = new AjaxEditableLabel<String>("name",
-                PropertyModel.of(aCurrentProject, "name"))
+        nameModel = Model.of(aCurrentProject.map(Project::getName).getObject());
+
+        AjaxEditableLabel<String> name = new AjaxEditableLabel<String>("name", nameModel)
         {
             private static final long serialVersionUID = -2867104998844713915L;
 
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                projectService.updateProject(aCurrentProject.getObject());
-                success("Project name was updated");
                 aTarget.addChildren(getPage(), IFeedback.class);
-                // Put the component back into label mode
-                onCancel(aTarget);
+
+                if (!Project.isValidProjectName(nameModel.getObject())) {
+                    // nameModel.setObject(aCurrentProject.map(Project::getName).getObject());
+                    error("Invalid project name");
+                }
+                else {
+                    aCurrentProject.getObject().setName(nameModel.getObject());
+                    projectService.updateProject(aCurrentProject.getObject());
+                    success("Project name was updated");
+                    // Put the component back into label mode
+                    onCancel(aTarget);
+                }
             }
         };
 
