@@ -19,89 +19,156 @@
 
     import {
         AnnotatedText,
+        Annotation,
         DiamAjax,
         Relation,
         Span,
-    } from "@inception-project/inception-js-api"
-    import LabelBadge from "./LabelBadge.svelte"
-    import SpanText from "./SpanText.svelte"
-    import { groupRelationsByLabel, groupSpansByLabel, uniqueLabels } from "./Utils"
+    } from "@inception-project/inception-js-api";
+    import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
+    import LabelBadge from "./LabelBadge.svelte";
+    import SpanText from "./SpanText.svelte";
+    import { compareSpanText, groupBy, uniqueLabels } from "./Utils";
 
-    export let ajaxClient: DiamAjax
-    export let data: AnnotatedText
+    export let ajaxClient: DiamAjax;
+    export let data: AnnotatedText;
 
-    let groupedSpans: Record<string, Span[]>
-    let sortedLabels: string[]
+    let groupedAnnotations: Record<string, Annotation[]>;
+    let sortedLabels: string[];
+    let sortByScore: boolean = false;
 
-    $: groupedSpans = groupSpansByLabel(data)
-    $: groupedRelations = groupRelationsByLabel(data)
-    $: sortedLabels = uniqueLabels(data)
+    $: sortedLabels = uniqueLabels(data);
+    $: {
+        const relations = data?.relations.values() || [];
+        const spans = data?.spans.values() || [];
+        groupedAnnotations = groupBy(
+            [...spans, ...relations],
+            (s) => s.label || ""
+        );
+        for (const items of Object.values(groupedAnnotations)) {
+            items.sort((a, b) => {
+                if (a instanceof Span && !(b instanceof Span)) {
+                    return -1;
+                }
 
-    function scrollToSpan (span: Span) {
-        ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] })
+                if (a instanceof Relation && !(b instanceof Relation)) {
+                    return 1;
+                }
+
+                if (sortByScore && a.vid.toString().startsWith("rec:") && !b.vid.toString().startsWith("rec:")) {
+                    return -1;
+                }
+
+                if (a instanceof Span && b instanceof Span) {
+                    if (sortByScore) {
+                        return b.score - a.score;
+                    }
+                    return (
+                        compareSpanText(data, a, b) ||
+                        compareOffsets(a.offsets[0], b.offsets[0])
+                    );
+                }
+
+                if (a instanceof Relation && b instanceof Relation) {
+                    if (sortByScore) {
+                        return b.score - a.score;
+                    }
+                    return compareOffsets(
+                        (a.arguments[0].target as Span).offsets[0],
+                        (b.arguments[0].target as Span).offsets[0]
+                    );
+                }
+
+                console.error("Unexpected annotation type combination", a, b);
+            });
+        }
     }
 
-    function scrollToRelation (relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid })
+    function scrollTo(ann: Annotation) {
+        ajaxClient.scrollTo({ id: ann.vid });
     }
 </script>
 
 {#if !data}
-<div class="mt-5 d-flex flex-column justify-content-center">
-    <div class="d-flex flex-row justify-content-center">
-        <div class="spinner-border text-muted" role="status">
-            <span class="sr-only">Loading...</span>
+    <div class="mt-5 d-flex flex-column justify-content-center">
+        <div class="d-flex flex-row justify-content-center">
+            <div class="spinner-border text-muted" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
         </div>
     </div>
-</div>
 {:else}
-<div class="flex-content fit-child-snug">
-    {#if sortedLabels || sortedLabels?.length}
-        <ul class="scrolling flex-content list-group list-group-flush">
-            {#each sortedLabels as label}
-                {@const spans = groupedSpans[`${label}`] || []}
-                {@const relations = groupedRelations[`${label}`] || []}
-                <li class="list-group-item py-0 px-0 border-0">
-                    <div class="px-2 py-1 bg.-light fw-bold sticky-top bg-light border-top border-bottom">
-                        {label || 'No label'}
-                    </div>
-                    <ul class="px-0 list-group list-group-flush">
-                        {#each spans as span}
-                            <li class="list-group-item list-group-item-action p-0 d-flex">
-                                <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
-                                    <div class="annotation-type-marker">␣</div>
-                                </div>
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(span)}>
-                                    <div class="float-end">
-                                        <LabelBadge annotation={span} {ajaxClient} showText={false} />
+    <div class="d-flex">
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="inlineLabelsEnabled"
+                bind:checked={sortByScore}
+            />
+            <label class="form-check-label" for="inlineLabelsEnabled"
+                >Sort by score</label
+            >
+        </div>
+    </div>
+    <div class="flex-content fit-child-snug">
+        {#if sortedLabels || sortedLabels?.length}
+            <ul class="scrolling flex-content list-group list-group-flush">
+                {#each sortedLabels as label}
+                    <li class="list-group-item py-0 px-0 border-0">
+                        <div
+                            class="px-2 py-1 bg.-light fw-bold sticky-top bg-light border-top border-bottom"
+                        >
+                            {label || "No label"}
+                        </div>
+                        <ul class="px-0 list-group list-group-flush">
+                            {#each groupedAnnotations[label] as ann}
+                                <li
+                                    class="list-group-item list-group-item-action p-0 d-flex"
+                                >
+                                    <div
+                                        class="text-secondary bg-light border-end px-2 d-flex align-items-center"
+                                    >
+                                        {#if ann instanceof Span}
+                                            <div class="annotation-type-marker">
+                                                ␣
+                                            </div>
+                                        {:else if ann instanceof Relation}
+                                            <div class="annotation-type-marker">
+                                                →
+                                            </div>
+                                        {/if}
                                     </div>
-                
-                                    <SpanText {data} span={span} />
-                                </div>
-                            </li>
-                        {/each}
-                        {#each relations as relation}
-                            <li class="list-group-item list-group-item-action p-0 d-flex">
-                                <div class="text-secondary bg-light border-end px-2 d-flex align-items-center">
-                                    <div class="annotation-type-marker">→</div>
-                                </div>
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
-                                    <div class="float-end">
-                                        <LabelBadge annotation={relation} {ajaxClient} showText={false} />
-                                    </div>
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <div
+                                        class="flex-grow-1 py-1 px-2"
+                                        on:click={() => scrollTo(ann)}
+                                    >
+                                        <div class="float-end">
+                                            <LabelBadge
+                                                annotation={ann}
+                                                {ajaxClient}
+                                                showText={false}
+                                            />
+                                        </div>
 
-                                    <SpanText {data} span={relation.arguments[0].target} />
-                                </div>
-                            </li>
-                        {/each}
-                    </ul>
-                </li>
-            {/each}
-        </ul>
-    {/if}
-</div>
+                                        {#if ann instanceof Span}
+                                            <SpanText {data} span={ann} />
+                                        {:else if ann instanceof Relation}
+                                            <SpanText
+                                                {data}
+                                                span={ann.arguments[0].target}
+                                            />
+                                        {/if}
+                                    </div>
+                                </li>
+                            {/each}
+                        </ul>
+                    </li>
+                {/each}
+            </ul>
+        {/if}
+    </div>
 {/if}
 
 <style lang="scss">
@@ -110,4 +177,3 @@
         text-align: center;
     }
 </style>
-  

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { isConstructorDeclaration, textChangeRangeIsUnchanged } from 'typescript'
 import { calculateEndOffset, calculateStartOffset } from './OffsetUtils'
 
 export type ViewportTrackerCallback = (range: [number, number]) => void
@@ -40,7 +39,7 @@ export class ViewportTracker {
    * @param sectionSelector optional CSS selector indicating which elements are considered sections
    * and should be tracked as a whole
    */
-  public constructor(element: Element, callback: ViewportTrackerCallback, sectionSelector?: string) {
+  public constructor (element: Element, callback: ViewportTrackerCallback, sectionSelector?: string) {
     this.root = element
     this.callback = callback
     this.sectionSelector = sectionSelector
@@ -48,15 +47,15 @@ export class ViewportTracker {
     this.initializeElementTracking(this.root)
   }
 
-  public get currentRange(): [number, number] {
+  public get currentRange (): [number, number] {
     return this._currentRange
   }
 
-  public get visibleElements(): Set<Element> {
-    return this.visibleElements;
+  public get visibleElements (): Set<Element> {
+    return this.visibleElements
   }
 
-  private shouldTrack(element: Element): boolean {
+  private shouldTrack (element: Element): boolean {
     const style = getComputedStyle(element)
     if (!style.display) {
       return false
@@ -64,7 +63,7 @@ export class ViewportTracker {
     return !style.display.startsWith('inline')
   }
 
-  private initializeElementTracking(element: Element): void {
+  private initializeElementTracking (element: Element): void {
     const startTime = new Date().getTime()
     if (this.observer) {
       this.observer.disconnect()
@@ -104,7 +103,7 @@ export class ViewportTracker {
     console.log(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
   }
 
-  private handleIntersectRange(entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
+  private handleIntersectRange (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
     // Avoid triggering the callback if no new elements have become visible
     let visibleElementsAdded = 0
 
@@ -119,14 +118,14 @@ export class ViewportTracker {
 
     if (visibleElementsAdded || !this.initialized) {
       console.log(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
-      // the first time the callback is called, we want to make sure that the annotations are 
+      // the first time the callback is called, we want to make sure that the annotations are
       // loaded at least once
       this.initialized = true
       this.initiateAction()
     }
   }
 
-  private initiateAction(): void {
+  private initiateAction (): void {
     clearTimeout(this.redrawTimeoutId)
     this.redrawTimeoutId = setTimeout(() => {
       this._currentRange = this.calculateWindowRange()
@@ -134,7 +133,7 @@ export class ViewportTracker {
     }, this.debounceDelay)
   }
 
-  private calculateWindowRange(): [number, number] {
+  private calculateWindowRange (): [number, number] {
     const startTime = new Date().getTime()
     let begin = Number.MAX_SAFE_INTEGER
     let end = Number.MIN_SAFE_INTEGER
