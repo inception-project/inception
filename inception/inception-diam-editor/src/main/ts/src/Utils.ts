@@ -57,7 +57,7 @@ export function uniqueOffsets (data: AnnotatedText): Offsets[] {
   return sortedOffsets
 }
 
-export function groupBy<T> (data: IterableIterator<T>, keyMapper: (s: T) => string): Record<string, T[]> {
+export function groupBy<T> (data: Iterable<T>, keyMapper: (s: T) => string): Record<string, T[]> {
   if (!data) return {}
 
   const groupedSpans = {}

@@ -178,12 +178,12 @@ public class RecommendationEditorExtension
             VID recommendationVid = VID.parse(aVID.getExtensionPayload());
             var prediction = getPrediction(aState, recommendationVid);
             var page = (AnnotationPageBase) aTarget.getPage();
-            if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
+            if (prediction.map(p -> p instanceof SpanSuggestion).orElse(false)) {
                 var suggestion = (SpanSuggestion) prediction.get();
                 page.getAnnotationActionHandler().actionJump(aTarget, suggestion.getBegin(),
                         suggestion.getEnd());
             }
-            if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
+            if (prediction.map(p -> p instanceof RelationSuggestion).orElse(false)) {
                 var suggestion = (RelationSuggestion) prediction.get();
                 var position = suggestion.getPosition();
                 page.getAnnotationActionHandler().actionJump(aTarget, position.getSourceBegin(),
