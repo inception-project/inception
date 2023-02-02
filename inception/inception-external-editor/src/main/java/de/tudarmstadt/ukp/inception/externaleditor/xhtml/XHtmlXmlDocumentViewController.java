@@ -22,6 +22,9 @@ import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebU
 import java.security.Principal;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -34,5 +37,9 @@ public interface XHtmlXmlDocumentViewController
 
     ResponseEntity<String> getDocument(long aProjectId, long aDocumentId, Optional<String> aEditor,
             Principal aPrincipal)
+        throws Exception;
+
+    ResponseEntity<InputStreamResource> getResource(long aProjectId, long aDocumentId,
+            HttpServletRequest aRequest, Principal aPrincipal)
         throws Exception;
 }
