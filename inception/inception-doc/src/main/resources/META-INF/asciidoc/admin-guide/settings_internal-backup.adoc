@@ -49,25 +49,24 @@ The internal backups are controlled through three properties:
 | Default
 | Example
 
-| backup.interval
+| `backup.interval`
 | Time between backups (seconds)
-| 172800 _(60 * 60 * 24 = 24 hours)_
-| 300 _(60 * 5 = 5 minutes)_
+| `172800` _(60 * 60 * 24 = 24 hours)_
+| `0` _(disabled)_
 
-| backup.keep.number
+| `backup.keep.number`
 | Maximum number of backups to keep
-| 2
-| 0 _(unlimited)_
+| `2`
+| `0` _(unlimited)_
 
-| backup.keep.time
+| `backup.keep.time`
 | Maximum age of backups to keep (seconds)
-| 0 _(unlimited)_
-| 2592000 _(60 * 60 * 24 * 30 = 30 days)_
+| `0` _(unlimited)_
+| `2592000` _(60 * 60 * 24 * 30 = 30 days)_
 |===
 
-By default, backups are disabled (**backup.interval** is set to `0`). Changing this properties to
-any positive number enables internal backups. The interval controls the minimum time between changes
-to a document that needs to have elapsed in order for a new backup to be created.
+The interval controls the minimum time between changes to a document that needs to have elapsed in
+order for a new backup to be created. Setting the interval to `0` disables the internal backups.
 
 When backups are enabled, either or both of the properties **backup.keep.number** and 
 **backup.keep.time** should be changed as well, because their default values will cause the
