@@ -32,6 +32,7 @@ import static java.awt.EventQueue.invokeLater;
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE;
 import static javax.swing.WindowConstants.HIDE_ON_CLOSE;
+import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
@@ -82,6 +83,9 @@ public class StandaloneShutdownDialogManager
     @Autowired
     private ApplicationContext context;
 
+    @Value("${server.servlet.context-path:}")
+    private String servletContextPath;
+
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
 
@@ -126,7 +130,8 @@ public class StandaloneShutdownDialogManager
             }
         }
 
-        log.info("You can now access INCEpTION at http://localhost:{}", port);
+        log.info("You can now access INCEpTION at http://localhost:{}{}", port,
+                prependIfMissing(servletContextPath, "/"));
     }
 
     @EventListener
@@ -255,8 +260,10 @@ public class StandaloneShutdownDialogManager
     private void actionBrowse()
     {
         try {
+
             if (!StringUtils.isBlank(openBrowserCommand)) {
-                String cmd = openBrowserCommand.replace("%u", "http://localhost:" + port);
+                String cmd = openBrowserCommand.replace("%u",
+                        "http://localhost:" + port + prependIfMissing(servletContextPath, "/"));
 
                 String[] cmdTokens = cmd.split("\\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
 
