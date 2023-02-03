@@ -620,11 +620,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
 
-        // Update progress information
-        LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
-        state.setFocusUnitIndex(sentenceNumber);
-
         // persist changes
         editorPage.writeEditorCas(aCas);
 
