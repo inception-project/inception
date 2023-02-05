@@ -414,10 +414,10 @@ public class ProjectsOverviewPage
                     protected Set<String> update(Set<String> aClasses)
                     {
                         if (highlightedProjects.contains(project.getId())) {
-                            aClasses.add("border border-primary");
+                            aClasses.add("border border-primary bg-light");
                         }
                         else {
-                            aClasses.remove("border border-primary");
+                            aClasses.remove("border border-primary bg-light");
                         }
                         return aClasses;
                     }
@@ -521,6 +521,8 @@ public class ProjectsOverviewPage
         List<Project> projects = aEvent.getProjects();
 
         if (projects.size() > 1) {
+            allAccessibleProjects.detach(); // Ensure that the subsequent refresh gets fresh data
+            dataProvider.refresh();
             aEvent.getTarget().add(projectListContainer);
             highlightedProjects.clear();
             projects.stream().forEach(p -> highlightedProjects.add(p.getId()));
