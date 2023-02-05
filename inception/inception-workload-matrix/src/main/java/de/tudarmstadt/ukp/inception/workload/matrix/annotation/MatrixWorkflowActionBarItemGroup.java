@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 
 import java.io.IOException;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
@@ -35,7 +36,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
@@ -117,8 +118,13 @@ public class MatrixWorkflowActionBarItemGroup
         }
         link.setOutputMarkupId(true);
         link.add(enabledWhen(() -> page.isEditable() || isReopenableByUser()));
-        link.add(new Label("state")
-                .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+        var stateLabel = new Label("state");
+        stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
+        stateLabel.add(AttributeModifier.replace("title", LoadableDetachableModel.of(() -> {
+            var tooltip = this.getStateTooltip();
+            return tooltip.wrapOnAssignment(stateLabel).getObject();
+        })));
+        link.add(stateLabel);
         return link;
     }
 
@@ -140,6 +146,28 @@ public class MatrixWorkflowActionBarItemGroup
     protected AnnotationPageBase getAnnotationPage()
     {
         return page;
+    }
+
+    public ResourceModel getStateTooltip()
+    {
+        AnnotatorState state = page.getModelObject();
+
+        // Curation sidebar: when writing to the curation document, we need to update the document
+        if (state.getUser().getUsername().equals(CURATION_USER)) {
+            if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
+                return new ResourceModel("stateToggle.curationFinished");
+            }
+            else {
+                return new ResourceModel("stateToggle.curationInProgress");
+            }
+        }
+
+        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+            return new ResourceModel("stateToggle.annotationFinished");
+        }
+        else {
+            return new ResourceModel("stateToggle.annotationInProgress");
+        }
     }
 
     public String getStateClass()
