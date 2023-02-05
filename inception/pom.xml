@@ -63,32 +63,30 @@
 
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
     <junit-platform.version>1.9.1</junit-platform.version>
-    <mockito.version>4.9.0</mockito.version>
+    <mockito.version>4.11.0</mockito.version>
     <assertj.version>3.23.1</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
     <xmlunit.version>1.6</xmlunit.version>
 
     <dkpro.version>2.3.0</dkpro.version>
-    <uima.version>3.3.1</uima.version>
+    <uima.version>3.4.0</uima.version>
     <uimafit.version>3.3.0</uimafit.version>
     <uima-json.version>0.4.0</uima-json.version>
 
-    <pdfbox.version>2.0.26</pdfbox.version>
+    <pdfbox.version>2.0.27</pdfbox.version>
 
-    <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.6</spring.boot.version>
+    <spring.version>5.3.25</spring.version>
+    <spring.boot.version>2.7.8</spring.boot.version>
     <spring.data.version>2.7.6</spring.data.version>
-    <spring.security.version>5.8.0</spring.security.version>
-    <springdoc.version>1.6.13</springdoc.version>
+    <spring.security.version>5.8.1</spring.security.version>
+    <springdoc.version>1.6.14</springdoc.version>
     <swagger.version>2.2.7</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
-    <groovy.version>3.0.13</groovy.version>
-
-    <tomcat.version>9.0.69</tomcat.version>
+    <tomcat.version>9.0.71</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.7</mariadb.driver.version>
@@ -111,22 +109,25 @@
     <solr.version>8.11.2</solr.version>
     <mtas.version>8.11.1.0</mtas.version> 
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
+    <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.7</elasticsearch.version> 
+    <elasticsearch.version>7.17.8</elasticsearch.version> 
     <!--   7.10.2   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.1   depends on Lucene 8.11.1 -->
     <!--   8.1.1    depends on Lucene 9.0.0 -->
 
-    <opensearch.version>1.3.6</opensearch.version>
+    <opensearch.version>1.3.8</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
+    <!--   2.x      depends on Lucene 9.x -->
 
     <rdf4j.version>4.2.2</rdf4j.version> 
     <!-- * 4.2.x depends on Lucene 8.5.1 -->
 
     <jena.version>4.6.1</jena.version>
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
+    <!--   4.7.0    depends on Lucene 9.4.2 -->
 
-    <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
+    <asciidoctor.plugin.version>2.2.2</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.7</asciidoctor.version>
     <asciidoctor-diagram.version>2.2.3</asciidoctor-diagram.version>
 
@@ -1096,7 +1097,7 @@
       <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
-        <version>0.5.6</version>
+        <version>0.5.7</version>
         <scope>test</scope>
         <exclusions>
           <exclusion>
@@ -1533,7 +1534,7 @@
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.9</version>
+        <version>8.5.11</version>
       </dependency>
 
       <dependency>
@@ -1585,7 +1586,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.19</version>
+        <version>1.12.20</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1735,16 +1736,6 @@
         <version>2.2.1</version>
       </dependency>
 
-
-      <!-- GROOVY -->
-      <dependency>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-bom</artifactId>
-        <version>${groovy.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-        
       <!-- Snakeyaml -->
       <dependency>
         <groupId>org.yaml</groupId>
@@ -1899,7 +1890,7 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.1</version>
+        <version>3.1.2</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
@@ -2074,7 +2065,7 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-        <version>${opensearch.version}.0</version>
+        <version>1.3.7.0</version>
       </dependency>
 
       <dependency>
@@ -2615,9 +2606,24 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>com.helger.maven</groupId>
+          <artifactId>ph-javacc-maven-plugin</artifactId>
+          <version>4.1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>io.github.swagger2markup</groupId>
+          <artifactId>swagger2markup-maven-plugin</artifactId>
+          <version>1.3.7</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.15</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -2674,17 +2680,17 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.3.2</version>
         </plugin>
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.39.1</version>
+          <version>0.40.3</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.10.0</version>
+          <version>2.14.2</version>
           <configuration>
             <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
             <!--
@@ -2891,7 +2897,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.0</version>
             <executions>
               <execution>
                 <id>addToSourceFolder</id>
@@ -2931,7 +2937,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.1.2</version>
+              <version>3.2.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>

@@ -37,7 +37,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -47,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -78,7 +77,7 @@ public class KnowledgeBaseDetailsPanel
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
 
     private final KBSettingsContent content;
-    private final ConfirmationDialog confirmationDialog;
+    private final BootstrapModalDialog confirmationDialog;
 
     public KnowledgeBaseDetailsPanel(String aId, IModel<KnowledgeBase> aKbModel)
     {
@@ -119,7 +118,8 @@ public class KnowledgeBaseDetailsPanel
                 .add(visibleWhen(kbwModel.map($ -> $.getKb().getType() == LOCAL).orElse(false))));
         queue(new LambdaAjaxButton<>(CID_SAVE, this::actionSave).triggerAfterSubmit());
 
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+        confirmationDialog.trapFocus();
         queue(confirmationDialog);
     }
 
@@ -212,12 +212,10 @@ public class KnowledgeBaseDetailsPanel
 
     private void actionDelete(AjaxRequestTarget aTarget)
     {
-        // delete only if user confirms deletion
-        confirmationDialog.setTitleModel(
-                new StringResourceModel("kb.details.delete.confirmation.title", this));
-        confirmationDialog.setContentModel(new StringResourceModel(
-                "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
-        confirmationDialog.setConfirmAction(_target -> {
+        var dialogContent = new DeleteKnowledgeBaseConfirmationDialogPanel(
+                BootstrapModalDialog.CONTENT_ID, kbModel);
+
+        dialogContent.setConfirmAction(_target -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
                 kbService.removeKnowledgeBase(kb);
@@ -228,12 +226,12 @@ public class KnowledgeBaseDetailsPanel
                 error("Unable to remove knowledge base: " + e.getLocalizedMessage());
                 LOG.error("Unable to remove knowledge base.", e);
                 _target.addChildren(getPage(), IFeedback.class);
-
             }
             _target.add(this);
             _target.add(findParentWithAssociatedMarkup());
         });
-        confirmationDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private class KBSettingsTitle

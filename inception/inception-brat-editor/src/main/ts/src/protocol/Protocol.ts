@@ -252,6 +252,8 @@ export type SourceData = {
   sentence_offsets: Array<Offsets>;
   token_offsets: Array<Offsets>;
   sentence_number_offset: number;
+  windowBegin: number;
+  windowEnd: number;
   rtl_mode: boolean;
   font_zoom: number;
   args: Record<MarkerType, MarkerDto>;

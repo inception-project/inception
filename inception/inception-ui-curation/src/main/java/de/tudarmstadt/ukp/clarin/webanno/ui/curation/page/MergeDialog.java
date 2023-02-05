@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,8 @@ public class MergeDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
-    private final IModel<String> titleModel;
-    private final IModel<String> challengeModel;
+    private final ResourceModel titleModel;
+    private final ResourceModel challengeModel;
     private final IModel<String> expectedResponseModel;
     private final IModel<CurationWorkflow> curationWorkflowModel;
 
@@ -53,7 +54,7 @@ public class MergeDialog
     private AjaxCallback cancelAction;
     private ContentPanel conentPanel;
 
-    public MergeDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
+    public MergeDialog(String aId, ResourceModel aTitle, ResourceModel aChallenge,
             IModel<String> aExpectedResponse, IModel<CurationWorkflow> aCurationWorkflow)
     {
         super(aId);
@@ -200,7 +201,10 @@ public class MergeDialog
 
             queue(new Form<>("form", aModel));
             queue(new Label("title", titleModel));
-            queue(new Label("challenge", challengeModel).setEscapeModelStrings(false));
+            var challenge = new Label("challenge", challengeModel);
+            challenge.setEscapeModelStrings(false); // SAFE - challengeModel is a ResourceModel
+            // which can only come from a trusted resource bundle
+            queue(challenge);
             queue(new Label("expectedResponse", expectedResponseModel));
             queue(new Label("feedback"));
             queue(new TextField<>("response"));

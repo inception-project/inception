@@ -78,6 +78,9 @@ public interface AnnotationActionHandler
     void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
+    void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
+        throws IOException, AnnotationException;
+
     /**
      * Delete currently selected annotation.
      * 

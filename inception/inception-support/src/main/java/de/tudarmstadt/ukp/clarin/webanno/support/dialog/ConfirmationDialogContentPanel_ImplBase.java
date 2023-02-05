@@ -26,6 +26,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
@@ -33,43 +34,38 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
-public class ConfirmationDialogContentPanel
+public abstract class ConfirmationDialogContentPanel_ImplBase
     extends Panel
 {
     private static final long serialVersionUID = 5202661827792148838L;
 
     private Form<State> form;
     private Label title;
-    private Label content;
     private LambdaAjaxLink cancel;
 
     private IModel<String> titleModel;
-    private IModel<String> contentModel;
 
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
 
-    public ConfirmationDialogContentPanel(String aId)
+    public ConfirmationDialogContentPanel_ImplBase(String aId)
     {
         super(aId);
 
         form = new Form<>("form", CompoundPropertyModel.of(new State()));
-        title = new Label("title", titleModel);
-        content = new Label("content", contentModel);
-        content.setEscapeModelStrings(false);
+        title = new Label("title", new ResourceModel("title"));
         cancel = new LambdaAjaxLink("cancel", this::onCancelInternal);
         cancel.setOutputMarkupId(true);
 
         queue(new Label("feedback"));
         queue(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
         queue(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
-        queue(title, content, cancel, form);
+        queue(title, cancel, form);
     }
 
     public void onShow(AjaxRequestTarget aTarget)
     {
         title.setDefaultModel(titleModel);
-        content.setDefaultModel(contentModel);
 
         State state = new State();
         state.feedback = null;
@@ -121,39 +117,14 @@ public class ConfirmationDialogContentPanel
         findParent(ModalDialog.class).close(aTarget);
     }
 
-    public IModel<String> getTitleModel()
-    {
-        return titleModel;
-    }
-
     public void setTitleModel(IModel<String> aTitleModel)
     {
         titleModel = aTitleModel;
     }
 
-    public IModel<String> getContentModel()
-    {
-        return contentModel;
-    }
-
-    public void setContentModel(IModel<String> aContentModel)
-    {
-        contentModel = aContentModel;
-    }
-
-    public AjaxCallback getConfirmAction()
-    {
-        return confirmAction;
-    }
-
     public void setConfirmAction(AjaxCallback aConfirmAction)
     {
         confirmAction = aConfirmAction;
-    }
-
-    public AjaxCallback getCancelAction()
-    {
-        return cancelAction;
     }
 
     public void setCancelAction(AjaxCallback aCancelAction)

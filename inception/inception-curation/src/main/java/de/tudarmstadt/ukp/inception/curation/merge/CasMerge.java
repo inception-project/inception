@@ -440,7 +440,8 @@ public class CasMerge
 
     private static boolean existsEquivalentAt(CAS aCas, TypeAdapter aAdapter, AnnotationFS aFs)
     {
-        return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream() //
+        Type targetType = CasUtil.getType(aCas, aFs.getType().getName());
+        return selectAt(aCas, targetType, aFs.getBegin(), aFs.getEnd()).stream() //
                 .filter(cand -> aAdapter.equivalents(aFs, cand,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f))) //
                 .findAny() //

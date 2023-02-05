@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.inception.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.collections4.CollectionUtils.union;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,8 @@ public class ProjectPermissionsExporterTest
     private @Mock UserDao userService;
 
     private Project project;
+    private ExportedProject exportedProject;
+
     private User manager;
     private List<ProjectPermission> managerPermissions;
     private User annotator;
@@ -73,24 +76,27 @@ public class ProjectPermissionsExporterTest
 
     private ProjectPermissionsExporter sut;
 
+    private ArgumentCaptor<User> userCaptor;
+    private ArgumentCaptor<ProjectPermission> permissionCaptor;
+
     @BeforeEach
     public void setUp() throws Exception
     {
         new ApplicationContextProvider().setApplicationContext(appContext);
-        when(appContext.getBean("passwordEncoder", PasswordEncoder.class))
+        lenient().when(appContext.getBean("passwordEncoder", PasswordEncoder.class))
                 .thenReturn(new BCryptPasswordEncoder());
 
-        project = new Project();
-        project.setId(1l);
-        project.setName("Test Project");
+        project = Project.builder().withId(1l).withName("Test Project").build();
+        exportedProject = new ExportedProject();
 
-        manager = new User("manager", ROLE_USER);
+        manager = User.builder().withUsername("manager").withRoles(ROLE_USER).build();
         managerPermissions = asList(new ProjectPermission(project, manager.getUsername(), MANAGER));
 
         annotator = new User("projectAnnotator", ROLE_USER);
-        annotator.setRealm(REALM_PROJECT_PREFIX + project.getId());
         annotatorPermissions = asList(
                 new ProjectPermission(project, annotator.getUsername(), ANNOTATOR));
+
+        sut = new ProjectPermissionsExporter(projectService, userService);
 
         when(projectService.listProjectUsersWithPermissions(any()))
                 .thenReturn(asList(manager, annotator));
@@ -99,38 +105,134 @@ public class ProjectPermissionsExporterTest
         when(projectService.listProjectPermissionLevel(annotator, project))
                 .thenReturn(annotatorPermissions);
 
-        sut = new ProjectPermissionsExporter(projectService, userService);
+        userCaptor = captureCreatedUsers();
+        permissionCaptor = captureCreatedPermissions();
     }
 
     @Test
-    public void thatExportingWorks() throws Exception
+    public void thatUserPermissionsAreExportedAndImported() throws Exception
     {
-        // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
+        annotator.setRealm(REALM_GLOBAL);
 
-        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+        exportProject();
 
-        // Import the project again
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        when(userService.create(userCaptor.capture())).thenAnswer(_call -> _call.getArgument(0));
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
+        sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
 
-        ArgumentCaptor<ProjectPermission> permissionCaptor = ArgumentCaptor
-                .forClass(ProjectPermission.class);
-        doNothing().when(projectService).createProjectPermission(permissionCaptor.capture());
-
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
-
-        // Check that after re-importing the exported projects, they are identical to the original
         assertThat(userCaptor.getAllValues()) //
+                .as("Missing users have been created") //
                 .containsExactlyInAnyOrderElementsOf(asList(manager, annotator));
 
         assertThat(permissionCaptor.getAllValues()) //
+                .as("Permissions have been imported") //
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
                 .containsExactlyInAnyOrderElementsOf(
                         union(managerPermissions, annotatorPermissions));
+    }
+
+    @Test
+    public void thatUserPermissionsAreNotImported() throws Exception
+    {
+        annotator.setRealm(REALM_GLOBAL);
+
+        exportProject();
+
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(false) //
+                .withImportPermissions(false) //
+                .withManager(manager) //
+                .build();
+        sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
+
+        assertThat(userCaptor.getAllValues()) //
+                .as("No missing users have been created") //
+                .isEmpty();
+
+        assertThat(permissionCaptor.getAllValues()) //
+                .as("Permissions have been imported") //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
+                .containsExactlyInAnyOrderElementsOf(managerPermissions);
+    }
+
+    @Test
+    public void thatProjectSpecificPermissionsAreCreatedIfUserDidNotYetExist() throws Exception
+    {
+        annotator.setRealm(REALM_PROJECT_PREFIX + project.getId());
+
+        exportProject();
+
+        // Trying to import project into another instance from which the project was exported, so
+        // the project-bound user should not yet exist. Thus, we can create this user and set up the
+        // permissions
+        when(userService.exists(annotator.getUsername())).thenReturn(false);
+
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(false) // project-bound users are always created ...
+                .withImportPermissions(false) // ... and always get their permissions
+                .build();
+        sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
+
+        assertThat(userCaptor.getAllValues()) //
+                .as("Missing users have been created") //
+                .containsExactlyInAnyOrderElementsOf(asList(annotator));
+
+        assertThat(permissionCaptor.getAllValues()) //
+                .as("Permissions have been imported") //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
+                .containsExactlyInAnyOrderElementsOf(annotatorPermissions);
+    }
+
+    @Test
+    public void thatProjectSpecificPermissionsAreNotCreatedIfUserAlreadyExisted() throws Exception
+    {
+        annotator.setRealm(REALM_PROJECT_PREFIX + project.getId());
+
+        exportProject();
+
+        // Trying to import project into the same instance from which the project was exported, so
+        // the project-bound user already exists. We must not bind this used to another project in
+        // the same instance.
+        when(userService.exists(annotator.getUsername())).thenReturn(true);
+
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(false) // project-bound users are always created ...
+                .withImportPermissions(true) // ... and always get their permissions unless they
+                                             // existed!
+                .build();
+        sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
+
+        assertThat(userCaptor.getAllValues()) //
+                .as("No missing users have been created") //
+                .isEmpty();
+
+        assertThat(permissionCaptor.getAllValues()) //
+                .as("Permissions have been imported") //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
+                .containsExactlyInAnyOrderElementsOf(managerPermissions);
+    }
+
+    private void exportProject() throws Exception
+    {
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
+        sut.exportData(exportRequest, monitor, exportedProject, workFolder);
+    }
+
+    private ArgumentCaptor<ProjectPermission> captureCreatedPermissions()
+    {
+        ArgumentCaptor<ProjectPermission> captor = ArgumentCaptor.forClass(ProjectPermission.class);
+        lenient().doNothing().when(projectService).createProjectPermission(captor.capture());
+        return captor;
+    }
+
+    private ArgumentCaptor<User> captureCreatedUsers()
+    {
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        lenient().when(userService.create(captor.capture()))
+                .thenAnswer(_call -> _call.getArgument(0));
+        return captor;
     }
 }

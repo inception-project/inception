@@ -19,21 +19,21 @@ $(document)
   .ready(
     function() {
       function hideBusysign() {
-        document.getElementById('spinner').style.display = 'none';
+        let spinner = document.getElementById('spinner')
+        if (spinner) spinner.style.display = 'none';
       }
 
       function showBusysign() {
-        document.getElementById('spinner').style.display = 'inline';
+        let spinner = document.getElementById('spinner')
+        if (spinner) spinner.style.display = 'inline';
       }
       
       hideBusysign();
       if (typeof Wicket != 'undefined') {
-        Wicket.Event.subscribe('/ajax/call/beforeSend', function(
-            attributes, jqXHR, settings) {
+        Wicket.Event.subscribe('/ajax/call/beforeSend', function(attributes, jqXHR, settings) {
           showBusysign()
         });
-        Wicket.Event.subscribe('/ajax/call/complete', function(
-            attributes, jqXHR, textStatus) {
+        Wicket.Event.subscribe('/ajax/call/complete', function(attributes, jqXHR, textStatus) {
           hideBusysign()
         });
       }

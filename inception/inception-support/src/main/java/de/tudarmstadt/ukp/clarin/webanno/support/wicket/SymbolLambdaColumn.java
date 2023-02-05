@@ -24,19 +24,19 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
-public class NonEscapingLambdaColumn<T, S>
+public class SymbolLambdaColumn<T, S>
     extends LambdaColumn<T, S>
 {
     private static final long serialVersionUID = -2103168638018286379L;
 
-    public NonEscapingLambdaColumn(IModel<String> aDisplayModel, S aSortProperty,
-            SerializableFunction<T, ?> aFunction)
+    public SymbolLambdaColumn(IModel<String> aDisplayModel, S aSortProperty,
+            SerializableFunction<T, ? extends HasSymbol> aFunction)
     {
         super(aDisplayModel, aSortProperty, aFunction);
     }
 
-    public NonEscapingLambdaColumn(IModel<String> aDisplayModel,
-            SerializableFunction<T, ?> aFunction)
+    public SymbolLambdaColumn(IModel<String> aDisplayModel,
+            SerializableFunction<T, ? extends HasSymbol> aFunction)
     {
         super(aDisplayModel, aFunction);
     }
@@ -44,6 +44,9 @@ public class NonEscapingLambdaColumn<T, S>
     @Override
     public void populateItem(Item<ICellPopulator<T>> item, String componentId, IModel<T> rowModel)
     {
-        item.add(new Label(componentId, getDataModel(rowModel)).setEscapeModelStrings(false));
+        @SuppressWarnings("unchecked")
+        var hasSymbol = (IModel<HasSymbol>) getDataModel(rowModel);
+        item.add(new Label(componentId, hasSymbol.map(HasSymbol::symbol))
+                .setEscapeModelStrings(false)); // SAFE - WE RENDER CONTROLLED SET OF ICONS
     }
 }

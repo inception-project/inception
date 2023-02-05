@@ -136,6 +136,8 @@ public class KendoComboboxTextFeatureEditor
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("animation", false);
                 aBehavior.setOption("delay", 0);
+                aBehavior.setOption("open",
+                        KendoChoiceDescriptionScriptReference.applyTooltipScript());
             }
 
             @Override

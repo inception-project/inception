@@ -28,11 +28,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementPolicy;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionBuilder;
-
 public class PolicyCollectionTest
 {
     static List<Arguments> builderVariants()

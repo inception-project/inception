@@ -17,18 +17,15 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<wicket:panel>
-  <div class="row form-row fe-input" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
-      <span wicket:id="feature"/>
-      <span class="float-end">
-        <span wicket:id="textIndicator"></span>
-      </span>
-    </label>
-    <div class="feature-editor-value">
-      <input wicket:id="value" class="form-control col-sm-12"></input>
-      <div wicket:id="keyBindings" class="col-sm-12"/>
-    </div>
-  </div>
-</wicket:panel>
+<wicket:extend>
+  <p class="text-center rounded border border-danger p-2">
+    <wicket:container wicket:id="message" />
+  </p>
+  <p class="text-muted vw-50">
+    <wicket:message key="explanation" />
+  </p>
+  <p class="vw-50">
+    <wicket:message key="challenge" />
+  </p>
+</wicket:extend>
 </html>

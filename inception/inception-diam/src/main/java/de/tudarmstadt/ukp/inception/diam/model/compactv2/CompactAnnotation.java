@@ -24,4 +24,6 @@ public interface CompactAnnotation
     long getLayerId();
 
     VID getVid();
+
+    CompactAnnotationAttributes getAttributes();
 }

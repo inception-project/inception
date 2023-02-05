@@ -18,6 +18,7 @@
 export { CompactAnnotatedText, unpackCompactAnnotatedText } from './CompactAnnotatedText'
 export { CompactAnnotationAttributes } from './CompactAnnotationAttributes'
 export { CompactArgument } from './CompactArgument'
+export { CompactComment } from './CompactComment'
 export { CompactRelationAttributes } from './CompactRelationAttributes'
 export { CompactSpan } from './CompactSpan'
 export { CompactSpanAttributes } from './CompactSpanAttributes'

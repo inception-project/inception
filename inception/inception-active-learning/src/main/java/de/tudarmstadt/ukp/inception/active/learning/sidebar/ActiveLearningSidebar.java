@@ -60,7 +60,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -78,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
@@ -181,7 +180,7 @@ public class ActiveLearningSidebar
     private final WebMarkupContainer alMainContainer;
 
     private AnnotationPage annotationPage;
-    private ConfirmationDialog confirmationDialog;
+    private BootstrapModalDialog dialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
     private Form<Void> sessionControlForm;
@@ -234,8 +233,9 @@ public class ActiveLearningSidebar
         alMainContainer.add(createLearningHistory());
         add(alMainContainer);
 
-        confirmationDialog = new ConfirmationDialog(CID_CONFIRMATION_DIALOG);
-        add(confirmationDialog);
+        dialog = new BootstrapModalDialog(CID_CONFIRMATION_DIALOG);
+        dialog.trapFocus();
+        add(dialog);
     }
 
     private Label createNoRecommendersMessage()
@@ -1003,29 +1003,8 @@ public class ActiveLearningSidebar
                 setActiveLearningHighlight(aRecord);
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                         aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
-                confirmationDialog.setTitleModel(new StringResourceModel(
-                        "alSidebar.history.delete.confirmation.title", this));
-                confirmationDialog.setContentModel(new StringResourceModel(
-                        "alSidebar.history.delete.confirmation.content", this, null));
-                confirmationDialog.setConfirmAction(_t -> {
-                    if (alStateModel.getObject().getSuggestion().isPresent()) {
-                        setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
-                    }
-                    else {
-                        clearActiveLearningHighlight();
-                    }
-                    deleteAnnotationByHistory(_t, aRecord);
-                });
-                confirmationDialog.setCancelAction(_t -> {
-                    if (alStateModel.getObject().getSuggestion().isPresent()) {
-                        setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
-                    }
-                    else {
-                        clearActiveLearningHighlight();
-                    }
-                    annotationPage.actionRefreshDocument(_t);
-                });
-                confirmationDialog.show(aTarget);
+
+                openHistoryItemRemovalConfirmationDialog(aTarget, aRecord);
             }
         }
 
@@ -1037,6 +1016,35 @@ public class ActiveLearningSidebar
             requestClearningSelectionAndJumpingToSuggestion();
             moveToNextSuggestion(aTarget);
         }
+    }
+
+    private void openHistoryItemRemovalConfirmationDialog(AjaxRequestTarget aTarget,
+            LearningRecord aRecord)
+    {
+        var dialogContent = new HistoryItemDeleteConfirmationDialogPanel(
+                BootstrapModalDialog.CONTENT_ID);
+
+        dialogContent.setConfirmAction(_t -> {
+            if (alStateModel.getObject().getSuggestion().isPresent()) {
+                setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
+            }
+            else {
+                clearActiveLearningHighlight();
+            }
+            deleteAnnotationByHistory(_t, aRecord);
+        });
+        
+        dialogContent.setCancelAction(_t -> {
+            if (alStateModel.getObject().getSuggestion().isPresent()) {
+                setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
+            }
+            else {
+                clearActiveLearningHighlight();
+            }
+            annotationPage.actionRefreshDocument(_t);
+        });
+
+        dialog.open(dialogContent, aTarget);
     }
 
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
@@ -1374,7 +1382,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestHandler().add(alMainContainer);
+            aEvent.getRequestTarget().add(alMainContainer);
             return;
         }
 
@@ -1383,11 +1391,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestHandler());
+            moveToNextSuggestion(aEvent.getRequestTarget());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestHandler());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
     }
 
     private void refreshCurrentSuggestionOrMoveToNextSuggestion(AjaxRequestTarget aTarget)

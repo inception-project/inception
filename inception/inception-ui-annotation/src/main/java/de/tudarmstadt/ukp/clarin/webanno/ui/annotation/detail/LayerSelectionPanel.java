@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
 import java.util.List;
@@ -96,7 +95,6 @@ public class LayerSelectionPanel
     {
         Label label = new Label("relationHint", Model.of());
         label.setOutputMarkupPlaceholderTag(true);
-        label.setEscapeModelStrings(false);
         label.add(LambdaBehavior.onConfigure(_this -> {
             if (layerSelector.getModelObject() != null) {
                 List<AnnotationLayer> relLayers = annotationService
@@ -105,9 +103,8 @@ public class LayerSelectionPanel
                     _this.setVisible(false);
                 }
                 else if (relLayers.size() == 1) {
-                    _this.setDefaultModelObject("Create a <b>"
-                            + escapeMarkup(relLayers.get(0).getUiName(), false, false)
-                            + "</b> relation by drawing an arc between annotations of this layer.");
+                    _this.setDefaultModelObject("Create a " + relLayers.get(0).getUiName()
+                            + " relation by drawing an arc between annotations of this layer.");
                     _this.setVisible(true);
                 }
                 else {

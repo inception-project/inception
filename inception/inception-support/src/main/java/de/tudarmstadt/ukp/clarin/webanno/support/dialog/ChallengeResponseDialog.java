@@ -20,18 +20,23 @@ package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 
+/**
+ * @deprecated Use {@link BootstrapModalDialog#open(org.apache.wicket.Component, AjaxRequestTarget)}
+ *             to directly open a dialog content panel.
+ */
+@Deprecated
 public class ChallengeResponseDialog
     extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
-    private StringResourceModel titleModel;
-    private StringResourceModel messageModel;
+    private ResourceModel titleModel;
+    private ResourceModel messageModel;
     private IModel<String> expectedResponseModel;
 
     private AjaxCallback confirmAction;
@@ -55,24 +60,14 @@ public class ChallengeResponseDialog
         open(contentPanel, aTarget);
     }
 
-    public StringResourceModel getTitleModel()
-    {
-        return titleModel;
-    }
-
-    public void setTitleModel(StringResourceModel aTitleModel)
+    public void setTitleModel(ResourceModel aTitleModel)
     {
         titleModel = aTitleModel;
     }
 
-    public void setMessageModel(StringResourceModel aMessageModel)
+    public void setMessageModel(ResourceModel aMessageModel)
     {
         messageModel = aMessageModel;
-    }
-
-    public StringResourceModel getMessageModel()
-    {
-        return messageModel;
     }
 
     public IModel<String> getExpectedResponseModel()

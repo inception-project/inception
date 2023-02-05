@@ -46,7 +46,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -147,7 +146,7 @@ public class ProjectConstraintsPanel
 
         private TextArea<String> script;
 
-        private ConfirmationDialog confirmationDialog;
+        private BootstrapModalDialog confirmationDialog;
 
         public DetailForm(String aId, IModel<ConstraintSet> aModel)
         {
@@ -186,8 +185,8 @@ public class ProjectConstraintsPanel
                 }
             };
 
-            confirmationDialog = new ConfirmationDialog("confirmationDialog");
-            confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
+            confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+            confirmationDialog.trapFocus();
             add(confirmationDialog);
 
             // The file that is returned by exportConstraintAsFile is the internal constraints
@@ -276,14 +275,16 @@ public class ProjectConstraintsPanel
 
         private void actionDelete(AjaxRequestTarget aTarget)
         {
-            confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
-                    .setParameters(DetailForm.this.getModelObject().getName()));
-            confirmationDialog.setConfirmAction((_target) -> {
+            var dialogContent = new ConstraintsDeletionConfirmationDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, DetailForm.this.getModel());
+
+            dialogContent.setConfirmAction((_target) -> {
                 constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
                 DetailForm.this.setModelObject(null);
                 _target.add(findParent(ProjectSettingsPanelBase.class));
             });
-            confirmationDialog.show(aTarget);
+
+            confirmationDialog.open(dialogContent, aTarget);
         }
 
         @Override

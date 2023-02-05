@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.remote;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.BASIC;
+import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.OAUTH_CLIENT_CREDENTIALS;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -92,7 +94,7 @@ public class RemoteRepositorySettingsPanel
         queue(urlField);
 
         authenticationType = new DropDownChoice<>("authenticationType",
-                asList(AuthenticationType.values()), new EnumChoiceRenderer<>(this));
+                asList(BASIC, OAUTH_CLIENT_CREDENTIALS), new EnumChoiceRenderer<>(this));
         authenticationType.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionAuthenticationTypeSelected));
         authenticationType.setNullValid(true);

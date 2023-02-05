@@ -81,7 +81,7 @@ export class ResizeManager {
     if (this.id) this.hide()
     this.id = id
 
-    const highlights = Array.from(this.visualizer.getHighlightsForSpan(id))
+    const highlights = Array.from(this.visualizer.getHighlightElementsForSpan(id))
     if (!highlights.length) return
     this.beginHandle.highlight = highlights[0]
     this.endHandle.highlight = highlights[highlights.length - 1]
@@ -99,15 +99,17 @@ export class ResizeManager {
     let begin : number | null = null
     let end : number | null = null
     if (position === 'begin') {
-      const range = caretRangeFromPoint(dragEvent.clientX, dragEvent.clientY)
-      begin = this.visualizer.rangeToOffsets(range)?.[0] || null
-      const offsets = this.visualizer.data?.spans[this.id]?.offsets
-      end = offsets ? offsets[offsets.length - 1][1] : null
+      const beginRange = caretRangeFromPoint(dragEvent.clientX, dragEvent.clientY)
+      const beginOffsets = this.visualizer.rangeToOffsets(beginRange)
+      begin = beginOffsets ? beginOffsets[0] : null
+      const endOffsets = this.visualizer.data?.spans[this.id]?.offsets
+      end = endOffsets ? endOffsets[endOffsets.length - 1][1] : null
     } else {
-      const offsets = this.visualizer.data?.spans[this.id]?.offsets
-      begin = offsets ? offsets[0][0] : null
-      const range = caretRangeFromPoint(dragEvent.clientX, dragEvent.clientY)
-      end = this.visualizer.rangeToOffsets(range)?.[0] || null
+      const beginOffsets = this.visualizer.data?.spans[this.id]?.offsets
+      begin = beginOffsets ? beginOffsets[0][0] : null
+      const endRange = caretRangeFromPoint(dragEvent.clientX, dragEvent.clientY)
+      const endOffsets = this.visualizer.rangeToOffsets(endRange)
+      end = endOffsets ? endOffsets[0] : null
     }
 
     if (begin === null || end === null) return
