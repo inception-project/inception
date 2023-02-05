@@ -80,6 +80,9 @@ public class CurationRenderer
     implements RenderStep
 {
     public static final String ID = "CurationRenderer";
+
+    private static final String COLOR = "#ccccff";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final CurationSidebarService curationService;
@@ -212,7 +215,7 @@ public class CurationRenderer
                     generatedCurationVids.add(curationVid);
 
                     object.setVid(curationVid);
-                    object.setColorHint("#ccccff");
+                    object.setColorHint(COLOR);
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
                             "Users with this annotation:\n" + cfg.getCasGroupIds().stream()
                                     .collect(Collectors.joining(", "))));
