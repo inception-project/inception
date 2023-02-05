@@ -216,6 +216,8 @@ public class CurationRenderer
 
                     object.setVid(curationVid);
                     object.setColorHint(COLOR);
+                    aVdoc.add(object);
+
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
                             "Users with this annotation:\n" + cfg.getCasGroupIds().stream()
                                     .collect(Collectors.joining(", "))));
@@ -233,8 +235,6 @@ public class CurationRenderer
                     else {
                         log.trace("Rendering curation vid: {}", object.getVid());
                     }
-
-                    aVdoc.add(object);
                 }
             }
         }

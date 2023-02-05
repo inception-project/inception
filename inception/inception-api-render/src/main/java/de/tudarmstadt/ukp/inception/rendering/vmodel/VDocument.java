@@ -22,6 +22,7 @@ import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +32,8 @@ import java.util.Map;
 
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -38,6 +41,7 @@ public class VDocument
     implements Serializable
 {
     private static final long serialVersionUID = 683698003864323322L;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final Map<VID, VArc> arcs = new LinkedHashMap<>();
     private final Map<VID, VSpan> spans = new LinkedHashMap<>();
@@ -120,6 +124,11 @@ public class VDocument
 
     public void add(VComment aComment)
     {
+        if (get(aComment.getVid()) == null) {
+            LOG.warn("VID {} referenced by comment does not exist: {}", aComment.getVid(),
+                    aComment);
+        }
+
         comments.put(aComment.getVid(), aComment);
     }
 
