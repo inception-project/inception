@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
 public class ProjectDangerZonePanel
     extends Panel
@@ -80,12 +81,26 @@ public class ProjectDangerZonePanel
     private void actionDeletePerform(AjaxRequestTarget aTarget)
     {
         try {
+            boolean deletingCurrentProject = false;
+            var projectPageBase = findParent(ProjectPageBase.class);
+            if (projectPageBase != null) {
+                deletingCurrentProject = getModel().getObject()
+                        .equals(projectPageBase.getProject());
+            }
+
             projectService.removeProject(getModel().getObject());
-            setResponsePage(getApplication().getHomePage());
+
+            if (deletingCurrentProject) {
+                setResponsePage(getApplication().getHomePage());
+            }
+            else {
+                getModel().setObject(null);
+                aTarget.add(getPage());
+            }
         }
         catch (IOException e) {
-            LOG.error("Unable to remove project :" + ExceptionUtils.getRootCauseMessage(e));
-            error("Unable to remove project " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error deleting project {}", getModel().getObject(), e);
+            error("Error deleting project:" + ExceptionUtils.getRootCauseMessage(e));
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
