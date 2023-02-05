@@ -34,6 +34,10 @@
         ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
     }
 
+    function handleMerge(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
+
     function handleReject(ev: MouseEvent) {
         ajaxClient.triggerExtensionAction(annotation.vid);
     }
@@ -41,30 +45,16 @@
     function handleDelete(ev: MouseEvent) {
         ajaxClient.deleteAnnotation(annotation.vid);
     }
-
-    function handleScrollTo(ev: MouseEvent) {
-        ajaxClient.scrollTo({ id: annotation.vid });
-    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith("rec:")}
     <div class="btn-group mb-0 ms-1 btn-group-recommendation" role="group">
-        <!-- {#if showText}
-            <button
-                type="button"
-                class="btn btn-outline-secondary btn-sm py-0 px-1 "
-                on:click={handleScrollTo}
-                title="Scroll to suggestion"
-            >
-                <i class="fas fa-crosshairs" />
-            </button>
-        {/if} -->
         <button
             type="button"
-            class="btn btn-outline-success btn-sm py-0 px-1 btn-accept"
+            class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
             on:click={handleAccept}
-            title="Accept"
+            title="Accept ({annotation.vid})"
         >
             <i class="far fa-check-circle" />
             {#if showText}
@@ -78,21 +68,39 @@
         </button>
         <button
             type="button"
-            class="btn btn-outline-danger btn-sm py-0 px-1 btn-reject"
+            class="btn-reject btn btn-outline-danger btn-sm py-0 px-1"
             on:click={handleReject}
-            title="Reject"
+            title="Reject ({annotation.vid})"
         >
             <i class="far fa-times-circle" />
         </button>
     </div>
+{:else if annotation.vid.toString().startsWith("cur:")}
+    <button
+        type="button"
+        class="btn-merge btn btn-colored btn-sm py-0 px-1 border-dark"
+        style="color: {textColor}; background-color: {backgroundColor}"
+        on:click={handleMerge}
+        title="Merge ({annotation.vid})"
+    >
+        <i class="fas fa-clipboard-check" />
+        {#if showText}
+            {annotation.label || "No label"}
+        {/if}
+        {#if annotation.score}
+            <span class="small font-monospace score"
+                >{annotation.score.toFixed(2)}</span
+            >
+        {/if}
+    </button>
 {:else}
     <div class="btn-group mb-0 ms-1" role="group">
         <button
             type="button"
-            class="btn btn-colored btn-sm py-0 px-1 border-dark"
+            class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleSelect}
-            title="Select"
+            title="Select ({annotation.vid})"
         >
             {#if showText}
                 {annotation.label || "No label"}
@@ -102,10 +110,10 @@
         </button>
         <button
             type="button"
-            class="btn btn-colored btn-sm py-0 px-1 border-dark"
+            class="btn-delete btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleDelete}
-            title="Delete"
+            title="Delete ({annotation.vid})"
         >
             <i class="far fa-times-circle" />
         </button>
@@ -118,7 +126,7 @@
     }
 
     .btn-group-recommendation {
-        .btn-accept {
+        .btn-accept, .btn-merge {
             .score {
                 color: var(--bs-secondary);
                 &:hover {
