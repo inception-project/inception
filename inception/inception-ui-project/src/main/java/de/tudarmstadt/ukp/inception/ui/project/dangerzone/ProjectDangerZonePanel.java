@@ -94,6 +94,7 @@ public class ProjectDangerZonePanel
                 setResponsePage(getApplication().getHomePage());
             }
             else {
+                getModel().setObject(null);
                 aTarget.add(getPage());
             }
         }
