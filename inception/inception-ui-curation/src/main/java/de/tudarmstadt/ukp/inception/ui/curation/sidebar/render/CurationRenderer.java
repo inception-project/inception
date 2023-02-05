@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -50,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
@@ -106,14 +106,20 @@ public class CurationRenderer
     }
 
     @Override
-    public boolean accepts(RenderRequest aContext)
+    public boolean accepts(RenderRequest aRequest)
     {
-        AnnotatorState state = aContext.getState();
-        if (state == null) {
+        AnnotatorState state = aRequest.getState();
+
+        // do not show predictions on the decicated curation page
+        if (state != null && state.getMode() != ANNOTATION) {
             return false;
         }
 
-        return state.getMode() == Mode.ANNOTATION;
+        if (aRequest.getCas() == null) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
