@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession.
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
-import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
@@ -50,8 +49,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -63,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -124,7 +122,8 @@ public class CasStorageServiceImplTest
         try (CasStorageSession casStorageSession = openNested(true)) {
             // Setup fixture
             SourceDocument doc = makeSourceDocument(1l, 1l, "test");
-            JCas templateCas = JCasFactory.createText("This is a test");
+            JCas templateCas = WebAnnoCasUtil.createCas().getJCas();
+            templateCas.setDocumentText("This is a test");
             casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
             String user = "test";
 
@@ -149,7 +148,7 @@ public class CasStorageServiceImplTest
             typeSystems.add(createTypeSystemDescription());
             typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
 
-            JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
+            JCas cas = WebAnnoCasUtil.createCas(mergeTypeSystems(typeSystems)).getJCas();
             casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
 
             SourceDocument doc = makeSourceDocument(2l, 2l, "test");
@@ -299,7 +298,7 @@ public class CasStorageServiceImplTest
     {
         CasProvider initializer = () -> {
             try {
-                CAS cas = createCas(mergeTypeSystems(
+                CAS cas = WebAnnoCasUtil.createCas(mergeTypeSystems(
                         asList(createTypeSystemDescription(), getInternalTypeSystem())));
                 cas.setDocumentText(repeat("This is a test.\n", 100_000));
                 return cas;
@@ -374,7 +373,7 @@ public class CasStorageServiceImplTest
     {
         CasProvider initializer = () -> {
             try {
-                CAS cas = createCas(mergeTypeSystems(
+                CAS cas = WebAnnoCasUtil.createCas(mergeTypeSystems(
                         asList(createTypeSystemDescription(), getInternalTypeSystem())));
                 cas.setDocumentText(repeat("This is a test.\n", 100_000));
                 return cas;
@@ -642,7 +641,7 @@ public class CasStorageServiceImplTest
     private CAS makeCas(String aText) throws IOException
     {
         try {
-            CAS cas = CasFactory.createCas(mergeTypeSystems(
+            CAS cas = WebAnnoCasUtil.createCas(mergeTypeSystems(
                     asList(createTypeSystemDescription(), getInternalTypeSystem())));
             cas.setDocumentText(aText);
             return cas;
