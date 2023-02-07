@@ -138,33 +138,6 @@ public class FixedBinaryCasSerDes
         reinitIndexedFSs(fsIndex, false, i -> csds.addr2fs.get(i));
     }
 
-  // @formatter:off
-  /**
-   * Given the deserialized main heap, byte heap, short heap, long heap and string heap,
-   *   a) create the corresponding FSs, populating a
-   *   b) addr2fs    map, key = fsAddr, value = FS
-   *   c) auxAddr2fs map, key = aux Array Start addr, 
-   *                      value = FS corresponding to that primitive bool/byte/short/long/double array 
-   * 
-   * For some use cases, the byte / short / long heaps have not yet been initialized.
-   *   - when data is available, deserialization will update the values in the fs directly
-   * 
-   * Each new fs created augments the addr2fs map.
-   *   - forward fs refs are put into deferred update list  deferModFs
-   * Each new fs created which is a Boolean/Byte/Short/Long/Double array updates auxAddr2fsa map
-   *   if the aux data is not available (update is put on deferred list).   deferModByte  deferModShort  deferModLong
-   * Each new fs created which has a slot referencing a long/double not yet read in creates a 
-   *   deferred update specifying the fs, the slot, indexed by the addr in the aux table. 
-   *      see deferModStr  deferModLong   deferModDouble   
-   * Notes:  
-   *   Subtypes of AnnotationBase created in the right view
-   *     DocumentAnnotation - update out-of-indexes
-   * 
-   * FSs not subtypes of AnnotationBase are **all** associated with the initial view.
-   * 
-   *   Delta serialization: this routine adds just the new (above-the-line) FSs, and augments existing addr2fs and auxAddr2fsa
-   */
-  // @formatter:on
     private void createFSsFromHeaps(boolean isDelta, int startPos, CommonSerDesSequential csds)
     {
         CASImpl baseCas = getBaseCas();
