@@ -122,7 +122,7 @@ public class CasStorageServiceImplTest
         try (CasStorageSession casStorageSession = openNested(true)) {
             // Setup fixture
             SourceDocument doc = makeSourceDocument(1l, 1l, "test");
-            JCas templateCas = WebAnnoCasUtil.createCas().getJCas();
+            JCas templateCas = WebAnnoCasUtil.createCas(createTypeSystemDescription()).getJCas();
             templateCas.setDocumentText("This is a test");
             casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
             String user = "test";

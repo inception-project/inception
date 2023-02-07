@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem;
 
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class CasPersistenceUtilsTest
     @Test
     void thatDocumentAnnotationIsNotDuplicatedDuringLoad(@TempDir Path aTempDir) throws Exception
     {
-        CAS cas = WebAnnoCasUtil.createCas();
+        CAS cas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         cas.setDocumentLanguage("en");
 
         DocumentMetaData dmd = DocumentMetaData.create(cas);
@@ -70,12 +71,12 @@ public class CasPersistenceUtilsTest
     {
         File target = aTempDir.resolve("out.ser").toFile();
 
-        CAS originalCas = WebAnnoCasUtil.createCas();
+        CAS originalCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         originalCas.setDocumentText("This is a test.");
         originalCas.setDocumentLanguage("en");
         CasPersistenceUtils.writeSerializedCas(originalCas, target);
 
-        CAS actualCas = WebAnnoCasUtil.createCas();
+        CAS actualCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         CasPersistenceUtils.readSerializedCas(actualCas, target);
 
         assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
@@ -87,12 +88,12 @@ public class CasPersistenceUtilsTest
     {
         File target = aTempDir.resolve("out.ser").toFile();
 
-        CAS originalCas = WebAnnoCasUtil.createCas();
+        CAS originalCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         originalCas.setDocumentText("This is a test.");
         originalCas.setDocumentLanguage("en");
         CasPersistenceUtils.writeSerializedCasCompressed(originalCas, target);
 
-        CAS actualCas = WebAnnoCasUtil.createCas();
+        CAS actualCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         CasPersistenceUtils.readSerializedCas(actualCas, target);
 
         assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
@@ -104,12 +105,12 @@ public class CasPersistenceUtilsTest
     {
         File target = aTempDir.resolve("out.ser").toFile();
 
-        CAS originalCas = WebAnnoCasUtil.createCas();
+        CAS originalCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         originalCas.setDocumentText("This is a test.");
         originalCas.setDocumentLanguage("en");
         CasPersistenceUtils.writeSerializedCasParanoid(originalCas, target);
 
-        CAS actualCas = WebAnnoCasUtil.createCas();
+        CAS actualCas = WebAnnoCasUtil.createCas(createTypeSystemDescription());
         CasPersistenceUtils.readSerializedCas(actualCas, target);
 
         assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
