@@ -122,7 +122,11 @@ public interface FormatSupport
             throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
         }
 
-        var path = prependIfMissing(normalize(aResourcePath, isProneToInconsistencies()), "/");
+        if (aResourcePath.contains("..") || aResourcePath.contains("//")) {
+            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
+        }
+
+        var path = prependIfMissing(normalize(aResourcePath, true), "/");
         return new URL("jar:" + aDocFile.toURI().toURL() + "!" + path).openStream();
     }
 
