@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebU
 import java.security.Principal;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 
@@ -40,6 +38,6 @@ public interface XHtmlXmlDocumentViewController
         throws Exception;
 
     ResponseEntity<InputStreamResource> getResource(long aProjectId, long aDocumentId,
-            HttpServletRequest aRequest, Principal aPrincipal)
+            String aResourceId, Principal aPrincipal)
         throws Exception;
 }

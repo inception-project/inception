@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -30,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
@@ -72,10 +70,8 @@ public class XHtmlXmlDocumentViewControllerImpl
 {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
-    private static final String RESOURCE_ELEMENT = "/res/";
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
-    private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}"
-            + RESOURCE_ELEMENT + "**";
+    private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}/res";
 
     private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
     private static final String HTML = "html";
@@ -198,7 +194,7 @@ public class XHtmlXmlDocumentViewControllerImpl
     @GetMapping(path = GET_RESOURCE_PATH)
     public ResponseEntity<InputStreamResource> getResource(
             @PathVariable("projectId") long aProjectId,
-            @PathVariable("documentId") long aDocumentId, HttpServletRequest aRequest,
+            @PathVariable("documentId") long aDocumentId, @RequestParam("resId") String aResourceId,
             Principal principal)
         throws Exception
     {
@@ -210,22 +206,20 @@ public class XHtmlXmlDocumentViewControllerImpl
         }
 
         var srcDocFile = documentService.getSourceDocumentFile(srcDoc);
-        var path = aRequest.getServletPath();
-        var resource = substringAfter(path, RESOURCE_ELEMENT);
 
         var formatSupport = maybeFormatSupport.get();
 
         try {
-            var inputStream = formatSupport.openResourceStream(srcDocFile, resource);
+            var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
             HttpHeaders httpHeaders = new HttpHeaders();
             return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
         }
         catch (FileNotFoundException e) {
-            LOG.error("Resource [{}] for document {} not found", resource, srcDoc);
+            LOG.error("Resource [{}] for document {} not found", aResourceId, srcDoc);
             return ResponseEntity.notFound().build();
         }
         catch (Exception e) {
-            LOG.error("Unable to load resource [{}] for document {}", resource, srcDoc, e);
+            LOG.error("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
         }
     }
