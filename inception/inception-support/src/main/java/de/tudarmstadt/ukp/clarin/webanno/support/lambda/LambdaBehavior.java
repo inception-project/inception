@@ -164,6 +164,20 @@ public class LambdaBehavior
         };
     }
 
+    public static Behavior visibleWhenNot(SerializableBooleanSupplier aPredicate)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -7550330528381560032L;
+
+            @Override
+            public void onConfigure(Component aComponent)
+            {
+                aComponent.setVisible(!aPredicate.getAsBoolean());
+            }
+        };
+    }
+
     public static Behavior enabledWhen(SerializableBooleanSupplier aPredicate)
     {
         return new Behavior()

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
@@ -57,6 +58,7 @@ import org.wicketstuff.urlfragment.UrlFragment;
 import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
@@ -98,6 +100,7 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectService;
 
     private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
             .of(this::loadAnnotationFinished);
@@ -422,8 +425,7 @@ public abstract class AnnotationPageBase
 
         // If curating (check mode for curation page and user for curation sidebar),
         // then it is editable unless the curation is finished
-        if (state.getMode().equals(CURATION)
-                || state.getUser().getUsername().equals(CURATION_USER)) {
+        if (state.getMode() == CURATION || CURATION_USER.equals(state.getUser().getUsername())) {
             if (state.getDocument().getState().equals(CURATION_FINISHED)) {
                 throw new NotEditableException("Curation is already finished. You can put it back "
                         + "into progress via the monitoring page.");
@@ -441,6 +443,10 @@ public abstract class AnnotationPageBase
             throw new NotEditableException("This document is already closed for user ["
                     + state.getUser().getUsername() + "]. Please ask your "
                     + "project manager to re-open it via the monitoring page.");
+        }
+
+        if (!projectService.hasRole(userRepository.getCurrentUsername(), getProject(), ANNOTATOR)) {
+            throw new NotEditableException("You are not an annotator in this project.");
         }
     }
 

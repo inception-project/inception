@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -63,9 +64,9 @@ public class RecommendationSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.chart_line_s;
+        return new Icon(aId, FontAwesome5IconType.chart_line_s);
     }
 
     @Override

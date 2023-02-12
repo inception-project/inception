@@ -93,7 +93,7 @@ public class CurationServiceTest
         List<User> selectedUsers = new ArrayList<>();
         selectedUsers.add(kevin);
         selectedUsers.add(beate);
-        sut.updateUsersSelectedForCuration("current", testProject.getId(), selectedUsers);
+        sut.setSelectedUsers("current", testProject.getId(), selectedUsers);
     }
 
     @AfterEach

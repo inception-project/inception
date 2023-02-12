@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -37,7 +37,7 @@ public interface AnnotationSidebarFactory
 
     String getDescription();
 
-    IconType getIcon();
+    Component createIcon(String aId, IModel<AnnotatorState> aState);
 
     AnnotationSidebar_ImplBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,

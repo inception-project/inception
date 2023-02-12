@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.active.learning.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class ActiveLearningSessionStartedEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -4736560772442881663L;
 

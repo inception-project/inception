@@ -59,38 +59,43 @@ public interface CurationSidebarService
      * Store the users that were selected to be shown for curation by the given user
      */
     @SuppressWarnings("javadoc")
-    void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
-            Collection<User> aUsers);
+    void setSelectedUsers(String aCurrentUser, long aProjectId, Collection<User> aUsers);
 
     /**
      * Store which name the curated document should be associated with
      */
     @SuppressWarnings("javadoc")
-    void updateCurationName(String aCurrentUser, long aProjectId, String aCurationName);
+    void setCurationTarget(String aCurrentUser, long aProjectId, String aCurationName);
 
     /**
-     * Remove stored curation information on given user
+     * Start a new curation session.
      */
     @SuppressWarnings("javadoc")
-    void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
+    boolean existsSession(String aSessionOwner, long aProjectId);
 
     /**
-     * Remove information on users that were selected to be shown for curation by the given user
+     * Start a new curation session.
      */
     @SuppressWarnings("javadoc")
-    void clearUsersSelectedForCuration(String aUsername, Long aId);
+    void startSession(String aSessionOwner, long aProjectId);
+
+    /**
+     * Stop a running curation session.
+     */
+    @SuppressWarnings("javadoc")
+    void closeSession(String aCurrentUser, long aProjectId);
 
     /**
      * @return the name of the user corresponding to the CAS used as curation (target) CAS
      */
     @SuppressWarnings("javadoc")
-    String retrieveCurationTarget(String aUser, long aProjectId);
+    String getCurationTarget(String aUser, long aProjectId);
 
     /**
      * @return the user corresponding to the CAS used as curation (target) CAS
      */
     @SuppressWarnings("javadoc")
-    User retrieveCurationUser(String aUser, long aProjectId);
+    User getCurationTargetUser(String aUser, long aProjectId);
 
     /**
      * @return list of users that were selected to be shown for curation by the given user and have
