@@ -444,7 +444,7 @@ public class CurationSidebar
         User currentUser = userRepository.getCurrentUser();
         String curationTarget = getModelObject().getUser().getUsername();
         return curationSidebarService
-                .listFinishedUsers(getModelObject().getProject(), getModelObject().getDocument())
+                .listCuratableUsers(getModelObject().getDocument())
                 .stream()
                 .filter(user -> !user.equals(currentUser) || curationTarget.equals(CURATION_USER))
                 .collect(Collectors.toList());

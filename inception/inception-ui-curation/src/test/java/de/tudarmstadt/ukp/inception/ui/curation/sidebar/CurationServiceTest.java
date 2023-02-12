@@ -130,7 +130,7 @@ public class CurationServiceTest
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
 
-        List<User> finishedUsers = sut.listFinishedUsers(testProject, testDocument);
+        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }
