@@ -17,33 +17,45 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.model.IModel;
+import org.springframework.context.ApplicationContext;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public abstract class SidebarTab
     extends AbstractTab
 {
     private static final long serialVersionUID = -3205381571000021331L;
 
-    private final IconType icon;
     private final String factoryId;
 
-    public SidebarTab(IModel<String> aTitle, IconType aIcon, String aFactoryId)
+    public SidebarTab(IModel<String> aTitle, String aFactoryId)
     {
         super(aTitle);
-        icon = aIcon;
         factoryId = aFactoryId;
-    }
-
-    public IconType getIcon()
-    {
-        return icon;
     }
 
     public String getFactoryId()
     {
         return factoryId;
+    }
+
+    public Component getIcon(String aId, IModel<AnnotatorState> aState)
+    {
+        try {
+            // We need to get the methods and services directly in here so
+            // that the lambda doesn't have a dependency on the non-serializable
+            // AnnotationSidebarFactory class.
+            ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
+            return ctx.getBean(AnnotationSidebarRegistry.class).getSidebarFactory(factoryId)
+                    .createIcon(aId, aState);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

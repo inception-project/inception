@@ -128,8 +128,12 @@ public class CurationRenderer
     @Override
     public void render(VDocument aVdoc, RenderRequest aRequest)
     {
-        String currentUsername = userRepository.getCurrentUsername();
-        List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
+        String sessionOwner = userRepository.getCurrentUsername();
+        if (!curationService.existsSession(sessionOwner, aRequest.getProject().getId())) {
+            return;
+        }
+
+        List<User> selectedUsers = curationService.listUsersReadyForCuration(sessionOwner,
                 aRequest.getProject(), aRequest.getSourceDocument());
 
         if (selectedUsers.isEmpty()) {
@@ -174,8 +178,8 @@ public class CurationRenderer
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
         Set<VID> generatedCurationVids = new HashSet<>();
-        boolean showAll = curationService.isShowAll(currentUsername, aRequest.getProject().getId());
-        String curationTarget = curationService.retrieveCurationTarget(currentUsername,
+        boolean showAll = curationService.isShowAll(sessionOwner, aRequest.getProject().getId());
+        String curationTarget = curationService.getCurationTarget(sessionOwner,
                 aRequest.getProject().getId());
         for (ConfigurationSet cfgSet : diff.getConfigurationSets()) {
             if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {

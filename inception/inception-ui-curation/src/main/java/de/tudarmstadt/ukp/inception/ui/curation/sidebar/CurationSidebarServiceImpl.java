@@ -23,18 +23,19 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -42,7 +43,6 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
@@ -73,7 +73,7 @@ public class CurationSidebarServiceImpl
     implements CurationSidebarService
 {
     // stores info on which users are selected and which doc is the curation-doc
-    private ConcurrentMap<CurationStateKey, CurationState> curationStates;
+    private ConcurrentMap<CurationSessionKey, CurationSession> sessions;
 
     private final EntityManager entityManager;
     private final DocumentService documentService;
@@ -82,13 +82,12 @@ public class CurationSidebarServiceImpl
     private final UserDao userRegistry;
     private final CasStorageService casStorageService;
 
-    @Autowired
     public CurationSidebarServiceImpl(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService)
     {
-        curationStates = new ConcurrentHashMap<>();
+        sessions = new ConcurrentHashMap<>();
         entityManager = aEntityManager;
         documentService = aDocumentService;
         sessionRegistry = aSessionRegistry;
@@ -100,12 +99,12 @@ public class CurationSidebarServiceImpl
     /**
      * Key to identify curation session for a specific user and project
      */
-    private class CurationStateKey
+    private class CurationSessionKey
     {
         private String username;
         private long projectId;
 
-        public CurationStateKey(String aUser, long aProject)
+        public CurationSessionKey(String aUser, long aProject)
         {
             username = aUser;
             projectId = aProject;
@@ -120,33 +119,32 @@ public class CurationSidebarServiceImpl
         @Override
         public boolean equals(Object aOther)
         {
-            if (!(aOther instanceof CurationStateKey)) {
+            if (!(aOther instanceof CurationSessionKey)) {
                 return false;
             }
-            CurationStateKey castOther = (CurationStateKey) aOther;
+            CurationSessionKey castOther = (CurationSessionKey) aOther;
             return new EqualsBuilder().append(username, castOther.username)
                     .append(projectId, castOther.projectId).isEquals();
         }
     }
 
-    private CurationState getCurationState(String aUser, long aProjectId)
+    private CurationSession getSession(String aSessionOwner, long aProjectId)
     {
-        if (curationStates.containsKey(new CurationStateKey(aUser, aProjectId))) {
-            return curationStates.get(new CurationStateKey(aUser, aProjectId));
+        if (sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId))) {
+            return sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
         }
         else {
-            return getSettingsFromDB(aUser, aProjectId);
+            return readSession(aSessionOwner, aProjectId);
         }
     }
 
-    @Transactional
-    private CurationState getSettingsFromDB(String aUsername, long aProjectId)
+    private CurationSession readSession(String aSessionOwner, long aProjectId)
     {
-        List<CurationSettings> settings = queryDBForSetting(aUsername, aProjectId);
+        List<CurationSettings> settings = queryDBForSetting(aSessionOwner, aProjectId);
 
-        CurationState state;
+        CurationSession state;
         if (settings.isEmpty()) {
-            state = new CurationState(aUsername);
+            state = new CurationSession(aSessionOwner);
         }
         else {
             CurationSettings setting = settings.get(0);
@@ -158,16 +156,16 @@ public class CurationSidebarServiceImpl
                         .filter(user -> projectService.hasAnyRole(user, project)) //
                         .collect(toList());
             }
-            state = new CurationState(setting.getCurationUserName(), users);
+            state = new CurationSession(setting.getCurationUserName(), users);
         }
 
-        curationStates.put(new CurationStateKey(aUsername, aProjectId), state);
+        sessions.put(new CurationSessionKey(aSessionOwner, aProjectId), state);
         return state;
     }
 
-    private List<CurationSettings> queryDBForSetting(String aUsername, long aProjectId)
+    private List<CurationSettings> queryDBForSetting(String aSessionOwner, long aProjectId)
     {
-        Validate.notBlank(aUsername, "User must be specified");
+        Validate.notBlank(aSessionOwner, "User must be specified");
         Validate.notNull(aProjectId, "project must be specified");
 
         String query = "FROM " + CurationSettings.class.getName() //
@@ -176,29 +174,29 @@ public class CurationSidebarServiceImpl
 
         List<CurationSettings> settings = entityManager //
                 .createQuery(query, CurationSettings.class) //
-                .setParameter("username", aUsername) //
+                .setParameter("username", aSessionOwner) //
                 .setParameter("projectId", aProjectId) //
                 .setMaxResults(1) //
                 .getResultList();
         return settings;
     }
 
-    private class CurationState
+    private class CurationSession
     {
         private List<User> selectedUsers;
         // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
-        private String curationUser;
+        private String curationTarget;
         private boolean showAll;
 
-        public CurationState(String aUser)
+        public CurationSession(String aUser)
         {
-            curationUser = aUser;
+            curationTarget = aUser;
         }
 
-        public CurationState(String aCurationUserName, List<User> aSelectedUsers)
+        public CurationSession(String aCurationTarget, List<User> aSelectedUsers)
         {
-            curationUser = aCurationUserName;
+            curationTarget = aCurationTarget;
             selectedUsers = new ArrayList<>(aSelectedUsers);
         }
 
@@ -212,14 +210,14 @@ public class CurationSidebarServiceImpl
             selectedUsers = new ArrayList<>(aSelectedUsers);
         }
 
-        public String getCurationName()
+        public String getCurationTarget()
         {
-            return curationUser;
+            return curationTarget;
         }
 
-        public void setCurationName(String aCurationName)
+        public void setCurationTarget(String aCurationTarget)
         {
-            curationUser = aCurationName;
+            curationTarget = aCurationTarget;
         }
 
         public boolean isShowAll()
@@ -233,19 +231,20 @@ public class CurationSidebarServiceImpl
         }
     }
 
+    @Transactional
     @Override
-    public List<User> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
+    public List<User> listUsersSelectedForCuration(String aSessionOwner, long aProjectId)
     {
-        var selectedUsers = getCurationState(aCurrentUser, aProjectId).getSelectedUsers();
-        return selectedUsers == null ? Collections.emptyList()
-                : Collections.unmodifiableList(selectedUsers);
+        var selectedUsers = getSession(aSessionOwner, aProjectId).getSelectedUsers();
+        return selectedUsers == null ? emptyList() : unmodifiableList(selectedUsers);
     }
 
+    @Transactional
     @Override
-    public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
+    public List<User> listUsersReadyForCuration(String aSessionOwner, Project aProject,
             SourceDocument aDocument)
     {
-        List<User> selectedUsers = getCurationState(aUsername, aProject.getId()).getSelectedUsers();
+        List<User> selectedUsers = getSession(aSessionOwner, aProject.getId()).getSelectedUsers();
 
         if (selectedUsers == null || selectedUsers.isEmpty()) {
             return new ArrayList<>();
@@ -280,11 +279,13 @@ public class CurationSidebarServiceImpl
         return finishedUsers;
     }
 
+    @Transactional
     @Override
-    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
+    public Optional<CAS> retrieveCurationCAS(String aSessionOwner, long aProjectId,
+            SourceDocument aDoc)
         throws IOException
     {
-        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
+        String curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         if (curationUser == null) {
             return Optional.empty();
         }
@@ -292,14 +293,17 @@ public class CurationSidebarServiceImpl
         return Optional.of(documentService.readAnnotationCas(aDoc, curationUser));
     }
 
+    // REC: Do we really needs this? Why not save via the AnnotationPage facilities? Or at least
+    // the curation target should already be set in the annotator state, so why not rely on that?
+    @Transactional
     @Override
     public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
         throws IOException
     {
         User curator;
-        synchronized (curationStates) {
-            String curatorName = getCurationState(aState.getUser().getUsername(), aProjectId)
-                    .getCurationName();
+        synchronized (sessions) {
+            String curatorName = getSession(aState.getUser().getUsername(), aProjectId)
+                    .getCurationTarget();
 
             if (curatorName.equals(CURATION_USER)) {
                 curator = new User(CURATION_USER);
@@ -316,28 +320,46 @@ public class CurationSidebarServiceImpl
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
+    @Transactional
     @Override
-    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
+    public void setSelectedUsers(String aSessionOwner, long aProjectId,
             Collection<User> aSelectedUsers)
     {
-        synchronized (curationStates) {
-            getCurationState(aCurrentUser, aProjectId).setSelectedUsers(aSelectedUsers);
+        synchronized (sessions) {
+            getSession(aSessionOwner, aProjectId).setSelectedUsers(aSelectedUsers);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void setCurationTarget(String aSessionOwner, long aProjectId, String aUserName)
+    {
+        synchronized (sessions) {
+            getSession(aSessionOwner, aProjectId).setCurationTarget(aUserName);
         }
     }
 
     @Override
-    public void updateCurationName(String aCurrentUser, long aProjectId, String aUserName)
+    public boolean existsSession(String aSessionOwner, long aProjectId)
     {
-        synchronized (curationStates) {
-            getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);
+        synchronized (sessions) {
+            return sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId));
         }
     }
 
     @Override
-    public void removeCurrentUserInformation(String aCurrentUser, long aProjectId)
+    public void startSession(String aSessionOwner, long aProjectId)
     {
-        synchronized (curationStates) {
-            curationStates.remove(new CurationStateKey(aCurrentUser, aProjectId));
+        synchronized (sessions) {
+            getSession(aSessionOwner, aProjectId);
+        }
+    }
+
+    @Override
+    public void closeSession(String aSessionOwner, long aProjectId)
+    {
+        synchronized (sessions) {
+            sessions.remove(new CurationSessionKey(aSessionOwner, aProjectId));
         }
     }
 
@@ -366,32 +388,33 @@ public class CurationSidebarServiceImpl
             return;
         }
 
+        // FIXME: Seems kind of pointless to first store everything and then delete it...
         storeCurationSettings(user);
-        clearState(user);
+        closeAllSessions(user);
     }
 
     /**
      * Write settings for all projects of this user to the data base
      */
-    private void storeCurationSettings(User aUser)
+    private void storeCurationSettings(User aSessionOwner)
     {
-        String aUsername = aUser.getUsername();
+        String aUsername = aSessionOwner.getUsername();
 
-        for (Project project : projectService.listAccessibleProjects(aUser)) {
+        for (Project project : projectService.listAccessibleProjects(aSessionOwner)) {
             Long projectId = project.getId();
             Set<String> usernames = null;
-            if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
+            if (sessions.containsKey(new CurationSessionKey(aUsername, projectId))) {
 
-                CurationState state = curationStates
-                        .get(new CurationStateKey(aUsername, projectId));
+                CurationSession state = sessions.get(new CurationSessionKey(aUsername, projectId));
                 // user does not exist anymore or is anonymous authentication
                 if (state == null) {
                     continue;
                 }
 
                 if (state.getSelectedUsers() != null) {
-                    usernames = state.getSelectedUsers().stream().map(User::getUsername)
-                            .collect(Collectors.toSet());
+                    usernames = state.getSelectedUsers().stream() //
+                            .map(User::getUsername) //
+                            .collect(toSet());
                 }
 
                 // get setting from context and update values if it exists, else save new setting
@@ -401,10 +424,10 @@ public class CurationSidebarServiceImpl
 
                 if (setting != null) {
                     setting.setSelectedUserNames(usernames);
-                    setting.setCurationUserName(state.getCurationName());
+                    setting.setCurationUserName(state.getCurationTarget());
                 }
                 else {
-                    setting = new CurationSettings(aUsername, projectId, state.getCurationName(),
+                    setting = new CurationSettings(aUsername, projectId, state.getCurationTarget(),
                             usernames);
                     entityManager.persist(setting);
                 }
@@ -412,69 +435,74 @@ public class CurationSidebarServiceImpl
         }
     }
 
-    private void clearState(User aUser)
+    private void closeAllSessions(User aSessionOwner)
     {
-        projectService.listAccessibleProjects(aUser).stream().map(Project::getId)
-                .forEach(pId -> removeCurrentUserInformation(aUser.getUsername(), pId));
+        projectService.listAccessibleProjects(aSessionOwner).stream() //
+                .map(Project::getId) //
+                .forEach(pId -> closeSession(aSessionOwner.getUsername(), pId));
     }
 
+    @Transactional
     @Override
-    public void clearUsersSelectedForCuration(String aUsername, Long aProjectId)
+    public boolean isShowAll(String aSessionOwner, Long aProjectId)
     {
-        synchronized (curationStates) {
-            getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
+        synchronized (sessions) {
+            return getSession(aSessionOwner, aProjectId).isShowAll();
         }
     }
 
+    @Transactional
     @Override
-    public boolean isShowAll(String aUsername, Long aProjectId)
+    public void setShowAll(String aSessionOwner, Long aProjectId, boolean aValue)
     {
-        synchronized (curationStates) {
-            return getCurationState(aUsername, aProjectId).isShowAll();
+        synchronized (sessions) {
+            getSession(aSessionOwner, aProjectId).setShowAll(aValue);
         }
     }
 
+    @Transactional
     @Override
-    public void setShowAll(String aUsername, Long aProjectId, boolean aValue)
+    public String getCurationTarget(String aSessionOwner, long aProjectId)
     {
-        synchronized (curationStates) {
-            getCurationState(aUsername, aProjectId).setShowAll(aValue);
+        String curationUser;
+        synchronized (sessions) {
+            curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         }
-    }
 
-    @Override
-    public String retrieveCurationTarget(String aUser, long aProjectId)
-    {
-        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
         if (curationUser == null) {
             // default to user as curation target
-            return aUser;
+            return aSessionOwner;
         }
+
         return curationUser;
     }
 
+    @Transactional
     @Override
-    public User retrieveCurationUser(String aUser, long aProjectId)
+    public User getCurationTargetUser(String aSessionOwner, long aProjectId)
     {
-        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
+        String curationUser;
+        synchronized (sessions) {
+            curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
+        }
         if (curationUser == null) {
             // default to user as curation target
-            return userRegistry.get(aUser);
+            return userRegistry.get(aSessionOwner);
         }
-        else if (curationUser.equals(CURATION_USER)) {
+
+        if (CURATION_USER.equals(curationUser)) {
             return new User(CURATION_USER);
         }
-        else {
-            return userRegistry.get(curationUser);
-        }
+
+        return userRegistry.get(curationUser);
     }
 
     @Override
-    public boolean isCurationFinished(AnnotatorState aState, String aCurrentUsername)
+    public boolean isCurationFinished(AnnotatorState aState, String aSessionOwner)
     {
         String username = aState.getUser().getUsername();
         SourceDocument sourceDoc = aState.getDocument();
-        return (username.equals(aCurrentUsername)
+        return (username.equals(aSessionOwner)
                 && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
                 || (username.equals(CURATION_USER)
                         && sourceDoc.getState().equals(CURATION_FINISHED));

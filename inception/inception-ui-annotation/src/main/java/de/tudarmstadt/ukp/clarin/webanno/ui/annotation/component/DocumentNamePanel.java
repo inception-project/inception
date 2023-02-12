@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -29,6 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
@@ -44,6 +47,10 @@ public class DocumentNamePanel
     {
         super(id, aModel);
         setOutputMarkupId(true);
+        queue(new WebMarkupContainer("read-only").add(LambdaBehavior.visibleWhen(() -> {
+            var page = findParent(AnnotationPage.class);
+            return page != null ? !page.isEditable() : false;
+        })));
         queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName)));
         queue(new Label("project", aModel.map(AnnotatorState::getProject).map(Project::getName)));
         queue(new Label("projectId", aModel.map(AnnotatorState::getProject).map(Project::getId))
