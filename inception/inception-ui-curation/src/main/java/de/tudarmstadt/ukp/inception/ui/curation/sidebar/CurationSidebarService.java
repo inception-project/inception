@@ -109,7 +109,7 @@ public interface CurationSidebarService
      * @return list of users that have finished the given document
      */
     @SuppressWarnings("javadoc")
-    List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
+    List<User> listCuratableUsers(SourceDocument aSourceDocument);
 
     /**
      * @return if user in given annotator state is curating and has finished it

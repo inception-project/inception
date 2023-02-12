@@ -582,12 +582,12 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
 
-        List<AnnotationDocument> finishedAnnotationDocuments = documentService
-                .listFinishedAnnotationDocuments(state.getDocument());
+        List<AnnotationDocument> curatableAnnotationDocuments = curationDocumentService
+                .listCuratableAnnotationDocuments(state.getDocument());
 
-        if (finishedAnnotationDocuments.isEmpty()) {
+        if (curatableAnnotationDocuments.isEmpty()) {
             getSession().error("This document has the state " + state.getDocument().getState()
-                    + " but " + "there are no finished annotation documents! This "
+                    + " but there are no finished annotation documents! This "
                     + "can for example happen when curation on a document has already started "
                     + "and afterwards all annotators have been removed from the project, have been "
                     + "disabled or if all were put back into " + AnnotationDocumentState.IN_PROGRESS
@@ -603,9 +603,9 @@ public class CurationPage
         }
 
         Map<String, CAS> casses = documentService
-                .readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
+                .readAllCasesSharedNoUpgrade(curatableAnnotationDocuments);
 
-        AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+        AnnotationDocument randomAnnotationDocument = curatableAnnotationDocuments.get(0);
         CAS curationCas = readCurationCas(state, state.getDocument(), casses,
                 randomAnnotationDocument, true, aMergeStrategy, aForceRecreateCas);
 
@@ -722,7 +722,7 @@ public class CurationPage
     {
         // get annotation documents
         Map<String, CAS> casses = documentService.readAllCasesSharedNoUpgrade(
-                documentService.listFinishedAnnotationDocuments(aState.getDocument()));
+                curationDocumentService.listCuratableAnnotationDocuments(aState.getDocument()));
 
         CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false,
                 curationService.getDefaultMergeStrategy(getProject()), false);

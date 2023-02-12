@@ -249,31 +249,29 @@ public class CurationSidebarServiceImpl
         if (selectedUsers == null || selectedUsers.isEmpty()) {
             return new ArrayList<>();
         }
-        List<User> finishedUsers = listFinishedUsers(aProject, aDocument);
+        List<User> finishedUsers = listCuratableUsers(aDocument);
         finishedUsers.retainAll(selectedUsers);
         return finishedUsers;
     }
 
     @Override
     @Transactional
-    public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
+    public List<User> listCuratableUsers(SourceDocument aSourceDocument)
     {
         Validate.notNull(aSourceDocument, "Document must be specified");
-        Validate.notNull(aProject, "project must be specified");
 
         String query = String.join("\n", //
                 "SELECT u FROM User u, AnnotationDocument d", //
                 "WHERE u.username = d.user", //
-                "AND d.project    = :project", //
                 "AND d.document   = :document", //
-                "AND d.state      = :state", //
+                "AND (d.state = :state or d.annotatorState = :ignore)", //
                 "ORDER BY u.username ASC");
 
         List<User> finishedUsers = new ArrayList<>(entityManager //
                 .createQuery(query, User.class) //
-                .setParameter("project", aProject) //
                 .setParameter("document", aSourceDocument) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList());
 
         return finishedUsers;
