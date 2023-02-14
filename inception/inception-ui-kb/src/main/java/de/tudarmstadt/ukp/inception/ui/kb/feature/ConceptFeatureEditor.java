@@ -221,6 +221,7 @@ public class ConceptFeatureEditor
             // because onSelected does not tell us when the auto-complete field is CLEARED!
             aBehavior.setOption("select", String.join(" ", //
                     "function (e) {", //
+                    "  e.sender.select(e.item);", //
                     "  e.sender.element.trigger('change');", //
                     "}"));
         }
@@ -262,11 +263,11 @@ public class ConceptFeatureEditor
         public String getIdentifierDynamicAttributeScript()
         {
             return String.join(" ", //
-                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();", //
+                    "var item = $(attrs.event.target).data('kendoAutoComplete')?.dataItem();", //
                     "if (item) {", //
                     "  return [{", //
                     "    'name': '" + getInputName() + ":identifier', ", //
-                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier", //
+                    "    'value': item.identifier", //
                     "  }]", //
                     "}", //
                     "return [];");
