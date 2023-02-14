@@ -36,7 +36,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -323,9 +322,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                         _target -> actionDelete(_target, detailPanel))
                                 .add(visibleWhen(() -> !aItem.getModelObject().singleton))
                                 .add(enabledWhen(() -> annotationPage.isEditable()
-                                        && !aItem.getModelObject().layer.isReadonly()))
-                                .add(AttributeAppender.append("class",
-                                        () -> annotationPage.isEditable() ? "" : "disabled")));
+                                        && !aItem.getModelObject().layer.isReadonly())));
 
                 aItem.setOutputMarkupId(true);
             }
