@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class LambdaAjaxLink
         super(aId);
         action = aAction;
         exceptionHandler = aExceptionHandler;
+        add(AttributeAppender.append("class", () -> isEnabledInHierarchy() ? "" : "disabled"));
     }
 
     public LambdaAjaxLink onConfigure(SerializableMethodDelegate<LambdaAjaxLink> aAction)
