@@ -494,8 +494,10 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         CAS cas = editorPage.getEditorCas();
-        AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(cas, aVid.getId());
-        actionSelectAndJump(aTarget, annoFs);
+        var targetFs = ICasUtil.selectFsByAddr(cas, aVid.getId());
+        if (targetFs instanceof AnnotationFS) {
+            actionSelectAndJump(aTarget, (AnnotationFS) targetFs);
+        }
     }
 
     @Override

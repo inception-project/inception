@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
@@ -49,6 +50,7 @@ public class LambdaAjaxButton<T>
         super(aId);
         action = aAction;
         exceptionHandler = aExceptionHandler;
+        add(AttributeAppender.append("class", () -> isEnabledInHierarchy() ? "" : "disabled"));
     }
 
     public LambdaAjaxButton<T> triggerAfterSubmit()

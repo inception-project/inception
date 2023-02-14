@@ -147,7 +147,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
         SidebarTab tab = getTabs().get(aIndex);
-        Icon icon = new Icon("icon", tab.getIcon());
+        Component icon = tab.getIcon("icon", state);
         icon.add(new AttributeModifier("title", aTitleModel));
         return icon;
     }

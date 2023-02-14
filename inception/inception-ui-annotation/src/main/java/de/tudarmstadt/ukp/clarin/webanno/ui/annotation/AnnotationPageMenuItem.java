@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
@@ -84,7 +85,7 @@ public class AnnotationPageMenuItem
     }
 
     /**
-     * Only project admins and annotators can see this page
+     * Only project admins, annotators and curators can see this page
      */
     @Override
     public boolean applies(Project aProject)
@@ -95,7 +96,7 @@ public class AnnotationPageMenuItem
 
         // Visible if the current user is an annotator
         User user = userRepo.getCurrentUser();
-        return projectService.hasRole(user, aProject, ANNOTATOR);
+        return projectService.hasRole(user, aProject, ANNOTATOR, CURATOR);
     }
 
     @Override

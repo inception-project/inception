@@ -154,10 +154,10 @@ public class ActiveLearningSidebar
     private static final String CID_ONLY_SKIPPED_RECOMMENDATION_LABEL = "onlySkippedRecommendationLabel";
     private static final String CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM = "learnFromSkippedRecommendationForm";
     private static final String CID_NO_RECOMMENDATION_LABEL = "noRecommendationLabel";
+    private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
     private static final String CID_START_SESSION_BUTTON = "startSession";
     private static final String CID_STOP_SESSION_BUTTON = "stopSession";
     private static final String CID_SELECT_LAYER = "selectLayer";
-    private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
     private static final String CID_REMOVE_RECORD = "removeRecord";
     private static final String CID_USER_ACTION = "userAction";
     private static final String CID_RECOMMENDED_ANNOTATION = "recommendedAnnotation";

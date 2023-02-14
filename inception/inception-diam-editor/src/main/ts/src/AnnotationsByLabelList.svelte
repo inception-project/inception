@@ -176,4 +176,8 @@
         width: 1em;
         text-align: center;
     }
+
+    .list-group-flush > .list-group-item:last-child {
+        border-bottom-width: 1px;
+    }
 </style>

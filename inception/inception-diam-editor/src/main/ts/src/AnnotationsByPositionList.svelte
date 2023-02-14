@@ -100,5 +100,8 @@
 {/if}
 
 <style lang="scss">
+    .list-group-flush > .list-group-item:last-child {
+        border-bottom-width: 1px;
+    }
 </style>
   

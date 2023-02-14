@@ -26,6 +26,7 @@ import org.apache.uima.cas.CAS;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -70,6 +71,8 @@ public interface CurationDocumentService
 
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
+    List<AnnotationDocument> listCuratableAnnotationDocuments(SourceDocument aDocument);
+
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
 
     Optional<Long> verifyCurationCasTimestamp(SourceDocument aDocument, long aTimeStamp,
@@ -96,4 +99,5 @@ public interface CurationDocumentService
      *             if there was an I/O-level error
      */
     boolean existsCurationCas(SourceDocument aDocument) throws IOException;
+
 }

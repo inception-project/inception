@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -120,7 +121,7 @@ public class OpenDocumentDialogPanel
         });
         choice.setOutputMarkupId(true);
         choice.add(visibleWhen(state.map(s -> s.getMode().equals(ANNOTATION) && projectService
-                .hasRole(userRepository.getCurrentUser(), s.getProject(), MANAGER))));
+                .hasRole(userRepository.getCurrentUser(), s.getProject(), MANAGER, CURATOR))));
         choice.add(OnChangeAjaxBehavior.onChange(this::actionSelectUser));
 
         if (choice.getChoices().contains(viewUser)) {
@@ -154,7 +155,7 @@ public class OpenDocumentDialogPanel
         User currentUser = userRepository.getCurrentUser();
         // cannot select other user than themselves if curating or not admin
         if (state.getObject().getMode().equals(Mode.CURATION)
-                || !projectService.hasRole(currentUser, project, MANAGER)) {
+                || !projectService.hasRole(currentUser, project, MANAGER, CURATOR)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUiName());
             users.add(du);

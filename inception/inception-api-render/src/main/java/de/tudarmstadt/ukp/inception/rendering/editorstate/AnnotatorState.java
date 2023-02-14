@@ -89,9 +89,6 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // User
     // ---------------------------------------------------------------------------------------------
-
-    // REC not sure if we need these really... we can fetch the user from the security context.
-    // Might be interesting to have if we allow an admin to open another users annotation though.
     User getUser();
 
     void setUser(User aUser);

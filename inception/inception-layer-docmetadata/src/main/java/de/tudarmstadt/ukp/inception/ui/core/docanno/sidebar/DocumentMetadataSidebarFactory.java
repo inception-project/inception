@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -62,9 +63,9 @@ public class DocumentMetadataSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.tags_s;
+        return new Icon(aId, FontAwesome5IconType.tags_s);
     }
 
     @Override

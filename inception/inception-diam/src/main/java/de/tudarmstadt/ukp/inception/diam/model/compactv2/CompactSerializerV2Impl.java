@@ -20,9 +20,13 @@ package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -46,6 +50,8 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 public class CompactSerializerV2Impl
     implements CompactSerializerV2
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static final String ID = "compact_v2";
 
     private final AnnotationEditorProperties properties;
@@ -175,6 +181,12 @@ public class CompactSerializerV2Impl
     {
         for (var comment : aVDoc.comments()) {
             var cann = vidToAnnotation.get(comment.getVid());
+            if (cann == null) {
+                LOG.warn("VID {} referenced by comment does not exist: {}", comment.getVid(),
+                        comment);
+                continue;
+            }
+
             String code;
             switch (comment.getCommentType()) {
             case ERROR:
