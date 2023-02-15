@@ -25,8 +25,6 @@ import static wicket.contrib.input.events.key.KeyType.Shift;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,26 +41,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateChainLinkAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateChainSpanAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateRelationAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.CreateSpanAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteRelationAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.DeleteSpanAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.MoveSpanAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UpdateFeatureValueAnnotationAction;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import wicket.contrib.input.events.key.KeyType;
@@ -77,37 +60,17 @@ public class UndoPanel
     private static final AtomicLong NEXT_REQUEST_ID = new AtomicLong(1);
 
     private @SpringBean AnnotationSchemaService schemaService;
-
-    private final Map<Class<? extends AnnotationEvent>, ActionFactory<UndoableAnnotationAction, //
-            AnnotationEvent>> undoHandlers;
+    private @SpringBean UndoableActionSupportRegistry undoableActionSupportRegistry;
 
     public UndoPanel(String aId, AnnotationPageBase aPage)
     {
         super(aId);
-
-        undoHandlers = new HashMap<>();
-
-        registerHandler(SpanCreatedEvent.class, CreateSpanAnnotationAction::new);
-        registerHandler(SpanDeletedEvent.class, DeleteSpanAnnotationAction::new);
-        registerHandler(SpanMovedEvent.class, MoveSpanAnnotationAction::new);
-        registerHandler(RelationCreatedEvent.class, CreateRelationAnnotationAction::new);
-        registerHandler(RelationDeletedEvent.class, DeleteRelationAnnotationAction::new);
-        registerHandler(ChainSpanCreatedEvent.class, CreateChainSpanAnnotationAction::new);
-        registerHandler(ChainLinkCreatedEvent.class, CreateChainLinkAnnotationAction::new);
-        registerHandler(FeatureValueUpdatedEvent.class, UpdateFeatureValueAnnotationAction::new);
 
         queue(new LambdaAjaxLink("undo", this::actionUndo)
                 .add(new InputBehavior(new KeyType[] { Ctrl, KeyType.z }, click)));
         queue(new LambdaAjaxLink("redo", this::actionRedo)
                 .add(new InputBehavior(new KeyType[] { Shift, Ctrl, KeyType.z }, click)));
 
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends UndoableAnnotationAction, E extends AnnotationEvent> void registerHandler(
-            Class<E> aEventClass, ActionFactory<T, E> aHandler)
-    {
-        undoHandlers.put(aEventClass, (ActionFactory) aHandler);
     }
 
     private UndoRedoState getState()
@@ -255,12 +218,12 @@ public class UndoPanel
             return;
         }
 
-        var handler = undoHandlers.get(aEvent.getClass());
+        var handler = undoableActionSupportRegistry.getExtension(aEvent);
 
-        if (handler != null) {
+        if (handler.isPresent()) {
             getState().clearRedoableActions();
             long requestId = getRequestId();
-            getState().pushUndoable(handler.create(requestId, schemaService, aEvent));
+            getState().pushUndoable(handler.get().actionForEvent(requestId, aEvent));
         }
     }
 }

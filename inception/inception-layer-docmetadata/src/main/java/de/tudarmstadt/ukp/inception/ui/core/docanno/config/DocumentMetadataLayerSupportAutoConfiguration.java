@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerType;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
@@ -70,5 +71,12 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     {
         return new DocumentMetadataLayerSingletonCreatingWatcher(aDocumentService,
                 aAnnotationService, aLayerRegistry);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
+    {
+        return new DocumentMetadataAnnotationActionUndoSupport();
     }
 }

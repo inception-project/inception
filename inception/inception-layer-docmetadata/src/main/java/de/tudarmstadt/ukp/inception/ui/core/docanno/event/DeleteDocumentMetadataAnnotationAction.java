@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,26 +24,17 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
-public class CreateChainSpanAnnotationAction
-    extends AnnotationAction_ImplBase
-    implements UndoableAnnotationAction
+public class DeleteDocumentMetadataAnnotationAction
+    extends CreateDocumentMetadataAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    private final Range range;
-
-    public CreateChainSpanAnnotationAction(long aRequestId, ChainEvent aEvent)
+    public DeleteDocumentMetadataAnnotationAction(long aRequestId, DocumentMetadataEvent aEvent)
     {
-        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
-
-        range = new Range(aEvent.getAnnotation());
+        super(aRequestId, aEvent);
     }
 
     @Override
@@ -51,9 +42,14 @@ public class CreateChainSpanAnnotationAction
             List<LogMessage> aMessages)
         throws AnnotationException
     {
-        var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.delete(getDocument(), getUser(), aCas, getVid());
-        aMessages.add(LogMessage.info(this, "[%s] span deleted", getLayer().getUiName()));
-        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range));
+        return super.redo(aSchemaService, aCas, aMessages);
+    }
+
+    @Override
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
+        throws AnnotationException
+    {
+        return super.undo(aSchemaService, aCas, aMessages);
     }
 }
