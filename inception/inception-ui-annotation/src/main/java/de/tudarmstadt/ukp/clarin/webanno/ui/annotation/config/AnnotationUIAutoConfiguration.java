@@ -17,16 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config;
 
+import java.util.List;
+
 import javax.servlet.ServletContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.AnnotationUndoActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.ChainAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.FeatureValueActionUndoSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RelationAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -43,5 +54,40 @@ public class AnnotationUIAutoConfiguration
     public AnnotationUndoActionBarExtension annotationUndoActionBarExtension()
     {
         return new AnnotationUndoActionBarExtension();
+    }
+
+    @Bean
+    public UndoableActionSupportRegistryImpl undoableActionSupportRegistry(
+            @Lazy @Autowired(required = false) List<UndoableAnnotationActionSupport> aExtensions)
+    {
+        return new UndoableActionSupportRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public SpanAnnotationActionUndoSupport spanAnnotationActionUndoSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new SpanAnnotationActionUndoSupport(aSchemaService);
+    }
+
+    @Bean
+    public RelationAnnotationActionUndoSupport relationAnnotationActionUndoSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationAnnotationActionUndoSupport(aSchemaService);
+    }
+
+    @Bean
+    public ChainAnnotationActionUndoSupport chainAnnotationActionUndoSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new ChainAnnotationActionUndoSupport(aSchemaService);
+    }
+
+    @Bean
+    public FeatureValueActionUndoSupport featureValueAnnotationActionUndoSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new FeatureValueActionUndoSupport(aSchemaService);
     }
 }
