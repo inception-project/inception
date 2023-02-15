@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,26 +24,23 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.AnnotationAction_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 
-public class CreateChainSpanAnnotationAction
+public class CreateDocumentMetadataAnnotationAction
     extends AnnotationAction_ImplBase
-    implements UndoableAnnotationAction
+    implements RedoableAnnotationAction, UndoableAnnotationAction
 {
-    private static final long serialVersionUID = -6268918582061776355L;
+    private static final long serialVersionUID = 2201744948794220160L;
 
-    private final Range range;
-
-    public CreateChainSpanAnnotationAction(long aRequestId, ChainEvent aEvent)
+    public CreateDocumentMetadataAnnotationAction(long aRequestId, DocumentMetadataEvent aEvent)
     {
         super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
-
-        range = new Range(aEvent.getAnnotation());
     }
 
     @Override
@@ -53,7 +50,18 @@ public class CreateChainSpanAnnotationAction
     {
         var adapter = aSchemaService.getAdapter(getLayer());
         adapter.delete(getDocument(), getUser(), aCas, getVid());
-        aMessages.add(LogMessage.info(this, "[%s] span deleted", getLayer().getUiName()));
-        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range));
+        aMessages.add(LogMessage.info(this, "[%s] deleted", getLayer().getUiName()));
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<PostAction> redo(AnnotationSchemaService aSchemaService, CAS aCas,
+            List<LogMessage> aMessages)
+        throws AnnotationException
+    {
+        var adapter = (DocumentMetadataLayerAdapter) aSchemaService.getAdapter(getLayer());
+        adapter.restore(getDocument(), getUser(), aCas, getVid());
+        aMessages.add(LogMessage.info(this, "[%s] restored", getLayer().getUiName()));
+        return Optional.empty();
     }
 }

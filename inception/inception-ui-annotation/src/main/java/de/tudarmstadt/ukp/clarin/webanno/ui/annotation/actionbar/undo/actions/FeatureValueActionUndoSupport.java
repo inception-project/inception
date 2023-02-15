@@ -19,19 +19,18 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationUIAutoConfiguration#featureValueActionUndoSupport}.
+ * </p>
+ */
 public class FeatureValueActionUndoSupport
     implements UndoableAnnotationActionSupport
 {
-    private final AnnotationSchemaService schemaService;
-
-    public FeatureValueActionUndoSupport(AnnotationSchemaService aSchemaService)
-    {
-        schemaService = aSchemaService;
-    }
-
     @Override
     public boolean accepts(ApplicationEvent aContext)
     {
@@ -42,7 +41,7 @@ public class FeatureValueActionUndoSupport
     public UndoableAnnotationAction actionForEvent(long aRequestId, ApplicationEvent aEvent)
     {
         if (aEvent instanceof FeatureValueUpdatedEvent) {
-            return new UpdateFeatureValueAnnotationAction(aRequestId, schemaService,
+            return new UpdateFeatureValueAnnotationAction(aRequestId,
                     (FeatureValueUpdatedEvent) aEvent);
         }
 

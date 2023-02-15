@@ -41,10 +41,9 @@ public class CreateSpanAnnotationAction
 
     private final Range range;
 
-    public CreateSpanAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            SpanEvent aEvent)
+    public CreateSpanAnnotationAction(long aRequestId, SpanEvent aEvent)
     {
-        super(aRequestId, aEvent, new VID(aEvent.getAnnotation()));
+        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
 
         range = new Range(aEvent.getAnnotation());
     }

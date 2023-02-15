@@ -15,39 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationUIAutoConfiguration#chainAnnotationActionUndoSupport}.
+ * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataAnnotationActionUndoSupport}.
  * </p>
  */
-public class ChainAnnotationActionUndoSupport
+public class DocumentMetadataAnnotationActionUndoSupport
     implements UndoableAnnotationActionSupport
 {
     @Override
     public boolean accepts(ApplicationEvent aContext)
     {
-        return aContext instanceof ChainSpanEvent;
+        return aContext instanceof DocumentMetadataEvent;
     }
 
     @Override
     public UndoableAnnotationAction actionForEvent(long aRequestId, ApplicationEvent aEvent)
     {
-        if (aEvent instanceof ChainSpanCreatedEvent) {
-            return new CreateChainSpanAnnotationAction(aRequestId, (ChainSpanCreatedEvent) aEvent);
+        if (aEvent instanceof DocumentMetadataCreatedEvent) {
+            return new CreateDocumentMetadataAnnotationAction(aRequestId,
+                    (DocumentMetadataCreatedEvent) aEvent);
         }
 
-        if (aEvent instanceof ChainLinkCreatedEvent) {
-            return new CreateChainLinkAnnotationAction(aRequestId, (ChainLinkCreatedEvent) aEvent);
+        if (aEvent instanceof DocumentMetadataDeletedEvent) {
+            return new DeleteDocumentMetadataAnnotationAction(aRequestId,
+                    (DocumentMetadataDeletedEvent) aEvent);
         }
 
         throw new IllegalArgumentException("Not an undoable action: [" + aEvent.getClass() + "]");

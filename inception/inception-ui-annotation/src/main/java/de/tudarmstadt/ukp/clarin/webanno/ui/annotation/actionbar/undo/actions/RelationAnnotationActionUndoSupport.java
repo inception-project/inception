@@ -19,21 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationUIAutoConfiguration#relationAnnotationActionUndoSupport}.
+ * </p>
+ */
 public class RelationAnnotationActionUndoSupport
     implements UndoableAnnotationActionSupport
 {
-    private final AnnotationSchemaService schemaService;
-
-    public RelationAnnotationActionUndoSupport(AnnotationSchemaService aSchemaService)
-    {
-        schemaService = aSchemaService;
-    }
-
     @Override
     public boolean accepts(ApplicationEvent aContext)
     {
@@ -44,13 +43,11 @@ public class RelationAnnotationActionUndoSupport
     public UndoableAnnotationAction actionForEvent(long aRequestId, ApplicationEvent aEvent)
     {
         if (aEvent instanceof RelationCreatedEvent) {
-            return new CreateRelationAnnotationAction(aRequestId, schemaService,
-                    (RelationCreatedEvent) aEvent);
+            return new CreateRelationAnnotationAction(aRequestId, (RelationCreatedEvent) aEvent);
         }
 
         if (aEvent instanceof RelationDeletedEvent) {
-            return new DeleteRelationAnnotationAction(aRequestId, schemaService,
-                    (RelationDeletedEvent) aEvent);
+            return new DeleteRelationAnnotationAction(aRequestId, (RelationDeletedEvent) aEvent);
         }
 
         throw new IllegalArgumentException("Not an undoable action: [" + aEvent.getClass() + "]");

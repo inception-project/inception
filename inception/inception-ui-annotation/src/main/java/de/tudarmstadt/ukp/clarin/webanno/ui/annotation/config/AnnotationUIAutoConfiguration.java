@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Re
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -64,30 +63,26 @@ public class AnnotationUIAutoConfiguration
     }
 
     @Bean
-    public SpanAnnotationActionUndoSupport spanAnnotationActionUndoSupport(
-            AnnotationSchemaService aSchemaService)
+    public SpanAnnotationActionUndoSupport spanAnnotationActionUndoSupport()
     {
-        return new SpanAnnotationActionUndoSupport(aSchemaService);
+        return new SpanAnnotationActionUndoSupport();
     }
 
     @Bean
-    public RelationAnnotationActionUndoSupport relationAnnotationActionUndoSupport(
-            AnnotationSchemaService aSchemaService)
+    public RelationAnnotationActionUndoSupport relationAnnotationActionUndoSupport()
     {
-        return new RelationAnnotationActionUndoSupport(aSchemaService);
+        return new RelationAnnotationActionUndoSupport();
     }
 
     @Bean
-    public ChainAnnotationActionUndoSupport chainAnnotationActionUndoSupport(
-            AnnotationSchemaService aSchemaService)
+    public ChainAnnotationActionUndoSupport chainAnnotationActionUndoSupport()
     {
-        return new ChainAnnotationActionUndoSupport(aSchemaService);
+        return new ChainAnnotationActionUndoSupport();
     }
 
     @Bean
-    public FeatureValueActionUndoSupport featureValueAnnotationActionUndoSupport(
-            AnnotationSchemaService aSchemaService)
+    public FeatureValueActionUndoSupport featureValueActionUndoSupport()
     {
-        return new FeatureValueActionUndoSupport(aSchemaService);
+        return new FeatureValueActionUndoSupport();
     }
 }

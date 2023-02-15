@@ -33,10 +33,9 @@ public class DeleteSpanAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    public DeleteSpanAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            SpanEvent aEvent)
+    public DeleteSpanAnnotationAction(long aRequestId, SpanEvent aEvent)
     {
-        super(aRequestId, aSchemaService, aEvent);
+        super(aRequestId, aEvent);
     }
 
     @Override

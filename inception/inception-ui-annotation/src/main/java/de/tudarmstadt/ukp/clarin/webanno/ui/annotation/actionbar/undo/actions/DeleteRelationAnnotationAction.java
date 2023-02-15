@@ -33,10 +33,9 @@ public class DeleteRelationAnnotationAction
 {
     private static final long serialVersionUID = -6268918582061776355L;
 
-    public DeleteRelationAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            RelationEvent aEvent)
+    public DeleteRelationAnnotationAction(long aRequestId, RelationEvent aEvent)
     {
-        super(aRequestId, aSchemaService, aEvent);
+        super(aRequestId, aEvent);
     }
 
     @Override

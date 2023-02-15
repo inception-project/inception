@@ -19,22 +19,21 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationUIAutoConfiguration#spanAnnotationActionUndoSupport}.
+ * </p>
+ */
 public class SpanAnnotationActionUndoSupport
     implements UndoableAnnotationActionSupport
 {
-    private final AnnotationSchemaService schemaService;
-
-    public SpanAnnotationActionUndoSupport(AnnotationSchemaService aSchemaService)
-    {
-        schemaService = aSchemaService;
-    }
-
     @Override
     public boolean accepts(ApplicationEvent aContext)
     {
@@ -45,17 +44,15 @@ public class SpanAnnotationActionUndoSupport
     public UndoableAnnotationAction actionForEvent(long aRequestId, ApplicationEvent aEvent)
     {
         if (aEvent instanceof SpanCreatedEvent) {
-            return new CreateSpanAnnotationAction(aRequestId, schemaService,
-                    (SpanCreatedEvent) aEvent);
+            return new CreateSpanAnnotationAction(aRequestId, (SpanCreatedEvent) aEvent);
         }
 
         if (aEvent instanceof SpanDeletedEvent) {
-            return new DeleteSpanAnnotationAction(aRequestId, schemaService,
-                    (SpanDeletedEvent) aEvent);
+            return new DeleteSpanAnnotationAction(aRequestId, (SpanDeletedEvent) aEvent);
         }
 
         if (aEvent instanceof SpanMovedEvent) {
-            return new MoveSpanAnnotationAction(aRequestId, schemaService, (SpanMovedEvent) aEvent);
+            return new MoveSpanAnnotationAction(aRequestId, (SpanMovedEvent) aEvent);
         }
 
         throw new IllegalArgumentException("Not an undoable action: [" + aEvent.getClass() + "]");
