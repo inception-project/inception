@@ -72,11 +72,11 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationSidebarAutoConfiguration#curationRenderer}.
+ * {@link CurationSidebarAutoConfiguration#curationSidebarRenderer}.
  * </p>
  */
 @Order(RenderStep.RENDER_SYNTHETIC_STRUCTURE)
-public class CurationRenderer
+public class CurationSidebarRenderer
     implements RenderStep
 {
     public static final String ID = "CurationRenderer";
@@ -91,7 +91,7 @@ public class CurationRenderer
     private final UserDao userRepository;
     private final AnnotationSchemaService annotationService;
 
-    public CurationRenderer(CurationSidebarService aCurationService,
+    public CurationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
     {

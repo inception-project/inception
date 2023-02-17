@@ -38,3 +38,14 @@ come back at a later time.
 
 To stop a curation session, use the **stop curation session** button next to the curation target
 select box.
+
+It is possible to start/stop a curation session via the URL. Adding the URL query parameter 
+`curationSession=on` to an annotation page URL will start a curation session (if none is running)
+while `curationSession=off` will stop a running session. By default, the session is started using
+the curation document as the curation target. By setting the parameter `curationTargetOwn=true`, the
+curation target can be changed to the current users own document - if the user has the *annotator*
+role in addition to the *curator* role. This parameter only takes effect when `curationSession=on` is
+also set. Mind that curation sessions in a project run until terminated. If you want directly link
+to a document on the annotation page and ensure that *no* curations session is running, be sure to
+add the `curationSession=off` parameter.
+Example: `http://localhost:8080/p/PROJECT/annotate/DOC-ID?curationSession=on&curationTargetOwn=true`.

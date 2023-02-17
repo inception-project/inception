@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
@@ -31,11 +32,13 @@ import static java.util.stream.Collectors.toSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -58,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
@@ -181,62 +185,34 @@ public class CurationSidebarServiceImpl
         return settings;
     }
 
-    private class CurationSession
+    @Transactional
+    @Override
+    public void setSelectedUsers(String aSessionOwner, long aProjectId,
+            Collection<User> aSelectedUsers)
     {
-        private List<User> selectedUsers;
-        // to find source document of the curated document
-        // the curationdoc can be retrieved from user (CURATION or current) and projectId
-        private String curationTarget;
-        private boolean showAll;
+        synchronized (sessions) {
+            var session = sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
+            if (session == null) {
+                return;
+            }
 
-        public CurationSession(String aUser)
-        {
-            curationTarget = aUser;
-        }
-
-        public CurationSession(String aCurationTarget, List<User> aSelectedUsers)
-        {
-            curationTarget = aCurationTarget;
-            selectedUsers = new ArrayList<>(aSelectedUsers);
-        }
-
-        public List<User> getSelectedUsers()
-        {
-            return selectedUsers;
-        }
-
-        public void setSelectedUsers(Collection<User> aSelectedUsers)
-        {
-            selectedUsers = new ArrayList<>(aSelectedUsers);
-        }
-
-        public String getCurationTarget()
-        {
-            return curationTarget;
-        }
-
-        public void setCurationTarget(String aCurationTarget)
-        {
-            curationTarget = aCurationTarget;
-        }
-
-        public boolean isShowAll()
-        {
-            return showAll;
-        }
-
-        public void setShowAll(boolean aShowAll)
-        {
-            showAll = aShowAll;
+            session.setSelectedUsers(aSelectedUsers);
         }
     }
 
     @Transactional
     @Override
-    public List<User> listUsersSelectedForCuration(String aSessionOwner, long aProjectId)
+    public List<User> getSelectedUsers(String aSessionOwner, long aProjectId)
     {
-        var selectedUsers = getSession(aSessionOwner, aProjectId).getSelectedUsers();
-        return selectedUsers == null ? emptyList() : unmodifiableList(selectedUsers);
+        synchronized (sessions) {
+            var session = sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
+            if (session == null) {
+                return Collections.emptyList();
+            }
+
+            var selectedUsers = session.getSelectedUsers();
+            return selectedUsers == null ? emptyList() : unmodifiableList(selectedUsers);
+        }
     }
 
     @Transactional
@@ -244,14 +220,33 @@ public class CurationSidebarServiceImpl
     public List<User> listUsersReadyForCuration(String aSessionOwner, Project aProject,
             SourceDocument aDocument)
     {
-        List<User> selectedUsers = getSession(aSessionOwner, aProject.getId()).getSelectedUsers();
+        synchronized (sessions) {
+            var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
+            if (session == null) {
+                return Collections.emptyList();
+            }
 
-        if (selectedUsers == null || selectedUsers.isEmpty()) {
-            return new ArrayList<>();
+            var selectedUsers = session.getSelectedUsers();
+
+            if (selectedUsers == null || selectedUsers.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<User> finishedUsers = listCuratableUsers(aDocument);
+            finishedUsers.retainAll(selectedUsers);
+            return finishedUsers;
         }
-        List<User> finishedUsers = listCuratableUsers(aDocument);
-        finishedUsers.retainAll(selectedUsers);
-        return finishedUsers;
+    }
+
+    @Override
+    @Transactional
+    public List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument)
+    {
+        String curationTarget = getCurationTarget(aSessionOwner, aDocument.getProject().getId());
+        return listCuratableUsers(aDocument).stream()
+                .filter(user -> !user.getUsername().equals(aSessionOwner)
+                        || curationTarget.equals(CURATION_USER))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -320,20 +315,18 @@ public class CurationSidebarServiceImpl
 
     @Transactional
     @Override
-    public void setSelectedUsers(String aSessionOwner, long aProjectId,
-            Collection<User> aSelectedUsers)
+    public void setCurationTarget(String aSessionOwner, Project aProject, boolean aOwnDocument)
     {
         synchronized (sessions) {
-            getSession(aSessionOwner, aProjectId).setSelectedUsers(aSelectedUsers);
-        }
-    }
+            var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
+            if (session == null) {
+                return;
+            }
 
-    @Transactional
-    @Override
-    public void setCurationTarget(String aSessionOwner, long aProjectId, String aUserName)
-    {
-        synchronized (sessions) {
-            getSession(aSessionOwner, aProjectId).setCurationTarget(aUserName);
+            session.curationTarget = aOwnDocument
+                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR) ? aSessionOwner
+                            : CURATION_USER;
+
         }
     }
 
@@ -346,10 +339,11 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
-    public void startSession(String aSessionOwner, long aProjectId)
+    public void startSession(String aSessionOwner, Project aProject, boolean aOwnDocument)
     {
         synchronized (sessions) {
-            getSession(aSessionOwner, aProjectId);
+            getSession(aSessionOwner, aProject.getId());
+            setCurationTarget(aSessionOwner, aProject, aOwnDocument);
         }
     }
 
@@ -359,6 +353,28 @@ public class CurationSidebarServiceImpl
         synchronized (sessions) {
             sessions.remove(new CurationSessionKey(aSessionOwner, aProjectId));
         }
+    }
+
+    @EventListener
+    @Transactional
+    public void onDocumentOpened(DocumentOpenedEvent aEvent)
+    {
+        setDefaultSelectedUsersForDocument(aEvent.getUser(), aEvent.getDocument());
+    }
+
+    @Override
+    public void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument)
+    {
+        var project = aDocument.getProject();
+
+        if (!existsSession(aSessionOwner, project.getId())) {
+            return;
+        }
+
+        // The set of curatable annotators can change from document to document, so we reset the
+        // selected users every time the document is switched
+        setSelectedUsers(aSessionOwner, project.getId(),
+                listCuratableUsers(aSessionOwner, aDocument));
     }
 
     @EventListener
@@ -483,6 +499,7 @@ public class CurationSidebarServiceImpl
         synchronized (sessions) {
             curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         }
+
         if (curationUser == null) {
             // default to user as curation target
             return userRegistry.get(aSessionOwner);
@@ -504,5 +521,55 @@ public class CurationSidebarServiceImpl
                 && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
                 || (username.equals(CURATION_USER)
                         && sourceDoc.getState().equals(CURATION_FINISHED));
+    }
+
+    private class CurationSession
+    {
+        private List<User> selectedUsers;
+        // to find source document of the curated document
+        // the curationdoc can be retrieved from user (CURATION or current) and projectId
+        private String curationTarget;
+        private boolean showAll;
+
+        public CurationSession(String aUser)
+        {
+            curationTarget = aUser;
+        }
+
+        public CurationSession(String aCurationTarget, List<User> aSelectedUsers)
+        {
+            curationTarget = aCurationTarget;
+            selectedUsers = new ArrayList<>(aSelectedUsers);
+        }
+
+        public List<User> getSelectedUsers()
+        {
+            return selectedUsers;
+        }
+
+        public void setSelectedUsers(Collection<User> aSelectedUsers)
+        {
+            selectedUsers = new ArrayList<>(aSelectedUsers);
+        }
+
+        public String getCurationTarget()
+        {
+            return curationTarget;
+        }
+
+        public void setCurationTarget(String aCurationTarget)
+        {
+            curationTarget = aCurationTarget;
+        }
+
+        public boolean isShowAll()
+        {
+            return showAll;
+        }
+
+        public void setShowAll(boolean aShowAll)
+        {
+            showAll = aShowAll;
+        }
     }
 }

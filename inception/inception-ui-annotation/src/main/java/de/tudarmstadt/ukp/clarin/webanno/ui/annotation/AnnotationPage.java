@@ -142,9 +142,6 @@ public class AnnotationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
         StringValue user = aPageParameters.get(PAGE_PARAM_USER);
-        if (focus == null) {
-            focus = StringValue.valueOf(0);
-        }
 
         handleParameters(document, focus, user);
 
@@ -388,7 +385,11 @@ public class AnnotationPage
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
-        // Update timestamp in state
+        bumpAnnotationCasTimestamp(state);
+    }
+
+    public void bumpAnnotationCasTimestamp(AnnotatorState state) throws IOException
+    {
         documentService
                 .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername())
                 .ifPresent(state::setAnnotationDocumentTimestamp);
@@ -446,11 +447,7 @@ public class AnnotationPage
                 documentService.writeAnnotationCas(editorCas, annotationDocument,
                         AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
-                // Initialize timestamp in state
-                documentService
-                        .getAnnotationCasTimestamp(state.getDocument(),
-                                state.getUser().getUsername())
-                        .ifPresent(state::setAnnotationDocumentTimestamp);
+                bumpAnnotationCasTimestamp(state);
             }
 
             // Load constraints
@@ -566,12 +563,30 @@ public class AnnotationPage
         // there is also a document change.
         if (doc != null && //
                 doc.equals(state.getDocument()) && //
-                aFocusParameter != null && //
                 aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //
-                aUserParameter != null && //
                 state.getUser().getUsername().equals(aUserParameter.toString()) //
         ) {
             return;
+        }
+
+        state.setProject(project);
+
+        if (!aUserParameter.isEmpty()
+                && !state.getUser().getUsername().equals(aUserParameter.toString())) {
+            // REC: We currently do not want that one can switch to the CURATION_USER directly via
+            // the URL without having to activate sidebar curation mode as well, so we do not handle
+            // the CURATION_USER here.
+            // if (CURATION_USER.equals(aUserParameter.toString())) {
+            // state.setUser(new User(CURATION_USER));
+            // }
+            // else {
+            User requestedUser = userRepository.get(aUserParameter.toString());
+            if (requestedUser == null) {
+                error("User not found [" + aUserParameter + "]");
+                backToProjectPage();
+            }
+            state.setUser(requestedUser);
+            // }
         }
 
         if (doc != null && !documentAccess.canViewAnnotationDocument(user.getUsername(),
@@ -580,39 +595,6 @@ public class AnnotationPage
                     "Requested document does not exist or you have no permissions to access it.");
             backToProjectPage();
         }
-
-        // if (!aUserParameter.isEmpty()) {
-        // User requestedUser = userRepository.get(aUserParameter.toString());
-        // if (requestedUser == null) {
-        // error("User not found [" + aUserParameter + "]");
-        // return;
-        // }
-        // state.setUser(requestedUser);
-        // }
-        //
-        // if (!user.equals(state.getUser())) {
-        // if (CURATION_USER.equals(state.getUser().getUsername())) {
-        // // Curators can access the special CURATION_USER
-        // requireProjectRole(user, MANAGER, CURATOR);
-        // }
-        // else {
-        // // Only managers are allowed to open documents as another user
-        // requireProjectRole(user, MANAGER);
-        // }
-        // }
-        //
-        // // Check if document is locked for the user
-        // if (doc != null && documentService.existsAnnotationDocument(doc, state.getUser())) {
-        // AnnotationDocument adoc = documentService.getAnnotationDocument(doc, state.getUser());
-        //
-        // if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
-        // error("Document [" + doc.getId() + "] in project [" + project.getId()
-        // + "] is locked for user [" + state.getUser().getUsername() + "]");
-        // return;
-        // }
-        // }
-
-        state.setProject(project);
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
