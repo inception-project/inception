@@ -293,7 +293,7 @@ export class Visualizer {
 
     const chunkElement = this.getChunkElementWithId(chunk.index)
     if (chunkElement) {
-      console.log('Scrolling to ', chunkElement)
+      // console.log('Scrolling to ', chunkElement)
       chunkElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
       this.svg.node.querySelectorAll('.ping').forEach((ping) => ping.remove())
