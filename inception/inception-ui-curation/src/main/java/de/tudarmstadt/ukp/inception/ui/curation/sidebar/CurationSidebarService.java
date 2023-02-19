@@ -39,7 +39,7 @@ public interface CurationSidebarService
      * @return list of users that were selected to be shown for curation by the given user
      */
     @SuppressWarnings("javadoc")
-    List<User> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
+    List<User> getSelectedUsers(String aCurrentUser, long aProjectId);
 
     /**
      * @return CAS associated with curation doc for the given user
@@ -56,7 +56,7 @@ public interface CurationSidebarService
         throws IOException;
 
     /**
-     * Store the users that were selected to be shown for curation by the given user
+     * Store the users that were selected to be shown for curation by the given user.
      */
     @SuppressWarnings("javadoc")
     void setSelectedUsers(String aCurrentUser, long aProjectId, Collection<User> aUsers);
@@ -65,7 +65,7 @@ public interface CurationSidebarService
      * Store which name the curated document should be associated with
      */
     @SuppressWarnings("javadoc")
-    void setCurationTarget(String aCurrentUser, long aProjectId, String aCurationName);
+    void setCurationTarget(String aCurrentUser, Project aProject, boolean aOwnDocument);
 
     /**
      * Start a new curation session.
@@ -77,7 +77,7 @@ public interface CurationSidebarService
      * Start a new curation session.
      */
     @SuppressWarnings("javadoc")
-    void startSession(String aSessionOwner, long aProjectId);
+    void startSession(String aSessionOwner, Project aProjectId, boolean aOwnDocument);
 
     /**
      * Stop a running curation session.
@@ -111,6 +111,8 @@ public interface CurationSidebarService
     @SuppressWarnings("javadoc")
     List<User> listCuratableUsers(SourceDocument aSourceDocument);
 
+    List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
+
     /**
      * @return if user in given annotator state is curating and has finished it
      * 
@@ -124,4 +126,6 @@ public interface CurationSidebarService
     void setShowAll(String aUsername, Long aProjectId, boolean aValue);
 
     boolean isShowAll(String aUsername, Long aProjectId);
+
+    void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
 }

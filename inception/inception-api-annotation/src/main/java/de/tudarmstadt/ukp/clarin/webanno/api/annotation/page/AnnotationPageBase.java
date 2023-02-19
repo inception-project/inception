@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -109,8 +110,9 @@ public abstract class AnnotationPageBase
     {
         super(aParameters);
 
-        StringValue documentParameter = getPageParameters().get(PAGE_PARAM_DOCUMENT);
-        StringValue userParameter = getPageParameters().get(PAGE_PARAM_USER);
+        var params = getPageParameters();
+        StringValue documentParameter = params.get(PAGE_PARAM_DOCUMENT);
+        StringValue userParameter = params.get(PAGE_PARAM_USER);
 
         // If the page was accessed using an URL form ending in a document ID, let's move
         // the document ID into the fragment and redirect to the form without the document ID.
@@ -123,8 +125,13 @@ public abstract class AnnotationPageBase
             clientUrl.resolveRelative(Url.parse("./"));
             List<String> fragmentParams = new ArrayList<>();
             fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+            params.remove(PAGE_PARAM_DOCUMENT);
             if (!userParameter.isEmpty()) {
                 fragmentParams.add(format("%s=%s", PAGE_PARAM_USER, userParameter.toString()));
+                params.remove(PAGE_PARAM_USER);
+            }
+            for (var namedParam : params.getAllNamed()) {
+                clientUrl.setQueryParameter(namedParam.getKey(), namedParam.getValue());
             }
             clientUrl.setFragment("!" + fragmentParams.stream().collect(joining("&")));
             String url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
@@ -530,7 +537,11 @@ public abstract class AnnotationPageBase
                 fragment.removeParameter(PAGE_PARAM_FOCUS);
             }
 
-            if (userRepository.getCurrentUsername().equals(state.getUser().getUsername())) {
+            // REC: We currently do not want that one can switch to the CURATION_USER directly via
+            // the URL without having to activate sidebar curation mode as well, so we do not handle
+            // the CURATION_USER here.
+            if (Set.of(userRepository.getCurrentUsername(), CURATION_USER)
+                    .contains(state.getUser().getUsername())) {
                 fragment.removeParameter(PAGE_PARAM_USER);
             }
             else {
