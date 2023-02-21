@@ -39,6 +39,7 @@ public class KBHandle
     private static final long serialVersionUID = -4284462837460396185L;
     private String identifier;
     private String name;
+    private String queryBestMatchTerm;
     private Set<Pair<String, String>> matchTerms;
     private String description;
     private KnowledgeBase kb;
@@ -207,6 +208,16 @@ public class KBHandle
     public String getDebugInfo()
     {
         return debugInfo;
+    }
+
+    public void setQueryBestMatchTerm(String aTerm)
+    {
+        queryBestMatchTerm = aTerm;
+    }
+
+    public String getQueryBestMatchTerm()
+    {
+        return queryBestMatchTerm;
     }
 
     public int getRank()

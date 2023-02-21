@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -453,6 +454,9 @@ public class ConceptLinkingServiceImpl
                 .map(candidate -> {
                     KBHandle handle = candidate.getHandle();
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+                    candidate.get(KEY_QUERY_BEST_MATCH_TERM_NC)
+                            .filter(t -> !t.equalsIgnoreCase(handle.getUiLabel()))
+                            .ifPresent(handle::setQueryBestMatchTerm);
                     return handle;
                 }) //
                 .collect(Collectors.toList());

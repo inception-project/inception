@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
+import static java.lang.Integer.MAX_VALUE;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 
@@ -44,6 +45,13 @@ public class CandidateEntity
     public static final Key<String> KEY_QUERY_NC = new Key<>("queryNC");
 
     /**
+     * The term which had the best match with query or mention. This should be displayed to the user
+     * in addition to the handles pref-label if it does differ from the pref-label.
+     */
+    public static final Key<String> KEY_QUERY_BEST_MATCH_TERM_NC = new Key<>(
+            "queryBestMatchTermNC");
+
+    /**
      * Whether the query entered by the user is completely in lower case.
      */
     public static final Key<Boolean> KEY_QUERY_IS_LOWER_CASE = new Key<>("queryIsLowerCase");
@@ -68,11 +76,10 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention",
-            Integer.MAX_VALUE);
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
 
     public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNC",
-            Integer.MAX_VALUE);
+            MAX_VALUE);
 
     /**
      * Edit distance between mention + context and candidate entity label
@@ -82,7 +89,7 @@ public class CandidateEntity
      * be calculated.
      */
     public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
-            Integer.MAX_VALUE);
+            MAX_VALUE);
 
     /**
      * Edit distance between typed string and candidate entity label
@@ -91,11 +98,9 @@ public class CandidateEntity
      * the default value to ensure that candidates are ranked last on this feature if it could not
      * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery",
-            Integer.MAX_VALUE);
+    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
 
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNC",
-            Integer.MAX_VALUE);
+    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNC", MAX_VALUE);
 
     /**
      * set of directly related entities as IRI Strings
@@ -220,10 +225,11 @@ public class CandidateEntity
         }
     }
 
-    public int mergeMin(Key<Integer> aKey, int aValue)
+    public boolean mergeMin(Key<Integer> aKey, int aValue)
     {
-        return (int) features.merge(aKey.name, aValue,
+        var newValue = (int) features.merge(aKey.name, aValue,
                 (o, n) -> o == null ? n : Math.min((int) o, (int) n));
+        return newValue == aValue;
     }
 
     public Map<String, Object> getFeatures()
