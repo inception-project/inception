@@ -27,11 +27,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.wicket.util.file.File;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
