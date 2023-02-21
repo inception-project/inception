@@ -220,6 +220,12 @@ public class CandidateEntity
         }
     }
 
+    public int mergeMin(Key<Integer> aKey, int aValue)
+    {
+        return (int) features.merge(aKey.name, aValue,
+                (o, n) -> o == null ? n : Math.min((int) o, (int) n));
+    }
+
     public Map<String, Object> getFeatures()
     {
         return unmodifiableMap(features);

@@ -294,7 +294,7 @@ public class ConceptLinkingServiceImpl
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates starting with [{}]] in {}ms", startingWithMatches.size(),
+        log.debug("Found [{}] candidates starting with [{}] in {}ms", startingWithMatches.size(),
                 aQuery, duration);
         WicketUtil.serverTiming("findStartingWithMatches", duration);
 
@@ -399,7 +399,7 @@ public class ConceptLinkingServiceImpl
 
         candidate.put(KEY_LABEL_NC, candidate.getLabel().toLowerCase(candidate.getLocale()));
 
-        if (aCas != null) {
+        if (aCas != null && aMention != null) {
             AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
@@ -423,6 +423,7 @@ public class ConceptLinkingServiceImpl
                 log.warn("Mention sentence could not be determined. Skipping.");
             }
         }
+
         return candidate;
     }
 

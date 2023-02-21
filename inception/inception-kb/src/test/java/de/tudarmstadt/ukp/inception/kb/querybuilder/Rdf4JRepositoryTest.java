@@ -20,12 +20,20 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.DATA_ADDITIONAL_SEARCH_PROPERTIES_2;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.TURTLE_PREFIX;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.importDataFromString;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.contentOf;
+import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.util.file.File;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -33,6 +41,8 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -101,5 +111,24 @@ public class Rdf4JRepositoryTest
     public void runTests(String aScenarioName, Scenario aScenario) throws Exception
     {
         aScenario.implementation.accept(repository, kb);
+    }
+
+    @Disabled("Not actually a test but rather a playground for SPARQL queries")
+    @Test
+    void runSparqlQuery() throws Exception
+    {
+        try (RepositoryConnection conn = repository.getConnection()) {
+            importDataFromString(repository, kb, TURTLE, TURTLE_PREFIX,
+                    DATA_ADDITIONAL_SEARCH_PROPERTIES_2);
+
+            var tupleQuery = conn.prepareTupleQuery(contentOf(new File(
+                    "src/test/resources/queries/additional_search_properties_2/rdf4j.sparql")));
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bindings = result.next();
+                    System.out.println(bindings);
+                }
+            }
+        }
     }
 }

@@ -24,7 +24,9 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static org.apache.commons.lang3.StringUtils.join;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -47,26 +49,32 @@ public class LevenshteinFeatureGenerator
     public void apply(CandidateEntity aCandidate)
     {
         String label = aCandidate.getLabel();
-        String labelNC = aCandidate.getLabel().toLowerCase(aCandidate.getLocale());
+        update(aCandidate, label);
+        aCandidate.getHandle().getMatchTerms().forEach(p -> update(aCandidate, p.getKey()));
+    }
+
+    private void update(CandidateEntity aCandidate, String label)
+    {
+        String labelNC = label.toLowerCase(aCandidate.getLocale());
+
+        aCandidate.get(KEY_MENTION_NC) //
+                .map(mention -> lev.apply(labelNC, mention)) //
+                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_NC, score));
+
+        aCandidate.get(KEY_QUERY_NC) //
+                .map(query -> lev.apply(labelNC, query)) //
+                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY_NC, score));
 
         aCandidate.get(KEY_MENTION) //
                 .map(mention -> lev.apply(label, mention)) //
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_MENTION, score));
-
-        aCandidate.get(KEY_MENTION) //
-                .map(mention -> lev.apply(labelNC, mention)) //
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_MENTION_NC, score));
+                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION, score));
 
         aCandidate.get(KEY_QUERY) //
                 .map(query -> lev.apply(label, query)) //
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_QUERY, score));
-
-        aCandidate.get(KEY_QUERY) //
-                .map(query -> lev.apply(labelNC, query)) //
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_QUERY_NC, score));
+                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_QUERY, score));
 
         aCandidate.get(KEY_MENTION_CONTEXT) //
                 .map(context -> lev.apply(label, join(context, ' '))) //
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_MENTION_CONTEXT, score));
+                .ifPresent(score -> aCandidate.mergeMin(KEY_LEVENSHTEIN_MENTION_CONTEXT, score));
     }
 }
