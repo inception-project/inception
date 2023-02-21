@@ -1,0 +1,13 @@
+PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>
+          SELECT DISTINCT ?m ?l ?subj
+          WHERE { { { { ?pMatch <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> * <http://www.w3.org/2000/01/rdf-schema#prefLabel> . } UNION { ?pMatch <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> * <http://www.w3.org/2000/01/rdf-schema#label> . }
+          { ?subj search:matches [ search:query "hand" ;
+              search:property ?pMatch ;
+              search:snippet ?snippet ] .
+          BIND( REPLACE( REPLACE( ?snippet, "</B>", "" ), "<B>", "" ) AS ?label )
+          ?subj ?pMatch ?m .
+          FILTER ( ( STR( ?label ) = STR( ?m ) && ( LANGMATCHES( LANG( ?m ), "en" ) || LANG( ?m ) = "" ) ) ) } } }
+          OPTIONAL { ?pPrefLabel <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> * <http://www.w3.org/2000/01/rdf-schema#prefLabel> . }
+          OPTIONAL { { ?subj ?pPrefLabel ?l .
+          FILTER ( ( LANGMATCHES( LANG( ?l ), "en" ) || LANG( ?l ) = "" ) ) } } }
+          LIMIT 200

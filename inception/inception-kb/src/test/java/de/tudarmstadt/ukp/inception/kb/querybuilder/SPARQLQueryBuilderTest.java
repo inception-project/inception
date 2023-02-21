@@ -47,6 +47,7 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiConsumer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -99,6 +100,9 @@ public class SPARQLQueryBuilderTest
 
     static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = contentOf(
             new File("src/test/resources/turtle/data_additional_search_properties.ttl"), UTF_8);
+
+    static final String DATA_ADDITIONAL_SEARCH_PROPERTIES_2 = contentOf(
+            new File("src/test/resources/turtle/data_additional_search_properties_2.ttl"), UTF_8);
 
     static final String LABEL_SUBPROPERTY = String.join("\n", //
             "<#sublabel>", //
@@ -273,6 +277,8 @@ public class SPARQLQueryBuilderTest
                         SPARQLQueryBuilderTest::thatSearchOverMultipleLabelsWorks),
                 new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks",
                         SPARQLQueryBuilderTest::thatMatchingAgainstAdditionalSearchPropertiesWorks),
+                new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks2",
+                        SPARQLQueryBuilderTest::thatMatchingAgainstAdditionalSearchPropertiesWorks2),
                 new Scenario("thatExistsReturnsFalseWhenDataQueriedForDoesNotExist",
                         SPARQLQueryBuilderTest::thatExistsReturnsFalseWhenDataQueriedForDoesNotExist),
                 new Scenario("thatExplicitClassCanBeRetrievedByItsIdentifier",
@@ -475,6 +481,41 @@ public class SPARQLQueryBuilderTest
                     .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name")
                     .containsExactlyInAnyOrder(
                             new KBHandle("http://example.org/#example", "specimen"));
+        }
+    }
+
+    static void thatMatchingAgainstAdditionalSearchPropertiesWorks2(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        aKB.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+        aKB.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
+
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_ADDITIONAL_SEARCH_PROPERTIES_2);
+
+        var queriesWithMatchTerms = asList(//
+                Pair.of("hand", //
+                        asList("Hand structure (body structure)", "Hand structure", "Hand")),
+                Pair.of("hand structure", //
+                        asList("Hand structure (body structure)", "Hand structure", "Hand")),
+                Pair.of("body structure", //
+                        asList("Hand structure (body structure)", "Hand structure")));
+
+        for (var queryPair : queriesWithMatchTerms) {
+            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                    .forItems(aKB) //
+                    .withLabelMatchingAnyOf(queryPair.getKey()) //
+                    .retrieveLabel());
+
+            var expectedKBHandle = new KBHandle("http://example.org/#example",
+                    "Hand structure (body structure)");
+            queryPair.getValue().forEach(v -> expectedKBHandle.addMatchTerm(v, null));
+
+            assertThat(results) //
+                    .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                            "matchTerms") //
+                    .containsExactlyInAnyOrder(expectedKBHandle);
         }
     }
 

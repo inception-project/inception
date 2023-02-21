@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -294,7 +295,7 @@ public class ConceptLinkingServiceImpl
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates starting with [{}]] in {}ms", startingWithMatches.size(),
+        log.debug("Found [{}] candidates starting with [{}] in {}ms", startingWithMatches.size(),
                 aQuery, duration);
         WicketUtil.serverTiming("findStartingWithMatches", duration);
 
@@ -399,7 +400,7 @@ public class ConceptLinkingServiceImpl
 
         candidate.put(KEY_LABEL_NC, candidate.getLabel().toLowerCase(candidate.getLocale()));
 
-        if (aCas != null) {
+        if (aCas != null && aMention != null) {
             AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
@@ -423,6 +424,7 @@ public class ConceptLinkingServiceImpl
                 log.warn("Mention sentence could not be determined. Skipping.");
             }
         }
+
         return candidate;
     }
 
@@ -452,6 +454,9 @@ public class ConceptLinkingServiceImpl
                 .map(candidate -> {
                     KBHandle handle = candidate.getHandle();
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+                    candidate.get(KEY_QUERY_BEST_MATCH_TERM_NC)
+                            .filter(t -> !t.equalsIgnoreCase(handle.getUiLabel()))
+                            .ifPresent(handle::setQueryBestMatchTerm);
                     return handle;
                 }) //
                 .collect(Collectors.toList());
