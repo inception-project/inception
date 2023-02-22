@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
@@ -35,6 +36,8 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.DESCENDING;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -47,10 +50,13 @@ import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -147,7 +153,9 @@ public class ProjectsOverviewPage
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
         allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
 
+        var defaultSortOrder = SortStrategy.NAME;
         dataProvider = new ProjectListDataProvider(allAccessibleProjects);
+        dataProvider.setSort(defaultSortOrder.key, defaultSortOrder.order);
 
         fastTrackAnnotatorsToProject();
 
@@ -171,6 +179,18 @@ public class ProjectsOverviewPage
         queue(createProjectImportGroup());
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
+
+        DropDownChoice<SortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
+        sortOrder.setModel(Model.of(defaultSortOrder));
+        sortOrder.setChoiceRenderer(new EnumChoiceRenderer<>(sortOrder));
+        sortOrder.setChoices(asList(SortStrategy.values()));
+        sortOrder.setNullValid(false);
+        sortOrder.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            var s = sortOrder.getModelObject();
+            dataProvider.setSort(s.key, s.order);
+            _target.add(projectListContainer);
+        }));
+        queue(sortOrder);
 
         nameFilter = new TextField<>("nameFilter",
                 PropertyModel.of(dataProvider.getFilterState(), "projectName"), String.class);
@@ -394,14 +414,16 @@ public class ProjectsOverviewPage
                 aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
                         aItem.getModelObject().getShortDescription()));
 
+                addActionsDropdown(aItem);
+                aItem.add(projectLink);
+                aItem.add(createRoleBadges(aItem.getModelObject()));
+
                 Label createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
-                addActionsDropdown(aItem);
-                aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
                 aItem.add(createdLabel);
-                aItem.add(createRoleBadges(aItem.getModelObject()));
+
                 Label projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
@@ -550,8 +572,23 @@ public class ProjectsOverviewPage
     {
         return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
                 .entrySet().stream() //
-                .map(e -> new ProjectEntry(e.getKey(), e.getValue()))
-                .sorted(comparing(ProjectEntry::getName)) //
+                .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
                 .collect(toList());
+    }
+
+    private enum SortStrategy
+    {
+        NAME(ProjectListSortKeys.NAME, ASCENDING),
+        CREATED_OLDEST(ProjectListSortKeys.CREATED, ASCENDING),
+        CREATED_NEWEST(ProjectListSortKeys.CREATED, DESCENDING);
+
+        final ProjectListSortKeys key;
+        final SortOrder order;
+
+        SortStrategy(ProjectListSortKeys aKey, SortOrder aOrder)
+        {
+            key = aKey;
+            order = aOrder;
+        }
     }
 }
