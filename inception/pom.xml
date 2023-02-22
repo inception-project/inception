@@ -61,8 +61,8 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
 
-    <junit-jupiter.version>5.9.1</junit-jupiter.version>
-    <junit-platform.version>1.9.1</junit-platform.version>
+    <junit-jupiter.version>5.9.2</junit-jupiter.version>
+    <junit-platform.version>1.9.2</junit-platform.version>
     <mockito.version>4.6.1</mockito.version>
     <assertj.version>3.23.1</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
@@ -75,25 +75,25 @@
 
     <pdfbox.version>2.0.26</pdfbox.version>
 
-    <spring.version>5.3.24</spring.version>
-    <spring.boot.version>2.7.7</spring.boot.version>
-    <spring.data.version>2.7.6</spring.data.version>
-    <spring.security.version>5.7.6</spring.security.version>
+    <spring.version>5.3.25</spring.version>
+    <spring.boot.version>2.7.8</spring.boot.version>
+    <spring.data.version>2.7.8</spring.data.version>
+    <spring.security.version>5.7.7</spring.security.version>
     <springdoc.version>1.6.14</springdoc.version>
-    <swagger.version>2.2.7</swagger.version>
+    <swagger.version>2.2.8</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.18.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
-    <groovy.version>4.0.7</groovy.version>
+    <groovy.version>4.0.9</groovy.version>
 
-    <tomcat.version>9.0.70</tomcat.version>
+    <tomcat.version>9.0.71</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
-    <mariadb.driver.version>2.7.7</mariadb.driver.version>
-    <postgres.driver.version>42.5.1</postgres.driver.version>
-    <hibernate.version>5.6.14.Final</hibernate.version>
+    <mariadb.driver.version>2.7.8</mariadb.driver.version>
+    <postgres.driver.version>42.5.4</postgres.driver.version>
+    <hibernate.version>5.6.15.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
     <wicket.version>9.11.0</wicket.version>
@@ -102,6 +102,7 @@
     <wicket-bootstrap.version>6.0.0</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
+    <!-- Stuck with 3.1.6: https://github.com/MarcGiffing/wicket-spring-boot/issues/199 -->
     <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
 
     <!--
@@ -112,12 +113,12 @@
     <mtas.version>8.11.1.0</mtas.version> 
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
 
-    <elasticsearch.version>7.17.8</elasticsearch.version> 
+    <elasticsearch.version>7.17.9</elasticsearch.version> 
     <!--   7.10.2   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.1   depends on Lucene 8.11.1 -->
     <!--   8.1.1    depends on Lucene 9.0.0 -->
 
-    <opensearch.version>1.3.7</opensearch.version>
+    <opensearch.version>1.3.8</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
 
     <rdf4j.version>4.1.3</rdf4j.version> 
@@ -128,27 +129,27 @@
 
     <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.7</asciidoctor.version>
-    <asciidoctor-diagram.version>2.2.3</asciidoctor-diagram.version>
+    <asciidoctor-diagram.version>2.2.4</asciidoctor-diagram.version>
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.4</jackson.version>
+    <jackson.version>2.13.5</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.2.0</okio.version>
 
     <npm-install-command>ci</npm-install-command>
 
-    <node.version>16.18.1</node.version>
+    <node.version>16.19.1</node.version>
     <bootstrap.version>5.2.2</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.4</dayjs.version>
-    <esbuild.version>^0.14.53</esbuild.version>
-    <esbuild-sass-plugin.version>^2.3.3</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>^0.7.1</esbuild-svelte.version>
+    <esbuild.version>~0.16.17</esbuild.version>
+    <esbuild-sass-plugin.version>^2.5.0</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>^0.7.3</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.25.0</eslint.version>
     <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
@@ -165,7 +166,7 @@
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>3.6.1</jquery.version>
+    <jquery.version>3.6.3</jquery.version>
     <jquery-ui.version>1.13.2</jquery-ui.version>
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
@@ -1362,12 +1363,12 @@
       <dependency>
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
-        <version>1.4</version>
+        <version>1.5</version>
       </dependency>
       <dependency>
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>2.1.3</version>
+        <version>2.1.4</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -1567,7 +1568,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.20</version>
+        <version>1.12.23</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1751,7 +1752,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.15.3</version>
+        <version>1.15.4</version>
       </dependency>
 
       <!-- LUCENE MTAS -->
@@ -1874,7 +1875,7 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.2</version>
+        <version>3.1.4</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
@@ -1896,7 +1897,12 @@
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
-        <version>2.3.7</version>
+        <version>2.3.8</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>2.3.8</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -2049,7 +2055,8 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-        <version>${opensearch.version}.0</version>
+        <version>1.3.7.0</version>
+<!--        <version>${opensearch.version}.0</version>-->
       </dependency>
 
       <dependency>
@@ -2157,7 +2164,7 @@
       <dependency>
         <groupId>org.apache.ant</groupId>
         <artifactId>ant</artifactId>
-        <version>1.10.12</version>
+        <version>1.10.13</version>
       </dependency>
 
       <dependency>
