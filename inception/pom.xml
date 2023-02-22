@@ -84,7 +84,7 @@
     <swagger.version>2.2.8</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.19.0</log4j2.version>
+    <log4j2.version>2.20.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
     <tomcat.version>9.0.71</tomcat.version>
@@ -138,11 +138,11 @@
     <jackson.version>2.14.1</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
-    <okio.version>3.2.0</okio.version>
+    <okio.version>3.3.0</okio.version>
 
     <npm-install-command>ci</npm-install-command>
 
-    <node.version>16.19.1</node.version>
+    <node.version>18.14.2</node.version>
     <bootstrap.version>5.2.3</bootstrap.version>
     <animate-css.version>3.2.6</animate-css.version>
     <chai.version>^4.3.6</chai.version>
@@ -1111,7 +1111,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>nimbus-jose-jwt</artifactId>
-        <version>9.22</version>
+        <version>9.31</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
@@ -1588,7 +1588,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.23</version>
+        <version>1.14.0</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1662,7 +1662,7 @@
       <dependency>
         <groupId>org.opensaml</groupId>
         <artifactId>opensaml-bom</artifactId>
-        <version>4.2.0</version>
+        <version>4.3.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -2079,7 +2079,7 @@
       <dependency>
         <groupId>org.eclipse.jgit</groupId>
         <artifactId>org.eclipse.jgit</artifactId>
-        <version>5.10.0.202012080955-r</version>
+        <version>5.13.1.202206130422-r</version>
       </dependency>
 
       <dependency>
