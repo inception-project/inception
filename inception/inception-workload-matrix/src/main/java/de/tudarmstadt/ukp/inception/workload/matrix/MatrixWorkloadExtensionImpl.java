@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -24,6 +26,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 
 import java.util.Map;
 
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -37,9 +41,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraitsEditor;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -60,13 +66,16 @@ public class MatrixWorkloadExtensionImpl
     private final WorkloadManagementService workloadManagementService;
     private final DocumentService documentService;
     private final ProjectService projectService;
+    private final UserDao userRepository;
 
     public MatrixWorkloadExtensionImpl(WorkloadManagementService aWorkloadManagementService,
-            DocumentService aDocumentService, ProjectService aProjectService)
+            DocumentService aDocumentService, ProjectService aProjectService,
+            UserDao aUserRepository)
     {
         workloadManagementService = aWorkloadManagementService;
         documentService = aDocumentService;
         projectService = aProjectService;
+        userRepository = aUserRepository;
     }
 
     @Override
@@ -84,7 +93,13 @@ public class MatrixWorkloadExtensionImpl
     @Override
     public boolean isDocumentRandomAccessAllowed(Project aProject)
     {
-        return true;
+        if (projectService.hasRole(userRepository.getCurrentUser(), aProject, CURATOR, MANAGER)) {
+            return true;
+        }
+
+        WorkloadManager manager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(aProject);
+        return readTraits(manager).isRandomDocumentAccessAllowed();
     }
 
     @Override
@@ -110,12 +125,30 @@ public class MatrixWorkloadExtensionImpl
 
     @Override
     @Transactional
-    public void writeTraits(MatrixWorkloadTraits aTrait, Project aProject)
+    public void writeTraits(WorkloadManager aWorkloadManager, MatrixWorkloadTraits aTraits)
+    {
+        try {
+            aWorkloadManager.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (Exception e) {
+            this.log.error("Unable to write traits", e);
+        }
+    }
+
+    @Override
+    public Panel createTraitsEditor(String aId, IModel<WorkloadManager> aWorkloadManager)
+    {
+        return new MatrixWorkloadTraitsEditor(aId, aWorkloadManager);
+    }
+
+    @Override
+    @Transactional
+    public void writeTraits(MatrixWorkloadTraits aTraits, Project aProject)
     {
         try {
             WorkloadManager manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
-            manager.setTraits(JSONUtil.toJsonString(aTrait));
+            this.writeTraits(manager, aTraits);
             workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {

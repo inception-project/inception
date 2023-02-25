@@ -30,14 +30,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.DESCENDING;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -74,7 +77,6 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -102,6 +104,7 @@ import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")
@@ -129,11 +132,12 @@ public class ProjectsOverviewPage
 
     private static final long serialVersionUID = -2159246322262294746L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
+    private @SpringBean DashboardProperties dashboardProperties;
 
     private IModel<List<ProjectEntry>> allAccessibleProjects;
     private IModel<User> currentUser;
@@ -573,6 +577,9 @@ public class ProjectsOverviewPage
         return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
                 .entrySet().stream() //
                 .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
+                .filter(e -> e.getLevels().contains(MANAGER)
+                        || containsAny(e.getLevels(), dashboardProperties.getAccessibleByRoles()))
+                .sorted(comparing(ProjectEntry::getName)) //
                 .collect(toList());
     }
 

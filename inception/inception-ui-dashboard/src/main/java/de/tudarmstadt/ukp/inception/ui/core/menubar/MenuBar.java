@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.help.DocLink.Book.USER_GUIDE;
@@ -39,6 +40,7 @@ import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -49,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
@@ -67,6 +70,7 @@ public class MenuBar
 
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
+    private @SpringBean DashboardProperties dashboardProperties;
 
     private IModel<User> user;
     private IModel<Project> project;
@@ -86,6 +90,8 @@ public class MenuBar
         user = LoadableDetachableModel.of(userRepository::getCurrentUser);
         project = LoadableDetachableModel.of(() -> findParent(ProjectContext.class)) //
                 .map(ProjectContext::getProject);
+
+        add(visibleWhen(this::isMenubarVisibleToCurrentUser));
 
         add(new LogoutPanel("logoutPanel", user));
 
@@ -141,6 +147,16 @@ public class MenuBar
         add(new ExternalLink(CID_SWAGGER_LINK, LoadableDetachableModel.of(this::getSwaggerUiUrl))
                 .add(visibleWhen(
                         user.map(u -> userRepository.hasRole(u, ROLE_REMOTE)).orElse(false))));
+    }
+
+    private boolean isMenubarVisibleToCurrentUser()
+    {
+        if (userRepository.isAdministrator(user.getObject()) || !project.isPresent().getObject()) {
+            return true;
+        }
+
+        var roles = dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new);
+        return projectService.hasRole(user.getObject(), project.getObject(), MANAGER, roles);
     }
 
     private String getSwaggerUiUrl()

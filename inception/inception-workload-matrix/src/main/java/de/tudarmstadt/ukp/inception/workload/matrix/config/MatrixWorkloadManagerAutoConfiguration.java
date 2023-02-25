@@ -23,10 +23,12 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl;
 import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -37,10 +39,10 @@ public class MatrixWorkloadManagerAutoConfiguration
     @Bean
     public MatrixWorkloadExtension matrixWorkloadExtension(
             WorkloadManagementService aWorkloadManagementService, DocumentService aDocumentService,
-            ProjectService aProjectService)
+            ProjectService aProjectService, UserDao aUserRepository)
     {
         return new MatrixWorkloadExtensionImpl(aWorkloadManagementService, aDocumentService,
-                aProjectService);
+                aProjectService, aUserRepository);
     }
 
     @Bean
@@ -54,5 +56,14 @@ public class MatrixWorkloadManagerAutoConfiguration
     public MatrixWorkflowActionBarExtension matrixWorkflowActionBarExtension()
     {
         return new MatrixWorkflowActionBarExtension();
+    }
+
+    @Bean
+    public MatrixWorkflowDocumentNavigationActionBarExtension matrixWorkflowDocumentNavigationActionBarExtension(
+            DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
+            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService)
+    {
+        return new MatrixWorkflowDocumentNavigationActionBarExtension(aDocumentService,
+                aWorkloadManagementService, aMatrixWorkloadExtension, aProjectService);
     }
 }

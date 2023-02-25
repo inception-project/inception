@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.workload.extension;
 
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
@@ -44,7 +48,29 @@ public interface WorkloadManagerExtension<T>
 
     T readTraits(WorkloadManager aWorkloadManager);
 
+    void writeTraits(WorkloadManager aWorkloadManager, T aTraits);
+
     void writeTraits(T aTrait, Project aProject);
+
+    /**
+     * Returns a Wicket component to configure the specific traits of this workload extension. Note
+     * that every {@link WorkloadManagerExtension} has to return a <b>different class</b> here. So
+     * it is not possible to simple return a Wicket {@link Panel} here, but it must be a subclass of
+     * {@link Panel} used exclusively by the current {@link WorkloadManagerExtension}. If this is
+     * not done, then the traits editor in the UI will not be correctly updated when switching
+     * between feature types!
+     * 
+     * @param aId
+     *            a markup ID.
+     * @param aWorkloadManager
+     *            a model holding the workload manager for which the traits editor should be
+     *            created.
+     * @return the traits editor component.
+     */
+    default Panel createTraitsEditor(String aId, IModel<WorkloadManager> aWorkloadManager)
+    {
+        return new EmptyPanel(aId);
+    }
 
     /**
      * Ask the workload manager to immediately recalculate the state of all documents in the project

@@ -179,11 +179,22 @@ public abstract class AnnotationPageBase
             return documentService.getSourceDocument(aProject, aDocumentParameter.toString());
         }
         catch (NoResultException e) {
-            error("Document [" + aDocumentParameter + "] does not exist in project ["
-                    + aProject.getName() + "]");
+            failWithDocumentNotFound("Document [" + aDocumentParameter
+                    + "] does not exist in project [" + aProject.getName() + "]");
         }
-
         return null;
+    }
+
+    protected void failWithDocumentNotFound(String aDetails)
+    {
+        if (userRepository.isCurrentUserAdmin()) {
+            getSession().error(aDetails);
+        }
+        else {
+            getSession().error(
+                    "Requested document does not exist or you have no permissions to access it.");
+        }
+        backToProjectPage();
     }
 
     protected UrlParametersReceivingBehavior createUrlFragmentBehavior()
