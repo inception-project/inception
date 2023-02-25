@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
-import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -29,6 +29,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -38,6 +40,8 @@ public class AnnotationInfoPanel
     extends Panel
 {
     private static final long serialVersionUID = -2911353962253404751L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final WebMarkupContainer noAnnotationWarning;
     private final WebMarkupContainer annotationInfo;
@@ -105,7 +109,8 @@ public class AnnotationInfoPanel
                 return String.valueOf(selectFsByAddr(editorPanel.getEditorCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
-            catch (IOException e) {
+            catch (Exception e) {
+                LOG.warn("Unable to render selected annotation type", e);
                 return "";
             }
         }));
