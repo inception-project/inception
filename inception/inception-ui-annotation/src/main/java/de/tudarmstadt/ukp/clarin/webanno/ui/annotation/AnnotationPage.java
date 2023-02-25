@@ -582,18 +582,18 @@ public class AnnotationPage
             // else {
             User requestedUser = userRepository.get(aUserParameter.toString());
             if (requestedUser == null) {
-                error("User not found [" + aUserParameter + "]");
-                backToProjectPage();
+                failWithDocumentNotFound("User not found [" + aUserParameter + "]");
             }
-            state.setUser(requestedUser);
+            else {
+                state.setUser(requestedUser);
+            }
             // }
         }
 
         if (doc != null && !documentAccess.canViewAnnotationDocument(user.getUsername(),
                 String.valueOf(project.getId()), doc.getId(), state.getUser().getUsername())) {
-            getSession().error(
-                    "Requested document does not exist or you have no permissions to access it.");
-            backToProjectPage();
+            failWithDocumentNotFound("Access to document [" + aDocumentParameter + "] in project ["
+                    + project.getName() + "] as denied");
         }
 
         // If we arrive here and the document is not null, then we have a change of document

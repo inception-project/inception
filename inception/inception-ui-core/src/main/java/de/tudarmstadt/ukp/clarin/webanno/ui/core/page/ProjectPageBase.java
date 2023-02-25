@@ -26,7 +26,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.util.lang.WicketObjects;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -37,7 +39,9 @@ import org.apache.wicket.util.string.StringValueConversionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 
 public abstract class ProjectPageBase
     extends ApplicationPageBase
@@ -49,6 +53,8 @@ public abstract class ProjectPageBase
     public static final String PAGE_PARAM_PROJECT = "p";
 
     private @SpringBean ProjectService projectService;
+    private @SpringBean DashboardProperties dashboardProperties;
+    private @SpringBean UserDao userService;
     private IModel<Project> projectModel;
 
     public ProjectPageBase(final PageParameters aParameters)
@@ -80,10 +86,10 @@ public abstract class ProjectPageBase
 
         // Check access to project
         if (aUser == null || !projectService.hasRole(aUser, project, aRole, aMoreRoles)) {
-            var roles = Stream.concat(Stream.of(aRole), Stream.of(aMoreRoles));
+            var roles = Stream.concat(Stream.of(aRole), Stream.of(aMoreRoles)).distinct();
             getSession().error(format("To access the [%s] you require any of these roles: [%s]",
                     getClass().getSimpleName(),
-                    roles.map(PermissionLevel::getId).collect(joining(", "))));
+                    roles.map(PermissionLevel::getName).collect(joining(", "))));
 
             backToProjectPage();
         }
@@ -93,6 +99,17 @@ public abstract class ProjectPageBase
     {
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
+
+        // If the current user cannot access the dashboard, at least update the feedback panel on
+        // the current page so that the user can see the error message that has most likely been
+        // queued
+        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(),
+                PermissionLevel.MANAGER,
+                dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new))) {
+            getRequestCycle().find(AjaxRequestTarget.class)
+                    .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            return;
+        }
 
         PageParameters pageParameters = new PageParameters();
         setProjectPageParameter(pageParameters, getProject());

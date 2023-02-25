@@ -30,7 +30,9 @@ public class MatrixWorkloadTraits
 {
     private static final long serialVersionUID = 6984531953353384507L;
 
-    private boolean reopenableByAnnotator;
+    private boolean reopenableByAnnotator = false;
+
+    private boolean randomDocumentAccessAllowed = true;
 
     public boolean isReopenableByAnnotator()
     {
@@ -40,5 +42,15 @@ public class MatrixWorkloadTraits
     public void setReopenableByAnnotator(boolean aReopenableByAnnotator)
     {
         reopenableByAnnotator = aReopenableByAnnotator;
+    }
+
+    public boolean isRandomDocumentAccessAllowed()
+    {
+        return randomDocumentAccessAllowed;
+    }
+
+    public void setRandomDocumentAccessAllowed(boolean aRandomDocumentAccessAllowed)
+    {
+        randomDocumentAccessAllowed = aRandomDocumentAccessAllowed;
     }
 }
