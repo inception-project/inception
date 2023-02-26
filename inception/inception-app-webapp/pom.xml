@@ -929,6 +929,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-remote</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
+              <usedDependency>org.hibernate.orm:hibernate-core</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>

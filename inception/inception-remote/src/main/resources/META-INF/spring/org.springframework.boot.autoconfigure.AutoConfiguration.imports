@@ -1,0 +1,2 @@
+de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration
+de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.InceptionSecurityRemoteApiAutoConfiguration

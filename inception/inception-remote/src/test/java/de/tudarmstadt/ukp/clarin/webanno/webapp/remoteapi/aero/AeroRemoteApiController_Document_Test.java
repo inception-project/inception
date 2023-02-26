@@ -40,6 +40,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -171,6 +172,10 @@ public class AeroRemoteApiController_Document_Test
     @SpringBootConfiguration
     public static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        public AeroRemoteApiController aeroRemoteApiController()
+        {
+            return new AeroRemoteApiController();
+        }
     }
 }

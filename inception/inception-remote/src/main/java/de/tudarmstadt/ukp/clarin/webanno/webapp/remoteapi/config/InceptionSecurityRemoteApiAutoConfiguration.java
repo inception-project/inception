@@ -61,7 +61,7 @@ public class InceptionSecurityRemoteApiAutoConfiguration
         aHttp.authenticationProvider(authProvider);
 
         aHttp.authorizeHttpRequests() //
-                .anyRequest().hasAnyRole("ROLE_REMOTE");
+                .anyRequest().hasAnyRole("REMOTE");
 
         if (aProperties.getHttpBasic().isEnabled()) {
             aHttp.httpBasic();

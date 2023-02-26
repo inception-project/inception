@@ -46,7 +46,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
@@ -74,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -81,6 +81,8 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -88,6 +90,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceA
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
@@ -105,9 +108,12 @@ import jakarta.persistence.EntityManager;
                 "event-logging.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
-                SecurityAutoConfiguration.class })
+                LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        CasDoctorAutoConfiguration.class, //
+        EventLoggingAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
+        InceptionSecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
@@ -188,7 +194,7 @@ public class WebSocketIntegrationTest
         CountDownLatch latch = new CountDownLatch(1);
         SessionHandler sessionHandler = new SessionHandler(latch, receivedMessages);
 
-        session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        session = stompClient.connectAsync(websocketUrl, sessionHandler).get(5, SECONDS);
         latch.await(10, SECONDS);
         session.disconnect();
 
@@ -290,7 +296,7 @@ public class WebSocketIntegrationTest
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
             aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
+            aHttp.authorizeHttpRequests() //
                     .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //

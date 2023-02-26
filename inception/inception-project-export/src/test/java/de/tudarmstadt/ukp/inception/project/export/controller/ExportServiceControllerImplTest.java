@@ -70,18 +70,21 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
@@ -99,6 +102,9 @@ import jakarta.persistence.EntityManager;
         exclude = { //
                 LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        CasDoctorAutoConfiguration.class, //
+        InceptionSecurityAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketSecurityConfig.class, //
         WebsocketAutoConfiguration.class, //
@@ -185,7 +191,8 @@ class ExportServiceControllerImplTest
         SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1, SECONDS);
+        StompSession session = stompClient.connectAsync(websocketUrl, sessionHandler).get(1,
+                SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
         try {
@@ -196,7 +203,7 @@ class ExportServiceControllerImplTest
         }
 
         assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("AccessDeniedException");
+        assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
         assertThat(errorRecieved).isTrue();
     }
 
@@ -213,7 +220,8 @@ class ExportServiceControllerImplTest
         SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        StompSession session = stompClient.connectAsync(websocketUrl, sessionHandler).get(5,
+                SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
         session.disconnect();

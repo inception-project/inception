@@ -43,17 +43,18 @@ public class InceptionSecurityWebUIShared
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry aCfg)
     {
         aCfg //
-                .requestMatchers("/swagger-ui/**").hasAnyRole("ROLE_REMOTE")
-                .requestMatchers("/swagger-ui.html").hasAnyRole("ROLE_REMOTE")
-                .requestMatchers("/v3/**").hasAnyRole("ROLE_REMOTE");
+                .requestMatchers("/swagger-ui/**").hasAnyRole("REMOTE") //
+                .requestMatchers("/swagger-ui.html").hasAnyRole("REMOTE") //
+                .requestMatchers("/v3/**") //
+                .hasAnyRole("REMOTE");
     }
 
     public static void accessToApplication(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry aCfg)
     {
         aCfg //
-                .requestMatchers("/admin/**").hasAnyRole("ROLE_ADMIN") //
-                .requestMatchers("/doc/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER") //
-                .requestMatchers("/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER");
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN") //
+                .requestMatchers("/doc/**").hasAnyRole("ADMIN", "USER") //
+                .requestMatchers("/**").hasAnyRole("ADMIN", "USER");
     }
 }

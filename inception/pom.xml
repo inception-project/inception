@@ -78,10 +78,10 @@
 
     <pdfbox.version>2.0.27</pdfbox.version>
 
-    <spring.version>6.0.2</spring.version>
-    <spring.boot.version>3.0.0</spring.boot.version>
-    <spring.data.version>3.0.0</spring.data.version>
-    <spring.security.version>6.0.0</spring.security.version>
+    <spring.version>6.0.5</spring.version>
+    <spring.boot.version>3.0.3</spring.boot.version>
+    <spring.data.version>3.0.2</spring.data.version>
+    <spring.security.version>6.0.2</spring.security.version>
     <springdoc.version>1.6.14</springdoc.version>
     <swagger.version>2.2.8</swagger.version>
 
@@ -101,7 +101,7 @@
 
     <wicket.version>10.0.0-M1-SNAPSHOT</wicket.version>
     <wicketstuff.version>10.0.0-SNAPSHOT</wicketstuff.version>
-    <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>10.0.0-SNAPSHOT</wicket-jquery-ui.version>
     <wicket-bootstrap.version>7.0.0-SNAPSHOT</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
@@ -317,6 +317,20 @@
     <dependency>
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -1563,6 +1577,21 @@
 
       <!-- JAXB DEPENDENCIES -->
       <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>2.3.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-core</artifactId>
+        <version>2.3.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>2.3.8</version>
+      </dependency>
+      <dependency>
         <groupId>javax.activation</groupId>
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
@@ -1571,6 +1600,15 @@
         <groupId>org.glassfish.jaxb</groupId>
         <artifactId>jaxb-bom</artifactId>
         <version>4.0.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <!-- Jetty -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>10.0.13</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -2510,6 +2548,9 @@
             -->
             <dependency>jakarta.xml.bind:jakarta.xml.bind-api</dependency>
             <dependency>org.glassfish.jaxb</dependency>
+            <dependency>javax.xml.bind:jaxb-api</dependency>
+            <dependency>com.sun.xml.bind:jaxb-core</dependency>
+            <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
             <!--
               - hsqldb and data-jpa, used via reflection in tests in search-mtas,

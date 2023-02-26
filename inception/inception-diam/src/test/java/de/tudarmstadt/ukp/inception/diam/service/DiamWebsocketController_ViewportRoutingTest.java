@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoCon
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -85,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -98,6 +100,8 @@ import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
+import de.tudarmstadt.ukp.inception.rendering.config.RenderingAutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -121,6 +125,10 @@ import jakarta.persistence.EntityManager;
         exclude = { //
                 LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        PreferencesServiceAutoConfig.class, //
+        CasDoctorAutoConfiguration.class, //
+        RenderingAutoConfig.class, //
+        InceptionSecurityAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //

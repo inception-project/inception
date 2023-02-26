@@ -65,6 +65,7 @@ import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
@@ -73,6 +74,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -134,7 +136,9 @@ import jakarta.persistence.NoResultException;
  * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
  * </p>
  */
+@Controller
 @ConditionalOnWebApplication
+@ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {

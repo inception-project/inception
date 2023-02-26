@@ -8,6 +8,8 @@
   <Loggers>
     <Logger name="de.tudarmstadt" level="INFO"/>
 <!--     <Logger name="org.springframework.security" level="TRACE" /> -->
+<!--     <Logger name="org.apache.wicket.request.mapper" level="TRACE"/> -->
+<!--     <Logger name="org.springframework.web.servlet" level="TRACE"/> -->
     
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />

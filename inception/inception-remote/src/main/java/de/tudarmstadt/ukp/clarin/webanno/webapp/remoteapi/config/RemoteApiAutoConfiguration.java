@@ -40,21 +40,7 @@ import io.swagger.v3.oas.models.info.Info;
 @EnableConfigurationProperties({ RemoteApiProperties.class, WebhooksConfiguration.class })
 public class RemoteApiAutoConfiguration
 {
-    static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
-
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
-    @Bean
-    public AeroRemoteApiController aeroRemoteApiController()
-    {
-        return new AeroRemoteApiController();
-    }
-
-    @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
-    @Bean
-    public LegacyRemoteApiController legacyRemoteApiController()
-    {
-        return new LegacyRemoteApiController();
-    }
+    public static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
 
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
     @Bean

@@ -72,7 +72,7 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     private void commonConfiguration(HttpSecurity aHttp) throws Exception
     {
         aHttp.authorizeHttpRequests() //
-                .requestMatchers("/**").hasAnyRole("ROLE_USER") //
+                .requestMatchers("/**").hasAnyRole("USER") //
                 .anyRequest().denyAll();
         aHttp.sessionManagement().sessionCreationPolicy(NEVER);
         aHttp.exceptionHandling() //
