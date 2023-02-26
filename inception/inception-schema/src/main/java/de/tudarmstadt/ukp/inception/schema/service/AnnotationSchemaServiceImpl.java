@@ -106,6 +106,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -311,26 +312,28 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public Tag getTag(String aTagName, TagSet aTagSet)
+    public Optional<Tag> getTag(String aTagName, TagSet aTagSet)
     {
-        return entityManager
-                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet = :tagSet", Tag.class)
-                .setParameter("name", aTagName) //
-                .setParameter("tagSet", aTagSet) //
-                .getSingleResult();
+        try {
+            return Optional.of(entityManager
+                    .createQuery("FROM Tag WHERE name = :name AND tagSet = :tagSet", Tag.class)
+                    .setParameter("name", aTagName) //
+                    .setParameter("tagSet", aTagSet) //
+                    .getSingleResult());
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
+    /**
+     * @deprecated Use {@code getTag(name, tagset).isPresent()}.
+     */
+    @Deprecated
     @Override
     public boolean existsTag(String aTagName, TagSet aTagSet)
     {
-
-        try {
-            getTag(aTagName, aTagSet);
-            return true;
-        }
-        catch (NoResultException e) {
-            return false;
-        }
+        return getTag(aTagName, aTagSet).isPresent();
     }
 
     @Override
@@ -1572,5 +1575,29 @@ public class AnnotationSchemaServiceImpl
         catch (NoResultException e) {
             return false;
         }
+    }
+
+    @Override
+    @Transactional
+    public void createMissingTag(AnnotationFeature aFeature, String aValue)
+        throws IllegalFeatureValueException
+    {
+        if (aValue == null || aFeature.getTagset() == null) {
+            return;
+        }
+
+        if (existsTag(aValue, aFeature.getTagset())) {
+            return;
+        }
+
+        if (!aFeature.getTagset().isCreateTag()) {
+            throw new IllegalFeatureValueException("[" + aValue
+                    + "] is not in the tag list. Please choose from the existing tags");
+        }
+
+        Tag selectedTag = new Tag();
+        selectedTag.setName(aValue);
+        selectedTag.setTagSet(aFeature.getTagset());
+        createTag(selectedTag);
     }
 }

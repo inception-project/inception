@@ -25,14 +25,17 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -45,6 +48,7 @@ public class PredictionTask
 
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
     private final int predictionBegin;
@@ -104,6 +108,11 @@ public class PredictionTask
                     currentTimeMillis() - startTime);
 
             recommendationService.putIncomingPredictions(user, project, predictions);
+
+            appEventPublisher.publishEvent(
+                    RecommenderTaskNotificationEvent.builder(this, project, user.getUsername()) //
+                            .withMessage(LogMessage.info(this, "New preditions available")) //
+                            .build());
 
             // We reset this in case the state was not properly cleared, e.g. the AL session
             // was started but then the browser closed. Places where it is set include

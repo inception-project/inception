@@ -44,9 +44,18 @@ public class DiamAjaxBehavior
 
     private List<EditorAjaxRequestHandler> priorityHandlers = new ArrayList<>();
 
-    public void addPriorityHandler(EditorAjaxRequestHandler aHandler)
+    private boolean globalHandlersEnabled = true;
+
+    public DiamAjaxBehavior addPriorityHandler(EditorAjaxRequestHandler aHandler)
     {
         priorityHandlers.add(aHandler);
+        return this;
+    }
+
+    public DiamAjaxBehavior setGlobalHandlersEnabled(boolean aGlobalHandlersEnabled)
+    {
+        globalHandlersEnabled = aGlobalHandlersEnabled;
+        return this;
     }
 
     @Override
@@ -71,8 +80,10 @@ public class DiamAjaxBehavior
             return;
         }
 
-        handlers.getHandler(request) //
-                .ifPresent(h -> call(aTarget, h));
+        if (globalHandlersEnabled) {
+            handlers.getHandler(request) //
+                    .ifPresent(h -> call(aTarget, h));
+        }
     }
 
     private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)

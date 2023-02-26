@@ -36,6 +36,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
@@ -78,7 +79,8 @@ public class SpringAuthenticatedWebSession
     {
         return aAuthentication instanceof PreAuthenticatedAuthenticationToken
                 || aAuthentication instanceof OAuth2AuthenticationToken
-                || aAuthentication instanceof UsernamePasswordAuthenticationToken;
+                || aAuthentication instanceof UsernamePasswordAuthenticationToken
+                || aAuthentication instanceof Saml2Authentication;
     }
 
     private void injectDependencies()

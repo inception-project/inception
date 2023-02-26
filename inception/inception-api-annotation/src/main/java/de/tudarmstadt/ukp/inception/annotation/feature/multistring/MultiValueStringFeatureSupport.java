@@ -41,11 +41,9 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportProperties;
@@ -57,6 +55,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
 
@@ -147,20 +146,8 @@ public class MultiValueStringFeatureSupport
             return;
         }
 
-        if (values != null && aFeature.getTagset() != null) {
-            for (String value : values) {
-                if (!schemaService.existsTag(value, aFeature.getTagset())) {
-                    if (!aFeature.getTagset().isCreateTag()) {
-                        throw new IllegalFeatureValueException("[" + value
-                                + "] is not in the tag list. Please choose from the existing tags");
-                    }
-
-                    Tag selectedTag = new Tag();
-                    selectedTag.setName(value);
-                    selectedTag.setTagSet(aFeature.getTagset());
-                    schemaService.createTag(selectedTag);
-                }
-            }
+        for (String value : values) {
+            schemaService.createMissingTag(aFeature, value);
         }
 
         // Create a new array if size differs otherwise re-use existing one
@@ -276,11 +263,16 @@ public class MultiValueStringFeatureSupport
     public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
             VID aParamId, String aQuery)
     {
-        Tag tag = schemaService.getTag(aQuery, aFeature.getTagset());
-        if (tag == null || isBlank(tag.getDescription())) {
+        var tag = schemaService.getTag(aQuery, aFeature.getTagset());
+
+        if (tag.isEmpty()) {
+            return asList(new VLazyDetailResult(aQuery, "Tag not in tagset"));
+        }
+
+        if (tag.map(t -> isBlank(t.getDescription())).orElse(true)) {
             return emptyList();
         }
 
-        return asList(new VLazyDetailResult(aQuery, tag.getDescription()));
+        return asList(new VLazyDetailResult(aQuery, tag.get().getDescription()));
     }
 }

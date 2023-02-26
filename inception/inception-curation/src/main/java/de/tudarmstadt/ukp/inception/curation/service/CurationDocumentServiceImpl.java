@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -106,6 +107,37 @@ public class CurationDocumentServiceImpl
 
     @Override
     @Transactional
+    public List<AnnotationDocument> listCuratableAnnotationDocuments(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Document must be specified");
+
+        // Get all annotators in the project
+        List<User> users = projectService.listProjectUsersWithPermissions(aDocument.getProject(),
+                ANNOTATOR);
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
+        if (users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String query = String.join("\n", //
+                "SELECT DISTINCT adoc", //
+                "FROM AnnotationDocument AS adoc", //
+                "WHERE adoc.document = :document", //
+                "AND adoc.user in (:users)", //
+                "AND (adoc.state = :state or adoc.annotatorState = :ignore)");
+
+        List<AnnotationDocument> docs = entityManager.createQuery(query, AnnotationDocument.class) //
+                .setParameter("document", aDocument) //
+                .setParameter("users", users.stream().map(User::getUsername).collect(toList())) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .setParameter("ignore", AnnotationDocumentState.IGNORE) //
+                .getResultList();
+
+        return docs;
+    }
+
+    @Override
+    @Transactional
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -122,14 +154,15 @@ public class CurationDocumentServiceImpl
                 "FROM AnnotationDocument AS adoc", //
                 "WHERE adoc.project = :project", //
                 "AND adoc.user in (:users)", //
-                "AND adoc.state = :state");
+                "AND (adoc.state = :state or adoc.annotatorState = :ignore)", //
+                "ORDER BY adoc.document.name");
 
         List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
                 .setParameter("project", aProject) //
                 .setParameter("users", users.stream().map(User::getUsername).collect(toList())) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList();
-        docs.sort(SourceDocument.NAME_COMPARATOR);
 
         return docs;
     }

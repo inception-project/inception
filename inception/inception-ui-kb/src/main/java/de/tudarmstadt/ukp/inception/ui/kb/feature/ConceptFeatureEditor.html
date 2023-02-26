@@ -24,16 +24,16 @@
       <span class="float-end">
         <span wicket:id="disabledKBWarning"/>
       </span>
+      <a wicket:id="openIri" class="float-end" target="_blank">
+        <i class="fas fa-external-link-alt"/>
+      </a>
     </label>
     <div class="feature-editor-value">
       <div class="input-group">
         <div class="input-group-text">
-          <span wicket:id="iriInfoBadge" class="me-2"/>
-          <a wicket:id="openIri" target="_blank">
-            <i class="fas fa-external-link-alt"></i>
-          </a>
+          <span wicket:id="iriInfoBadge"/>
         </div>
-        <input style="width: 1%;" wicket:id="value" class="form-control" type="text"/>
+        <input class="flex-content" wicket:id="value" type="text"/>
       </div>
       <div wicket:id="descriptionContainer" class="scrolling border border-top-0 rounded-bottom p-1" style="max-height: 4.5rem; word-wrap: break-word;" readonly>
         <small class="text-muted" wicket:id="description"/>

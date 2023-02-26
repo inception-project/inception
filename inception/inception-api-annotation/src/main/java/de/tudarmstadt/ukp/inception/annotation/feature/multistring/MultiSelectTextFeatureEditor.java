@@ -20,15 +20,18 @@ package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
@@ -51,6 +54,9 @@ import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 public class MultiSelectTextFeatureEditor
     extends FeatureEditor
 {
+    private static final String CID_TEXT_INDICATOR = "textIndicator";
+    private static final String CID_VALUE = "value";
+
     private static final long serialVersionUID = 7469241620229001983L;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -61,32 +67,105 @@ public class MultiSelectTextFeatureEditor
     // // For showing the status of Constraints rules kicking in.
     // private RulesIndicator indicator = new RulesIndicator();
 
-    private final MultiSelect<ReorderableTag> field;
+    private FormComponent<?> field;
 
     public MultiSelectTextFeatureEditor(String aId, MarkupContainer aOwner,
             final IModel<FeatureState> aFeatureStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
-        field = new MultiSelect<ReorderableTag>("value", new ChoiceRenderer<>())
+        field = createInput();
+        add(field);
+
+        add(new ConstraintsInUseIndicator(CID_TEXT_INDICATOR, getModel()));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onConfigure()
+    {
+        super.onConfigure();
+
+        // Workaround for https://github.com/sebfz1/wicket-jquery-ui/issues/352
+        if ((isEnabledInHierarchy() && !(field instanceof MultiSelect))
+                || !isEnabledInHierarchy() && (field instanceof MultiSelect)) {
+            field = (FormComponent<ReorderableTag>) field.replaceWith(createInput());
+        }
+
+        // Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied
+        // and feature doesn't match any constraint rule
+        // if enabled and constraints rule execution returns anything other than green
+        var featState = getModelObject();
+        setVisible(!featState.feature.isHideUnconstraintFeature() || //
+                (featState.indicator.isAffected()
+                        && featState.indicator.getStatusColor().equals("green")));
+    }
+
+    private FormComponent<?> createInput()
+    {
+        if (isEnabledInHierarchy()) {
+            return createEditableInput();
+        }
+        else {
+            return createReadOnlyInput();
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private FormComponent<String> createReadOnlyInput()
+    {
+        var input = new com.googlecode.wicket.kendo.ui.form.multiselect. //
+                MultiSelect<String>(CID_VALUE)
         {
-            private static final long serialVersionUID = 7769511105678209462L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            protected List<ReorderableTag> getChoices(String aInput)
+            public void renderHead(IHeaderResponse aResponse)
             {
-                return MultiSelectTextFeatureEditor.this.getChoices(aFeatureStateModel, aInput);
+                super.renderHead(aResponse);
+
+                aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
             }
 
             @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
                 super.onConfigure(aBehavior);
+                styleMultiSelect(aBehavior);
+            }
+        };
+        var choices = getChoices(getModel(), null).stream().map(t -> t.getName()).collect(toList());
+        input.setChoices(Model.ofList(choices));
+        return (FormComponent) input;
+    }
 
-                aBehavior.setOption("autoWidth", true);
-                aBehavior.setOption("animation", false);
-                aBehavior.setOption("delay", 250);
-                aBehavior.setOption("height", 300);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private FormComponent<ReorderableTag> createEditableInput()
+    {
+        return (FormComponent) new MultiSelect<ReorderableTag>(CID_VALUE, new ChoiceRenderer<>())
+        {
+            private static final long serialVersionUID = 7769511105678209462L;
+
+            @Override
+            public void renderHead(IHeaderResponse aResponse)
+            {
+                super.renderHead(aResponse);
+
+                aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+            }
+
+            @Override
+            protected List<ReorderableTag> getChoices(String aInput)
+            {
+                return MultiSelectTextFeatureEditor.this
+                        .getChoices(MultiSelectTextFeatureEditor.this.getModel(), aInput);
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
+                super.onConfigure(aBehavior);
+                styleMultiSelect(aBehavior);
             }
 
             @Override
@@ -103,7 +182,6 @@ public class MultiSelectTextFeatureEditor
              * return strings on the way out into the model. This is a very evil hack and we need to
              * avoid declaring generic types because we work against them!
              */
-            @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override
             public void convertInput()
             {
@@ -114,9 +192,17 @@ public class MultiSelectTextFeatureEditor
                         .collect(toList()));
             }
         };
-        add(field);
+    }
 
-        add(new ConstraintsInUseIndicator("textIndicator", getModel()));
+    private void styleMultiSelect(JQueryBehavior aBehavior)
+    {
+        aBehavior.setOption("autoWidth", true);
+        aBehavior.setOption("animation", false);
+        aBehavior.setOption("delay", 250);
+        aBehavior.setOption("height", 300);
+        aBehavior.setOption("open", KendoChoiceDescriptionScriptReference.applyTooltipScript());
+        aBehavior.setOption("dataBound",
+                KendoChoiceDescriptionScriptReference.applyTooltipScript());
     }
 
     @SuppressWarnings("rawtypes")
@@ -124,22 +210,6 @@ public class MultiSelectTextFeatureEditor
     public FormComponent getFocusComponent()
     {
         return field;
-    }
-
-    /**
-     * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
-     * feature doesn't match any constraint rule
-     */
-    @Override
-    public void onConfigure()
-    {
-        super.onConfigure();
-
-        // if enabled and constraints rule execution returns anything other than green
-        var featState = getModelObject();
-        setVisible(!featState.feature.isHideUnconstraintFeature() || //
-                (featState.indicator.isAffected()
-                        && featState.indicator.getStatusColor().equals("green")));
     }
 
     private List<ReorderableTag> getChoices(final IModel<FeatureState> aFeatureStateModel,

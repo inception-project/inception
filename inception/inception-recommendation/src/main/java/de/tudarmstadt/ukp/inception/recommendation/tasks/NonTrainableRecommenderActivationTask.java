@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.ERROR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.lang.System.currentTimeMillis;
 
@@ -33,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -40,7 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import jakarta.persistence.NoResultException;
 
@@ -98,23 +100,28 @@ public class NonTrainableRecommenderActivationTask
                         appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
                                 recommender, user.getUsername(), result,
                                 currentTimeMillis() - start, evaluatedRecommender.isActive()));
-
-                        var evalEvent = new SelectionTaskEvent(this, recommender,
-                                user.getUsername(), result);
-                        result.getErrorMsg().ifPresent(evalEvent::setErrorMsg);
-                        appEventPublisher.publishEvent(evalEvent);
                     });
                 }
                 catch (Throwable e) {
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
-                    appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender,
-                            user.getUsername(), e.getMessage()));
+                    appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                            .builder(this, getProject(), user.getUsername()) //
+                            .withMessage(new LogMessage(this, ERROR, e.getMessage())) //
+                            .build());
                 }
             }
 
             recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
+
+            appEventPublisher
+                    .publishEvent(
+                            RecommenderTaskNotificationEvent
+                                    .builder(this, getProject(), user.getUsername()) //
+                                    .withMessage(LogMessage.info(this,
+                                            "Activation of non-trainable recommenders complete"))
+                                    .build());
         }
     }
 
@@ -181,8 +188,11 @@ public class NonTrainableRecommenderActivationTask
     {
         log.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
                 recommender.getName(), recommender.getTool());
-        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender, user.getUsername(),
-                String.format("No recommender factory available for %s", recommender.getTool())));
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
+                        .withMessage(LogMessage.error(this,
+                                "No recommender factory available for %s", recommender.getTool())) //
+                        .build());
     }
 
     private Optional<Recommender> freshenRecommender(User aUser, Recommender r)

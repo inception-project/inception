@@ -45,6 +45,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.FixedBinaryCasSerDes;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
@@ -72,6 +73,7 @@ public class WebAnnoCasUtil
     public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
     {
         CAS cas = CasCreationUtils.createCas(aTSD, null, null);
+        FixedBinaryCasSerDes.inject(cas);
 
         if (ENFORCE_CAS_THREAD_LOCK) {
             cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
@@ -98,6 +100,7 @@ public class WebAnnoCasUtil
     public static CAS createCasCopy(CAS aOriginal) throws UIMAException
     {
         CAS copy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        FixedBinaryCasSerDes.inject(copy);
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aOriginal));
         deserializeCASComplete(serializer, (CASImpl) getRealCas(copy));
         return copy;
@@ -367,7 +370,8 @@ public class WebAnnoCasUtil
             return null;
         }
 
-        // First match is a hit?
+        // If the first annotation we hit is already the reference annotation, we can simply
+        // move on to the next one and are done.
         if (it.get() == aRef) {
             it.moveToNext();
             return it.isValid() ? (T) it.get() : null;
@@ -389,6 +393,7 @@ public class WebAnnoCasUtil
                 it.moveToNext();
                 return it.isValid() ? (T) it.get() : null;
             }
+            it.moveToNext();
         }
 
         return null;
@@ -405,7 +410,8 @@ public class WebAnnoCasUtil
             return null;
         }
 
-        // First match is a hit?
+        // If the first annotation we hit is already the reference annotation, we can simply
+        // move on to the previous one and are done.
         if (it.get() == aRef) {
             it.moveToPrevious();
             return it.isValid() ? (T) it.get() : null;
@@ -427,6 +433,7 @@ public class WebAnnoCasUtil
                 it.moveToPrevious();
                 return it.isValid() ? (T) it.get() : null;
             }
+            it.moveToNext();
         }
 
         return null;

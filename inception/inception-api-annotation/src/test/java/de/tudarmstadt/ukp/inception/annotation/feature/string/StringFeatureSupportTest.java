@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -67,33 +66,31 @@ public class StringFeatureSupportTest
     }
 
     @Test
-    public void thatUsingOutOfTagsetValueInClosedTagsetProducesException() throws Exception
+    public void thatCreationOfMissingFeaturesIsAttempted() throws Exception
     {
-        final String tag = "TAG-NOT-IN-LIST";
+        final String value = "someTag";
 
         valueFeature.setTagset(valueTagset);
-        valueTagset.setCreateTag(false);
 
-        when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
+        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS), value);
 
-        assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature,
-                        ICasUtil.getAddr(spanFS), tag))
-                .withMessageContaining("is not in the tag list");
+        verify(schemaService).createMissingTag(valueFeature, value);
     }
 
     @Test
-    public void thatUsingOutOfTagsetValueInOpenTagsetAddsNewValue() throws Exception
+    public void thatFeatureValueIsSet() throws Exception
     {
-        final String tag = "TAG-NOT-IN-LIST";
+        final String value = "value";
 
         valueFeature.setTagset(valueTagset);
         valueTagset.setCreateTag(true);
 
-        when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
+        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS), value);
 
-        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS), tag);
+        assertThat(FSUtil.getFeature(spanFS, valueFeature.getName(), String.class))
+                .isEqualTo(value);
 
-        verify(schemaService).createTag(new Tag(valueTagset, tag));
+        assertThat((String) sut.getFeatureValue(valueFeature, spanFS)) //
+                .isEqualTo(value);
     }
 }

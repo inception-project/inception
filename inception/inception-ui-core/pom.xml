@@ -181,94 +181,9 @@
       <groupId>de.agilecoders.wicket.webjars</groupId>
       <artifactId>wicket-webjars</artifactId>
     </dependency>
-    
-    <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>hover</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-      <artifactId>enjoyhint</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.webjars.bowergithub.flesler</groupId>
-          <artifactId>jquery.scrollto</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.webjars.bowergithub.jquery</groupId>
-          <artifactId>jquery-dist</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>kinetic</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>jquery.scrollTo</artifactId>
-    </dependency>
-    
     <dependency>
       <groupId>jakarta.persistence</groupId>
       <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
   </dependencies>
-  
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies>
-              <!--
-                - Maven doesn't detect the the webjar dependencies because there is
-                - no actual code dependency
-              -->
-              <usedDependency>org.webjars.bower:hover</usedDependency>
-              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
-              <usedDependency>org.webjars.npm:kinetic</usedDependency>
-              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-  
-  <profiles>
-    <profile>
-      <id>rat-check</id>
-      <activation>
-        <file>
-          <exists>src/main/java</exists>
-        </file>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.rat</groupId>
-            <artifactId>apache-rat-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>default</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-                <configuration>
-                  <excludes combine.children="append">
-                    <!-- otherwise license files mentioned in NOTICE.txt -->
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/css_browser_selector.js</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

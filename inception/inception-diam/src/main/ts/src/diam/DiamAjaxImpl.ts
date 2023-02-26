@@ -76,6 +76,20 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  scrollTo (args: { id?: VID, offset?: Offsets }): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'scrollTo',
+          id: args.id,
+          offset: args.offset
+        }
+      })
+    })
+  }
+
   createSpanAnnotation (offsets: Array<Offsets>, spanText?: string): void {
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({
@@ -85,6 +99,20 @@ export class DiamAjaxImpl implements DiamAjax {
           action: 'spanOpenDialog',
           offsets: JSON.stringify(offsets),
           spanText
+        }
+      })
+    })
+  }
+
+  moveSpanAnnotation (id: VID, offsets: Array<Offsets>): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'moveSpan',
+          id,
+          offsets: JSON.stringify(offsets)
         }
       })
     })
@@ -162,6 +190,10 @@ export class DiamAjaxImpl implements DiamAjax {
     } else if (options) {
       if (options.includeText === false) {
         params.text = options.includeText
+      }
+
+      if (options.clipSpans === false) {
+        params.clip = options.clipSpans
       }
 
       if (options.format) {

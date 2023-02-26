@@ -143,6 +143,8 @@ public class RecommenderServiceAutoConfiguration
         return new ProjectRecommendersMenuItem();
     }
 
+    @ConditionalOnProperty(prefix = "recommender.sidebar", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     @Bean
     public RecommendationSidebarFactory recommendationSidebarFactory(
             RecommendationService aRecommendationService)

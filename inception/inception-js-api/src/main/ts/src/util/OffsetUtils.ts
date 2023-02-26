@@ -16,6 +16,40 @@
  * limitations under the License.
  */
 
+export function caretRangeFromPoint (clientX: number, clientY: number) : Range | null {
+  const range = document.createRange()
+
+  // @ts-expect-error
+  if (document.caretPositionFromPoint) {
+    // Use CSSOM-proprietary caretPositionFromPoint method
+    // @ts-expect-error
+    const caretPosition = document.caretPositionFromPoint(clientX, clientY)
+    if (!caretPosition) {
+      console.error(`Unable to determine caret position from point: ${clientX},${clientY}`)
+      return null
+    }
+    range.setEnd(caretPosition.offsetNode, caretPosition.offset)
+  } else if (document.caretRangeFromPoint) {
+    // Use WebKit-proprietary fallback method
+    const caretRange = document.caretRangeFromPoint(clientX, clientY)
+    if (!caretRange) return null
+    range.setEnd(caretRange.startContainer, caretRange.startOffset)
+  } else {
+    // Neither method is supported, do nothing
+    return null
+  }
+
+  range.collapse()
+  return range
+}
+
+export function positionToOffset (root: Node, clientX: number, clientY: number): number {
+  const range = caretRangeFromPoint(clientX, clientY)
+  if (!range) return -1
+  range.setStart(root, 0)
+  return range.toString().length
+}
+
 export function calculateStartOffset (root: Node, element : Node) : number {
   try {
     const range = document.createRange()

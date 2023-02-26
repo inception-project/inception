@@ -106,10 +106,6 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui</artifactId>
     </dependency>
@@ -140,17 +136,6 @@
     <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>vue</artifactId>
-      <version>3.0.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>dayjs</artifactId>
-      <version>1.9.6</version>
     </dependency>
 
     <!-- Database dependencies -->
@@ -219,20 +204,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies>
-              <!--
-                - Maven doesn't detect the the webjar dependencies because there is
-                - no actual code dependency
-              -->
-              <usedDependency>org.webjars.npm:vue</usedDependency>
-              <usedDependency>org.webjars.npm:dayjs</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <executions>
@@ -242,9 +213,6 @@
                 <excludes combine.children="append">
                   <!-- Trivial template file which a license header would bloat too much-->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicket/input/remove-input-behavior.js</exclude>
-                  <!-- These upstream files do not contain license headers -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js.map</exclude>
                   <!-- Apache License without header -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/sass/*.java</exclude>
                   <!-- MIT License -->

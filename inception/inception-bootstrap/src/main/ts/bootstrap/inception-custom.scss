@@ -24,6 +24,7 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .page-header {
@@ -421,8 +422,10 @@ div.left-tabpanel div.tab-row a:hover {
 
   label {
     @extend .btn;
-    border: $border-width solid $primary;
     text-align: left;
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-list-group-action-hover-bg);
   }
 
   input[type="radio"]:checked ~ * {
@@ -442,6 +445,10 @@ div.left-tabpanel div.tab-row a:hover {
     outline: 0;
     box-shadow: $btn-focus-box-shadow;
   }
+}
+
+.vw-50 {
+  width: 50vw;
 }
 
 .w-min-220px {

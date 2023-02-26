@@ -55,7 +55,7 @@ public class FinishDocumentDialogContent
 
         var state = new BootstrapRadioChoice<AnnotationDocumentState>("state",
                 asList(FINISHED, IGNORE));
-        state.setEscapeModelStrings(false);
+        state.setEscapeModelStrings(false); // SAFE - RENDERING ONLY CONTROLLED SET OF ICONS
         state.setChoiceRenderer(new EnumChoiceRenderer<>(state));
         form.add(state);
         form.add(new TextArea<>("comment").add(new StringValidator(0, MAX_COMMENT_LENGTH)));

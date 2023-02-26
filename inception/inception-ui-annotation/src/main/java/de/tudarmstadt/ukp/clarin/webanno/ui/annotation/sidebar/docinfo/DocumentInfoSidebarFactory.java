@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -30,7 +31,6 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 // This now mainly serves as example code - we do not actually use it
-//@Component("documentInfoSidebar")
 public class DocumentInfoSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
@@ -47,9 +47,9 @@ public class DocumentInfoSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.info_s;
+        return new Icon(aId, FontAwesome5IconType.info_s);
     }
 
     @Override

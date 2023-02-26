@@ -90,7 +90,8 @@ public class DocumentAccessImpl
                 return false;
             }
 
-            // Users can see their own annotations and manager can see annotations of all users
+            // Annotators can see their own annotations and manager/curators can see annotations of
+            // all users
             if (!aUser.equals(aAnnotator) && !permissionLevels.contains(MANAGER)
                     && !(CURATION_USER.equals(aUser)
                             && containsAny(permissionLevels, MANAGER, CURATOR))) {

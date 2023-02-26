@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
+import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.io.FileUtils.copyFile;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.io.FilenameUtils.normalize;
+import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
@@ -29,11 +33,15 @@ import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -54,6 +62,10 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
 {
+    Set<String> DEFAULT_PERMITTED_RESOURCE_EXTENSIONS = unmodifiableSet(
+            Set.of("apng", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "png", "svg",
+                    "webp", "bmp", "tif", "tiff"));
+
     /**
      * Returns the format identifier which is stored in in {@link SourceDocument#setFormat(String)}.
      * 
@@ -92,6 +104,30 @@ public interface FormatSupport
     default boolean isProneToInconsistencies()
     {
         return true;
+    }
+
+    default boolean hasResources()
+    {
+        return false;
+    }
+
+    default boolean isAccessibelResource(File aDocFile, String aResourcePath)
+    {
+        return DEFAULT_PERMITTED_RESOURCE_EXTENSIONS.contains(getExtension(aResourcePath));
+    }
+
+    default InputStream openResourceStream(File aDocFile, String aResourcePath) throws IOException
+    {
+        if (!hasResources() || !isAccessibelResource(aDocFile, aResourcePath)) {
+            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
+        }
+
+        if (aResourcePath.contains("..") || aResourcePath.contains("//")) {
+            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
+        }
+
+        var path = prependIfMissing(normalize(aResourcePath, true), "/");
+        return new URL("jar:" + aDocFile.toURI().toURL() + "!" + path).openStream();
     }
 
     /**
@@ -196,8 +232,10 @@ public interface FormatSupport
         }
 
         // If the writer produced only a single file, then that is the result
-        File exportFile = createTempFile(
-                FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName()),
+        String filename = FilenameUtils.getBaseName(aTargetFolder.listFiles()[0].getName());
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File exportFile = createTempFile(filename,
                 "." + FilenameUtils.getExtension(aTargetFolder.listFiles()[0].getName()));
         // File exportFile = new File(aTargetFolder.getParent(),
         // aTargetFolder.listFiles()[0].getName());

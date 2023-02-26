@@ -16,38 +16,123 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-
     import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
     import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
 
     export let annotation: Annotation;
     export let ajaxClient: DiamAjax;
+    export let showText: boolean = true;
 
     $: backgroundColor = annotation.color || "var(--bs-secondary)";
     $: textColor = bgToFgColor(backgroundColor);
+
+    function handleSelect(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
+
+    function handleAccept(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
+
+    function handleMerge(ev: MouseEvent) {
+        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
+    }
+
+    function handleReject(ev: MouseEvent) {
+        ajaxClient.triggerExtensionAction(annotation.vid);
+    }
+
+    function handleDelete(ev: MouseEvent) {
+        ajaxClient.deleteAnnotation(annotation.vid);
+    }
 </script>
 
-<span
-    class="badge border border-dark ms-1 fw-normal"
-    on:click={(ev) =>
-        ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true })}
-    title={`${annotation.vid}@${annotation.layer.name}`}
-    role="button"
-    style="color: {textColor}; background-color: {backgroundColor}"
->
-    {annotation.label || "No label"}
-</span>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+{#if annotation.vid.toString().startsWith("rec:")}
+    <div class="btn-group mb-0 ms-1 btn-group-recommendation" role="group">
+        <button
+            type="button"
+            class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
+            on:click={handleAccept}
+            title="Accept ({annotation.vid})"
+        >
+            <i class="far fa-check-circle" />
+            {#if showText}
+                {annotation.label || "No label"}
+            {/if}
+            {#if annotation.score}
+                <span class="small font-monospace score"
+                    >{annotation.score.toFixed(2)}</span
+                >
+            {/if}
+        </button>
+        <button
+            type="button"
+            class="btn-reject btn btn-outline-danger btn-sm py-0 px-1"
+            on:click={handleReject}
+            title="Reject ({annotation.vid})"
+        >
+            <i class="far fa-times-circle" />
+        </button>
+    </div>
+{:else if annotation.vid.toString().startsWith("cur:")}
+    <button
+        type="button"
+        class="btn-merge btn btn-colored btn-sm py-0 px-1 border-dark"
+        style="color: {textColor}; background-color: {backgroundColor}"
+        on:click={handleMerge}
+        title="Merge ({annotation.vid})"
+    >
+        <i class="fas fa-clipboard-check" />
+        {#if showText}
+            {annotation.label || "No label"}
+        {/if}
+        {#if annotation.score}
+            <span class="small font-monospace score"
+                >{annotation.score.toFixed(2)}</span
+            >
+        {/if}
+    </button>
+{:else}
+    <div class="btn-group mb-0 ms-1" role="group">
+        <button
+            type="button"
+            class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
+            style="color: {textColor}; background-color: {backgroundColor}"
+            on:click={handleSelect}
+            title="Select ({annotation.vid})"
+        >
+            {#if showText}
+                {annotation.label || "No label"}
+            {:else}
+                <i class="fas fa-crosshairs" />
+            {/if}
+        </button>
+        <button
+            type="button"
+            class="btn-delete btn btn-colored btn-sm py-0 px-1 border-dark"
+            style="color: {textColor}; background-color: {backgroundColor}"
+            on:click={handleDelete}
+            title="Delete ({annotation.vid})"
+        >
+            <i class="far fa-times-circle" />
+        </button>
+    </div>
+{/if}
 
-<style>
-  .badge {
-    font-family: sans-serif;
-    white-space: normal;
-    --bs-badge-padding-y: 0.15rem;
-  }
+<style lang="scss">
+    .btn-colored:hover {
+        filter: brightness(0.8);
+    }
 
-  /*
-  .marker-focus {
-    box-shadow: 0px 0px 5px 2px orange;
-  }
-  */
+    .btn-group-recommendation {
+        .btn-accept, .btn-merge {
+            .score {
+                color: var(--bs-secondary);
+                &:hover {
+                    color: var(--bs-white);
+                }
+            }
+        }
+    }
 </style>

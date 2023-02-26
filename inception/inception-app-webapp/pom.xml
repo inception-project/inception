@@ -74,6 +74,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-feature-lookup</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
     <dependency>
@@ -96,6 +100,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-tagsets</artifactId>
     </dependency>
+    <!--
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-tutorial</artifactId>
+    </dependency>
+    -->
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -269,10 +279,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-lif</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-imscwb</artifactId>
     </dependency>
     <dependency>
@@ -441,6 +447,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
     </dependency>
 
@@ -460,6 +470,10 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-saml2-service-provider</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
@@ -642,20 +656,6 @@
       -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <!-- 
-          - Downgrade version to avoid exception during Eclipse builds:
-          - 
-          - Execution assemble-documentation of goal 
-          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single failed: 
-          - An API incompatibility was encountered while executing 
-          - org.apache.maven.plugins:maven-assembly-plugin:3.2.0:single: 
-          - java.lang.NoSuchMethodError: 'void org.codehaus.plexus.util.DirectoryScanner
-          -  .setFilenameComparator(java.util.Comparator)'
-          -
-          - Update 2021-05-18: Tried with assembly 3.3.0 and even tried adding plexus-utils 3.3.0
-          -                    as a direct dependency, but both didn't fix the problem.
-         -->
-        <version>3.1.1</version>
         <executions>
           <execution>
             <id>assemble-documentation</id>
@@ -897,6 +897,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-lookup</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
@@ -912,7 +913,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-lif</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>

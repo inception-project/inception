@@ -57,7 +57,7 @@ public class DocumentMatrixDataProvider
 
     public List<DocumentMatrixRow> getMatrixData()
     {
-        return filterTable(matrixData);
+        return filter(matrixData);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class DocumentMatrixDataProvider
         return getMatrixData().size();
     }
 
-    public List<DocumentMatrixRow> filterTable(List<DocumentMatrixRow> aData)
+    private List<DocumentMatrixRow> filter(List<DocumentMatrixRow> aData)
     {
         Stream<DocumentMatrixRow> rowStream = matrixData.stream();
 

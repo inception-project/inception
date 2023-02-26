@@ -121,7 +121,6 @@
       <plugin>
         <groupId>com.helger.maven</groupId>
         <artifactId>ph-javacc-maven-plugin</artifactId>
-        <version>4.1.4</version>
         <executions>
           <execution>
             <id>default</id>

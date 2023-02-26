@@ -446,7 +446,7 @@ public class AnnotatorsPanel
         casses.put(CURATION_USER, curationDocumentService.readCurationCas(aDocument));
 
         // The source CASes from the annotators are all ready read-only / shared
-        for (var annDoc : documentService.listFinishedAnnotationDocuments(aDocument)) {
+        for (var annDoc : curationDocumentService.listCuratableAnnotationDocuments(aDocument)) {
             casses.put(annDoc.getUser(),
                     documentService.readAnnotationCas(annDoc.getDocument(), annDoc.getUser()));
         }

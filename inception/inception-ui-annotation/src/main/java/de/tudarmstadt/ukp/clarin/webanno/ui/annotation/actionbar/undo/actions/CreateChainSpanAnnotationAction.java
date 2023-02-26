@@ -39,10 +39,9 @@ public class CreateChainSpanAnnotationAction
 
     private final Range range;
 
-    public CreateChainSpanAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            ChainEvent aEvent)
+    public CreateChainSpanAnnotationAction(long aRequestId, ChainEvent aEvent)
     {
-        super(aRequestId, aEvent, new VID(aEvent.getAnnotation()));
+        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
 
         range = new Range(aEvent.getAnnotation());
     }

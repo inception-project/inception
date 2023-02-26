@@ -63,7 +63,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -93,6 +92,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.FeatureFilter;
+import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
@@ -440,7 +440,8 @@ public class CasMerge
 
     private static boolean existsEquivalentAt(CAS aCas, TypeAdapter aAdapter, AnnotationFS aFs)
     {
-        return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream() //
+        Type targetType = CasUtil.getType(aCas, aFs.getType().getName());
+        return selectAt(aCas, targetType, aFs.getBegin(), aFs.getEnd()).stream() //
                 .filter(cand -> aAdapter.equivalents(aFs, cand,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f))) //
                 .findAny() //

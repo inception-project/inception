@@ -20,11 +20,15 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.getQName;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
@@ -33,7 +37,6 @@ import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -49,12 +52,16 @@ public class SanitizingContentHandler
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String MASKED = "MASKED-";
+    private static final String XMLNS = "xmlns";
+    private static final String XMLNS_PREFIX = "xmlns:";
 
     private final PolicyCollection policies;
 
     private final Stack<Frame> stack;
 
     private char filteredCharacter = ' ';
+
+    private final LinkedHashMap<String, String> namespaceMappings = new LinkedHashMap<>();
 
     private Set<QName> maskedElements = new HashSet<>();
     private Map<QName, Set<QName>> maskedAttributes = new HashMap<>();
@@ -64,12 +71,30 @@ public class SanitizingContentHandler
         super(aDelegate);
         stack = new Stack<>();
         policies = aPolicies;
+        namespaceMappings.put(XMLConstants.XML_NS_PREFIX, XMLConstants.XML_NS_URI);
+    }
+
+    @Override
+    public void startDocument() throws SAXException
+    {
+        stack.clear();
+        namespaceMappings.clear();
+        namespaceMappings.put(XMLConstants.XML_NS_PREFIX, XMLConstants.XML_NS_URI);
+        super.startDocument();
     }
 
     @Override
     public void startElement(String aUri, String aLocalName, String aQName, Attributes aAtts)
         throws SAXException
     {
+        var localNamespace = new LinkedHashMap<String, String>();
+        for (Entry<String, String> xmlns : prefixMappings(aAtts).entrySet()) {
+            var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
+            if (oldValue == null) {
+                localNamespace.put(xmlns.getKey(), xmlns.getValue());
+            }
+        }
+
         var element = toQName(aUri, aLocalName, aQName);
 
         var policy = policies.forElement(element);
@@ -78,10 +103,10 @@ public class SanitizingContentHandler
         switch (action) {
         case PASS:
             var attributes = sanitizeAttributes(element, aAtts);
-            startElement(element, attributes, policy, action);
+            startElement(element, attributes, policy, action, localNamespace);
             break;
         case DROP:
-            startElement(element, null, policy, action);
+            startElement(element, null, policy, action, localNamespace);
             break;
         default:
             throw new SAXException("Unsupported element action: [" + action + "]");
@@ -89,7 +114,7 @@ public class SanitizingContentHandler
     }
 
     private void startElement(QName aElement, Attributes aAtts, Optional<ElementPolicy> aPolicy,
-            ElementAction aAction)
+            ElementAction aAction, Map<String, String> aLocalNamespaces)
         throws SAXException
     {
         QName element = aElement;
@@ -98,12 +123,29 @@ public class SanitizingContentHandler
             element = maskElement(element);
         }
 
-        stack.push(new Frame(element, aPolicy, aAction));
+        stack.push(new Frame(element, aPolicy, aAction, aLocalNamespaces));
 
         if (aAction == ElementAction.PASS || policies.isDebug()) {
             super.startElement(element.getNamespaceURI(), element.getLocalPart(), getQName(element),
                     aAtts);
         }
+    }
+
+    private Map<String, String> prefixMappings(Attributes aAtts)
+    {
+        var mappings = new LinkedHashMap<String, String>();
+        if (aAtts != null) {
+            for (int i = 0; i < aAtts.getLength(); i++) {
+                String qName = aAtts.getQName(i);
+                if (XMLNS.equals(qName)) {
+                    mappings.put("", aAtts.getValue(i));
+                }
+                if (startsWith(qName, XMLNS_PREFIX)) {
+                    mappings.put(qName.substring(XMLNS_PREFIX.length()), aAtts.getValue(i));
+                }
+            }
+        }
+        return mappings;
     }
 
     @Override
@@ -115,31 +157,23 @@ public class SanitizingContentHandler
             super.endElement(frame.element.getNamespaceURI(), frame.element.getLocalPart(), qName);
         }
 
+        frame.namespaces.keySet().forEach(namespaceMappings::remove);
+
         if (stack.isEmpty()) {
             if (policies.isDebug() && log.isDebugEnabled()) {
-                log.debug("Masked elements: {}",
-                        maskedElements.stream().sorted(comparing(QName::getLocalPart)) //
-                                .map(this::toPrefixedForm) //
-                                .collect(toList()));
+                log.debug("Masked elements: {}", maskedElements.stream() //
+                        .map(QName::toString) //
+                        .sorted() //
+                        .collect(toList()));
                 for (var element : maskedAttributes.keySet().stream()
                         .sorted(comparing(QName::getLocalPart)).collect(toList())) {
                     log.debug("Masked attributes on {}: {}", element,
-                            maskedAttributes.get(element).stream()
-                                    .sorted(comparing(QName::getLocalPart)) //
-                                    .map(this::toPrefixedForm) //
+                            maskedAttributes.get(element).stream().map(QName::toString) //
+                                    .sorted() //
                                     .collect(toList()));
                 }
             }
         }
-    }
-
-    private String toPrefixedForm(QName aQName)
-    {
-        if (Strings.isEmpty(aQName.getPrefix())) {
-            return aQName.getLocalPart();
-        }
-
-        return aQName.getPrefix() + ":" + aQName.getLocalPart();
     }
 
     @Override
@@ -231,12 +265,21 @@ public class SanitizingContentHandler
         final QName element;
         final Optional<ElementPolicy> policy;
         final ElementAction action;
+        final Map<String, String> namespaces;
 
-        public Frame(QName aElement, Optional<ElementPolicy> aPolicy, ElementAction aAction)
+        public Frame(QName aElement, Optional<ElementPolicy> aPolicy, ElementAction aAction,
+                Map<String, String> aLocalNamespaces)
         {
             element = aElement;
             policy = aPolicy;
             action = aAction;
+
+            if (aLocalNamespaces != null && !aLocalNamespaces.isEmpty()) {
+                namespaces = aLocalNamespaces;
+            }
+            else {
+                namespaces = Collections.emptyMap();
+            }
         }
 
         @Override
@@ -291,6 +334,11 @@ public class SanitizingContentHandler
             }
         }
 
-        return new QName(aUri, localName, prefix);
+        String uri = aUri;
+        if (StringUtils.isEmpty(uri)) {
+            uri = namespaceMappings.getOrDefault(prefix, XMLConstants.NULL_NS_URI);
+        }
+
+        return new QName(uri, localName, prefix);
     }
 }

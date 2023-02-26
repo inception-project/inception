@@ -50,7 +50,7 @@ public class DocLink
     public DocLink(String aId, Book aBook, IModel<String> aAnchor)
     {
         super(aId, Model.of(), Model.of("<i class=\"fas fa-question-circle\"></i>"));
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE - RENDERING STATIC ICON
         setContextRelative(true);
         setPopupSettings(new PopupSettings().setWindowName("_blank"));
         setDefaultModel(wrap(aAnchor).map(frag -> aBook.url + "#" + frag).orElse(aBook.url));

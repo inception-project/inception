@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.io.Serializable;
@@ -103,7 +104,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                 .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
                         aPage.getModelObject().getProject()).getType())
                 && !projectService.hasRole(aPage.getModelObject().getUser(),
-                        aPage.getModelObject().getProject(), CURATOR);
+                        aPage.getModelObject().getProject(), CURATOR, MANAGER);
     }
 
     @Override

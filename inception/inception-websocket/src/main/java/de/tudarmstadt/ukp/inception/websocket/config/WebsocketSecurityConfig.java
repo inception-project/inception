@@ -64,6 +64,9 @@ public class WebsocketSecurityConfig
                 + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
                 + PARAM_USER + "}/**";
 
+        final var recommenterEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+                + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
+
         // @formatter:off
         aSecurityRegistry //
             .expressionHandler(handler)
@@ -78,6 +81,9 @@ public class WebsocketSecurityConfig
             .simpSubscribeDestMatchers(annotationEditorTopic)
                 .access("@documentAccess.canViewAnnotationDocument(#" + PARAM_PROJECT + 
                         ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")")
+            .simpSubscribeDestMatchers(recommenterEventsTopic)
+                .access("@projectAccess.canAccessProject(#" + PARAM_PROJECT + ") and "
+                        + "@userAccess.isUser(#" + PARAM_USER + ")")
             // authenticated users can subscribe
             .simpTypeMatchers(SUBSCRIBE).authenticated()
             // authenticated clients can send messages

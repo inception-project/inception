@@ -49,6 +49,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvColumn;
@@ -66,6 +68,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class Tsv3XCasDocumentBuilder
 {
+    private static final Logger LOG = LoggerFactory.getLogger(Tsv3XCasDocumentBuilder.class);
+
     public static TsvDocument of(TsvSchema aSchema, JCas aJCas)
     {
         TsvFormatHeader format = new TsvFormatHeader("WebAnno TSV", "3.3");
@@ -111,7 +115,15 @@ public class Tsv3XCasDocumentBuilder
         // Scan all annotations of the types defined in the schema and use them to set up sub-token
         // units.
         for (Type type : aSchema.getUimaTypes()) {
+            var annotations = CasUtil.select(aJCas.getCas(), type);
+
             if (aSchema.getIgnoredTypes().contains(type)) {
+                if (!annotations.isEmpty()) {
+                    LOG.warn(
+                            "The layer [{}] is incompatible with WebAnno TSV but contains {} "
+                                    + "annotations - these will not be exported.",
+                            type, annotations.size());
+                }
                 continue;
             }
 
@@ -119,7 +131,7 @@ public class Tsv3XCasDocumentBuilder
 
             boolean addDisambiguationIdIfStacked = SPAN.equals(layerType);
 
-            for (AnnotationFS annotation : CasUtil.select(aJCas.getCas(), type)) {
+            for (AnnotationFS annotation : annotations) {
                 // Mind that we might actually get an annotation here which is a subtype of `type`!
                 doc.activateType(type);
 

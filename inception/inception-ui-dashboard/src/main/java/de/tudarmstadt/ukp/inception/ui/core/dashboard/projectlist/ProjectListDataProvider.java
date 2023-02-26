@@ -25,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -39,6 +40,8 @@ public class ProjectListDataProvider
     implements IFilterStateLocator<ProjectListFilterState>, Serializable
 {
     private static final long serialVersionUID = 2144634813265254948L;
+
+    private static final Date BEGINNING_OF_TIME = new Date(0);
 
     private ProjectListFilterState filterState;
     private IModel<List<ProjectEntry>> source;
@@ -81,16 +84,26 @@ public class ProjectListDataProvider
             return dir * (o1.getName().compareTo(o2.getName()));
         case STATE:
             return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
-        case CREATED:
-            return dir * (o1.getCreated().compareTo(o2.getCreated()));
-        case UPDATED:
-            return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
+        case CREATED: {
+            var d1 = o1.getCreated();
+            var d2 = o2.getCreated();
+            d1 = d1 != null ? d1 : BEGINNING_OF_TIME;
+            d2 = d2 != null ? d2 : BEGINNING_OF_TIME;
+            return dir * (d1.compareTo(d2));
+        }
+        case UPDATED: {
+            var d1 = o1.getUpdated();
+            var d2 = o2.getUpdated();
+            d1 = d1 != null ? d1 : BEGINNING_OF_TIME;
+            d2 = d2 != null ? d2 : BEGINNING_OF_TIME;
+            return dir * (d1.compareTo(d2));
+        }
         default:
             return 0;
         }
     }
 
-    public List<ProjectEntry> filter(List<ProjectEntry> aData)
+    private List<ProjectEntry> filter(List<ProjectEntry> aData)
     {
         Stream<ProjectEntry> projectStream = aData.stream();
 

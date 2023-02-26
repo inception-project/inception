@@ -37,7 +37,7 @@ public class ToggleBox
         setRequired(true);
         setNullValid(false);
         setChoices(asList(true, false));
-        setEscapeModelStrings(false);
+        setEscapeModelStrings(false); // SAFE - ONLY RENDERING A FEW HARD-CODED CHOICES WITH ICONS
     }
 
     @Override

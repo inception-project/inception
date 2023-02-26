@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.app.ui.search.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,8 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration
 @ConditionalOnBean(SearchService.class)
 public class StatsServiceUIAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "search.statistics-sidebar", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
     @Bean
     public StatisticsAnnotationSidebarFactory statisticsAnnotationSidebarFactory()
     {

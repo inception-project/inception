@@ -130,7 +130,7 @@ class ExportServiceControllerImplTest
 
     // temporarily store data for test project
     private static @TempDir File repositoryDir;
-    private static Project testProject;
+    private static Project project;
     private static User user;
 
     @BeforeEach
@@ -151,7 +151,7 @@ class ExportServiceControllerImplTest
 
     void setupOnce() throws Exception
     {
-        if (testProject != null) {
+        if (project != null) {
             return;
         }
 
@@ -162,8 +162,8 @@ class ExportServiceControllerImplTest
         user.setPassword(PASS);
         userService.create(user);
 
-        testProject = new Project("test-project");
-        projectService.createProject(testProject);
+        project = new Project("test-project");
+        projectService.createProject(project);
     }
 
     @AfterEach
@@ -176,7 +176,7 @@ class ExportServiceControllerImplTest
     @Test
     void thatSubscriptionWithoutProjectPermissionIsRejected() throws Exception
     {
-        projectService.revokeRole(testProject, user, PermissionLevel.MANAGER);
+        projectService.revokeRole(project, user, PermissionLevel.MANAGER);
 
         CountDownLatch responseRecievedLatch = new CountDownLatch(1);
         AtomicBoolean messageRecieved = new AtomicBoolean(false);
@@ -204,7 +204,7 @@ class ExportServiceControllerImplTest
     @Test
     void thatSubscriptionWithProjectPermissionIsAccepted() throws Exception
     {
-        projectService.assignRole(testProject, user, PermissionLevel.MANAGER);
+        projectService.assignRole(project, user, PermissionLevel.MANAGER);
 
         CountDownLatch responseRecievedLatch = new CountDownLatch(1);
         AtomicBoolean messageRecieved = new AtomicBoolean(false);
@@ -243,7 +243,7 @@ class ExportServiceControllerImplTest
         @Override
         public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
         {
-            aSession.subscribe("/app" + NS_PROJECT + "/" + testProject.getId() + "/exports",
+            aSession.subscribe("/app" + NS_PROJECT + "/" + project.getId() + "/exports",
                     new StompFrameHandler()
                     {
                         @Override

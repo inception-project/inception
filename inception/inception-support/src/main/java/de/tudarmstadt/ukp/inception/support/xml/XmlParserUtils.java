@@ -49,10 +49,10 @@ public class XmlParserUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String EXTTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
-    private static final String EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
-    private static final String DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
-    private static final String LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+    public static final String EXTTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
+    public static final String EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
+    public static final String DISALLOW_DOCTYPE_DECL = "http://apache.org/xml/features/disallow-doctype-decl";
+    public static final String LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
     private XmlParserUtils()
     {
@@ -61,7 +61,8 @@ public class XmlParserUtils
 
     public static Comparator<QName> caseInsensitiveQNameComparator()
     {
-        return comparing(QName::getLocalPart, CASE_INSENSITIVE_ORDER);
+        return comparing(QName::getNamespaceURI).thenComparing(QName::getLocalPart,
+                CASE_INSENSITIVE_ORDER);
     }
 
     public static String getQName(QName aElement)
@@ -108,7 +109,14 @@ public class XmlParserUtils
         return factory;
     }
 
-    private static void setFeature(SAXParserFactory aFactory, String aFeature, boolean aValue)
+    public static SAXParserFactory enableNamespaceSupport(SAXParserFactory aFactory)
+        throws ParserConfigurationException
+    {
+        XmlParserUtils.setFeature(aFactory, "http://xml.org/sax/features/namespaces", true);
+        return aFactory;
+    }
+
+    public static void setFeature(SAXParserFactory aFactory, String aFeature, boolean aValue)
         throws ParserConfigurationException
     {
         try {
@@ -124,13 +132,20 @@ public class XmlParserUtils
         }
     }
 
+    public static SAXParser newSaxParser(SAXParserFactory aFactory)
+        throws SAXNotRecognizedException, SAXNotSupportedException, ParserConfigurationException,
+        SAXException
+    {
+        SAXParser saxParser = aFactory.newSAXParser();
+        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        return saxParser;
+    }
+
     public static SAXParser newSaxParser()
         throws SAXNotRecognizedException, SAXNotSupportedException, ParserConfigurationException,
         SAXException
     {
-        SAXParser saxParser = newSaxParserFactory().newSAXParser();
-        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-        return saxParser;
+        return newSaxParser(newSaxParserFactory());
     }
 }

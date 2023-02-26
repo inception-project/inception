@@ -18,19 +18,36 @@
 package de.tudarmstadt.ukp.inception.externaleditor.command;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+
+import java.io.IOException;
+import java.util.List;
 
 import org.springframework.core.annotation.Order;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactRange;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
 @Order(1000)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ScrollToCommand
     implements EditorCommand
 {
     private static final long serialVersionUID = 1779280309942407825L;
 
+    @JsonProperty("offset")
     private final int offset;
+
+    @JsonProperty("position")
     private final FocusPosition position;
+
+    @JsonProperty("pingRanges")
+    private List<CompactRange> pingRanges;
 
     public ScrollToCommand(int aOffset, FocusPosition aPosition)
     {
@@ -38,9 +55,25 @@ public class ScrollToCommand
         position = aPosition;
     }
 
+    public void setPingRange(VRange aRange)
+    {
+        if (aRange == null) {
+            pingRanges = null;
+            return;
+        }
+
+        pingRanges = asList(new CompactRange(aRange.getBegin(), aRange.getEnd()));
+    }
+
     @Override
     public String command(String aEditorVariable)
     {
-        return format("e.scrollTo({ offset: %d, position: '%s'})", offset, position);
+        try {
+            var args = JSONUtil.toJsonString(this);
+            return format("e.scrollTo(%s)", args);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

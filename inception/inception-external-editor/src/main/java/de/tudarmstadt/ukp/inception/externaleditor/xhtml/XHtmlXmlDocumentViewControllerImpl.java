@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.http.HttpStatus.OK;
+
+import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
@@ -26,8 +31,11 @@ import java.util.stream.Collectors;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,7 +67,10 @@ public class XHtmlXmlDocumentViewControllerImpl
     extends XmlDocumentViewControllerImplBase
     implements XHtmlXmlDocumentViewController
 {
-    private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
+    private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
+    private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}/res";
 
     private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
     private static final String HTML = "html";
@@ -86,10 +97,9 @@ public class XHtmlXmlDocumentViewControllerImpl
     @Override
     public String getDocumentUrl(SourceDocument aDoc)
     {
-        return servletContext.getContextPath() + BASE_URL
-                + GET_DOCUMENT_PATH
-                        .replace("{projectId}", String.valueOf(aDoc.getProject().getId()))
-                        .replace("{documentId}", String.valueOf(aDoc.getId()));
+        return servletContext.getContextPath() + BASE_URL + GET_DOCUMENT_PATH //
+                .replace("{projectId}", String.valueOf(aDoc.getProject().getId()))
+                .replace("{documentId}", String.valueOf(aDoc.getId()));
     }
 
     private void renderXmlStylesheet(ContentHandler ch, String aStylesheetUrl) throws SAXException
@@ -175,6 +185,41 @@ public class XHtmlXmlDocumentViewControllerImpl
             ch.endDocument();
 
             return toResponse(out);
+        }
+    }
+
+    @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
+    @Override
+    @GetMapping(path = GET_RESOURCE_PATH)
+    public ResponseEntity<InputStreamResource> getResource(
+            @PathVariable("projectId") long aProjectId,
+            @PathVariable("documentId") long aDocumentId, @RequestParam("resId") String aResourceId,
+            Principal principal)
+        throws Exception
+    {
+        var srcDoc = documentService.getSourceDocument(aProjectId, aDocumentId);
+
+        var maybeFormatSupport = formatRegistry.getFormatById(srcDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var srcDocFile = documentService.getSourceDocumentFile(srcDoc);
+
+        var formatSupport = maybeFormatSupport.get();
+
+        try {
+            var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
+        }
+        catch (FileNotFoundException e) {
+            LOG.error("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+        catch (Exception e) {
+            LOG.error("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
+            return ResponseEntity.notFound().build();
         }
     }
 

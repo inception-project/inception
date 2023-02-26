@@ -32,7 +32,6 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -49,7 +48,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Answers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,12 +79,14 @@ import jakarta.persistence.EntityManager;
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest
 {
+    private static final int DOC_SIZE = 100_000;
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Mock DocumentImportExportService importExportService;
-    private @Mock ProjectService projectService;
-    private @Mock ApplicationEventPublisher applicationEventPublisher;
-    private @Mock EntityManager entityManager;
+    private @Mock(stubOnly = true) DocumentImportExportService importExportService;
+    private @Mock(stubOnly = true) ProjectService projectService;
+    private @Mock(stubOnly = true) ApplicationEventPublisher applicationEventPublisher;
+    private @Mock(stubOnly = true) EntityManager entityManager;
 
     public @TempDir File testFolder;
 
@@ -121,8 +124,10 @@ public class DocumentServiceImplConcurrencyTest
         storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, null);
 
-        sut = spy(new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
-                projectService, applicationEventPublisher, entityManager));
+        var realSut = new DocumentServiceImpl(repositoryProperties, storageService,
+                importExportService, projectService, applicationEventPublisher, entityManager);
+        sut = Mockito.mock(DocumentServiceImpl.class, Mockito.withSettings().spiedInstance(realSut)
+                .stubOnly().defaultAnswer(Answers.CALLS_REAL_METHODS));
 
         lenient().doAnswer(_invocation -> {
             SourceDocument doc = _invocation.getArgument(0, SourceDocument.class);
@@ -168,11 +173,14 @@ public class DocumentServiceImplConcurrencyTest
     @Test
     public void testHighConcurrencySingleUser() throws Exception
     {
+        var docText = repeat("This is a test.\n", DOC_SIZE);
+        var typeSystem = mergeTypeSystems(
+                asList(createTypeSystemDescription(), getInternalTypeSystem()));
+
         when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
                 any())).then(_invocation -> {
-                    CAS cas = createCas(mergeTypeSystems(
-                            asList(createTypeSystemDescription(), getInternalTypeSystem())));
-                    cas.setDocumentText(repeat("This is a test.\n", 100_000));
+                    CAS cas = createCas(typeSystem);
+                    cas.setDocumentText(docText);
                     return cas;
                 });
 
@@ -186,7 +194,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         for (int n = 0; n < threadGroupCount; n++) {
             Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
             primaryTasks.add(rw);
@@ -233,11 +241,14 @@ public class DocumentServiceImplConcurrencyTest
     @Test
     public void testHighConcurrencyMultiUser() throws Exception
     {
+        var docText = repeat("This is a test.\n", DOC_SIZE);
+        var typeSystem = mergeTypeSystems(
+                asList(createTypeSystemDescription(), getInternalTypeSystem()));
+
         when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
                 any())).then(_invocation -> {
-                    CAS cas = createCas(mergeTypeSystems(
-                            asList(createTypeSystemDescription(), getInternalTypeSystem())));
-                    cas.setDocumentText(repeat("This is a test.\n", 100_000));
+                    CAS cas = createCas(typeSystem);
+                    cas.setDocumentText(docText);
                     return cas;
                 });
 
@@ -251,7 +262,7 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> secondaryTasks = new ArrayList<>();
 
         int threadGroupCount = 4;
-        int iterations = 100;
+        int iterations = 50;
         int userCount = 4;
         for (int u = 0; u < userCount; u++) {
             for (int n = 0; n < threadGroupCount; n++) {
@@ -282,10 +293,17 @@ public class DocumentServiceImplConcurrencyTest
             long running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
-            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            long totalMemory = Runtime.getRuntime().totalMemory();
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            long realFree = maxMemory - totalMemory + freeMemory;
+            long used = maxMemory - realFree;
+            long perc = (used * 100) / maxMemory;
+            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {} [{}% {}/{}]",
+                    running,
                     (writeCounter.get() * 100) / (userCount * threadGroupCount * iterations),
                     writeCounter, managedReadCounter, unmanagedReadCounter, deleteCounter,
-                    deleteInitialCounter);
+                    deleteInitialCounter, perc, used, maxMemory);
         }
 
         log.info("---- Wait for threads secondary threads to wrap up ----");

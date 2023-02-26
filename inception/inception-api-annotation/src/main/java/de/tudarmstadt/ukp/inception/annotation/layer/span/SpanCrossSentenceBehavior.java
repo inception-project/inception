@@ -72,6 +72,21 @@ public class SpanCrossSentenceBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    @Override
+    public MoveSpanAnnotationRequest onMove(TypeAdapter aAdapter,
+            MoveSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        return onRequest(aAdapter, aRequest);
+    }
+
+    private <T extends SpanAnnotationRequest_ImplBase<T>> T onRequest(TypeAdapter aAdapter,
+            T aRequest)
+        throws AnnotationException
+    {
         if (aAdapter.getLayer().isCrossSentence()) {
             return aRequest;
         }
@@ -115,7 +130,7 @@ public class SpanCrossSentenceBehavior
             }
 
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
-                aResponse.add(new VComment(new VID(fs), ERROR,
+                aResponse.add(new VComment(VID.of(fs), ERROR,
                         "Crossing sentence boundaries is not permitted."));
             }
         }

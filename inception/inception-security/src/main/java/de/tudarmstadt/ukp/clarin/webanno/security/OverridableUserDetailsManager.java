@@ -58,6 +58,7 @@ public class OverridableUserDetailsManager
         catch (Exception e) {
             throw new ApplicationContextException(e.getMessage(), e);
         }
+
         super.initDao();
     }
 

@@ -23,6 +23,8 @@ public class WebSocketConstants
     public static final String TOPIC_ELEMENT_DOCUMENT = "/document/";
     public static final String TOPIC_ELEMENT_USER = "/user/";
 
+    public static final String TOPIC_RECOMMENDER = "/recommender";
+
     public static final String PARAM_PROJECT = "project";
     public static final String PARAM_DOCUMENT = "document";
     public static final String PARAM_USER = "user";

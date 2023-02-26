@@ -484,7 +484,7 @@ public class FileSystemCasStorageDriver
                     + aUser + "] in document " + aDocument + " or project " + aDocument.getProject()
                     + " (expected: " + formatTimestamp(aExpectedTimeStamp) + " actual on storage: "
                     + formatTimestamp(diskLastModified) + ", delta: "
-                    + formatDurationHMS(diskLastModified - aExpectedTimeStamp) + ")"
+                    + formatDurationHMS(Math.abs(diskLastModified - aExpectedTimeStamp)) + ")"
                     + lastWriteMsg);
 
         }

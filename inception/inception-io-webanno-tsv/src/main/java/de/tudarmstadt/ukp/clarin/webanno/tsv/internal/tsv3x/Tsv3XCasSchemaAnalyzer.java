@@ -59,7 +59,7 @@ public class Tsv3XCasSchemaAnalyzer
     {
         TsvSchema schema = new TsvSchema();
 
-        Set<Type> ignoredTypes = new HashSet<>();
+        Set<Type> incompatibleTypes = new HashSet<>();
 
         Set<Type> chainLinkTypes = new HashSet<>();
 
@@ -96,7 +96,7 @@ public class Tsv3XCasSchemaAnalyzer
                 break;
             case INCOMPATIBLE:
                 // Do not generate a column definition for incompatible types.
-                ignoredTypes.add(type);
+                incompatibleTypes.add(type);
                 break;
             }
         }
@@ -107,11 +107,11 @@ public class Tsv3XCasSchemaAnalyzer
             Feature firstFeat = type.getFeatureByBaseName(CHAIN_FIRST_FEAT);
             if (firstFeat != null && chainLinkTypes.contains(firstFeat.getRange())) {
                 schema.addChainHeadType(type);
-                ignoredTypes.remove(type);
+                incompatibleTypes.remove(type);
             }
         }
 
-        ignoredTypes.forEach(schema::ignoreType);
+        incompatibleTypes.forEach(schema::ignoreType);
 
         return schema;
     }
@@ -138,6 +138,10 @@ public class Tsv3XCasSchemaAnalyzer
                         FeatureType.SLOT_TARGET);
                 targetColumn.setTargetTypeHint(slotTargetType);
                 aSchema.addColumn(targetColumn);
+            }
+            else if (CAS.TYPE_NAME_STRING_ARRAY.equals(feat.getRange().getName())) {
+                LOG.debug("Multi-value string features are not supported by WebAnno TSV: [{}]",
+                        feat.getName());
             }
         }
     }
@@ -223,12 +227,18 @@ public class Tsv3XCasSchemaAnalyzer
                 continue;
             }
 
+            // We ignore multi-value string features which are a new feature in INCEpTION but will
+            // not be supported by WebAnno TSV 3.x anymore. This should allow to at least export
+            // the compatible information while skipping over the multi-value strings.
+            if (CAS.TYPE_NAME_STRING_ARRAY.equals(feat.getRange().getName())) {
+                continue;
+            }
+
             if (!(isPrimitiveFeature(feat) || isSlotFeature(feat))) {
                 compatible = false;
                 // LOG.debug("Incompatible feature in type [" + aType + "]: " + feat);
                 break;
             }
-
         }
 
         return compatible;

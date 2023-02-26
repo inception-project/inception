@@ -31,7 +31,6 @@ export function uniqueLabels (data: AnnotatedText): string[] {
     }
   }
 
-  console.log(sortedLabels)
   return sortedLabels
 }
 
@@ -58,7 +57,7 @@ export function uniqueOffsets (data: AnnotatedText): Offsets[] {
   return sortedOffsets
 }
 
-export function groupBy<T> (data: IterableIterator<T>, keyMapper: (s: T) => string): Record<string, T[]> {
+export function groupBy<T> (data: Iterable<T>, keyMapper: (s: T) => string): Record<string, T[]> {
   if (!data) return {}
 
   const groupedSpans = {}
@@ -82,9 +81,16 @@ export function groupBy<T> (data: IterableIterator<T>, keyMapper: (s: T) => stri
 export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> {
   const groups = groupBy(data?.spans.values(), (s) => s.label || '')
   for (const items of Object.values(groups)) {
-    items.sort((a, b) => compareOffsets(a.offsets[0], b.offsets[0]))
+    items.sort((a, b) => compareSpanText(data, a, b) || compareOffsets(a.offsets[0], b.offsets[0]))
   }
   return groups
+}
+
+export function compareSpanText (data: AnnotatedText, a: Span, b: Span): number {
+  const textA = data.text?.substring(a.offsets[0][0], a.offsets[0][1]) || ''
+  const textB = data.text?.substring(b.offsets[0][0], b.offsets[0][1]) || ''
+
+  return textA.localeCompare(textB)
 }
 
 /**

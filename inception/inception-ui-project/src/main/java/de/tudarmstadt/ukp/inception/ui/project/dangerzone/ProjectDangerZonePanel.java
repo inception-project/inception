@@ -28,7 +28,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
 public class ProjectDangerZonePanel
     extends Panel
@@ -59,8 +60,8 @@ public class ProjectDangerZonePanel
 
         IModel<String> projectNameModel = PropertyModel.of(getModel(), "name");
         deleteDialog = new ChallengeResponseDialog("deleteProjectDialog");
-        deleteDialog.setTitleModel(new StringResourceModel("DeleteProjectDialog.title", this));
-        deleteDialog.setMessageModel(new StringResourceModel("DeleteProjectDialog.text", this));
+        deleteDialog.setTitleModel(new ResourceModel("DeleteProjectDialog.title"));
+        deleteDialog.setMessageModel(new ResourceModel("DeleteProjectDialog.text"));
         deleteDialog.setExpectedResponseModel(projectNameModel);
         deleteDialog.setConfirmAction(this::actionDeletePerform);
         add(deleteDialog);
@@ -80,12 +81,26 @@ public class ProjectDangerZonePanel
     private void actionDeletePerform(AjaxRequestTarget aTarget)
     {
         try {
+            boolean deletingCurrentProject = false;
+            var projectPageBase = findParent(ProjectPageBase.class);
+            if (projectPageBase != null) {
+                deletingCurrentProject = getModel().getObject()
+                        .equals(projectPageBase.getProject());
+            }
+
             projectService.removeProject(getModel().getObject());
-            setResponsePage(getApplication().getHomePage());
+
+            if (deletingCurrentProject) {
+                setResponsePage(getApplication().getHomePage());
+            }
+            else {
+                getModel().setObject(null);
+                aTarget.add(getPage());
+            }
         }
         catch (IOException e) {
-            LOG.error("Unable to remove project :" + ExceptionUtils.getRootCauseMessage(e));
-            error("Unable to remove project " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error deleting project {}", getModel().getObject(), e);
+            error("Error deleting project:" + ExceptionUtils.getRootCauseMessage(e));
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }

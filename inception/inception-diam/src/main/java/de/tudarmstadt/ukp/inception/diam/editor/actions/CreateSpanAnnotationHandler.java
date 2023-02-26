@@ -100,11 +100,9 @@ public class CreateSpanAnnotationHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    Range getOffsetsFromRequest(AnnotatorState aState, IRequestParameters request, CAS aCas)
+    static Range getOffsetsFromRequest(AnnotatorState aState, IRequestParameters request, CAS aCas)
         throws IOException
     {
-        // Create new span annotation - in this case we get the offset information from the
-        // request
         String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
 
         CompactRangeList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,

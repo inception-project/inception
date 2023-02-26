@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,18 +149,19 @@ public class Predictions
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return predictions.entrySet().stream().filter(f -> type.isInstance(f.getValue()))
-                .map(f -> (Entry<ExtendedId, T>) (Entry) f)
-                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+        return predictions.entrySet().stream() //
+                .filter(f -> type.isInstance(f.getValue())) //
+                .map(f -> (Entry<ExtendedId, T>) (Entry) f) //
+                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName)) //
+                .filter(f -> f.getKey().getLayerId() == aLayer.getId()) //
                 // .filter(f -> overlapping(f.getValue().getWindowBegin(),
                 // f.getValue().getWindowEnd(),
                 // aWindowBegin == -1 ? 0 : aWindowBegin,
                 // aWindowEnd == -1 ? MAX_VALUE : aWindowEnd))
                 .filter(f -> aWindowBegin == -1 || (f.getValue().getWindowBegin() >= aWindowBegin))
                 .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
-                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getWindowBegin()))
-                .map(Map.Entry::getValue).collect(toList());
+                .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())).map(Map.Entry::getValue)
+                .collect(toList());
     }
 
     /**

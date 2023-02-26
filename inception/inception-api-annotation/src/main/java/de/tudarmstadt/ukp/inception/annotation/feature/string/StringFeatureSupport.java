@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType;
@@ -109,19 +108,8 @@ public class StringFeatureSupport
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws AnnotationException
     {
-        if (aValue != null && schemaService != null && aFeature.getTagset() != null
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                && !schemaService.existsTag((String) aValue, aFeature.getTagset())) {
-            if (!aFeature.getTagset().isCreateTag()) {
-                throw new IllegalArgumentException("[" + aValue
-                        + "] is not in the tag list. Please choose from the existing tags");
-            }
-            else {
-                Tag selectedTag = new Tag();
-                selectedTag.setName((String) aValue);
-                selectedTag.setTagSet(aFeature.getTagset());
-                schemaService.createTag(selectedTag);
-            }
+        if (schemaService != null) {
+            schemaService.createMissingTag(aFeature, (String) aValue);
         }
 
         super.setFeatureValue(aCas, aFeature, aAddress, aValue);
@@ -164,7 +152,7 @@ public class StringFeatureSupport
             }
             else {
                 // Otherwise use a simple input field
-                return new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+                return new InputFieldStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
             }
         }
 
@@ -266,11 +254,15 @@ public class StringFeatureSupport
     public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
             VID aParamId, String aQuery)
     {
-        Tag tag = schemaService.getTag(aQuery, aFeature.getTagset());
-        if (tag == null || isBlank(tag.getDescription())) {
+        var tag = schemaService.getTag(aQuery, aFeature.getTagset());
+        if (tag.isEmpty()) {
+            return asList(new VLazyDetailResult(aQuery, "Tag not in tagset"));
+        }
+
+        if (tag.map(t -> isBlank(t.getDescription())).orElse(true)) {
             return emptyList();
         }
 
-        return asList(new VLazyDetailResult(aQuery, tag.getDescription()));
+        return asList(new VLazyDetailResult(aQuery, tag.get().getDescription()));
     }
 }

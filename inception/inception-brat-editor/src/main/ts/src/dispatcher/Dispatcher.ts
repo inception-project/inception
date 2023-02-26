@@ -39,13 +39,13 @@
  */
 
 export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRenderData' | 'messages'
-  | 'startedRendering' | 'doneRendering' | 'dataReady' | 'getValidArcTypesForDrag'
-  | 'ajax' | 'acceptButtonClicked' | 'rejectButtonClicked' | 'allowReloadByURL' | 'rerender'
+  | 'startedRendering' | 'doneRendering' | 'dataReady'
+  | 'ajax' | 'acceptButtonClicked' | 'rejectButtonClicked' | 'rerender'
   | 'svgWidth' | 'configurationUpdated' | 'newSourceData' | 'init' | 'click'
-  | 'contextmenu' | 'isReloadOkay' | 'screamingHalt' | 'spanAndAttributeTypesLoaded'
+  | 'contextmenu' | 'isReloadOkay' | 'spanAndAttributeTypesLoaded'
   | 'keydown' | 'dragstart' | 'mousedown' | 'mouseup' | 'mousemove'
   | 'displaySpanComment' | 'displayArcComment' | 'displaySentComment' | 'hideComment'
-  | 'resize' | 'displaySpanButtons' | 'renderError: Fatal' | 'configurationChanged'
+  | 'resize' | 'displaySpanButtons' | 'configurationChanged'
   | 'mouseover' | 'mouseout' | 'dblclick' | 'keypress' | 'touchstart' | 'touchend'
   | 'collectionChanged' | 'renderData' | 'renderDataPatch' | 'triggerRender'
   | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'loadAnnotations'

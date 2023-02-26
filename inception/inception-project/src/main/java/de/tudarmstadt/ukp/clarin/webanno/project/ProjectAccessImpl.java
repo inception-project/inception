@@ -51,6 +51,28 @@ public class ProjectAccessImpl
     }
 
     @Override
+    public boolean canAccessProject(String aProjectId)
+    {
+        return canAccessProject(userService.getCurrentUsername(), aProjectId);
+    }
+
+    public boolean canAccessProject(String aUser, String aProjectId)
+    {
+        log.trace("Permission check: canAccessProject [user: {}] [project: {}]", aUser, aProjectId);
+
+        try {
+            User user = getUser(aUser);
+            Project project = getProject(aProjectId);
+
+            return projectService.hasAnyRole(user, project);
+        }
+        catch (NoResultException | AccessDeniedException e) {
+            // If any object does not exist, the user cannot view
+            return false;
+        }
+    }
+
+    @Override
     public boolean canManageProject(String aProjectId)
     {
         return canManageProject(userService.getCurrentUsername(), aProjectId);

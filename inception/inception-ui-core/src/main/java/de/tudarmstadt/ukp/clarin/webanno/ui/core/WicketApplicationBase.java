@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
@@ -91,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
@@ -283,7 +283,7 @@ public abstract class WicketApplicationBase
         if (customCss.exists()) {
             log.info("Using custom CSS at [{}]", customCss);
             getComponentInstantiationListeners().add(component -> {
-                if (component instanceof Page) {
+                if (component instanceof ApplicationPageBase) {
                     component.add(new CustomThemeCssResourceBehavior());
                 }
             });
@@ -293,7 +293,7 @@ public abstract class WicketApplicationBase
     protected void addKendoResourcesToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
+            if (component instanceof ApplicationPageBase) {
                 component.add(new KendoResourceBehavior());
                 component.add(new WicketJQueryFocusPatchBehavior());
             }
@@ -314,7 +314,7 @@ public abstract class WicketApplicationBase
     protected void addFontAwesomeToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
+            if (component instanceof ApplicationPageBase) {
                 component.add(new FontAwesomeResourceBehavior());
             }
         });
@@ -323,7 +323,7 @@ public abstract class WicketApplicationBase
     protected void addJQueryUIResourcesToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
+            if (component instanceof ApplicationPageBase) {
                 component.add(new JQueryUIResourceBehavior());
             }
         });
@@ -332,7 +332,7 @@ public abstract class WicketApplicationBase
     protected void addJQueryJavascriptToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
+            if (component instanceof ApplicationPageBase) {
                 component.add(new JQueryJavascriptBehavior());
             }
         });
@@ -341,7 +341,7 @@ public abstract class WicketApplicationBase
     protected void addWebAnnoJavascriptToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
+            if (component instanceof ApplicationPageBase) {
                 component.add(new WebAnnoJavascriptBehavior());
             }
         });

@@ -2,4 +2,4 @@
     rdfs:prefLabel 'specimen' ;
     rdfs:label 'sample' ;
     rdfs:label 'instance' ;
-    rdfs:label 'case'  .
+    rdfs:label 'case' .

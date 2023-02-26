@@ -100,7 +100,7 @@ public class AnnotationStateList
                 }
 
                 stateLabel.setDefaultModel(labelModel);
-                stateLabel.setEscapeModelStrings(false);
+                stateLabel.setEscapeModelStrings(false); // SAFE - WE RENDER CONTROLLED SET OF ICONS
                 aItem.queue(stateLabel);
 
                 aItem.queue(new Label("annotatorName", user.getUiName()));

@@ -55,7 +55,6 @@ public class PostActionScrollToAndHighlight
             AnnotationPageBase page = aContextComponent.findParent(AnnotationPageBase.class);
             page.getAnnotationActionHandler().actionClear(aTarget);
             page.actionShowSelectedDocument(aTarget, document, range.getBegin(), range.getEnd());
-            // FIXME: the highlighting part is still missing...
         }
         catch (IOException | AnnotationException e) {
             handleException(LOG, aContextComponent, aTarget, e);

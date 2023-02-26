@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -71,5 +72,17 @@ public class WorkloadManagerExtensionPointImpl
         return getExtensions().stream()
                 .map(manExt -> new WorkloadManagerType(manExt.getId(), manExt.getLabel()))
                 .collect(toList());
+    }
+
+    @Override
+    public WorkloadManagerType getWorkloadManagerType(WorkloadManager aWorkloadManager)
+    {
+        if (aWorkloadManager.getType() == null) {
+            return null;
+        }
+
+        return getTypes().stream()
+                .filter(t -> t.getWorkloadManagerExtensionId().equals(aWorkloadManager.getType()))
+                .findFirst().orElse(null);
     }
 }

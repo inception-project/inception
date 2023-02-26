@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
@@ -29,12 +30,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.DESCENDING;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -47,10 +53,13 @@ import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -68,7 +77,6 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -82,7 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitia
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -96,6 +104,7 @@ import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")
@@ -123,11 +132,12 @@ public class ProjectsOverviewPage
 
     private static final long serialVersionUID = -2159246322262294746L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
+    private @SpringBean DashboardProperties dashboardProperties;
 
     private IModel<List<ProjectEntry>> allAccessibleProjects;
     private IModel<User> currentUser;
@@ -135,7 +145,7 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private DataView<ProjectEntry> projectList;
     private PagingNavigator navigator;
-    private ConfirmationDialog confirmLeaveDialog;
+    private BootstrapModalDialog confirmationDialog;
     private Label noProjectsNotice;
     private TextField<String> nameFilter;
 
@@ -147,7 +157,9 @@ public class ProjectsOverviewPage
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
         allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
 
+        var defaultSortOrder = SortStrategy.NAME;
         dataProvider = new ProjectListDataProvider(allAccessibleProjects);
+        dataProvider.setSort(defaultSortOrder.key, defaultSortOrder.order);
 
         fastTrackAnnotatorsToProject();
 
@@ -172,6 +184,18 @@ public class ProjectsOverviewPage
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
 
+        DropDownChoice<SortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
+        sortOrder.setModel(Model.of(defaultSortOrder));
+        sortOrder.setChoiceRenderer(new EnumChoiceRenderer<>(sortOrder));
+        sortOrder.setChoices(asList(SortStrategy.values()));
+        sortOrder.setNullValid(false);
+        sortOrder.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            var s = sortOrder.getModelObject();
+            dataProvider.setSort(s.key, s.order);
+            _target.add(projectListContainer);
+        }));
+        queue(sortOrder);
+
         nameFilter = new TextField<>("nameFilter",
                 PropertyModel.of(dataProvider.getFilterState(), "projectName"), String.class);
         nameFilter.setOutputMarkupPlaceholderTag(true);
@@ -183,10 +207,9 @@ public class ProjectsOverviewPage
         nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
         queue(nameFilter);
 
-        confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE);
-        confirmLeaveDialog.setTitleModel(new StringResourceModel("leaveDialog.title", this));
-        confirmLeaveDialog.setContentModel(new StringResourceModel("leaveDialog.text", this));
-        queue(confirmLeaveDialog);
+        confirmationDialog = new BootstrapModalDialog(MID_CONFIRM_LEAVE);
+        confirmationDialog.trapFocus();
+        queue(confirmationDialog);
     }
 
     @Override
@@ -200,7 +223,6 @@ public class ProjectsOverviewPage
     @OnEvent
     public void onProjectRoleFilterStateChanged(ProjectRoleFilterStateChanged aEvent)
     {
-
         actionApplyFilter(aEvent.getTarget());
     }
 
@@ -349,6 +371,7 @@ public class ProjectsOverviewPage
     {
         LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
+        startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
         startTutorialLink.add(visibleWhen(() -> {
             return userRepository.isAdministrator(currentUser.getObject())
                     || userRepository.isProjectCreator(currentUser.getObject());
@@ -357,6 +380,17 @@ public class ProjectsOverviewPage
         add(startTutorialLink);
 
         return startTutorialLink;
+    }
+
+    private boolean isTutorialAvailable()
+    {
+        try {
+            Class.forName("de.tudarmstadt.ukp.inception.tutorial.TutorialFooterItem");
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private void startTutorial(AjaxRequestTarget aTarget)
@@ -384,14 +418,16 @@ public class ProjectsOverviewPage
                 aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
                         aItem.getModelObject().getShortDescription()));
 
+                addActionsDropdown(aItem);
+                aItem.add(projectLink);
+                aItem.add(createRoleBadges(aItem.getModelObject()));
+
                 Label createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
-                addActionsDropdown(aItem);
-                aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
                 aItem.add(createdLabel);
-                aItem.add(createRoleBadges(aItem.getModelObject()));
+
                 Label projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
@@ -404,10 +440,10 @@ public class ProjectsOverviewPage
                     protected Set<String> update(Set<String> aClasses)
                     {
                         if (highlightedProjects.contains(project.getId())) {
-                            aClasses.add("border border-primary");
+                            aClasses.add("border border-primary bg-light");
                         }
                         else {
-                            aClasses.remove("border border-primary");
+                            aClasses.remove("border border-primary bg-light");
                         }
                         return aClasses;
                     }
@@ -442,13 +478,19 @@ public class ProjectsOverviewPage
 
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
-        confirmLeaveDialog.setConfirmAction((_target) -> {
+        var dialogContent = new LeaveProjectConfirmationDialogPanel(BootstrapModalDialog.CONTENT_ID,
+                Model.of(aProject));
+
+        dialogContent.setConfirmAction((_target) -> {
             projectService.revokeAllRoles(aProject, currentUser.getObject());
-            _target.add(projectListContainer);
+            allAccessibleProjects.detach();
+            dataProvider.refresh();
+            actionApplyFilter(_target);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");
         });
-        confirmLeaveDialog.show(aTarget);
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
@@ -505,6 +547,8 @@ public class ProjectsOverviewPage
         List<Project> projects = aEvent.getProjects();
 
         if (projects.size() > 1) {
+            allAccessibleProjects.detach(); // Ensure that the subsequent refresh gets fresh data
+            dataProvider.refresh();
             aEvent.getTarget().add(projectListContainer);
             highlightedProjects.clear();
             projects.stream().forEach(p -> highlightedProjects.add(p.getId()));
@@ -532,8 +576,26 @@ public class ProjectsOverviewPage
     {
         return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
                 .entrySet().stream() //
-                .map(e -> new ProjectEntry(e.getKey(), e.getValue()))
+                .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
+                .filter(e -> e.getLevels().contains(MANAGER)
+                        || containsAny(e.getLevels(), dashboardProperties.getAccessibleByRoles()))
                 .sorted(comparing(ProjectEntry::getName)) //
                 .collect(toList());
+    }
+
+    private enum SortStrategy
+    {
+        NAME(ProjectListSortKeys.NAME, ASCENDING),
+        CREATED_OLDEST(ProjectListSortKeys.CREATED, ASCENDING),
+        CREATED_NEWEST(ProjectListSortKeys.CREATED, DESCENDING);
+
+        final ProjectListSortKeys key;
+        final SortOrder order;
+
+        SortStrategy(ProjectListSortKeys aKey, SortOrder aOrder)
+        {
+            key = aKey;
+            order = aOrder;
+        }
     }
 }

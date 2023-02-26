@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import java.util.Set;
 
@@ -117,7 +118,7 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
         assertThat(userService.get(USERNAME)) //
                 .as("User should exist when test starts").isNotNull();
 
-        sut.loadUser(USERNAME);
+        assertThatNoException().isThrownBy(() -> sut.loadUser(USERNAME));
     }
 
     @Test

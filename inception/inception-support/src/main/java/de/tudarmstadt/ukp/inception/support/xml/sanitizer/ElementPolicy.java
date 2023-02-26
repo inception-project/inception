@@ -69,4 +69,10 @@ public class ElementPolicy
     {
         return new ElementPolicy(ElementAction.PASS);
     }
+
+    @Override
+    public String toString()
+    {
+        return "[" + qName + " -> " + action + "]";
+    }
 }

@@ -47,6 +47,8 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -68,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublishe
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.HighlightLabel;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -209,26 +211,23 @@ public class SearchPage
     {
         private static final long serialVersionUID = -6708211343231617251L;
 
-        public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
+        public ResultRowView(String aId, long aRowNumber, IModel<ExternalSearchResult> aModel)
         {
-            super(id, model);
+            super(aId, aModel);
 
-            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
+            ExternalSearchResult result = aModel.getObject();
 
-            // FIXME: Should display all highlights
-            String highlight = "NO MATCH PREVIEW AVAILABLE";
-            if (!result.getHighlights().isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("<ul>");
-                for (ExternalSearchHighlight h : result.getHighlights()) {
-                    sb.append("<li>");
-                    sb.append(Utilities.cleanHighlight(h.getHighlight()));
-                    sb.append("</li>");
+            add(new ListView<ExternalSearchHighlight>("highlights", result.getHighlights())
+            {
+                private static final long serialVersionUID = 7281297180627354855L;
+
+                @Override
+                protected void populateItem(ListItem<ExternalSearchHighlight> aItem)
+                {
+                    aItem.add(
+                            new HighlightLabel("highlight", aItem.getModelObject().getHighlight()));
                 }
-                sb.append("</ul>");
-                highlight = sb.toString();
-            }
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            });
 
             PageParameters titleLinkPageParameters = new PageParameters();
             ProjectPageBase.setProjectPageParameter(titleLinkPageParameters, getProject());

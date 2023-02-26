@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.Collections.emptyList;
-import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +45,6 @@ import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
@@ -144,16 +143,13 @@ public class RecommendationEditorExtension
             return;
         }
 
-        ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
-
         // Create annotation
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
-            Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                    aState.getProject());
-            SourceDocument document = aState.getDocument();
+            ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
+
             VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-            Optional<AnnotationSuggestion> prediction = predictions //
-                    .getPredictionByVID(document, recommendationVid);
+            var prediction = getPrediction(aState, recommendationVid);
+            SourceDocument document = aState.getDocument();
 
             if (prediction.isEmpty()) {
                 log.error("Could not find annotation in [{}] with id [{}]", document,
@@ -174,8 +170,36 @@ public class RecommendationEditorExtension
             }
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
+            ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
+
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
+        else if (ScrollToHandler.COMMAND.equals(aAction)) {
+            VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+            var prediction = getPrediction(aState, recommendationVid);
+            var page = (AnnotationPageBase) aTarget.getPage();
+            if (prediction.map(p -> p instanceof SpanSuggestion).orElse(false)) {
+                var suggestion = (SpanSuggestion) prediction.get();
+                page.getAnnotationActionHandler().actionJump(aTarget, suggestion.getBegin(),
+                        suggestion.getEnd());
+            }
+            if (prediction.map(p -> p instanceof RelationSuggestion).orElse(false)) {
+                var suggestion = (RelationSuggestion) prediction.get();
+                var position = suggestion.getPosition();
+                page.getAnnotationActionHandler().actionJump(aTarget, position.getSourceBegin(),
+                        position.getSourceEnd());
+            }
+        }
+    }
+
+    private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
+    {
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+                aState.getProject());
+        SourceDocument document = aState.getDocument();
+        Optional<AnnotationSuggestion> prediction = predictions //
+                .getPredictionByVID(document, aRecVid);
+        return prediction;
     }
 
     /**
@@ -337,10 +361,6 @@ public class RecommendationEditorExtension
         // Trigger a re-rendering of the document
         Page page = aTarget.getPage();
         page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
-
-        // Send a UI event that the suggestion has been rejected
-        page.send(page, Broadcast.BREADTH,
-                new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
 
     @Override
@@ -365,9 +385,7 @@ public class RecommendationEditorExtension
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
         if (switched) {
-            RequestCycle.get().find(AjaxRequestTarget.class)
-                    .ifPresent(_target -> _target.getPage().send(_target.getPage(), BREADTH,
-                            new PredictionsSwitchedEvent(_target, aState)));
+            applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
         }
     }
 

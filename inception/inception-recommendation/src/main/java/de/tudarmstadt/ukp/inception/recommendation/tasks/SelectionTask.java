@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -50,7 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import jakarta.persistence.NoResultException;
@@ -137,11 +138,6 @@ public class SelectionTask
                             appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(
                                     this, recommender, user.getUsername(), result,
                                     currentTimeMillis() - start, evaluatedRecommender.isActive()));
-
-                            var evalEvent = new SelectionTaskEvent(this, recommender,
-                                    user.getUsername(), result);
-                            result.getErrorMsg().ifPresent(evalEvent::setErrorMsg);
-                            appEventPublisher.publishEvent(evalEvent);
                         });
                     }
 
@@ -149,12 +145,19 @@ public class SelectionTask
                     // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
-                        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender,
-                                user.getUsername(), e.getMessage()));
+                        appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                                .builder(this, project, user.getUsername()) //
+                                .withMessage(LogMessage.error(this, e.getMessage())) //
+                                .build());
                     }
                 }
 
                 recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
+
+                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                        .builder(this, getProject(), user.getUsername()) //
+                        .withMessage(LogMessage.info(this, "Evaluation complete")) //
+                        .build());
             }
 
             if (!seenRecommender) {
@@ -292,8 +295,11 @@ public class SelectionTask
     {
         log.error("[{}][{}]: No recommender factory available for [{}]", user.getUsername(),
                 recommender.getName(), recommender.getTool());
-        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender, user.getUsername(),
-                String.format("No recommender factory available for %s", recommender.getTool())));
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
+                        .withMessage(LogMessage.error(this,
+                                "No recommender factory available for %s", recommender.getTool())) //
+                        .build());
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

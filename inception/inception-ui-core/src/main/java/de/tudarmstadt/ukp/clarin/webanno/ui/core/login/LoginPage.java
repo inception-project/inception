@@ -37,7 +37,6 @@ import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
@@ -70,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 import jakarta.servlet.http.HttpSession;
 
 /**
@@ -97,6 +97,7 @@ public class LoginPage
 
     private final LoginForm localLoginPanel;
     private final OAuth2LoginPanel oAuth2LoginPanel;
+    private final Saml2LoginPanel saml2LoginPanel;
 
     private final WebMarkupContainer tooManyUsersLabel;
     private final IModel<Boolean> tooManyUsers;
@@ -118,16 +119,24 @@ public class LoginPage
         oAuth2LoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(oAuth2LoginPanel);
 
+        saml2LoginPanel = new Saml2LoginPanel("saml2LoginPanel");
+        saml2LoginPanel.add(visibleWhen(this::isLoginAllowed));
+        queue(saml2LoginPanel);
+
         var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
                 || tooManyUsers.getObject();
-        if (!skipAutoLogin && isLoginAllowed()) {
-            oAuth2LoginPanel.autoLogin();
-        }
 
-        // Failed OAuth2 call this page with the parameter `?error` so we display a message
+        // Failed OAuth2/SAML call this page with the parameter `?error` so we display a message
         var error = aParameters.getNamedKeys().contains(PARAM_ERROR);
         if (error) {
-            error("Login failed");
+            error("Login with SSO service failed. You might try logging out of your SSO service "
+                    + "before trying to log in here again.");
+            skipAutoLogin = true;
+        }
+
+        if (!skipAutoLogin && isLoginAllowed()) {
+            oAuth2LoginPanel.autoLogin();
+            saml2LoginPanel.autoLogin();
         }
 
         tooManyUsersLabel = new WebMarkupContainer("usersLabel");
@@ -276,8 +285,7 @@ public class LoginPage
             add(new PasswordTextField("password").setOutputMarkupId(true));
             add(new HiddenField<>("urlfragment"));
             add(new Button("signInBtn").add(enabledWhenNot(tooManyUsers)));
-            add(new Label("loginMessage", loginProperties.getMessage()) //
-                    .setEscapeModelStrings(false) //
+            add(new MarkdownLabel("loginMessage", loginProperties.getMessage()) //
                     .add(visibleWhen(() -> isNotBlank(loginProperties.getMessage()))));
         }
 

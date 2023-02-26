@@ -69,7 +69,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -88,11 +87,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
@@ -136,7 +136,7 @@ public abstract class AnnotationDetailEditorPanel
     private final AttachedAnnotationListPanel relationListPanel;
 
     // Components
-    private final ConfirmationDialog deleteAnnotationDialog;
+    private final BootstrapModalDialog confirmationDialog;
     private final AnnotationPageBase editorPage;
 
     public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
@@ -149,11 +149,9 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
-        deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog");
-        deleteAnnotationDialog
-                .setTitleModel(new StringResourceModel("DeleteDialog.title", this, null));
-        deleteAnnotationDialog.setContentModel(Model.of());
-        add(deleteAnnotationDialog);
+        confirmationDialog = new BootstrapModalDialog("deleteAnnotationDialog");
+        confirmationDialog.trapFocus();
+        add(confirmationDialog);
 
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
@@ -469,8 +467,15 @@ public abstract class AnnotationDetailEditorPanel
     public void actionJump(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException
     {
-        actionJump(aTarget,
-                ICasUtil.selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+        actionJump(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(), aBegin,
+                aEnd);
     }
 
     @Deprecated
@@ -488,8 +493,10 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         CAS cas = editorPage.getEditorCas();
-        AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(cas, aVid.getId());
-        actionSelectAndJump(aTarget, annoFs);
+        var targetFs = ICasUtil.selectFsByAddr(cas, aVid.getId());
+        if (targetFs instanceof AnnotationFS) {
+            actionSelectAndJump(aTarget, (AnnotationFS) targetFs);
+        }
     }
 
     @Override
@@ -618,11 +625,6 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
-
-        // Update progress information
-        LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
-        state.setFocusUnitIndex(sentenceNumber);
 
         // persist changes
         editorPage.writeEditorCas(aCas);
@@ -807,11 +809,10 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
-            deleteAnnotationDialog.setContentModel(
-                    new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
-                            .setParameters(attachStatus.attachCount));
-            deleteAnnotationDialog.setConfirmAction(_target -> doDelete(_target, layer, vid));
-            deleteAnnotationDialog.show(aTarget);
+            var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
+            dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
+            confirmationDialog.open(dialogContent, aTarget);
             return;
         }
 
@@ -1203,26 +1204,36 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    @OnEvent
-    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    private boolean isAnnotationEventRelevant(AnnotationEvent aEvent)
     {
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
         if (selection.getAnnotation().isNotSet()) {
-            return;
+            return false;
         }
 
         if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @OnEvent
+    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    {
+        if (!isAnnotationEventRelevant(aEvent)) {
             return;
         }
 
         try {
+            Selection selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
             boolean annotationStillExists = getEditorCas().select(Annotation.class) //
                     .at(selection.getBegin(), selection.getEnd()) //
                     .anyMatch(ann -> ann._id() == id);
             if (!annotationStillExists) {
-                state.getSelection().clear();
+                selection.clear();
                 refresh(aEvent.getRequestTarget());
 
             }
@@ -1517,9 +1528,17 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private static class AttachStatus
+    static class AttachStatus
+        implements Serializable
     {
+        private static final long serialVersionUID = -8359575377186677974L;
+
         boolean readOnlyAttached;
         int attachCount;
+
+        public int getAttachCount()
+        {
+            return attachCount;
+        }
     }
 }

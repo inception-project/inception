@@ -35,13 +35,18 @@ an example of how the parameter can be configured below:
 | Example
 
 
-| search.enable
-| Enable/disable search
-| true
-| false
+| `search.enable`
+| enable/disable search
+| `true`
+| `false`
 
-| search.resultsPerPage
+| `search.results-per-page`
 | list of possible numbers of results per page for in-project search
-| 10, 20, 50, 100, 500, 1000
-| 100, 1000, 2000, 3000
+| `10, 20, 50, 100, 500, 1000`
+| `100, 1000, 2000, 3000`
+
+| `search.statistics-sidebar.enabled`
+| enable/disable statistics sidebar on annotation page
+| `true`
+| `false`
 |===

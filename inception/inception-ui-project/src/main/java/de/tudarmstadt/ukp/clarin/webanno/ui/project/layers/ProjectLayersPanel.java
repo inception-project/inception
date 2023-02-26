@@ -73,19 +73,14 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -95,7 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -403,7 +398,10 @@ public class ProjectLayersPanel
                         importUimaTypeSystemFile(bis);
                     }
                     else {
-                        importLayerFile(bis);
+                        User user = userRepository.getCurrentUser();
+                        var layer = LayerImportExportUtils.importLayerFile(annotationService, user,
+                                project, bis);
+                        layerDetailForm.setModelObject(layer);
                     }
                 }
                 catch (Exception e) {
@@ -425,92 +423,6 @@ public class ProjectLayersPanel
 
             annotationService.importUimaTypeSystem(project, tsd);
         }
-
-        private void importLayerFile(InputStream aIS) throws IOException
-        {
-            User user = userRepository.getCurrentUser();
-            Project project = ProjectLayersPanel.this.getModelObject();
-
-            String text = IOUtils.toString(aIS, "UTF-8");
-
-            ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
-                    ExportedAnnotationLayer[].class);
-
-            // First import the layers but without setting the attach-layers/features
-            Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
-            Map<String, AnnotationLayer> layersMap = new HashMap<>();
-            for (ExportedAnnotationLayer exLayer : exLayers) {
-                AnnotationLayer layer = createLayer(exLayer, user);
-                layersMap.put(layer.getName(), layer);
-                exLayersMap.put(layer.getName(), exLayer);
-            }
-
-            // Second fill in the attach-layer and attach-feature information
-            for (AnnotationLayer layer : layersMap.values()) {
-                ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
-                if (exLayer.getAttachType() != null) {
-                    layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
-                }
-                if (exLayer.getAttachFeature() != null) {
-                    AnnotationLayer attachLayer = annotationService.findLayer(project,
-                            exLayer.getAttachType().getName());
-                    AnnotationFeature attachFeature = annotationService
-                            .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
-                    layer.setAttachFeature(attachFeature);
-                }
-                annotationService.createOrUpdateLayer(layer);
-            }
-
-            layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));
-        }
-
-        private AnnotationLayer createLayer(ExportedAnnotationLayer aExLayer, User aUser)
-            throws IOException
-        {
-            Project project = ProjectLayersPanel.this.getModelObject();
-            AnnotationLayer layer;
-
-            if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
-                layer = annotationService.findLayer(project, aExLayer.getName());
-                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-            }
-            else {
-                layer = new AnnotationLayer();
-                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-            }
-
-            for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
-                ExportedTagSet exTagset = exfeature.getTagSet();
-                TagSet tagSet = null;
-                if (exTagset != null
-                        && annotationService.existsTagSet(exTagset.getName(), project)) {
-                    tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
-                }
-                else if (exTagset != null) {
-                    tagSet = new TagSet();
-                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
-                }
-                if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                    AnnotationFeature feature = annotationService.getFeature(exfeature.getName(),
-                            layer);
-                    feature.setTagset(tagSet);
-                    ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
-                    continue;
-                }
-                AnnotationFeature feature = new AnnotationFeature();
-                feature.setLayer(layer);
-                feature.setTagset(tagSet);
-                ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
-            }
-
-            return layer;
-        }
-    }
-
-    static enum LayerExportMode
-    {
-        JSON, UIMA
     }
 
     public class FeatureSelectionForm

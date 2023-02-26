@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
-import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
@@ -39,15 +38,6 @@ public class HtmlAnnotationEditorSupportAutoConfiguration
     public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
     {
         return new AnnotatorJsHtmlAnnotationEditorFactory();
-    }
-
-    @ConditionalOnProperty(prefix = "ui.html.legacy-html-view", name = "enabled", //
-            havingValue = "true", matchIfMissing = false)
-    @Bean
-    @Deprecated
-    public HtmlDocumentViewFactory htmlDocumentViewFactory()
-    {
-        return new HtmlDocumentViewFactory();
     }
 
     @ConditionalOnProperty(prefix = "ui.html.legacy-iframe-view", name = "enabled", //

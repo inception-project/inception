@@ -15,7 +15,12 @@
 // limitations under the License.
 
 [[sect_settings_segmentation]]
-=== Editable Segmentation Settings
+= Editable Segmentation Settings
+
+====
+CAUTION: Experimental feature. Highly experimental. Expect strange things to happen if you start
+adding/removing/changing segmentation annotations (i.e. sentences or tokens).
+====
 
 This section describes the global settings related to the support for editable segmentation annotations (i.e. sentences or tokens).
 

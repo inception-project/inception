@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class RecommendationRejectedEvent
     extends ApplicationEvent
+    implements TransientAnnotationStateChangedEvent
 {
     private static final long serialVersionUID = 4618078923202025558L;
 
@@ -50,11 +52,13 @@ public class RecommendationRejectedEvent
         recommendedValue = aRecommendedValue;
     }
 
+    @Override
     public SourceDocument getDocument()
     {
         return document;
     }
 
+    @Override
     public String getUser()
     {
         return user;

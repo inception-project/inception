@@ -18,7 +18,7 @@
 
 import { Offsets } from '@inception-project/inception-js-api'
 
-export type VID = string
+export type VID = string | number
 export type CommentType = 'AnnotatorNotes' | 'EditHighlight' | 'AnnotationError'
   | 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
   | 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'
@@ -252,6 +252,8 @@ export type SourceData = {
   sentence_offsets: Array<Offsets>;
   token_offsets: Array<Offsets>;
   sentence_number_offset: number;
+  windowBegin: number;
+  windowEnd: number;
   rtl_mode: boolean;
   font_zoom: number;
   args: Record<MarkerType, MarkerDto>;

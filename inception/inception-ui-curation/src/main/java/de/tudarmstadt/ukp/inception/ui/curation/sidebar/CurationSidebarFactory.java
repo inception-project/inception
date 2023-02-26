@@ -19,11 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -46,7 +44,6 @@ public class CurationSidebarFactory
     private final ProjectService projectService;
     private final UserDao userService;
 
-    @Autowired
     public CurationSidebarFactory(ProjectService aProjectService, UserDao aUserService)
     {
         projectService = aProjectService;
@@ -66,9 +63,9 @@ public class CurationSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.clipboard_s;
+        return new CurationSidebarIcon(aId, aState);
     }
 
     @Override

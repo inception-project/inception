@@ -47,7 +47,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
@@ -71,8 +71,8 @@ public class CurationDocumentTable
         var dataProvider = new CurationDocumentTableDataProvider(aModel);
 
         var columns = new ArrayList<IColumn<SourceDocument, CurationDocumentTableSortKeys>>();
-        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState().symbol()));
+        columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> item.getState()));
         columns.add(new CurationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
 

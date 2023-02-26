@@ -23,6 +23,7 @@ export type DiamLoadAnnotationsOptions = {
   format?: string,
   range?: Offsets,
   includeText?: boolean
+  clipSpans?: boolean
 }
 
 export type DiamSelectAnnotationOptions = {
@@ -32,9 +33,17 @@ export type DiamSelectAnnotationOptions = {
 export interface DiamAjax {
   selectAnnotation(id: VID, options?: DiamSelectAnnotationOptions): void;
 
+  /**
+   * Scroll to the given annotation or offset. If both are given, the offset is used. Offsets
+   * are relative to the entire document, not to the current viewport.
+   */
+  scrollTo(args: { id?: VID, offset?: Offsets }): void;
+
   deleteAnnotation(id: VID): void;
 
   createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void;
+
+  moveSpanAnnotation(id: VID, offsets: Array<Offsets>): void;
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
 

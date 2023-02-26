@@ -123,3 +123,8 @@
   pointer-events: stroke;
   stroke-dasharray: 5;
 }
+
+.ping {
+  background: orange;
+  animation-fill-mode: forwards;
+}

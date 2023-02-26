@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -98,8 +100,14 @@ public class ColorRenderer
             allLayers = schemaService.listAnnotationLayer(aRequest.getProject());
         }
 
+        // Sort layers by creation order (i.e. by ID) to ensure the colors remain the same even
+        // if a new layer is added to a project
+        var sortedLayers = allLayers.stream() //
+                .sorted(comparing(AnnotationLayer::getId)) //
+                .collect(toList());
+
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : allLayers) {
+        for (AnnotationLayer layer : sortedLayers) {
             ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride()
                     .orElse(coloringService.getStrategy(layer, prefs.get(), colorQueues));
 

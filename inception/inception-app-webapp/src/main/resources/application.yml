@@ -88,7 +88,7 @@ wicket:
     servlet:
       dispatcher-types: request, error, async, forward
       init-parameters:
-        ignorePaths: /api
+        ignorePaths: /api,/saml2
   verifier:
     dependencies:
       throw-exception-on-dependency-version-mismatch: false

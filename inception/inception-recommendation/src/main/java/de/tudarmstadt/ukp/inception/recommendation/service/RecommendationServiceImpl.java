@@ -147,7 +147,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
@@ -1404,8 +1404,11 @@ public class RecommendationServiceImpl
                     + "skipping recommender", recommender, aUser, aDocument, aDocument.getProject(),
                     e);
 
-            applicationEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                    aUser.getUsername(), e.getMessage(), recommender));
+            applicationEventPublisher.publishEvent(
+                    RecommenderTaskNotificationEvent.builder(this, project, aUser.getUsername()) //
+                            .withMessage(LogMessage.error(this, "Recommender [%s] failed: %s",
+                                    recommender.getName(), e.getMessage())) //
+                            .build());
 
             // If there was a previous successful run of the recommender, inherit
             // its suggestions to avoid that all the suggestions of the recommender
@@ -1762,79 +1765,128 @@ public class RecommendationServiceImpl
     {
         switch (aMode) {
         case CHARACTERS: {
-            int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
-                    min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
-            TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
-            var begin = offsets[0];
-            var end = offsets[1];
-            return Optional.of(new Offset(begin, end));
+            return getOffsetsAnchoredOnCharacters(aOriginalCas, aPredictedAnnotation);
         }
         case SINGLE_TOKEN: {
-            Type tokenType = getType(aOriginalCas, Token.class);
-            var tokens = aOriginalCas.<Annotation> select(tokenType) //
-                    .coveredBy(aPredictedAnnotation) //
-                    .limit(2).asList();
-
-            if (tokens.isEmpty()) {
-                // This can happen if a recommender uses different token boundaries (e.g. if a
-                // remote service performs its own tokenization). We might be smart here by
-                // looking for overlapping tokens instead of contained tokens.
-                LOG.trace("Discarding suggestion because no covering token was found: {}",
-                        aPredictedAnnotation);
-                return Optional.empty();
-            }
-
-            if (tokens.size() > 1) {
-                // We only want to accept single-token suggestions
-                LOG.trace("Discarding suggestion because only single-token suggestions are "
-                        + "accepted: {}", aPredictedAnnotation);
-                return Optional.empty();
-            }
-
-            AnnotationFS token = tokens.get(0);
-            var begin = token.getBegin();
-            var end = token.getEnd();
-            return Optional.of(new Offset(begin, end));
+            return getOffsetsAnchoredOnSingleTokens(aOriginalCas, aPredictedAnnotation);
         }
         case TOKENS: {
-            var tokens = aOriginalCas.select(Token.class) //
-                    .coveredBy(aPredictedAnnotation) //
-                    .asList();
-
-            if (tokens.isEmpty()) {
-                // This can happen if a recommender uses different token boundaries (e.g. if a
-                // remote service performs its own tokenization). We might be smart here by
-                // looking for overlapping tokens instead of contained tokens.
-                LOG.trace("Discarding suggestion because no covering tokens were found: {}",
-                        aPredictedAnnotation);
-                return Optional.empty();
-            }
-
-            var begin = tokens.get(0).getBegin();
-            var end = tokens.get(tokens.size() - 1).getEnd();
-            return Optional.of(new Offset(begin, end));
+            return getOffsetsAnchoredOnTokens(aOriginalCas, aPredictedAnnotation);
         }
         case SENTENCES: {
-            var sentences = aOriginalCas.select(Sentence.class) //
-                    .coveredBy(aPredictedAnnotation) //
-                    .asList();
-
-            if (sentences.isEmpty()) {
-                // This can happen if a recommender uses different token boundaries (e.g. if a
-                // remote service performs its own tokenization). We might be smart here by
-                // looking for overlapping sentences instead of contained sentences.
-                LOG.trace("Discarding suggestion because no covering sentences were found: {}",
-                        aPredictedAnnotation);
-                return Optional.empty();
-            }
-
-            var begin = sentences.get(0).getBegin();
-            var end = sentences.get(sentences.size() - 1).getEnd();
-            return Optional.of(new Offset(begin, end));
+            return getOffsetsAnchoredOnSentences(aOriginalCas, aPredictedAnnotation);
         }
         default:
             throw new IllegalStateException("Unsupported anchoring mode: [" + aMode + "]");
         }
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnCharacters(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
+                min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
+        TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
+        var begin = offsets[0];
+        var end = offsets[1];
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSingleTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        Type tokenType = getType(aOriginalCas, Token.class);
+        var tokens = aOriginalCas.<Annotation> select(tokenType) //
+                .coveredBy(aPredictedAnnotation) //
+                .limit(2).asList();
+
+        if (tokens.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of contained tokens.
+            LOG.trace("Discarding suggestion because no covering token was found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        if (tokens.size() > 1) {
+            // We only want to accept single-token suggestions
+            LOG.trace("Discarding suggestion because only single-token suggestions are "
+                    + "accepted: {}", aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        AnnotationFS token = tokens.get(0);
+        var begin = token.getBegin();
+        var end = token.getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var sentences = aOriginalCas.select(Sentence.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (sentences.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping sentences instead of contained sentences.
+            LOG.trace("Discarding suggestion because no covering sentences were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = sentences.get(0).getBegin();
+        var end = sentences.get(sentences.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var tokens = aOriginalCas.select(Token.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (tokens.isEmpty()) {
+            if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
+                var pos = aPredictedAnnotation.getBegin();
+                var allTokens = aOriginalCas.select(Token.class).asList();
+                Token prevToken = null;
+                for (var token : allTokens) {
+                    if (prevToken == null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(token.getBegin(), token.getBegin()));
+                    }
+
+                    if (token.covering(aPredictedAnnotation)) {
+                        return Optional.of(new Offset(pos, pos));
+                    }
+
+                    if (prevToken != null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                    }
+
+                    prevToken = token;
+                }
+
+                if (prevToken != null && pos >= prevToken.getEnd()) {
+                    return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                }
+            }
+
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of contained tokens.
+            LOG.trace("Discarding suggestion because no covering tokens were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = tokens.get(0).getBegin();
+        var end = tokens.get(tokens.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
     }
 
     /**

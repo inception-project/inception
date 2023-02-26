@@ -40,16 +40,16 @@
 import { Dispatcher } from '../dispatcher/Dispatcher'
 import { Box, Svg, SVGTypeMapping, Point } from '@svgdotjs/svg.js'
 import { DocumentData } from '../visualizer/DocumentData'
-import { Entity } from '../visualizer/Entity'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
-import { EntityTypeDto } from '../protocol/Protocol'
+import { DiamAjax } from '@inception-project/inception-js-api'
+import { EntityTypeDto, VID } from '../protocol/Protocol'
+import { findClosestChunkElement, Visualizer } from '../visualizer/Visualizer'
 
 export class AnnotatorUI {
   private data: DocumentData
 
-  private arcDragOrigin?: string
+  private arcDragOrigin?: VID
   private arcDragOriginBox: Box
   private arcDragOriginGroup: SVGTypeMapping<SVGGElement>
   private arcDragArc: SVGTypeMapping<SVGPathElement>
@@ -58,40 +58,35 @@ export class AnnotatorUI {
   private dragStartedAt?: MouseEvent & { target: Element }
   private selectionInProgress = false
 
-  private spanOptions?: { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
-  private arcOptions?: { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
-  private editedSpan: Entity
-  private editedFragment: string | null = null
+  private arcOptions?: { type?: string, old_target?: string, origin?: VID, target?: VID }
   private spanTypes: Record<string, EntityTypeDto>
-  private selRect: SVGRectElement[]
-  private lastStartRec = null
-  private lastEndRec = null
+  private selRect: SVGRectElement[] | null = null
+  private lastStartRec : DOMRect | null = null
+  private lastEndRec : DOMRect | null = null
 
   private draggedArcHeight = 30
-
-  // for normalization: appropriate DBs per type
-  private normDbsByType = {}
 
   private svg: Svg
   private dispatcher: Dispatcher
 
-  private svgPosition: JQueryCoordinates
+  private svgPosition?: Coordinates
 
   private clickCount = 0
   private clickTimer: number | null = null
   private CLICK_DELAY = 300
 
   private ajax: DiamAjax
+  private visualizer: Visualizer
 
-  constructor (dispatcher: Dispatcher, svg: Svg, ajax: DiamAjax) {
+  constructor (dispatcher: Dispatcher, visualizer: Visualizer, ajax: DiamAjax) {
     console.debug('Setting up annotator-ui editor...')
 
     this.dispatcher = dispatcher
-    this.svg = svg
+    this.svg = visualizer.svg
+    this.visualizer = visualizer
     this.ajax = ajax
 
     dispatcher
-      .on('getValidArcTypesForDrag', this, this.getValidArcTypesForDrag)
       .on('dataReady', this, this.rememberData)
       .on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded)
       .on('isReloadOkay', this, this.isReloadOkay)
@@ -104,26 +99,11 @@ export class AnnotatorUI {
       .on('contextmenu', this, this.contextMenu)
   }
 
-  // FIXME I think we don't need this anymore because we don't work with these numerical suffixes
-  // REC 2021-11-27
-  private stripNumericSuffix (s) {
-    // utility function, originally for stripping numerix suffixes
-    // from arc types (e.g. "Theme2" -> "Theme"). For values
-    // without suffixes (including non-strings), returns given value.
-    if (typeof (s) !== 'string') {
-      return s // can't strip
-    }
-    const m = s.match(/^(.*?)(\d*)$/)
-    return m !== null ? m[1] : s // always matches
-  }
-
   private clearSelection () {
     window.getSelection()?.removeAllRanges()
 
-    if (this.selRect != null) {
-      for (let s = 0; s !== this.selRect.length; s++) {
-        this.selRect[s].parentNode.removeChild(this.selRect[s])
-      }
+    if (this.selRect) {
+      this.selRect.forEach(rect => rect.remove())
       this.selRect = null
       this.lastStartRec = null
       this.lastEndRec = null
@@ -155,9 +135,9 @@ export class AnnotatorUI {
 
     const singleClickAction = Configuration.singleClickEdit
       ? this.selectAnnotation
-      : this.customAction
+      : this.handleExtensionAction
     const doubleClickAction = Configuration.singleClickEdit
-      ? this.customAction
+      ? this.handleExtensionAction
       : this.selectAnnotation
 
     if (this.clickCount === 1) {
@@ -180,132 +160,63 @@ export class AnnotatorUI {
     }
   }
 
-  private customAction (evt: MouseEvent & { target: Element }) {
-    if (evt.target.getAttribute('data-span-id')) {
-      this.customSpanAction(evt)
-      return
-    }
-
-    if (evt.target.getAttribute('data-arc-ed')) {
-      this.customArcAction(evt)
-    }
-  }
-
-  private customArcAction (evt: MouseEvent) {
+  private handleExtensionAction (evt: MouseEvent) : void {
     if (!(evt.target instanceof Element)) return
 
-    const id = evt.target.getAttribute('data-arc-ed')
-    const type = evt.target.getAttribute('data-arc-role')
-    const attrOrigin = evt.target.getAttribute('data-arc-origin')
-    const attrTarget = evt.target.getAttribute('data-arc-target')
-
-    if (id && type && attrOrigin && attrTarget) {
-      const originSpan = this.data.spans[attrOrigin]
-      const targetSpan = this.data.spans[attrTarget]
-      this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan)
-    }
-  }
-
-  private sendTriggerCustomArcAction (id: string, type: string, originSpan: Entity, targetSpan: Entity) {
-    this.dispatcher.post('ajax', [{
-      action: 'doAction',
-      arcId: id,
-      arcType: type,
-      originSpanId: originSpan.id,
-      originType: originSpan.type,
-      targetSpanId: targetSpan.id,
-      targetType: targetSpan.type
-    }])
-  }
-
-  private customSpanAction (evt: MouseEvent & { target: Element }) {
-    const id = evt.target.getAttribute('data-span-id')
-
+    const id = evt.target.getAttribute('data-span-id') || evt.target.getAttribute('data-arc-ed')
     if (id) {
       evt.preventDefault()
-      this.editedSpan = this.data.spans[id]
-      this.editedFragment = evt.target.getAttribute('data-fragment-id')
-      this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets)
+      this.ajax.triggerExtensionAction(id)
     }
-  }
-
-  private sendTriggerCustomSpanAction (id: string, offsets: ReadonlyArray<Offsets>) {
-    this.dispatcher.post('ajax', [{
-      action: 'doAction',
-      offsets: JSON.stringify(offsets),
-      id,
-      labelText: this.editedSpan.labelText,
-      type: this.editedSpan.type
-    }])
   }
 
   private selectAnnotation (evt: MouseEvent & { target: Element }) {
-    // must not be creating an arc
+    // Prevent selection of annotation while creating an arc
     if (this.arcDragOrigin) return
 
     if (evt.target.getAttribute('data-arc-role')) {
-      this.selectArc(evt)
+      this.selectRelation(evt)
       return
     }
 
     if (evt.target.getAttribute('data-span-id')) {
-      this.selectSpanAnnotation(evt)
+      this.selectSpan(evt)
     }
   }
 
-  private selectArc (evt: MouseEvent & { target: Element }) {
+  private selectRelation (evt: MouseEvent & { target: Element }) {
     this.clearSelection()
     const originSpanId = evt.target.getAttribute('data-arc-origin')
     const targetSpanId = evt.target.getAttribute('data-arc-target')
     const type = evt.target.getAttribute('data-arc-role')
     this.arcOptions = {
-      action: 'createArc',
       origin: originSpanId !== null ? originSpanId : undefined,
       target: targetSpanId !== null ? targetSpanId : undefined,
       old_target: targetSpanId !== null ? targetSpanId : undefined,
-      type: type !== null ? type : undefined,
-      old_type: type !== null ? type : undefined
+      type: type !== null ? type : undefined
     }
 
     const eventDescId = evt.target.getAttribute('data-arc-ed')
     if (eventDescId) {
-      const eventDesc = this.data.eventDescs[eventDescId]
-      if (eventDesc.equiv) {
-        this.arcOptions.left = eventDesc.leftSpans.join(',')
-        this.arcOptions.right = eventDesc.rightSpans.join(',')
-      }
-
       this.ajax.selectAnnotation(eventDescId)
     }
   }
 
-  private selectSpanAnnotation (evt: MouseEvent) {
+  private selectSpan (evt: MouseEvent) {
     if (!(evt.target instanceof Element)) return
 
-    const target = evt.target
-    const id = target.getAttribute('data-span-id')
+    const id = evt.target.getAttribute('data-span-id')
 
     if (id) {
       this.clearSelection()
-      this.editedSpan = this.data.spans[id]
-      this.editedFragment = target.getAttribute('data-fragment-id')
-      const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets
-
-      this.spanOptions = {
-        action: 'createSpan',
-        offsets,
-        type: this.editedSpan.type,
-        id
-      }
-
       this.ajax.selectAnnotation(id)
     }
   }
 
-  private startArcDrag (originId) {
+  private startArcDrag (originId: string | undefined | null) {
     this.clearSelection()
 
-    if (!this.data.spans[originId]) {
+    if (!originId || !this.data.spans[originId]) {
       return
     }
 
@@ -324,30 +235,11 @@ export class AnnotatorUI {
     this.arcDragJustStarted = true
   }
 
-  private getValidArcTypesForDrag (targetId, targetType): string[] {
-    const arcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type)
-    if (!this.arcDragOrigin || targetId === this.arcDragOrigin) return []
-
-    const originType = this.data.spans[this.arcDragOrigin].type
-    const spanType = this.spanTypes[originType]
-    const result: string[] = []
-    if (spanType && spanType.arcs) {
-      $.each(spanType.arcs, (arcNo, arc) => {
-        if (arcType && arcType !== arc.type) return
-
-        if ($.inArray(targetType, arc.targets) !== -1) {
-          result.push(arc.type)
-        }
-      })
-    }
-    return result
-  }
-
-  onMouseDown (evt: MouseEvent & { target: Element }) {
-    if (!(evt.target instanceof Element)) return
+  private onMouseDown (evt: MouseEvent & { target: Element }) : boolean {
+    if (!(evt.target instanceof Element)) return true
 
     // Instead of calling startArcDrag() immediately, we defer this to onMouseMove
-    if (this.arcDragOrigin) return
+    if (this.arcDragOrigin) return true
 
     // is it arc drag start?
     if (evt.target.getAttribute('data-span-id')) {
@@ -361,12 +253,22 @@ export class AnnotatorUI {
       this.spanDragJustStarted = true
       this.selectionInProgress = true
       this.dispatcher.post('selectionStarted')
+      return true
     }
+
+    return true
   }
 
-  onMouseMove (evt: MouseEvent) {
+  private onMouseMove (evt: MouseEvent) : void {
     if (!evt.buttons && this.selectionInProgress) {
       this.dispatcher.post('selectionEnded')
+    }
+
+    if (this.arcDragOrigin && !evt.buttons) {
+      // Mouse button was released outside the event scope - cancel arc drag
+      this.stopArcDrag()
+      this.arcDragJustStarted = false
+      return
     }
 
     if (!this.arcDragOrigin && this.dragStartedAt) {
@@ -380,39 +282,39 @@ export class AnnotatorUI {
       if (deltaX > 5 || deltaY > 5) {
         this.arcOptions = undefined
         const target = this.dragStartedAt.target
-        const id = target.getAttribute('data-span-id')
-        this.startArcDrag(id)
+        this.startArcDrag(target.getAttribute('data-span-id'))
       }
     }
 
     if (this.arcDragOrigin) {
-      if (this.arcDragJustStarted) {
-        this.initializeArcDragTargets(evt)
-      }
-
-      this.clearSelection()
-      const mx = evt.pageX - this.svgPosition.left
-      const my = evt.pageY - this.svgPosition.top + 5 // TODO FIXME why +5?!?
-      const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight
-      const dx = (this.arcDragOriginBox.center - mx) / 4
-      this.arcDragArc.plot([
-        ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
-        ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]])
+      this.onMouseMoveArcCreation(evt)
     } else {
-      if (this.spanDragJustStarted) {
-        // If user starts selecting text, suppress all pointer events on annotations to
-        // avoid the selection jumping around. During selection, we don't need the annotations
-        // to react on mouse events anyway.
-        this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', 'none'))
-      }
-
       this.onMouseMoveSpanSelection(evt)
     }
+
     this.arcDragJustStarted = false
     this.spanDragJustStarted = false
   }
 
-  private initializeArcDragTargets (evt: MouseEvent) {
+  private onMouseMoveArcCreation (evt: MouseEvent) : void {
+    if (this.arcDragJustStarted) {
+      this.initializeArcDragTargets(evt)
+    }
+
+    this.clearSelection()
+    const mx = evt.pageX - this.svgPosition.left
+    const my = evt.pageY - this.svgPosition.top + 5 // TODO FIXME why +5?!?
+    const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight
+    const dx = (this.arcDragOriginBox.center - mx) / 4
+    this.arcDragArc.plot([
+      ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
+      ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]
+    ])
+  }
+
+  private initializeArcDragTargets (evt: MouseEvent) : void {
+    if (!this.arcDragOrigin) return
+
     // show the possible targets
     const span = this.data.spans[this.arcDragOrigin]
     const spanDesc = this.spanTypes[span.type]
@@ -421,9 +323,7 @@ export class AnnotatorUI {
       return
     }
 
-    // separate out possible numeric suffix from type for highlight
-    // (instead of e.g. "Theme3", need to look for "Theme")
-    const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type)
+    const noNumArcType = this.arcOptions && this.arcOptions.type
 
     spanDesc.arcs.map(possibleArc => {
       if (!((this.arcOptions && possibleArc.type === noNumArcType) || !(this.arcOptions && this.arcOptions.old_target))) {
@@ -446,23 +346,28 @@ export class AnnotatorUI {
     })
   }
 
-  private onMouseMoveSpanSelection (evt: MouseEvent) {
+  private onMouseMoveSpanSelection (evt: MouseEvent) : void {
+    if (this.spanDragJustStarted) {
+      // If user starts selecting text, suppress all pointer events on annotations to
+      // avoid the selection jumping around. During selection, we don't need the annotations
+      // to react on mouse events anyway.
+      this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', 'none'))
+    }
+
     // A. Scerri FireFox chunk
 
     // if not, then is it span selection? (ctrl key cancels)
     const sel = window.getSelection()
-    if (sel === null) {
-      return
-    }
+    if (sel === null) return
 
-    let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id')
-    let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id')
+    // let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id')
+    // let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id')
+    let chunkIndexFrom = findClosestChunkElement(sel.anchorNode)?.getAttribute('data-chunk-id')
+    let chunkIndexTo = findClosestChunkElement(sel.focusNode)?.getAttribute('data-chunk-id')
     // fallback for firefox (at least):
-    // it's unclear why, but for firefox the anchor and focus
-    // node parents are always undefined, the the anchor and
-    // focus nodes themselves do (often) have the necessary
-    // chunk ID. However, anchor offsets are almost always
-    // wrong, so we'll just make a guess at what the user might
+    // it's unclear why, but for firefox the anchor and focus node parents are always undefined,
+    // the the anchor and focus nodes themselves do (often) have the necessary chunk ID. However,
+    // anchor offsets are almost always wrong, so we'll just make a guess at what the user might
     // be interested in tagging instead of using what's given.
     let anchorOffset = -1
     let focusOffset = -1
@@ -518,7 +423,7 @@ export class AnnotatorUI {
       endRec.y += 2
 
       // If nothing has changed then stop here
-      if (this.lastStartRec != null && this.lastStartRec.x == startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
+      if (this.lastStartRec != null && this.lastStartRec.x === startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
         return
       }
 
@@ -552,11 +457,11 @@ export class AnnotatorUI {
         }
 
         // Start has moved
-        const flip = !(startRec.x === this.lastStartRec.x && startRec.y === this.lastStartRec.y)
+        const flip = !(startRec.x === this.lastStartRec?.x && startRec.y === this.lastStartRec.y)
         // If the height of the start or end changed we need to check whether
         // to remove multi line highlights no longer needed if the user went back towards their start line
         // and whether to create new ones if we moved to a newline
-        if (((endRec.y !== this.lastEndRec.y)) || ((startRec.y !== this.lastStartRec.y))) {
+        if (((endRec.y !== this.lastEndRec?.y)) || ((startRec.y !== this.lastStartRec?.y))) {
           // First check if we have to remove the first highlights because we are moving towards the end on a different line
           let ss = 0
           for (; ss !== this.selRect.length; ss++) {
@@ -575,7 +480,7 @@ export class AnnotatorUI {
           let trunc = false
           if (ss < this.selRect.length) {
             for (let s2 = 0; s2 !== ss; s2++) {
-              this.selRect[s2].parentNode.removeChild(this.selRect[s2])
+              this.selRect[s2].remove()
               es--
               trunc = true
             }
@@ -583,7 +488,7 @@ export class AnnotatorUI {
           }
           if (es > -1) {
             for (let s2 = this.selRect.length - 1; s2 !== es; s2--) {
-              this.selRect[s2].parentNode.removeChild(this.selRect[s2])
+              this.selRect[s2].remove()
               trunc = true
             }
             this.selRect = this.selRect.slice(0, es + 1)
@@ -674,38 +579,34 @@ export class AnnotatorUI {
     }
   }
 
-  stopArcDrag (target?: JQuery) {
-    // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+  private stopArcDrag (target?: Element) : void {
     // Clear the dragStartAt saved event
     this.dragStartedAt = undefined
-    // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
-    if (this.arcDragOrigin) {
-      if (!target) {
-        target = $('.badTarget')
-      }
-      target.removeClass('badTarget')
-      this.arcDragOriginGroup.removeClass('highlight')
-      if (target) {
-        target.parent().removeClass('highlight')
-      }
-      if (this.arcDragArc) {
-        try {
-          this.arcDragArc.remove()
-        } catch (err) {
-          // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
-        }
-      }
-      this.arcDragOrigin = undefined
-      if (this.arcOptions) {
-        $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect')
-      }
-      this.svg.removeClass('reselect')
-    }
+
     this.svg.removeClass('unselectable')
-    $('.reselectTarget').removeClass('reselectTarget')
+    this.svg.removeClass('reselect')
+    this.svg.node.querySelectorAll('.reselectTarget').forEach(e => e.classList.remove('reselectTarget'))
+
+    if (!this.arcDragOrigin) return
+
+    if (!target) {
+      this.svg.node.querySelectorAll('.badTarget').forEach(e => {
+        e.parentElement?.classList.remove('highlight')
+        e.classList.remove('badTarget')
+      })
+    } else {
+      target.classList.remove('badTarget')
+      target?.parentElement?.classList.remove('highlight')
+    }
+    this.arcDragOriginGroup.removeClass('highlight')
+    this.arcDragArc?.remove()
+    this.arcDragOrigin = undefined
+    if (this.arcOptions) {
+      $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect')
+    }
   }
 
-  onMouseUp (evt: MouseEvent) {
+  private onMouseUp (evt: MouseEvent) : void {
     if (!evt.buttons && this.selectionInProgress) {
       this.dispatcher.post('selectionEnded')
     }
@@ -713,37 +614,50 @@ export class AnnotatorUI {
     // Restore pointer events on annotations
     this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null))
 
-    const target = $(evt.target)
+    if (!(evt.target instanceof Element)) return
 
     // three things that are clickable in SVG
-    const targetSpanId = target.data('span-id')
-    const targetChunkId = target.data('chunk-id')
-    const targetArcRole = target.data('arc-role')
-    // BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
-    /*
-            if (!(targetSpanId !== undefined || targetChunkId !== undefined || targetArcRole !== undefined)) {
-    */
+    const targetSpanId = evt.target.getAttribute('data-span-id')
+    const targetChunkId = evt.target.getAttribute('data-chunk-id')
+    const targetArcRole = evt.target.getAttribute('data-arc-role')
     // The targetArcRole check must be excluded from the negation - it cancels this handler when
     // doing a mouse-up on a relation
-    if (!(targetSpanId !== undefined || targetChunkId !== undefined) || targetArcRole !== undefined) {
-      // END WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
+    if (!(targetSpanId || targetChunkId) || targetArcRole) {
       // misclick
       this.clearSelection()
-      this.stopArcDrag(target)
+      this.stopArcDrag(evt.target)
       return
     }
 
     // is it arc drag end?
     if (this.arcDragOrigin) {
-      const origin = this.arcDragOrigin
-      const targetValid = target.hasClass('reselectTarget')
-      this.stopArcDrag(target)
-      // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers
-      let id
-      if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
-        //          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
-        // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers
-        const originSpan = this.data.spans[origin]
+      this.endArcCreation(evt, targetSpanId)
+      return
+    }
+
+    // CTRL cancels span creation
+    if (evt.ctrlKey) return
+
+    const sel = window.getSelection()
+    const offsets = this.visualizer.selectionToOffsets(sel)
+    this.clearSelection()
+    this.stopArcDrag(evt.target)
+
+    // Abort if there is no range or if the range is zero-width and the shift key is not pressed
+    if (!offsets || (offsets[0] === offsets[1] && !evt.shiftKey)) return
+
+    this.spanDragJustStarted = false
+    this.ajax.createSpanAnnotation([offsets])
+  }
+
+  private endArcCreation (evt: MouseEvent, targetSpanId: VID | null) {
+    if (!(evt.target instanceof Element) || !this.arcDragOrigin) return
+
+    try {
+      const targetValid = evt.target.classList.contains('reselectTarget')
+      let id: VID | null
+      if ((id = targetSpanId) && targetValid && (evt.shiftKey || this.arcDragOrigin !== id)) {
+        const originSpan = this.data.spans[this.arcDragOrigin]
         const targetSpan = this.data.spans[id]
 
         if (this.arcOptions && this.arcOptions.old_target) {
@@ -751,7 +665,6 @@ export class AnnotatorUI {
           this.dispatcher.post('ajax', [this.arcOptions, 'edited'])
         } else {
           this.arcOptions = {
-            action: 'createArc',
             origin: originSpan.id,
             target: targetSpan.id
           }
@@ -759,150 +672,24 @@ export class AnnotatorUI {
           this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id)
         }
       }
-    } else if (!evt.ctrlKey) {
-      // if not, then is it span selection? (ctrl key cancels)
-      const sel = window.getSelection()
-
-      // Try getting anchor and focus node via the selection itself. This works in Chrome and
-      // Safari.
-      let anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]')
-      let anchorOffset = sel.anchorOffset
-      let focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]')
-      let focusOffset = sel.focusOffset
-
-      // If using the selection was not successful, try using the ranges instead. This should
-      // work on Firefox.
-      if ((anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) && sel.type != 'None') {
-        anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]')
-        anchorOffset = sel.getRangeAt(0).startOffset
-        focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]')
-        focusOffset = sel.getRangeAt(sel.rangeCount - 1).endOffset
-      }
-
-      // If neither approach worked, give up - the user didn't click on selectable text.
-      if (anchorNode == null || !anchorNode[0] || focusNode == null || !focusNode[0]) {
-        this.clearSelection()
-        this.stopArcDrag(target)
-        return
-      }
-
-      let chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id')
-      let chunkIndexTo = focusNode && focusNode.attr('data-chunk-id')
-
-      // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      if (focusNode && anchorNode && focusNode[0] === anchorNode[0] && focusNode.hasClass('spacing')) {
-        if (evt.shiftKey) {
-          if (anchorOffset === 0) {
-            // Move anchor to the end of the previous node
-            anchorNode = focusNode = anchorNode.prev()
-            anchorOffset = focusOffset = anchorNode.text().length
-            chunkIndexFrom = chunkIndexTo = anchorNode.attr('data-chunk-id')
-          } else {
-            // Move anchor to the beginning of the next node
-            anchorNode = focusNode = anchorNode.next()
-            anchorOffset = focusOffset = 0
-            chunkIndexFrom = chunkIndexTo = anchorNode.attr('data-chunk-id')
-          }
-        } else {
-          // misclick
-          this.clearSelection()
-          this.stopArcDrag(target)
-          return
-        }
-      } else {
-        // If we hit a spacing element, then we shift the anchors left or right, depending on
-        // the direction of the selected range.
-        if (anchorNode.hasClass('spacing')) {
-          if (Number(chunkIndexFrom) < Number(chunkIndexTo)) {
-            anchorNode = anchorNode.next()
-            anchorOffset = 0
-            chunkIndexFrom = anchorNode.attr('data-chunk-id')
-          } else if (anchorNode.hasClass('row-initial')) {
-            anchorNode = anchorNode.next()
-            anchorOffset = 0
-          } else {
-            anchorNode = anchorNode.prev()
-            anchorOffset = anchorNode.text().length
-          }
-        }
-        if (focusNode.hasClass('spacing')) {
-          if (Number(chunkIndexFrom) > Number(chunkIndexTo)) {
-            focusNode = focusNode.next()
-            focusOffset = 0
-            chunkIndexTo = focusNode.attr('data-chunk-id')
-          } else if (focusNode.hasClass('row-initial')) {
-            focusNode = focusNode.next()
-            focusOffset = 0
-          } else {
-            focusNode = focusNode.prev()
-            focusOffset = focusNode.text().length
-          }
-        }
-      }
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
-
-      if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
-        const chunkFrom = this.data.chunks[chunkIndexFrom]
-        const chunkTo = this.data.chunks[chunkIndexTo]
-        let selectedFrom = chunkFrom.from + anchorOffset
-        let selectedTo = chunkTo.from + focusOffset
-        sel.removeAllRanges()
-
-        if (selectedFrom > selectedTo) {
-          const tmp = selectedFrom; selectedFrom = selectedTo; selectedTo = tmp
-        }
-        // trim
-        while (selectedFrom < selectedTo && ' \n\t'.indexOf(this.data.text.substr(selectedFrom, 1)) !== -1) selectedFrom++
-        while (selectedFrom < selectedTo && ' \n\t'.indexOf(this.data.text.substr(selectedTo - 1, 1)) !== -1) selectedTo--
-
-        // shift+click allows zero-width spans
-        if (selectedFrom === selectedTo && !evt.shiftKey) {
-          // simple click (zero-width span)
-          return
-        }
-
-        this.spanOptions = {
-          action: 'createSpan',
-          offsets: [[selectedFrom, selectedTo]]
-        }
-
-        // normal span select in standard annotation mode or reselect: show selector
-        this.spanDragJustStarted = false
-        const spanText = this.data.text.substring(selectedFrom, selectedTo)
-        this.ajax.createSpanAnnotation(this.spanOptions.offsets, spanText)
-      }
+    }
+    finally {
+      this.stopArcDrag(evt.target)
     }
   }
 
-  toggleCollapsible ($el, state?) {
-    const opening = state !== undefined ? state : !$el.hasClass('open')
-    const $collapsible = $el.parent().find('.collapsible:first')
-    if (opening) {
-      $collapsible.addClass('open')
-      $el.addClass('open')
-    } else {
-      $collapsible.removeClass('open')
-      $el.removeClass('open')
-    }
-  }
-
-  collapseHandler (evt) {
-    this.toggleCollapsible($(evt.target))
-  }
-
-  rememberData (data: DocumentData) {
+  private rememberData (data: DocumentData) : void {
     if (data && !data.exception) {
       this.data = data
     }
   }
 
-  spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
+  private spanAndAttributeTypesLoaded (_spanTypes: Record<string, EntityTypeDto>,
+    _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes
   }
 
-  contextMenu (evt: MouseEvent) {
+  private contextMenu (evt: MouseEvent) : void {
     if (evt.target instanceof Element) {
       // If the user shift-right-clicks, open the normal browser context menu. This is useful
       // e.g. during debugging / developing
@@ -920,7 +707,7 @@ export class AnnotatorUI {
     }
   }
 
-  isReloadOkay () {
+  private isReloadOkay () : boolean {
     // do not reload while the user is in the middle of editing
     return this.arcDragOrigin == null
   }

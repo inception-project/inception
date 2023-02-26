@@ -137,12 +137,24 @@ public class DynamicWorkloadExtensionImpl
 
     @Override
     @Transactional
+    public void writeTraits(WorkloadManager aWorkloadManager, DynamicWorkloadTraits aTraits)
+    {
+        try {
+            aWorkloadManager.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (Exception e) {
+            this.log.error("Unable to write traits", e);
+        }
+    }
+
+    @Override
+    @Transactional
     public void writeTraits(DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
-            manager.setTraits(JSONUtil.toJsonString(aTrait));
+            this.writeTraits(manager, aTrait);
             workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {

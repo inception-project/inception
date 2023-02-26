@@ -105,7 +105,7 @@ public class RecommenderInfoPanel
                     aModel.getObject().getProject());
             return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
-        })).setEscapeModelStrings(false));
+        })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
 
         WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
@@ -129,20 +129,20 @@ public class RecommenderInfoPanel
                         state.add(new Icon("icon", FontAwesome5IconType.play_circle_s));
                         state.add(AttributeModifier.replace("title", "[Active]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
-                        state.add(AttributeModifier.append("class", "bg-success"));
+                        state.add(AttributeModifier.append("class", "text-bg-success bg-success"));
                     }
                     else {
                         state.add(new Icon("icon", FontAwesome5IconType.stop_circle_s));
                         state.add(AttributeModifier.replace("title", "[Inactive]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
-                        state.add(AttributeModifier.append("class", "bg-danger"));
+                        state.add(AttributeModifier.append("class", "text-bg-danger bg-danger"));
                     }
                 }
                 else {
                     state.add(new Icon("icon", FontAwesome5IconType.hourglass_half_s));
                     state.add(AttributeModifier.replace("title", "Pending..."));
-                    state.add(AttributeModifier.append("class", "bg-light"));
+                    state.add(AttributeModifier.append("class", "text-bg-light bg-light"));
                 }
                 item.add(state);
 
@@ -187,11 +187,10 @@ public class RecommenderInfoPanel
 
                 item.add(resultsContainer);
 
-                item.add(
-                        new Label("noEvaluationMessage",
-                                evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
-                                        .orElse("")).add(
-                                                visibleWhen(() -> !resultsContainer.isVisible())));
+                item.add(new Label("noEvaluationMessage",
+                        evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
+                                .orElse("Waiting for evalation..."))
+                                        .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
         IModel<List<Recommender>> recommenders = LoadableDetachableModel
@@ -240,7 +239,7 @@ public class RecommenderInfoPanel
     @OnEvent
     public void onRenderAnnotations(PredictionsSwitchedEvent aEvent)
     {
-        aEvent.getRequestHandler().add(this);
+        aEvent.getRequestTarget().add(this);
     }
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)

@@ -33,20 +33,20 @@ public class CurationVIDTest
     @Test
     public void testParse()
     {
-        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10"), //
-                "curationEditorExtension", "kevin", "10", -1, 10, -1, -1, -1);
+        assertParseVid(VID.parse("cur:10-kevin!10"), //
+                "cur", "kevin", "10", -1, 10, -1, -1, -1);
 
-        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10.1"), //
-                "curationEditorExtension", "kevin", "10.1", -1, 10, -1, 1, -1);
+        assertParseVid(VID.parse("cur:10-kevin!10.1"), //
+                "cur", "kevin", "10.1", -1, 10, -1, 1, -1);
 
-        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10.1.2"), //
-                "curationEditorExtension", "kevin", "10.1.2", -1, 10, -1, 1, 2);
+        assertParseVid(VID.parse("cur:10-kevin!10.1.2"), //
+                "cur", "kevin", "10.1.2", -1, 10, -1, 1, 2);
 
-        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10-1.2.3"), //
-                "curationEditorExtension", "kevin", "10-1.2.3", -1, 10, 1, 2, 3);
+        assertParseVid(VID.parse("cur:10-kevin!10-1.2.3"), //
+                "cur", "kevin", "10-1.2.3", -1, 10, 1, 2, 3);
 
-        assertParseVid(VID.parse("curationEditorExtension:10-kevin!10-1.2.3@1"), //
-                "curationEditorExtension", "kevin", "10-1.2.3@1", 1, 10, 1, 2, 3);
+        assertParseVid(VID.parse("cur:10-kevin!10-1.2.3@1"), //
+                "cur", "kevin", "10-1.2.3@1", 1, 10, 1, 2, 3);
     }
 
     private void assertParseVid(VID aVID, String aExtensionId, String aUsername, String aPayload,

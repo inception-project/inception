@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
@@ -27,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 
 import java.io.IOException;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
@@ -34,15 +36,16 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -50,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
@@ -66,6 +70,7 @@ public class MatrixWorkflowActionBarItemGroup
     private static final long serialVersionUID = 4139817495914347777L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
@@ -91,10 +96,8 @@ public class MatrixWorkflowActionBarItemGroup
 
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog");
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
-        resetDocumentDialog
-                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setTitleModel(new ResourceModel("ResetDocumentDialog.title"));
+        resetDocumentDialog.setMessageModel(new ResourceModel("ResetDocumentDialog.text"));
         resetDocumentDialog.setExpectedResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
         add(resetDocumentDialog);
@@ -106,21 +109,38 @@ public class MatrixWorkflowActionBarItemGroup
 
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
     {
-        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(page.getModelObject().getProject()));
-
         LambdaAjaxLink link;
-        if (traits.isReopenableByAnnotator()) {
+        if (isReopenableByUser()) {
             link = new LambdaAjaxLink(aId, this::actionToggleDocumentState);
         }
         else {
             link = new LambdaAjaxLink(aId, this::actionRequestFinishDocumentConfirmation);
         }
         link.setOutputMarkupId(true);
-        link.add(enabledWhen(() -> page.isEditable() || traits.isReopenableByAnnotator()));
-        link.add(new Label("state")
-                .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+        link.add(enabledWhen(() -> page.isEditable() || isReopenableByUser()));
+        var stateLabel = new Label("state");
+        stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
+        stateLabel.add(AttributeModifier.replace("title", LoadableDetachableModel.of(() -> {
+            var tooltip = this.getStateTooltip();
+            return tooltip.wrapOnAssignment(stateLabel).getObject();
+        })));
+        link.add(stateLabel);
         return link;
+    }
+
+    private boolean isReopenableByUser()
+    {
+        // Curators can re-open documents anyway via the monitoring page, so we can always allow
+        // the re-open documents here as well
+        AnnotatorState state = page.getModelObject();
+        if (projectService.hasRole(userRepository.getCurrentUsername(), state.getProject(),
+                CURATOR)) {
+            return true;
+        }
+
+        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(page.getModelObject().getProject()));
+        return traits.isReopenableByAnnotator();
     }
 
     protected AnnotationPageBase getAnnotationPage()
@@ -128,14 +148,50 @@ public class MatrixWorkflowActionBarItemGroup
         return page;
     }
 
+    public ResourceModel getStateTooltip()
+    {
+        AnnotatorState state = page.getModelObject();
+
+        // Curation sidebar: when writing to the curation document, we need to update the document
+        if (state.getUser().getUsername().equals(CURATION_USER)) {
+            if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
+                return new ResourceModel("stateToggle.curationFinished");
+            }
+            else {
+                return new ResourceModel("stateToggle.curationInProgress");
+            }
+        }
+
+        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+            return new ResourceModel("stateToggle.annotationFinished");
+        }
+        else {
+            return new ResourceModel("stateToggle.annotationInProgress");
+        }
+    }
+
     public String getStateClass()
     {
         AnnotatorState state = page.getModelObject();
 
+        // Curation sidebar: when writing to the curation document, we need to update the document
+        if (state.getUser().getUsername().equals(CURATION_USER)) {
+            if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
+                // SourceDocumentState.CURATION_FINISHED.symbol()
+                return FontAwesome5IconType.clipboard_check_s.cssClassName();
+            }
+            else {
+                // SourceDocumentState.CURATION_IN_PROGRESS.symbol()
+                return FontAwesome5IconType.clipboard_s.cssClassName();
+            }
+        }
+
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+            // AnnotationDocumentState.FINISHED.symbol();
             return FontAwesome5IconType.lock_s.cssClassName();
         }
         else {
+            // AnnotationDocumentState.IN_PROGRESS.symbol();
             return FontAwesome5IconType.lock_open_s.cssClassName();
         }
     }
@@ -178,10 +234,26 @@ public class MatrixWorkflowActionBarItemGroup
 
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)
     {
+        // state instead
         AnnotatorState state = page.getModelObject();
         SourceDocument document = state.getDocument();
-        var annDoc = documentService.getAnnotationDocument(document, state.getUser());
 
+        // Curation sidebar: when writing to the curation document, we need to update the docuement
+        if (state.getUser().getUsername().equals(CURATION_USER)) {
+            switch (document.getState()) {
+            case CURATION_FINISHED:
+                documentService.setSourceDocumentState(document, CURATION_IN_PROGRESS);
+                aTarget.add(page);
+                break;
+            default:
+                documentService.setSourceDocumentState(document, CURATION_FINISHED);
+                aTarget.add(page);
+                break;
+            }
+            return;
+        }
+
+        var annDoc = documentService.getAnnotationDocument(document, state.getUser());
         if (annDoc.getAnnotatorState() != annDoc.getState()) {
             error("Annotation state has been overridden by a project manager or curator. "
                     + "You cannot change it.");
@@ -194,25 +266,13 @@ public class MatrixWorkflowActionBarItemGroup
         var annState = annDoc.getAnnotatorState();
         switch (annState) {
         case IN_PROGRESS:
-            // curation sidebar: need to update source doc state as well to finished
-            if (state.getUser().getUsername().equals(CURATION_USER)) {
-                documentService.setSourceDocumentState(document, CURATION_FINISHED);
-            }
-            else {
-                documentService.setAnnotationDocumentState(annDoc, FINISHED,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
-            }
+            documentService.setAnnotationDocumentState(annDoc, FINISHED,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
             aTarget.add(page);
             break;
         case FINISHED:
-            // curation sidebar: need to update source doc state as well to finished
-            if (state.getUser().getUsername().equals(CURATION_USER)) {
-                documentService.setSourceDocumentState(document, CURATION_IN_PROGRESS);
-            }
-            else {
-                documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
-                        EXPLICIT_ANNOTATOR_USER_ACTION);
-            }
+            documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
             aTarget.add(page);
             break;
         default:

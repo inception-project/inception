@@ -29,6 +29,7 @@ export class DiamWebsocketImpl implements DiamWebsocket {
   private webSocket: WebSocket
   private initSubscription: StompSubscription
   private updateSubscription: StompSubscription
+  private diff: any
 
   private data: any
 
@@ -36,14 +37,15 @@ export class DiamWebsocketImpl implements DiamWebsocket {
 
   connect (aWsEndpoint: string) {
     if (this.stompClient) {
-      throw 'Already connected'
+      console.log('Already connected')
+      return
     }
 
     const protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
     const wsEndpoint = new URL(aWsEndpoint)
     wsEndpoint.protocol = protocol
 
-    this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(wsEndpoint.toString()))
+    this.stompClient = Stomp.over(() => new WebSocket(wsEndpoint.toString()))
     this.stompClient.reconnectDelay = 5000
 
     this.stompClient.onConnect = frame => {
@@ -60,7 +62,7 @@ export class DiamWebsocketImpl implements DiamWebsocket {
 
   disconnect () {
     this.stompClient.deactivate()
-    this.webSocket.close()
+    this.stompClient.webSocket.close()
   }
 
   private handleBrokerError (receipt: IFrame) {
