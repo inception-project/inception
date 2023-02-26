@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigura
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -97,8 +98,9 @@ public class SpringAuthenticatedWebSession
                 HttpServletRequest containerRequest = ((ServletWebRequest) request)
                         .getContainerRequest();
 
-                // Kill current session and create a new one as part of the authentication
+                // Kill current session and create a new one
                 containerRequest.getSession().invalidate();
+                containerRequest.getSession(true);
             }
 
             Authentication authentication = authenticationConfigurationHolder
@@ -146,9 +148,11 @@ public class SpringAuthenticatedWebSession
         log.debug("Stored authentication for user [{}] in security context",
                 aAuthentication.getName());
 
-        setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                .getContainerRequest().getSession(false);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 SecurityContextHolder.getContext());
-        log.debug("Stored security context in session");
+        log.debug("Stored security context in session [{}]", getId());
 
         bind();
 
