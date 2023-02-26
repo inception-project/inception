@@ -97,7 +97,7 @@ public class Recommender
     private Set<AnnotationDocumentState> statesIgnoredForTraining;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     private Recommender(Builder builder)

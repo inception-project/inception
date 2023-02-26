@@ -70,7 +70,7 @@ public class LoggedEvent
     private String annotator;
 
     @Lob
-    @Column(length = 64000, nullable = true)
+    @Column(length = 16_777_216, nullable = true)
     private String details;
 
     public LoggedEvent()

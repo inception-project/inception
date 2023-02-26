@@ -55,14 +55,14 @@ public class ElgSession
     private Project project;
 
     @Lob
-    @Column(length = 4096)
+    @Column(length = 16_777_216)
     private String accessToken;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date accessTokenValidUntil;
 
     @Lob
-    @Column(length = 4096)
+    @Column(length = 16_777_216)
     private String refreshToken;
 
     @Temporal(TemporalType.TIMESTAMP)

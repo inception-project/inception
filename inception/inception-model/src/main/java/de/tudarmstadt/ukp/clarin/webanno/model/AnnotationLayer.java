@@ -71,7 +71,7 @@ public class AnnotationLayer
     private String type;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String description;
 
     private boolean enabled = true;
@@ -82,7 +82,7 @@ public class AnnotationLayer
     private boolean readonly = false;
 
     @Lob
-    @Column(nullable = true, length = 64000)
+    @Column(length = 16_777_216, nullable = true)
     private String onClickJavascriptAction;
 
     @Column(name = "name", nullable = false)
@@ -128,7 +128,7 @@ public class AnnotationLayer
     private ValidationMode validationMode = ValidationMode.ALWAYS;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     public AnnotationLayer()

@@ -209,7 +209,7 @@ public class KnowledgeBase
     private boolean skipSslValidation = false;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     public String getRepositoryId()

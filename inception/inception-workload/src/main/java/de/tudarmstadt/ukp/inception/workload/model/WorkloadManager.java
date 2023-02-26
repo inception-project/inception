@@ -60,7 +60,7 @@ public class WorkloadManager
     private String workloadType;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     public WorkloadManager()

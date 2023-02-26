@@ -52,7 +52,7 @@ public class TelemetrySettings
     private int version;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     @Temporal(TemporalType.TIMESTAMP)

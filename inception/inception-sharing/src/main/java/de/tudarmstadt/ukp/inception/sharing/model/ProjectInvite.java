@@ -66,7 +66,7 @@ public class ProjectInvite
     private Date expirationDate;
 
     @Lob
-    @Column(length = 64000, nullable = true)
+    @Column(length = 16_777_216, nullable = true)
     private String invitationText;
 
     @Temporal(TemporalType.TIMESTAMP)

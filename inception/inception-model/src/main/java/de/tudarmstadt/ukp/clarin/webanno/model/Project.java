@@ -66,7 +66,7 @@ public class Project
     private String slug;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String description;
 
     /**

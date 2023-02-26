@@ -90,7 +90,7 @@ public class AnnotationFeature
     private String uiName;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String description;
 
     private boolean enabled = true;
@@ -128,7 +128,7 @@ public class AnnotationFeature
     private String linkTypeTargetFeatureName;
 
     @Lob
-    @Column(length = 64000)
+    @Column(length = 16_777_216)
     private String traits;
 
     private boolean curatable = true;
