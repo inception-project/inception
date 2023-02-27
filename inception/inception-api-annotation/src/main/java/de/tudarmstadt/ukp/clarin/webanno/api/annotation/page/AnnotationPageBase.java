@@ -76,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -89,9 +88,6 @@ public abstract class AnnotationPageBase
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
-
-    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
-            AnnotationEditorState.class, "annotation/editor");
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_USER = "u";
