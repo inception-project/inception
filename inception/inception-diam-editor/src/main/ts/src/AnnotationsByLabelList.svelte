@@ -34,7 +34,7 @@
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
-    let sortByScore: boolean = false;
+    let sortByScore: boolean = true;
 
     $: sortedLabels = uniqueLabels(data);
     $: {

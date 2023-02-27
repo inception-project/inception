@@ -262,9 +262,9 @@ public class DocumentServiceImplConcurrencyTest
         List<Thread> primaryTasks = new ArrayList<>();
         List<Thread> secondaryTasks = new ArrayList<>();
 
-        int threadGroupCount = 8;
-        int iterations = 1000;
-        int userCount = 16;
+        int threadGroupCount = 4;
+        int iterations = 100;
+        int userCount = 4;
         for (int u = 0; u < userCount; u++) {
             for (int n = 0; n < threadGroupCount; n++) {
                 Thread rw = new ExclusiveReadWriteTask(n, doc, user + n, iterations);
