@@ -98,7 +98,7 @@
     <wicket.version>9.12.0</wicket.version>
     <wicketstuff.version>9.12.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0</wicket-bootstrap.version>
+    <wicket-bootstrap.version>6.0.1</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
     <!-- Stuck with 3.1.6: https://github.com/MarcGiffing/wicket-spring-boot/issues/199 -->
