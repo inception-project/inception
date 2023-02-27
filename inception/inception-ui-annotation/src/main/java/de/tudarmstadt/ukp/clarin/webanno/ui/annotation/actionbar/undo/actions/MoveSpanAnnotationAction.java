@@ -43,10 +43,9 @@ public class MoveSpanAnnotationAction
     private final Range range;
     private final Range oldRange;
 
-    public MoveSpanAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            SpanMovedEvent aEvent)
+    public MoveSpanAnnotationAction(long aRequestId, SpanMovedEvent aEvent)
     {
-        super(aRequestId, aEvent, new VID(aEvent.getAnnotation()));
+        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
 
         range = new Range(aEvent.getAnnotation());
         oldRange = new Range(aEvent.getOldBegin(), aEvent.getOldEnd());

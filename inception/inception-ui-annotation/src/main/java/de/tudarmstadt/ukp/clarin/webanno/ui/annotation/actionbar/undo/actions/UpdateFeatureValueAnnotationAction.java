@@ -36,14 +36,15 @@ public class UpdateFeatureValueAnnotationAction
     extends AnnotationAction_ImplBase
     implements RedoableAnnotationAction, UndoableAnnotationAction
 {
+    private static final long serialVersionUID = -1475379306317223468L;
+
     private final AnnotationFeature feature;
     private final Serializable oldValue;
     private final Serializable newValue;
 
-    public UpdateFeatureValueAnnotationAction(long aRequestId,
-            AnnotationSchemaService aSchemaService, FeatureValueUpdatedEvent aEvent)
+    public UpdateFeatureValueAnnotationAction(long aRequestId, FeatureValueUpdatedEvent aEvent)
     {
-        super(aRequestId, aEvent, new VID(aEvent.getFS()));
+        super(aRequestId, aEvent, VID.of(aEvent.getFS()));
 
         feature = aEvent.getFeature();
 
@@ -63,8 +64,6 @@ public class UpdateFeatureValueAnnotationAction
             newValue = null;
         }
     }
-
-    private static final long serialVersionUID = -1475379306317223468L;
 
     @Override
     public Optional<PostAction> undo(AnnotationSchemaService aSchemaService, CAS aCas,
@@ -91,5 +90,4 @@ public class UpdateFeatureValueAnnotationAction
                 feature.getLayer().getUiName(), feature.getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
-
 }

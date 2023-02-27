@@ -18,17 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -43,6 +46,8 @@ public class DocumentNamePanel
 {
     private static final long serialVersionUID = 3584950105138069924L;
 
+    private @SpringBean UserDao userService;
+
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
@@ -51,7 +56,9 @@ public class DocumentNamePanel
             var page = findParent(AnnotationPage.class);
             return page != null ? !page.isEditable() : false;
         })));
-        queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName)));
+        queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))
+                .add(visibleWhenNot(aModel.map(AnnotatorState::getUser)
+                        .map(u -> u.getUsername().equals(userService.getCurrentUsername())))));
         queue(new Label("project", aModel.map(AnnotatorState::getProject).map(Project::getName)));
         queue(new Label("projectId", aModel.map(AnnotatorState::getProject).map(Project::getId))
                 .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));

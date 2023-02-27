@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
         "de.tudarmstadt.ukp.inception.curation", //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-public class CurationServiceTest
+public class CurationSidebarServiceTest
 {
     private CurationSidebarService sut;
 
@@ -103,18 +103,17 @@ public class CurationServiceTest
     }
 
     @Test
-    public void listUsersReadyForCuration_ShouldReturnFinishedUsers()
+    public void listCuratableUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotation documents
         AnnotationDocument annoDoc1 = new AnnotationDocument("beate", testDocument);
         annoDoc1.setState(AnnotationDocumentState.FINISHED);
         AnnotationDocument annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setState(AnnotationDocumentState.FINISHED);
+        annoDoc2.setAnnotatorState(AnnotationDocumentState.IGNORE);
         testEntityManager.persist(annoDoc1);
         testEntityManager.persist(annoDoc2);
 
-        List<User> finishedUsers = sut.listUsersReadyForCuration("current", testProject,
-                testDocument);
+        List<User> finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
     }

@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
@@ -136,7 +137,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         add(content);
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
-        annotationsContainer.setOutputMarkupId(true);
+        annotationsContainer.setOutputMarkupPlaceholderTag(true);
         annotationsContainer.add(createAnnotationList());
         annotationsContainer
                 .add(visibleWhen(() -> !availableLayers.map(List::isEmpty).orElse(true).getObject()
@@ -389,16 +390,31 @@ public class DocumentMetadataAnnotationSelectionPanel
     }
 
     @OnEvent
+    public void onDocumentMetadataEvent(DocumentMetadataEvent aEvent)
+    {
+        aEvent.getRequestTarget().add(annotationsContainer);
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+    }
+
+    @OnEvent
     public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
     {
-        // If a feature value is updated refresh the annotation list since it might mean that
-        // a label has changed
-        if (selectedAnnotation != null) {
-            aEvent.getRequestTarget().add(selectedAnnotation);
-        }
-        if (selectedDetailPanel != null) {
-            aEvent.getRequestTarget().add(selectedDetailPanel);
-        }
+        var vid = VID.of(aEvent.getFS());
+        annotationsContainer.visitChildren(DocumentMetadataAnnotationDetailPanel.class, (c, v) -> {
+            var detailPanel = (DocumentMetadataAnnotationDetailPanel) c;
+            if (detailPanel.getModelObject().getId() == vid.getId()) {
+                aEvent.getRequestTarget().add(detailPanel.findParent(ListItem.class));
+            }
+        });
+
+        // // If a feature value is updated refresh the annotation list since it might mean that
+        // // a label has changed
+        // if (selectedAnnotation != null) {
+        // aEvent.getRequestTarget().add(selectedAnnotation);
+        // }
+        // if (selectedDetailPanel != null) {
+        // aEvent.getRequestTarget().add(selectedDetailPanel);
+        // }
 
         findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
     }

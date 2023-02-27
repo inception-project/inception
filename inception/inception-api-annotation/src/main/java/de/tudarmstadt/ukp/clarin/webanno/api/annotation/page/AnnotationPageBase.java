@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -75,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -88,9 +88,6 @@ public abstract class AnnotationPageBase
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
-
-    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
-            AnnotationEditorState.class, "annotation/editor");
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_USER = "u";
@@ -109,8 +106,9 @@ public abstract class AnnotationPageBase
     {
         super(aParameters);
 
-        StringValue documentParameter = getPageParameters().get(PAGE_PARAM_DOCUMENT);
-        StringValue userParameter = getPageParameters().get(PAGE_PARAM_USER);
+        var params = getPageParameters();
+        StringValue documentParameter = params.get(PAGE_PARAM_DOCUMENT);
+        StringValue userParameter = params.get(PAGE_PARAM_USER);
 
         // If the page was accessed using an URL form ending in a document ID, let's move
         // the document ID into the fragment and redirect to the form without the document ID.
@@ -123,8 +121,13 @@ public abstract class AnnotationPageBase
             clientUrl.resolveRelative(Url.parse("./"));
             List<String> fragmentParams = new ArrayList<>();
             fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+            params.remove(PAGE_PARAM_DOCUMENT);
             if (!userParameter.isEmpty()) {
                 fragmentParams.add(format("%s=%s", PAGE_PARAM_USER, userParameter.toString()));
+                params.remove(PAGE_PARAM_USER);
+            }
+            for (var namedParam : params.getAllNamed()) {
+                clientUrl.setQueryParameter(namedParam.getKey(), namedParam.getValue());
             }
             clientUrl.setFragment("!" + fragmentParams.stream().collect(joining("&")));
             String url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
@@ -172,11 +175,22 @@ public abstract class AnnotationPageBase
             return documentService.getSourceDocument(aProject, aDocumentParameter.toString());
         }
         catch (NoResultException e) {
-            error("Document [" + aDocumentParameter + "] does not exist in project ["
-                    + aProject.getName() + "]");
+            failWithDocumentNotFound("Document [" + aDocumentParameter
+                    + "] does not exist in project [" + aProject.getName() + "]");
         }
-
         return null;
+    }
+
+    protected void failWithDocumentNotFound(String aDetails)
+    {
+        if (userRepository.isCurrentUserAdmin()) {
+            getSession().error(aDetails);
+        }
+        else {
+            getSession().error(
+                    "Requested document does not exist or you have no permissions to access it.");
+        }
+        backToProjectPage();
     }
 
     protected UrlParametersReceivingBehavior createUrlFragmentBehavior()
@@ -530,7 +544,11 @@ public abstract class AnnotationPageBase
                 fragment.removeParameter(PAGE_PARAM_FOCUS);
             }
 
-            if (userRepository.getCurrentUsername().equals(state.getUser().getUsername())) {
+            // REC: We currently do not want that one can switch to the CURATION_USER directly via
+            // the URL without having to activate sidebar curation mode as well, so we do not handle
+            // the CURATION_USER here.
+            if (Set.of(userRepository.getCurrentUsername(), CURATION_USER)
+                    .contains(state.getUser().getUsername())) {
                 fragment.removeParameter(PAGE_PARAM_USER);
             }
             else {

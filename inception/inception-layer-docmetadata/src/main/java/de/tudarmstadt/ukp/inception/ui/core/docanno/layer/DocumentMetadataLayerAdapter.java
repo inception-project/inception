@@ -121,6 +121,16 @@ public class DocumentMetadataLayerAdapter
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
 
+    public AnnotationBaseFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
+    {
+        var fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
+
+        aCas.addFsToIndexes(fs);
+
+        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(), fs));
+        return fs;
+    }
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {

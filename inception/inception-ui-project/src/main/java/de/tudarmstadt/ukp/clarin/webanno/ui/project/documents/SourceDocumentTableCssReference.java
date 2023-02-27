@@ -15,15 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-public final class CurationMetadata
+public class SourceDocumentTableCssReference
+    extends CssResourceReference
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    private static final long serialVersionUID = 1L;
+
+    private static final SourceDocumentTableCssReference INSTANCE = new SourceDocumentTableCssReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static SourceDocumentTableCssReference get()
+    {
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private SourceDocumentTableCssReference()
+    {
+        super(SourceDocumentTableCssReference.class, "SourceDocumentTable.css");
+    }
 }

@@ -22,10 +22,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardPropertiesImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
@@ -35,6 +37,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExp
 
 @ConditionalOnWebApplication
 @Configuration
+@EnableConfigurationProperties(DashboardPropertiesImpl.class)
 public class DashboardAutoConfiguration
 {
     @Bean

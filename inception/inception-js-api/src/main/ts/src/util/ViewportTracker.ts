@@ -52,7 +52,7 @@ export class ViewportTracker {
   }
 
   public get visibleElements (): Set<Element> {
-    return this.visibleElements
+    return this._visibleElements
   }
 
   private shouldTrack (element: Element): boolean {

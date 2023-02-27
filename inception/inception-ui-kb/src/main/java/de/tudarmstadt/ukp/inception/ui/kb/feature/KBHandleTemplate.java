@@ -41,7 +41,12 @@ final class KBHandleTemplate
         sb.append("  # if (data.rank) { if (data.rank != '0') { #");
         sb.append("    <span class=\"item-rank\">[${ data.rank }]</span>");
         sb.append("  # } } #");
-        sb.append("  ${ data.uiLabel }");
+        sb.append("  # if (data.queryBestMatchTerm) { #");
+        sb.append("    ${ data.queryBestMatchTerm }");
+        sb.append("    <div class='item-alt-title'>${ data.uiLabel }</div>");
+        sb.append("  # } else { #");
+        sb.append("    ${ data.uiLabel }");
+        sb.append("  # } #");
         sb.append("</span>");
         sb.append("<div class=\"item-identifier\">");
         sb.append("  ${ data.identifier }");
@@ -64,6 +69,7 @@ final class KBHandleTemplate
         properties.add("identifier");
         properties.add("description");
         properties.add("rank");
+        properties.add("queryBestMatchTerm");
         if (DEVELOPMENT.equals(Application.get().getConfigurationType())) {
             properties.add("debugInfo");
         }

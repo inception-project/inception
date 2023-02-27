@@ -42,6 +42,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.TextField;
@@ -197,6 +198,9 @@ public class SourceDocumentTable
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
+
+        aResponse
+                .render(CssReferenceHeaderItem.forReference(SourceDocumentTableCssReference.get()));
 
         WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
     }
