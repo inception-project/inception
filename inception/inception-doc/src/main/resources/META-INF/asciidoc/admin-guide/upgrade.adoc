@@ -17,9 +17,53 @@
 [[sect_upgrade]]
 = Upgrading
 
+== Upgrade paths
 
-In general, it is possible to perform an in-place upgrade of the application. However, before doing
-an upgrade, it is recommender to create a backup of the application and data to allow coming back
-to a working system if case of a problem during the upgrade. Mind that the upgrade is only completed
-once the new version has successfully started because during startup, the application may make
-changes to the database schema or to the data on disk.
+There are in principle three ways to upgrade {product-name} to a new version:
+
+* **In-place update** - in this scenario, you simply stop the application, replace the existing 
+  {product-name} JAR file with the new version, and then start the application again. The benefit
+  of this approach is, that is is very fast. The downside is, that in case anything goes wrong, you
+  cannot simply go back to using the old version. You need to make sure that you have a proper
+  backup of the application home folder and the database (if you use an external database) because
+  the in-place update might migrate your data and after you might no longer be able to use it with
+  an older version (e.g. if you replace the JAR again with an older version). The steps for
+  performing an in-place upgrade are specifed in the respective section below.
+
+* **Migrating to a fresh installation** - in this scenario, you would set up a fresh installation
+  of the new {product-name} version using a different application home folder and a different database
+  than your existing installation. After that, you would move the data of the old installation over
+  to the new installation, e.g. by copying the contents of the old application home/database over
+  into the new ones. When you start the fresh installation then, it will find the data you just
+  copied over, automatically perform a database migration if there were any changes in the database
+  schema, and then start up. The benefit of this approach is that in case anything does wrong during
+  the upgrade or in case there is a critical problem with the new version, you can always go back
+  to using the old installation and e.g. retry the update again at a later time. The steps for
+  setting up a new instance are specified in the installation instructions. The steps for copying
+  the data over to the new instance are the same as for performing a backup.
+  
+* **Copying projects to a fresh installation** - in this scenario, you would export all projects
+  from your existing installation. Then you would set up a new installation using a fresh
+  application home folder/database. Finally, you would import all the exported projects into this
+  new installation. The only situation where this type of upgrade procedure is necessary is, when
+  you want to change the database backend, e.g. if you want to switch from an embedded database to
+  an external database. Otherwise, there is typically no benefit in following this approach. 
+  It would only be necessary if a new {product-name} release would completely break its database
+  schema and not offer an automatic migration. This typically does never happen since {product-name}
+  has support for automatic database migrations these days.  Also note that none of the user's
+  passwords are migrated in this way. When you import the projects in the new installation, you need
+  to enable the **import missing users** option and after all projects have been imported, you need
+  to go through each of the users, enable them, set their roles and set a new password for them.
+  Or alternatively, you could copy the contents of the database tables `users` and `authorities`
+  from the old database into the new one.
+
+The release notes generally indicate that it is possible to perform an in-place upgrade of the
+application. However, before doing an upgrade, it is recommended to create a backup of the
+application and data to allow coming back to a working system if case of a problem during the
+upgrade. Mind that the upgrade is only completed once the new version has successfully started
+because during startup, the application may make changes to the database schema or to the data on
+disk.
+
+Also, for certain versions there might be special considerations to be aware of when performing the
+upgrade. Always be sure to check the section below **as well as the release notes** of every version
+between the version you are upgrading from up to and including the version you are upgrading to.
