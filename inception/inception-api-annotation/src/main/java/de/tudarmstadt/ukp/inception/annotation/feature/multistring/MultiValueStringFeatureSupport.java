@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportProperties;
@@ -264,11 +263,16 @@ public class MultiValueStringFeatureSupport
     public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
             VID aParamId, String aQuery)
     {
-        Tag tag = schemaService.getTag(aQuery, aFeature.getTagset());
-        if (tag == null || isBlank(tag.getDescription())) {
+        var tag = schemaService.getTag(aQuery, aFeature.getTagset());
+
+        if (tag.isEmpty()) {
+            return asList(new VLazyDetailResult(aQuery, "Tag not in tagset"));
+        }
+
+        if (tag.map(t -> isBlank(t.getDescription())).orElse(true)) {
             return emptyList();
         }
 
-        return asList(new VLazyDetailResult(aQuery, tag.getDescription()));
+        return asList(new VLazyDetailResult(aQuery, tag.get().getDescription()));
     }
 }

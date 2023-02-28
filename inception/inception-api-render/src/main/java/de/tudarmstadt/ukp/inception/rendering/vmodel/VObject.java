@@ -38,6 +38,7 @@ public abstract class VObject
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String color;
     private String label;
+    private double score;
     private boolean actionButtons;
 
     public VObject(AnnotationLayer aLayer, VID aVid, Map<String, String> aFeatures)
@@ -127,5 +128,15 @@ public abstract class VObject
     public void setActionButtons(boolean aActionButtons)
     {
         actionButtons = aActionButtons;
+    }
+
+    public double getScore()
+    {
+        return score;
+    }
+
+    public void setScore(double aScore)
+    {
+        score = aScore;
     }
 }

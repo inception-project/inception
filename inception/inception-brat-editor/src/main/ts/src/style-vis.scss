@@ -559,8 +559,7 @@ $background_color_10: #ffcccc;
     background-color: $background_color_10;
   }
   
-  /* WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers */
-  .highlight {
+  .highlights {
     .matchfocus {
       fill: orange;
       -webkit-animation-name: flash;
@@ -584,5 +583,10 @@ $background_color_10: #ffcccc;
       opacity: 0.25;
     }
   }
-  /* WEBANNO EXTENSION END - #1119 - Improve control over markers */
+
+  .ping {
+    fill: none;
+    stroke: orange;
+    stroke-width: 2px;
+  }
 }

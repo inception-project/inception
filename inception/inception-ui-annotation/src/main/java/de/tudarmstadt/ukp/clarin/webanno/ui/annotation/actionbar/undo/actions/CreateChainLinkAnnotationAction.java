@@ -39,8 +39,7 @@ public class CreateChainLinkAnnotationAction
 
     private final Range range;
 
-    public CreateChainLinkAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            ChainEvent aEvent)
+    public CreateChainLinkAnnotationAction(long aRequestId, ChainEvent aEvent)
     {
         super(aRequestId, aEvent, new VID(aEvent.getAnnotation(), 1, VID.NONE, VID.NONE));
 

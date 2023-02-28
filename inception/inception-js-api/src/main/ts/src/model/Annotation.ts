@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID } from '.'
-import { Layer } from './Layer';
+import { VID, Comment, Layer } from '.'
 
 export interface Annotation {
     layer: Layer
@@ -26,10 +25,20 @@ export interface Annotation {
     /**
      * Color (optional)
      */
-    color?: string;
+    color?: string
 
     /**
      * Label (optional)
      */
-    label?: string;
+    label?: string
+
+    /**
+     * Score (optional)
+     */
+    score?: number
+
+    /**
+     * Comments
+     */
+    comments?: Comment[]
 }

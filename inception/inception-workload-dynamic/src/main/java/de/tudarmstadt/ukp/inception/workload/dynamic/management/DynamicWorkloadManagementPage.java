@@ -73,7 +73,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -106,7 +105,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -213,8 +212,8 @@ public class DynamicWorkloadManagementPage
 
         // Columns of the table
         var columns = new ArrayList<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>>();
-        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState().symbol()));
+        columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> item.getState()));
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), DOCUMENT,
                 AnnotationQueueItem::getSourceDocumentName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), ASSIGNED,
@@ -716,10 +715,8 @@ public class DynamicWorkloadManagementPage
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetDocumentDialog.title", this));
-        resetDocumentDialog
-                .setMessageModel(new StringResourceModel("ResetDocumentDialog.text", this));
+        resetDocumentDialog.setTitleModel(new ResourceModel("ResetDocumentDialog.title"));
+        resetDocumentDialog.setMessageModel(new ResourceModel("ResetDocumentDialog.text"));
         resetDocumentDialog.setExpectedResponseModel(
                 Model.of(aUser.getUiName() + " / " + aDocument.getName()));
         resetDocumentDialog.setConfirmAction(_target -> {

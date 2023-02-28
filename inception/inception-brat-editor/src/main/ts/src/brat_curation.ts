@@ -24,9 +24,9 @@ import './style-vis.scss'
 declare let Wicket
 
 function brat (markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
-  Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
+  const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl)
+  Util.embedByURL(markupId, diamAjax, collCallbackUrl, docCallbackUrl,
     function (dispatcher) {
-      const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl)
       new Ajax(dispatcher, markupId, controllerCallbackUrl)
       new CurationMod(dispatcher, diamAjax)
       Wicket.$(markupId).dispatcher = dispatcher

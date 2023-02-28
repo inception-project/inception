@@ -114,6 +114,18 @@ $dashboard-border-left: 3em;
       width: 4rem;
       text-align: center;
       transition: color .1s ease-in;
+      position: relative;
+    }
+    
+    .icon-badge {
+      position: absolute;
+      font-size: 50%;
+      bottom: 0;
+      right: 0;
+      text-shadow: 2px 2px 0 var(--bs-light),  2px -2px var(--bs-light), 
+                  -2px 2px 0 var(--bs-light), -2px -2px 0 var(--bs-light), 
+                   2px 0px 0 var(--bs-light),  0px  2px 0 var(--bs-light), 
+                  -2px 0px 0 var(--bs-light),  0px -2px 0 var(--bs-light);
     }
   
     .active {

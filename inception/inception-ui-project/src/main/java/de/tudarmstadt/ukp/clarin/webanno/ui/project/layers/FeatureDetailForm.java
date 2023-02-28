@@ -51,7 +51,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -199,8 +199,7 @@ public class FeatureDetailForm
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
 
         confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog
-                .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
+        confirmationDialog.setTitleModel(new ResourceModel("DeleteFeatureDialog.title"));
         add(confirmationDialog);
     }
 
@@ -234,8 +233,7 @@ public class FeatureDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog
-                .setMessageModel(new StringResourceModel("DeleteFeatureDialog.text", this));
+        confirmationDialog.setMessageModel(new ResourceModel("DeleteFeatureDialog.text"));
         confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationFeature::getName));
         confirmationDialog.show(aTarget);
 

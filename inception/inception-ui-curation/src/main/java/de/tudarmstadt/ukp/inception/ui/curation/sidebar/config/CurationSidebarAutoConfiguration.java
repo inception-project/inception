@@ -31,14 +31,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -60,13 +59,11 @@ public class CurationSidebarAutoConfiguration
     @Bean(CurationEditorExtension.EXTENSION_ID)
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
             CurationSidebarService aCurationSidebarService)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
-                aAnnotationEditorProperties, aApplicationEventPublisher, aUserRepository,
-                aCurationSidebarService);
+                aApplicationEventPublisher, aUserRepository, aCurationSidebarService);
     }
 
     @Bean("curationSidebar")
@@ -78,11 +75,11 @@ public class CurationSidebarAutoConfiguration
     }
 
     @Bean
-    public CurationRenderer curationRenderer(CurationSidebarService aCurationService,
+    public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
     {
-        return new CurationRenderer(aCurationService, aLayerSupportRegistry, aDocumentService,
-                aUserRepository, aAnnotationService);
+        return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
+                aDocumentService, aUserRepository, aAnnotationService);
     }
 }

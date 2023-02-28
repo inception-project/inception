@@ -283,18 +283,25 @@ export class Visualizer {
     // Object.seal(this);
   }
 
-  scrollTo (args: { offset: number; position: string }): void {
-    const chunk = this.data?.chunks?.find(
-      chunk => chunk.from <= args.offset && args.offset < chunk.to)
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
+    const chunk = this.getChunkAtOffset(args.offset - (this.sourceData?.windowBegin || 0))
 
     if (!chunk) {
+      console.warn('Could not find chunk at offset', args.offset)
       return
     }
 
-    const scrollTarget = this.svgContainer.querySelector(`text[data-chunk-id='${chunk.index}']`)
-    if (scrollTarget) {
-      console.log('Scrolling to ', scrollTarget)
-      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const chunkElement = this.getChunkElementWithId(chunk.index)
+    if (chunkElement) {
+      // console.log('Scrolling to ', chunkElement)
+      chunkElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      this.svg.node.querySelectorAll('.ping').forEach((ping) => ping.remove())
+      const ping = this.svg.rect(this.data?.sizes.texts.widths[chunk.text], this.data?.sizes.texts.height)
+        .addClass('ping')
+        .move(chunk.textX, chunk.row.textY + (this.data?.sizes.texts.y || 0))
+        .addTo(this.highlightGroup)
+      ping.animate(5000, 0, 'now').attr({ opacity: 0 }).after(() => ping.remove())
     }
   }
 
@@ -3475,7 +3482,7 @@ export class Visualizer {
       setSourceDataDefaults(sourceData)
     }
 
-    setTimeout(() => { this.renderDataReal(sourceData) }, 0)
+    this.renderDataReal(sourceData)
   }
 
   /**
@@ -4067,12 +4074,20 @@ export class Visualizer {
       .addTo(fragment.group)
   }
 
+  getChunkAtOffset (offset: number) : Chunk | null {
+    return this.data?.chunks?.find(chunk => chunk.from <= offset && offset < chunk.to) || null
+  }
+
+  getChunkElementWithId (id: VID): Element | null {
+    return this.svg.node.querySelector(`text:not(.spacing)[data-chunk-id="${id}"]`)
+  }
+
   /**
    * @returns the highlights for the given span id. Those are the elements representing the label
    *  bubbles above the text.
    * @param id the span id
    */
-  getHighlightsForSpan (id: VID): ArrayLike<Element> {
+  getHighlightElementsForSpan (id: VID): ArrayLike<Element> {
     return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
   }
 
@@ -4096,9 +4111,9 @@ export class Visualizer {
   rangeToOffsets (range: Range | null) : Offsets | null {
     if (!range || !this.data) return null
 
-    let anchorNode = closestChunk(range.startContainer)
+    let anchorNode = findClosestChunkElement(range.startContainer)
     let anchorOffset = range.startOffset
-    let focusNode = closestChunk(range.endContainer)
+    let focusNode = findClosestChunkElement(range.endContainer)
     let focusOffset = range.endOffset
 
     // If neither approach worked, give up - the user didn't click on selectable text.
@@ -4109,7 +4124,8 @@ export class Visualizer {
     let chunkIndexFrom = anchorNode.getAttribute('data-chunk-id')
     let chunkIndexTo = focusNode.getAttribute('data-chunk-id')
 
-    // Is it a zero-width annotation?
+    // Is the selection fully contained in a single spacing element?
+    // If yes, move it to the begin or end of the previous or next chunk.
     if (focusNode === anchorNode && focusNode.classList.contains('spacing')) {
       if (anchorOffset === 0) {
         // Move anchor to the end of the previous node
@@ -4123,6 +4139,7 @@ export class Visualizer {
         chunkIndexFrom = chunkIndexTo = anchorNode?.getAttribute('data-chunk-id') || null
       }
     } else {
+      // Is the selection partially contained in a spacing element?
       // If we hit a spacing element, then we shift the anchors left or right, depending on
       // the direction of the selected range.
       if (anchorNode.classList.contains('spacing')) {
@@ -4178,13 +4195,13 @@ export class Visualizer {
  * @param target a DOM node.
  * @returns the closest highlight element or null if none is found.
  */
-export function closestChunk (target: Node | null): Element | null {
+export function findClosestChunkElement (target: Node | null): Element | null {
   if (target instanceof Text) {
     target = target.parentElement
   }
 
   if (target instanceof Element) {
-    return target.closest('[data-chunk-id]')
+    return target.closest(':not(.spacing)[data-chunk-id]')
   }
 
   return null

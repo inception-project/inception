@@ -66,6 +66,11 @@ public class KendoChoiceDescriptionScriptReference
         return dependencies;
     }
 
+    public static String applyTooltipScript()
+    {
+        return "(evt) => { applyTooltip(evt.sender.list) }";
+    }
+
     public static IJQueryTemplate template()
     {
         return new IJQueryTemplate()
@@ -75,12 +80,11 @@ public class KendoChoiceDescriptionScriptReference
             @Override
             public String getText()
             {
-                // Some docs on how the templates work in Kendo, in case we need
-                // more fancy dropdowns
-                // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                return "<div title=\"#: data.description #\" "
-                        + "onmouseover=\"javascript:applyTooltip(this)\">"
-                        + "#: data.name #</div>\n";
+                StringBuilder sb = new StringBuilder();
+                sb.append("<span class='item-title' title='#: data.description #'>");
+                sb.append("${ data.name }");
+                sb.append("</span>");
+                return sb.toString();
             }
 
             @Override
@@ -104,18 +108,18 @@ public class KendoChoiceDescriptionScriptReference
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
                 // @formatter:off
                 StringBuilder sb = new StringBuilder();
-                sb.append("<span title='#: data.description #' onmouseover='javascript:applyTooltip(this)'>");
+                sb.append("<span class='d-inline' title='#: data.description #'>");
                 sb.append("# if (data.reordered == 'true') { #");
                 sb.append("<b>${data.name}</b>");
                 sb.append("# } else { #");
                 sb.append("${data.name}");
                 sb.append("# } #");
-                sb.append("# if (data.score) { #");
-                sb.append("<div class='item-description'>");
-                sb.append("Score: ${ data.score }");
-                sb.append("</div>");
-                sb.append("# } #");
                 sb.append("</span>");
+                sb.append("# if (data.score) { #");
+                sb.append("<span class='float-end fw-lighter font-monospace small w-auto d-inline'>");
+                sb.append("${ data.score }");
+                sb.append("</span>");
+                sb.append("# } #");
                 // @formatter:on
 
                 return sb.toString();

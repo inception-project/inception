@@ -23,3 +23,8 @@ a.tree-junction {
 .modal-dialog .modal-dialog-content {
   font-size: initial;
 }
+
+.dialog-theme-default .modal-dialog-overlay {
+  // z-index 1020 is in Bootstrap's .sticky-top and we need to be above that
+  z-index: 1030;
+}

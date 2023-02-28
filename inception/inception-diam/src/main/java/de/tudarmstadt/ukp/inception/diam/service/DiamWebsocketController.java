@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
@@ -63,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -199,6 +201,13 @@ public class DiamWebsocketController
         sendUpdate(aEvent.getDocument());
     }
 
+    @EventListener
+    public void onRecommendationRejected(TransientAnnotationStateChangedEvent aEvent)
+    {
+        var doc = aEvent.getDocument();
+        sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);
+    }
+
     @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
     public JsonNode onSubscribeToAnnotationDocument(SimpMessageHeaderAccessor aHeaderAccessor,
             Principal aPrincipal, //
@@ -273,7 +282,14 @@ public class DiamWebsocketController
         throws IOException
     {
         SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
-        User user = userRepository.get(aUser);
+        User user;
+        if (CURATION_USER.equals(aUser)) {
+            user = new User(CURATION_USER);
+        }
+        else {
+            user = userRepository.get(aUser);
+        }
+
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
         AnnotationPreference prefs = userPreferencesService.loadPreferences(doc.getProject(),

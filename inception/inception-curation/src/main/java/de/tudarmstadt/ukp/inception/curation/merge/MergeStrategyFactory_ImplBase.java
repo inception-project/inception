@@ -43,13 +43,15 @@ public abstract class MergeStrategyFactory_ImplBase<T>
             return createTraits();
         }
 
-        T traits = null;
-        try {
-            traits = fromJsonString((Class<T>) createTraits().getClass(),
-                    aCurationWorkflow.getMergeStrategyTraits());
-        }
-        catch (IOException e) {
-            LOG.error("Error while reading traits", e);
+        T traits = createTraits();
+        if (traits != null) {
+            try {
+                traits = fromJsonString((Class<T>) traits.getClass(),
+                        aCurationWorkflow.getMergeStrategyTraits());
+            }
+            catch (IOException e) {
+                LOG.error("Error while reading traits", e);
+            }
         }
 
         if (traits == null) {

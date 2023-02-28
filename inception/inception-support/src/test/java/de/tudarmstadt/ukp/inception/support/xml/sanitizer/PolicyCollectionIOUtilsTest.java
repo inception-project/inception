@@ -18,15 +18,13 @@
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import static de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils.loadPolicies;
+import static javax.xml.XMLConstants.NULL_NS_URI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import javax.xml.namespace.QName;
 
 import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction;
 
 class PolicyCollectionIOUtilsTest
 {
@@ -57,19 +55,22 @@ class PolicyCollectionIOUtilsTest
         assertThat(sut.getDefaultElementAction()).isEqualTo(ElementAction.PASS);
 
         assertThat(sut.getElementPolicies()) //
-                .extracting(p -> p.getQName().getLocalPart(), p -> p.getAction()) //
-                .containsExactly( //
-                        tuple("div", ElementAction.PASS), //
-                        tuple("p", ElementAction.PASS), //
-                        tuple("th", ElementAction.PASS), //
-                        tuple("tr", ElementAction.PASS));
+                .extracting(p -> p.getQName().getNamespaceURI(), p -> p.getQName().getLocalPart(),
+                        p -> p.getAction()) //
+                .containsExactlyInAnyOrder( //
+                        tuple(NULL_NS_URI, "div", ElementAction.PASS), //
+                        tuple(NULL_NS_URI, "p", ElementAction.PASS), //
+                        tuple(NULL_NS_URI, "th", ElementAction.PASS), //
+                        tuple(NULL_NS_URI, "tr", ElementAction.PASS), //
+                        tuple("http://namespace.org", "custom", ElementAction.PASS));
 
         assertThat(sut.getGlobalAttributeElementPolicies())
-                .extracting(p -> p.getQName().getLocalPart(), p -> p.getAction()) //
+                .extracting(p -> p.getQName().getNamespaceURI(), p -> p.getQName().getLocalPart(),
+                        p -> p.getAction()) //
                 .containsExactly( //
-                        tuple("style", AttributeAction.PASS));
+                        tuple(NULL_NS_URI, "style", AttributeAction.PASS));
 
         assertThat(sut.forAttribute(new QName("div"), new QName("title"), null, "blah")).get() //
-                .isEqualTo(AttributeAction.PASS);
+                .isEqualTo(AttributeAction.DROP);
     }
 }

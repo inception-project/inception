@@ -20,9 +20,9 @@
 <script lang="ts">
   import { caretRangeFromPoint } from '@inception-project/inception-js-api'
   import { createEventDispatcher, onMount } from 'svelte'
-  import { closestChunk } from '../visualizer/Visualizer'
+  import { findClosestChunkElement } from '../visualizer/Visualizer'
 
-  export let highlight: Element
+  export let highlight: Element = undefined
   export let position: 'begin' | 'end'
   export let handle: Element
   export let marker: Element
@@ -102,23 +102,52 @@
       return
     }
 
+    console.log(`clientX: ${event.clientX}, clientY: ${event.clientY}`)
     const range = caretRangeFromPoint(event.clientX, event.clientY)
 
-    if (!range || !closestChunk(range.startContainer)) {
+    const chunk = findClosestChunkElement(range.startContainer)
+    console.log(chunk)
+    if (!range || !chunk) {
       markerVisibility = 'hidden'
       return
     }
 
-    const rect = range.getBoundingClientRect()
     const scrollerContainerRect = scrollContainer.getBoundingClientRect()
+    const rect = range.getBoundingClientRect()
+
+    // In Safari and Firefox, the bounding rect of the caret rect is completely broken and we need
+    // to fix it up. We can detect if the caret rect is broken by checking if the caret rect is
+    // withing the rect of the container element of the range (which should always be true!).
+    let container = range.commonAncestorContainer instanceof Element ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement
+    const containerRect = container.getBoundingClientRect()
+
+    const isRectConsistent = containerRect.left <= rect.x && rect.x <= containerRect.right 
+      && containerRect.top <= rect.y && rect.y <= containerRect.bottom
+    if (!isRectConsistent) {
+      rect.x = rect.x - scrollerContainerRect.left + containerRect.left
+      rect.y = rect.y - scrollerContainerRect.top + containerRect.top
+
+      // Firefox has the additional problem that the caret rect always snaps to the begin of the 
+      // ancestor range, so we need to adjust the rect to the actual caret position based on the 
+      // offset within the container. This is a very rough approximation...
+      const avgGlyphWidth = containerRect.width / container.textContent.length
+      const isRtl = container.closest('svg[direction="rtl"]') !== null
+      const tolerance = 5
+      const expectedX = isRtl ? 
+        containerRect.right - (avgGlyphWidth * range.startOffset) :
+        containerRect.left + (avgGlyphWidth * range.startOffset)
+      if (Math.abs(rect.x - expectedX) > tolerance) {
+        rect.x = expectedX
+      }
+    }
+
     markerX = rect.left + scrollContainer.scrollLeft - scrollerContainerRect.left
     markerY = rect.top + scrollContainer.scrollTop - scrollerContainerRect.top
-    markerHeight = rect.height
+    markerHeight = rect.height || containerRect.height // Firefox does not return a height for the caret rect
     markerVisibility = 'visible'
   }
 
   function handleDragEnd(event: MouseEvent) {
-    console.log("handleDragEnd")
     // Prevent the drag-end from turning into a mouse-up event which would trigger a selection
     // of the annotation
     event.stopPropagation()

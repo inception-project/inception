@@ -158,6 +158,7 @@ public class RecommendationRelationRenderer
 
                 VArc arc = new VArc(layer, suggestion.getVID(), new VID(source), new VID(target),
                         "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
+                arc.setScore(suggestion.getScore());
 
                 List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
                         suggestion.getLabel());

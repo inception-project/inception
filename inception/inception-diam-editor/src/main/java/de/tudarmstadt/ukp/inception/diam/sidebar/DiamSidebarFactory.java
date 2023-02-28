@@ -21,7 +21,7 @@ import org.apache.wicket.model.IModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -48,9 +48,9 @@ public class DiamSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public org.apache.wicket.Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.list_s;
+        return new Icon(aId, FontAwesome5IconType.list_s);
     }
 
     @Override

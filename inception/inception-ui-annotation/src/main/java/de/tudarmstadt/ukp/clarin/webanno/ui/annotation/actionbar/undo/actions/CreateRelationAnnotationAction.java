@@ -41,10 +41,9 @@ public class CreateRelationAnnotationAction
 
     private final Range range;
 
-    public CreateRelationAnnotationAction(long aRequestId, AnnotationSchemaService aSchemaService,
-            RelationEvent aEvent)
+    public CreateRelationAnnotationAction(long aRequestId, RelationEvent aEvent)
     {
-        super(aRequestId, aEvent, new VID(aEvent.getAnnotation()));
+        super(aRequestId, aEvent, VID.of(aEvent.getAnnotation()));
 
         range = new Range(aEvent.getSourceAnnotation());
     }

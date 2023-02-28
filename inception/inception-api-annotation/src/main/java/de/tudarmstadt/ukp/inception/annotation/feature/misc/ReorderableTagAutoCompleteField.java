@@ -80,6 +80,9 @@ public class ReorderableTagAutoCompleteField
         aBehavior.setOption("animation", false);
         aBehavior.setOption("footerTemplate",
                 Options.asString("#: instance.dataSource.total() # items found"));
+        aBehavior.setOption("open", KendoChoiceDescriptionScriptReference.applyTooltipScript());
+        aBehavior.setOption("dataBound",
+                KendoChoiceDescriptionScriptReference.applyTooltipScript());
 
         KendoStyleUtils.keepDropdownVisibleWhenScrolling(aBehavior);
         KendoStyleUtils.autoDropdownHeight(aBehavior);

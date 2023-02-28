@@ -27,13 +27,18 @@ This section describes the global settings related to the recommender module.
 | Default
 | Example
 
-| recommender.enabled
+| `recommender.enabled`
 | enable/disable recommender support
-| true
-| false
+| `true`
+| `false`
 
-| recommender.evaluation-page.enabled
+| `recommender.evaluation-page.enabled`
 | enable/disable evaluation page
-| true
-| false
+| `true`
+| `false`
+
+| `recommender.sidebar.enabled`
+| enable/disable recommender sidebar on annotation page
+| `true`
+| `false`
 |===

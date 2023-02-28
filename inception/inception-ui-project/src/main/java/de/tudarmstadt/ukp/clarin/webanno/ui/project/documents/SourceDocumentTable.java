@@ -35,12 +35,14 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFallbackHeadersToolbar;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxNavigationToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.TextField;
@@ -50,7 +52,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
@@ -62,12 +63,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PipedStreamResource;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
@@ -94,7 +95,7 @@ public class SourceDocumentTable
     private DataTable<SourceDocumentTableRow, SourceDocumentTableSortKeys> table;
     private TextField<String> nameFilter;
     private LambdaAjaxLink toggleBulkChange;
-    private ChallengeResponseDialog confirmationDialog;
+    private ModalDialog confirmationDialog;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
 
@@ -113,8 +114,8 @@ public class SourceDocumentTable
         var columns = new ArrayList<IColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>>();
         selectColumns = new SourceDocumentSelectColumn(this, dataProvider);
         columns.add(selectColumns);
-        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                $ -> $.getDocument().getState().symbol()));
+        columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                $ -> $.getDocument().getState()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentName"), NAME,
                 $ -> $.getDocument().getName()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentFormat"), FORMAT,
@@ -160,7 +161,7 @@ public class SourceDocumentTable
         queue(new SourceDocumentStateFilterPanel(CID_STATE_FILTERS,
                 () -> dataProvider.getFilterState().getStates()));
 
-        queue(confirmationDialog = new ChallengeResponseDialog("confirmationDialog"));
+        queue(confirmationDialog = new BootstrapModalDialog("confirmationDialog").trapFocus());
     }
 
     @SuppressWarnings("unchecked")
@@ -197,6 +198,9 @@ public class SourceDocumentTable
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
+
+        aResponse
+                .render(CssReferenceHeaderItem.forReference(SourceDocumentTableCssReference.get()));
 
         WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
     }
@@ -277,15 +281,14 @@ public class SourceDocumentTable
 
     private void actionDeleteDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
+        var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID);
+
         IModel<String> documentNameModel = Model.of(aDocument.getName());
-        confirmationDialog
-                .setTitleModel(new StringResourceModel("DeleteDocumentDialog.title", this));
-        confirmationDialog
-                .setMessageModel(new StringResourceModel("DeleteDocumentDialog.text", this));
-        confirmationDialog.setExpectedResponseModel(documentNameModel);
-        confirmationDialog
-                .setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
-        confirmationDialog.show(aTarget);
+        dialogContent.setExpectedResponseModel(documentNameModel);
+        dialogContent.setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionBulkDeleteDocuments(AjaxRequestTarget aTarget)
@@ -301,15 +304,19 @@ public class SourceDocumentTable
         var project = selectedDocuments.get(0).getProject();
 
         IModel<String> projectNameModel = Model.of(project.getName());
-        confirmationDialog
-                .setTitleModel(new StringResourceModel("BulkDeleteDocumentDialog.title", this));
-        confirmationDialog
-                .setMessageModel(new StringResourceModel("BulkDeleteDocumentDialog.text", this)
-                        .setParameters(selectedDocuments.size()));
-        confirmationDialog.setExpectedResponseModel(projectNameModel);
-        confirmationDialog
-                .setConfirmAction($ -> actionConfirmDeleteDocuments($, selectedDocuments));
-        confirmationDialog.show(aTarget);
+
+        var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                Model.of(selectedDocuments));
+
+        if (selectedDocuments.size() == 1) {
+            dialogContent.setExpectedResponseModel(Model.of(selectedDocuments.get(0).getName()));
+        }
+        else {
+            dialogContent.setExpectedResponseModel(projectNameModel);
+        }
+        dialogContent.setConfirmAction($ -> actionConfirmDeleteDocuments($, selectedDocuments));
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
     private void actionConfirmDeleteDocuments(AjaxRequestTarget aTarget,

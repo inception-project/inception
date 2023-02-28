@@ -52,7 +52,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.NonEscapingLambdaColumn;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
 
 public class UserTable
     extends Panel
@@ -77,8 +77,8 @@ public class UserTable
         dataProvider = new UserTableDataProvider(aModel);
 
         var columns = new ArrayList<IColumn<User, UserTableSortKeys>>();
-        columns.add(new NonEscapingLambdaColumn<>(new ResourceModel("UserState"), STATE,
-                $ -> UserState.of($).symbol()));
+        columns.add(new SymbolLambdaColumn<>(new ResourceModel("UserState"), STATE,
+                $ -> UserState.of($)));
         columns.add(new UsernameColumn(this, new ResourceModel("UserName"), UI_NAME));
         columns.add(new LambdaColumn<>(new ResourceModel("UserCreated"), CREATED,
                 $ -> renderDate($.getCreated())));

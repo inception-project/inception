@@ -39,7 +39,7 @@ function applyTooltip(aElement) {
           return html;
         }
       });
-      setTimeout(function() { $(aElement).tooltip().mouseover();; }, 0);
+      setTimeout(function() { $(aElement).tooltip().mouseover(); }, 0);
     }
   }
   catch (e) {

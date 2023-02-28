@@ -119,7 +119,7 @@ public interface AnnotationSchemaService
      *            the tagset.
      * @return the tag.
      */
-    Tag getTag(String tagName, TagSet tagSet);
+    Optional<Tag> getTag(String tagName, TagSet tagSet);
 
     /**
      * Check if a tag with this name in the given tagset exists

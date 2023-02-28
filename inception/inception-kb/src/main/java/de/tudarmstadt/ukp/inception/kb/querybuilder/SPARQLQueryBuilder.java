@@ -2123,16 +2123,27 @@ public class SPARQLQueryBuilder
             // Not recorded yet -> add it
             if (current == null) {
                 cMap.put(handle.getIdentifier(), handle);
+                continue;
             }
+
+            boolean replace = false;
             // Found one with a label while current one doesn't have one
-            else if (current.getName() == null && handle.getName() != null) {
-                cMap.put(handle.getIdentifier(), handle);
+            if (current.getName() == null && handle.getName() != null) {
+                replace = true;
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
             else if (kb.getDefaultLanguage() != null
                     && kb.getDefaultLanguage().equals(handle.getLanguage())) {
+                replace = true;
+            }
+
+            if (replace) {
                 cMap.put(handle.getIdentifier(), handle);
+                current.getMatchTerms().forEach(e -> handle.addMatchTerm(e.getKey(), e.getValue()));
+            }
+            else {
+                handle.getMatchTerms().forEach(e -> current.addMatchTerm(e.getKey(), e.getValue()));
             }
         }
 

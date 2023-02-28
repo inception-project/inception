@@ -175,7 +175,6 @@
       <plugin>
         <groupId>io.github.swagger2markup</groupId>
         <artifactId>swagger2markup-maven-plugin</artifactId>
-        <version>1.3.3</version>
         <configuration>
           <swaggerInput>${project.basedir}/src/main/resources/swagger/external_recommender.yaml</swaggerInput>
           <outputFile>${project.build.directory}/asciidoc/external_recommender_api</outputFile>

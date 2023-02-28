@@ -76,6 +76,20 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  scrollTo (args: { id?: VID, offset?: Offsets }): void {
+    DiamAjaxImpl.performAjaxCall(() => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: {
+          action: 'scrollTo',
+          id: args.id,
+          offset: args.offset
+        }
+      })
+    })
+  }
+
   createSpanAnnotation (offsets: Array<Offsets>, spanText?: string): void {
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({

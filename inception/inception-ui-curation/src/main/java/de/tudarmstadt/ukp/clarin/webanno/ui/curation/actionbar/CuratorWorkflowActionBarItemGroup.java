@@ -32,7 +32,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -90,10 +90,9 @@ public class CuratorWorkflowActionBarItemGroup
                 curationService.readOrCreateCurationWorkflow(page.getModelObject().getProject()));
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
-                        .setParameters(documentNameModel),
-                documentNameModel, curationWorkflowModel));
+                new ResourceModel("ResetDocumentDialog.title"),
+                new ResourceModel("ResetDocumentDialog.text"), documentNameModel,
+                curationWorkflowModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
