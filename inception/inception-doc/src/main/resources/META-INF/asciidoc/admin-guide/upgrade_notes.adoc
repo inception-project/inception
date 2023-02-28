@@ -18,7 +18,9 @@
 
 This section summarizes important upgrade notes from the release history of INCEpTION. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
 
-NOTE: It is a good idea to back up your installation and data before an upgrade.
+NOTE: It is a good idea to back up your installation and data before an upgrade. Also make sure that
+      you can actually re-create a working installation by restoring your backup. A backup which cannot be
+      successfully restored is worthless.
 
 == INCEpTION 25.0
 

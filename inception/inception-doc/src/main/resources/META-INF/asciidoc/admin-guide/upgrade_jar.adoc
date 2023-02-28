@@ -18,7 +18,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= Upgrading with embedded Tomcat
+= Performing an in-place upgrade
 
 * Stop the {product-name} service
 * Replace the `inception.jar` file with the new version
