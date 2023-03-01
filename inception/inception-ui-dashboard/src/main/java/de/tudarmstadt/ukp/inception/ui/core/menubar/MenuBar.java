@@ -151,7 +151,13 @@ public class MenuBar
 
     private boolean isMenubarVisibleToCurrentUser()
     {
-        if (userRepository.isAdministrator(user.getObject()) || !project.isPresent().getObject()) {
+        // E.g. on the invite page, we do not have a user object, but we would still like to see
+        // the empty menu bar saying "INCEpTION".
+        if (!user.isPresent().getObject() || !project.isPresent().getObject()) {
+            return true;
+        }
+
+        if (userRepository.isAdministrator(user.getObject())) {
             return true;
         }
 
