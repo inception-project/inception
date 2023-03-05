@@ -124,7 +124,20 @@
   stroke-dasharray: 5;
 }
 
+@keyframes ping-fade-animation {
+	0% {
+		background: rgba(255, 165, 0, 0);
+	}
+
+  50% {
+		background: rgba(255, 165, 0, 1);
+	}
+
+	100% {
+		background: rgba(255, 165, 0, 0);
+	}
+}
 .ping {
-  background: orange;
-  animation-fill-mode: forwards;
+  background: rgba(255, 165, 0, 0);
+  animation: ping-fade-animation 0.3s ease-in-out .2s 3 normal forwards;
 }
