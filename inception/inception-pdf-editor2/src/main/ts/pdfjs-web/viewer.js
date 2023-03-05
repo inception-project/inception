@@ -20,6 +20,31 @@
  * JavaScript code in this page
  */
 
+/* eslint no-sparse-arrays: 0 */
+/* eslint camelcase: 0 */
+/* eslint quotes: 0 */
+/* eslint no-tabs: 0 */
+/* eslint indent: 0 */
+/* eslint no-extra-parens: 0 */
+/* eslint padded-blocks: 0 */
+/* eslint semi: 0 */
+/* eslint space-before-function-paren: 0 */
+/* eslint no-void: 0 */
+/* eslint no-mixed-operators: 0 */
+/* eslint one-var: 0 */
+/* eslint no-multiple-empty-lines: 0 */
+/* eslint no-case-declarations: 0 */
+/* eslint no-fallthrough: 0 */
+/* eslint quote-props: 0 */
+/* eslint prefer-const: 0 */
+/* eslint eqeqeq: 0 */
+/* eslint no-trailing-spaces: 0 */
+/* eslint no-unsafe-finally: 0 */
+/* eslint no-unused-vars: 0 */
+/* eslint no-var: 0 */
+/* eslint no-lone-blocks: 0 */
+/* eslint wrap-iife: 0 */
+
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -1880,15 +1905,15 @@ const PDFViewerApplication = {
 
     eventBus._on("namedaction", webViewerNamedAction);
 
-    eventBus._on("presentationmodechanged", webViewerPresentationModeChanged);
+    // eventBus._on("presentationmodechanged", webViewerPresentationModeChanged);
 
-    eventBus._on("presentationmode", webViewerPresentationMode);
+    // eventBus._on("presentationmode", webViewerPresentationMode);
 
-    eventBus._on("print", webViewerPrint);
+    // eventBus._on("print", webViewerPrint);
 
-    eventBus._on("download", webViewerDownload);
+    // eventBus._on("download", webViewerDownload);
 
-    eventBus._on("save", webViewerSave);
+    // eventBus._on("save", webViewerSave);
 
     eventBus._on("firstpage", webViewerFirstPage);
 
@@ -1908,9 +1933,9 @@ const PDFViewerApplication = {
 
     eventBus._on("scalechanged", webViewerScaleChanged);
 
-    eventBus._on("rotatecw", webViewerRotateCw);
+    // eventBus._on("rotatecw", webViewerRotateCw);
 
-    eventBus._on("rotateccw", webViewerRotateCcw);
+    // eventBus._on("rotateccw", webViewerRotateCcw);
 
     eventBus._on("optionalcontentconfig", webViewerOptionalContentConfig);
 
@@ -1940,7 +1965,7 @@ const PDFViewerApplication = {
 
     eventBus._on("fileinputchange", webViewerFileInputChange);
 
-    eventBus._on("openfile", webViewerOpenFile);
+    // eventBus._on("openfile", webViewerOpenFile);
   },
 
   bindWindowEvents() {
@@ -2833,32 +2858,32 @@ function webViewerKeyDown(evt) {
     }
   }
 
-  if (cmd === 1 || cmd === 8) {
-    switch (evt.keyCode) {
-      case 83:
-        eventBus.dispatch("download", {
-          source: window
-        });
-        handled = true;
-        break;
+  // if (cmd === 1 || cmd === 8) {
+  //   switch (evt.keyCode) {
+  //     case 83:
+  //       eventBus.dispatch("download", {
+  //         source: window
+  //       });
+  //       handled = true;
+  //       break;
 
-      case 79:
-        {
-          eventBus.dispatch("openfile", {
-            source: window
-          });
-          handled = true;
-        }
-        break;
-    }
-  }
+  //     case 79:
+  //       {
+  //         eventBus.dispatch("openfile", {
+  //           source: window
+  //         });
+  //         handled = true;
+  //       }
+  //       break;
+  //   }
+  // }
 
   if (cmd === 3 || cmd === 10) {
     switch (evt.keyCode) {
-      case 80:
-        PDFViewerApplication.requestPresentationMode();
-        handled = true;
-        break;
+      // case 80:
+      //   PDFViewerApplication.requestPresentationMode();
+      //   handled = true;
+      //   break;
 
       case 71:
         PDFViewerApplication.appConfig.toolbar.pageNumber.select();
@@ -2890,103 +2915,103 @@ function webViewerKeyDown(evt) {
         turnOnlyIfPageFit = false;
 
     switch (evt.keyCode) {
-      case 38:
-      case 33:
-        if (pdfViewer.isVerticalScrollbarEnabled) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 38:
+      // case 33:
+      //   if (pdfViewer.isVerticalScrollbarEnabled) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-        turnPage = -1;
-        break;
+      //   turnPage = -1;
+      //   break;
 
-      case 8:
-        if (!isViewerInPresentationMode) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 8:
+      //   if (!isViewerInPresentationMode) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-        turnPage = -1;
-        break;
+      //   turnPage = -1;
+      //   break;
 
-      case 37:
-        if (pdfViewer.isHorizontalScrollbarEnabled) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 37:
+      //   if (pdfViewer.isHorizontalScrollbarEnabled) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-      case 75:
-      case 80:
-        turnPage = -1;
-        break;
+      // case 75:
+      // case 80:
+      //   turnPage = -1;
+      //   break;
 
-      case 27:
-        if (PDFViewerApplication.secondaryToolbar.isOpen) {
-          PDFViewerApplication.secondaryToolbar.close();
-          handled = true;
-        }
+      // case 27:
+      //   if (PDFViewerApplication.secondaryToolbar.isOpen) {
+      //     PDFViewerApplication.secondaryToolbar.close();
+      //     handled = true;
+      //   }
 
-        if (!PDFViewerApplication.supportsIntegratedFind && PDFViewerApplication.findBar.opened) {
-          PDFViewerApplication.findBar.close();
-          handled = true;
-        }
+      //   if (!PDFViewerApplication.supportsIntegratedFind && PDFViewerApplication.findBar.opened) {
+      //     PDFViewerApplication.findBar.close();
+      //     handled = true;
+      //   }
 
-        break;
+      //   break;
 
-      case 40:
-      case 34:
-        if (pdfViewer.isVerticalScrollbarEnabled) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 40:
+      // case 34:
+      //   if (pdfViewer.isVerticalScrollbarEnabled) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-        turnPage = 1;
-        break;
+      //   turnPage = 1;
+      //   break;
 
-      case 13:
-      case 32:
-        if (!isViewerInPresentationMode) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 13:
+      // case 32:
+      //   if (!isViewerInPresentationMode) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-        turnPage = 1;
-        break;
+      //   turnPage = 1;
+      //   break;
 
-      case 39:
-        if (pdfViewer.isHorizontalScrollbarEnabled) {
-          turnOnlyIfPageFit = true;
-        }
+      // case 39:
+      //   if (pdfViewer.isHorizontalScrollbarEnabled) {
+      //     turnOnlyIfPageFit = true;
+      //   }
 
-      case 74:
-      case 78:
-        turnPage = 1;
-        break;
+      // case 74:
+      // case 78:
+      //   turnPage = 1;
+      //   break;
 
-      case 36:
-        if (isViewerInPresentationMode || PDFViewerApplication.page > 1) {
-          PDFViewerApplication.page = 1;
-          handled = true;
-          ensureViewerFocused = true;
-        }
+      // case 36:
+      //   if (isViewerInPresentationMode || PDFViewerApplication.page > 1) {
+      //     PDFViewerApplication.page = 1;
+      //     handled = true;
+      //     ensureViewerFocused = true;
+      //   }
 
-        break;
+      //   break;
 
-      case 35:
-        if (isViewerInPresentationMode || PDFViewerApplication.page < PDFViewerApplication.pagesCount) {
-          PDFViewerApplication.page = PDFViewerApplication.pagesCount;
-          handled = true;
-          ensureViewerFocused = true;
-        }
+      // case 35:
+      //   if (isViewerInPresentationMode || PDFViewerApplication.page < PDFViewerApplication.pagesCount) {
+      //     PDFViewerApplication.page = PDFViewerApplication.pagesCount;
+      //     handled = true;
+      //     ensureViewerFocused = true;
+      //   }
 
-        break;
+      //   break;
 
-      case 83:
-        PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.SELECT);
-        break;
+      // case 83:
+      //   PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.SELECT);
+      //   break;
 
-      case 72:
-        PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.HAND);
-        break;
+      // case 72:
+      //   PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.HAND);
+      //   break;
 
-      case 82:
-        PDFViewerApplication.rotatePages(90);
-        break;
+      // case 82:
+      //   PDFViewerApplication.rotatePages(90);
+      //   break;
 
       case 115:
         PDFViewerApplication.pdfSidebar.toggle();
