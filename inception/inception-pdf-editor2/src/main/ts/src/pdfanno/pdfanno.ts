@@ -214,14 +214,16 @@ function renderAnnotations () {
   dispatchWindowEvent('annotationrendered')
 }
 
-export function scrollTo (offset: number, position: string): void {
-  const page = textLayer.findPageForTextOffset(offset)?.index
+export function scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
+  const page = textLayer.findPageForTextOffset(args.offset)?.index
   if (!page) {
-    console.error(`No page found for offset: ${offset}`)
+    console.error(`No page found for offset: ${args.offset}`)
     return
   }
 
-  const rectangles = mapToDocumentCoordinates(getGlyphsInRange([offset, offset + 1]).map(g => g.bbox))
+  const pingRange: Offsets = args.pingRanges && args.pingRanges.length > 0 ? args.pingRanges[0] : [args.offset, args.offset + 1]
+
+  const rectangles = mapToDocumentCoordinates(getGlyphsInRange(pingRange).map(g => g.bbox))
   const markerLayer = document.getElementById('markerLayer')
   if (!markerLayer) {
     console.error('No marker layer found.')
@@ -229,26 +231,28 @@ export function scrollTo (offset: number, position: string): void {
   }
 
   if (!rectangles?.length) {
-    console.warn(`No glyphs found for offset: ${offset} - scrolling only to page`)
+    console.warn(`No glyphs found for ping range: ${pingRange} - scrolling only to page`)
     document.querySelector(`.page[data-page-number="${page}"]`)?.scrollIntoView()
     return
   }
 
   markerLayer.querySelectorAll('.ping').forEach((ping) => ping.remove())
 
-  let base: HTMLElement = document.createElement('div')
-  base.classList.add('anno-span', 'ping')
-  base.style.zIndex = '10'
-  const child = createRect(rectangles[0])
-  child.classList.add('ping')
-  base.appendChild(child)
+  let ping: HTMLElement = document.createElement('div')
+  ping.classList.add('anno-span', 'ping')
+  ping.style.zIndex = '10'
+  rectangles.forEach(rect => {
+    const child = createRect(rect)
+    child.classList.add('ping')
+    child.animate([{ opacity: 0.75 }, { opacity: 0 }], { duration: 5000, iterations: 1 })
+    ping.appendChild(child)
+  })
 
   const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
-  base = transform(markerLayer, base, viewport)
-  markerLayer.appendChild(base)
-  child.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
-  child.animate([{ opacity: 0.75, width: child.style.width }, { opacity: 0, width: '50px' }], { duration: 5000, iterations: 1 })
-  setTimeout(() => base.remove(), 5000) // Need to defer so scrolling can complete
+  ping = transform(markerLayer, ping, viewport)
+  markerLayer.appendChild(ping)
+  ping.firstElementChild?.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
+  setTimeout(() => ping.remove(), 2000) // Need to defer so scrolling can complete
 }
 
 export function getAnnotations () {

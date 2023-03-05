@@ -2218,7 +2218,7 @@ a.secondaryToolbarButton[href="#"] {
           user-select: none;
 }
 #thumbnailView {
-  width: calc(100% - 60px);
+  width: calc(100% - 1px);
   padding: 10px 30px 0;
 }
 
