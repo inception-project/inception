@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { AnnotationEditor, DiamAjax } from '@inception-project/inception-js-api'
+import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import './PdfAnnotationEditor.css'
 import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo } from './pdfanno/pdfanno'
 import AbstractAnnotation from './pdfanno/core/src/annotation/abstract'
@@ -42,15 +42,17 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     doLoadAnnotations()
   }
 
-  scrollTo (args: { offset: number; position: string }): void {
-    console.log(`SCROLLING! ${args.offset} ${args.position}`)
-    scrollTo(args.offset, args.position)
+  scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
+    // console.log(`SCROLLING! ${args.offset} ${args.position}`)
+    scrollTo(args)
   }
 
   onAnnotationSelected (ev: Event) {
     if (ev instanceof CustomEvent) {
       const ann = ev.detail as AbstractAnnotation
-      this.ajax.selectAnnotation(ann.vid)
+      if (ann.vid) {
+        this.ajax.selectAnnotation(ann.vid)
+      }
     }
   }
 
@@ -64,7 +66,9 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   onDoubleClickAnnotation (ev: Event) {
     if (ev instanceof CustomEvent) {
       const ann = ev.detail as AbstractAnnotation
-      this.ajax.triggerExtensionAction(ann.vid)
+      if (ann.vid) {
+        this.ajax.triggerExtensionAction(ann.vid)
+      }
     }
   }
 
