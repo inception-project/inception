@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.util.List;
@@ -91,15 +90,17 @@ public class DocumentAccessImpl
                 return false;
             }
 
-            // Annotators can see their own annotations and manager/curators can see annotations of
-            // all users
-            if (!aUser.equals(aAnnotator) && !permissionLevels.contains(MANAGER)
-                    && !(CURATION_USER.equals(aUser)
-                            && containsAny(permissionLevels, MANAGER, CURATOR))) {
+            // Managers and curators can see anything
+            if (containsAny(permissionLevels, MANAGER, CURATOR)) {
+                return true;
+            }
+
+            // Annotators can only see their own documents
+            if (!aUser.equals(aAnnotator)) {
                 return false;
             }
 
-            // Blocked documents cannot be viewed
+            // Annotators cannot view blocked documents
             SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
             if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
                 AnnotationDocument aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
