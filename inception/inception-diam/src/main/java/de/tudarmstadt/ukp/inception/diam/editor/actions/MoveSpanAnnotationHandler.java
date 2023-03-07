@@ -84,10 +84,10 @@ public class MoveSpanAnnotationHandler
     {
         AnnotatorState state = getAnnotatorState();
 
-        SpanAdapter adapter = (SpanAdapter) annotationService
-                .getAdapter(state.getSelectedAnnotationLayer());
-
         AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
+
+        SpanAdapter adapter = (SpanAdapter) annotationService.findAdapter(state.getProject(),
+                annoFs);
 
         adapter.move(state.getDocument(), state.getUser().getUsername(), aCas, annoFs,
                 aRange.getBegin(), aRange.getEnd());
