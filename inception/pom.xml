@@ -2827,7 +2827,7 @@
                 </goals>
                 <configuration>
                   <consoleOutput>true</consoleOutput>
-                  <excludes>
+                  <excludes combine.children="append">
                     <exclude>.mvn/jvm.config</exclude>
                     <exclude>.oracle_jre_usage/*.timestamp</exclude>
                     <exclude>.factorypath</exclude>
@@ -3211,6 +3211,7 @@
                   <exclude>src/main/ts/*.json</exclude>
                   <exclude>src/main/ts_template/*.json</exclude>
                   <exclude>src/main/ts/node_modules/**/*</exclude>
+                  <exclude>**/mocha-test-report.xml</exclude>
                 </excludes>
               </configuration>
             </plugin>
