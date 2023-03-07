@@ -16,5 +16,12 @@
 
 = Backup your data
 
-* Make a copy of your {product-name} home folder
-* If you are using MySQL, make a backup of your {product-name} database, e.g. using the link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] command.
+* Make a copy of your {product-name} application home folder
+* If you are using an external database like MariaDB, make a backup of your {product-name} database,
+  e.g. using the link:https://mariadb.com/kb/en/making-backups-with-mysqldump/[mysqldump] command.
+
+NOTE: Make sure that you can actually re-create a working installation by restoring your backup.
+      I.e. restore your database export into a fresh database and point a new {product-name} installation
+      at using your home folder copy and the restored database and then start the application and check
+      that everything is there and working. A backup which cannot be successfully restored is worthless.
+  

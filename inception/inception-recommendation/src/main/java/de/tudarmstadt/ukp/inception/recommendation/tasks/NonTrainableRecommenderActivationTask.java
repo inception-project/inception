@@ -167,9 +167,9 @@ public class NonTrainableRecommenderActivationTask
     private EvaluatedRecommender skipTrainableRecommender(User user, Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.info("[{}][{}]: Recommender requires training " + "- skipping recommender",
+        log.debug("[{}][{}]: Recommender requires training - not activating recommender",
                 user.getUsername(), recommenderName);
-        info("Recommender [%s] requires training - skipping recommender", recommenderName);
+        info("Recommender [%s] requires training - not activating recommender", recommenderName);
         return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender, "Requires training");
     }
 

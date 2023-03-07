@@ -72,7 +72,8 @@ export class ResizeManager {
     }
 
     const vid = event.target.getAttribute('data-span-id')
-    if (vid) this.show(vid)
+
+    if (vid && !(String(vid).indexOf(':') >= 0)) this.show(vid)
   }
 
   show (id: VID): void {
