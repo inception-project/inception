@@ -23,7 +23,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameView;
 
 /**
@@ -38,9 +38,9 @@ public class HtmlDocumentIFrameView
     private @SpringBean DocumentService documentService;
     private @SpringBean HtmlDocumentViewController htmlDocumentViewController;
 
-    private IModel<AnnotationDocument> document;
+    private IModel<SourceDocument> document;
 
-    public HtmlDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc)
+    public HtmlDocumentIFrameView(String aId, IModel<SourceDocument> aDoc)
     {
         super(aId);
 
@@ -51,8 +51,7 @@ public class HtmlDocumentIFrameView
     protected void onComponentTag(ComponentTag aTag)
     {
         aTag.setName("iframe");
-        aTag.put("src",
-                htmlDocumentViewController.getDocumentUrl(document.getObject().getDocument()));
+        aTag.put("src", htmlDocumentViewController.getDocumentUrl(document.getObject()));
         super.onComponentTag(aTag);
     }
 }
