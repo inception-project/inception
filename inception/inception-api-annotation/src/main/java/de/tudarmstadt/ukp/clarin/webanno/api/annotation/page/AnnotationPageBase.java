@@ -26,6 +26,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -53,6 +54,7 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.urlfragment.UrlFragment;
@@ -88,6 +90,8 @@ public abstract class AnnotationPageBase
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_USER = "u";
@@ -235,7 +239,13 @@ public abstract class AnnotationPageBase
             return;
         }
 
-        aTarget.registerRespondListener(new UrlFragmentUpdateListener());
+        // Update URL for current document
+        try {
+            aTarget.registerRespondListener(new UrlFragmentUpdateListener());
+        }
+        catch (Exception e) {
+            LOG.debug("Unable to request URL fragment update anymore", e);
+        }
     }
 
     /**
