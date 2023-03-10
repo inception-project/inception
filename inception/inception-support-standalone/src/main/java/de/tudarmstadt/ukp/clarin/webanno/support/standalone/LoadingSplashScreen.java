@@ -67,10 +67,16 @@ public class LoadingSplashScreen
             return Optional.empty();
         }
 
-        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl, aApplicationName);
-        window.setVisible(true);
+        try {
+            SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl,
+                    aApplicationName);
+            window.setVisible(true);
 
-        return Optional.of(window);
+            return Optional.of(window);
+        }
+        catch (UnsatisfiedLinkError e) {
+            return Optional.empty();
+        }
     }
 
     public static Optional<SplashWindow> setupScreen(String aApplicationName)
