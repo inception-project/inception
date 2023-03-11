@@ -35,6 +35,7 @@
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
     let sortByScore: boolean = true;
+    let recommendationsFirst: boolean = false;
 
     $: sortedLabels = uniqueLabels(data);
     $: {
@@ -57,7 +58,7 @@
                 const aIsRec = a.vid.toString().startsWith("rec:")
                 const bIsRec = b.vid.toString().startsWith("rec:")
                 if (sortByScore && aIsRec && !bIsRec) {
-                    return -1;
+                    return recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
@@ -99,17 +100,29 @@
         </div>
     </div>
 {:else}
-    <div class="d-flex">
+    <div class="d-flex flex-column">
         <div class="form-check form-switch mx-2">
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                id="inlineLabelsEnabled"
+                id="sortByScore"
                 bind:checked={sortByScore}
             />
-            <label class="form-check-label" for="inlineLabelsEnabled"
+            <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
+            >
+        </div>
+        <div class="form-check form-switch mx-2" class:d-none={!sortByScore}>
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="recommendationsFirst"
+                bind:checked={recommendationsFirst}
+            />
+            <label class="form-check-label" for="recommendationsFirst"
+                >Recommendations first</label
             >
         </div>
     </div>
