@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -102,13 +103,12 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public class AnnotationPage
     extends AnnotationPageBase
 {
-    private static final String MID_EDITOR = "editor";
-
-    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
-
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
-
     private static final long serialVersionUID = 1378872465851908515L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final String MID_EDITOR = "editor";
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
@@ -273,7 +273,15 @@ public class AnnotationPage
             return;
         }
 
-        aEvent.getRequestHandler().add(centerArea.get(MID_NUMBER_OF_PAGES));
+        try {
+            aEvent.getRequestHandler().add(centerArea.get(MID_NUMBER_OF_PAGES));
+        }
+        catch (IllegalStateException e) {
+            // Ignore IllegalStateException if rendering of page has already progress so far that
+            // no new components can be added. We hope the caller will know what they are doing
+            // when they invoke this method so late in the render cycle and trigger a page-reload
+            // themselves.
+        }
 
         actionRefreshDocument(aEvent.getRequestHandler());
     }
@@ -539,13 +547,7 @@ public class AnnotationPage
             }
         }
 
-        // Update URL for current document
-        try {
-            updateUrlFragment(aTarget);
-        }
-        catch (Exception e) {
-            LOG.warn("Unable to request URL fragment update anymore", e);
-        }
+        updateUrlFragment(aTarget);
     }
 
     @Override
