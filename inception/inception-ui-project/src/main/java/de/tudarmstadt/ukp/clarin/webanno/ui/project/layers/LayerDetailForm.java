@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -49,7 +51,6 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
@@ -58,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -102,7 +103,7 @@ public class LayerDetailForm
     private FeatureDetailForm featureDetailForm;
 
     private WebMarkupContainer traitsContainer;
-    private final ChallengeResponseDialog confirmationDialog;
+    private ModalDialog confirmationDialog;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
@@ -198,13 +199,11 @@ public class LayerDetailForm
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<AnnotationLayer>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete).add(enabledWhen(
-                () -> !isNull(getModelObject().getId()) && isLayerDeletable(getModelObject()))));
+        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete) //
+                .add(enabledWhen(() -> !isNull(getModelObject().getId()))));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
 
-        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new ResourceModel("DeleteLayerDialog.title"));
-        add(confirmationDialog);
+        queue(confirmationDialog = new BootstrapModalDialog("confirmationDialog").trapFocus());
     }
 
     private String getEffectiveAttachTypeName()
@@ -298,26 +297,24 @@ public class LayerDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog.setMessageModel(new ResourceModel("DeleteLayerDialog.text"));
-        confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationLayer::getName));
+        var dialogContent = new DeleteLayerConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                getModel());
 
-        confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeLayer(getModelObject());
+        dialogContent.setConfirmAction((_target) -> actionDeleteLayerConfirmed(_target));
 
-            Project project = getModelObject().getProject();
+        confirmationDialog.open(dialogContent, aTarget);
+    }
 
-            setModelObject(null);
-
-            documentService.upgradeAllAnnotationDocuments(project);
-
-            // Trigger LayerConfigurationChangedEvent
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
-
-            _target.add(getPage());
-        });
-
-        confirmationDialog.show(aTarget);
+    private void actionDeleteLayerConfirmed(AjaxRequestTarget _target) throws IOException
+    {
+        annotationService.removeLayer(getModelObject());
+        Project project = getModelObject().getProject();
+        setModelObject(null);
+        documentService.upgradeAllAnnotationDocuments(project);
+        // Trigger LayerConfigurationChangedEvent
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, project));
+        _target.add(getPage());
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
