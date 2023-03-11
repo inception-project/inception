@@ -54,12 +54,14 @@
                     return 1;
                 }
 
-                if (sortByScore && a.vid.toString().startsWith("rec:") && !b.vid.toString().startsWith("rec:")) {
+                const aIsRec = a.vid.toString().startsWith("rec:")
+                const bIsRec = b.vid.toString().startsWith("rec:")
+                if (sortByScore && aIsRec && !bIsRec) {
                     return -1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if (sortByScore) {
+                    if (sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return (
@@ -69,7 +71,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if (sortByScore) {
+                    if (sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return compareOffsets(

@@ -17,32 +17,25 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <wicket:container wicket:id="warnings">
-      <div class="dev-warnings ms-2 float-end footer-item-warnings">
-        <a class="alert alert-warning"
-           role="button"
-           tabindex="0"
-           title="Warnings"
-           data-bs-container="body"
-           data-bs-toggle="popover"
-           data-bs-placement="top"
-           data-bs-trigger="focus"
-           data-bs-html="true"
-           data-bs-popover-content="#warning-popover">
-             <i class="fas fa-exclamation-triangle"></i> Warnings</a>
-      </div>
-    </wicket:container>
-
-    <div id="warning-popover" class="d-none">
-      <div class="popover-body">
-        <ul>
-          <li wicket:id="embeddedDbWarning"></li>
-          <li wicket:id="browserWarning"></li>
-        </ul>
-      </div>
-    </div>
-  </wicket:panel>
-</body>
+<wicket:extend>
+  <p class="text-center rounded border border-danger p-2" wicket:enclosure="message">
+    <wicket:container wicket:id="message" />
+  </p>
+  <div wicket:enclosure="challenge">
+    <p class="text-muted vw-50">
+      <wicket:message key="explanation" />
+    </p>
+    <p class="vw-50">
+      <wicket:container wicket:id="challenge" />
+    </p>
+  </div>
+  <div wicket:enclosure="blockers">
+    <p class="vw-50">
+    <wicket:message key="blockerExplanation" />
+    </p>
+    <ul wicket:id="blockers" class="vw-50">
+      <li wicket:id="blocker"/>
+    </ul>
+  </div>
+</wicket:extend>
 </html>
