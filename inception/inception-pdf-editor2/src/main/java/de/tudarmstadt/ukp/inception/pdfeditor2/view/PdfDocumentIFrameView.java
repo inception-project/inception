@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
@@ -67,8 +66,7 @@ public class PdfDocumentIFrameView
     private AbstractAjaxBehavior pdfProvider;
     private AbstractAjaxBehavior vModelProvider;
 
-    public PdfDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc,
-            String aEditorFactoryId)
+    public PdfDocumentIFrameView(String aId, IModel<SourceDocument> aDoc, String aEditorFactoryId)
     {
         super(aId, aDoc);
 
@@ -79,7 +77,7 @@ public class PdfDocumentIFrameView
             @Override
             public void onRequest()
             {
-                SourceDocument doc = aDoc.getObject().getDocument();
+                SourceDocument doc = aDoc.getObject();
 
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
@@ -115,10 +113,10 @@ public class PdfDocumentIFrameView
         });
     }
 
-    private void sendVModel(IModel<AnnotationDocument> aDoc, AjaxRequestTarget aTarget)
+    private void sendVModel(IModel<SourceDocument> aDoc, AjaxRequestTarget aTarget)
     {
         try {
-            CAS cas = documentService.readAnnotationCas(aDoc.getObject());
+            CAS cas = documentService.createOrReadInitialCas(aDoc.getObject());
 
             VModel vModel;
             var pdfPages = cas.select(PdfPage.class).asList();
@@ -141,8 +139,8 @@ public class PdfDocumentIFrameView
             getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
         }
         catch (IOException e) {
-            handleError("Unable to create visual model for ["
-                    + aDoc.getObject().getDocument().getName() + "]", e, aTarget);
+            handleError("Unable to create visual model for [" + aDoc.getObject().getName() + "]", e,
+                    aTarget);
         }
     }
 
@@ -150,7 +148,7 @@ public class PdfDocumentIFrameView
     {
         LOG.info("Loading visual model from source");
         VModel vModel;
-        File file = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
+        File file = documentService.getSourceDocumentFile(getModel().getObject());
         try (PDDocument doc = PDDocument.load(file)) {
             var extractor = new VisualPDFTextStripper();
             extractor.writeText(doc, new StringWriter());
@@ -176,9 +174,10 @@ public class PdfDocumentIFrameView
         super.onComponentTag(aTag);
     }
 
-    public IModel<AnnotationDocument> getModel()
+    @SuppressWarnings("unchecked")
+    public IModel<SourceDocument> getModel()
     {
-        return (IModel<AnnotationDocument>) getDefaultModel();
+        return (IModel<SourceDocument>) getDefaultModel();
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)

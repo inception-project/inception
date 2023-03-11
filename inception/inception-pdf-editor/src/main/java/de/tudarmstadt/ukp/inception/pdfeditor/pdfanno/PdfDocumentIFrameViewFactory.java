@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
@@ -45,14 +45,13 @@ public class PdfDocumentIFrameViewFactory
     }
 
     @Override
-    public boolean accepts(AnnotationDocument aContext)
+    public boolean accepts(SourceDocument aContext)
     {
         return false;
     }
 
     @Override
-    public Component createView(String aId, IModel<AnnotationDocument> aDoc,
-            String aEditorFactoryId)
+    public Component createView(String aId, IModel<SourceDocument> aDoc, String aEditorFactoryId)
     {
         return new PdfDocumentIFrameView(aId, aDoc, aEditorFactoryId);
     }
