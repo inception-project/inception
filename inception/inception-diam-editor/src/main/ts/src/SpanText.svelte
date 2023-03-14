@@ -22,17 +22,22 @@
     export let data: AnnotatedText
     export let span: Span
 
+    const maxLength = 50
+    const showTextAfter = false // Experimental
+
     $: begin = span.offsets[0][0]
     $: end = span.offsets[0][1]
     $: text = data.text.substring(begin, end).trim().replace(/\s+/g, ' ')
+    $: textAfter = (showTextAfter && text.length < maxLength) ? 
+        data.text.substring(end, end + maxLength - text.length).trim().replace(/\s+/g, ' ') : ''
 </script>
 
 {#if text.length === 0}
-<span class="text-muted">(empty span)</span>
-{:else if text.length > 50}
+<span class="text-muted">(empty)</span>
+{:else if text.length > maxLength}
 <span title="{text.substring(0,1000)}">{text.substring(0, 50)}</span><span class="text-muted">…</span>
 {:else}
-<span>{text}</span>
+<span>{text} {#if textAfter.length > 0}<span class="text-muted">{textAfter}</span>{/if}</span>
 {/if}
 
 <style>
