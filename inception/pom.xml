@@ -2118,23 +2118,6 @@
         <artifactId>kinetic</artifactId>
         <version>5.2.0</version>
       </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>color-thief</artifactId>
-        <version>2.2.1</version>
-        <exclusions>
-        <!-- The versions of canvas referenced by color-thief are not available on Maven Central -->
-          <exclusion>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>canvas</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>canvas</artifactId>
-        <version>1.4.0</version>
-      </dependency>
 
       <dependency>
         <groupId>org.mariadb.jdbc</groupId>

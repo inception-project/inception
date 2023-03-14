@@ -105,10 +105,6 @@
       <artifactId>wicket-kendo-ui</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
-    <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
     </dependency>
@@ -116,34 +112,5 @@
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>color-thief</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>canvas</artifactId>
-    </dependency>
   </dependencies>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies>
-              <!--
-                - Maven doesn't detect the the webjar dependencies because there is
-                - no actual code dependency
-              -->
-              <usedDependency>org.webjars.npm:color-thief</usedDependency>
-              <usedDependency>org.webjars.npm:canvas</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>
