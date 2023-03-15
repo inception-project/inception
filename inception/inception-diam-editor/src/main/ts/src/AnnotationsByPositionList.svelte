@@ -64,7 +64,7 @@
                 {@const firstSpan = spans[0]}
                 <li class="list-group-item list-group-item-action p-0">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToSpan(firstSpan)}>
+                    <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToSpan(firstSpan)}>
                         <div class="float-end">
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
@@ -83,7 +83,7 @@
                                 <span>↳</span>
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div class="flex-grow-1 py-1 px-2" on:click={() => scrollToRelation(relation)}>
+                            <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToRelation(relation)}>
                                 <div class="float-end">
                                     <LabelBadge annotation={relation} {ajaxClient} />
                                 </div>

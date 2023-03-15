@@ -156,7 +156,7 @@
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="flex-grow-1 py-1 px-2"
+                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
                                         on:click={() => scrollTo(ann)}
                                     >
                                         <div class="float-end">

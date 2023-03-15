@@ -48,8 +48,9 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="wrapper">
 {#if annotation.vid.toString().startsWith("rec:")}
-    <div class="btn-group mb-0 ms-1 btn-group-recommendation" role="group">
+    <div class="btn-group mb-0 ms-0 btn-group-recommendation bg-body" role="group">
         <button
             type="button"
             class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
@@ -94,7 +95,7 @@
         {/if}
     </button>
 {:else}
-    <div class="btn-group mb-0 ms-1" role="group">
+    <div class="btn-group mb-0 ms-0 bg-body" role="group">
         <button
             type="button"
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
@@ -119,8 +120,16 @@
         </button>
     </div>
 {/if}
+</div>
 
 <style lang="scss">
+    .wrapper {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .btn-colored:hover {
         filter: brightness(0.8);
     }
