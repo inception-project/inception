@@ -65,7 +65,7 @@
                 <li class="list-group-item list-group-item-action p-0">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToSpan(firstSpan)}>
-                        <div class="float-end">
+                        <div class="float-end labels">
                             {#each spans as span}
                                 <LabelBadge annotation={span} {ajaxClient} />
                             {/each}
@@ -84,7 +84,7 @@
                             </div>
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="flex-grow-1 my-1 mx-2 overflow-hidden" on:click={() => scrollToRelation(relation)}>
-                                <div class="float-end">
+                                <div class="float-end labels">
                                     <LabelBadge annotation={relation} {ajaxClient} />
                                 </div>
 
@@ -100,6 +100,13 @@
 {/if}
 
 <style lang="scss">
+    .labels {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .list-group-flush > .list-group-item:last-child {
         border-bottom-width: 1px;
     }
