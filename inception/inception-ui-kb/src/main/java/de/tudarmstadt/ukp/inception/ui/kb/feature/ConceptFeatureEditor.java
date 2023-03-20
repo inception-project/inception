@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
+import static org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog.CONTENT_ID;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
@@ -51,16 +53,22 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -78,6 +86,7 @@ public class ConceptFeatureEditor
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
     private UrlValidator urlValidator = new UrlValidator(new String[] { "http", "https" });
+    private BootstrapModalDialog dialog;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
@@ -116,6 +125,30 @@ public class ConceptFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+
+        dialog = new BootstrapModalDialog("dialog");
+        dialog.trapFocus();
+        queue(dialog);
+
+        queue(new LambdaAjaxLink("openBrowseDialog", this::actionOpenBrowseDialog)
+                .add(LambdaBehavior.visibleWhen(this::isBrowsingAllowed)));
+    }
+
+    private boolean isBrowsingAllowed()
+    {
+        var traits = featureSupportRegistry.readTraits(getModelObject().feature,
+                ConceptFeatureTraits::new);
+
+        // Currently, browsing is only allowed if
+        // 1) the feature is bound to a specific knowledge base
+        // 2) any KB item is allowed as value
+        return traits.getRepositoryId() != null && traits.getAllowedValueType() == ANY_OBJECT;
+    }
+
+    private void actionOpenBrowseDialog(AjaxRequestTarget aTarget)
+    {
+        var content = new BrowseKnowledgeBaseDialogContentPanel(CONTENT_ID, getModel());
+        dialog.open(content, aTarget);
     }
 
     private String descriptionValue()
@@ -141,6 +174,27 @@ public class ConceptFeatureEditor
     public void onFeatureEditorValueChanged(FeatureEditorValueChangedEvent aEvent)
     {
         aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink);
+    }
+
+    @OnEvent
+    public void onConceptSelectionEvent(AjaxConceptSelectionEvent aEvent)
+    {
+        selectItem(aEvent.getTarget(), aEvent.getSelection());
+    }
+
+    @OnEvent
+    public void onInstanceSelectionEvent(AjaxInstanceSelectionEvent aEvent)
+    {
+        selectItem(aEvent.getTarget(), aEvent.getSelection());
+    }
+
+    private void selectItem(AjaxRequestTarget aTarget, KBObject aKBObject)
+    {
+        getModelObject().value = aKBObject;
+        dialog.close(aTarget);
+        aTarget.add(focusComponent, descriptionContainer, iriBadge, openIriLink);
+        send(focusComponent, BUBBLE,
+                new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
     }
 
     @Override
