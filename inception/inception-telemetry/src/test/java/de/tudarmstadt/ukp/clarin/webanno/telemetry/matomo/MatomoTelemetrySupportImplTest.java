@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupportImpl.CURRENT_SETTINGS_VERSION;
 import static java.lang.String.format;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -60,6 +61,7 @@ public class MatomoTelemetrySupportImplTest
     private MockWebServer matomoServer;
     private MatomoTelemetryServicePropertiesImpl properties;
     private UUID instanceId;
+    private TelemetrySettings telemetrySettings;
 
     @BeforeEach
     public void setup() throws Exception
@@ -78,8 +80,8 @@ public class MatomoTelemetrySupportImplTest
         when(identityService.getInstanceIdentity())
                 .thenReturn(new InstanceIdentity(instanceId.toString()));
 
-        TelemetrySettings telemetrySettings = new TelemetrySettings();
-        telemetrySettings.setVersion(2);
+        telemetrySettings = new TelemetrySettings();
+        telemetrySettings.setVersion(CURRENT_SETTINGS_VERSION);
         telemetrySettings.setTraits("{\"enabled\": true}");
         TelemetryService telemetryService = mock(TelemetryService.class);
         when(telemetryService.readSettings(any())).thenReturn(Optional.of(telemetrySettings));
@@ -108,6 +110,8 @@ public class MatomoTelemetrySupportImplTest
     @Test
     public void thatAliveIsRecieved() throws Exception
     {
+        assertThat(sut.isEnabled()).isTrue();
+
         matomoServer.enqueue(new MockResponse().setResponseCode(200));
 
         sut.sendAlive();
@@ -135,6 +139,8 @@ public class MatomoTelemetrySupportImplTest
     @Test
     public void thatPingIsRecieved() throws Exception
     {
+        assertThat(sut.isEnabled()).isTrue();
+
         matomoServer.enqueue(new MockResponse().setResponseCode(200));
 
         sut.sendPing();
@@ -157,5 +163,16 @@ public class MatomoTelemetrySupportImplTest
         assertThat(map.get("3")).isEqualTo(asList("activeUsers", "2"));
         assertThat(map.get("4")).isEqualTo(asList("enabledUsers", "2"));
         assertThat(map.get("5")).isEqualTo(asList("deploymentMode", "DESKTOP"));
+    }
+
+    @Test
+    public void thatVersionMismatchDisablesTelemetry() throws Exception
+    {
+        assertThat(telemetrySettings.getVersion()).isEqualTo(CURRENT_SETTINGS_VERSION);
+        assertThat(sut.isEnabled()).isTrue();
+
+        telemetrySettings.setVersion(CURRENT_SETTINGS_VERSION - 1);
+        assertThat(telemetrySettings.getVersion()).isNotEqualTo(CURRENT_SETTINGS_VERSION);
+        assertThat(sut.isEnabled()).isFalse();
     }
 }
