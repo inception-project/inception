@@ -83,6 +83,7 @@ public class MatomoTelemetrySupportImpl
     implements MatomoTelemetrySupport, DisposableBean
 {
     public static final String MATOMO_TELEMETRY_SUPPORT_ID = "MatomoTelemetry";
+    public static final int CURRENT_SETTINGS_VERSION = 3;
 
     public static final String ACTION_BOOT = "boot";
     public static final String ACTION_HELLO = "hello";
@@ -159,7 +160,7 @@ public class MatomoTelemetrySupportImpl
     @Override
     public int getVersion()
     {
-        return 2;
+        return CURRENT_SETTINGS_VERSION;
     }
 
     @Override
@@ -171,7 +172,7 @@ public class MatomoTelemetrySupportImpl
             return false;
         }
 
-        boolean outdated = settings.get().getVersion() < getVersion();
+        boolean outdated = settings.get().getVersion() != getVersion();
         if (outdated) {
             return false;
         }
