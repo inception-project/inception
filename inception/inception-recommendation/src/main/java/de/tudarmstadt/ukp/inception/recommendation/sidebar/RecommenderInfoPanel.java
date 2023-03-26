@@ -237,7 +237,7 @@ public class RecommenderInfoPanel
     }
 
     @OnEvent
-    public void onRenderAnnotations(PredictionsSwitchedEvent aEvent)
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
         aEvent.getRequestTarget().add(this);
     }
@@ -303,7 +303,7 @@ public class RecommenderInfoPanel
                 AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                         layer);
                 // int address =
-                recommendationService.upsertSpanFeature(annotationService, state.getDocument(),
+                recommendationService.upsertSpanFeature(state.getDocument(),
                         state.getUser().getUsername(), cas, layer, feature, suggestion.getLabel(),
                         suggestion.getBegin(), suggestion.getEnd());
 
