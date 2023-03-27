@@ -77,5 +77,11 @@ public interface SchedulingService
      */
     void stopAllTasksForProject(Project aProject);
 
+    /**
+     * Execute a task immediately and synchronously (blocking) in the current thread.
+     * 
+     * @param aTask
+     *            the task to be executed.
+     */
     void executeSync(Task aTask);
 }

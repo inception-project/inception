@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,7 +82,7 @@ public class LearningRecordServiceImplIntegrationTest
 
         SpanSuggestion suggestion = new SpanSuggestion(42, 1337, "testRecommender", layer.getId(),
                 feature.getName(), sourceDoc.getName(), 7, 14, "aCoveredText", "testLabel",
-                "testUiLabel", 0.42, "Test confidence");
+                "testUiLabel", 0.42, "Test confidence", NEVER);
 
         sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
                 LearningRecordType.ACCEPTED, MAIN_EDITOR);
@@ -115,7 +116,7 @@ public class LearningRecordServiceImplIntegrationTest
 
         RelationSuggestion suggestion = new RelationSuggestion(42, 1337, "testRecommender",
                 layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
-                "testUiLabel", 0.42, "Test confidence");
+                "testUiLabel", 0.42, "Test confidence", NEVER);
 
         sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
                 LearningRecordType.REJECTED, DETAIL_EDITOR);
@@ -153,25 +154,25 @@ public class LearningRecordServiceImplIntegrationTest
         sut.logSpanRecord(sourceDoc1, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence"),
+                        0.42, "Test confidence", NEVER),
                 layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc1, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence"),
+                        0.42, "Test confidence", NEVER),
                 layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence"),
+                        0.42, "Test confidence", NEVER),
                 layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence"),
+                        0.42, "Test confidence", NEVER),
                 layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         assertThat(sut.listRecords(sourceDoc1, USER_NAME, feature1)).hasSize(1);

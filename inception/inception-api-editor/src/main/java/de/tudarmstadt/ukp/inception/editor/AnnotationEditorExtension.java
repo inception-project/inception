@@ -69,7 +69,7 @@ public interface AnnotationEditorExtension
         // Do nothing by default
     }
 
-    default void renderRequested(AnnotatorState aState)
+    default void renderRequested(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         // Do nothing by default
     }

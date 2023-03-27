@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -202,12 +203,13 @@ public class RecommendationServiceImplIntegrationTest
             assertThat(type.getFeatures()).extracting(Feature::getShortName)
                     .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
                     .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
+                    .contains(feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX)
                     .contains(FEATURE_NAME_IS_PREDICTION);
         }
     }
 
     @Test
-    void thatZeroWithAnnotationsAreCorretlyAnchoredOnTokens() throws Exception
+    void thatZeroWithAnnotationsAreCorrectlyAnchoredOnTokens() throws Exception
     {
         JCas jCas = createJCas();
         TokenBuilder.create(Token.class, Sentence.class).buildTokens(jCas, "  This is  a test.  ");
