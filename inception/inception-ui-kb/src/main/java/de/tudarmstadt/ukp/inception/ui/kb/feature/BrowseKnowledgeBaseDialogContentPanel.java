@@ -17,7 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT;
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.INSTANCE;
+
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
@@ -84,10 +90,18 @@ public class BrowseKnowledgeBaseDialogContentPanel
         }
 
         instanceListBrowser = new InstanceListBrowser("instances", concept, instance);
+        instanceListBrowser.add(visibleWhen(() -> Set.of(ANY_OBJECT, INSTANCE)
+                .contains(conceptFeatureTraits.getAllowedValueType())));
         instanceListBrowser.setOutputMarkupPlaceholderTag(true);
 
         conceptTreeBrowser = new ConceptTreeBrowser("concepts", knowledgeBase, concept);
-        instanceListBrowser.setOutputMarkupPlaceholderTag(true);
+        conceptTreeBrowser.add(visibleWhen(() -> Set.of(ANY_OBJECT, CONCEPT, INSTANCE)
+                .contains(conceptFeatureTraits.getAllowedValueType())));
+        conceptTreeBrowser.setConceptNavigationEnabled(
+                Set.of(ANY_OBJECT, INSTANCE).contains(conceptFeatureTraits.getAllowedValueType()));
+        conceptTreeBrowser.setConceptSelectionEnabled(
+                Set.of(ANY_OBJECT, CONCEPT).contains(conceptFeatureTraits.getAllowedValueType()));
+        conceptTreeBrowser.setOutputMarkupPlaceholderTag(true);
 
         queue(instanceListBrowser, conceptTreeBrowser);
 

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 import static org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog.CONTENT_ID;
@@ -59,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -79,6 +80,7 @@ public class ConceptFeatureEditor
     private static final long serialVersionUID = 7763348613632105600L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean KnowledgeBaseService knowledgeBaseService;
 
     private AutoCompleteField focusComponent;
     private WebMarkupContainer descriptionContainer;
@@ -139,10 +141,19 @@ public class ConceptFeatureEditor
         var traits = featureSupportRegistry.readTraits(getModelObject().feature,
                 ConceptFeatureTraits::new);
 
-        // Currently, browsing is only allowed if
-        // 1) the feature is bound to a specific knowledge base
-        // 2) any KB item is allowed as value
-        return traits.getRepositoryId() != null && traits.getAllowedValueType() == ANY_OBJECT;
+        // There is now KB selector in the browser yet, so we do not show it unless either the
+        // feature is bound to a specific KB or there is only a single KB in the project.
+        if (traits.getRepositoryId() == null && knowledgeBaseService
+                .getEnabledKnowledgeBases(getModelObject().feature.getProject()).size() > 1) {
+            return false;
+        }
+
+        // Properties are not supported in the browser
+        if (traits.getAllowedValueType() == ConceptFeatureValueType.PROPERTY) {
+            return false;
+        }
+
+        return true;
     }
 
     private void actionOpenBrowseDialog(AjaxRequestTarget aTarget)

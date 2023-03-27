@@ -60,6 +60,8 @@ public class ConceptTreeBrowser
     private IModel<KBObject> concept;
     private IModel<KnowledgeBase> kbModel;
     private IModel<ConceptTreeProviderOptions> options;
+    private IModel<Boolean> conceptNavigationEnabled;
+    private IModel<Boolean> conceptSelectionEnabled;
 
     public ConceptTreeBrowser(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBObject> aConcept)
     {
@@ -70,6 +72,8 @@ public class ConceptTreeBrowser
         concept = aConcept;
         kbModel = aKbModel;
         options = Model.of(new ConceptTreeProviderOptions());
+        conceptNavigationEnabled = Model.of(true);
+        conceptSelectionEnabled = Model.of(true);
 
         var tree = new DefaultNestedTree<KBObject>("tree",
                 new ConceptTreeProvider(kbService, kbModel, options), Model.ofSet(new HashSet<>()))
@@ -79,7 +83,8 @@ public class ConceptTreeBrowser
             @Override
             protected Component newContentComponent(String id, IModel<KBObject> node)
             {
-                return new ConceptTreeBrowserNode(id, this, node, concept);
+                return new ConceptTreeBrowserNode(id, this, node, concept, conceptNavigationEnabled,
+                        conceptSelectionEnabled);
             }
         };
         add(tree);
@@ -104,13 +109,23 @@ public class ConceptTreeBrowser
         add(form);
     }
 
+    public void setConceptNavigationEnabled(boolean aValue)
+    {
+        conceptNavigationEnabled.setObject(aValue);
+    }
+
+    public void setConceptSelectionEnabled(boolean aValue)
+    {
+        conceptSelectionEnabled.setObject(aValue);
+    }
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
 
-        aResponse.render(OnDomReadyHeaderItem.forScript(
-                "document.querySelector('#" + getMarkupId() + " .selected')?.scrollIntoView();"));
+        aResponse.render(OnDomReadyHeaderItem.forScript("document.querySelector('#" + getMarkupId()
+                + " .selected')?.scrollIntoView({block: 'center'});"));
     }
 
     /**

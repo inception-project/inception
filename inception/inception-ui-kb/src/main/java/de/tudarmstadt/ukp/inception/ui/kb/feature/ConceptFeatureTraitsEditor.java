@@ -57,6 +57,8 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 public class ConceptFeatureTraitsEditor
     extends Panel
 {
+    private static final String MID_KEY_BINDINGS = "keyBindings";
+
     private static final String MID_FORM = "form";
 
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
@@ -115,8 +117,8 @@ public class ConceptFeatureTraitsEditor
                 traits.bind("knowledgeBase.repositoryId")));
         add(form);
 
-        add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,
-                traits.bind("keyBindings")));
+        add(new KeyBindingsConfigurationPanel(MID_KEY_BINDINGS, aFeatureModel,
+                traits.bind(MID_KEY_BINDINGS)).setOutputMarkupId(true));
     }
 
     private void refresh(AjaxRequestTarget aTarget)
@@ -124,7 +126,7 @@ public class ConceptFeatureTraitsEditor
         Traits t = traits.getObject();
         t.setScope(loadConcept(t.getKnowledgeBase(),
                 t.getScope() != null ? t.getScope().getIdentifier() : null));
-        aTarget.add(get(MID_FORM).get(MID_SCOPE));
+        aTarget.add(get(MID_FORM).get(MID_SCOPE), get(MID_KEY_BINDINGS));
 
     }
 

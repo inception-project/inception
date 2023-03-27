@@ -76,7 +76,7 @@ public class InstanceListBrowser
         super.renderHead(aResponse);
 
         aResponse.render(OnDomReadyHeaderItem.forScript("document.querySelector('#" + getMarkupId()
-                + " .border-primary')?.scrollIntoView();"));
+                + " .border-primary')?.scrollIntoView({block: 'center'});"));
     }
 
     @SuppressWarnings("unchecked")

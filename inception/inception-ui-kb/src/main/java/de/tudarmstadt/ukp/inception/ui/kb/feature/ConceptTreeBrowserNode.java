@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Objects;
@@ -40,16 +41,23 @@ public class ConceptTreeBrowserNode
 
     private final NestedTree<KBObject> tree;
     private final IModel<KBObject> selectedConcept;
+    private IModel<Boolean> conceptNavigationEnabled;
+    private IModel<Boolean> conceptSelectionEnabled;
 
     public ConceptTreeBrowserNode(String aId, NestedTree<KBObject> aTree, IModel<KBObject> aModel,
-            IModel<KBObject> aSelectedConcept)
+            IModel<KBObject> aSelectedConcept, IModel<Boolean> aConceptNavigationEnabled,
+            IModel<Boolean> aConceptSelectionEnabled)
     {
         super(aId, aTree, aModel);
 
         selectedConcept = aSelectedConcept;
         tree = aTree;
+        conceptNavigationEnabled = aConceptNavigationEnabled;
+        conceptSelectionEnabled = aConceptSelectionEnabled;
 
-        queue(new LambdaAjaxLink("select", this::actionSelectConcept));
+        queue(new LambdaAjaxLink("select", this::actionSelectConcept)
+                .add(visibleWhen(() -> conceptNavigationEnabled.getObject()
+                        && conceptSelectionEnabled.getObject())));
     }
 
     @Override
@@ -67,7 +75,12 @@ public class ConceptTreeBrowserNode
     @Override
     protected void onClick(Optional<AjaxRequestTarget> aTarget)
     {
-        actionViewConcept(aTarget.get());
+        if (conceptNavigationEnabled.getObject()) {
+            actionViewConcept(aTarget.get());
+        }
+        else {
+            actionSelectConcept(aTarget.get());
+        }
     }
 
     private void actionViewConcept(AjaxRequestTarget aTarget)
@@ -91,6 +104,7 @@ public class ConceptTreeBrowserNode
     @Override
     protected boolean isSelected()
     {
-        return Objects.equals(getModelObject(), selectedConcept.getObject());
+        return Objects.equals(getModelObject().getIdentifier(),
+                selectedConcept.getObject().getIdentifier());
     }
 }
