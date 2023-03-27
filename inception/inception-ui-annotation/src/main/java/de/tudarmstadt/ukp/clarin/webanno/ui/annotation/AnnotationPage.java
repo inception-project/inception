@@ -430,6 +430,7 @@ public class AnnotationPage
             // create one.
             AnnotationDocument annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
+            var stateBeforeOpening = annotationDocument.getState();
 
             // Read the CAS
             // Update the annotation document CAS
@@ -519,7 +520,7 @@ public class AnnotationPage
 
             applicationEventPublisherHolder.get().publishEvent(
                     new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
-                            getModelObject().getUser().getUsername(),
+                            stateBeforeOpening, getModelObject().getUser().getUsername(),
                             userRepository.getCurrentUser().getUsername()));
         }
         catch (Exception e) {

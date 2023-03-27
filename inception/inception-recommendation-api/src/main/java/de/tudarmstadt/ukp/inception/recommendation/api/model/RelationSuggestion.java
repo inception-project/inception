@@ -32,20 +32,21 @@ public class RelationSuggestion
 
     public RelationSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
             String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget, String aLabel,
-            String aUiLabel, double aScore, String aScoreExplanation)
+            String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode)
     {
         this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
                 aSource.getBegin(), aSource.getEnd(), aTarget.getBegin(), aTarget.getEnd(), aLabel,
-                aUiLabel, aScore, aScoreExplanation);
+                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
     }
 
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,
             int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aScore,
-            String aScoreExplanation)
+            String aScoreExplanation, AutoAcceptMode aAutoAcceptMode)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aScore, aScoreExplanation);
+                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
 
         position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
     }

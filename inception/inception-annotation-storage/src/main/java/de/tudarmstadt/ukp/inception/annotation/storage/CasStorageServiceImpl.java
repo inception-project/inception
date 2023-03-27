@@ -1062,6 +1062,10 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
+        log.debug("Writing annotation document [{}] ({}) for user [{}] in project [{}] ({})",
+                aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
+                aDocument.getProject().getId());
+
         driver.writeCas(aDocument, aUserName, aCas);
     }
 }

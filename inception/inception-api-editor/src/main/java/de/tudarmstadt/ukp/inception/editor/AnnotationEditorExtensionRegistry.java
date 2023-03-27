@@ -40,7 +40,7 @@ public interface AnnotationEditorExtensionRegistry
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException;
 
-    void fireRenderRequested(AnnotatorState aState);
+    void fireRenderRequested(AjaxRequestTarget aTarget, AnnotatorState aState);
 
     void generateContextMenuItems(List<IMenuItem> aItems);
 }
