@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
@@ -72,8 +71,7 @@ public class PdfDocumentIFrameView
 
     private PdfExtractFile pdfExtractFile;
 
-    public PdfDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc,
-            String aEditorFactoryId)
+    public PdfDocumentIFrameView(String aId, IModel<SourceDocument> aDoc, String aEditorFactoryId)
     {
         super(aId, aDoc);
 
@@ -87,7 +85,7 @@ public class PdfDocumentIFrameView
             @Override
             public void onRequest()
             {
-                SourceDocument doc = aDoc.getObject().getDocument();
+                SourceDocument doc = aDoc.getObject();
 
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
@@ -120,7 +118,7 @@ public class PdfDocumentIFrameView
             {
                 initialize(aTarget);
                 String pdftext = pdfExtractFile.getPdftxt();
-                SourceDocument doc = aDoc.getObject().getDocument();
+                SourceDocument doc = aDoc.getObject();
 
                 StringResourceStream resource = new StringResourceStream(pdftext, "text/plain");
 
@@ -177,14 +175,14 @@ public class PdfDocumentIFrameView
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<AnnotationDocument> getModel()
+    public IModel<SourceDocument> getModel()
     {
-        return (IModel<AnnotationDocument>) getDefaultModel();
+        return (IModel<SourceDocument>) getDefaultModel();
     }
 
     private void initialize(AjaxRequestTarget aTarget)
     {
-        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
+        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject());
 
         try {
             String pdfText = PDFExtractor.processFileToString(pdfFile);

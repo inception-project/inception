@@ -29,7 +29,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
@@ -60,10 +59,8 @@ public class RecogitoHtmlAnnotationEditor
     {
         AnnotatorState state = getModelObject();
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
-                state.getUser());
-
-        return viewFactory.createView(CID_VIS, Model.of(annDoc), editorFactory.getBeanName());
+        return viewFactory.createView(CID_VIS, Model.of(state.getDocument()),
+                editorFactory.getBeanName());
     }
 
     @Override

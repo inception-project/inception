@@ -35,7 +35,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
@@ -77,11 +76,8 @@ public class ExternalAnnotationEditor
 
         AnnotatorState state = getModelObject();
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
-                state.getUser());
-
         return documentViewExtensionPoint.getExtension(getDescription().getView()) //
-                .map(ext -> ext.createView(CID_VIS, Model.of(annDoc), editorFactoryId)) //
+                .map(ext -> ext.createView(CID_VIS, Model.of(state.getDocument()), editorFactoryId)) //
                 .orElseGet(() -> new Label(CID_VIS,
                         "Unsupported view: [" + getDescription().getView() + "]"));
     }

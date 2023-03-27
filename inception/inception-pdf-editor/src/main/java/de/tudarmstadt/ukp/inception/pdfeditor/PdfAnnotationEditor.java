@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
@@ -118,9 +117,7 @@ public class PdfAnnotationEditor
             return new WrongFileFormatPanel(VIS, format);
         }
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
-                state.getUser());
-        view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(annDoc),
+        view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(state.getDocument()),
                 viewFactory.getId());
         return view;
     }
