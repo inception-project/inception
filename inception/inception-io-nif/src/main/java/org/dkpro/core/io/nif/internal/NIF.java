@@ -30,7 +30,7 @@ package org.dkpro.core.io.nif.internal;
 public class NIF
 {
     public static final String PREFIX_NIF = "nif";
-    
+
     public static final String NS_NIF = "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#";
 
     /**
@@ -41,7 +41,7 @@ public class NIF
      * first character of a text).
      */
     public static final String PROP_BEGIN_INDEX = NS_NIF + "beginIndex";
-    
+
     /**
      * The end index of a character range as defined in
      * <a href="http://tools.ietf.org/html/rfc5147#section-2.2.1">RFC 5147 Section 2.2.1</a> and
@@ -50,7 +50,7 @@ public class NIF
      * first character of a text).
      */
     public static final String PROP_END_INDEX = NS_NIF + "endIndex";
-    
+
     /**
      * Links a URI of a string to its reference context of type nif:Context. The reference context
      * determines the calculation of begin and end index
@@ -58,7 +58,7 @@ public class NIF
      * Each String that is not an instance of nif:Context MUST have exactly one reference context.
      */
     public static final String PROP_REFERENCE_CONTEXT = NS_NIF + "referenceContext";
-    
+
     /**
      * The reference text as rdf:Literal for this nif:Context resource.
      * 
@@ -71,33 +71,33 @@ public class NIF
      * character position and indices.
      */
     public static final String PROP_IS_STRING = NS_NIF + "isString";
-    
+
     /**
      * The string, which the URI is representing as an RDF Literal. Some use cases require this
      * property, as it is necessary for certain sparql queries.
      */
     public static final String PROP_ANCHOR_OF = NS_NIF + "anchorOf";
-    
+
     /**
      * This property links sentences to their words.
      */
     public static final String PROP_WORD = NS_NIF + "word";
-    
+
     /**
      * See nif:nextSentence
      */
     public static final String PROP_NEXT_WORD = NS_NIF + "nextWord";
-    
+
     /**
      * see nif:nextSentence
      */
     public static final String PROP_PREVIOUS_WORD = NS_NIF + "previousWord";
-    
+
     /**
      * This property links words and other structures to their sentence.
      */
     public static final String PROP_SENTENCE = NS_NIF + "sentence";
-    
+
     /**
      * This property (and nif:previousSentence, nif:nextWord, nif:previousWord and their transitive
      * extension) can be used to make resources of nif:Sentence and nif:Word traversable, it can not
@@ -107,22 +107,22 @@ public class NIF
      * skos:broader and skos:broaderTransitive.
      */
     public static final String PROP_NEXT_SENTENCE = NS_NIF + "nextSentence";
-    
+
     /**
      * see nif:nextSentence
      */
     public static final String PROP_PREVIOUS_SENTENCE = NS_NIF + "previousSentence";
-    
+
     /**
      * The lemma(s) of the nif:String.
      */
     public static final String PROP_LEMMA = NS_NIF + "lemma";
-    
+
     /**
      * The stem(s) of the nif:String.
      */
     public static final String PROP_STEM = NS_NIF + "stem";
-    
+
     /**
      * To include the pos tag as it comes out of the NLP tool as RDF Literal. This property is
      * discouraged to use alone, please use oliaLink and oliaCategory. We included it, because some
@@ -133,7 +133,7 @@ public class NIF
      */
     @Deprecated
     public static final String PROP_POS_TAG = NS_NIF + "posTag";
-    
+
     /**
      * The confidence of an annotation as decimal between 0 and 1.
      */
@@ -150,7 +150,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String PROP_TA_MS_CLASS_REF = NS_NIF + "taMsClassRef";
-    
+
     /**
      * A title within a text.
      * 
@@ -159,7 +159,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_TITLE = NS_NIF + "Title";
-    
+
     /**
      * A paragraph.
      * 
@@ -168,7 +168,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_PARAGRAPH = NS_NIF + "Paragraph";
-    
+
     /**
      * The Word class represents strings that are tokens or words. A string is a Word, if it is a
      * word. We don't nitpic about whether it is a a pronoun, a name, a punctuation mark or an
@@ -210,14 +210,16 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_WORD = NS_NIF + "Word";
-    
+
     /**
      * A sentence.
      * 
-     * @see <a href="https://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core/nif-core.html#d4e251">NIF 2.0 Core Ontology</a>
+     * @see <a href=
+     *      "https://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core/nif-core.html#d4e251">NIF
+     *      2.0 Core Ontology</a>
      */
     public static final String TYPE_SENTENCE = NS_NIF + "Sentence";
-    
+
     /**
      * The string that serves as a context for its substrings. The Unicode String given in the
      * nif:isString property must be used to calculate the begin and endIndex for all nif:Strings
@@ -229,7 +231,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_CONTEXT = NS_NIF + "Context";
-    
+
     /**
      * Individuals of this class are a string, i.e. Unicode characters, who have been given a URI
      * and are used in the subject of an RDF statement.
@@ -246,7 +248,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_STRING = NS_NIF + "String";
-    
+
     /**
      * A nif:Phrase can be a nif:String, that is a chunk of several words or a word itself (e.g. a
      * NounPhrase as a Named Entity). The term is underspecified and can be compatible with many
@@ -258,7 +260,7 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_PHRASE = NS_NIF + "Phrase";
-    
+
     /**
      * cf. Linked-Data Aware URI Schemes for Referencing Text Fragments by Sebastian Hellmann, Jens
      * Lehmann und Sören Auer in EKAW 2012 http://jens-lehmann.org/files/2012/ekaw_nif.pdf
@@ -270,15 +272,14 @@ public class NIF
      *      2.0 Core Ontology</a>
      */
     public static final String TYPE_OFFSET_BASED_STRING = NS_NIF + "OffsetBasedString";
-    
+
     /**
      * Text span annotation denoting that a word or phrase has been detected as occurrence of a
      * named entity. (Use this without further annotation property assertions if you just want to
      * express the detection of the occurrence when neither the mentioned entity nor its category
      * was identified.)
      * 
-     * @see <a href=
-     *      "https://github.com/NLP2RDF/ontologies/blob/master/nif-core/nif-core.ttl">NIF
+     * @see <a href= "https://github.com/NLP2RDF/ontologies/blob/master/nif-core/nif-core.ttl">NIF
      *      2.1 Core Ontology</a>
      */
     public static final String TYPE_ENTITY_OCCURRENCE = NS_NIF + "EntityOccurrence";

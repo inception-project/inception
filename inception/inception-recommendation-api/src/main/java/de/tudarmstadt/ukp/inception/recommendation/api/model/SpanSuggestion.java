@@ -32,19 +32,21 @@ public class SpanSuggestion
 
     public SpanSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
             String aDocumentName, Offset aOffset, String aCoveredText, String aLabel,
-            String aUiLabel, double aScore, String aScoreExplanation)
+            String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode)
     {
         this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
                 aOffset.getBegin(), aOffset.getEnd(), aCoveredText, aLabel, aUiLabel, aScore,
-                aScoreExplanation);
+                aScoreExplanation, aAutoAcceptMode);
     }
 
     public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
-            String aLabel, String aUiLabel, double aScore, String aScoreExplanation)
+            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aScore, aScoreExplanation);
+                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
 
         position = new Offset(aBegin, aEnd);
         coveredText = aCoveredText;

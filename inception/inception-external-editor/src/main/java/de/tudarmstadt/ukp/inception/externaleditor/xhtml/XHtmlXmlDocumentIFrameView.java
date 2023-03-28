@@ -23,7 +23,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class XHtmlXmlDocumentIFrameView
     extends WebMarkupContainer
@@ -35,9 +35,9 @@ public class XHtmlXmlDocumentIFrameView
 
     private final String editorFactoryId;
 
-    private IModel<AnnotationDocument> document;
+    private IModel<SourceDocument> document;
 
-    public XHtmlXmlDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc,
+    public XHtmlXmlDocumentIFrameView(String aId, IModel<SourceDocument> aDoc,
             String aEditorFactoryId)
     {
         super(aId);
@@ -50,8 +50,8 @@ public class XHtmlXmlDocumentIFrameView
     protected void onComponentTag(ComponentTag aTag)
     {
         aTag.setName("iframe");
-        aTag.put("src", viewController.getDocumentUrl(document.getObject().getDocument())
-                + "?editor=" + editorFactoryId);
+        aTag.put("src",
+                viewController.getDocumentUrl(document.getObject()) + "?editor=" + editorFactoryId);
         super.onComponentTag(aTag);
     }
 }

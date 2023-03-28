@@ -171,7 +171,7 @@ public abstract class AnnotationEditorBase
 
             if (getModelObject().getDocument() != null) {
                 // Fire render event into UI
-                extensionRegistry.fireRenderRequested(getModelObject());
+                extensionRegistry.fireRenderRequested(aTarget, getModelObject());
                 send(getPage(), Broadcast.BREADTH, new RenderRequestedEvent(aTarget));
             }
         }

@@ -27,7 +27,7 @@
   <name>INCEpTION - Docker Image</name>
   <packaging>pom</packaging>
   <properties>
-    <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
+    <docker.image.name>ghcr.io/inception-project/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
     <dependency>

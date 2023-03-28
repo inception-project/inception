@@ -6,7 +6,7 @@
   "homepage": "https://github.com/inception-project/inception#readme",
   "scripts": {
     "build": "node build.mjs",
-    "test": "mocha -r esbuild-runner-plugins/register -r jsdom-global/register './test/**/*.test.ts' --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile='../../../target/surefire-reports/mocha-test-report.xml'"
+    "test": "mocha -r esbuild-runner-plugins/register -r jsdom-global/register \"./test/**/*.test.ts\" --extension ts --reporter mocha-junit-reporter --reporter-options mochaFile=\"../../../target/surefire-reports/mocha-test-report.xml\""
   },
   "repository": {
     "type": "git",

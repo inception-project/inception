@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package org.dkpro.core.io.nif;
+ */
+package org.dkpro.core.io.nif;
 
 import java.io.OutputStream;
 
@@ -40,46 +41,43 @@ import eu.openminted.share.annotations.api.DocumentationResource;
 /**
  * Writer for the NLP Interchange Format (NIF).
  * 
- * @see <a href="http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core/nif-core.html">NIF 2.0 Core Ontology</a>
+ * @see <a href="http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core/nif-core.html">NIF
+ *      2.0 Core Ontology</a>
  */
 @ResourceMetaData(name = "NLP Interchange Format (NIF) Writer")
 @DocumentationResource("${docbase}/format-reference.html#format-${command}")
-@MimeTypeCapability({MimeTypes.APPLICATION_X_NIF_TURTLE})
-@TypeCapability(
-        inputs = { 
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
-                "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
-                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem",
-                "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"  })
+@MimeTypeCapability({ MimeTypes.APPLICATION_X_NIF_TURTLE })
+@TypeCapability(inputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
+        "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem",
+        "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity" })
 public class NifWriter
     extends JCasFileWriter_ImplBase
 {
     /**
      * Specify the suffix of output files. Default value <code>.ttl</code>. The file format will be
-     * chosen depending on the file suffice. 
+     * chosen depending on the file suffice.
      * 
      * @see RDFLanguages
      */
-    public static final String PARAM_FILENAME_EXTENSION = 
-            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    public static final String PARAM_FILENAME_EXTENSION = ComponentParameters.PARAM_FILENAME_EXTENSION;
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".ttl")
     private String filenameSuffix;
 
     @Override
-    public void process(JCas aJCas)
-        throws AnalysisEngineProcessException
+    public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         OntModel model = ModelFactory.createOntologyModel();
         model.setNsPrefix(NIF.PREFIX_NIF, NIF.NS_NIF);
         model.setNsPrefix(ITS.PREFIX_ITS, ITS.NS_ITS);
-        
+
         DKPro2Nif.convert(aJCas, model);
-        
+
         try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
             RDFDataMgr.write(docOS, model.getBaseModel(),
                     RDFLanguages.fileExtToLang(filenameSuffix));

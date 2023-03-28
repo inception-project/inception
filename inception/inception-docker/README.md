@@ -13,20 +13,20 @@ To create a SNAPSHOT build:
 
 To run the latest SNAPSHOT build, use: 
 
-    docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception-snapshots
+    docker run -p8080:8080 -v inception-data:/export -it ghcr.io/inception-project/inception-snapshots
 
 To run the latest SNAPSHOT build with Docker Compose, use:
 
-    INCEPTION_IMAGE=inceptionproject/inception-snapshots INCEPTION_VERSION=latest docker-compose -f ../inception-doc/src/main/resources/META-INF/asciidoc/admin-guide/scripts/docker-compose.yml -p inception up
+    INCEPTION_IMAGE=ghcr.io/inception-project/inception-snapshots INCEPTION_VERSION=latest docker-compose -f ../inception-doc/src/main/resources/META-INF/asciidoc/admin-guide/scripts/docker-compose.yml -p inception up
 
 ## Release builds
    
 For a release build:
 
-    mvn -Pdocker clean docker:build -Ddocker.image.name="inceptionproject/inception"
-    mvn -Pdocker docker:push -Ddocker.image.name="inceptionproject/inception"
+    mvn -Pdocker clean docker:build -Ddocker.image.name="ghcr.io/inception-project/inception"
+    mvn -Pdocker docker:push -Ddocker.image.name="ghcr.io/inception-project/inception"
         
-    docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception
+    docker run -p8080:8080 -v inception-data:/export -it ghcr.io/inception-project/inception
 
 ## Multi-platform build for ARM46 and AMD64
 
@@ -35,7 +35,7 @@ To build a docker images which runs on AMD64 as well as ARM64 machines, use:
     docker buildx create --use          (need to do this only once!)
     mvn -Pdocker-buildx clean package   (will be pushed immediately!)
 
-Mind that you may have to log in to DockerHub before being able to publish. This can be done e.g.
+Mind that you may have to log in to GitHub before being able to publish. This can be done e.g.
 via Docker Desktop or on the command line via `docker login`.
 
 ## Options
@@ -55,7 +55,7 @@ In the folder where the **inception-doc/src/main/resources/META-INF/asciidoc/adm
 
     docker-compose -p inception up -d
     
-This starts an INCEpTION instance together with a MySQL database.   
+This starts an INCEpTION instance together with a MariaDB database.   
     
 To stop, call
 
