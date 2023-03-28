@@ -398,7 +398,7 @@ public class DocumentImportExportServiceImpl
         splitSentences(aCas, null);
     }
 
-    public static void splitSentences(CAS aCas, Iterable<AnnotationFS> aZones)
+    public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
     {
         if (aCas.getDocumentText() == null) {
             return;
@@ -428,10 +428,10 @@ public class DocumentImportExportServiceImpl
             int last = bi.first();
             int cur = bi.next();
             while (cur != BreakIterator.DONE) {
-                int[] span = new int[] { last, cur };
+                int[] span = new int[] { last + begin, cur + begin };
                 trim(aCas.getDocumentText(), span);
                 if (!isEmpty(span[0], span[1])) {
-                    aCas.addFsToIndexes(createSentence(aCas, span[0] + begin, span[1] + end));
+                    aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
                 }
                 last = cur;
                 cur = bi.next();
