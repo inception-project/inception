@@ -105,14 +105,14 @@ public abstract class ConceptFeatureEditor_ImplBase
 
         String input = aInput;
 
-        // Extract filter on the description
-        final String descriptionFilter;
+        // Extract filter on the description and/or canonical term
+        final String secondaryFilter;
         if (input.contains("::")) {
-            descriptionFilter = substringAfter(input, "::").trim();
+            secondaryFilter = substringAfter(input, "::").trim();
             input = substringBefore(input, "::");
         }
         else {
-            descriptionFilter = null;
+            secondaryFilter = null;
         }
 
         // Extract exact match filter on the query
@@ -165,9 +165,8 @@ public abstract class ConceptFeatureEditor_ImplBase
                     .collect(Collectors.toList());
         }
 
-        if (isNotBlank(descriptionFilter)) {
-            choices = choices.stream()
-                    .filter(kb -> containsIgnoreCase(kb.getDescription(), descriptionFilter))
+        if (isNotBlank(secondaryFilter)) {
+            choices = choices.stream().filter(kb -> applySecondaryFilter(kb, secondaryFilter))
                     .collect(Collectors.toList());
         }
 
@@ -178,6 +177,20 @@ public abstract class ConceptFeatureEditor_ImplBase
         WicketUtil.serverTiming("getCandidates", currentTimeMillis() - startTime);
 
         return result;
+    }
+
+    private boolean applySecondaryFilter(KBHandle aObject, String aFilter)
+    {
+        if (containsIgnoreCase(aObject.getDescription(), aFilter)) {
+            return true;
+        }
+
+        if (aObject.getQueryBestMatchTerm() != null
+                && containsIgnoreCase(aObject.getUiLabel(), aFilter)) {
+            return true;
+        }
+
+        return false;
     }
 
     protected abstract ConceptFeatureTraits_ImplBase readFeatureTraits(
