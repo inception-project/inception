@@ -42,3 +42,13 @@ what you are looking for, try typing in a longer search string. If you know the 
 you are looking for, try entering the IRI. Some knowledge bases (e.g. Wikidata) are not making a
 proper distinction between classes and instances. Try configuring the *Allowed values* in
 the feature settings to *any* to compensate.
+
+.Browsing the knowledge base
+Instead of searching a concept using the auto-complete field, you can also browse the knowledge
+base. However, this is only possible if:
+
+* the concept feature is bound to a specific knowledge base or the project contains only a single
+  knowledge base;
+* the concept feature **allowed values** setting is not set to **properties**.
+
+Note that only concept and instances can be linked, not properties - even if the **allowed values** setting is set to **any**.
