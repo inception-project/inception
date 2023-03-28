@@ -104,7 +104,13 @@ public class ConceptTreeBrowserNode
     @Override
     protected boolean isSelected()
     {
-        return Objects.equals(getModelObject().getIdentifier(),
-                selectedConcept.getObject().getIdentifier());
+        var objectA = getModelObject();
+        var objectB = selectedConcept.getObject();
+
+        if (objectA == null || objectB == null) {
+            return false;
+        }
+
+        return Objects.equals(objectA.getIdentifier(), objectB.getIdentifier());
     }
 }
