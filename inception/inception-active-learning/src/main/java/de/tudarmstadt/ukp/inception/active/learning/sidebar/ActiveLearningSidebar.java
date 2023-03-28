@@ -1033,7 +1033,7 @@ public class ActiveLearningSidebar
             }
             deleteAnnotationByHistory(_t, aRecord);
         });
-        
+
         dialogContent.setCancelAction(_t -> {
             if (alStateModel.getObject().getSuggestion().isPresent()) {
                 setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());

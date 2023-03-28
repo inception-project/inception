@@ -15,20 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.dkpro.core.io.nif.internal;
+package de.tudarmstadt.ukp.inception.ui.kb;
 
-/**
- * ITS vocabulary.
- * 
- * @see <a href="https://www.w3.org/TR/its20/">Internationalization Tag Set (ITS) Version 2.0</a>
- */
-public class ITS
+import java.io.Serializable;
+
+public class ConceptTreeProviderOptions
+    implements Serializable
 {
-    public static final String PREFIX_ITS = "itsrdf";
+    private static final long serialVersionUID = 8310379405075949753L;
 
-    public static final String NS_ITS = "http://www.w3.org/2005/11/its/rdf#";
+    private boolean showAllConcepts;
 
-    public static final String PROP_TA_IDENT_REF = NS_ITS + "taIdentRef";
+    public boolean isShowAllConcepts()
+    {
+        return showAllConcepts;
+    }
 
-    public static final String PROP_TA_CLASS_REF = NS_ITS + "taClassRef";
+    public void setShowAllConcepts(boolean aShowAllConcepts)
+    {
+        showAllConcepts = aShowAllConcepts;
+    }
 }
