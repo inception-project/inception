@@ -69,7 +69,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -96,6 +95,7 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionC
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
+import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
@@ -1033,7 +1033,7 @@ public class ActiveLearningSidebar
             }
             deleteAnnotationByHistory(_t, aRecord);
         });
-        
+
         dialogContent.setCancelAction(_t -> {
             if (alStateModel.getObject().getSuggestion().isPresent()) {
                 setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
@@ -1353,7 +1353,7 @@ public class ActiveLearningSidebar
     }
 
     @OnEvent
-    public void onDocumentReset(AfterDocumentResetEvent aEvent)
+    public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();

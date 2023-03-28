@@ -18,11 +18,16 @@ the annotated text.
 TIP: Just press kbd:[SPACEBAR] instead of writing anything into the field to search the knowledge
      base for concepts matching the annotated text.
 
-.Filtering by description
+.Filtering
 The query entered into the field only matches against the label of the knowledge base items, not
 against their description. However, you can filter the candidates by their description. E.g. if you
 wish to find all knowledge base items with `Obama` in the label and `president` in the description,
 then you can write `Obama :: president`. A case-insensitive matching is being used.
+
+If the knowledge base is configured for additional matching properties and the value entered into
+the field matches such an additional property, then the label property will be shown separately
+in the dropdown. In this case, filtering does not only apply to the description but also to the
+canonical label.
 
 .Substring matching
 Depending on the knowledge base and full-text mode being used, there may be fuzzy matching. To
@@ -42,3 +47,13 @@ what you are looking for, try typing in a longer search string. If you know the 
 you are looking for, try entering the IRI. Some knowledge bases (e.g. Wikidata) are not making a
 proper distinction between classes and instances. Try configuring the *Allowed values* in
 the feature settings to *any* to compensate.
+
+.Browsing the knowledge base
+Instead of searching a concept using the auto-complete field, you can also browse the knowledge
+base. However, this is only possible if:
+
+* the concept feature is bound to a specific knowledge base or the project contains only a single
+  knowledge base;
+* the concept feature **allowed values** setting is not set to **properties**.
+
+Note that only concept and instances can be linked, not properties - even if the **allowed values** setting is set to **any**.

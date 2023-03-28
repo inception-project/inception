@@ -29,6 +29,21 @@ meet the configured threshold, the recommender will not be used.
 Recommenders can be configured in the *Project Settings* under the *Recommenders* tab. To create a new
 recommender, click *Create*. Then, the layer, feature and the classifier type has to be selected.
 
+== Overall recommender settings
+
+The option **wait for suggestions from non-trainable recommenders when opening document** can be
+enabled overall. It is accessible from the settings dropdown on the recommender list panel.
+When this option is enabled, the system will wait for responses from all non-trainable recommenders
+in the project when a user is opening a document before actually displaying the document to the
+user. If this option is not checked, then recommendations may only appear after the user has 
+performed some action such as creating an annotation.
+
+NOTE: Enable this option only if all of your non-trainable recommenders have a fast response time,
+      as otherwise your users may complain about a long delay when opening documents.
+
+
+== Per-recommender settings
+
 By default, the name of new recommenders are auto-generated based on the choice of layer, feature and tool. However, you can deactivate this behavior by unchecking the *auto-generate* option next to the name field.
 
 Recommenders can be enabled and disabled. This behaviour is configured by the *Enabled* checkbox.

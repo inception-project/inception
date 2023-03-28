@@ -4201,7 +4201,7 @@ export function findClosestChunkElement (target: Node | null): Element | null {
   }
 
   if (target instanceof Element) {
-    return target.closest(':not(.spacing)[data-chunk-id]')
+    return target.closest('[data-chunk-id]')
   }
 
   return null

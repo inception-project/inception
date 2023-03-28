@@ -22,9 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.extractSuggestions;
@@ -280,6 +282,7 @@ class RecommendationServiceImplTest
         predType.addFeature("value" + FEATURE_NAME_SCORE_SUFFIX, null, TYPE_NAME_DOUBLE);
         predType.addFeature("value" + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, null,
                 TYPE_NAME_STRING);
+        predType.addFeature("value" + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, null, TYPE_NAME_STRING);
         predType.addFeature(FEATURE_NAME_IS_PREDICTION, null, TYPE_NAME_BOOLEAN);
 
         var targetCas = createCas(mergeTypeSystems(asList(tsd, createTypeSystemDescription())));
@@ -350,7 +353,8 @@ class RecommendationServiceImplTest
                 aLabel, // aLabel
                 aLabel, // aUiLabel
                 0.0, // aScore
-                "" // aScoreExplanation
+                "", // aScoreExplanation,
+                NEVER // autoAccept
         );
     }
 }
