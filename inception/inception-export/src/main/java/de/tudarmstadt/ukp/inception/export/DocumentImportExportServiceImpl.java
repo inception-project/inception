@@ -100,6 +100,7 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAut
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
  * <p>
@@ -394,23 +395,56 @@ public class DocumentImportExportServiceImpl
 
     public static void splitSentences(CAS aCas)
     {
-        BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
-        bi.setText(aCas.getDocumentText());
-        int last = bi.first();
-        int cur = bi.next();
-        while (cur != BreakIterator.DONE) {
-            int[] span = new int[] { last, cur };
-            trim(aCas.getDocumentText(), span);
-            if (!isEmpty(span[0], span[1])) {
-                aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
+        splitSentences(aCas, null);
+    }
+
+    public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
+    {
+        if (aCas.getDocumentText() == null) {
+            return;
+        }
+
+        int[] sortedZoneBoundaries = null;
+
+        if (aZones != null) {
+            var zoneBoundaries = new IntArrayList();
+            for (var zone : aZones) {
+                zoneBoundaries.add(zone.getBegin());
+                zoneBoundaries.add(zone.getEnd());
             }
-            last = cur;
-            cur = bi.next();
+
+            sortedZoneBoundaries = zoneBoundaries.intStream().distinct().sorted().toArray();
+        }
+
+        if (sortedZoneBoundaries == null || sortedZoneBoundaries.length < 2) {
+            sortedZoneBoundaries = new int[] { 0, aCas.getDocumentText().length() };
+        }
+
+        for (int i = 1; i < sortedZoneBoundaries.length; i++) {
+            var begin = sortedZoneBoundaries[i - 1];
+            var end = sortedZoneBoundaries[i];
+            BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
+            bi.setText(aCas.getDocumentText().substring(begin, end));
+            int last = bi.first();
+            int cur = bi.next();
+            while (cur != BreakIterator.DONE) {
+                int[] span = new int[] { last + begin, cur + begin };
+                trim(aCas.getDocumentText(), span);
+                if (!isEmpty(span[0], span[1])) {
+                    aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
+                }
+                last = cur;
+                cur = bi.next();
+            }
         }
     }
 
     public static void tokenize(CAS aCas)
     {
+        if (aCas.getDocumentText() == null) {
+            return;
+        }
+
         BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
         for (AnnotationFS s : selectSentences(aCas)) {
             bi.setText(s.getCoveredText());
