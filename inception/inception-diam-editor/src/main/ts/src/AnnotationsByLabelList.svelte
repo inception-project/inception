@@ -156,10 +156,10 @@
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="flex-grow-1 py-1 px-2"
+                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
                                         on:click={() => scrollTo(ann)}
                                     >
-                                        <div class="float-end">
+                                        <div class="float-end labels">
                                             <LabelBadge
                                                 annotation={ann}
                                                 {ajaxClient}
@@ -187,6 +187,13 @@
 {/if}
 
 <style lang="scss">
+    .labels {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .annotation-type-marker {
         width: 1em;
         text-align: center;
