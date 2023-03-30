@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.parseXmlStringToCas;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.removeWithDescendantsFromTree;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.selectElements;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.serializeCasToXmlString;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSCollectionFactory.createFSArray;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,5 +71,50 @@ class XmlNodeUtilsTest
         assertThat(root.getChildren().toArray(new XmlNode[root.getChildren().size()]))
                 .extracting(Annotation::getCoveredText) //
                 .containsExactly("This", "is", "a", "test");
+    }
+
+    @Test
+    void testRemoveWithDescendantsFromTree() throws Exception
+    {
+        var jcas = JCasFactory.createJCas();
+        parseXmlStringToCas(jcas, "<root><e1>This <e2>is a</e2> test.</e1></root>");
+
+        var el2 = jcas.select(XmlElement.class) //
+                .filter(e -> e.getQName().equals("e1")) //
+                .findFirst().get();
+
+        removeWithDescendantsFromTree(el2);
+
+        assertThat(serializeCasToXmlString(jcas)).isEqualTo("<root>This is a test.</root>");
+    }
+
+    @Test
+    void testRemoveWithDescendantsFromTree2() throws Exception
+    {
+        var jcas = JCasFactory.createJCas();
+        parseXmlStringToCas(jcas, "<root><e1>This <e2>is a</e2> test.</e1></root>");
+
+        var el2 = jcas.select(XmlElement.class) //
+                .filter(e -> e.getQName().equals("e2")) //
+                .findFirst().get();
+
+        removeWithDescendantsFromTree(el2);
+
+        assertThat(serializeCasToXmlString(jcas))
+                .isEqualTo("<root><e1>This is a test.</e1></root>");
+    }
+
+    @Test
+    void testSelectElements() throws Exception
+    {
+        var jcas = JCasFactory.createJCas();
+        parseXmlStringToCas(jcas, "<root><e1>This <e2>is a</e2> test.</e1></root>");
+
+        var root = jcas.select(XmlDocument.class).get().getRoot();
+        var result = selectElements(root, asList("root", "e1"));
+
+        assertThat(result) //
+                .extracting(XmlElement::getQName) //
+                .containsExactly("e1");
     }
 }
