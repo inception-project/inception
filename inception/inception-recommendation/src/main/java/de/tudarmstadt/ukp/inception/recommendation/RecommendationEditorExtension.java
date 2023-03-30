@@ -159,15 +159,8 @@ public class RecommendationEditorExtension
                 return;
             }
 
-            if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
-                actionAcceptSpanRecommendation((SpanSuggestion) prediction.get(), document,
-                        aActionHandler, aState, aTarget, aCas, aVID);
-            }
-
-            if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
-                actionAcceptRelationRecommendation((RelationSuggestion) prediction.get(), document,
-                        aActionHandler, aState, aTarget, aCas, aVID);
-            }
+            actionAcceptPrediction(aActionHandler, aState, aTarget, aCas, aVID, prediction,
+                    document);
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
@@ -189,6 +182,22 @@ public class RecommendationEditorExtension
                 page.getAnnotationActionHandler().actionJump(aTarget, position.getSourceBegin(),
                         position.getSourceEnd());
             }
+        }
+    }
+
+    private void actionAcceptPrediction(AnnotationActionHandler aActionHandler,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID,
+            Optional<AnnotationSuggestion> prediction, SourceDocument document)
+        throws AnnotationException, IOException
+    {
+        if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
+            actionAcceptSpanRecommendation((SpanSuggestion) prediction.get(), document,
+                    aActionHandler, aState, aTarget, aCas, aVID);
+        }
+
+        if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
+            actionAcceptRelationRecommendation((RelationSuggestion) prediction.get(), document,
+                    aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
 
@@ -220,9 +229,9 @@ public class RecommendationEditorExtension
         // Upsert an annotation based on the suggestion
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        int address = recommendationService.upsertSpanFeature(annotationService,
-                aState.getDocument(), aState.getUser().getUsername(), aCas, layer, feature,
-                suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
+        int address = recommendationService.upsertSpanFeature(aState.getDocument(),
+                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
+                suggestion.getBegin(), suggestion.getEnd());
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
@@ -246,7 +255,7 @@ public class RecommendationEditorExtension
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
 
-        int address = recommendationService.upsertRelationFeature(annotationService, document,
+        int address = recommendationService.upsertRelationFeature(document,
                 aState.getUser().getUsername(), aCas, layer, feature, suggestion);
 
         AnnotationFS relation = ICasUtil.selectAnnotationByAddr(aCas, address);
@@ -364,7 +373,7 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public void renderRequested(AnnotatorState aState)
+    public void renderRequested(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         log.trace("renderRequested()");
 
@@ -382,11 +391,16 @@ public class RecommendationEditorExtension
                 aState.getProject());
         log.trace("switchPredictions() returned {}", switched);
 
+        if (!switched) {
+            return;
+        }
+
+        // Maybe later ;)
+        // recommendationService.autoAccept(aTarget, aState.getUser(), aState.getDocument());
+
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        if (switched) {
-            applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
-        }
+        applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
     }
 
     @Override

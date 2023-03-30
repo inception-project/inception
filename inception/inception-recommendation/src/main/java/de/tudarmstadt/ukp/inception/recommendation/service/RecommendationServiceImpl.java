@@ -27,6 +27,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.lang.Math.max;
@@ -34,7 +36,11 @@ import static java.lang.Math.min;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -79,6 +85,7 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -108,6 +115,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -118,6 +126,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -131,6 +141,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
@@ -176,6 +187,8 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public class RecommendationServiceImpl
     implements RecommendationService
 {
+    private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final int TRAININGS_PER_SELECTION = 5;
@@ -501,7 +514,10 @@ public class RecommendationServiceImpl
         String username = aEvent.getAnnotator();
         SourceDocument doc = aEvent.getDocument();
         Predictions predictions = getState(username, project).getActivePredictions();
+        boolean predictionSessionExistedOnOpen = predictions != null;
 
+        // If the user does not exist (also if the user is a pseudo-user like CURATION_USER
+        // we do not apply recommendations
         User user = userRepository.get(username);
         if (user == null) {
             return;
@@ -510,30 +526,32 @@ public class RecommendationServiceImpl
         // We want to get predictions from all trained recommenders immediately - be they externally
         // pre-trained or possibly internal recommenders that have been trained due to earlier
         // actions.
-        if (predictions == null) {
+        String trigger = aEvent.getClass().getSimpleName();
+        if (!predictionSessionExistedOnOpen) {
             // Activate all non-trainable recommenders - execute synchronously - blocking
-            schedulingService.executeSync(new NonTrainableRecommenderActivationTask(user, project,
-                    "DocumentOpenedEvent"));
+            schedulingService
+                    .executeSync(new NonTrainableRecommenderActivationTask(user, project, trigger));
         }
 
-        boolean predictionTriggered = false;
-        if (predictions == null || !predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
-            var settings = preferencesService
-                    .loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS, project);
-            if (settings.isWaitForRecommendersOnOpenDocument()) {
-                schedulingService.executeSync(new PredictionTask(user, "DocumentOpenedEvent", doc));
-                switchPredictions(user, project);
-            }
+        // Check if we need to wait for the initial recommender run before displaying the document
+        // to the user var predictionSessionExists =
+        boolean predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, user,
+                trigger);
+
+        // Is it the first time a document has been opened? If yes, ther might be auto-accept
+        // suggestions that need to be processed (in particular ones that may have been generated
+        // by the non-trainable recommenders triggered above or from already existing predictions
+        if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
+            autoAccept(aEvent.getRequestTarget(), user, doc, ON_FIRST_ACCESS);
         }
 
-        // If there already is a state, we just re-use it. We only trigger a new training if no
-        // predictions object has been created yet.
-        if (predictions == null) {
-            triggerTrainingAndPrediction(username, project, "DocumentOpenedEvent", doc);
+        // Trigger a training and prediction run if there is no prediction state yet
+        if (!predictionSessionExistedOnOpen) {
+            triggerTrainingAndPrediction(username, project, trigger, doc);
             return;
         }
 
-        if (predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
+        if (predictions != null && predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
             LOG.debug(
                     "Not scheduling prediction task after document was opened as we already have predictions");
             return;
@@ -543,7 +561,117 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(username, "DocumentOpenedEvent", doc);
+            triggerPrediction(username, trigger, doc);
+        }
+    }
+
+    private boolean nonTrainableRecommenderRunSync(SourceDocument doc, Predictions predictions,
+            User user, String trigger)
+    {
+        if (predictions != null && predictions.hasRunPredictionOnDocument(doc)) {
+            LOG.trace("Not running sync prediction for non-trainable recommenders as we already "
+                    + "have predictions");
+            return false;
+        }
+
+        var settings = preferencesService
+                .loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS, doc.getProject());
+        if (!settings.isWaitForRecommendersOnOpenDocument()) {
+            LOG.trace("Not running sync prediction for non-trainable recommenders because the "
+                    + "option is not enabled in the project settings");
+            return false;
+        }
+
+        LOG.trace("Running sync prediction for non-trainable recommenders");
+        schedulingService.executeSync(new PredictionTask(user, trigger, doc));
+        switchPredictions(user, doc.getProject());
+
+        return true;
+    }
+
+    private void autoAccept(AjaxRequestTarget aTarget, User aUser, SourceDocument aDocument,
+            AutoAcceptMode aAutoAcceptMode)
+    {
+        if (aTarget == null) {
+            LOG.trace("Not auto-accepting outside AJAX requests");
+            return;
+        }
+
+        if (!(aTarget.getPage() instanceof AnnotationPage)) {
+            LOG.trace("Not auto-accepting when not triggered through AnnotationPage");
+            return;
+        }
+
+        var page = (AnnotationPage) aTarget.getPage();
+
+        var predictions = getPredictions(aUser, aDocument.getProject());
+        if (predictions == null || !predictions.hasPredictions()) {
+            LOG.trace("Not auto-accepting because no predictions are available");
+            return;
+        }
+
+        if (!page.isEditable()) {
+            return;
+        }
+
+        CAS cas;
+        try {
+            cas = page.getEditorCas();
+        }
+        catch (IOException e) {
+            LOG.error("Not auto-accepting because editor CAS could not be loaded", e);
+            return;
+        }
+
+        var count = 0;
+        for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
+            if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
+                continue;
+            }
+
+            // We do not clear auto-accept for on-first-access predictions because these should be
+            // restored after a document reset but they won't be re-generated after a document
+            // reset.
+            if (prediction.getAutoAcceptMode() != AutoAcceptMode.ON_FIRST_ACCESS) {
+                prediction.clearAutoAccept();
+            }
+
+            AnnotationLayer layer = annoService.getLayer(prediction.getLayerId());
+            AnnotationFeature feature = annoService.getFeature(prediction.getFeature(), layer);
+
+            try {
+                if (prediction instanceof SpanSuggestion) {
+                    var spanPrediction = (SpanSuggestion) prediction;
+                    upsertSpanFeature(aDocument, aUser.getUsername(), cas, layer, feature,
+                            spanPrediction.getLabel(), spanPrediction.getBegin(),
+                            spanPrediction.getEnd());
+                    prediction.hide(FLAG_TRANSIENT_ACCEPTED);
+                    count++;
+                }
+
+                if (prediction instanceof RelationSuggestion) {
+                    var relationPrediction = (RelationSuggestion) prediction;
+                    upsertRelationFeature(aDocument, aUser.getUsername(), cas, layer, feature,
+                            relationPrediction);
+                    prediction.hide(FLAG_TRANSIENT_ACCEPTED);
+                    count++;
+                }
+            }
+            catch (AnnotationException e) {
+                LOG.debug("Not auto-accepting suggestion: {}", e.getMessage());
+            }
+        }
+
+        predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", count));
+        LOG.debug("Auto-accepted [{}] suggestions", count);
+
+        if (count > 0) {
+            try {
+                page.writeEditorCas(cas);
+            }
+            catch (Exception e) {
+                WicketExceptionUtil.handleException(LOG, page, aTarget, e);
+            }
         }
     }
 
@@ -795,10 +923,10 @@ public class RecommendationServiceImpl
     public void afterDocumentReset(AfterDocumentResetEvent aEvent)
     {
         String userName = aEvent.getDocument().getUser();
-        Project project = aEvent.getDocument().getProject();
         clearState(userName);
-        triggerTrainingAndPrediction(userName, project, "AfterDocumentResetEvent",
-                aEvent.getDocument().getDocument());
+        // Project project = aEvent.getDocument().getProject();
+        // triggerTrainingAndPrediction(userName, project, "AfterDocumentResetEvent",
+        // aEvent.getDocument().getDocument());
     }
 
     @Override
@@ -891,13 +1019,12 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public int upsertSpanFeature(AnnotationSchemaService annotationService,
-            SourceDocument aDocument, String aUsername, CAS aCas, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
+    public int upsertSpanFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationLayer aLayer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
         throws AnnotationException
     {
         // The feature of the predicted label
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(aLayer);
+        SpanAdapter adapter = (SpanAdapter) annoService.getAdapter(aLayer);
 
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
@@ -922,12 +1049,11 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public int upsertRelationFeature(AnnotationSchemaService annotationService,
-            SourceDocument aDocument, String aUsername, CAS aCas, AnnotationLayer layer,
-            AnnotationFeature aFeature, RelationSuggestion aSuggestion)
+    public int upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
         throws AnnotationException
     {
-        RelationAdapter adapter = (RelationAdapter) annotationService.getAdapter(layer);
+        RelationAdapter adapter = (RelationAdapter) annoService.getAdapter(layer);
 
         int sourceBegin = aSuggestion.getPosition().getSourceBegin();
         int sourceEnd = aSuggestion.getPosition().getSourceEnd();
@@ -1659,6 +1785,8 @@ public class RecommendationServiceImpl
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
         Feature scoreExplanationFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+        Feature modeFeature = predictedType
+                .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
         Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
         var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
 
@@ -1669,6 +1797,15 @@ public class RecommendationServiceImpl
         for (FeatureStructure predictedFS : aPredictionCas.select(predictedType)) {
             if (!predictedFS.getBooleanValue(predictionFeature)) {
                 continue;
+            }
+
+            var autoAcceptFeatureValue = predictedFS.getStringValue(modeFeature);
+            var autoAcceptMode = AutoAcceptMode.NEVER;
+            if (autoAcceptFeatureValue != null) {
+                switch (autoAcceptFeatureValue) {
+                case AUTO_ACCEPT_ON_FIRST_ACCESS:
+                    autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
+                }
             }
 
             String[] labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
@@ -1693,7 +1830,7 @@ public class RecommendationServiceImpl
 
                     suggestion = new SpanSuggestion(id, aRecommender, layer.getId(), featureName,
                             aDocument.getName(), targetOffsets.get(), coveredText, label, label,
-                            score, scoreExplanation);
+                            score, scoreExplanation, autoAcceptMode);
                     break;
                 }
                 case RELATION_TYPE: {
@@ -1705,7 +1842,7 @@ public class RecommendationServiceImpl
 
                     suggestion = new RelationSuggestion(id, aRecommender, layer.getId(),
                             featureName, aDocument.getName(), originalSource, originalTarget, label,
-                            label, score, scoreExplanation);
+                            label, score, scoreExplanation, autoAcceptMode);
                     break;
                 }
                 default:
@@ -2003,17 +2140,15 @@ public class RecommendationServiceImpl
                             // that would just trigger the creation of the same annotation and
                             // not set any new feature. This applies whether stacking is allowed
                             // or not.
-                            if (suggestion.getBegin() == annotation.getBegin()
-                                    && suggestion.getEnd() == annotation.getEnd()) {
+                            if (colocated(annotation, suggestion.getBegin(), suggestion.getEnd())) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
 
                             // If stacking is enabled, we do allow suggestions that create an
                             // annotation with no label, but only if the offsets differ
-                            if (feature.getLayer().isAllowStacking()
-                                    && (suggestion.getBegin() != annotation.getBegin()
-                                            || suggestion.getEnd() != annotation.getEnd())) {
+                            if (feature.getLayer().isAllowStacking() && !colocated(annotation,
+                                    suggestion.getBegin(), suggestion.getEnd())) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2025,13 +2160,14 @@ public class RecommendationServiceImpl
                             // Is the feature still unset in the current annotation - i.e. would
                             // accepting the suggestion merge the feature into it? If yes, we do
                             // not hide
-                            if (label == null) {
+                            if (label == null && colocated(annotation, suggestion.getBegin(),
+                                    suggestion.getEnd())) {
                                 continue;
                             }
 
                             // Does the suggested label match the label of an existing
                             // annotation, then we hide
-                            if (label.equals(suggestion.getLabel())) {
+                            if (label != null && label.equals(suggestion.getLabel())) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2225,16 +2361,19 @@ public class RecommendationServiceImpl
                 }
 
                 for (FeatureDescription feature : td.getFeatures()) {
-                    String scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-                    td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
+                    var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
+                    td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
 
-                    String scoreExplanationFeatureName = feature.getName()
+                    var scoreExplanationFeatureName = feature.getName()
                             + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
                     td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
                             CAS.TYPE_NAME_STRING);
+
+                    var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+                    td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
                 }
 
-                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
+                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
             }
 
             annoService.upgradeCas(aSourceCas, aTargetCas, tsd);

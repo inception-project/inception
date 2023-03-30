@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_US
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
@@ -40,7 +39,6 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
@@ -105,14 +103,7 @@ public class CurationSidebarIcon
                     state.getProject().getId());
             if (!state.getUser().equals(curationTarget)) {
                 state.setUser(curationTarget);
-                try {
-                    // Cannot use actionLoadDocument() here, but we still need to bump the timestamp
-                    // to avoid a concurrent access error when switching curation targets
-                    findParent(AnnotationPage.class).bumpAnnotationCasTimestamp(state);
-                }
-                catch (IOException e) {
-                    WicketExceptionUtil.handleException(LOG, getPage(), e);
-                }
+                findParent(AnnotationPage.class).actionLoadDocument(null);
                 throw new RestartResponseException(getPage());
             }
         }

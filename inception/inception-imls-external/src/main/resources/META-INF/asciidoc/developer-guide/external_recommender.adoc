@@ -15,35 +15,16 @@ When making changes to the API, just copy the stuff from there over to this docu
 
 [[_external_recommender_api_overview]]
 == Overview
-This section describes the External Recommender API for INCEpTION. An external recommender is a
+This section describes the External Recommender API for {product-name}. An external recommender is a
 classifier whose functionality is exposed via a HTTP web service. It can predict annotations for
 given documents and optionally be trained on new data. This document describes the endpoints a web
-service needs to expose so it can be used with INCEpTION. The documents that are exchanged are in
+service needs to expose so it can be used with {product-name}. The documents that are exchanged are in
 form of a UIMA CAS. For sending, they have to be serialized to CAS XMI. For receiving, it has to be
-deserialized back. There are two main libraries available that manage CAS handling, one is the UIMA
-Java SDK, the other one dkpro-cassis (Python).
-
-=== Version information
-[%hardbreaks]
-__Version__ : 1.0.0
-
-
-=== Contact information
-[%hardbreaks]
-__Contact Email__ : inception-users@googlegroups.com
-
-
-=== License information
-[%hardbreaks]
-__License__ : Apache 2.0
-__License URL__ : http://www.apache.org/licenses/LICENSE-2.0.html
-__Terms of service__ : https://inception-project.github.io
-
-
-
+deserialized back. There are two main libraries available that manage CAS handling, one is the
+link:https://uima.apache.org[Apache UIMA Java SDK], the other one link:https://github.com/dkpro/dkpro-cassis#dkpro-cassis[dkpro-cassis] (Python).
 
 [[_external_recommender_api_paths]]
-== Paths
+== API Endpoints
 
 [[_external_recommender_api_predictcas]]
 === Predict annotations for a single document
@@ -291,5 +272,16 @@ __required__|Type system XML of the CAS +
 **Example** : `"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <typeSystemDescription xmlns=\"http://uima.apache.org/resourceSpecifier\"> <types> <typeDescription> <name>uima.tcas.DocumentAnnotation</name> <description/> <supertypeName>uima.tcas.Annotation</supertypeName> <features> <featureDescription> <name>language</name> <description/> <rangeTypeName>uima.cas.String</rangeTypeName> </featureDescription> </features> </typeDescription> </types> </typeSystemDescription>"`|string
 |===
 
+== Encoding annotation suggestions
 
+This section explains how annotation suggestions can be encoded in the response to a `predict` call.
 
+Note that a recommender can only produce suggestions for one feature on one layer. The name of the layer and feature are contained in the request to the `predict` call and only suggestions generated for that specific layer and feature will be processed by {product-name} when the call returns.
+
+For the purpose of producing annotation suggestions, this specific layer is extended with additional features that can be set. Some of these features start with the name of the feature (we use `<FEATURE_NAME>` as a placeholder for the actual feature name below) to be predicted and then add a suffix:
+
+* `inception_internal_predicted`: this boolean feature indicates that an annotation was added by the external recommender. It allows the system to distinguish between annotations that already existed in the document and annotations that the recommender has created. Only annotations where this flag is set to `true` will be processed by {product-name}.
+* `<FEATURE_NAME>`: this feature takes the label that the external recommender assigns.
+* `<FEATURE_NAME>_score` (optional): this floating-point (double) feature can be used to indicate the score assigned to a predicted label.
+* `<FEATURE_NAME>_score_explanation` (optional): this string feature can be used to provide an explanation for the score. This explanation is shown on the annotation page when the user inspects a particular suggestion (note that not all editors may support displaying explanations).
+* `<FEATURE_NAME>_auto_accept` (optional): this feature can be set to `on-first-access` to force-accept an annotation into a document when an annotator accesses a document for the first time. This should only be used in conjunction with non-trainable recommenders and with the option **Wait for suggestions from non-trainable recommenders when opening document** in the recommender project settings. Thus, when an annotator opens a document for the first time, the system would wait for recommendations by non-trainable (pre-trained) recommenders and then directly accept any of the suggestions that the recommender has marked to uto-accept on-first-access. When the annotator resets a document via the action bar, this procedure is also followed. This provides a convenient way of "pre-annotating" documents with the help of external recommenders. Note though that an annotator has to actually open a document in order for this process to trigger.

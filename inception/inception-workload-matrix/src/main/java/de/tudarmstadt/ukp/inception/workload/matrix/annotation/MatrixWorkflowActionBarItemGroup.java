@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
@@ -74,17 +76,23 @@ public class MatrixWorkflowActionBarItemGroup
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
+    private @SpringBean PreferencesService preferencesService;
 
     private final AnnotationPageBase page;
     protected ModalDialog finishDocumentDialog;
     private final ChallengeResponseDialog resetDocumentDialog;
     private final LambdaAjaxLink resetDocumentLink;
+    private final IModel<MatrixWorkloadTraits> traits;
 
     public MatrixWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
         page = aPage;
+
+        traits = LoadableDetachableModel.of(() -> matrixWorkloadExtension
+                .readTraits(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
+                        page.getModelObject().getProject())));
 
         finishDocumentDialog = new BootstrapModalDialog("finishDocumentDialog");
         finishDocumentDialog.setContent(new FinishDocumentDialogContent(ModalDialog.CONTENT_ID,
@@ -105,6 +113,8 @@ public class MatrixWorkflowActionBarItemGroup
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));
         resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
+        resetDocumentLink.add(visibleWhen(
+                traits.map(MatrixWorkloadTraits::isDocumentResetAllowed).orElse(false)));
     }
 
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
@@ -138,9 +148,7 @@ public class MatrixWorkflowActionBarItemGroup
             return true;
         }
 
-        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(page.getModelObject().getProject()));
-        return traits.isReopenableByAnnotator();
+        return traits.getObject().isReopenableByAnnotator();
     }
 
     protected AnnotationPageBase getAnnotationPage()

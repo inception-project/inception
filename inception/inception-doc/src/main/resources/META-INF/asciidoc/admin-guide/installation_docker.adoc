@@ -27,10 +27,10 @@ If you have Docker installed, you can run {product-name} using
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
-The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
+The command downloads {product-name} from GitHub and starts it on port 8080. If this port is not
 available on your machine, you should provide another port to the `-p` parameter. 
 
 The logs will be printed to the console. To stop the container, press `CTRL-C`.
@@ -39,7 +39,7 @@ To run the {product-name} docker in the background use
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -d --name inception -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
 Logs are accessible by typing
@@ -86,7 +86,7 @@ When you run {product-name} via Docker, you then mount this folder into the cont
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
 == Settings file

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class Fixtures
         for (int[] val : vals) {
             suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     aFeat.getLayer().getId(), aFeat.getName(), doc.getName(), val[1], val[2],
-                    COVERED_TEXT, null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION));
+                    COVERED_TEXT, null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION, NEVER));
         }
 
         return new SuggestionDocumentGroup<>(suggestions);
@@ -79,7 +80,7 @@ public class Fixtures
         for (int[] val : vals) {
             suggestions.add(new RelationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     aFeat.getLayer().getId(), aFeat.getName(), doc.getName(), val[1], val[2],
-                    val[3], val[4], null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION));
+                    val[3], val[4], null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION, NEVER));
         }
 
         return new SuggestionDocumentGroup<>(suggestions);

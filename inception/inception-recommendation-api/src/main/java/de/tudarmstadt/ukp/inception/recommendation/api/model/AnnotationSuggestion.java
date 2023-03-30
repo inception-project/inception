@@ -81,11 +81,13 @@ public abstract class AnnotationSuggestion
     protected final String uiLabel;
     protected final double score;
     protected final String scoreExplanation;
+
+    private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
-            double aScore, String aScoreExplanation)
+            double aScore, String aScoreExplanation, AutoAcceptMode aAutoAcceptMode)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -97,6 +99,7 @@ public abstract class AnnotationSuggestion
         scoreExplanation = aScoreExplanation;
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
+        autoAcceptMode = aAutoAcceptMode;
     }
 
     public AnnotationSuggestion(AnnotationSuggestion aObject)
@@ -111,6 +114,7 @@ public abstract class AnnotationSuggestion
         scoreExplanation = aObject.scoreExplanation;
         recommenderId = aObject.recommenderId;
         documentName = aObject.documentName;
+        autoAcceptMode = aObject.autoAcceptMode;
     }
 
     public int getId()
@@ -207,6 +211,16 @@ public abstract class AnnotationSuggestion
     public boolean isVisible()
     {
         return hidingFlags == 0;
+    }
+
+    public AutoAcceptMode getAutoAcceptMode()
+    {
+        return autoAcceptMode;
+    }
+
+    public void clearAutoAccept()
+    {
+        autoAcceptMode = AutoAcceptMode.NEVER;
     }
 
     public VID getVID()

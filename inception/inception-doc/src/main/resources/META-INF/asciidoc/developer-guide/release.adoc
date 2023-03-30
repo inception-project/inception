@@ -105,7 +105,7 @@ version folder under `releases/{version}/docs` in the documentation
 repository. Also update the `_data/releases.yml` file. Create a pull
 request for this as well.
 
-== Publish to DockerHub
+== Publish to GitHub Packages
 
 Make sure that you configured your docker user in your Maven settings:
 
@@ -118,7 +118,7 @@ Make sure that you configured your docker user in your Maven settings:
 </server>
 ----
 
-Also, your user needs to have push rights to the `inceptionproject` Dockerhub group.
+Also, your user needs to have push rights to the `ghcr.io/inception-project` GitHub package repository.
 If you have just made a release, change to `target/checkout/inception-docker`. Otherwise check out the release
 tag e.g. via `git checkout tags/inception-app-0.18.0`. 
 Make sure that in the top-level POM, the version is set to a release version (no snapshot suffix).
@@ -126,11 +126,12 @@ Then go to the `inception-docker` module folder and there run the following comm
 
 [source,xml]
 ----
-mvn -Pdocker clean docker:build -Ddocker.image.name="inceptionproject/inception"
-mvn -Pdocker docker:push -Ddocker.image.name="inceptionproject/inception"
+mvn -Pdocker clean docker:build -Ddocker.image.name="ghcr.io/inception-project/inception"
+mvn -Pdocker docker:push -Ddocker.image.name="ghcr.io/inception-project/inception"
 ----
 
-After successfully publishing to DockerHub, the DockerHub repository will show your released version as the latest version.
+After successfully publishing, the GitHub package repository will show your released
+version as the latest version.
 
 == Aborting and re-running a release
 

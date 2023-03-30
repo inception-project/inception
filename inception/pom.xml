@@ -150,7 +150,7 @@
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.4</dayjs.version>
     <esbuild.version>~0.16.17</esbuild.version>
-    <esbuild-sass-plugin.version>^2.5.0</esbuild-sass-plugin.version>
+    <esbuild-sass-plugin.version>~2.5.0</esbuild-sass-plugin.version>
     <esbuild-svelte.version>^0.7.3</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.31.0</eslint.version>
@@ -168,7 +168,7 @@
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>3.6.3</jquery.version>
+    <jquery.version>3.6.4</jquery.version>
     <jquery-ui.version>1.13.2</jquery-ui.version>
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
@@ -1308,7 +1308,7 @@
       </dependency>
 
       <dependency>
-        <groupId>org.webjars</groupId>
+        <groupId>org.webjars.npm</groupId>
         <artifactId>jquery</artifactId>
         <version>${jquery.version}</version>
       </dependency>
@@ -2117,23 +2117,6 @@
         <groupId>org.webjars.npm</groupId>
         <artifactId>kinetic</artifactId>
         <version>5.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>color-thief</artifactId>
-        <version>2.2.1</version>
-        <exclusions>
-        <!-- The versions of canvas referenced by color-thief are not available on Maven Central -->
-          <exclusion>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>canvas</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>canvas</artifactId>
-        <version>1.4.0</version>
       </dependency>
 
       <dependency>

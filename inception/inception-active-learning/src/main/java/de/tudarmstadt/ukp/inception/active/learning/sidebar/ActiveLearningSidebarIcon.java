@@ -48,9 +48,9 @@ public class ActiveLearningSidebarIcon
     public ActiveLearningSidebarIcon(String aId, IModel<AnnotatorState> aState)
     {
         super(aId, aState);
-        
+
         setOutputMarkupId(true);
-        
+
         queue(new Icon("icon", FontAwesome5IconType.robot_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
@@ -99,14 +99,16 @@ public class ActiveLearningSidebarIcon
 
         return FontAwesome5IconType.stop_circle_s;
     }
-    
+
     @OnEvent
-    public void sessionStarted(ActiveLearningSessionStartedEvent aEvent) {
+    public void sessionStarted(ActiveLearningSessionStartedEvent aEvent)
+    {
         aEvent.getRequestTarget().add(this);
     }
 
     @OnEvent
-    public void sessionStarted(ActiveLearningSessionCompletedEvent aEvent) {
+    public void sessionStarted(ActiveLearningSessionCompletedEvent aEvent)
+    {
         aEvent.getRequestTarget().add(this);
     }
 }

@@ -284,8 +284,8 @@ public class ActiveLearningServiceImpl
         // Request clearing selection and when onFeatureValueUpdated is triggered as a callback
         // from the update event created by upsertSpanFeature.
         AnnotationFeature feature = schemaService.getFeature(suggestion.getFeature(), layer);
-        recommendationService.upsertSpanFeature(schemaService, sourceDoc, username, cas, layer,
-                feature, value, suggestion.getBegin(), suggestion.getEnd());
+        recommendationService.upsertSpanFeature(sourceDoc, username, cas, layer, feature, value,
+                suggestion.getBegin(), suggestion.getEnd());
 
         // Save CAS after annotation has been created
         documentService.writeAnnotationCas(cas, sourceDoc, aUser, true);

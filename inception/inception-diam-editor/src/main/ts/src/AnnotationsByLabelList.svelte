@@ -35,6 +35,7 @@
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
     let sortByScore: boolean = true;
+    let recommendationsFirst: boolean = false;
 
     $: sortedLabels = uniqueLabels(data);
     $: {
@@ -54,12 +55,14 @@
                     return 1;
                 }
 
-                if (sortByScore && a.vid.toString().startsWith("rec:") && !b.vid.toString().startsWith("rec:")) {
-                    return -1;
+                const aIsRec = a.vid.toString().startsWith("rec:")
+                const bIsRec = b.vid.toString().startsWith("rec:")
+                if (sortByScore && aIsRec && !bIsRec) {
+                    return recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if (sortByScore) {
+                    if (sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return (
@@ -69,7 +72,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if (sortByScore) {
+                    if (sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return compareOffsets(
@@ -97,17 +100,29 @@
         </div>
     </div>
 {:else}
-    <div class="d-flex">
+    <div class="d-flex flex-column">
         <div class="form-check form-switch mx-2">
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                id="inlineLabelsEnabled"
+                id="sortByScore"
                 bind:checked={sortByScore}
             />
-            <label class="form-check-label" for="inlineLabelsEnabled"
+            <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
+            >
+        </div>
+        <div class="form-check form-switch mx-2" class:d-none={!sortByScore}>
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="recommendationsFirst"
+                bind:checked={recommendationsFirst}
+            />
+            <label class="form-check-label" for="recommendationsFirst"
+                >Recommendations first</label
             >
         </div>
     </div>
@@ -141,10 +156,10 @@
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="flex-grow-1 py-1 px-2"
+                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
                                         on:click={() => scrollTo(ann)}
                                     >
-                                        <div class="float-end">
+                                        <div class="float-end labels">
                                             <LabelBadge
                                                 annotation={ann}
                                                 {ajaxClient}
@@ -172,6 +187,13 @@
 {/if}
 
 <style lang="scss">
+    .labels {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .annotation-type-marker {
         width: 1em;
         text-align: center;

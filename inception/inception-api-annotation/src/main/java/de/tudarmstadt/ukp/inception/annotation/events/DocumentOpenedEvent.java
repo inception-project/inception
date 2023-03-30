@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.events;
 import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
@@ -35,15 +36,17 @@ public class DocumentOpenedEvent
     private final String annotator;
     // user who opened the document
     private final String opener;
+    private final AnnotationDocumentState stateBeforeOpening;
 
     public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
-            String aAnnotator, String aOpener)
+            AnnotationDocumentState aStateBeforeOpening, String aAnnotator, String aOpener)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
         annotator = aAnnotator;
         opener = aOpener;
+        stateBeforeOpening = aStateBeforeOpening;
     }
 
     public CAS getCas()
@@ -64,5 +67,10 @@ public class DocumentOpenedEvent
     public String getAnnotator()
     {
         return annotator;
+    }
+
+    public AnnotationDocumentState getStateBeforeOpening()
+    {
+        return stateBeforeOpening;
     }
 }

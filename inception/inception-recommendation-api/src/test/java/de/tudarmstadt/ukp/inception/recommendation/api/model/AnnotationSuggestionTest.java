@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,13 +35,13 @@ public class AnnotationSuggestionTest
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
         SpanSuggestion rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a",
-                "A", "#A", 0.1, "E1");
+                "A", "#A", 0.1, "E1", NEVER);
         SpanSuggestion rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b",
-                "B", "#B", 0.2, "E2");
+                "B", "#B", 0.2, "E2", NEVER);
         SpanSuggestion rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c",
-                "C", "#C", 0.1, "E1");
+                "C", "#C", 0.1, "E1", NEVER);
         SpanSuggestion rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d",
-                "D", "#D", 0.3, "E3");
+                "D", "#D", 0.3, "E3", NEVER);
 
         List<SpanSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
         for (SpanSuggestion x : all) {

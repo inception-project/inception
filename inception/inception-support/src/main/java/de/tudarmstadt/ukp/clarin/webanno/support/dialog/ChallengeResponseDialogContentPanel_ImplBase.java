@@ -45,6 +45,7 @@ public abstract class ChallengeResponseDialogContentPanel_ImplBase
     private Label title;
     private Label expectedResponse;
     private TextField<String> responseField;
+    private LambdaAjaxButton<State> confirm;
     private LambdaAjaxLink cancel;
 
     private ResourceModel titleModel;
@@ -75,9 +76,19 @@ public abstract class ChallengeResponseDialogContentPanel_ImplBase
         cancel.setOutputMarkupId(true);
 
         queue(new Label("feedback"));
-        queue(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
+        queue(confirm = new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
         queue(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
         queue(title, expectedResponse, responseField, cancel, form);
+    }
+
+    public LambdaAjaxButton<State> getConfirmButton()
+    {
+        return confirm;
+    }
+
+    public TextField<String> getResponseField()
+    {
+        return responseField;
     }
 
     @Deprecated
@@ -168,7 +179,7 @@ public abstract class ChallengeResponseDialogContentPanel_ImplBase
         cancelAction = aCancelAction;
     }
 
-    private class State
+    protected class State
         implements Serializable
     {
         private static final long serialVersionUID = 4483229579553569947L;

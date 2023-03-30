@@ -51,7 +51,7 @@ public class DKPro2Nif
         final Resource tParagraph = m.createResource(NIF.TYPE_PARAGRAPH);
         final Resource tEntityOccurrence = m.createResource(NIF.TYPE_ENTITY_OCCURRENCE);
         final Resource tOffsetBasedString = m.createResource(NIF.TYPE_OFFSET_BASED_STRING);
-        
+
         final Property pReferenceContext = m.createProperty(NIF.PROP_REFERENCE_CONTEXT);
         final Property pIsString = m.createProperty(NIF.PROP_IS_STRING);
         final Property pAnchorOf = m.createProperty(NIF.PROP_ANCHOR_OF);
@@ -73,7 +73,7 @@ public class DKPro2Nif
         DocumentMetaData dmd = DocumentMetaData.get(aJCas);
         String docuri = dmd.getDocumentUri() != null ? dmd.getDocumentUri()
                 : "urn:" + dmd.getDocumentId();
-        
+
         // Convert document -> context node
         Individual context;
         {
@@ -81,14 +81,12 @@ public class DKPro2Nif
                     aJCas.getDocumentText().length());
             context = m.createIndividual(uri, tContext);
             context.addRDFType(tOffsetBasedString);
-            context.addLiteral(pIsString, 
-                    m.createTypedLiteral(aJCas.getDocumentText(), XSDstring));
-            context.addLiteral(pBeginIndex, 
-                    m.createTypedLiteral(0, XSDnonNegativeInteger));
+            context.addLiteral(pIsString, m.createTypedLiteral(aJCas.getDocumentText(), XSDstring));
+            context.addLiteral(pBeginIndex, m.createTypedLiteral(0, XSDnonNegativeInteger));
             context.addLiteral(pEndIndex,
                     m.createTypedLiteral(aJCas.getDocumentText().length(), XSDnonNegativeInteger));
         }
-        
+
         // Convert headings/titles
         for (Heading uimaHeading : select(aJCas, Heading.class)) {
             String headingUri = String.format("%s#offset_%d_%d", docuri, uimaHeading.getBegin(),
@@ -97,7 +95,7 @@ public class DKPro2Nif
             nifTitle.addRDFType(tOffsetBasedString);
             nifTitle.addProperty(pReferenceContext, context);
             nifTitle.addLiteral(pAnchorOf, uimaHeading.getCoveredText());
-            nifTitle.addLiteral(pBeginIndex, 
+            nifTitle.addLiteral(pBeginIndex,
                     m.createTypedLiteral(uimaHeading.getBegin(), XSDnonNegativeInteger));
             nifTitle.addLiteral(pEndIndex,
                     m.createTypedLiteral(uimaHeading.getEnd(), XSDnonNegativeInteger));
@@ -111,12 +109,12 @@ public class DKPro2Nif
             nifParagraph.addRDFType(tOffsetBasedString);
             nifParagraph.addProperty(pReferenceContext, context);
             nifParagraph.addLiteral(pAnchorOf, uimaParagraph.getCoveredText());
-            nifParagraph.addLiteral(pBeginIndex, 
+            nifParagraph.addLiteral(pBeginIndex,
                     m.createTypedLiteral(uimaParagraph.getBegin(), XSDnonNegativeInteger));
             nifParagraph.addLiteral(pEndIndex,
                     m.createTypedLiteral(uimaParagraph.getEnd(), XSDnonNegativeInteger));
         }
-        
+
         // Convert sentences
         Individual previousNifSentence = null;
         for (Sentence uimaSentence : select(aJCas, Sentence.class)) {
@@ -126,18 +124,18 @@ public class DKPro2Nif
             nifSentence.addRDFType(tOffsetBasedString);
             nifSentence.addProperty(pReferenceContext, context);
             nifSentence.addLiteral(pAnchorOf, uimaSentence.getCoveredText());
-            nifSentence.addLiteral(pBeginIndex, 
+            nifSentence.addLiteral(pBeginIndex,
                     m.createTypedLiteral(uimaSentence.getBegin(), XSDnonNegativeInteger));
             nifSentence.addLiteral(pEndIndex,
                     m.createTypedLiteral(uimaSentence.getEnd(), XSDnonNegativeInteger));
-            
+
             // Link word sequence
             if (previousNifSentence != null) {
                 previousNifSentence.addProperty(pNextSentence, nifSentence);
                 nifSentence.addProperty(pPreviousSentence, previousNifSentence);
             }
             previousNifSentence = nifSentence;
-            
+
             // Convert tokens
             Individual previousNifWord = null;
             for (Token uimaToken : selectCovered(Token.class, uimaSentence)) {
@@ -147,39 +145,39 @@ public class DKPro2Nif
                 nifWord.addRDFType(tOffsetBasedString);
                 nifWord.addProperty(pReferenceContext, context);
                 nifWord.addLiteral(pAnchorOf, uimaToken.getText());
-                nifWord.addLiteral(pBeginIndex, 
+                nifWord.addLiteral(pBeginIndex,
                         m.createTypedLiteral(uimaToken.getBegin(), XSDnonNegativeInteger));
                 nifWord.addLiteral(pEndIndex,
                         m.createTypedLiteral(uimaToken.getEnd(), XSDnonNegativeInteger));
-                
+
                 // Link sentence <-> word
                 nifWord.addProperty(pSentence, nifSentence);
                 nifSentence.addProperty(pWord, nifWord);
-                
+
                 // Link word sequence
                 if (previousNifWord != null) {
                     previousNifWord.addProperty(pNextWord, nifWord);
                     nifWord.addProperty(pPreviousWord, previousNifWord);
                 }
                 previousNifWord = nifWord;
-                
+
                 // Convert stem
                 if (uimaToken.getStemValue() != null) {
                     nifWord.addProperty(pStem, uimaToken.getStemValue());
                 }
-                
+
                 // Convert lemma
                 if (uimaToken.getLemmaValue() != null) {
                     nifWord.addProperty(pLemma, uimaToken.getLemmaValue());
                 }
-                
+
                 // Convert posTag (this is discouraged, the better alternative should be oliaLink)
                 if (uimaToken.getPosValue() != null) {
                     nifWord.addProperty(pPosTag, uimaToken.getPosValue());
                 }
             }
         }
-        
+
         // Convert named entities
         //
         // Actually, the named entity in NIF is different from the one in DKPro Core. NIF uses
@@ -188,36 +186,36 @@ public class DKPro2Nif
         // uses, we'd need a named entity linker, not just a recognizer.
         //
         // We create NEs using the NIF 2.1 class "EntityOccurence".
-        // 
+        //
         // So here, we check if the DKPro Core NE value/identifier looks like a URI and if yes, then
         // we store it into the NIF taIdentRef property - otherwise we ignore it because NIF does
         // not have the concept of a NE category.
         for (NamedEntity uimaNamedEntity : select(aJCas, NamedEntity.class)) {
             String neClass = uimaNamedEntity.getValue();
             String neIdentifier = uimaNamedEntity.getIdentifier();
-            
+
             boolean neClassIsUri = neClass != null && IRIs.check(neClass);
             boolean neIdentifierIsUri = neIdentifier != null && IRIs.check(neIdentifier);
-            
+
             if (!neClassIsUri && !neIdentifierIsUri) {
                 continue;
             }
-            
+
             String neUri = String.format("%s#offset_%d_%d", docuri, uimaNamedEntity.getBegin(),
                     uimaNamedEntity.getEnd());
             Individual nifNamedEntity = m.createIndividual(neUri, tEntityOccurrence);
             nifNamedEntity.addRDFType(tOffsetBasedString);
             nifNamedEntity.addProperty(pReferenceContext, context);
             nifNamedEntity.addLiteral(pAnchorOf, uimaNamedEntity.getCoveredText());
-            nifNamedEntity.addLiteral(pBeginIndex, 
+            nifNamedEntity.addLiteral(pBeginIndex,
                     m.createTypedLiteral(uimaNamedEntity.getBegin(), XSDnonNegativeInteger));
             nifNamedEntity.addLiteral(pEndIndex,
                     m.createTypedLiteral(uimaNamedEntity.getEnd(), XSDnonNegativeInteger));
-            
+
             if (neClassIsUri) {
                 nifNamedEntity.addProperty(pTaClassRef, m.createResource(neClass));
             }
-            
+
             if (neIdentifierIsUri) {
                 nifNamedEntity.addProperty(pTaIdentRef, m.createResource(neIdentifier));
             }

@@ -21,6 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -32,13 +33,13 @@ public class PredictionGroupTest
     public void thatAddingElementsToGroupWorks()
     {
         var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2");
+                0.2, "E2", NEVER);
         var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3");
+                0.3, "E3", NEVER);
 
         // Ensure that group grows and that all elements are added properly
         var sut = new SuggestionGroup<>();
@@ -60,13 +61,13 @@ public class PredictionGroupTest
     public void thatSortingWorks()
     {
         var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2");
+                0.2, "E2", NEVER);
         var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3");
+                0.3, "E3", NEVER);
 
         var sut = new SuggestionGroup<>(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 
@@ -87,13 +88,13 @@ public class PredictionGroupTest
     public void thatTopDeltasAreCorrect()
     {
         var rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a", "A", "#A",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b", "B", "#B",
-                0.2, "E2");
+                0.2, "E2", NEVER);
         var rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c", "C", "#C",
-                0.1, "E1");
+                0.1, "E1", NEVER);
         var rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d", "D", "#D",
-                0.3, "E3");
+                0.3, "E3", NEVER);
 
         var sut = new SuggestionGroup<>(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 

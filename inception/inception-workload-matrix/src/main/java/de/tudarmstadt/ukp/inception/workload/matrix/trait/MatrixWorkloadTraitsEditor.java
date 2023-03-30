@@ -65,6 +65,8 @@ public class MatrixWorkloadTraitsEditor
                 randomDocumentAccessAllowed.setOutputMarkupId(true);
                 queue(randomDocumentAccessAllowed);
 
+                queue(new CheckBox("documentResetAllowed").setOutputMarkupId(true));
+
                 CheckBox reopenableByAnnotator = new CheckBox(MID_REOPENABLE_BY_ANNOTATOR);
                 reopenableByAnnotator.setOutputMarkupId(true);
                 queue(reopenableByAnnotator);

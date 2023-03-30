@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -209,6 +210,12 @@ public abstract class RecommendationEngine
     protected Feature getScoreExplanationFeature(CAS aCas)
     {
         String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+    }
+
+    protected Feature getModeFeature(CAS aCas)
+    {
+        String scoreExplanationFeature = featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
