@@ -19,21 +19,19 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="card border-0 flex-content flex-v-container">
-      <div class="flex-content scrolling card-body">
-        <div class="flex-v-container flex-content flex-gutter">
-          <div wicket:id="annotationEditor"/>
-          <div wicket:id="bratAnnotationEditorManagerPrefs"/>
-          <div wicket:id="diamAnnotationSidebarManagerPrefs"/>
-          <div wicket:id="annotationSidebar"/>
-          <div wicket:id="annotationSearch"/>
-        </div>
+    <form wicket:id="form" class="card">
+      <div class="card-header">
+        <wicket:message key="title"/>
       </div>
-      <div class="card-footer text-end">
-        <button wicket:id="save" class="btn btn-primary">
-          <i class="fas fa-save"></i>&nbsp;
-          <wicket:message key="save"/>
-        </button>
+      <div class="card-body">
+        <div class="row form-row">
+          <label class="col-sm-4 col-form-label">
+            <wicket:message key="pinnedGroups"/>
+          </label>
+          <div class="col-sm-8">
+            <div wicket:id="pinnedGroups"/>
+          </div>
+        </div>
       </div>
     </form>
   </wicket:panel>

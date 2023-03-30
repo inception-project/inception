@@ -31,13 +31,17 @@
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
+    export let pinnedGroups: string[];
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
     let sortByScore: boolean = true;
     let recommendationsFirst: boolean = false;
 
-    $: sortedLabels = uniqueLabels(data);
+    $: { 
+        sortedLabels = [...new Set([...pinnedGroups, ...uniqueLabels(data)])];
+        sortedLabels.sort()
+    }
     $: {
         const relations = data?.relations.values() || [];
         const spans = data?.spans.values() || [];
@@ -137,6 +141,7 @@
                             {label || "No label"}
                         </div>
                         <ul class="px-0 list-group list-group-flush">
+                            {#if groupedAnnotations[label]}
                             {#each groupedAnnotations[label] as ann}
                                 <li
                                     class="list-group-item list-group-item-action p-0 d-flex"
@@ -178,6 +183,11 @@
                                     </div>
                                 </li>
                             {/each}
+                            {:else}
+                            <li class="list-group-item list-group-item-action p-2 text-center text-secondary bg-light">
+                                No occurrences
+                            </li>
+                            {/if}
                         </ul>
                     </li>
                 {/each}

@@ -16,26 +16,32 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <form wicket:id="form" class="card border-0 flex-content flex-v-container">
-      <div class="flex-content scrolling card-body">
-        <div class="flex-v-container flex-content flex-gutter">
-          <div wicket:id="annotationEditor"/>
-          <div wicket:id="bratAnnotationEditorManagerPrefs"/>
-          <div wicket:id="diamAnnotationSidebarManagerPrefs"/>
-          <div wicket:id="annotationSidebar"/>
-          <div wicket:id="annotationSearch"/>
+<wicket:panel>
+  <div class="list-group">
+    <div class="list-group-item">
+      <div class="input-group">
+        <input type="text" wicket:id="newItemName" class="form-control"/>
+        <span class="input-group-btn">
+          <a wicket:id="addItem" class="btn btn-primary">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+          </a>
+        </span>
+      </div>
+    </div>
+    <div wicket:id=items class="list-group-item">
+      <form wicket:id="itemForm">
+        <div class="input-group">
+          <input type="text" wicket:id="textField" class="form-control"/>
+          <span class="input-group-btn">
+            <a wicket:id="removeItem" class="btn btn-danger">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </a>
+          </span>
         </div>
-      </div>
-      <div class="card-footer text-end">
-        <button wicket:id="save" class="btn btn-primary">
-          <i class="fas fa-save"></i>&nbsp;
-          <wicket:message key="save"/>
-        </button>
-      </div>
-    </form>
-  </wicket:panel>
-</body>
+      </form>
+    </div>
+  </div>
+</wicket:panel>
 </html>

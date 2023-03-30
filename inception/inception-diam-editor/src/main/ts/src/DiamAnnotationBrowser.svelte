@@ -27,6 +27,7 @@
     export let wsEndpointUrl: string
     export let topicChannel: string
     export let ajaxEndpointUrl: string
+    export let pinnedGroups: string[]
     
     let connected = false
     let element = null;
@@ -78,7 +79,7 @@
     {#if mode=='Group by position'}
         <AnnotationsByPositionList {ajaxClient} {data} />
     {:else}
-        <AnnotationsByLabelList {ajaxClient} {data} />
+        <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />
     {/if}
 </div>
 
