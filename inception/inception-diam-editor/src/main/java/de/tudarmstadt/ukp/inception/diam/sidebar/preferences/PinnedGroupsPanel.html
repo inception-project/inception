@@ -33,12 +33,16 @@
     <div wicket:id=items class="list-group-item">
       <form wicket:id="itemForm">
         <div class="input-group">
+          <a wicket:id="moveUp" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-up" aria-hidden="true"></i>
+          </a>
+          <a wicket:id="moveDown" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-down" aria-hidden="true"></i>
+          </a>
           <input type="text" wicket:id="textField" class="form-control"/>
-          <span class="input-group-btn">
-            <a wicket:id="removeItem" class="btn btn-danger">
-              <i class="fas fa-trash" aria-hidden="true"></i>
-            </a>
-          </span>
+          <a wicket:id="removeItem" class="btn btn-outline-danger">
+            <i class="fas fa-trash" aria-hidden="true"></i>
+          </a>
         </div>
       </form>
     </div>

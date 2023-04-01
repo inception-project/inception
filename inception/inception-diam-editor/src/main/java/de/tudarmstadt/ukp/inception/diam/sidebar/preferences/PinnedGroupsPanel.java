@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.diam.sidebar.preferences;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static java.util.Collections.swap;
+
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -52,11 +55,17 @@ public class PinnedGroupsPanel
             @Override
             protected void populateItem(ListItem<String> item)
             {
-                Form<Void> propertyForm = new Form<Void>("itemForm");
-                propertyForm.add(buildTextField("textField", item.getModel()));
-                propertyForm.add(new LambdaAjaxLink("removeItem", t -> PinnedGroupsPanel.this
+                var itemForm = new Form<Void>("itemForm");
+                itemForm.add(buildTextField("textField", item.getModel()));
+                itemForm.add(new LambdaAjaxLink("removeItem", t -> PinnedGroupsPanel.this
                         .actionRemoveProperty(t, item.getModelObject())));
-                item.add(propertyForm);
+                itemForm.add(new LambdaAjaxLink("moveUp",
+                        t -> PinnedGroupsPanel.this.actionMoveUp(t, item.getModelObject()))
+                                .add(enabledWhen(() -> item.getIndex() > 0)));
+                itemForm.add(new LambdaAjaxLink("moveDown",
+                        t -> PinnedGroupsPanel.this.actionMoveDown(t, item.getModelObject())).add(
+                                enabledWhen(() -> item.getIndex() < getModelObject().size() - 1)));
+                item.add(itemForm);
             }
 
         };
@@ -72,6 +81,7 @@ public class PinnedGroupsPanel
         add(addPropertyButton);
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<List<String>> getModel()
     {
         return (IModel<List<String>>) getDefaultModel();
@@ -90,8 +100,11 @@ public class PinnedGroupsPanel
 
     private void actionAddProperty(AjaxRequestTarget aTarget)
     {
-        String itemName = newItemName.getObject();
-        getModel().getObject().add(itemName);
+        var item = newItemName.getObject();
+        var items = getModel().getObject();
+        if (!items.contains(item)) {
+            items.add(item);
+        }
         newItemName.setObject(null);
         aTarget.add(this);
     }
@@ -99,6 +112,26 @@ public class PinnedGroupsPanel
     private void actionRemoveProperty(AjaxRequestTarget aTarget, String aItem)
     {
         getModel().getObject().remove(aItem);
+        aTarget.add(this);
+    }
+
+    private void actionMoveUp(AjaxRequestTarget aTarget, String aItem)
+    {
+        var items = getModel().getObject();
+        int index = items.indexOf(aItem);
+        if (index > 0) {
+            swap(items, index - 1, index);
+        }
+        aTarget.add(this);
+    }
+
+    private void actionMoveDown(AjaxRequestTarget aTarget, String aItem)
+    {
+        var items = getModel().getObject();
+        int index = items.indexOf(aItem);
+        if (index < items.size() - 1) {
+            swap(items, index, index + 1);
+        }
         aTarget.add(this);
     }
 }

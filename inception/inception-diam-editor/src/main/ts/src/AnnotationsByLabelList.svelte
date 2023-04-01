@@ -38,17 +38,16 @@
     let sortByScore: boolean = true;
     let recommendationsFirst: boolean = false;
 
-    $: { 
-        sortedLabels = [...new Set([...pinnedGroups, ...uniqueLabels(data)])];
-        sortedLabels.sort()
-    }
     $: {
-        const relations = data?.relations.values() || [];
-        const spans = data?.spans.values() || [];
+        sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
+
+        const relations = data?.relations.values() || []
+        const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
             (s) => s.label || ""
-        );
+        )
+
         for (const items of Object.values(groupedAnnotations)) {
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
