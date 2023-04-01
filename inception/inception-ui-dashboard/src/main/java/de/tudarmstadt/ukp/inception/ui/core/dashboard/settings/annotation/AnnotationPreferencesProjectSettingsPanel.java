@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarManagerPrefPanel;
 
 public class AnnotationPreferencesProjectSettingsPanel
     extends ProjectSettingsPanelBase
@@ -38,6 +39,7 @@ public class AnnotationPreferencesProjectSettingsPanel
     private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
     private static final String CID_ANNOTATION_EDITOR = "annotationEditor";
     private static final String CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS = "bratAnnotationEditorManagerPrefs";
+    private static final String CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS = "diamAnnotationSidebarManagerPrefs";
     private static final String CID_ANNOTATION_SEARCH = "annotationSearch";
 
     public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
@@ -49,6 +51,8 @@ public class AnnotationPreferencesProjectSettingsPanel
         queue(new LambdaAjaxButton<>(CID_SAVE, this::actionSave));
 
         queue(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
+        queue(new DiamSidebarManagerPrefPanel(CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS,
+                aProjectModel));
         queue(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
         queue(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
                 aProjectModel));
