@@ -168,13 +168,17 @@ public class RecommenderInfoPanel
                 resultsContainer.add(new Label("testSampleCount",
                         evalResult.map(EvaluationResult::getTestSetSize).orElse(0)));
 
-                resultsContainer.add(new LambdaAjaxLink("acceptBest",
+                item.add(resultsContainer);
+
+                item.add(new LambdaAjaxLink("acceptBest",
                         _tgt -> actionAcceptBest(_tgt, recommender))
                                 .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
                                         .orElse(false)));
 
-                resultsContainer.add(new LambdaAjaxLink("showDetails",
-                        _tgt -> actionShowDetails(_tgt, recommender)));
+                item.add(new LambdaAjaxLink("showDetails",
+                        _tgt -> actionShowDetails(_tgt, recommender))
+                                .setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
+                                        .orElse(evalResult.isPresent())));
 
                 AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
@@ -183,9 +187,7 @@ public class RecommenderInfoPanel
                         () -> recommendationService.getRecommenderFactory(recommender).isPresent()
                                 && recommendationService.getRecommenderFactory(recommender).get()
                                         .isModelExportSupported()));
-                resultsContainer.add(exportModel);
-
-                item.add(resultsContainer);
+                item.add(exportModel);
 
                 item.add(new Label("noEvaluationMessage",
                         evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)

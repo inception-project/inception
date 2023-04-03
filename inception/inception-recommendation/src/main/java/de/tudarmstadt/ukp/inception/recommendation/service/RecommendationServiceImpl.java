@@ -1833,8 +1833,8 @@ public class RecommendationServiceImpl
         if (sentences.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
             // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping sentences instead of contained sentences.
-            LOG.trace("Discarding suggestion because no covering sentences were found: {}",
+            // looking for overlapping sentences instead of covered sentences.
+            LOG.trace("Discarding suggestion because no covered sentences were found: {}",
                     aPredictedAnnotation);
             return Optional.empty();
         }
@@ -1879,8 +1879,8 @@ public class RecommendationServiceImpl
 
             // This can happen if a recommender uses different token boundaries (e.g. if a
             // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping tokens instead of contained tokens.
-            LOG.trace("Discarding suggestion because no covering tokens were found: {}",
+            // looking for overlapping tokens instead of covered tokens.
+            LOG.trace("Discarding suggestion because no covered tokens were found: {}",
                     aPredictedAnnotation);
             return Optional.empty();
         }
