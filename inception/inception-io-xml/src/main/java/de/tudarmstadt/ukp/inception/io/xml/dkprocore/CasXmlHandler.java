@@ -78,7 +78,9 @@ public class CasXmlHandler
         docNode = new XmlDocument(jcas);
         docNode.setBegin(text.length());
 
-        listeners.forEach(l -> l.startDocument(docNode));
+        for (var l : listeners) {
+            l.startDocument(docNode);
+        }
     }
 
     @Override
@@ -87,7 +89,9 @@ public class CasXmlHandler
         docNode.setEnd(text.length());
         docNode.addToIndexes();
 
-        listeners.forEach(l -> l.endDocument(docNode));
+        for (var l : listeners) {
+            l.endDocument(docNode);
+        }
 
         jcas.setDocumentText(text.toString());
     };
@@ -107,7 +111,7 @@ public class CasXmlHandler
         element.setLocalName(trimToNull(aLocalName));
         element.setQName(trimToNull(aQName));
 
-        if (aAttributes.getLength() > 0) {
+        if (aAttributes != null && aAttributes.getLength() > 0) {
             var attributes = new FSArray<XmlAttribute>(jcas, aAttributes.getLength());
             for (int i = 0; i < aAttributes.getLength(); i++) {
                 XmlAttribute attribute = new XmlAttribute(jcas);
@@ -134,7 +138,9 @@ public class CasXmlHandler
 
         stack.push(new StackFrame(element, capture));
 
-        listeners.forEach(l -> l.startElement(element));
+        for (var l : listeners) {
+            l.startElement(element);
+        }
     }
 
     @Override
@@ -154,7 +160,9 @@ public class CasXmlHandler
             element.setChildren(children);
         }
 
-        listeners.forEach(l -> l.endElement(element));
+        for (var l : listeners) {
+            l.endElement(element);
+        }
 
         element.addToIndexes();
     }
@@ -234,22 +242,22 @@ public class CasXmlHandler
 
     public static interface ElementListener
     {
-        default void startDocument(XmlDocument aDocument)
+        default void startDocument(XmlDocument aDocument) throws SAXException
         {
             // Do nothing
         }
 
-        default void endDocument(XmlDocument aDocument)
+        default void endDocument(XmlDocument aDocument) throws SAXException
         {
             // Do nothing
         }
 
-        default void startElement(XmlElement aElement)
+        default void startElement(XmlElement aElement) throws SAXException
         {
             // Do nothing
         }
 
-        default void endElement(XmlElement aElement)
+        default void endElement(XmlElement aElement) throws SAXException
         {
             // Do nothing
         }

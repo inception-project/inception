@@ -20,16 +20,19 @@
 <body>
   <wicket:panel>
     <div class="flex-h-container">
-      <div class="flex-content">
-        <h4>
-          <a wicket:id="titleLink"><wicket:container wicket:id="title"/></a>
-        </h4>
+      <div class="fs-1 me-4">
+        <i wicket:id="icon"/>
+      </div>
+      <a wicket:id="titleLink" class="flex-content text-decoration-none text-reset">
+        <h5>
+          <wicket:container wicket:id="title"/>
+        </h5>
         <ul>
           <li wicket:id="highlights">
             <wicket:container wicket:id="highlight"/>
           </li>
         </ul>
-      </div>
+      </a>
       <div class="flex-v-container">
         <a wicket:id="importLink" class="btn btn-secondary">
           <i class="fas fa-plus"></i>
@@ -39,7 +42,6 @@
           <i class="fas fa-folder-open"></i>
           <wicket:message key="open"/>
         </a>
-        <div wicket:id="importStatus" class="badge bg-info"/>
         <div class="text-center">
           <wicket:container wicket:id="score"/>
         </div>
