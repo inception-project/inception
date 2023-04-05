@@ -539,7 +539,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = NoResultException.class)
     public Project getProjectBySlug(String aSlug)
     {
         String query = "FROM Project WHERE slug = :slug";
@@ -549,7 +549,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = NoResultException.class)
     public Project getProject(long aId)
     {
         String query = "FROM Project " + "WHERE id = :id";
@@ -597,7 +597,6 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
     public List<Project> listProjectsWithFinishedAnnos()
     {
         String query = String.join("\n", //
