@@ -1071,11 +1071,12 @@ public class MtasDocumentIndex
                                         .filter(t -> t.getPositionStart() >= matchStart
                                                 && t.getPositionEnd() < matchEnd)
                                         .mapToInt(MtasTokenString::getOffsetStart).min()
-                                        .getAsInt());
+                                        .orElse(matchStart));
                                 result.setOffsetEnd(tokens.stream()
                                         .filter(t -> t.getPositionStart() >= matchStart
                                                 && t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
+                                        .mapToInt(MtasTokenString::getOffsetEnd).max()
+                                        .orElse(matchEnd));
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
                                 result.setReadOnly(annotationDocument != null
