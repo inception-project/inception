@@ -431,8 +431,8 @@ public class MtasUimaParser
                 MultiValuedMap<String, String> fieldsAndValues = fis.get().indexFeatureValue(aLayer,
                         aAnnotation, aPrefix, feature);
                 for (Entry<String, String> e : fieldsAndValues.entries()) {
-                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++, aAnnotation.getBegin(),
-                            aAnnotation.getEnd(), aRange, aFSAddress);
+                    indexFeatureValue(getIndexedName(e.getKey()), e.getValue(), mtasId++,
+                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange, aFSAddress);
                 }
 
                 if (LOG.isTraceEnabled()) {
