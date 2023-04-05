@@ -285,6 +285,13 @@ public class SearchServiceImpl
     {
         Project project = aEvent.getProject();
 
+        if (isBeingDeleted(project.getId())) {
+            log.trace(
+                    "Ignoring repeated attempt to delete project which is already in progress of being deleted",
+                    project);
+            return;
+        }
+
         log.trace("Removing index for project {} because project is being removed", project);
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
@@ -314,6 +321,17 @@ public class SearchServiceImpl
     }
 
     private final Map<Long, PooledIndex> indexes = new HashMap<>();
+
+    private boolean isBeingDeleted(long aProjectId)
+    {
+        synchronized (indexes) {
+            PooledIndex pooledIndex = indexes.get(aProjectId);
+            if (pooledIndex != null && pooledIndex.isTombstone()) {
+                return true;
+            }
+            return false;
+        }
+    }
 
     private PooledIndex acquireIndex(long aProjectId)
     {
