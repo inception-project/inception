@@ -76,9 +76,9 @@
 
     <pdfbox.version>2.0.27</pdfbox.version>
 
-    <spring.version>5.3.25</spring.version>
-    <spring.boot.version>2.7.8</spring.boot.version>
-    <spring.data.version>2.7.8</spring.data.version>
+    <spring.version>5.3.26</spring.version>
+    <spring.boot.version>2.7.10</spring.boot.version>
+    <spring.data.version>2.7.10</spring.data.version>
     <spring.security.version>5.8.1</spring.security.version>
     <springdoc.version>1.6.14</springdoc.version>
     <swagger.version>2.2.8</swagger.version>
@@ -91,13 +91,13 @@
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.8</mariadb.driver.version>
-    <postgres.driver.version>42.5.4</postgres.driver.version>
+    <postgres.driver.version>42.6.0</postgres.driver.version>
     <hibernate.version>5.6.15.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
 
     <wicket.version>9.12.0</wicket.version>
     <wicketstuff.version>9.12.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.11.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>9.12.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.1</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
@@ -1606,6 +1606,11 @@
         <version>1.14.0</version>
       </dependency>
       <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>1.14.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-clipboardjs</artifactId>
         <version>${wicketstuff.version}</version>
@@ -1892,7 +1897,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.22</version>
+        <version>1.23.0</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
