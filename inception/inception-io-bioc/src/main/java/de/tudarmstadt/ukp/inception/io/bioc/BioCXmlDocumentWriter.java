@@ -19,12 +19,17 @@ package de.tudarmstadt.ukp.inception.io.bioc;
 
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
+import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -48,18 +53,48 @@ public class BioCXmlDocumentWriter
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
-        try (OutputStream docOS = getOutputStream(aJCas, ".xml")) {
-            var tf = XmlParserUtils.newTransformerFactory();
-            var th = tf.newTransformerHandler();
-            th.getTransformer().setOutputProperty(METHOD, "xml");
-            th.getTransformer().setOutputProperty(INDENT, indent ? "yes" : "no");
-            th.setResult(new StreamResult(docOS));
+        if (indent) {
+            String xmlString;
+            try (var stringWriter = new StringWriter()) {
+                var tf = XmlParserUtils.newTransformerFactory();
+                var th = tf.newTransformerHandler();
+                th.setResult(new StreamResult(stringWriter));
+                var serializer = new Cas2BioCSaxEvents(th);
+                serializer.process(aJCas);
+                xmlString = stringWriter.toString();
+            }
+            catch (IOException | SAXException | TransformerConfigurationException e) {
+                throw new AnalysisEngineProcessException(e);
+            }
 
-            var serializer = new Cas2BioCSaxEvents(th);
-            serializer.process(aJCas);
+            try (OutputStream docOS = getOutputStream(aJCas, ".xml")) {
+                var tf = XmlParserUtils.newTransformerFactory();
+                tf.setAttribute("indent-number", 2);
+                var transformer = tf.newTransformer();
+                transformer.setOutputProperty(OMIT_XML_DECLARATION, "yes");
+                transformer.setOutputProperty(INDENT, "yes");
+                transformer.transform(new StreamSource(new StringReader(xmlString)),
+                        new StreamResult(docOS));
+            }
+            catch (IOException | TransformerException e) {
+                throw new AnalysisEngineProcessException(e);
+            }
         }
-        catch (IOException | SAXException | TransformerConfigurationException e) {
-            throw new AnalysisEngineProcessException(e);
+        else {
+            try (OutputStream docOS = getOutputStream(aJCas, ".xml")) {
+                var tf = XmlParserUtils.newTransformerFactory();
+                var th = tf.newTransformerHandler();
+                th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
+                th.getTransformer().setOutputProperty(METHOD, "xml");
+                th.getTransformer().setOutputProperty(INDENT, "no");
+                th.setResult(new StreamResult(docOS));
+
+                var serializer = new Cas2BioCSaxEvents(th);
+                serializer.process(aJCas);
+            }
+            catch (IOException | SAXException | TransformerConfigurationException e) {
+                throw new AnalysisEngineProcessException(e);
+            }
         }
     }
 }

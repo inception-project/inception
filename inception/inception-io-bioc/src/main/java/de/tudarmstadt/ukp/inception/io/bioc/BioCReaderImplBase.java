@@ -37,21 +37,16 @@ import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
 public abstract class BioCReaderImplBase
     extends JCasResourceCollectionReader_ImplBase
+    implements BioCComponent
 {
-    public static final String E_DOCUMENT = "document";
-    public static final String E_COLLECTION = "collection";
-    public static final String E_SENTENCE = "sentence";
-    public static final String E_INFON = "infon";
-    public static final String E_OFFSET = "offset";
-    public static final String E_KEY = "key";
-    public static final String E_DATE = "date";
-    public static final String E_ID = "id";
-    public static final String E_SOURCE = "source";
-
     private InputStream is;
     private XMLInputFactory xmlInputFactory;
     private XMLEventReader xmlEventReader;
     private Resource res;
+
+    private String collectionSource;
+    private String collectionDate;
+    private String collectionKey;
 
     @Override
     public void initialize(UimaContext aContext) throws ResourceInitializationException
@@ -59,6 +54,21 @@ public abstract class BioCReaderImplBase
         super.initialize(aContext);
 
         xmlInputFactory = XmlParserUtils.newXmlInputFactory();
+    }
+
+    public String getCollectionSource()
+    {
+        return collectionSource;
+    }
+
+    public String getCollectionDate()
+    {
+        return collectionDate;
+    }
+
+    public String getCollectionKey()
+    {
+        return collectionKey;
     }
 
     @Override
@@ -113,6 +123,9 @@ public abstract class BioCReaderImplBase
 
     protected void closeFile()
     {
+        collectionKey = null;
+        collectionSource = null;
+        collectionDate = null;
         res = null;
         xmlEventReader = null;
         if (is != null) {
@@ -121,6 +134,36 @@ public abstract class BioCReaderImplBase
             }
             catch (IOException e) {
                 // Ignore
+            }
+        }
+    }
+
+    protected void readCollectionMetdata() throws XMLStreamException
+    {
+        if (isFileOpen()) {
+            collectionSource = null;
+            collectionDate = null;
+            collectionKey = null;
+            while ((collectionSource == null || collectionDate == null || collectionKey == null)
+                    && xmlEventReader.hasNext()) {
+                var event = xmlEventReader.nextEvent();
+                if (event.isStartElement()) {
+                    if (event.asStartElement().getName().getLocalPart().equals(E_KEY)) {
+                        event = xmlEventReader.nextEvent();
+                        collectionKey = event.asCharacters().getData();
+                        xmlEventReader.nextEvent(); // Reader closing element
+                    }
+                    else if (event.asStartElement().getName().getLocalPart().equals(E_SOURCE)) {
+                        event = xmlEventReader.nextEvent();
+                        collectionSource = event.asCharacters().getData();
+                        xmlEventReader.nextEvent(); // Reader closing element
+                    }
+                    else if (event.asStartElement().getName().getLocalPart().equals(E_DATE)) {
+                        event = xmlEventReader.nextEvent();
+                        collectionDate = event.asCharacters().getData();
+                        xmlEventReader.nextEvent(); // Reader closing element
+                    }
+                }
             }
         }
     }

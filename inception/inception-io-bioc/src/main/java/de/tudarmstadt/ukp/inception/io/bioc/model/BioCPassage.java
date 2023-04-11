@@ -20,14 +20,14 @@ package de.tudarmstadt.ukp.inception.io.bioc.model;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
+@XmlType(propOrder = { "infons", "offset", "text", "sentences", "annotations", "relations" })
 public class BioCPassage
-    extends BioCObject
+    extends BioCAnnotationContainer
 {
     private int offset;
     private String text;
-    private List<BioCAnnotation> annotations;
-    private List<BioCRelation> relations;
     private List<BioCSentence> sentences;
 
     public int getOffset()
@@ -50,28 +50,6 @@ public class BioCPassage
     public void setText(String aText)
     {
         text = aText;
-    }
-
-    public List<BioCAnnotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    @XmlElement(name = "annotation")
-    public void setAnnotations(List<BioCAnnotation> aAnnotations)
-    {
-        annotations = aAnnotations;
-    }
-
-    public List<BioCRelation> getRelations()
-    {
-        return relations;
-    }
-
-    @XmlElement(name = "relation")
-    public void setRelations(List<BioCRelation> aRelations)
-    {
-        relations = aRelations;
     }
 
     public List<BioCSentence> getSentences()

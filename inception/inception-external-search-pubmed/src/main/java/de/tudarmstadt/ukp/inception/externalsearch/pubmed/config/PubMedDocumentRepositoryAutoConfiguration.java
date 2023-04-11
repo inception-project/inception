@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter({ ExternalSearchAutoConfiguration.class, BioCAutoConfiguration.class,
@@ -41,8 +42,8 @@ public class PubMedDocumentRepositoryAutoConfiguration
 {
     @Bean
     public PubMedCentralProviderFactory pubMedCentralProviderFactory(EntrezClient aEntrezClient,
-            PmcOaClient aPmcOaClient)
+            PmcOaClient aPmcOaClient, AnnotationSchemaService aSchemaService)
     {
-        return new PubMedCentralProviderFactory(aEntrezClient, aPmcOaClient);
+        return new PubMedCentralProviderFactory(aEntrezClient, aPmcOaClient, aSchemaService);
     }
 }

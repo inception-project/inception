@@ -24,6 +24,17 @@ public class BioCLocation
     private int offset;
     private int length;
 
+    public BioCLocation()
+    {
+        // Needed for serialization
+    }
+
+    public BioCLocation(int aOffset, int aLength)
+    {
+        offset = aOffset;
+        length = aLength;
+    }
+
     public int getOffset()
     {
         return offset;

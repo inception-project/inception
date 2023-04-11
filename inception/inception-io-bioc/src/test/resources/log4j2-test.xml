@@ -8,7 +8,7 @@
 
   <Loggers>
     <Logger name="de.tudarmstadt.ukp.inception.externalsearch.pubmed.bioc" level="INFO"/>
-    <Root level="ERROR">
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

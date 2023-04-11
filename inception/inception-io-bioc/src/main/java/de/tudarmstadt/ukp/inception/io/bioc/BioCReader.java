@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc;
 
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.addCollectionMetadataField;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -66,8 +68,22 @@ public class BioCReader
     {
         initCas(aJCas, currentResource());
 
+        addCollectionMetadataField(aJCas, E_KEY, getCollectionKey());
+        addCollectionMetadataField(aJCas, E_SOURCE, getCollectionSource());
+        addCollectionMetadataField(aJCas, E_DATE, getCollectionDate());
+
+        var document = nextDocument.get();
+
+        // if (getCollectionSource() != null) {
+        // DocumentMetaData.get(aJCas).setDocumentId(getCollectionSource());
+        // }
+        //
+        // if (document.getId() != null) {
+        // DocumentMetaData.get(aJCas).setDocumentId(document.getId());
+        // }
+
         JCasBuilder jb = new JCasBuilder(aJCas);
-        new BioCToCas().readDocument(jb, nextDocument.get());
+        new BioCToCas().readDocument(jb, document);
         jb.close();
 
         try {
@@ -89,6 +105,7 @@ public class BioCReader
     {
         if (!isFileOpen()) {
             openNextFile();
+            readCollectionMetdata();
         }
 
         if (isFileOpen()) {

@@ -17,10 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
+import static java.util.stream.Collectors.toMap;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+@XmlTransient
 public abstract class BioCObject
 {
     private List<BioCInfon> infons;
@@ -34,5 +41,30 @@ public abstract class BioCObject
     public void setInfons(List<BioCInfon> aInfons)
     {
         infons = aInfons;
+    }
+
+    public void addInfon(String aKey, String aValue)
+    {
+        if (infons == null) {
+            infons = new ArrayList<>();
+        }
+        infons.add(new BioCInfon(aKey, aValue));
+    }
+
+    public Optional<String> infon(String aKey)
+    {
+        if (infons == null) {
+            return Optional.empty();
+        }
+
+        return infons.stream() //
+                .filter(i -> i.getKey().equals(aKey)) //
+                .findFirst() //
+                .map(BioCInfon::getValue);
+    }
+
+    public Map<String, String> infonMap()
+    {
+        return infons.stream().collect(toMap(BioCInfon::getKey, BioCInfon::getValue));
     }
 }

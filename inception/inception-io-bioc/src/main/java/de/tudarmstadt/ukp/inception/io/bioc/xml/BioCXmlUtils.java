@@ -15,45 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.bioc.model;
+package de.tudarmstadt.ukp.inception.io.bioc.xml;
 
-import javax.xml.bind.annotation.XmlAttribute;
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_LOCATION;
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_TEXT;
 
-public class BioCNode
+import java.util.Optional;
+
+import org.dkpro.core.api.xml.type.XmlElement;
+
+public class BioCXmlUtils
 {
-    private String refId;
-    private String role;
-
-    public BioCNode()
+    public static Optional<XmlElement> getChildTextElement(XmlElement aContainer)
     {
-        // Needed for serialization
+        return aContainer.getChildren().select(XmlElement.class) //
+                .filter(e -> E_TEXT.equals(e.getQName())) //
+                .findFirst();
     }
 
-    public BioCNode(String aRefId, String aRole)
+    public static Optional<XmlElement> getChildLocationElement(XmlElement aContainer)
     {
-        refId = aRefId;
-        role = aRole;
-    }
-
-    public String getRefId()
-    {
-        return refId;
-    }
-
-    @XmlAttribute(name = "refid")
-    public void setRefId(String aRefId)
-    {
-        refId = aRefId;
-    }
-
-    public String getRole()
-    {
-        return role;
-    }
-
-    @XmlAttribute(name = "role")
-    public void setRole(String aRole)
-    {
-        role = aRole;
+        return aContainer.getChildren().select(XmlElement.class) //
+                .filter(e -> E_LOCATION.equals(e.getQName())) //
+                .findFirst();
     }
 }

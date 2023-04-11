@@ -36,10 +36,11 @@ public class EntrezClient
     private static final String PARAM_RETSTART = "retstart";
     private static final String PARAM_DB = "db";
     private static final String PARAM_RETMAX = "retmax";
+    private static final String PARAM_SORT = "sort";
 
     private static final String EUTILS_BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils";
     private static final String ESEARCH_URL = EUTILS_BASE_URL
-            + "/esearch.fcgi?db={db}&retstart={retstart}&retmax={retmax}&term={term}";
+            + "/esearch.fcgi?db={db}&retstart={retstart}&retmax={retmax}&term={term}&sort={sort}";
     private static final String ESUMMARY_URL = EUTILS_BASE_URL + "/esummary.fcgi?db={db}&id={id}";
     private static final String EFETCH_URL = EUTILS_BASE_URL + "/efetch.fcgi?db={db}&id={id}";
 
@@ -58,7 +59,8 @@ public class EntrezClient
                 PARAM_DB, aDb, //
                 PARAM_RETSTART, Integer.toString(aOffset), //
                 PARAM_RETMAX, Integer.toString(aPageSize), //
-                PARAM_TERM, aQuery);
+                PARAM_TERM, aQuery, //
+                PARAM_SORT, "relevance");
 
         var response = restTemplate.exchange(ESEARCH_URL, HttpMethod.GET, null, ESearchResult.class,
                 variables);

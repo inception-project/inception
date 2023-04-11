@@ -25,16 +25,17 @@ import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCXmlDocumentFormatSupport;
 
 @Configuration
-@ConditionalOnProperty(prefix = "format.bioc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class BioCAutoConfiguration
 {
     @Bean
+    @ConditionalOnProperty(prefix = "format.bioc", name = "enabled", havingValue = "true", matchIfMissing = false)
     public BioCFormatSupport bioCFormatSupport()
     {
         return new BioCFormatSupport();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "format.bioc-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
     public BioCXmlDocumentFormatSupport bioCXmlDocumentFormatSupport()
     {
         return new BioCXmlDocumentFormatSupport();

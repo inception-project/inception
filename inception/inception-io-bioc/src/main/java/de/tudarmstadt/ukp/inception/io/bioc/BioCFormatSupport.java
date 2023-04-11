@@ -29,8 +29,7 @@ import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
 /**
  * Support for BioC format.
  * <p>
- * This class is exposed as a Spring Component via
- * {@link BioCAutoConfiguration#bioCFormatSupport}.
+ * This class is exposed as a Spring Component via {@link BioCAutoConfiguration#bioCFormatSupport}.
  * </p>
  */
 public class BioCFormatSupport

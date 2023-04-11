@@ -25,6 +25,17 @@ public class BioCInfon
     private String key;
     private String value;
 
+    public BioCInfon()
+    {
+        // Required for serialization
+    }
+
+    public BioCInfon(String aKey, String aValue)
+    {
+        key = aKey;
+        value = aValue;
+    }
+
     public String getKey()
     {
         return key;

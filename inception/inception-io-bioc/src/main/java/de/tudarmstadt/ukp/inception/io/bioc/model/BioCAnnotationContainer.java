@@ -17,53 +17,54 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
-import static java.util.stream.Collectors.toMap;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
-public class BioCRelation
+@XmlTransient
+public abstract class BioCAnnotationContainer
     extends BioCObject
 {
-    private String id;
-    private List<BioCNode> nodes;
+    private List<BioCAnnotation> annotations;
+    private List<BioCRelation> relations;
 
-    public String getId()
+    public List<BioCAnnotation> getAnnotations()
     {
-        return id;
+        return annotations;
     }
 
-    @XmlAttribute(name = "id")
-    public void setId(String aId)
+    @XmlElement(name = "annotation")
+    public void setAnnotations(List<BioCAnnotation> aAnnotations)
     {
-        id = aId;
+        annotations = aAnnotations;
     }
 
-    public List<BioCNode> getNodes()
+    public void addAnnotation(BioCAnnotation aAnnotation)
     {
-        return nodes;
-    }
-
-    @XmlElement(name = "node")
-    public void setNodes(List<BioCNode> aNodes)
-    {
-        nodes = aNodes;
-    }
-
-    public void addNode(String aRole, String aRefId)
-    {
-        if (nodes == null) {
-            nodes = new ArrayList<>();
+        if (annotations == null) {
+            annotations = new ArrayList<>();
         }
-        nodes.add(new BioCNode(aRefId, aRole));
+        annotations.add(aAnnotation);
     }
 
-    public Map<String, String> nodeMap()
+    public List<BioCRelation> getRelations()
     {
-        return nodes.stream().collect(toMap(BioCNode::getRole, BioCNode::getRefId));
+        return relations;
+    }
+
+    @XmlElement(name = "relation")
+    public void setRelations(List<BioCRelation> aRelations)
+    {
+        relations = aRelations;
+    }
+
+    public void addRelation(BioCRelation aRelation)
+    {
+        if (relations == null) {
+            relations = new ArrayList<>();
+        }
+        relations.add(aRelation);
     }
 }

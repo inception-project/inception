@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraitsEditor;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * Support for PubAnnotation.
@@ -53,13 +54,16 @@ public class PubMedCentralProviderFactory
 
     private final EntrezClient entrezClient;
     private final PmcOaClient pmcOaClient;
+    private final AnnotationSchemaService schemaService;
 
     private String beanName;
 
-    public PubMedCentralProviderFactory(EntrezClient aEntrezClient, PmcOaClient aPmcOaClient)
+    public PubMedCentralProviderFactory(EntrezClient aEntrezClient, PmcOaClient aPmcOaClient,
+            AnnotationSchemaService aSchemaService)
     {
         entrezClient = aEntrezClient;
         pmcOaClient = aPmcOaClient;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -83,7 +87,7 @@ public class PubMedCentralProviderFactory
     @Override
     public ExternalSearchProvider<PubMedProviderTraits> getNewExternalSearchProvider()
     {
-        return new PubMedCentralProvider(entrezClient, pmcOaClient);
+        return new PubMedCentralProvider(entrezClient, pmcOaClient, schemaService);
     }
 
     @Override

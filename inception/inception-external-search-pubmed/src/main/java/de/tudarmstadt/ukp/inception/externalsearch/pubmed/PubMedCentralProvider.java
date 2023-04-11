@@ -17,9 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubmed;
 
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +36,7 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.uima.UIMAException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -37,6 +45,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.model.BioCToCas;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class PubMedCentralProvider
     implements ExternalSearchProvider<PubMedProviderTraits>
@@ -49,18 +58,25 @@ public class PubMedCentralProvider
 
     private final PmcOaClient pmcoaClient;
     private final EntrezClient entrezClient;
+    private final AnnotationSchemaService schemaService;
 
-    public PubMedCentralProvider(EntrezClient aEntrezClient, PmcOaClient aPmcoaClient)
+    public PubMedCentralProvider(EntrezClient aEntrezClient, PmcOaClient aPmcoaClient,
+            AnnotationSchemaService aSchemaService)
     {
         pmcoaClient = aPmcoaClient;
         entrezClient = aEntrezClient;
+        schemaService = aSchemaService;
     }
 
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubMedProviderTraits aTraits, String aQuery)
     {
-        var query = aQuery + " AND \"free full text\"[filter]";
+        var date = Instant.now().atZone(ZoneOffset.UTC).minus(Duration.ofHours(24));
+        var query = aQuery + " AND \"free full text\"[filter] AND (\"0001/01/01\"[PubDate] : \""
+                + date.get(YEAR) + "/" + date.get(MONTH_OF_YEAR) + "/" + date.get(DAY_OF_MONTH)
+                + "\"[PubDate])";
+
         var searchResponse = entrezClient.esearch(DB_PUB_MED_CENTRAL, query, 0, 100);
         var summaryResponse = entrezClient.esummary(DB_PUB_MED_CENTRAL,
                 searchResponse.getIdList().stream().mapToInt(i -> i).toArray());
@@ -107,7 +123,8 @@ public class PubMedCentralProvider
         var biocXml = pmcoaClient.bioc(aTraits, PMCID_PREFIX + stripExtension(aDocumentId));
 
         try {
-            var cas = WebAnnoCasUtil.createCas();
+            Project project = aDocumentRepository.getProject();
+            var cas = WebAnnoCasUtil.createCas(schemaService.getFullProjectTypeSystem(project));
             new BioCToCas().parseXml(new ByteArrayInputStream(biocXml), cas.getJCas());
             return cas.getDocumentText();
         }

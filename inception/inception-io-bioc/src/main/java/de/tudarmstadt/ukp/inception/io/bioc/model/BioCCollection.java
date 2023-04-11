@@ -17,12 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_DATE;
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_KEY;
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_SOURCE;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "collection")
+@XmlType(propOrder = { "source", "date", "key", "infons", "documents" })
 public class BioCCollection
     extends BioCObject
 {
@@ -36,7 +44,7 @@ public class BioCCollection
         return source;
     }
 
-    @XmlElement(name = "source")
+    @XmlElement(name = E_SOURCE)
     public void setSource(String aSource)
     {
         source = aSource;
@@ -47,7 +55,7 @@ public class BioCCollection
         return date;
     }
 
-    @XmlElement(name = "date")
+    @XmlElement(name = E_DATE)
     public void setDate(String aDate)
     {
         date = aDate;
@@ -58,7 +66,7 @@ public class BioCCollection
         return key;
     }
 
-    @XmlElement(name = "key")
+    @XmlElement(name = E_KEY)
     public void setKey(String aKey)
     {
         key = aKey;
@@ -69,9 +77,18 @@ public class BioCCollection
         return documents;
     }
 
-    @XmlElement(name = "document")
+    @XmlElement(name = E_DOCUMENT)
     public void setDocuments(List<BioCDocument> aDocuments)
     {
         documents = aDocuments;
+    }
+
+    public void addDocument(BioCDocument aDocument)
+    {
+        if (documents == null) {
+            documents = new ArrayList<>();
+        }
+
+        documents.add(aDocument);
     }
 }

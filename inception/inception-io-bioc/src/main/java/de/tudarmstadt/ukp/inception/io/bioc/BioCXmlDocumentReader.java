@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc;
 
+import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.addCollectionMetadataField;
 import static de.tudarmstadt.ukp.inception.io.bioc.xml.DocumentWrappingXmlInputReader.wrapInDocument;
-import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
-import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Transformer;
@@ -38,8 +37,7 @@ import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.xml.sax.SAXException;
 
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.io.bioc.xml.BioC2XmlCas;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler.ElementListener;
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
@@ -47,14 +45,8 @@ import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 public class BioCXmlDocumentReader
     extends BioCReaderImplBase
 {
-    private static final Set<String> ELEMENTS_NOT_TO_TO_CAPTURE = Set.of(E_OFFSET, E_INFON, E_ID);
-
     private Transformer transformer;
     private boolean documentAvailable = false;
-
-    private String source;
-    private String date;
-    private String key;
 
     @Override
     public void initialize(UimaContext aContext) throws ResourceInitializationException
@@ -87,17 +79,40 @@ public class BioCXmlDocumentReader
     {
         initCas(aJCas, currentResource());
 
-        addMetadataField(aJCas, "key", key);
-        addMetadataField(aJCas, "source", source);
-        addMetadataField(aJCas, "date", date);
+        addCollectionMetadataField(aJCas, E_KEY, getCollectionKey());
+        addCollectionMetadataField(aJCas, E_SOURCE, getCollectionSource());
+        addCollectionMetadataField(aJCas, E_DATE, getCollectionDate());
 
         CasXmlHandler handler = new CasXmlHandler(aJCas);
-        handler.addListener(new ElementListener()
+        handler.addListener(newElementFilter(handler));
+
+        try {
+            transformer.transform(new StAXSource(wrapInDocument(getXmlEventReader())),
+                    new SAXResult(handler));
+        }
+        catch (TransformerException | XMLStreamException e) {
+            throw new IOException(e);
+        }
+
+        new BioC2XmlCas().transferAnnotations(aJCas);
+
+        try {
+            documentAvailable = seekNextBioCDocument();
+        }
+        catch (XMLStreamException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private ElementListener newElementFilter(CasXmlHandler handler)
+    {
+        return new ElementListener()
         {
             @Override
             public void startDocument(XmlDocument aDocument) throws SAXException
             {
                 handler.startElement(null, null, E_COLLECTION, null);
+                handler.captureText(false);
             }
 
             @Override
@@ -109,36 +124,18 @@ public class BioCXmlDocumentReader
             @Override
             public void startElement(XmlElement aElement)
             {
-                if (ELEMENTS_NOT_TO_TO_CAPTURE.contains(aElement.getQName())) {
+                var parent = aElement.getParent();
+                if (parent != null
+                        && (E_PASSAGE.equals(parent.getQName())
+                                || E_SENTENCE.equals(parent.getQName()))
+                        && E_TEXT.equals(aElement.getQName())) {
+                    handler.captureText(true);
+                }
+                else {
                     handler.captureText(false);
                 }
             }
-        });
-
-        try {
-            transformer.transform(new StAXSource(wrapInDocument(getXmlEventReader())),
-                    new SAXResult(handler));
-        }
-        catch (TransformerException | XMLStreamException e) {
-            throw new IOException(e);
-        }
-
-        transferAnnotations(aJCas);
-
-        try {
-            documentAvailable = seekNextBioCDocument();
-        }
-        catch (XMLStreamException e) {
-            throw new IOException(e);
-        }
-    }
-
-    private void addMetadataField(JCas aJCas, String aKey, String aValue)
-    {
-        var keyField = new MetaDataStringField(aJCas);
-        keyField.setKey(aKey);
-        keyField.setValue(aValue);
-        keyField.addToIndexes();
+        };
     }
 
     private boolean seekNextBioCDocument()
@@ -147,34 +144,7 @@ public class BioCXmlDocumentReader
         if (!isFileOpen()) {
             openNextFile();
 
-            if (isFileOpen()) {
-                var xmlEventReader = getXmlEventReader();
-
-                source = null;
-                date = null;
-                key = null;
-                while ((source == null || date == null || key == null)
-                        && xmlEventReader.hasNext()) {
-                    var event = xmlEventReader.nextEvent();
-                    if (event.isStartElement()) {
-                        if (event.asStartElement().getName().getLocalPart().equals(E_KEY)) {
-                            event = xmlEventReader.nextEvent();
-                            key = event.asCharacters().getData();
-                            xmlEventReader.nextEvent(); // Reader closing element
-                        }
-                        else if (event.asStartElement().getName().getLocalPart().equals(E_SOURCE)) {
-                            event = xmlEventReader.nextEvent();
-                            source = event.asCharacters().getData();
-                            xmlEventReader.nextEvent(); // Reader closing element
-                        }
-                        else if (event.asStartElement().getName().getLocalPart().equals(E_DATE)) {
-                            event = xmlEventReader.nextEvent();
-                            date = event.asCharacters().getData();
-                            xmlEventReader.nextEvent(); // Reader closing element
-                        }
-                    }
-                }
-            }
+            readCollectionMetdata();
         }
 
         if (isFileOpen()) {
@@ -184,38 +154,4 @@ public class BioCXmlDocumentReader
         return false;
     }
 
-    @Override
-    protected void closeFile()
-    {
-        key = null;
-        source = null;
-        date = null;
-        super.closeFile();
-    }
-
-    private void transferAnnotations(JCas aJCas)
-    {
-        transferSentences(aJCas);
-    }
-
-    private void transferSentences(JCas aJCas)
-    {
-        var sentenceElements = aJCas.select(XmlElement.class) //
-                .filter(e -> E_SENTENCE.equals(e.getQName()))//
-                .collect(toList());
-
-        for (var sentenceElement : sentenceElements) {
-            var sentence = new Sentence(aJCas, sentenceElement.getBegin(),
-                    sentenceElement.getEnd());
-            sentence.trim();
-            sentence.addToIndexes();
-
-            // We do not remove the sentence elements from the XML tree. That way, we do not have to
-            // re-generated them on export. It means we cannot change the boundaries of sentences,
-            // but if we did that we would be running out-of-sync with the offsets referenced in
-            // the BioC file anyway. That is a potential drawback of the XML-based approach to
-            // handling BioC files.
-            // XmlNodeUtils.removeFromTree(sentenceElement);
-        }
-    }
 }

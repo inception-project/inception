@@ -17,23 +17,33 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubmed;
 
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 @Tag("slow")
 public class PubMedProviderTest
 {
+    protected @Mock AnnotationSchemaService annotationService;
+
     private EntrezClient entrezClient = new EntrezClient();
     private PmcOaClient pmcOaClient = new PmcOaClient();
     private PubMedCentralProvider sut;
@@ -41,10 +51,10 @@ public class PubMedProviderTest
     private PubMedProviderTraits traits = null;
 
     @BeforeEach
-    public void setup() throws InterruptedException
+    public void setup() throws Exception
     {
         Thread.sleep(1000); // Get around API rate limiting
-        sut = new PubMedCentralProvider(entrezClient, pmcOaClient);
+        sut = new PubMedCentralProvider(entrezClient, pmcOaClient, annotationService);
         repo = new DocumentRepository("dummy", null);
     }
 
@@ -61,6 +71,9 @@ public class PubMedProviderTest
     @Test
     public void thatGetDocumentTextWorks() throws Exception
     {
+        when(annotationService.getFullProjectTypeSystem(any()))
+            .thenReturn(createTypeSystemDescription());
+        
         String results = sut.getDocumentText(repo, traits, "PMC", "PMC8222896");
 
         // System.out.println(results);

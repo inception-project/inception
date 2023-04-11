@@ -30,7 +30,6 @@ import org.apache.uima.util.CasIOUtils;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.inception.io.bioc.BioCXmlDocumentReader;
 
 public class BioCXmlDocumentReaderTest
 {
