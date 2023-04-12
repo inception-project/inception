@@ -19,5 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 public interface Position
 {
+    @Override
+    int hashCode();
 
+    @Override
+    boolean equals(Object obj);
 }
