@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,18 +31,22 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 
 @Tag("slow")
 public class PubAnnotationProviderTest
 {
+    private EntrezClient entrezClient = new EntrezClient();
     private PubAnnotationProvider sut;
     private DocumentRepository repo;
     private PubAnnotationProviderTraits traits;
 
     @BeforeEach
-    public void setup()
+    public void setup() throws Exception
     {
-        sut = new PubAnnotationProvider();
+        Thread.sleep(1000); // Get around API rate limiting
+
+        sut = new PubAnnotationProvider(entrezClient);
 
         repo = new DocumentRepository("dummy", null);
 
@@ -50,7 +56,7 @@ public class PubAnnotationProviderTest
     @Test
     public void thatQueryWorks() throws Exception
     {
-        List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
+        List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding", 0, 10);
 
         // System.out.println(results);
 
@@ -72,8 +78,23 @@ public class PubAnnotationProviderTest
     {
         String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
 
-        // System.out.println(text);
+        System.out.println(text);
 
-        assertThat(text).isNotEmpty();
+        assertThat(text)
+                .startsWith("Resistance to IL-10 inhibition of interferon gamma production");
+    }
+
+    @Test
+    public void thatDocumentStreamCanBeRetrieved() throws Exception
+    {
+        String data;
+        try (var is = sut.getDocumentAsStream(repo, traits, "PMC", "1064873")) {
+            data = IOUtils.toString(is, StandardCharsets.UTF_8);
+        }
+
+        System.out.println(data);
+
+        assertThat(data).startsWith(
+                "[{\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
     }
 }
