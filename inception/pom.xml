@@ -136,7 +136,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.14.1</jackson.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
+    <snakeyaml.version>2.0</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.3.0</okio.version>
 
