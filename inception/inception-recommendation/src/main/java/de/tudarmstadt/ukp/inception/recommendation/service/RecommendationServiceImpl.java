@@ -510,11 +510,11 @@ public class RecommendationServiceImpl
     @EventListener
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
-        Project project = aEvent.getDocument().getProject();
-        String username = aEvent.getAnnotator();
-        SourceDocument doc = aEvent.getDocument();
-        Predictions predictions = getState(username, project).getActivePredictions();
-        boolean predictionSessionExistedOnOpen = predictions != null;
+        var project = aEvent.getDocument().getProject();
+        var username = aEvent.getAnnotator();
+        var doc = aEvent.getDocument();
+        var predictions = getState(username, project).getActivePredictions();
+        var predictionSessionExistedOnOpen = predictions != null;
 
         // If the user does not exist (also if the user is a pseudo-user like CURATION_USER
         // we do not apply recommendations
@@ -605,7 +605,7 @@ public class RecommendationServiceImpl
         var page = (AnnotationPage) aTarget.getPage();
 
         var predictions = getPredictions(aUser, aDocument.getProject());
-        if (predictions == null || !predictions.hasPredictions()) {
+        if (predictions == null || predictions.isEmpty()) {
             LOG.trace("Not auto-accepting because no predictions are available");
             return;
         }

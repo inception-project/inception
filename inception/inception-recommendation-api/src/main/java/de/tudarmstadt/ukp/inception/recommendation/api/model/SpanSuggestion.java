@@ -34,7 +34,7 @@ public class SpanSuggestion
     {
         super(builder.id, builder.recommenderId, builder.recommenderName, builder.layerId,
                 builder.feature, builder.documentName, builder.label, builder.uiLabel,
-                builder.score, builder.scoreExplanation);
+                builder.score, builder.scoreExplanation, builder.autoAcceptMode);
 
         position = builder.position;
         coveredText = builder.coveredText;
@@ -142,6 +142,7 @@ public class SpanSuggestion
         private String scoreExplanation;
         private Offset position;
         private String coveredText;
+        private AutoAcceptMode autoAcceptMode;
 
         private Builder()
         {
@@ -216,6 +217,12 @@ public class SpanSuggestion
         public Builder withCoveredText(String aCoveredText)
         {
             this.coveredText = aCoveredText;
+            return this;
+        }
+
+        public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
+        {
+            this.autoAcceptMode = aAutoAcceptMode;
             return this;
         }
 

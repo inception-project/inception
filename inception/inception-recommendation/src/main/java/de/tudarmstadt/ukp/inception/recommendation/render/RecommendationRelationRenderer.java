@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -52,21 +53,21 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
- * Render spans.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationRelationRenderer}.
+ * </p>
  */
 public class RecommendationRelationRenderer
-    implements RecommendationTypeRenderer
+    implements RecommendationTypeRenderer<RelationAdapter>
 {
-    private final RelationAdapter typeAdapter;
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService annotationService;
     private final FeatureSupportRegistry fsRegistry;
 
-    public RecommendationRelationRenderer(RelationAdapter aTypeAdapter,
-            RecommendationService aRecommendationService,
+    public RecommendationRelationRenderer(RecommendationService aRecommendationService,
             AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
-        typeAdapter = aTypeAdapter;
         recommendationService = aRecommendationService;
         annotationService = aAnnotationService;
         fsRegistry = aFsRegistry;
@@ -80,7 +81,7 @@ public class RecommendationRelationRenderer
      *            A VDocument containing annotations for the given layer
      */
     @Override
-    public void render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest, RelationAdapter aTypeAdapter)
     {
         if (aRequest.getCas() == null || recommendationService == null) {
             return;
@@ -96,7 +97,7 @@ public class RecommendationRelationRenderer
 
         CAS cas = aRequest.getCas();
 
-        AnnotationLayer layer = typeAdapter.getLayer();
+        AnnotationLayer layer = aTypeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = getSourceDocumentName(cas)
@@ -156,7 +157,7 @@ public class RecommendationRelationRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(suggestion.getFeature(), annotation);
 
-                VArc arc = new VArc(layer, suggestion.getVID(), new VID(source), new VID(target),
+                VArc arc = new VArc(layer, suggestion.getVID(), VID.of(source), VID.of(target),
                         "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
                 arc.setScore(suggestion.getScore());
 

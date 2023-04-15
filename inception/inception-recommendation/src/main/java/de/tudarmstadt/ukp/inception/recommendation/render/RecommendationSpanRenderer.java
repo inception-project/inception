@@ -21,15 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -37,36 +33,34 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
- * Render spans.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationSpanRenderer}.
+ * </p>
  */
 public class RecommendationSpanRenderer
-    implements RecommendationTypeRenderer
+    implements RecommendationTypeRenderer<SpanAdapter>
 {
-    private final SpanAdapter typeAdapter;
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService annotationService;
     private final FeatureSupportRegistry fsRegistry;
     private final RecommenderProperties recommenderProperties;
 
-    public RecommendationSpanRenderer(SpanAdapter aTypeAdapter,
-            RecommendationService aRecommendationService,
+    public RecommendationSpanRenderer(RecommendationService aRecommendationService,
             AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
             RecommenderProperties aRecommenderProperties)
     {
-        typeAdapter = aTypeAdapter;
         recommendationService = aRecommendationService;
         annotationService = aAnnotationService;
         fsRegistry = aFsRegistry;
@@ -81,7 +75,7 @@ public class RecommendationSpanRenderer
      *            A VDocument containing annotations for the given layer
      */
     @Override
-    public void render(VDocument vdoc, RenderRequest aRequest)
+    public void render(VDocument vdoc, RenderRequest aRequest, SpanAdapter aTypeAdapter)
     {
         CAS cas = aRequest.getCas();
 
@@ -91,12 +85,11 @@ public class RecommendationSpanRenderer
 
         Predictions predictions = recommendationService.getPredictions(aRequest.getAnnotationUser(),
                 aRequest.getProject());
-        // No recommendations available at all
         if (predictions == null) {
             return;
         }
 
-        AnnotationLayer layer = typeAdapter.getLayer();
+        var layer = aTypeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
@@ -118,44 +111,39 @@ public class RecommendationSpanRenderer
                 layer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
-                .stream().collect(toMap(AnnotationFeature::getName, identity()));
+        var features = annotationService.listSupportedFeatures(layer).stream()
+                .collect(toMap(AnnotationFeature::getName, identity()));
 
-        for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
+        for (var suggestionGroup : groups) {
             // Render annotations for each label
-            for (SpanSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
-                Optional<VRange> range = VRange.clippedRange(vdoc, ao.getBegin(), ao.getEnd());
-
+            for (var spanSuggestion : suggestionGroup.bestSuggestions(pref)) {
+                var range = VRange.clippedRange(vdoc, spanSuggestion.getBegin(),
+                        spanSuggestion.getEnd());
                 if (!range.isPresent()) {
                     continue;
                 }
 
-                VID vid = ao.getVID();
-
-                // Here, we generate a visual suggestion representation based on the first
-                // suggestion with a given label. We can later get info about the other
-                // recommendations for that label via the lazy details
-                AnnotationFeature feature = features.get(ao.getFeature());
+                AnnotationFeature feature = features.get(spanSuggestion.getFeature());
 
                 // Retrieve the UI display label for the given feature value
-                FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
-                String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());
+                var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
+                var annotation = featureSupport.renderFeatureValue(feature,
+                        spanSuggestion.getLabel());
 
-                Map<String, String> featureAnnotation = new HashMap<>();
-                featureAnnotation.put(ao.getFeature(), annotation);
+                var featureAnnotation = Map.of(spanSuggestion.getFeature(), annotation);
 
-                VSpan v = new VSpan(layer, vid, range.get(), featureAnnotation, COLOR);
-                v.setScore(ao.getScore());
-
+                var v = new VSpan(layer, spanSuggestion.getVID(), range.get(), featureAnnotation,
+                        COLOR);
+                v.setScore(spanSuggestion.getScore());
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 
-                List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
-                        ao.getLabel());
+                var lazyDetails = featureSupport.getLazyDetails(feature, spanSuggestion.getLabel());
                 if (!lazyDetails.isEmpty()) {
                     v.addLazyDetails(lazyDetails);
                 }
                 else {
-                    v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
+                    v.addLazyDetail(
+                            new VLazyDetailQuery(feature.getName(), spanSuggestion.getLabel()));
                 }
 
                 vdoc.add(v);

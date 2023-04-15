@@ -51,7 +51,9 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRelationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
@@ -192,14 +194,32 @@ public class RecommenderServiceAutoConfiguration
 
     @Bean
     public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
-            RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, RecommenderProperties aRecommenderProperties,
-            UserDao aUserRegistry)
+            RecommendationSpanRenderer aRecommendationSpanRenderer,
+            RecommendationRelationRenderer aRecommendationRelationRenderer)
     {
-        return new RecommendationRenderer(aAnnotationService, aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher, aFsRegistry,
-                aRecommenderProperties, aUserRegistry);
+        return new RecommendationRenderer(aAnnotationService, aLearningRecordService,
+                aApplicationEventPublisher, aRecommendationSpanRenderer,
+                aRecommendationRelationRenderer);
+    }
+
+    @Bean
+    public RecommendationSpanRenderer recommendationSpanRenderer(
+            RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+            RecommenderProperties aRecommenderProperties)
+    {
+        return new RecommendationSpanRenderer(aRecommendationService, aAnnotationService,
+                aFsRegistry, aRecommenderProperties);
+    }
+
+    @Bean
+    public RecommendationRelationRenderer recommendationRelationRenderer(
+            RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
+    {
+        return new RecommendationRelationRenderer(aRecommendationService, aAnnotationService,
+                aFsRegistry);
     }
 }
