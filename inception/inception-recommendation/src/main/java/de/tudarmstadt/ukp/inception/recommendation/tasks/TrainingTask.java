@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -61,9 +62,6 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotifica
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
-/**
- * This consumer trains a new classifier model, if a classification tool was selected before.
- */
 public class TrainingTask
     extends RecommendationTask_ImplBase
 {
@@ -87,6 +85,7 @@ public class TrainingTask
     @Override
     public void execute()
     {
+        long overallStartTime = System.currentTimeMillis();
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
             User user = getUser().orElseThrow();
@@ -290,6 +289,7 @@ public class TrainingTask
             PredictionTask predictionTask = new PredictionTask(user,
                     String.format("TrainingTask %s complete", getId()), currentDocument);
             predictionTask.inheritLog(this);
+            info("Training complete ({} ms).", currentTimeMillis() - overallStartTime);
             schedulingService.enqueue(predictionTask);
         }
     }
