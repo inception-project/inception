@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
@@ -282,13 +281,7 @@ public class DiamWebsocketController
         throws IOException
     {
         SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
-        User user;
-        if (CURATION_USER.equals(aUser)) {
-            user = new User(CURATION_USER);
-        }
-        else {
-            user = userRepository.get(aUser);
-        }
+        User user = userRepository.getUserOrCurationUser(aUser);
 
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
