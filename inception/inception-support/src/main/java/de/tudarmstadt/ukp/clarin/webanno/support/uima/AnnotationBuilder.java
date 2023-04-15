@@ -35,6 +35,13 @@ public class AnnotationBuilder<T extends AnnotationFS>
         super(aCas, aType);
     }
 
+    public AnnotationBuilder<T> at(AnnotationFS aAnnotation)
+    {
+        withFeature(CAS.FEATURE_BASE_NAME_BEGIN, aAnnotation.getBegin());
+        withFeature(CAS.FEATURE_BASE_NAME_END, aAnnotation.getEnd());
+        return this;
+    }
+
     public AnnotationBuilder<T> at(int aBegin, int aEnd)
     {
         withFeature(CAS.FEATURE_BASE_NAME_BEGIN, aBegin);
@@ -49,6 +56,11 @@ public class AnnotationBuilder<T extends AnnotationFS>
             at(m.start(), m.end());
         }
         return this;
+    }
+
+    public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(CAS aCas, Type aType)
+    {
+        return new AnnotationBuilder<X>(aCas, aType);
     }
 
     public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(CAS aCas,

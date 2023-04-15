@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
@@ -39,7 +40,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
-import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -55,7 +55,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class CurationTestUtils
 {
-
+    public static final String TARGET_FEATURE = "target";
+    public static final String ROLE_FEATURE = "role";
+    public static final String LINKS_FEATURE = "links";
     public static final String HOST_TYPE = "webanno.custom.LinkHost";
     public static final String LINK_TYPE = "webanno.custom.LinkType";
 
@@ -182,12 +184,12 @@ public class CurationTestUtils
 
         // Link type
         TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
-        linkTD.addFeature("role", "", CAS.TYPE_NAME_STRING);
-        linkTD.addFeature("target", "", CAS.TYPE_NAME_ANNOTATION);
+        linkTD.addFeature(ROLE_FEATURE, "", CAS.TYPE_NAME_STRING);
+        linkTD.addFeature(TARGET_FEATURE, "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
         TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
-        hostTD.addFeature("links", "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+        hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
 
         typeSystems.add(tsd);
         typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
@@ -204,12 +206,12 @@ public class CurationTestUtils
 
         // Link type
         TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
-        linkTD.addFeature("role", "", CAS.TYPE_NAME_STRING);
-        linkTD.addFeature("target", "", CAS.TYPE_NAME_ANNOTATION);
+        linkTD.addFeature(ROLE_FEATURE, "", CAS.TYPE_NAME_STRING);
+        linkTD.addFeature(TARGET_FEATURE, "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
         TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
-        hostTD.addFeature("links", "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+        hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
         for (String feature : aFeatures) {
             hostTD.addFeature(feature, "", CAS.TYPE_NAME_STRING);
         }
@@ -246,28 +248,26 @@ public class CurationTestUtils
         return type;
     }
 
-    public static void makeLinkHostFS(JCas aCas, int aBegin, int aEnd, FeatureStructure... aLinks)
+    public static AnnotationFS makeLinkHostFS(JCas aCas, int aBegin, int aEnd,
+            FeatureStructure... aLinks)
     {
-        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
-        hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
-        aCas.getCas().addFsToIndexes(hostA1);
+        return buildAnnotation(aCas.getCas(), HOST_TYPE) //
+                .at(aBegin, aEnd) //
+                .withFeature(LINKS_FEATURE, asList(aLinks)) //
+                .buildAndAddToIndexes();
     }
 
-    public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aCas, int aBegin, int aEnd,
-            Feature aSpanFeature, String aValue, FeatureStructure... aLinks)
+    public static AnnotationFS makeLinkHostFS(JCas aCas, int aBegin, int aEnd, Feature aSpanFeature,
+            String aValue, FeatureStructure... aLinks)
     {
-        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
-        hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
-        hostA1.setStringValue(aSpanFeature, aValue);
-        aCas.getCas().addFsToIndexes(hostA1);
-        return hostA1;
+        return buildAnnotation(aCas.getCas(), HOST_TYPE) //
+                .at(aBegin, aEnd) //
+                .withFeature(aSpanFeature, aValue) //
+                .withFeature(LINKS_FEATURE, asList(aLinks)) //
+                .buildAndAddToIndexes();
     }
 
-    public static FeatureStructure makeLinkFS(JCas aCas, String aSlotLabel, int aTargetBegin,
+    public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
         Token token1 = new Token(aCas, aTargetBegin, aTargetEnd);
@@ -275,8 +275,8 @@ public class CurationTestUtils
 
         Type linkType = aCas.getTypeSystem().getType(LINK_TYPE);
         FeatureStructure linkA1 = aCas.getCas().createFS(linkType);
-        linkA1.setStringValue(linkType.getFeatureByBaseName("role"), aSlotLabel);
-        linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), token1);
+        linkA1.setStringValue(linkType.getFeatureByBaseName(ROLE_FEATURE), aRole);
+        linkA1.setFeatureValue(linkType.getFeatureByBaseName(TARGET_FEATURE), token1);
         aCas.getCas().addFsToIndexes(linkA1);
 
         return linkA1;
