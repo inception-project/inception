@@ -76,12 +76,13 @@
 
     <pdfbox.version>2.0.27</pdfbox.version>
 
-    <spring.version>5.3.26</spring.version>
+    <spring.version>5.3.27</spring.version>
     <spring.boot.version>2.7.10</spring.boot.version>
     <spring.data.version>2.7.10</spring.data.version>
-    <spring.security.version>5.8.1</spring.security.version>
+    <spring.security.version>5.8.2</spring.security.version>
     <springdoc.version>1.6.14</springdoc.version>
     <swagger.version>2.2.8</swagger.version>
+    <jjwt.version>0.11.5</jjwt.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.20.0</log4j2.version>
@@ -133,7 +134,7 @@
     <asciidoctor.version>2.5.7</asciidoctor.version>
     <asciidoctor-diagram.version>2.2.4</asciidoctor-diagram.version>
 
-    <json.version>20180813</json.version>
+    <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.14.1</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
@@ -1667,17 +1668,17 @@
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-api</artifactId>
-        <version>0.11.5</version>
+        <version>${jjwt.version}</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-impl</artifactId>
-        <version>0.11.5</version>
+        <version>${jjwt.version}</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-gson</artifactId>
-        <version>0.11.5</version>
+        <version>${jjwt.version}</version>
       </dependency>
       <dependency>
         <groupId>org.opensaml</groupId>
@@ -1986,24 +1987,6 @@
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-io-xml-asl</artifactId>
         <version>${dkpro.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.codehaus.woodstox</groupId>
-            <artifactId>woodstox-core-asl</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.xml.stream</groupId>
-            <artifactId>stax-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>stax</groupId>
-            <artifactId>stax-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.dkpro.core</groupId>
-            <artifactId>dkpro-core-api-xml-asl</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.dkpro.core</groupId>
