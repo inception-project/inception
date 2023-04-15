@@ -120,7 +120,8 @@ public class SpanSuggestion
                 .append("position", position).append("coveredText", coveredText)
                 .append("label", label).append("uiLabel", uiLabel).append("score", score)
                 .append("confindenceExplanation", scoreExplanation).append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+                .append("reasonForHiding", getReasonForHiding())
+                .append("autoAcceptMode", getAutoAcceptMode()).toString();
     }
 
     public static Builder builder()

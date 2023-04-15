@@ -205,13 +205,14 @@ public class NonTrainableRecommenderActivationTask
             recommender = recommendationService.getRecommender(r.getId());
         }
         catch (NoResultException e) {
-            log.info("[{}][{}]: Recommender no longer available... skipping", aUser.getUsername(),
+            log.info("[{}][{}]: Recommender no longer available - skipping", aUser.getUsername(),
                     r.getName());
             return Optional.empty();
         }
 
         if (!recommender.isEnabled()) {
-            log.debug("[{}][{}]: Disabled - skipping", aUser.getUsername(), recommender.getName());
+            log.debug("[{}][{}]: Recommender is disabled - skipping", aUser.getUsername(),
+                    recommender.getName());
             return Optional.empty();
         }
 

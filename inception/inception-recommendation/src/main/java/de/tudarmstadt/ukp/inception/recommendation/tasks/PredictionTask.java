@@ -37,10 +37,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 
-/**
- * This consumer predicts new annotations for a given annotation layer, if a classification tool for
- * this layer was selected previously.
- */
 public class PredictionTask
     extends RecommendationTask_ImplBase
 {
@@ -83,8 +79,9 @@ public class PredictionTask
             // Limit prediction to a single document and inherit the rest?
             if (recommendationService.isPredictForAllDocuments(username, project)) {
                 log.debug(
-                        "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+                        "[{}][{}]: Starting prediction for project [{}] on [{}] documents triggered by [{}]",
                         getId(), username, project, docs.size(), getTrigger());
+                info("Starting prediction triggered by [%s]...", getTrigger());
 
                 predictions = recommendationService.computePredictions(user, project, docs);
             }
@@ -94,9 +91,10 @@ public class PredictionTask
                         .collect(toList());
 
                 log.debug(
-                        "[{}][{}]: Starting prediction for project [{}] on one doc "
+                        "[{}][{}]: Starting prediction for project [{}] on one document "
                                 + "(inheriting [{}]) triggered by [{}]",
                         getId(), username, project, inherit.size(), getTrigger());
+                info("Starting prediction triggered by [%s]...", getTrigger());
 
                 predictions = recommendationService.computePredictions(user, project,
                         currentDocument, inherit, predictionBegin, predictionEnd);
@@ -104,8 +102,9 @@ public class PredictionTask
 
             predictions.inheritLog(getLogMessages());
 
-            log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
-                    currentTimeMillis() - startTime);
+            var duration = currentTimeMillis() - startTime;
+            log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username, duration);
+            info("Prediction complete ({} ms).", duration);
 
             recommendationService.putIncomingPredictions(user, project, predictions);
 

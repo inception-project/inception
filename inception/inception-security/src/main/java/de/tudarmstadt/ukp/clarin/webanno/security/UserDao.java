@@ -107,6 +107,10 @@ public interface UserDao
      */
     User get(String aUsername);
 
+    User getUserOrCurationUser(String aUsername);
+
+    User getCurationUser();
+
     User getUserByRealmAndUiName(String aRealm, String aUiName);
 
     /**

@@ -40,6 +40,12 @@ public interface RecommendationEngineFactory<T>
         return true;
     }
 
+    /**
+     * @return {@code true} if the recommender could generate more than one recommendation at a
+     *         given position. If this is not the case (i.e. if {@code false} is returned, then
+     *         there is no need to offer the option to cap the number of recommendations in the
+     *         recommender settings.
+     */
     default boolean isMultipleRecommendationProvider()
     {
         return true;
