@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -158,7 +159,9 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return (T) featureSupportRegistry.findExtension(aFeature).orElseThrow()
+        return (T) featureSupportRegistry.findExtension(aFeature) //
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Unsupported feature type [" + aFeature.getType() + "]"))
                 .getFeatureValue(aFeature, aFs);
     }
 

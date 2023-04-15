@@ -298,12 +298,7 @@ public class CurationSidebarServiceImpl
             String curatorName = getSession(aState.getUser().getUsername(), aProjectId)
                     .getCurationTarget();
 
-            if (curatorName.equals(CURATION_USER)) {
-                curator = new User(CURATION_USER);
-            }
-            else {
-                curator = userRegistry.get(curatorName);
-            }
+            curator = userRegistry.getUserOrCurationUser(curatorName);
         }
 
         SourceDocument doc = aState.getDocument();
@@ -506,7 +501,7 @@ public class CurationSidebarServiceImpl
         }
 
         if (CURATION_USER.equals(curationUser)) {
-            return new User(CURATION_USER);
+            return userRegistry.getCurationUser();
         }
 
         return userRegistry.get(curationUser);
