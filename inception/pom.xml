@@ -1987,6 +1987,12 @@
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-io-xml-asl</artifactId>
         <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-xml-asl</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.dkpro.core</groupId>
