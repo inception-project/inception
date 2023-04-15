@@ -378,8 +378,8 @@ public class RecommendationEditorExtension
         log.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(ANNOTATION)
-                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
+        String sessionOwner = userRegistry.getCurrentUsername();
+        if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
 
@@ -387,7 +387,7 @@ public class RecommendationEditorExtension
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
-        boolean switched = recommendationService.switchPredictions(aState.getUser(),
+        boolean switched = recommendationService.switchPredictions(sessionOwner,
                 aState.getProject());
         log.trace("switchPredictions() returned {}", switched);
 
@@ -395,20 +395,17 @@ public class RecommendationEditorExtension
             return;
         }
 
-        // Maybe later ;)
-        // recommendationService.autoAccept(aTarget, aState.getUser(), aState.getDocument());
-
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
+        applicationEventPublisher
+                .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
     }
 
     @Override
     public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
             AnnotationFeature aFeature, String aQuery)
     {
-        Predictions predictions = recommendationService.getPredictions(aUser,
-                aDocument.getProject());
+        var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
 
         if (predictions == null) {
             return emptyList();
@@ -416,9 +413,8 @@ public class RecommendationEditorExtension
 
         Preferences pref = recommendationService.getPreferences(aUser, aDocument.getProject());
 
-        VID vid = VID.parse(aVid.getExtensionPayload());
-        Optional<AnnotationSuggestion> representative = predictions.getPredictionByVID(aDocument,
-                vid);
+        var vid = VID.parse(aVid.getExtensionPayload());
+        var representative = predictions.getPredictionByVID(aDocument, vid);
         if (representative.isEmpty()) {
             return emptyList();
         }
@@ -427,14 +423,16 @@ public class RecommendationEditorExtension
         Optional<SuggestionGroup<AnnotationSuggestion>> group = predictions
                 .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
                         aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
-                .stream().filter(g -> g.contains(representative.get())).findFirst();
+                .stream() //
+                .filter(g -> g.contains(representative.get())) //
+                .findFirst();
 
         if (group.isEmpty()) {
             return emptyList();
         }
 
-        List<AnnotationSuggestion> sortedByScore = group.get()
-                .bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(), aQuery);
+        var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
+                aQuery);
 
         List<VLazyDetailResult> details = new ArrayList<>();
         for (AnnotationSuggestion ao : sortedByScore) {

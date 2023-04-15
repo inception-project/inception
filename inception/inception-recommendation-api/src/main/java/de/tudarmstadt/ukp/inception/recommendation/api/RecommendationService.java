@@ -98,53 +98,54 @@ public interface RecommendationService
      */
     Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
 
-    boolean hasActiveRecommenders(String aUser, Project aProject);
+    boolean hasActiveRecommenders(String aSessionOwner, Project aProject);
 
-    List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject);
+    List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner, Project aProject);
 
-    void setEvaluatedRecommenders(User aUser, AnnotationLayer layer,
+    void setEvaluatedRecommenders(User aSessionOwner, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
 
-    List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer);
+    List<EvaluatedRecommender> getEvaluatedRecommenders(User aSessionOwner, AnnotationLayer aLayer);
 
-    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser, Recommender aRecommender);
+    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aSessionOwner,
+            Recommender aRecommender);
 
-    List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
+    List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner, AnnotationLayer aLayer);
 
-    void setPreferences(User aUser, Project aProject, Preferences aPreferences);
+    void setPreferences(User aSessionOwner, Project aProject, Preferences aPreferences);
 
-    Preferences getPreferences(User aUser, Project aProject);
+    Preferences getPreferences(User aSessionOwner, Project aProject);
 
-    Predictions getPredictions(User aUser, Project aProject);
+    Predictions getPredictions(User aSessionOwner, Project aProject);
 
-    Predictions getIncomingPredictions(User aUser, Project aProject);
+    Predictions getIncomingPredictions(User aSessionOwner, Project aProject);
 
-    void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
+    void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
 
-    boolean switchPredictions(User aUser, Project aProject);
+    boolean switchPredictions(String aSessionOwner, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            The owner of the context
      * @param aRecommender
      *            The recommender to which the desired context belongs
      * @return The context of the given recommender if there is one, or an empty one
      */
-    Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender);
+    Optional<RecommenderContext> getContext(String aSessionOwner, Recommender aRecommender);
 
     /**
      * Publishes a new context for the given recommender.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            The owner of the context.
      * @param aRecommender
      *            The recommender to which the desired context belongs.
      * @param aContext
      *            The new active context of the given recommender.
      */
-    void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext);
+    void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
@@ -182,7 +183,7 @@ public interface RecommendationService
     /**
      * Compute predictions.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            the user to compute the predictions for.
      * @param aProject
      *            the project to compute the predictions for.
@@ -190,12 +191,13 @@ public interface RecommendationService
      *            the documents to compute the predictions for.
      * @return the new predictions.
      */
-    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
+    Predictions computePredictions(User aSessionOwner, Project aProject,
+            List<SourceDocument> aDocuments, String aDataOwner);
 
     /**
      * Compute predictions.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            the user to compute the predictions for.
      * @param aProject
      *            the project to compute the predictions for.
@@ -209,8 +211,9 @@ public interface RecommendationService
      *            end of the prediction range (negative to predict until the end of the document)
      * @return the new predictions.
      */
-    Predictions computePredictions(User aUser, Project aProject, SourceDocument aCurrentDocument,
-            List<SourceDocument> aInherit, int aPredictionBegin, int aPredictionEnd);
+    Predictions computePredictions(User aSessionOwner, Project aProject,
+            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
+            int aPredictionBegin, int aPredictionEnd);
 
     void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
             AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
@@ -220,26 +223,28 @@ public interface RecommendationService
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 
-    void clearState(String aUsername);
+    void clearState(String aSessionOwner);
 
-    void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
+    void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
+            String aDataOwner);
 
-    void triggerTrainingAndPrediction(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument);
+    void triggerTrainingAndPrediction(String aSessionOwner, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument, String aDataOwner);
 
-    void triggerSelectionTrainingAndPrediction(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument);
+    void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument, String aDataOwner);
 
-    boolean isPredictForAllDocuments(String aUser, Project aProject);
+    boolean isPredictForAllDocuments(String aSessionOwner, Project aProject);
 
-    void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
+    void setPredictForAllDocuments(String aSessionOwner, Project aProject,
+            boolean aPredictForAllDocuments);
 
-    List<LogMessageGroup> getLog(String aUser, Project aProject);
+    List<LogMessageGroup> getLog(String aSessionOwner, Project aProject);
 
     /**
      * @return the total amount of enabled recommenders
      */
     long countEnabledRecommenders();
 
-    Progress getProgressTowardsNextEvaluation(User aUser, Project aProject);
+    Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
 }

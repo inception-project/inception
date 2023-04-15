@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
@@ -275,15 +274,14 @@ public abstract class BratSuggestionVisualizer
             // what they were when the VDocument has first been created. Optimally, we wouldn't
             // need access to the request here at all and the important information would be
             // contained in the VDocuemnt already.
-            RenderRequest request = RenderRequest.builder() //
+            var request = RenderRequest.builder() //
                     .withState(state) //
+                    .withSessionOwner(userService.getCurrentUser()) //
                     .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                     .build();
-            GetDocumentResponse response = bratSerializer.render(getModelObject().getVDocument(),
-                    request);
+            var response = bratSerializer.render(getModelObject().getVDocument(), request);
 
             return JSONUtil.toInterpretableJsonString(response);
-
         }
         catch (Exception e) {
             handleError("Unable to render annotatations", e);

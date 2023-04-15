@@ -74,6 +74,11 @@ public class Predictions
         user = aUser;
     }
 
+    public User getSessionOwner()
+    {
+        return user;
+    }
+
     /**
      * @param type
      *            the suggestion type

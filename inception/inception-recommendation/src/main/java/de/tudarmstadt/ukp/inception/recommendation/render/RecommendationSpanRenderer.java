@@ -23,16 +23,12 @@ import static java.util.stream.Collectors.toMap;
 
 import java.util.Map;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -73,30 +69,22 @@ public class RecommendationSpanRenderer
      *
      * @param vdoc
      *            A VDocument containing annotations for the given layer
+     * @param aPredictions
+     *            the predictions to render
      */
     @Override
-    public void render(VDocument vdoc, RenderRequest aRequest, SpanAdapter aTypeAdapter)
+    public void render(VDocument vdoc, RenderRequest aRequest, Predictions aPredictions,
+            SpanAdapter aTypeAdapter)
     {
-        CAS cas = aRequest.getCas();
-
-        if (cas == null || recommendationService == null) {
-            return;
-        }
-
-        Predictions predictions = recommendationService.getPredictions(aRequest.getAnnotationUser(),
-                aRequest.getProject());
-        if (predictions == null) {
-            return;
-        }
+        var cas = aRequest.getCas();
 
         var layer = aTypeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
+        var sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
                 .orElse(getDocumentTitle(cas));
-        SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getGroupedPredictions(
-                SpanSuggestion.class, sourceDocumentName, layer, aRequest.getWindowBeginOffset(),
-                aRequest.getWindowEndOffset());
+        var groups = aPredictions.getGroupedPredictions(SpanSuggestion.class, sourceDocumentName,
+                layer, aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -107,7 +95,7 @@ public class RecommendationSpanRenderer
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
+        var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
@@ -116,34 +104,33 @@ public class RecommendationSpanRenderer
 
         for (var suggestionGroup : groups) {
             // Render annotations for each label
-            for (var spanSuggestion : suggestionGroup.bestSuggestions(pref)) {
-                var range = VRange.clippedRange(vdoc, spanSuggestion.getBegin(),
-                        spanSuggestion.getEnd());
+            for (var suggestion : suggestionGroup.bestSuggestions(pref)) {
+                var range = VRange.clippedRange(vdoc, suggestion.getBegin(), suggestion.getEnd());
                 if (!range.isPresent()) {
                     continue;
                 }
 
-                AnnotationFeature feature = features.get(spanSuggestion.getFeature());
+                var feature = features.get(suggestion.getFeature());
 
                 // Retrieve the UI display label for the given feature value
                 var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
-                var annotation = featureSupport.renderFeatureValue(feature,
-                        spanSuggestion.getLabel());
+                var annotation = featureSupport.renderFeatureValue(feature, suggestion.getLabel());
 
-                var featureAnnotation = Map.of(spanSuggestion.getFeature(), annotation);
+                Map<String, String> featureAnnotation = annotation != null
+                        ? Map.of(suggestion.getFeature(), annotation)
+                        : Map.of();
 
-                var v = new VSpan(layer, spanSuggestion.getVID(), range.get(), featureAnnotation,
+                var v = new VSpan(layer, suggestion.getVID(), range.get(), featureAnnotation,
                         COLOR);
-                v.setScore(spanSuggestion.getScore());
+                v.setScore(suggestion.getScore());
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 
-                var lazyDetails = featureSupport.getLazyDetails(feature, spanSuggestion.getLabel());
+                var lazyDetails = featureSupport.getLazyDetails(feature, suggestion.getLabel());
                 if (!lazyDetails.isEmpty()) {
                     v.addLazyDetails(lazyDetails);
                 }
                 else {
-                    v.addLazyDetail(
-                            new VLazyDetailQuery(feature.getName(), spanSuggestion.getLabel()));
+                    v.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
                 }
 
                 vdoc.add(v);

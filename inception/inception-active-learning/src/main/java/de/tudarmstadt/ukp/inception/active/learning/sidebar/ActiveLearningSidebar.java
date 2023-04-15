@@ -309,7 +309,7 @@ public class ActiveLearningSidebar
 
         recommendationService.setPredictForAllDocuments(userName, project, true);
         recommendationService.triggerPrediction(userName, "ActionStartActiveLearningSession",
-                state.getDocument());
+                state.getDocument(), state.getUser().getUsername());
 
         // Start new session
         alState.setSessionActive(true);

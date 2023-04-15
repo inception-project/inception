@@ -511,14 +511,15 @@ public class RecommendationServiceImpl
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
         var project = aEvent.getDocument().getProject();
-        var username = aEvent.getAnnotator();
+        var sessionOwner = aEvent.getUser();
+        var dataOwner = aEvent.getAnnotator();
         var doc = aEvent.getDocument();
-        var predictions = getState(username, project).getActivePredictions();
+        var predictions = getState(sessionOwner, project).getActivePredictions();
         var predictionSessionExistedOnOpen = predictions != null;
 
         // If the user does not exist (also if the user is a pseudo-user like CURATION_USER
         // we do not apply recommendations
-        User user = userRepository.get(username);
+        User user = userRepository.get(sessionOwner);
         if (user == null) {
             return;
         }
@@ -534,9 +535,9 @@ public class RecommendationServiceImpl
         }
 
         // Check if we need to wait for the initial recommender run before displaying the document
-        // to the user var predictionSessionExists =
+        // to the user
         boolean predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, user,
-                trigger);
+                trigger, dataOwner);
 
         // Is it the first time a document has been opened? If yes, ther might be auto-accept
         // suggestions that need to be processed (in particular ones that may have been generated
@@ -547,7 +548,7 @@ public class RecommendationServiceImpl
 
         // Trigger a training and prediction run if there is no prediction state yet
         if (!predictionSessionExistedOnOpen) {
-            triggerTrainingAndPrediction(username, project, trigger, doc);
+            triggerTrainingAndPrediction(sessionOwner, project, trigger, doc, dataOwner);
             return;
         }
 
@@ -561,12 +562,12 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(username, trigger, doc);
+            triggerPrediction(sessionOwner, trigger, doc, dataOwner);
         }
     }
 
     private boolean nonTrainableRecommenderRunSync(SourceDocument doc, Predictions predictions,
-            User user, String trigger)
+            User aSessionOwner, String trigger, String aDataOwner)
     {
         if (predictions != null && predictions.hasRunPredictionOnDocument(doc)) {
             LOG.trace("Not running sync prediction for non-trainable recommenders as we already "
@@ -583,8 +584,8 @@ public class RecommendationServiceImpl
         }
 
         LOG.trace("Running sync prediction for non-trainable recommenders");
-        schedulingService.executeSync(new PredictionTask(user, trigger, doc));
-        switchPredictions(user, doc.getProject());
+        schedulingService.executeSync(new PredictionTask(aSessionOwner, trigger, doc, aDataOwner));
+        switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
         return true;
     }
@@ -718,7 +719,8 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(COMMITTED, committed);
         }
 
-        committed.add(new CommittedDocument(aEvent.getDocument()));
+        var annDoc = aEvent.getDocument();
+        committed.add(new CommittedDocument(annDoc));
 
         boolean containsTrainingTrigger = false;
         for (IRequestCycleListener listener : requestCycle.getListeners()) {
@@ -735,8 +737,8 @@ public class RecommendationServiceImpl
             if (handler.isPageInstanceCreated()
                     && handler.getPage() instanceof AnnotationPageBase) {
                 AnnotatorState state = ((AnnotationPageBase) handler.getPage()).getModelObject();
-                requestCycle.getListeners()
-                        .add(new TriggerTrainingTaskListener(state.getDocument()));
+                requestCycle.getListeners().add(new TriggerTrainingTaskListener(state.getDocument(),
+                        state.getUser().getUsername()));
             }
             else {
                 // Otherwise use the document from the event... mind that if there are multiple
@@ -746,8 +748,8 @@ public class RecommendationServiceImpl
                 // the user is doing a bulk operation. If a bulk-operation is done, we get multiple
                 // AfterCasWrittenEvent and we do not know which of them belongs to the document
                 // which the user is currently viewing.
-                requestCycle.getListeners()
-                        .add(new TriggerTrainingTaskListener(aEvent.getDocument().getDocument()));
+                requestCycle.getListeners().add(
+                        new TriggerTrainingTaskListener(annDoc.getDocument(), annDoc.getUser()));
             }
         }
     }
@@ -792,34 +794,36 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument)
+    public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument,
+            String aDataOwner)
     {
         User user = userRepository.get(aUsername);
         if (user == null) {
             return;
         }
 
-        schedulingService.enqueue(new PredictionTask(user, aEventName, aDocument));
+        schedulingService.enqueue(new PredictionTask(user, aEventName, aDocument, aDataOwner));
     }
 
     @Override
-    public void triggerTrainingAndPrediction(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument)
+    public void triggerTrainingAndPrediction(String aSessionOwner, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aUser, aProject, aEventName, aCurrentDocument, false, null);
+        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false, null);
     }
 
     @Override
-    public void triggerSelectionTrainingAndPrediction(String aUser, Project aProject,
-            String aEventName, SourceDocument aCurrentDocument)
+    public void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aUser, aProject, aEventName, aCurrentDocument, true, null);
+        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true, null);
     }
 
-    private void triggerRun(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument, boolean aForceSelection, Set<DirtySpot> aDirties)
+    private void triggerRun(String aSessionOwner, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
+            Set<DirtySpot> aDirties)
     {
-        User user = userRepository.get(aUser);
+        User user = userRepository.get(aSessionOwner);
         // do not trigger training during when viewing others' work
         if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
@@ -832,7 +836,7 @@ public class RecommendationServiceImpl
 
         // If there is no active recommender at all then let's try hard to make one active by
         // re-setting the count and thus force-scheduling a SelectionTask
-        if (!hasActiveRecommenders(aUser, aProject)) {
+        if (!hasActiveRecommenders(aSessionOwner, aProject)) {
             count.set(0);
         }
 
@@ -840,10 +844,10 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument);
+            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
             schedulingService.enqueue(task);
 
-            RecommendationState state = getState(aUser, aProject);
+            RecommendationState state = getState(aSessionOwner, aProject);
             synchronized (state) {
                 state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
                 state.setPredictionsSinceLastEvaluation(0);
@@ -852,10 +856,10 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
+        Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
         schedulingService.enqueue(task);
 
-        RecommendationState state = getState(aUser, aProject);
+        RecommendationState state = getState(aSessionOwner, aProject);
         synchronized (state) {
             int predictions = state.getPredictionsSinceLastEvaluation() + 1;
             state.setPredictionsSinceLastEvaluation(predictions);
@@ -992,18 +996,18 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public boolean switchPredictions(User aUser, Project aProject)
+    public boolean switchPredictions(String aSessionOwner, Project aProject)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        RecommendationState state = getState(aSessionOwner, aProject);
         synchronized (state) {
             return state.switchPredictions();
         }
     }
 
     @Override
-    public Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender)
+    public Optional<RecommenderContext> getContext(String aSessionOwner, Recommender aRecommender)
     {
-        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        RecommendationState state = getState(aSessionOwner, aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
         }
@@ -1416,12 +1420,12 @@ public class RecommendationServiceImpl
     }
 
     private void computePredictions(LazyCas aOriginalCas,
-            EvaluatedRecommender aEvaluatedRecommender, Predictions predictions, CAS predictionCas,
-            SourceDocument aDocument, User aUser, int aPredictionBegin, int aPredictionEnd)
+            EvaluatedRecommender aEvaluatedRecommender, Predictions aPredictions, CAS predictionCas,
+            SourceDocument aDocument, User aSessionOwner, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
         Project project = aDocument.getProject();
-        Predictions activePredictions = getPredictions(aUser, project);
+        Predictions activePredictions = getPredictions(aSessionOwner, project);
         int predictionBegin = aPredictionBegin;
         int predictionEnd = aPredictionEnd;
 
@@ -1432,38 +1436,38 @@ public class RecommendationServiceImpl
             recommender = getRecommender(recommender.getId());
         }
         catch (NoResultException e) {
-            predictions.log(LogMessage.info(recommender.getName(),
+            aPredictions.log(LogMessage.info(recommender.getName(),
                     "Recommender no longer available... skipping"));
-            LOG.info("{}[{}]: Recommender no longer available... skipping", aUser,
+            LOG.info("{}[{}]: Recommender no longer available... skipping", aSessionOwner,
                     recommender.getName());
             return;
         }
 
         if (!recommender.isEnabled()) {
-            predictions.log(
+            aPredictions.log(
                     LogMessage.info(recommender.getName(), "Recommender disabled... skipping"));
-            LOG.debug("{}[{}]: Disabled - skipping", aUser, recommender.getName());
+            LOG.debug("{}[{}]: Disabled - skipping", aSessionOwner, recommender.getName());
             return;
         }
 
-        Optional<RecommenderContext> context = getContext(aUser, recommender);
+        Optional<RecommenderContext> context = getContext(aSessionOwner.getUsername(), recommender);
 
         if (!context.isPresent()) {
-            predictions.log(LogMessage.info(recommender.getName(),
+            aPredictions.log(LogMessage.info(recommender.getName(),
                     "Recommender has no context... skipping"));
             LOG.info("No context available for recommender {} for user {} on document {} in " //
-                    + "project {} - skipping recommender", recommender, aUser, aDocument,
+                    + "project {} - skipping recommender", recommender, aSessionOwner, aDocument,
                     aDocument.getProject());
             return;
         }
 
         RecommenderContext ctx = context.get();
-        ctx.setUser(aUser);
+        ctx.setUser(aSessionOwner);
 
         Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(recommender);
 
         if (maybeFactory.isEmpty()) {
-            LOG.warn("{}[{}]: No factory found - skipping recommender", aUser,
+            LOG.warn("{}[{}]: No factory found - skipping recommender", aSessionOwner,
                     recommender.getName());
             return;
         }
@@ -1473,10 +1477,10 @@ public class RecommendationServiceImpl
         // Check that configured layer and feature are accepted
         // by this type of recommender
         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-            predictions.log(LogMessage.info(recommender.getName(),
+            aPredictions.log(LogMessage.info(recommender.getName(),
                     "Recommender configured with invalid layer or feature... skipping"));
             LOG.info("{}[{}]: Recommender configured with invalid layer or feature "
-                    + "- skipping recommender", aUser, recommender.getName());
+                    + "- skipping recommender", aSessionOwner, recommender.getName());
             return;
         }
 
@@ -1492,17 +1496,17 @@ public class RecommendationServiceImpl
             RecommendationEngine engine = factory.build(recommender);
 
             if (!engine.isReadyForPrediction(ctx)) {
-                predictions.log(LogMessage.info(recommender.getName(),
+                aPredictions.log(LogMessage.info(recommender.getName(),
                         "Recommender context is not ready... skipping"));
                 LOG.info("Recommender context {} for user {} in project {} is not ready for " //
-                        + "prediction - skipping recommender", recommender, aUser,
+                        + "prediction - skipping recommender", recommender, aSessionOwner,
                         aDocument.getProject());
 
                 // If possible, we inherit recommendations from a previous run while
                 // the recommender is still busy
                 if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(predictions, originalCas, recommender,
-                            activePredictions, aDocument, aUser);
+                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, recommender,
+                            activePredictions, aDocument, aSessionOwner);
                 }
 
                 return;
@@ -1515,34 +1519,34 @@ public class RecommendationServiceImpl
             if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
-                inheritSuggestionsAtRecommenderLevel(predictions, originalCas,
-                        engine.getRecommender(), activePredictions, aDocument, aUser);
+                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,
+                        engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
             }
             else {
-                generateSuggestions(predictions, ctx, engine, activePredictions, aDocument,
-                        originalCas, predictionCas, aUser, predictionBegin, predictionEnd);
+                generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
+                        originalCas, predictionCas, aSessionOwner, predictionBegin, predictionEnd);
             }
         }
         // Catching Throwable is intentional here as we want to continue the
         // execution even if a particular recommender fails.
         catch (Throwable e) {
-            predictions.log(LogMessage.error(recommender.getName(), "Failed: %s", e.getMessage()));
+            aPredictions.log(LogMessage.error(recommender.getName(), "Failed: %s", e.getMessage()));
             LOG.error("Error applying recommender {} for user {} to document {} in project {} - " //
-                    + "skipping recommender", recommender, aUser, aDocument, aDocument.getProject(),
-                    e);
+                    + "skipping recommender", recommender, aSessionOwner, aDocument,
+                    aDocument.getProject(), e);
 
-            applicationEventPublisher.publishEvent(
-                    RecommenderTaskNotificationEvent.builder(this, project, aUser.getUsername()) //
-                            .withMessage(LogMessage.error(this, "Recommender [%s] failed: %s",
-                                    recommender.getName(), e.getMessage())) //
-                            .build());
+            applicationEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, aSessionOwner.getUsername()) //
+                    .withMessage(LogMessage.error(this, "Recommender [%s] failed: %s",
+                            recommender.getName(), e.getMessage())) //
+                    .build());
 
             // If there was a previous successful run of the recommender, inherit
             // its suggestions to avoid that all the suggestions of the recommender
             // simply disappear.
             if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(predictions, originalCas, recommender,
-                        activePredictions, aDocument, aUser);
+                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, recommender,
+                        activePredictions, aDocument, aSessionOwner);
             }
 
             return;
@@ -1556,34 +1560,35 @@ public class RecommendationServiceImpl
      *            the re-usable buffer CAS to use when calling recommenders
      * @param aDocument
      *            the current document
-     * @param aUser
-     *            the current annotation owner
      * @param aPredictionBegin
      *            begin of the prediction window (&lt; 0 for 0)
      * @param aPredictionEnd
      *            end of the prediction window (&lt; 0 for document-end)
+     * @param aDataOwner
+     *            the annotation data owner
      */
     private void computePredictions(Predictions aPredictions, CAS aPredictionCas,
-            SourceDocument aDocument, User aUser, int aPredictionBegin, int aPredictionEnd)
+            SourceDocument aDocument, String aDataOwner, int aPredictionBegin, int aPredictionEnd)
     {
+        var aSessionOwner = aPredictions.getSessionOwner();
+
         try {
-            List<EvaluatedRecommender> recommenders = getActiveRecommenders(aUser,
-                    aDocument.getProject());
+            var recommenders = getActiveRecommenders(aSessionOwner, aDocument.getProject());
             if (recommenders.isEmpty()) {
                 aPredictions.log(LogMessage.info(this, "No active recommenders"));
-                LOG.trace("[{}]: No active recommenders", aUser);
+                LOG.trace("[{}]: No active recommenders", aSessionOwner);
                 return;
             }
 
-            LazyCas originalCas = new LazyCas(aDocument, aUser);
+            LazyCas originalCas = new LazyCas(aDocument, aDataOwner);
             for (EvaluatedRecommender r : recommenders) {
-                AnnotationLayer layer = annoService.getLayer(r.getRecommender().getLayer().getId());
+                var layer = annoService.getLayer(r.getRecommender().getLayer().getId());
                 if (!layer.isEnabled()) {
                     continue;
                 }
 
-                computePredictions(originalCas, r, aPredictions, aPredictionCas, aDocument, aUser,
-                        aPredictionBegin, aPredictionEnd);
+                computePredictions(originalCas, r, aPredictions, aPredictionCas, aDocument,
+                        aSessionOwner, aPredictionBegin, aPredictionEnd);
             }
         }
         catch (IOException e) {
@@ -1591,8 +1596,8 @@ public class RecommendationServiceImpl
             LOG.error(
                     "Cannot read annotation CAS for user {} of document "
                             + "[{}]({}) in project [{}]({}) - skipping document",
-                    aUser, aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
-                    aDocument.getProject().getId(), e);
+                    aSessionOwner, aDocument.getName(), aDocument.getId(),
+                    aDocument.getProject().getName(), aDocument.getProject().getId(), e);
             return;
         }
 
@@ -1601,14 +1606,14 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public Predictions computePredictions(User aUser, Project aProject,
-            List<SourceDocument> aDocuments)
+    public Predictions computePredictions(User aSessionOwner, Project aProject,
+            List<SourceDocument> aDocuments, String aDataOwner)
     {
         try (var casHolder = new PredictionCasHolder()) {
-            Predictions predictions = new Predictions(aUser, aProject);
+            Predictions predictions = new Predictions(aSessionOwner, aProject);
             // Generate new predictions or inherit at the recommender level
             for (SourceDocument document : aDocuments) {
-                computePredictions(predictions, casHolder.cas, document, aUser, -1, -1);
+                computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
             }
 
             predictions.log(LogMessage.info(this, "Prediction complete"));
@@ -1617,7 +1622,7 @@ public class RecommendationServiceImpl
             return predictions;
         }
         catch (ResourceInitializationException e) {
-            Predictions predictions = new Predictions(aUser, aProject);
+            Predictions predictions = new Predictions(aSessionOwner, aProject);
             predictions.log(
                     LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
             LOG.error("Cannot create prediction CAS, stopping predictions!");
@@ -1626,19 +1631,19 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public Predictions computePredictions(User aUser, Project aProject,
-            SourceDocument aCurrentDocument, List<SourceDocument> aInherit, int aPredictionBegin,
-            int aPredictionEnd)
+    public Predictions computePredictions(User aSessionOwner, Project aProject,
+            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
+            int aPredictionBegin, int aPredictionEnd)
     {
-        Predictions predictions = new Predictions(aUser, aProject);
-        Predictions activePredictions = getPredictions(aUser, aProject);
+        Predictions predictions = new Predictions(aSessionOwner, aProject);
+        Predictions activePredictions = getPredictions(aSessionOwner, aProject);
 
         // Inherit at the document level. If inheritance at a recommender level is possible,
         // this is done below.
         if (activePredictions != null) {
             for (SourceDocument document : aInherit) {
-                inheritSuggestionsAtDocumentLevel(aProject, document, aUser, activePredictions,
-                        predictions);
+                inheritSuggestionsAtDocumentLevel(aProject, document, aSessionOwner,
+                        activePredictions, predictions);
             }
         }
 
@@ -1646,7 +1651,7 @@ public class RecommendationServiceImpl
             final CAS predictionCas = casHolder.cas;
 
             // Generate new predictions or inherit at the recommender level
-            computePredictions(predictions, predictionCas, aCurrentDocument, aUser,
+            computePredictions(predictions, predictionCas, aCurrentDocument, aDataOwner,
                     aPredictionBegin, aPredictionEnd);
 
             predictions.log(LogMessage.info(this, "Prediction complete"));
@@ -2035,8 +2040,6 @@ public class RecommendationServiceImpl
             AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
             int aWindowBegin, int aWindowEnd)
     {
-        LOG.trace("calculateSpanSuggestionVisibility()");
-
         Type type = getAnnotationType(aCas, aLayer);
         if (type == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
@@ -2045,8 +2048,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
-                aWindowEnd);
+        var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
 
         // Collect all suggestions of the given layer within the view window
         List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow = aRecommendations.stream()
@@ -2386,10 +2388,12 @@ public class RecommendationServiceImpl
         implements IRequestCycleListener
     {
         private final SourceDocument currentDocument;
+        private final String dataOwner;
 
-        public TriggerTrainingTaskListener(SourceDocument aCurrentDocument)
+        public TriggerTrainingTaskListener(SourceDocument aCurrentDocument, String aDataOwner)
         {
             currentDocument = aCurrentDocument;
+            dataOwner = aDataOwner;
         }
 
         @Override
@@ -2429,7 +2433,7 @@ public class RecommendationServiceImpl
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
                 triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
-                        "Committed dirty CAS at end of request", currentDocument, false,
+                        "Committed dirty CAS at end of request", currentDocument, dataOwner, false,
                         contextDirties.getValue());
             }
         }
@@ -2481,20 +2485,20 @@ public class RecommendationServiceImpl
     private class LazyCas
     {
         private final SourceDocument document;
-        private final User user;
+        private final String dataOwner;
 
         private CAS originalCas;
 
-        public LazyCas(SourceDocument aDocument, User aUser)
+        public LazyCas(SourceDocument aDocument, String aDataOwner)
         {
             document = aDocument;
-            user = aUser;
+            dataOwner = aDataOwner;
         }
 
         public CAS get() throws IOException
         {
             if (originalCas == null) {
-                originalCas = documentService.readAnnotationCas(document, user.getUsername(),
+                originalCas = documentService.readAnnotationCas(document, dataOwner,
                         AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
             }
 

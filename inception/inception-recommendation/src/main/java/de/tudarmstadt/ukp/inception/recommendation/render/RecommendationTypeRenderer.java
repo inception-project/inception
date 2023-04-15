@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
@@ -38,5 +39,5 @@ public interface RecommendationTypeRenderer<T extends TypeAdapter>
      * @param aRequest
      *            a render request
      */
-    void render(VDocument aVdoc, RenderRequest aRequest, T aAdapter);
+    void render(VDocument aVdoc, RenderRequest aRequest, Predictions aPredictions, T aAdapter);
 }

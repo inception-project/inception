@@ -194,14 +194,12 @@ public class RecommenderServiceAutoConfiguration
 
     @Bean
     public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
             RecommendationSpanRenderer aRecommendationSpanRenderer,
-            RecommendationRelationRenderer aRecommendationRelationRenderer)
+            RecommendationRelationRenderer aRecommendationRelationRenderer,
+            RecommendationService aRecommendationService)
     {
-        return new RecommendationRenderer(aAnnotationService, aLearningRecordService,
-                aApplicationEventPublisher, aRecommendationSpanRenderer,
-                aRecommendationRelationRenderer);
+        return new RecommendationRenderer(aAnnotationService, aRecommendationSpanRenderer,
+                aRecommendationRelationRenderer, aRecommendationService);
     }
 
     @Bean

@@ -20,14 +20,13 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
@@ -50,16 +49,17 @@ public class RecommendationRenderer
     private final AnnotationSchemaService annotationService;
     private final RecommendationSpanRenderer recommendationSpanRenderer;
     private final RecommendationRelationRenderer recommendationRelationRenderer;
+    private final RecommendationService recommendationService;
 
     public RecommendationRenderer(AnnotationSchemaService aAnnotationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
             RecommendationSpanRenderer aRecommendationSpanRenderer,
-            RecommendationRelationRenderer aRecommendationRelationRenderer)
+            RecommendationRelationRenderer aRecommendationRelationRenderer,
+            RecommendationService aRecommendationService)
     {
         annotationService = aAnnotationService;
         recommendationSpanRenderer = aRecommendationSpanRenderer;
         recommendationRelationRenderer = aRecommendationRelationRenderer;
+        recommendationService = aRecommendationService;
     }
 
     @Override
@@ -88,22 +88,36 @@ public class RecommendationRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
+        var cas = aRequest.getCas();
+
+        if (cas == null || recommendationService == null) {
+            return;
+        }
+
+        var predictions = recommendationService.getPredictions(aRequest.getSessionOwner(),
+                aRequest.getProject());
+        if (predictions == null) {
+            return;
+        }
+
         // Add the suggestions to the visual document
         for (var layer : aRequest.getVisibleLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || layer.getType().equals(CHAIN_TYPE)
+            if (Token.class.getName().equals(layer.getName())
+                    || Sentence.class.getName().equals(layer.getName())
+                    || CHAIN_TYPE.equals(layer.getType())
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
 
             var adapter = annotationService.getAdapter(layer);
             if (adapter instanceof SpanAdapter) {
-                recommendationSpanRenderer.render(aVDoc, aRequest, (SpanAdapter) adapter);
+                recommendationSpanRenderer.render(aVDoc, aRequest, predictions,
+                        (SpanAdapter) adapter);
             }
 
             if (adapter instanceof RelationAdapter) {
-                recommendationRelationRenderer.render(aVDoc, aRequest, (RelationAdapter) adapter);
+                recommendationRelationRenderer.render(aVDoc, aRequest, predictions,
+                        (RelationAdapter) adapter);
             }
         }
     }

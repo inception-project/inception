@@ -151,8 +151,9 @@ public class NonTrainableRecommenderActivationTask
     private EvaluatedRecommender activateNonTrainableRecommender(User user, Recommender recommender,
             RecommendationEngine aEngine)
     {
-        RecommenderContext ctx = aEngine.newContext(recommendationService
-                .getContext(user, recommender).orElse(RecommenderContext.EMPTY_CONTEXT));
+        RecommenderContext ctx = aEngine
+                .newContext(recommendationService.getContext(user.getUsername(), recommender)
+                        .orElse(RecommenderContext.emptyContext()));
         ctx.setUser(user);
         ctx.close();
         recommendationService.putContext(user, recommender, ctx);

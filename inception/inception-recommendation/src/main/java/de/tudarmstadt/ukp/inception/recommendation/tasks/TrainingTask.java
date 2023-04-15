@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -70,9 +71,26 @@ public class TrainingTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
+    private final String dataOwner;
 
+    /**
+     * Create a new training task.
+     * 
+     * @param aUser
+     *            the user owning the training session.
+     * @param aProject
+     *            the project to perform the selection on.
+     * @param aTrigger
+     *            the trigger that caused the selection to be scheduled.
+     * @param aCurrentDocument
+     *            the document currently open in the editor.
+     * @param aDataOwner
+     *            the user owning the annotations currently shown in the editor (this can differ
+     *            from the user owning the session e.g. if a manager views another users annotations
+     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
+     */
     public TrainingTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument, String aDataOwner)
     {
         super(aUser, aProject, aTrigger);
 
@@ -81,6 +99,7 @@ public class TrainingTask
         }
 
         currentDocument = aCurrentDocument;
+        dataOwner = aDataOwner;
     }
 
     @Override
@@ -94,9 +113,9 @@ public class TrainingTask
     private void executeTraining()
     {
         long overallStartTime = currentTimeMillis();
-        User user = getUser().orElseThrow();
+        User sessionOwner = getUser().orElseThrow();
 
-        logTrainingOverallStart(user);
+        logTrainingOverallStart(sessionOwner);
 
         // Read the CASes only when they are accessed the first time. This allows us to skip
         // reading the CASes in case that no layer / recommender is available or if no
@@ -106,7 +125,7 @@ public class TrainingTask
             @Override
             protected List<TrainingDocument> initialize()
             {
-                return readCasses(getProject(), user);
+                return readCasses(getProject(), dataOwner);
             }
         };
 
@@ -118,10 +137,11 @@ public class TrainingTask
                 continue;
             }
 
-            var evaluatedRecommenders = recommenderService.getActiveRecommenders(user, layer);
+            var evaluatedRecommenders = recommenderService.getActiveRecommenders(sessionOwner,
+                    layer);
 
             if (evaluatedRecommenders.isEmpty()) {
-                logNoActiveRecommenders(user, layer);
+                logNoActiveRecommenders(sessionOwner, layer);
                 continue;
             }
 
@@ -134,12 +154,12 @@ public class TrainingTask
                             .getRecommender(evaluatedRecommender.getRecommender().getId());
                 }
                 catch (NoResultException e) {
-                    logRecommenderGone(user, evaluatedRecommender);
+                    logRecommenderGone(sessionOwner, evaluatedRecommender);
                     continue;
                 }
 
                 if (!recommender.isEnabled()) {
-                    logRecommenderDisabled(user, evaluatedRecommender);
+                    logRecommenderDisabled(sessionOwner, evaluatedRecommender);
                     continue;
                 }
 
@@ -148,27 +168,29 @@ public class TrainingTask
                 try {
                     var maybeFactory = recommenderService.getRecommenderFactory(recommender);
                     if (maybeFactory.isEmpty()) {
-                        logUnsupportedRecommenderType(user, evaluatedRecommender);
+                        logUnsupportedRecommenderType(sessionOwner, evaluatedRecommender);
                         continue;
                     }
 
                     var factory = maybeFactory.get();
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                        logInvalidRecommenderConfiguration(user, evaluatedRecommender, recommender);
+                        logInvalidRecommenderConfiguration(sessionOwner, evaluatedRecommender,
+                                recommender);
                         continue;
                     }
 
                     var engine = factory.build(recommender);
-                    var ctx = engine.newContext(recommenderService.getContext(user, recommender)
-                            .orElse(RecommenderContext.EMPTY_CONTEXT));
-                    ctx.setUser(user);
+                    var ctx = engine.newContext(
+                            recommenderService.getContext(sessionOwner.getUsername(), recommender)
+                                    .orElse(RecommenderContext.emptyContext()));
+                    ctx.setUser(sessionOwner);
 
                     // If engine does not support training, mark engine ready and skip to
                     // prediction
                     if (engine.getTrainingCapability() == TRAINING_NOT_SUPPORTED) {
                         seenNonTrainingRecommender = true;
-                        logTrainingNotSupported(user, recommender);
-                        commitContext(user, recommender, ctx);
+                        logTrainingNotSupported(sessionOwner, recommender);
+                        commitContext(sessionOwner, recommender, ctx);
                         continue;
                     }
 
@@ -184,7 +206,7 @@ public class TrainingTask
                     // do not mark as ready
                     if (trainingCasses.isEmpty()
                             && engine.getTrainingCapability() == TRAINING_REQUIRED) {
-                        logNoDataAvailableForTraining(user, layer, recommender);
+                        logNoDataAvailableForTraining(sessionOwner, layer, recommender);
                         // This can happen if there were already predictions based on existing
                         // annotations, but all annotations have been removed/deleted. To ensure
                         // that the prediction run removes the stale predictions, we need to
@@ -193,7 +215,7 @@ public class TrainingTask
                         continue;
                     }
 
-                    logTrainingRecommenderStart(user, casLoader, layer, recommender,
+                    logTrainingRecommenderStart(sessionOwner, casLoader, layer, recommender,
                             trainingCasses);
 
                     engine.train(ctx, trainingCasses);
@@ -202,45 +224,46 @@ public class TrainingTask
                     long duration = currentTimeMillis() - startTime;
 
                     if (!engine.isReadyForPrediction(ctx)) {
-                        logTrainingFailure(user, recommender, duration, casLoader.get(),
+                        logTrainingFailure(sessionOwner, recommender, duration, casLoader.get(),
                                 trainingCasses);
                         continue;
                     }
 
-                    logTrainingSuccessful(user, casLoader, recommender, trainingCasses, duration);
+                    logTrainingSuccessful(sessionOwner, casLoader, recommender, trainingCasses,
+                            duration);
                     seenSuccessfulTraining = true;
 
-                    commitContext(user, recommender, ctx);
+                    commitContext(sessionOwner, recommender, ctx);
                 }
                 // Catching Throwable is intentional here as we want to continue the execution
                 // even if a particular recommender fails.
                 catch (Throwable e) {
-                    handleError(user, recommender, startTime, e);
+                    handleError(sessionOwner, recommender, startTime, e);
                 }
             }
         }
 
         if (!seenSuccessfulTraining && !seenNonTrainingRecommender) {
-            logNothingWasTrained(user);
+            logNothingWasTrained(sessionOwner);
             return;
         }
 
-        logTrainingOverallEnd(overallStartTime, user);
+        logTrainingOverallEnd(overallStartTime, sessionOwner);
 
-        schedulePredictionTask(user);
+        schedulePredictionTask(sessionOwner);
     }
 
     private void schedulePredictionTask(User user)
     {
         var predictionTask = new PredictionTask(user,
-                String.format("TrainingTask %s complete", getId()), currentDocument);
+                String.format("TrainingTask %s complete", getId()), currentDocument, dataOwner);
         predictionTask.inheritLog(this);
         schedulingService.enqueue(predictionTask);
     }
 
     private void logTrainingOverallEnd(long overallStartTime, User user)
     {
-        info("Training complete ({} ms).", currentTimeMillis() - overallStartTime);
+        info("Training complete (%d ms).", currentTimeMillis() - overallStartTime);
     }
 
     private void commitContext(User user, Recommender recommender, RecommenderContext ctx)
@@ -249,7 +272,7 @@ public class TrainingTask
         recommenderService.putContext(user, recommender, ctx);
     }
 
-    private List<TrainingDocument> readCasses(Project aProject, User aUser)
+    private List<TrainingDocument> readCasses(Project aProject, String aUser)
     {
         var casses = new ArrayList<TrainingDocument>();
         var allDocuments = documentService.listAllDocuments(aProject, aUser);
@@ -259,7 +282,7 @@ public class TrainingTask
             var state = annotationDocument != null ? annotationDocument.getState()
                     : AnnotationDocumentState.NEW;
 
-            casses.add(new TrainingDocument(sourceDocument, aUser.getUsername(), state));
+            casses.add(new TrainingDocument(sourceDocument, aUser, state));
         }
         return casses;
     }
@@ -420,11 +443,11 @@ public class TrainingTask
         private boolean attemptedLoading = false;
         private CAS _cas;
 
-        private TrainingDocument(SourceDocument aDocument, String aUser,
+        private TrainingDocument(SourceDocument aDocument, String aAnnotator,
                 AnnotationDocumentState aState)
         {
             document = aDocument;
-            user = aUser;
+            user = aAnnotator;
             state = aState;
         }
 
