@@ -81,9 +81,13 @@ public class LoadingSplashScreen
 
     public static Optional<SplashWindow> setupScreen(String aApplicationName)
     {
-        URL splasHScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
+        URL splashScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
         URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
-        return setupScreen(splasHScreenImageUrl, iconUrl, aApplicationName);
+        if (splashScreenImageUrl == null || iconUrl == null) {
+            LOG.error("Unable to locate splash screen and icon resources");
+            return Optional.empty();
+        }
+        return setupScreen(splashScreenImageUrl, iconUrl, aApplicationName);
     }
 
     public static class SplashWindow
