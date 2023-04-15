@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 
@@ -56,7 +55,7 @@ public class PubAnnotationProviderTest
     @Test
     public void thatQueryWorks() throws Exception
     {
-        List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding", 0, 10);
+        var results = sut.query(traits, "binding", 1, 10);
 
         // System.out.println(results);
 
@@ -76,9 +75,9 @@ public class PubAnnotationProviderTest
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
+        var text = sut.getDocumentText(repo, traits, "PMC", "1064873");
 
-        System.out.println(text);
+        // System.out.println(text);
 
         assertThat(text)
                 .startsWith("Resistance to IL-10 inhibition of interferon gamma production");
@@ -92,7 +91,7 @@ public class PubAnnotationProviderTest
             data = IOUtils.toString(is, StandardCharsets.UTF_8);
         }
 
-        System.out.println(data);
+        // System.out.println(data);
 
         assertThat(data).startsWith(
                 "[{\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
