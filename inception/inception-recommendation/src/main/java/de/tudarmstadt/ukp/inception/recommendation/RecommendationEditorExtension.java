@@ -220,9 +220,9 @@ public class RecommendationEditorExtension
         // Upsert an annotation based on the suggestion
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        int address = recommendationService.upsertSpanFeature(annotationService,
-                aState.getDocument(), aState.getUser().getUsername(), aCas, layer, feature,
-                suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
+        int address = recommendationService.upsertSpanFeature(aState.getDocument(),
+                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
+                suggestion.getBegin(), suggestion.getEnd());
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
@@ -246,8 +246,8 @@ public class RecommendationEditorExtension
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
 
-        int address = recommendationService.upsertRelationFeature(annotationService, document,
-                aState.getUser().getUsername(), aCas, layer, feature, suggestion);
+        int address = recommendationService.upsertRelationFeature(document, aState.getUser().getUsername(),
+                aCas, layer, feature, suggestion);
 
         AnnotationFS relation = ICasUtil.selectAnnotationByAddr(aCas, address);
 
