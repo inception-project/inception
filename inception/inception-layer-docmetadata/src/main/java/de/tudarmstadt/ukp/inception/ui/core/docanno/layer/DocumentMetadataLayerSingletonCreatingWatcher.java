@@ -80,7 +80,7 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
             DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
                     .getAdapter(layer);
             if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
-                adapter.add(aEvent.getDocument(), aEvent.getUser(), cas);
+                adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
             }
         }
     }

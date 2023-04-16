@@ -227,9 +227,9 @@ public class RecommendationEditorExtension
         throws AnnotationException, IOException
     {
         // Upsert an annotation based on the suggestion
-        AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        int address = recommendationService.upsertSpanFeature(aState.getDocument(),
+        var layer = annotationService.getLayer(suggestion.getLayerId());
+        var feature = annotationService.getFeature(suggestion.getFeature(), layer);
+        var address = recommendationService.upsertSpanFeature(aState.getDocument(),
                 aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
                 suggestion.getBegin(), suggestion.getEnd());
 
@@ -252,10 +252,9 @@ public class RecommendationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException, IOException
     {
-        AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-
-        int address = recommendationService.upsertRelationFeature(document,
+        var layer = annotationService.getLayer(suggestion.getLayerId());
+        var feature = annotationService.getFeature(suggestion.getFeature(), layer);
+        var address = recommendationService.upsertRelationFeature(document,
                 aState.getUser().getUsername(), aCas, layer, feature, suggestion);
 
         AnnotationFS relation = ICasUtil.selectAnnotationByAddr(aCas, address);

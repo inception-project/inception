@@ -201,7 +201,7 @@ public class RecommendationServiceImpl
     private final UserDao userRepository;
     private final RecommenderFactoryRegistry recommenderFactoryRegistry;
     private final SchedulingService schedulingService;
-    private final AnnotationSchemaService annoService;
+    private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
     private final LearningRecordService learningRecordService;
     private final ProjectService projectService;
@@ -243,7 +243,7 @@ public class RecommendationServiceImpl
         userRepository = aUserRepository;
         recommenderFactoryRegistry = aRecommenderFactoryRegistry;
         schedulingService = aSchedulingService;
-        annoService = aAnnoService;
+        schemaService = aAnnoService;
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
         projectService = aProjectService;
@@ -511,8 +511,8 @@ public class RecommendationServiceImpl
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
         var project = aEvent.getDocument().getProject();
-        var sessionOwner = aEvent.getUser();
-        var dataOwner = aEvent.getAnnotator();
+        var sessionOwner = aEvent.getSessionOwner();
+        var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
         var predictions = getState(sessionOwner, project).getActivePredictions();
         var predictionSessionExistedOnOpen = predictions != null;
@@ -637,8 +637,8 @@ public class RecommendationServiceImpl
                 prediction.clearAutoAccept();
             }
 
-            AnnotationLayer layer = annoService.getLayer(prediction.getLayerId());
-            AnnotationFeature feature = annoService.getFeature(prediction.getFeature(), layer);
+            var layer = schemaService.getLayer(prediction.getLayerId());
+            var feature = schemaService.getFeature(prediction.getFeature(), layer);
 
             try {
                 if (prediction instanceof SpanSuggestion) {
@@ -1023,22 +1023,23 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public int upsertSpanFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+    public int upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             AnnotationLayer aLayer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
         throws AnnotationException
     {
         // The feature of the predicted label
-        SpanAdapter adapter = (SpanAdapter) annoService.getAdapter(aLayer);
+        var adapter = (SpanAdapter) schemaService.getAdapter(aLayer);
 
         // Check if there is already an annotation of the target type at the given location
-        Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
+        var annoFS = aCas.<Annotation> select(adapter.getAnnotationTypeName()) //
+                .at(aBegin, aEnd).nullOK().get();
 
         int address;
         if (annoFS == null || aLayer.isAllowStacking()) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
-            address = ICasUtil.getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
+            var newAnnotation = adapter.add(aDocument, aDocumentOwner, aCas, aBegin, aEnd);
+            address = ICasUtil.getAddr(newAnnotation);
         }
         else {
             // ... if yes and stacking is not allowed, then we update the feature on the existing
@@ -1047,29 +1048,29 @@ public class RecommendationServiceImpl
         }
 
         // Update the feature value
-        adapter.setFeatureValue(aDocument, aUsername, aCas, address, aFeature, aValue);
+        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, address, aFeature, aValue);
 
         return address;
     }
 
     @Override
-    public int upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+    public int upsertRelationFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
         throws AnnotationException
     {
-        RelationAdapter adapter = (RelationAdapter) annoService.getAdapter(layer);
+        var adapter = (RelationAdapter) schemaService.getAdapter(layer);
 
-        int sourceBegin = aSuggestion.getPosition().getSourceBegin();
-        int sourceEnd = aSuggestion.getPosition().getSourceEnd();
-        int targetBegin = aSuggestion.getPosition().getTargetBegin();
-        int targetEnd = aSuggestion.getPosition().getTargetEnd();
+        var sourceBegin = aSuggestion.getPosition().getSourceBegin();
+        var sourceEnd = aSuggestion.getPosition().getSourceEnd();
+        var targetBegin = aSuggestion.getPosition().getTargetBegin();
+        var targetEnd = aSuggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
-        Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        Type attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
+        var type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
+        var attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
 
-        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
+        var sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
         // The begin and end feature of a relation in the CAS are of the dependent/target
         // annotation. See also RelationAdapter::createRelationAnnotation.
@@ -1117,13 +1118,13 @@ public class RecommendationServiceImpl
                 throw new IllegalStateException(msg);
             }
 
-            relation = adapter.add(aDocument, aUsername, source, target, aCas);
+            relation = adapter.add(aDocument, aDocumentOwner, source, target, aCas);
         }
 
         int address = ICasUtil.getAddr(relation);
 
         // Update the feature value
-        adapter.setFeatureValue(aDocument, aUsername, aCas, address, aFeature,
+        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, address, aFeature,
                 aSuggestion.getLabel());
 
         return address;
@@ -1582,7 +1583,7 @@ public class RecommendationServiceImpl
 
             LazyCas originalCas = new LazyCas(aDocument, aDataOwner);
             for (EvaluatedRecommender r : recommenders) {
-                var layer = annoService.getLayer(r.getRecommender().getLayer().getId());
+                var layer = schemaService.getLayer(r.getRecommender().getLayer().getId());
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -2064,7 +2065,7 @@ public class RecommendationServiceImpl
         // Get all the skipped/rejected entries for the current layer
         List<LearningRecord> recordedAnnotations = learningRecordService.listRecords(aUser, aLayer);
 
-        for (AnnotationFeature feature : annoService.listSupportedFeatures(aLayer)) {
+        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
@@ -2245,7 +2246,7 @@ public class RecommendationServiceImpl
             groupedRecordedAnnotations.put(relationPosition, learningRecord);
         }
 
-        for (AnnotationFeature feature : annoService.listSupportedFeatures(aLayer)) {
+        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
@@ -2352,9 +2353,9 @@ public class RecommendationServiceImpl
         throws UIMAException, IOException
     {
         try (StopWatch watch = new StopWatch(LOG, "adding score features")) {
-            TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
+            TypeSystemDescription tsd = schemaService.getFullProjectTypeSystem(aProject);
 
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
+            for (AnnotationLayer layer : schemaService.listAnnotationLayer(aProject)) {
                 TypeDescription td = tsd.getType(layer.getName());
 
                 if (td == null) {
@@ -2378,7 +2379,7 @@ public class RecommendationServiceImpl
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
             }
 
-            annoService.upgradeCas(aSourceCas, aTargetCas, tsd);
+            schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }
 
         return aTargetCas;

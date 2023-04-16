@@ -543,7 +543,7 @@ public class CasMerge
             boolean aAllowStacking)
         throws AnnotationException
     {
-        SpanAdapter adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
+        var adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
         }
@@ -555,13 +555,13 @@ public class CasMerge
 
         // a) if stacking allowed add this new annotation to the mergeview
         Type targetType = CasUtil.getType(aTargetCas, adapter.getAnnotationTypeName());
-        List<AnnotationFS> existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
+        var existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
                 aSourceFs.getEnd());
         if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
-            AnnotationFS mergedSpan = adapter.add(aDocument, aUsername, aTargetCas,
-                    aSourceFs.getBegin(), aSourceFs.getEnd());
+            var mergedSpan = adapter.add(aDocument, aUsername, aTargetCas, aSourceFs.getBegin(),
+                    aSourceFs.getEnd());
 
             int mergedSpanAddr = -1;
             try {
@@ -571,7 +571,7 @@ public class CasMerge
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedSpan));
+                adapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedSpan));
                 throw e;
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
@@ -609,10 +609,8 @@ public class CasMerge
 
         SpanAdapter spanAdapter = (SpanAdapter) adapterCache.get(aAnnotationLayer.getAttachType());
 
-        List<AnnotationFS> candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter,
-                originFsClicked);
-        List<AnnotationFS> candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter,
-                targetFsClicked);
+        var candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter, originFsClicked);
+        var candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter, targetFsClicked);
 
         // check if target/source exists in the mergeview
         if (candidateOrigins.isEmpty() || candidateTargets.isEmpty()) {
@@ -656,7 +654,7 @@ public class CasMerge
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                relationAdapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedRelation));
+                relationAdapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedRelation));
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
                     getAddr(mergedRelation));

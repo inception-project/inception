@@ -89,7 +89,7 @@ public class FeatureValueUpdatedEvent
             builder.append("docID=");
             builder.append(getDocument());
             builder.append(", user=");
-            builder.append(getUser());
+            builder.append(getDocumentOwner());
             builder.append(", ");
         }
         builder.append("addr=");

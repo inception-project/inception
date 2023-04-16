@@ -51,7 +51,7 @@ public class DocumentMetadataEventAdapter
     @Override
     public String getAnnotator(DocumentMetadataEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

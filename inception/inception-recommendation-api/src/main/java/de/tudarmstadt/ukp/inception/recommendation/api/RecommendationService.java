@@ -153,7 +153,7 @@ public interface RecommendationService
      * 
      * @param aDocument
      *            the source document to which the annotations belong
-     * @param aUsername
+     * @param aDocumentOwner
      *            the annotator user to whom the annotations belong
      * @param aCas
      *            the CAS containing the annotations
@@ -167,12 +167,12 @@ public interface RecommendationService
      *            the position of the annotation (in case it is created)
      * @param aEnd
      *            the position of the annotation (in case it is created)
-     *
+     * 
      * @return the CAS address of the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    int upsertSpanFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+    int upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             AnnotationLayer layer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
         throws AnnotationException;
 
@@ -192,7 +192,7 @@ public interface RecommendationService
      * @return the new predictions.
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner);
+            List<SourceDocument> aDocuments, String aDocumentOwner);
 
     /**
      * Compute predictions.
@@ -212,7 +212,7 @@ public interface RecommendationService
      * @return the new predictions.
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
-            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
+            SourceDocument aCurrentDocument, String aDocumentOwner, List<SourceDocument> aInherit,
             int aPredictionBegin, int aPredictionEnd);
 
     void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
@@ -226,13 +226,13 @@ public interface RecommendationService
     void clearState(String aSessionOwner);
 
     void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
-            String aDataOwner);
+            String aDocumentOwner);
 
     void triggerTrainingAndPrediction(String aSessionOwner, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument, String aDataOwner);
+            SourceDocument aCurrentDocument, String aDocumentOwner);
 
     void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
-            String aEventName, SourceDocument aCurrentDocument, String aDataOwner);
+            String aEventName, SourceDocument aCurrentDocument, String aDocumentOwner);
 
     boolean isPredictForAllDocuments(String aSessionOwner, Project aProject);
 

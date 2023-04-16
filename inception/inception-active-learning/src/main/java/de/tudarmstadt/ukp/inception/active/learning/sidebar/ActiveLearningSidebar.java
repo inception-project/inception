@@ -1071,7 +1071,7 @@ public class ActiveLearningSidebar
         }
 
         // Does event match the current active learning configuration?
-        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+        if (!aEvent.getDocumentOwner().equals(getModelObject().getUser().getUsername())
                 || !aEvent.getLayer().equals(alState.getLayer())) {
             return;
         }
@@ -1090,7 +1090,7 @@ public class ActiveLearningSidebar
         }
 
         // Does event match the current active learning configuration?
-        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+        if (!aEvent.getDocumentOwner().equals(getModelObject().getUser().getUsername())
                 || !aEvent.getLayer().equals(alState.getLayer())) {
             return;
         }
@@ -1119,7 +1119,7 @@ public class ActiveLearningSidebar
         }
 
         // Does event match the current active learning configuration?
-        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+        if (!aEvent.getDocumentOwner().equals(getModelObject().getUser().getUsername())
                 || !aEvent.getFeature().getLayer().equals(alState.getLayer())
                 || !aEvent.getFeature().getName()
                         .equals(alState.getSuggestion().get().getFeature())) {
@@ -1148,7 +1148,7 @@ public class ActiveLearningSidebar
         }
 
         // Does event match the current active learning configuration?
-        if (!aEvent.getUser().equals(getModelObject().getUser().getUsername())
+        if (!aEvent.getDocumentOwner().equals(getModelObject().getUser().getUsername())
                 || !aEvent.getLayer().equals(alState.getLayer())) {
             return;
         }

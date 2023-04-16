@@ -231,7 +231,7 @@ public class AnnotationPage
 
         if (!Objects.equals(state.getProject(), aEvent.getProject())
                 || !Objects.equals(state.getDocument(), aEvent.getDocument())
-                || !Objects.equals(state.getUser().getUsername(), aEvent.getUser())) {
+                || !Objects.equals(state.getUser().getUsername(), aEvent.getDocumentOwner())) {
             return;
         }
 
@@ -254,7 +254,7 @@ public class AnnotationPage
 
         if (!Objects.equals(state.getProject(), aEvent.getProject())
                 || !Objects.equals(state.getDocument(), aEvent.getDocument())
-                || !Objects.equals(state.getUser().getUsername(), aEvent.getUser())) {
+                || !Objects.equals(state.getUser().getUsername(), aEvent.getDocumentOwner())) {
             return;
         }
 

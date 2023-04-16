@@ -106,14 +106,14 @@ public interface TypeAdapter
      *
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS object
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid);
+    void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid);
 
     /**
      * @return the layer for which this adapter has been created.
@@ -132,7 +132,7 @@ public interface TypeAdapter
      * 
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS.
@@ -145,7 +145,7 @@ public interface TypeAdapter
      * @throws AnnotationException
      *             if there was an error setting the feature value
      */
-    void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
+    void setFeatureValue(SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
 
@@ -183,7 +183,7 @@ public interface TypeAdapter
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
 
     /**
-     * Disable the adapter from dispatching any events. This is useful for backend bulk operations
+     * Disable the adapter from dispatching any events. This is useful for back-end bulk operations
      * that should not be tracked in detail.
      */
     void silenceEvents();
