@@ -166,7 +166,7 @@ public interface RecommendationService
      *            the position of the annotation (in case it is created)
      * @param aEnd
      *            the position of the annotation (in case it is created)
-     *
+     * 
      * @return the CAS address of the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
