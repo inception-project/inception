@@ -100,7 +100,7 @@ export class ViewportTracker {
     leafTrackingCandidates.forEach(e => this.observer.observe(e))
 
     const endTime = new Date().getTime()
-    console.log(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
+    console.debug(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
   }
 
   private handleIntersectRange (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
@@ -117,7 +117,7 @@ export class ViewportTracker {
     })
 
     if (visibleElementsAdded || !this.initialized) {
-      console.log(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
+      console.debug(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
       // the first time the callback is called, we want to make sure that the annotations are
       // loaded at least once
       this.initialized = true
@@ -143,7 +143,7 @@ export class ViewportTracker {
     })
     const endTime = new Date().getTime()
 
-    console.log(`Visible: ${begin}-${end} (${this._visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
+    console.debug(`Visible: ${begin}-${end} (${this._visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
     return [begin, end]
   }
 }
