@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
@@ -149,9 +148,6 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
-     * 
-     * @param annotationService
-     *            the annotation schema service
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aUsername
@@ -168,19 +164,18 @@ public interface RecommendationService
      *            the position of the annotation (in case it is created)
      * @param aEnd
      *            the position of the annotation (in case it is created)
-     *
+     * 
      * @return the CAS address of the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            String aValue, int aBegin, int aEnd)
+    int upsertSpanFeature(SourceDocument aDocument, String aUsername,
+            CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature, String aValue,
+            int aBegin, int aEnd)
         throws AnnotationException;
 
-    int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            RelationSuggestion aSuggestion)
+    int upsertRelationFeature(SourceDocument aDocument, String aUsername,
+            CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
         throws AnnotationException;
 
     /**

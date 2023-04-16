@@ -27,7 +27,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
@@ -38,6 +37,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
@@ -56,8 +56,9 @@ import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 @ExtendWith(MockitoExtension.class)
 public class SpanAdapterTest
 {
+    private @Mock FeatureSupportRegistry featureSupportRegistry;
+
     private LayerSupportRegistry layerSupportRegistry;
-    private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
     private AnnotationLayer neLayer;
     private JCas jcas;
@@ -89,7 +90,6 @@ public class SpanAdapterTest
         neLayer.setId(1l);
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList());
-        featureSupportRegistry = mock(FeatureSupportRegistry.class);
 
         behaviors = asList(new SpanOverlapBehavior(), new SpanCrossSentenceBehavior(),
                 new SpanAnchoringModeBehavior());
