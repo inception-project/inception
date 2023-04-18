@@ -51,8 +51,11 @@ public class DynamicTextAreaFeatureEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         aResponse.render(JavaScriptHeaderItem.forReference(DynamicTextAreaScriptReference.get()));
-        aResponse.render(OnDomReadyHeaderItem.forScript(
-                "window.addEventListener('load', function(){resizeDynamicTextArea(document.getElementById('"
-                        + textarea.getMarkupId() + "'));});"));
+        aResponse.render(OnDomReadyHeaderItem.forScript(String.join("\n", //
+                "let ta = document.getElementById('" + textarea.getMarkupId() + "');", //
+                "ta && window.addEventListener('load', () => resizeDynamicTextArea(ta));", //
+                "ta?.addEventListener('focus', ev => resizeDynamicTextArea(ta));", //
+                "ta?.addEventListener('input', ev => resizeDynamicTextArea(ta));", //
+                "ta?.addEventListener('blur', ev => resizeDynamicTextArea(ta));")));
     }
 }
