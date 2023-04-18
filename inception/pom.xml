@@ -74,7 +74,7 @@
     <uimafit.version>3.4.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 
-    <pdfbox.version>2.0.27</pdfbox.version>
+    <pdfbox.version>2.0.28</pdfbox.version>
 
     <spring.version>5.3.27</spring.version>
     <spring.boot.version>2.7.10</spring.boot.version>
@@ -1367,6 +1367,17 @@
             <artifactId>junit</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.pdfbox</groupId>
+        <artifactId>pdfbox</artifactId>
+        <version>${pdfbox.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.pdfbox</groupId>
+        <artifactId>fontbox</artifactId>
+        <version>${pdfbox.version}</version>
       </dependency>
 
       <dependency>
