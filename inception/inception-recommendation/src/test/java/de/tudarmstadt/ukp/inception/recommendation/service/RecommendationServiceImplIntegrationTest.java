@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
@@ -27,6 +29,7 @@ import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
 import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
@@ -60,15 +63,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = SpringConfig.class)
@@ -80,10 +88,13 @@ public class RecommendationServiceImplIntegrationTest
 
     private @Autowired TestEntityManager testEntityManager;
 
-    private RecommendationServiceImpl sut;
     private @Mock RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private @Mock AnnotationSchemaServiceImpl annoService;
+    private @Mock AnnotationSchemaServiceImpl schemaService;
+    private @Mock LayerSupportRegistry layerSupportRegistry;
 
+    private RecommendationServiceImpl sut;
+
+    private FeatureSupportRegistryImpl featureSupportRegistry;
     private Project project;
     private AnnotationLayer layer;
     private Recommender rec;
@@ -93,7 +104,10 @@ public class RecommendationServiceImplIntegrationTest
     public void setUp() throws Exception
     {
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
-                annoService, null, null, testEntityManager.getEntityManager());
+                schemaService, null, null, testEntityManager.getEntityManager());
+
+        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport()));
+        featureSupportRegistry.init();
 
         project = createProject(PROJECT_NAME);
         layer = createAnnotationLayer();
@@ -190,10 +204,10 @@ public class RecommendationServiceImplIntegrationTest
             JCas jCas = createText("I am text CAS", "de");
             session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
 
-            when(annoService.getFullProjectTypeSystem(project))
+            when(schemaService.getFullProjectTypeSystem(project))
                     .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-            when(annoService.listAnnotationLayer(project)).thenReturn(asList(layer));
-            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class), any(CAS.class),
+            when(schemaService.listAnnotationLayer(project)).thenReturn(asList(layer));
+            doCallRealMethod().when(schemaService).upgradeCas(any(CAS.class), any(CAS.class),
                     any(TypeSystemDescription.class));
 
             sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
@@ -234,6 +248,88 @@ public class RecommendationServiceImplIntegrationTest
         assertThat(getOffsetsAnchoredOnTokens(jCas.getCas(), new Annotation(jCas, 10, 10))).get()
                 .as("Zero-width annotation between tokens snaps to end of previous") //
                 .isEqualTo(new Offset(9, 9));
+    }
+
+    @Test
+    void testUpsertSpanFeature() throws Exception
+    {
+        var docOwner = "dummy";
+        var doc = SourceDocument.builder() //
+                .withProject(project) //
+                .build();
+        var feature = AnnotationFeature.builder() //
+                .withName(NamedEntity._FeatName_value) //
+                .withType(CAS.TYPE_NAME_STRING) //
+                .build();
+        var layer = AnnotationLayer.builder() //
+                .forJCasClass(NamedEntity.class) //
+                .build();
+        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, layer,
+                () -> asList(), asList());
+
+        when(schemaService.getAdapter(layer)).thenReturn(adapter);
+
+        layer.setOverlapMode(NO_OVERLAP);
+        var cas = createJCas();
+        var targetFS = new NamedEntity(cas, 0, 10);
+        targetFS.addToIndexes();
+        assertThat(targetFS.getValue()).isNull();
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V1",
+                targetFS.getBegin(), targetFS.getEnd());
+
+        assertThat(targetFS.getValue()) //
+                .as("Label was merged into existing annotation replacing unset label") //
+                .isEqualTo("V1");
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V2",
+                targetFS.getBegin(), targetFS.getEnd());
+
+        assertThat(targetFS.getValue()) //
+                .as("Label was merged into existing annotation replacing previous label") //
+                .isEqualTo("V2");
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V3", 10, 20);
+
+        assertThat(cas.select(NamedEntity.class).asList()) //
+                .as("Label was merged as new annotation") //
+                .extracting(NamedEntity::getBegin, NamedEntity::getEnd, NamedEntity::getValue)
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 10, "V2"), //
+                        tuple(10, 20, "V3"));
+
+        layer.setOverlapMode(ANY_OVERLAP);
+        cas.reset();
+        targetFS = new NamedEntity(cas, 0, 10);
+        targetFS.addToIndexes();
+        assertThat(targetFS.getValue()).isNull();
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V1",
+                targetFS.getBegin(), targetFS.getEnd());
+
+        assertThat(targetFS.getValue()) //
+                .as("Label was merged into existing annotation replacing unset label") //
+                .isEqualTo("V1");
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V2",
+                targetFS.getBegin(), targetFS.getEnd());
+
+        assertThat(cas.select(NamedEntity.class).asList()) //
+                .as("Label was merged as new annotation") //
+                .extracting(NamedEntity::getBegin, NamedEntity::getEnd, NamedEntity::getValue)
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 10, "V1"), //
+                        tuple(0, 10, "V2"));
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V3", 10, 20);
+
+        assertThat(cas.select(NamedEntity.class).asList()) //
+                .as("Label was merged as new annotation") //
+                .extracting(NamedEntity::getBegin, NamedEntity::getEnd, NamedEntity::getValue)
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 10, "V1"), //
+                        tuple(0, 10, "V2"), //
+                        tuple(10, 20, "V3"));
     }
 
     // Helper

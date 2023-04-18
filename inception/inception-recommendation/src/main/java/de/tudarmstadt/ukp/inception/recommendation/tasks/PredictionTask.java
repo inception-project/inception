@@ -99,7 +99,7 @@ public class PredictionTask
 
             appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                     .builder(this, project, sessionOwner.getUsername()) //
-                    .withMessage(LogMessage.info(this, "New preditions available")) //
+                    .withMessage(LogMessage.info(this, "New predictions available")) //
                     .build());
 
             // We reset this in case the state was not properly cleared, e.g. the AL session

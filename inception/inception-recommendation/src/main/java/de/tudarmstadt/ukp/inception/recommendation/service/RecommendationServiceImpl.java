@@ -1035,7 +1035,11 @@ public class RecommendationServiceImpl
                 .at(aBegin, aEnd).nullOK().get();
 
         int address;
-        if (annoFS == null || aLayer.isAllowStacking()) {
+        if (annoFS != null && adapter.getFeatureValue(aFeature, annoFS) == null) {
+            // If there is an annotation where the predicted feature is unset, use it ...
+            address = ICasUtil.getAddr(annoFS);
+        }
+        else if (annoFS == null || aLayer.isAllowStacking()) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
             var newAnnotation = adapter.add(aDocument, aDocumentOwner, aCas, aBegin, aEnd);
