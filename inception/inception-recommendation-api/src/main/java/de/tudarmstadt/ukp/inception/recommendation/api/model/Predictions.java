@@ -57,7 +57,8 @@ public class Predictions
     private static final long serialVersionUID = -1598768729246662885L;
 
     private final Project project;
-    private final User user;
+    private final User sessionOwner;
+    private final String dataOwner;
 
     private final Map<String, Map<ExtendedId, AnnotationSuggestion>> idxDocuments = new HashMap<>();
 
@@ -65,18 +66,25 @@ public class Predictions
     private final Set<String> seenDocumentsForPrediction = new HashSet<>();
     private final List<LogMessage> log = new ArrayList<>();
 
-    public Predictions(User aUser, Project aProject)
+    public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
-        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aSessionOwner, "Session owner must be specified");
+        Validate.notNull(aSessionOwner, "Data owner must be specified");
 
         project = aProject;
-        user = aUser;
+        sessionOwner = aSessionOwner;
+        dataOwner = aDataOwner;
     }
 
     public User getSessionOwner()
     {
-        return user;
+        return sessionOwner;
+    }
+
+    public String getDataOwner()
+    {
+        return dataOwner;
     }
 
     /**
@@ -97,7 +105,7 @@ public class Predictions
     {
         var result = new HashMap<String, SuggestionDocumentGroup<T>>();
 
-        var docs = aDocumentService.listAnnotationDocuments(project, user);
+        var docs = aDocumentService.listAnnotationDocuments(project, sessionOwner);
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS

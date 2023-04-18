@@ -511,17 +511,26 @@ public class RecommendationServiceImpl
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
         var project = aEvent.getDocument().getProject();
-        var sessionOwner = aEvent.getSessionOwner();
+        var sessionOwnerName = aEvent.getSessionOwner();
         var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
-        var predictions = getState(sessionOwner, project).getActivePredictions();
-        var predictionSessionExistedOnOpen = predictions != null;
+        var predictions = getState(sessionOwnerName, project).getActivePredictions();
 
-        // If the user does not exist (also if the user is a pseudo-user like CURATION_USER
-        // we do not apply recommendations
-        User user = userRepository.get(sessionOwner);
-        if (user == null) {
+        var sessionOwner = userRepository.get(sessionOwnerName);
+        if (sessionOwner == null) {
             return;
+        }
+
+        boolean predictionSessionExistedOnOpen = false;
+        if (predictions != null) {
+            if (predictions.getDataOwner().equals(dataOwner)) {
+                predictionSessionExistedOnOpen = true;
+            }
+            else {
+                // If the session owner has switched the data they are looking at, we need to
+                // clear and rebuild the predictions.
+                clearState(sessionOwnerName);
+            }
         }
 
         // We want to get predictions from all trained recommenders immediately - be they externally
@@ -530,25 +539,25 @@ public class RecommendationServiceImpl
         String trigger = aEvent.getClass().getSimpleName();
         if (!predictionSessionExistedOnOpen) {
             // Activate all non-trainable recommenders - execute synchronously - blocking
-            schedulingService
-                    .executeSync(new NonTrainableRecommenderActivationTask(user, project, trigger));
+            schedulingService.executeSync(
+                    new NonTrainableRecommenderActivationTask(sessionOwner, project, trigger));
         }
 
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
-        boolean predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, user,
+        boolean predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
                 trigger, dataOwner);
 
-        // Is it the first time a document has been opened? If yes, ther might be auto-accept
+        // Is it the first time a document has been opened? If yes, there might be auto-accept
         // suggestions that need to be processed (in particular ones that may have been generated
         // by the non-trainable recommenders triggered above or from already existing predictions
         if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
-            autoAccept(aEvent.getRequestTarget(), user, doc, ON_FIRST_ACCESS);
+            autoAccept(aEvent.getRequestTarget(), sessionOwner, doc, ON_FIRST_ACCESS);
         }
 
         // Trigger a training and prediction run if there is no prediction state yet
         if (!predictionSessionExistedOnOpen) {
-            triggerTrainingAndPrediction(sessionOwner, project, trigger, doc, dataOwner);
+            triggerTrainingAndPrediction(sessionOwnerName, project, trigger, doc, dataOwner);
             return;
         }
 
@@ -562,7 +571,7 @@ public class RecommendationServiceImpl
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
         if (!predictionTriggered) {
-            triggerPrediction(sessionOwner, trigger, doc, dataOwner);
+            triggerPrediction(sessionOwnerName, trigger, doc, dataOwner);
         }
     }
 
@@ -1615,7 +1624,7 @@ public class RecommendationServiceImpl
             List<SourceDocument> aDocuments, String aDataOwner)
     {
         try (var casHolder = new PredictionCasHolder()) {
-            Predictions predictions = new Predictions(aSessionOwner, aProject);
+            Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             // Generate new predictions or inherit at the recommender level
             for (SourceDocument document : aDocuments) {
                 computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
@@ -1627,7 +1636,7 @@ public class RecommendationServiceImpl
             return predictions;
         }
         catch (ResourceInitializationException e) {
-            Predictions predictions = new Predictions(aSessionOwner, aProject);
+            Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             predictions.log(
                     LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
             LOG.error("Cannot create prediction CAS, stopping predictions!");
@@ -1640,7 +1649,7 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
             int aPredictionBegin, int aPredictionEnd)
     {
-        Predictions predictions = new Predictions(aSessionOwner, aProject);
+        Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
         Predictions activePredictions = getPredictions(aSessionOwner, aProject);
 
         // Inherit at the document level. If inheritance at a recommender level is possible,
