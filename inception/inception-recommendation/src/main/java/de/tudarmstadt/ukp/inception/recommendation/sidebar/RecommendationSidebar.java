@@ -98,7 +98,7 @@ public class RecommendationSidebar
 
         Label noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
-        List<Recommender> recommenders = recommendationService
+        var recommenders = recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject());
         noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
         add(noRecommendersLabel);
@@ -177,8 +177,8 @@ public class RecommendationSidebar
 
     private void actionShowLog(AjaxRequestTarget aTarget)
     {
-        List<LogMessageGroup> messages = recommendationService
-                .getLog(getModelObject().getUser().getUsername(), getModelObject().getProject());
+        var messages = recommendationService.getLog(userRepository.getCurrentUsername(),
+                getModelObject().getProject());
         logDialog.setModel(new ListModel<LogMessageGroup>(messages));
         logDialog.show(aTarget);
     }
@@ -186,9 +186,13 @@ public class RecommendationSidebar
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-        recommendationService.clearState(state.getUser().getUsername());
-        recommendationService.triggerSelectionTrainingAndPrediction(state.getUser().getUsername(),
-                state.getProject(), "User request via sidebar", state.getDocument());
+        var sessionOwner = userRepository.getCurrentUsername();
+        var dataOwner = state.getUser().getUsername();
+
+        recommendationService.clearState(sessionOwner);
+        recommendationService.triggerSelectionTrainingAndPrediction(sessionOwner,
+                state.getProject(), "User request via sidebar", state.getDocument(), dataOwner);
+
         info("Annotation state cleared - re-training from scratch...");
         getAnnotationPage().actionRefreshDocument(aTarget);
         aTarget.add(recommenderInfos);

@@ -20,26 +20,19 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
  * <p>
@@ -54,23 +47,19 @@ public class RecommendationRenderer
     public static final String ID = "RecommendationRenderer";
 
     private final AnnotationSchemaService annotationService;
+    private final RecommendationSpanRenderer recommendationSpanRenderer;
+    private final RecommendationRelationRenderer recommendationRelationRenderer;
     private final RecommendationService recommendationService;
-    private final FeatureSupportRegistry fsRegistry;
-    private final RecommenderProperties recommenderProperties;
-    private final UserDao userRegistry;
 
     public RecommendationRenderer(AnnotationSchemaService aAnnotationService,
-            RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, RecommenderProperties aRecommenderProperties,
-            UserDao aUserRegistry)
+            RecommendationSpanRenderer aRecommendationSpanRenderer,
+            RecommendationRelationRenderer aRecommendationRelationRenderer,
+            RecommendationService aRecommendationService)
     {
         annotationService = aAnnotationService;
+        recommendationSpanRenderer = aRecommendationSpanRenderer;
+        recommendationRelationRenderer = aRecommendationRelationRenderer;
         recommendationService = aRecommendationService;
-        fsRegistry = aFsRegistry;
-        recommenderProperties = aRecommenderProperties;
-        userRegistry = aUserRegistry;
     }
 
     @Override
@@ -84,17 +73,12 @@ public class RecommendationRenderer
     {
         AnnotatorState state = aRequest.getState();
 
-        // do not show predictions during curation
-        if (state != null && state.getMode() != ANNOTATION) {
-            return false;
-        }
-
-        // do not show predictions when viewing others' work
-        if (!aRequest.getAnnotationUser().getUsername().equals(userRegistry.getCurrentUsername())) {
-            return false;
-        }
-
         if (aRequest.getCas() == null) {
+            return false;
+        }
+
+        // Do not show predictions on curation page
+        if (state != null && state.getMode() != ANNOTATION) {
             return false;
         }
 
@@ -104,40 +88,37 @@ public class RecommendationRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
+        var cas = aRequest.getCas();
+
+        if (cas == null || recommendationService == null) {
+            return;
+        }
+
+        var predictions = recommendationService.getPredictions(aRequest.getSessionOwner(),
+                aRequest.getProject());
+        if (predictions == null) {
+            return;
+        }
+
         // Add the suggestions to the visual document
-        for (AnnotationLayer layer : aRequest.getVisibleLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || layer.getType().equals(CHAIN_TYPE)
+        for (var layer : aRequest.getVisibleLayers()) {
+            if (Token.class.getName().equals(layer.getName())
+                    || Sentence.class.getName().equals(layer.getName())
+                    || CHAIN_TYPE.equals(layer.getType())
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
 
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            RecommendationTypeRenderer renderer = getRenderer(adapter);
-            if (renderer != null) {
-                renderer.render(aVDoc, aRequest);
+            var adapter = annotationService.getAdapter(layer);
+            if (adapter instanceof SpanAdapter) {
+                recommendationSpanRenderer.render(aVDoc, aRequest, predictions,
+                        (SpanAdapter) adapter);
+            }
+
+            if (adapter instanceof RelationAdapter) {
+                recommendationRelationRenderer.render(aVDoc, aRequest, predictions,
+                        (RelationAdapter) adapter);
             }
         }
-    }
-
-    /**
-     * Helper method to fetch a renderer for a given type. This is indented to be a temporary
-     * solution. The final solution should be able to return renderers specific to a certain
-     * visualization - one of which would be brat.
-     */
-    private RecommendationTypeRenderer getRenderer(TypeAdapter aTypeAdapter)
-    {
-        if (aTypeAdapter instanceof SpanAdapter) {
-            return new RecommendationSpanRenderer((SpanAdapter) aTypeAdapter, recommendationService,
-                    annotationService, fsRegistry, recommenderProperties);
-        }
-
-        if (aTypeAdapter instanceof RelationAdapter) {
-            return new RecommendationRelationRenderer((RelationAdapter) aTypeAdapter,
-                    recommendationService, annotationService, fsRegistry);
-        }
-
-        return null;
     }
 }

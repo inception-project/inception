@@ -151,8 +151,9 @@ public class NonTrainableRecommenderActivationTask
     private EvaluatedRecommender activateNonTrainableRecommender(User user, Recommender recommender,
             RecommendationEngine aEngine)
     {
-        RecommenderContext ctx = aEngine.newContext(recommendationService
-                .getContext(user, recommender).orElse(RecommenderContext.EMPTY_CONTEXT));
+        RecommenderContext ctx = aEngine
+                .newContext(recommendationService.getContext(user.getUsername(), recommender)
+                        .orElse(RecommenderContext.emptyContext()));
         ctx.setUser(user);
         ctx.close();
         recommendationService.putContext(user, recommender, ctx);
@@ -167,9 +168,11 @@ public class NonTrainableRecommenderActivationTask
     private EvaluatedRecommender skipTrainableRecommender(User user, Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        log.debug("[{}][{}]: Recommender requires training - not activating recommender",
+        log.debug(
+                "[{}][{}]: Recommender requires training - deferring activation to selection task",
                 user.getUsername(), recommenderName);
-        info("Recommender [%s] requires training - not activating recommender", recommenderName);
+        info("Recommender [%s] requires training - deferring activation to selection task",
+                recommenderName);
         return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender, "Requires training");
     }
 

@@ -354,7 +354,7 @@ public class CurationSidebarServiceImpl
     @Transactional
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
-        setDefaultSelectedUsersForDocument(aEvent.getUser(), aEvent.getDocument());
+        setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(), aEvent.getDocument());
     }
 
     @Override

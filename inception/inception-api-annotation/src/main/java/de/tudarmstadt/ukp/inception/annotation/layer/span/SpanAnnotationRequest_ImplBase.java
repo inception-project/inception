@@ -27,27 +27,27 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationRequest_ImplBase<T>>
 {
     private final SourceDocument document;
-    private final String username;
+    private final String documentOwner;
     private final CAS cas;
     private final int begin;
     private final int end;
     private final T originalRequest;
 
-    public SpanAnnotationRequest_ImplBase(SourceDocument aDocument, String aUsername, CAS aCas,
+    public SpanAnnotationRequest_ImplBase(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             int aBegin, int aEnd)
     {
-        this(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        this(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
     }
 
     protected SpanAnnotationRequest_ImplBase(T aOriginal, SourceDocument aDocument,
-            String aUsername, CAS aCas, int aBegin, int aEnd)
+            String aDocumentOwner, CAS aCas, int aBegin, int aEnd)
     {
         Validate.isTrue(aBegin <= aEnd, "Annotation begin [%d] must smaller or equal to end [%d]",
                 aBegin, aEnd);
 
         originalRequest = aOriginal;
         document = aDocument;
-        username = aUsername;
+        documentOwner = aDocumentOwner;
         cas = aCas;
         begin = aBegin;
         end = aEnd;
@@ -58,9 +58,9 @@ public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationReq
         return document;
     }
 
-    public String getUsername()
+    public String getDocumentOwner()
     {
-        return username;
+        return documentOwner;
     }
 
     public CAS getCas()

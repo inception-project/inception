@@ -50,7 +50,7 @@ public class FeatureValueUpdatedEventAdapter
     @Override
     public String getAnnotator(FeatureValueUpdatedEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

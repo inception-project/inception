@@ -31,11 +31,13 @@ public class PredictionsSwitchedEvent
     private static final long serialVersionUID = 3072280760236986642L;
 
     private final AnnotatorState state;
+    private final String sessionOwner;
 
-    public PredictionsSwitchedEvent(Object aSource, AnnotatorState aState)
+    public PredictionsSwitchedEvent(Object aSource, String aSessionOwner, AnnotatorState aState)
     {
         super(aSource);
         state = aState;
+        sessionOwner = aSessionOwner;
     }
 
     public AnnotatorState getState()
@@ -52,6 +54,6 @@ public class PredictionsSwitchedEvent
     @Override
     public String getUser()
     {
-        return state.getUser().getUsername();
+        return sessionOwner;
     }
 }

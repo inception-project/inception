@@ -1213,7 +1213,7 @@ public abstract class AnnotationDetailEditorPanel
             return false;
         }
 
-        if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+        if (!state.getUser().getUsername().equals(aEvent.getDocumentOwner())) {
             return false;
         }
 

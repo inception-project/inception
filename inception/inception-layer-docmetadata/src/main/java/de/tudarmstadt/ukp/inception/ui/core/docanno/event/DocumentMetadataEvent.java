@@ -60,7 +60,7 @@ public class DocumentMetadataEvent
             builder.append("docID=");
             builder.append(getDocument().getId());
             builder.append(", user=");
-            builder.append(getUser());
+            builder.append(getDocumentOwner());
         }
         builder.append("]");
         return builder.toString();
