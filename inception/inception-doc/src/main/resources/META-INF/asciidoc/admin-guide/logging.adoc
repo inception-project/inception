@@ -39,7 +39,7 @@ logging.level.de.tudarmstadt.ukp.inception.security=TRACE
 == Custom logging
 
 A custom logging configuration can be specified when starting up {product-name} using the parameter
-`-Dlog4j.configurationFile=/path/to/your/log4.xml`. This should be a standard Log4J configuration file.
+`-Dlogging.config=/path/to/your/log4.xml`. This should be a standard Log4J2 configuration file.
 A good starting point is the default configuration used by {product-name} which can be found in link:https://github.com/inception-project/inception/blob/main/inception/inception-app-webapp/src/main/resources/log4j2.xml[our code repository].
 
 == Logging in JSON format
@@ -47,7 +47,7 @@ A good starting point is the default configuration used by {product-name} which 
 If you would like to integrate the logging output of {product-name} with something like LogStash and
 Kibana, you may want log output to be in a properly interpretable JSON format, instead of the usual
 plain text format. {product-name} comes with several JSON configurations that are compatible with
-popular tools like LogStash and others. You can activate it by adding the following sections to a custom `log4j.xml` file in the `Appenders` sections and in the `Root` logger.
+popular tools like LogStash and others. You can activate it by adding the following sections to a custom `log4j2.xml` file in the `Appenders` sections and in the `Root` logger.
 
 [source,text]
 ----
