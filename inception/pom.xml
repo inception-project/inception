@@ -2439,6 +2439,11 @@
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
             </path>
+            <path>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-core</artifactId>
+              <version>${log4j2.version}</version>
+            </path>
           </annotationProcessorPaths>
         </configuration>
       </plugin>
