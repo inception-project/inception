@@ -157,8 +157,16 @@ public class MenuBar
             return true;
         }
 
-        if (userRepository.isAdministrator(user.getObject())) {
+        if (userRepository.isAdministrator(user.getObject())
+                || userRepository.isProjectCreator(user.getObject())) {
             return true;
+        }
+
+        // The project might be null if it is in the process of being created. Normally, this can
+        // only be done by admisn and project creators that are handled above - so returning false
+        // here is really just a sanity fallback that should never kick in.
+        if (project.getObject().getId() == null) {
+            return false;
         }
 
         var roles = dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new);
