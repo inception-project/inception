@@ -420,6 +420,7 @@
     <dependency>
       <groupId>com.squareup.okio</groupId>
       <artifactId>okio-jvm</artifactId>
+      <version>${okio.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -1068,6 +1069,20 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp-bom</artifactId>
+        <version>${okhttp.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio-bom</artifactId>
+        <version>${okio.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
         <groupId>org.junit.platform</groupId>
         <artifactId>junit-platform-suite-engine</artifactId>
         <version>${junit-platform.version}</version>
@@ -1093,21 +1108,6 @@
         <version>${assertj.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio</artifactId>
-        <version>${okio.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio-jvm</artifactId>
-        <version>${okio.version}</version>
-      </dependency>
-      <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
         <version>0.5.7</version>
@@ -1123,11 +1123,6 @@
         <groupId>com.nimbusds</groupId>
         <artifactId>nimbus-jose-jwt</artifactId>
         <version>9.31</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -2450,6 +2445,11 @@
               <groupId>org.hibernate</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
+            </path>
+            <path>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-core</artifactId>
+              <version>${log4j2.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>

@@ -23,7 +23,6 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
 @Order(FooterItem.ORDER_RIGHT + 100)
-@org.springframework.stereotype.Component
 public class AboutFooterItem
     implements FooterItem
 {
