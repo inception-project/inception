@@ -900,14 +900,19 @@ public class RecommendationServiceImpl
 
         // Check if there is already an annotation of the target type at the given location
         var type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        var annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
+
+        var candidates = aCas.select(type).at(aBegin, aEnd).asList();
+
+        var candidateWithEmptyLabel = candidates.stream() //
+                .filter(c -> adapter.getFeatureValue(aFeature, c) == null) //
+                .findFirst();
 
         int address;
-        if (annoFS != null && adapter.getFeatureValue(aFeature, annoFS) == null) {
+        if (candidateWithEmptyLabel.isPresent()) {
             // If there is an annotation where the predicted feature is unset, use it ...
-            address = ICasUtil.getAddr(annoFS);
+            address = ICasUtil.getAddr(candidateWithEmptyLabel.get());
         }
-        else if (annoFS == null || aLayer.isAllowStacking()) {
+        else if (candidates.isEmpty() || aLayer.isAllowStacking()) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
             var newAnnotation = adapter.add(aDocument, aDocumentOwner, aCas, aBegin, aEnd);
@@ -916,7 +921,7 @@ public class RecommendationServiceImpl
         else {
             // ... if yes and stacking is not allowed, then we update the feature on the existing
             // annotation
-            address = ICasUtil.getAddr(annoFS);
+            address = ICasUtil.getAddr(candidates.get(0));
         }
 
         // Update the feature value
