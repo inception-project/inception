@@ -33,11 +33,11 @@ public abstract class RelationEvent
     private final AnnotationFS targetAnno;
     private final AnnotationFS sourceAnno;
 
-    public RelationEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public RelationEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
             AnnotationLayer aLayer, AnnotationFS aRelationFS, AnnotationFS aTargetAnnotation,
             AnnotationFS aSourceAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer);
+        super(aSource, aDocument, aDocumentOwner, aLayer);
 
         relation = aRelationFS;
         targetAnno = aTargetAnnotation;
@@ -76,8 +76,8 @@ public abstract class RelationEvent
         if (getDocument() != null) {
             builder.append("docID=");
             builder.append(getDocument());
-            builder.append(", user=");
-            builder.append(getUser());
+            builder.append(", docOwner=");
+            builder.append(getDocumentOwner());
             builder.append(", ");
         }
         builder.append("relation=[");

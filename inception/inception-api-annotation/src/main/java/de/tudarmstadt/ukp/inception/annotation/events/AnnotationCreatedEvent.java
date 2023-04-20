@@ -28,7 +28,7 @@ public interface AnnotationCreatedEvent
 {
     SourceDocument getDocument();
 
-    String getUser();
+    String getDocumentOwner();
 
     AnnotationLayer getLayer();
 

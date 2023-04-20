@@ -29,10 +29,10 @@ public class RelationDeletedEvent
 {
     private static final long serialVersionUID = -3212535102141634478L;
 
-    public RelationDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public RelationDeletedEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
             AnnotationLayer aLayer, AnnotationFS aRelationFS, AnnotationFS aTargetAnnotation,
             AnnotationFS aSourceAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer, aRelationFS, aTargetAnnotation, aSourceAnnotation);
+        super(aSource, aDocument, aDocumentOwner, aLayer, aRelationFS, aTargetAnnotation, aSourceAnnotation);
     }
 }

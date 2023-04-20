@@ -94,14 +94,14 @@ public class RecommenderInfoPanel
 
         setOutputMarkupId(true);
 
-        User user = aModel.getObject().getUser();
+        var sessionOwner = userService.getCurrentUser();
 
         detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
                 .closeOnClick();
         add(detailsDialog);
 
         add(new Label("progress", LoadableDetachableModel.of(() -> {
-            Progress p = recommendationService.getProgressTowardsNextEvaluation(user,
+            Progress p = recommendationService.getProgressTowardsNextEvaluation(sessionOwner,
                     aModel.getObject().getProject());
             return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
@@ -119,7 +119,7 @@ public class RecommenderInfoPanel
             {
                 Recommender recommender = item.getModelObject();
                 Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
-                        .getEvaluatedRecommender(user, recommender);
+                        .getEvaluatedRecommender(sessionOwner, recommender);
                 item.add(new Label("name", recommender.getName()));
 
                 WebMarkupContainer state = new WebMarkupContainer("state");
@@ -182,7 +182,8 @@ public class RecommenderInfoPanel
 
                 AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
-                        LoadableDetachableModel.of(() -> exportModel(user, recommender)));
+                        LoadableDetachableModel
+                                .of(() -> exportModel(sessionOwner.getUsername(), recommender)));
                 exportModel.add(visibleWhen(
                         () -> recommendationService.getRecommenderFactory(recommender).isPresent()
                                 && recommendationService.getRecommenderFactory(recommender).get()
@@ -210,7 +211,7 @@ public class RecommenderInfoPanel
                 .map(e -> e.getExportModelName(aRecommender)).orElse(null);
     }
 
-    private IResourceStream exportModel(User aUser, Recommender aRecommender)
+    private IResourceStream exportModel(String aSessionOwner, Recommender aRecommender)
     {
         Optional<RecommendationEngineFactory<?>> maybeEngine = recommendationService
                 .getRecommenderFactory(aRecommender);
@@ -222,7 +223,7 @@ public class RecommenderInfoPanel
 
         RecommendationEngine engine = maybeEngine.get().build(aRecommender);
 
-        Optional<RecommenderContext> context = recommendationService.getContext(aUser,
+        Optional<RecommenderContext> context = recommendationService.getContext(aSessionOwner,
                 aRecommender);
 
         if (context.isEmpty()) {
@@ -246,8 +247,7 @@ public class RecommenderInfoPanel
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
     {
-        RecommenderStatusDetailPanel panel = new RecommenderStatusDetailPanel(
-                ModalDialog.CONTENT_ID,
+        var panel = new RecommenderStatusDetailPanel(ModalDialog.CONTENT_ID,
                 LoadableDetachableModel.of(() -> recommendationService
                         .getEvaluatedRecommender(userService.getCurrentUser(), aRecommender).get())
                         .map(EvaluatedRecommender::getEvaluationResult));

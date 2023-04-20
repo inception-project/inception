@@ -51,7 +51,7 @@ public class ChainLinkEventAdapter
     @Override
     public String getAnnotator(ChainLinkEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

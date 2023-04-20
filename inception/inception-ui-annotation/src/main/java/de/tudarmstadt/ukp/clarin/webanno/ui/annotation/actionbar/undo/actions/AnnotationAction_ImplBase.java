@@ -40,7 +40,7 @@ public abstract class AnnotationAction_ImplBase
         requestId = aRequestId;
         vid = aVid;
         document = aEvent.getDocument();
-        user = aEvent.getUser();
+        user = aEvent.getDocumentOwner();
         layer = aEvent.getLayer();
     }
 

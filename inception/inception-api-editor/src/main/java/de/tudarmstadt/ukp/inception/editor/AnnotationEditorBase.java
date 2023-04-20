@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -66,6 +67,7 @@ public abstract class AnnotationEditorBase
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
+    private @SpringBean UserDao userService;
     private @SpringBean RenderingPipeline renderingPipeline;
 
     private final AnnotationActionHandler actionHandler;
@@ -194,6 +196,7 @@ public abstract class AnnotationEditorBase
                 .withState(getModelObject()) //
                 .withWindow(aWindowBeginOffset, aWindowEndOffset) //
                 .withCas(aCas) //
+                .withSessionOwner(userService.getCurrentUser()) //
                 .withVisibleLayers(getLayersToRender(getModelObject())) //
                 .build();
 

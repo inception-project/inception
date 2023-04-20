@@ -66,7 +66,7 @@ class PredictionsTest
         DocumentImportExportServiceImpl.splitSentences(cas);
         DocumentImportExportServiceImpl.tokenize(cas);
 
-        sut = new Predictions(user, project);
+        sut = new Predictions(user, user.getUsername(), project);
     }
 
     @Test
@@ -91,7 +91,7 @@ class PredictionsTest
         var winBegin = sentences.get(Math.round(sentences.size() * 0.25f)).getBegin();
         var winEnd = sentences.get(Math.round(sentences.size() * 0.75f)).getEnd();
 
-        sut = new Predictions(user, project);
+        sut = new Predictions(user, user.getUsername(), project);
         var generatedPredictions = generatePredictions(10_000, 1, 1_000);
         sut.putPredictions(generatedPredictions);
         var documents = generatedPredictions.stream() //

@@ -17,14 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations
  *
  */
-public interface RecommendationTypeRenderer
+public interface RecommendationTypeRenderer<T extends TypeAdapter>
 {
     String COLOR = "#cccccc";
 
@@ -37,5 +39,5 @@ public interface RecommendationTypeRenderer
      * @param aRequest
      *            a render request
      */
-    void render(VDocument aVdoc, RenderRequest aRequest);
+    void render(VDocument aVdoc, RenderRequest aRequest, Predictions aPredictions, T aAdapter);
 }

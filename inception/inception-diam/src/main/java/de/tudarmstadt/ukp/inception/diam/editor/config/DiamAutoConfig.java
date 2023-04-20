@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
@@ -145,9 +146,11 @@ public class DiamAutoConfig
 
     @Bean
     public LoadAnnotationsHandler loadAnnotationsHandler(RenderingPipeline aRenderingPipeline,
-            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
+            UserDao aUserService)
     {
-        return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint);
+        return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint,
+                aUserService);
     }
 
     @Bean

@@ -33,19 +33,20 @@ public class DocumentOpenedEvent
     private final CAS cas;
     private final SourceDocument document;
     // user who owns/annotates the opened document
-    private final String annotator;
+    private final String documentOwner;
     // user who opened the document
-    private final String opener;
+    private final String sessionOwner;
     private final AnnotationDocumentState stateBeforeOpening;
 
     public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
-            AnnotationDocumentState aStateBeforeOpening, String aAnnotator, String aOpener)
+            AnnotationDocumentState aStateBeforeOpening, String aDocumentOwner,
+            String aSessionOwner)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
-        annotator = aAnnotator;
-        opener = aOpener;
+        documentOwner = aDocumentOwner;
+        sessionOwner = aSessionOwner;
         stateBeforeOpening = aStateBeforeOpening;
     }
 
@@ -59,14 +60,14 @@ public class DocumentOpenedEvent
         return document;
     }
 
-    public String getUser()
+    public String getSessionOwner()
     {
-        return opener;
+        return sessionOwner;
     }
 
-    public String getAnnotator()
+    public String getDocumentOwner()
     {
-        return annotator;
+        return documentOwner;
     }
 
     public AnnotationDocumentState getStateBeforeOpening()

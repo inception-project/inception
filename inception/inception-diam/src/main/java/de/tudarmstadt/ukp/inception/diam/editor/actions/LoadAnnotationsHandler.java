@@ -25,6 +25,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -55,12 +56,15 @@ public class LoadAnnotationsHandler
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
+    private final UserDao userService;
 
     public LoadAnnotationsHandler(RenderingPipeline aRenderingPipeline,
-            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
+            UserDao aUserService)
     {
         renderingPipeline = aRenderingPipeline;
         vDocumentSerializerExtensionPoint = aVDocumentSerializerExtensionPoint;
+        userService = aUserService;
     }
 
     @Override
@@ -100,6 +104,7 @@ public class LoadAnnotationsHandler
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
+                .withSessionOwner(userService.getCurrentUser()) //
                 .withCas(page.getEditorCas()) //
                 .withWindow(begin, end) //
                 .withText(includeText) //

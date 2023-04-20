@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
@@ -30,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
@@ -48,23 +48,25 @@ public class CurationRendererImpl
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
     private final AnnotationEditorProperties annotationEditorProperties;
+    private final UserDao userService;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties)
+            AnnotationEditorProperties aAnnotationEditorProperties, UserDao aUserService)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
         annotationEditorProperties = aAnnotationEditorProperties;
+        userService = aUserService;
     }
 
     @Override
     public VDocument render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
         throws IOException
     {
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
+        var layersToRender = new ArrayList<AnnotationLayer>();
+        for (var layer : aState.getAnnotationLayers()) {
             boolean isNonEditableTokenLayer = layer.getName().equals(Token.class.getName())
                     && !annotationEditorProperties.isTokenLayerEditable();
             boolean isNonEditableSentenceLayer = layer.getName().equals(Sentence.class.getName())
@@ -77,15 +79,16 @@ public class CurationRendererImpl
             }
         }
 
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
                 .withState(aState) //
+                .withSessionOwner(userService.getCurrentUser()) //
                 .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
                 .withCas(aCas) //
                 .withVisibleLayers(layersToRender) //
                 .withColoringStrategyOverride(aColoringStrategy) //
                 .build();
 
-        VDocument vdoc = new VDocument();
+        var vdoc = new VDocument();
         preRenderer.render(vdoc, request);
 
         new LabelRenderer().render(vdoc, request);
