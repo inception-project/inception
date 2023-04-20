@@ -265,7 +265,7 @@ class VisualPdfReaderTest
 
         var expectedText = "\n" //
                 + "\n" //
-                + " ُآَّتاب\n" //
+                + " آَُّتاب\n" //
                 + " \n" //
                 + "\n" //
                 + "\n" //
@@ -280,7 +280,7 @@ class VisualPdfReaderTest
         assertThat(jCas.select(PdfChunk.class).asList()) //
                 .extracting(PdfChunk::getBegin, PdfChunk::getEnd, PdfChunk::getCoveredText)
                 .containsExactly( //
-                        tuple(2, 7, " ُآَّ"), //
+                        tuple(2, 7, " آَُّ"), //
                         tuple(7, 10, "تاب"), //
                         tuple(11, 12, " "));
 
@@ -303,7 +303,7 @@ class VisualPdfReaderTest
         assertThat(actual.getPages().get(0).getChunks()) //
                 .extracting(VChunk::getBegin, VChunk::getText) //
                 .containsExactly( //
-                        tuple(2, " ُآَّ"), //
+                        tuple(2, " آَُّ"), //
                         tuple(7, "تاب"), //
                         tuple(11, " "));
 
@@ -318,7 +318,7 @@ class VisualPdfReaderTest
                 .containsExactly( //
                         tuple(//
                                 114.486824f, //
-                                new String[] { " ", "ُآ", "َّ" }, //
+                                new String[] { " ", "آُ", "َّ" }, //
                                 new float[] { 131.10103f, 120.79997f, 114.486824f }, //
                                 new float[] { 6.494995f, 10.301056f, 6.3131485f }),
                         tuple(//
@@ -347,7 +347,7 @@ class VisualPdfReaderTest
 
         var expectedText = "\n" //
                 + "\n" //
-                + "بُآتَّا  \n" //
+                + "بآُتَّا  \n" //
                 + " \n" //
                 + "\n" //
                 + "\n" //
@@ -363,8 +363,8 @@ class VisualPdfReaderTest
                 .extracting(PdfChunk::getBegin, PdfChunk::getEnd, PdfChunk::getCoveredText)
                 .containsExactly( //
                         tuple(2, 3, "ب"), //
-                        tuple(3, 6, "ُآت"), //
-                        tuple(6, 9, "َّا"), //
+                        tuple(3, 6, "آُت"), //
+                        tuple(6, 9, "َّا"), //
                         tuple(10, 11, " "), //
                         tuple(12, 13, " "));
 
@@ -394,8 +394,8 @@ class VisualPdfReaderTest
                 .extracting(VChunk::getBegin, VChunk::getText) //
                 .containsExactly( //
                         tuple(2, "ب"), //
-                        tuple(3, "ُآت"), //
-                        tuple(6, "َّا"), //
+                        tuple(3, "آُت"), //
+                        tuple(6, "َّا"), //
                         tuple(10, " "), //
                         tuple(12, " "));
 
@@ -414,12 +414,12 @@ class VisualPdfReaderTest
                                 new float[] { 18.523743f }),
                         tuple( //
                                 114.47643f, //
-                                new String[] { "ُآ", "ت" }, //
+                                new String[] { "آُ", "ت" }, //
                                 new float[] { 120.79997f, 114.47643f }, //
                                 new float[] { 10.2361145f, 6.3235397f }),
                         tuple( //
                                 108.54f, //
-                                new String[] { "َّ", "ا" }, //
+                                new String[] { "َّ", "ا" }, //
                                 new float[] { 114.486824f, 108.54f }, //
                                 new float[] { 5.481781f, 5.946823f }),
                         tuple( //
