@@ -130,13 +130,13 @@
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
     <!--   4.7.0    depends on Lucene 9.4.2 -->
 
-    <asciidoctor.plugin.version>2.2.2</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.7</asciidoctor.version>
-    <asciidoctor-diagram.version>2.2.4</asciidoctor-diagram.version>
+    <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
+    <asciidoctor.version>2.5.8</asciidoctor.version>
+    <asciidoctor-diagram.version>2.2.7</asciidoctor-diagram.version>
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.14.1</jackson.version>
+    <jackson.version>2.14.2</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.10.0</okhttp.version>
     <okio.version>3.3.0</okio.version>
@@ -293,7 +293,7 @@
     <dependency>
       <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -462,17 +462,6 @@
         <groupId>org.apache.uima</groupId>
         <artifactId>uimaj-core</artifactId>
         <version>${uima.version}</version>
-        <exclusions>
-          <!-- These are only needed for the UIMA JCas decompiler which we do not use -->
-          <exclusion>
-            <groupId>org.bitbucket.mstrobel</groupId>
-            <artifactId>procyon-compilertools</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.bitbucket.mstrobel</groupId>
-            <artifactId>procyon-core</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
@@ -2198,24 +2187,6 @@
       </dependency>
 
       <dependency>
-        <!-- Import dependency management from Spring Boot -->
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${spring.boot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <!-- Import dependency management from Wicket -->
-        <groupId>org.apache.wicket</groupId>
-        <artifactId>wicket-parent</artifactId>
-        <version>${wicket.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
         <!-- Import dependency management from LOG4J -->
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
@@ -2240,13 +2211,31 @@
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j-impl</artifactId>
+        <artifactId>log4j-slf4j2-impl</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-spring-boot</artifactId>
         <version>${log4j2.version}</version>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from Spring Boot -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from Wicket -->
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-parent</artifactId>
+        <version>${wicket.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <dependency>
@@ -2539,7 +2528,7 @@
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
-            <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
+            <dependency>org.apache.logging.log4j:log4j-slf4j2-impl</dependency>
             <dependency>org.apache.logging.log4j:log4j-spring-boot</dependency>
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
