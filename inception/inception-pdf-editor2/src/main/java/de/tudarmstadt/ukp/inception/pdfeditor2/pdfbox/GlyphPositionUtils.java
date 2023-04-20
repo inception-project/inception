@@ -156,7 +156,7 @@ public class GlyphPositionUtils
     }
 
     // source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1911
+    // https://github.com/apache/pdfbox/blob/2.0.28/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1911
     // The support for extracting the glyph order was added for INCEpTION
     /**
      * Normalize certain Unicode characters. For example, convert the single "fi" ligature to "f"
@@ -195,8 +195,17 @@ public class GlyphPositionUtils
                 }
                 else {
                     // Trim because some decompositions have an extra space, such as U+FC5E
-                    builder.append(Normalizer
-                            .normalize(word.substring(q, q + 1), Normalizer.Form.NFKC).trim());
+                    String normalized = Normalizer
+                            .normalize(word.substring(q, q + 1), Normalizer.Form.NFKC).trim();
+
+                    // Hebrew in Alphabetic Presentation Forms from FB1D to FB4F and
+                    // Arabic Presentation Forms-A from FB50 to FDFF and
+                    // Arabic Presentation Forms-B from FE70 to FEFF
+                    if (0xFB1D <= c && normalized.length() > 1) {
+                        // Reverse the order of decomposed Hebrew and Arabic letters
+                        normalized = new StringBuilder(normalized).reverse().toString();
+                    }
+                    builder.append(normalized);
                 }
                 p = q + 1;
             }
