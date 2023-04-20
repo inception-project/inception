@@ -330,6 +330,21 @@ public class RecommendationServiceImplIntegrationTest
                         tuple(0, 10, "V1"), //
                         tuple(0, 10, "V2"), //
                         tuple(10, 20, "V3"));
+
+        new NamedEntity(cas, 0, 10).addToIndexes();
+        new NamedEntity(cas, 0, 10).addToIndexes();
+
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V4", 0, 10);
+
+        assertThat(cas.select(NamedEntity.class).asList()) //
+                .as("Label was merged again into one of the entities without a label") //
+                .extracting(NamedEntity::getBegin, NamedEntity::getEnd, NamedEntity::getValue)
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 10, "V1"), //
+                        tuple(0, 10, "V2"), //
+                        tuple(0, 10, "V4"), //
+                        tuple(0, 10, null), //
+                        tuple(10, 20, "V3"));
     }
 
     // Helper
