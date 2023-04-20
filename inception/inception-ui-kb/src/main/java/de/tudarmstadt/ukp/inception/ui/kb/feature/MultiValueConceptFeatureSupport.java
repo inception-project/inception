@@ -340,6 +340,10 @@ public class MultiValueConceptFeatureSupport
         }
 
         List<KBHandle> handles = getFeatureValue(aFeature, aFs);
+        if (handles == null) {
+            return Collections.emptyList();
+        }
+
         return handles.stream() //
                 .flatMap(h -> getLazyDetails(aFeature, h.getIdentifier()).stream()) //
                 .collect(toList());
