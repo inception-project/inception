@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -306,12 +305,7 @@ public class RecommenderInfoPanel
                         layer);
                 // int address =
                 recommendationService.upsertSpanFeature(state.getDocument(),
-                        state.getUser().getUsername(), cas, layer, feature, suggestion.getLabel(),
-                        suggestion.getBegin(), suggestion.getEnd());
-
-                // Hide the suggestion. This is faster than having to recalculate the visibility
-                // status for the entire document or even for the part visible on screen.
-                suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+                        state.getUser().getUsername(), cas, layer, feature, suggestion);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

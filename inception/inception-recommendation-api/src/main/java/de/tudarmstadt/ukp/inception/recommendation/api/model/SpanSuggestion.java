@@ -124,6 +124,24 @@ public class SpanSuggestion
                 .append("autoAcceptMode", getAutoAcceptMode()).toString();
     }
 
+    public Builder toBuilder()
+    {
+        return builder() //
+                .withId(id) //
+                .withRecommenderId(recommenderId) //
+                .withRecommenderName(recommenderName) //
+                .withLayerId(layerId) //
+                .withFeature(feature) //
+                .withDocumentName(documentName) //
+                .withLabel(label) //
+                .withUiLabel(uiLabel) //
+                .withScore(score) //
+                .withScoreExplanation(scoreExplanation) //
+                .withPosition(position) //
+                .withCoveredText(coveredText) //
+                .withAutoAcceptMode(getAutoAcceptMode());
+    }
+
     public static Builder builder()
     {
         return new Builder();

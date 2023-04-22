@@ -664,7 +664,7 @@ public class ActiveLearningSidebar
         // from the update event created by acceptSuggestion/upsertSpanFeature.
         requestClearningSelectionAndJumpingToSuggestion();
 
-        activeLearningService.acceptSpanSuggestion(state.getUser(), alState.getLayer(), suggestion,
+        activeLearningService.acceptSpanSuggestion(state.getProject(), state.getUser(), suggestion,
                 editor.getModelObject().value);
 
         // If the currently displayed document is the same one where the annotation was created,
@@ -1253,9 +1253,8 @@ public class ActiveLearningSidebar
 
         var state = getModelObject();
         var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
-        var eventState = aEvent.getAnnotatorState();
         var doc = state.getDocument();
-        var vid = VID.parse(aEvent.getVid().getExtensionPayload());
+        var vid = VID.parse(aEvent.getSuggestionVid().getExtensionPayload());
 
         var oRecommendation = predictions.getPredictionByVID(doc, vid) //
                 .filter(f -> f instanceof SpanSuggestion) //
@@ -1269,19 +1268,21 @@ public class ActiveLearningSidebar
 
         var acceptedSuggestion = oRecommendation.get();
 
-        applicationEventPublisherHolder.get().publishEvent(new ActiveLearningRecommendationEvent(
-                this, eventState.getDocument(), acceptedSuggestion, state.getUser().getUsername(),
-                eventState.getSelectedAnnotationLayer(), acceptedSuggestion.getFeature(), ACCEPTED,
-                predictions.getPredictionsByTokenAndFeature(acceptedSuggestion.getDocumentName(),
-                        eventState.getSelectedAnnotationLayer(), acceptedSuggestion.getBegin(),
-                        acceptedSuggestion.getEnd(), acceptedSuggestion.getFeature())));
+        var allSuggestions = predictions.getPredictionsByTokenAndFeature(
+                acceptedSuggestion.getDocumentName(), aEvent.getLayer(),
+                acceptedSuggestion.getBegin(), acceptedSuggestion.getEnd(),
+                acceptedSuggestion.getFeature());
+        applicationEventPublisherHolder.get()
+                .publishEvent(new ActiveLearningRecommendationEvent(this, aEvent.getDocument(),
+                        acceptedSuggestion, state.getUser().getUsername(), aEvent.getLayer(),
+                        acceptedSuggestion.getFeature(), ACCEPTED, allSuggestions));
 
         // If the annotation that the user accepted is the one that is currently displayed in
         // the annotation sidebar, then we have to go and pick a new one
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (alState.isSessionActive() && alState.getSuggestion().isPresent()
-                && eventState.getUser().equals(state.getUser())
-                && eventState.getProject().equals(state.getProject())) {
+                && aEvent.getDataOwner().equals(state.getUser())
+                && aEvent.getProject().equals(state.getProject())) {
             SpanSuggestion suggestion = alState.getSuggestion().get();
             if (acceptedSuggestion.getPosition().equals(suggestion.getPosition())
                     && vid.getLayerId() == suggestion.getLayerId()

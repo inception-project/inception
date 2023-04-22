@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -171,15 +172,15 @@ public interface RecommendationService
      * @param aEnd
      *            the position of the annotation (in case it is created)
      * 
-     * @return the CAS address of the created/updated annotation.
+     * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    int upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
+    AnnotationFS upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
+            AnnotationLayer layer, AnnotationFeature aFeature, SpanSuggestion aSuggestion)
         throws AnnotationException;
 
-    int upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
+    AnnotationFS upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
             AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
         throws AnnotationException;
 

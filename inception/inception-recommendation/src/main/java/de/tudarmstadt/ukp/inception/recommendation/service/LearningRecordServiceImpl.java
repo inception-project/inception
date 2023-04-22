@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
@@ -75,6 +76,23 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
+    public void logRecord(SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        if (aSuggestion instanceof SpanSuggestion) {
+            logSpanRecord(aDocument, aDataOwner, (SpanSuggestion) aSuggestion,
+                    aSuggestion.getLabel(), aFeature, aUserAction, aLocation);
+        }
+        else if (aSuggestion instanceof RelationSuggestion) {
+            logRelationRecord(aDocument, aDataOwner, (RelationSuggestion) aSuggestion, aFeature,
+                    aUserAction, aLocation);
+        }
+
+    }
+
+    @Transactional
+    @Override
     public void logSpanRecord(SourceDocument aDocument, String aUsername,
             SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation)
@@ -95,12 +113,12 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public void logRelationRecord(SourceDocument aDocument, String aUsername,
+    public void logRelationRecord(SourceDocument aDocument, String aDataOwner,
             RelationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
         RelationPosition pos = aSuggestion.getPosition();
-        logRecord(aDocument, aUsername, pos.getSourceBegin(), pos.getSourceEnd(),
+        logRecord(aDocument, aDataOwner, pos.getSourceBegin(), pos.getSourceEnd(),
                 pos.getTargetBegin(), pos.getTargetEnd(), RELATION, aSuggestion.getLabel(),
                 aUserAction, aFeature, "", aLocation);
     }

@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
@@ -205,85 +203,84 @@ public class ActiveLearningServiceImpl
 
     @Override
     @Transactional
-    public void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationLayer aLayer,
+    public void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationFeature aFeature,
             SpanSuggestion aSuggestion, LearningRecordType aUserAction, String aAnnotationValue)
     {
-        var feat = schemaService.getFeature(aSuggestion.getFeature(), aLayer);
-        var sourceDoc = documentService.getSourceDocument(aLayer.getProject(),
+        var document = documentService.getSourceDocument(aFeature.getProject(),
                 aSuggestion.getDocumentName());
+        var dataOwner = aUser.getUsername();
 
-        var alternativeSuggestions = recommendationService
-                .getPredictions(aUser, aLayer.getProject())
-                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), aLayer,
+        var allSuggestions = recommendationService
+                .getPredictions(aUser, aFeature.getProject())
+                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), aFeature.getLayer(),
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
 
         // Log the action to the learning record
-        learningHistoryService.logSpanRecord(sourceDoc, aUser.getUsername(), aSuggestion,
-                aAnnotationValue, feat, aUserAction, AL_SIDEBAR);
+        learningHistoryService.logSpanRecord(document, dataOwner, aSuggestion, aAnnotationValue,
+                aFeature, aUserAction, AL_SIDEBAR);
 
         // If the action was a correction (i.e. suggestion label != annotation value) then generate
         // a rejection for the original value - we do not want the original value to re-appear
         if (aUserAction == CORRECTED) {
-            learningHistoryService.logSpanRecord(sourceDoc, aUser.getUsername(), aSuggestion,
-                    aSuggestion.getLabel(), feat, REJECTED, AL_SIDEBAR);
+            learningHistoryService.logRecord(document, dataOwner, aSuggestion, aFeature, REJECTED,
+                    AL_SIDEBAR);
         }
 
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
-        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this,
-                sourceDoc, aSuggestion, aUser.getUsername(), aLayer, aSuggestion.getFeature(),
-                aUserAction, alternativeSuggestions));
+        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
+                aSuggestion, dataOwner, aFeature.getLayer(), aSuggestion.getFeature(), aUserAction,
+                allSuggestions));
     }
 
     @Override
     @Transactional
-    public void acceptSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion,
+    public void acceptSpanSuggestion(Project aProject, User aDataOwner, SpanSuggestion aSuggestion,
             Object aValue)
         throws IOException, AnnotationException
     {
-        // There is always a current recommendation when we get here because if there is none, the
-        // button to accept the recommendation is not visible.
-        SpanSuggestion suggestion = aSuggestion;
-
-        // Create AnnotationFeature and FeatureSupport
-        AnnotationFeature feat = schemaService.getFeature(suggestion.getFeature(), aLayer);
-        FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
+        // Upsert an annotation based on the suggestion
+        var layer = schemaService.getLayer(aProject, aSuggestion.getLayerId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No such layer: [" + aSuggestion.getLayerId() + "]"));
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
 
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
         // the suggestion has been loaded into the sidebar.
-        SourceDocument sourceDoc = documentService.getSourceDocument(aLayer.getProject(),
-                suggestion.getDocumentName());
-        String username = aUser.getUsername();
-        CAS cas = documentService.readAnnotationCas(sourceDoc, username);
+        var document = documentService.getSourceDocument(aProject, aSuggestion.getDocumentName());
+        var dataOwner = aDataOwner.getUsername();
+        var cas = documentService.readAnnotationCas(document, dataOwner);
 
-        // Upsert an annotation based on the suggestion
-        String value = (String) featureSupport.unwrapFeatureValue(feat, cas, aValue);
-        AnnotationLayer layer = schemaService.getLayer(aLayer.getProject(), suggestion.getLayerId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No such layer: [" + suggestion.getLayerId() + "]"));
+        // Create AnnotationFeature and FeatureSupport
+        var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
+        var value = (String) featureSupport.unwrapFeatureValue(feature, cas, aValue);
+
+        // Clone the original suggestion setting the proper label from the value selected by the
+        // user
+        var suggestion = aSuggestion.toBuilder().withLabel(value).build();
 
         // Log the action to the learning record and immediately hide the suggestion
-        boolean areLabelsEqual = suggestion.labelEquals(value);
-        writeLearningRecordInDatabaseAndEventLog(aUser, aLayer, suggestion,
+        boolean areLabelsEqual = aSuggestion.labelEquals(value);
+        writeLearningRecordInDatabaseAndEventLog(aDataOwner, feature, suggestion,
                 (areLabelsEqual) ? ACCEPTED : CORRECTED, value);
-        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
+        aSuggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
 
         // Request clearing selection and when onFeatureValueUpdated is triggered as a callback
         // from the update event created by upsertSpanFeature.
-        AnnotationFeature feature = schemaService.getFeature(suggestion.getFeature(), layer);
-        recommendationService.upsertSpanFeature(sourceDoc, username, cas, layer, feature, value,
-                suggestion.getBegin(), suggestion.getEnd());
+        recommendationService.upsertSpanFeature(document, dataOwner, cas, layer, feature,
+                suggestion);
 
         // Save CAS after annotation has been created
-        documentService.writeAnnotationCas(cas, sourceDoc, aUser, true);
+        documentService.writeAnnotationCas(cas, document, aDataOwner, true);
     }
 
     @Override
     @Transactional
     public void rejectSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion)
     {
-        writeLearningRecordInDatabaseAndEventLog(aUser, aLayer, aSuggestion, REJECTED,
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), aLayer);
+        writeLearningRecordInDatabaseAndEventLog(aUser, feature, aSuggestion, REJECTED,
                 aSuggestion.getLabel());
     }
 
@@ -291,7 +288,8 @@ public class ActiveLearningServiceImpl
     @Transactional
     public void skipSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion)
     {
-        writeLearningRecordInDatabaseAndEventLog(aUser, aLayer, aSuggestion, SKIPPED,
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), aLayer);
+        writeLearningRecordInDatabaseAndEventLog(aUser, feature, aSuggestion, SKIPPED,
                 aSuggestion.getLabel());
     }
 

@@ -655,9 +655,7 @@ public class RecommendationServiceImpl
                 if (prediction instanceof SpanSuggestion) {
                     var spanPrediction = (SpanSuggestion) prediction;
                     upsertSpanFeature(aDocument, aUser.getUsername(), cas, layer, feature,
-                            spanPrediction.getLabel(), spanPrediction.getBegin(),
-                            spanPrediction.getEnd());
-                    prediction.hide(FLAG_TRANSIENT_ACCEPTED);
+                            spanPrediction);
                     count++;
                 }
 
@@ -665,7 +663,6 @@ public class RecommendationServiceImpl
                     var relationPrediction = (RelationSuggestion) prediction;
                     upsertRelationFeature(aDocument, aUser.getUsername(), cas, layer, feature,
                             relationPrediction);
-                    prediction.hide(FLAG_TRANSIENT_ACCEPTED);
                     count++;
                 }
             }
@@ -1034,48 +1031,57 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public int upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationLayer aLayer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
+    public AnnotationFS upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
+            AnnotationLayer aLayer, AnnotationFeature aFeature, SpanSuggestion aSuggestion)
         throws AnnotationException
     {
+        var aBegin = aSuggestion.getBegin();
+        var aEnd = aSuggestion.getEnd();
+        var aValue = aSuggestion.getLabel();
+
         // The feature of the predicted label
         var adapter = (SpanAdapter) schemaService.getAdapter(aLayer);
 
-        // Check if there is already an annotation of the target type at the given location
-        var type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-
-        var candidates = aCas.select(type).at(aBegin, aEnd).asList();
+        var candidates = aCas.<Annotation> select(adapter.getAnnotationTypeName()) //
+                .at(aBegin, aEnd) //
+                .asList();
 
         var candidateWithEmptyLabel = candidates.stream() //
                 .filter(c -> adapter.getFeatureValue(aFeature, c) == null) //
                 .findFirst();
 
-        int address;
+        AnnotationFS annotation;
         if (candidateWithEmptyLabel.isPresent()) {
             // If there is an annotation where the predicted feature is unset, use it ...
-            address = ICasUtil.getAddr(candidateWithEmptyLabel.get());
+            annotation = candidateWithEmptyLabel.get();
         }
         else if (candidates.isEmpty() || aLayer.isAllowStacking()) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
             var newAnnotation = adapter.add(aDocument, aDocumentOwner, aCas, aBegin, aEnd);
-            address = ICasUtil.getAddr(newAnnotation);
+            annotation = newAnnotation;
         }
         else {
             // ... if yes and stacking is not allowed, then we update the feature on the existing
             // annotation
-            address = ICasUtil.getAddr(candidates.get(0));
+            annotation = candidates.get(0);
         }
 
         // Update the feature value
-        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, address, aFeature, aValue);
+        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, ICasUtil.getAddr(annotation),
+                aFeature, aValue);
 
-        return address;
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+
+        return annotation;
     }
 
     @Override
-    public int upsertRelationFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
+    public AnnotationFS upsertRelationFeature(SourceDocument aDocument, String aDocumentOwner,
+            CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion)
         throws AnnotationException
     {
         var adapter = (RelationAdapter) schemaService.getAdapter(layer);
@@ -1141,13 +1147,15 @@ public class RecommendationServiceImpl
             relation = adapter.add(aDocument, aDocumentOwner, source, target, aCas);
         }
 
-        int address = ICasUtil.getAddr(relation);
-
         // Update the feature value
-        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, address, aFeature,
-                aSuggestion.getLabel());
+        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, ICasUtil.getAddr(relation),
+                aFeature, aSuggestion.getLabel());
 
-        return address;
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+
+        return relation;
     }
 
     private static class CommittedDocument

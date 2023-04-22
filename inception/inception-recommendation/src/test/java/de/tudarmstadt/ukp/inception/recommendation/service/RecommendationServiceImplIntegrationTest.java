@@ -73,6 +73,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -275,21 +276,24 @@ public class RecommendationServiceImplIntegrationTest
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V1",
-                targetFS.getBegin(), targetFS.getEnd());
+        var s1 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
+                .build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s1);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
                 .isEqualTo("V1");
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V2",
-                targetFS.getBegin(), targetFS.getEnd());
+        var s2 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
+                .build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s2);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing previous label") //
                 .isEqualTo("V2");
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V3", 10, 20);
+        var s3 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s3);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -304,15 +308,17 @@ public class RecommendationServiceImplIntegrationTest
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V1",
-                targetFS.getBegin(), targetFS.getEnd());
+        var s4 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
+                .build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s4);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
                 .isEqualTo("V1");
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V2",
-                targetFS.getBegin(), targetFS.getEnd());
+        var s5 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
+                .build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s5);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -321,7 +327,8 @@ public class RecommendationServiceImplIntegrationTest
                         tuple(0, 10, "V1"), //
                         tuple(0, 10, "V2"));
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V3", 10, 20);
+        var s6 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s6);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -334,7 +341,8 @@ public class RecommendationServiceImplIntegrationTest
         new NamedEntity(cas, 0, 10).addToIndexes();
         new NamedEntity(cas, 0, 10).addToIndexes();
 
-        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, "V4", 0, 10);
+        var s7 = SpanSuggestion.builder().withLabel("V4").withPosition(new Offset(0, 10)).build();
+        sut.upsertSpanFeature(doc, docOwner, cas.getCas(), layer, feature, s7);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged again into one of the entities without a label") //
