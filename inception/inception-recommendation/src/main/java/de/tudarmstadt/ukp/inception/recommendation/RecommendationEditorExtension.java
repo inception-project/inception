@@ -242,7 +242,7 @@ public class RecommendationEditorExtension
 
         // Log the action to the learning record
         learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion,
-                layer, feature, ACCEPTED, MAIN_EDITOR);
+                feature, ACCEPTED, MAIN_EDITOR);
 
         hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
     }
@@ -276,7 +276,7 @@ public class RecommendationEditorExtension
 
         // Log the action to the learning record
         learningRecordService.logRelationRecord(document, aState.getUser().getUsername(),
-                suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
+                suggestion, feature, ACCEPTED, MAIN_EDITOR);
 
         hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
     }
@@ -351,7 +351,7 @@ public class RecommendationEditorExtension
             SpanSuggestion spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
             learningRecordService.logSpanRecord(document, aState.getUser().getUsername(),
-                    spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
+                    spanSuggestion, feature, REJECTED, MAIN_EDITOR);
 
             // Send an application event that the suggestion has been rejected
             applicationEventPublisher.publishEvent(

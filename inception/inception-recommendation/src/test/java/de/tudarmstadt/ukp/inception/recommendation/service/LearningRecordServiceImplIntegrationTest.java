@@ -84,8 +84,8 @@ public class LearningRecordServiceImplIntegrationTest
                 feature.getName(), sourceDoc.getName(), 7, 14, "aCoveredText", "testLabel",
                 "testUiLabel", 0.42, "Test confidence", NEVER);
 
-        sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
-                LearningRecordType.ACCEPTED, MAIN_EDITOR);
+        sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, feature, LearningRecordType.ACCEPTED,
+                MAIN_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
         assertThat(records).hasSize(1);
@@ -118,7 +118,7 @@ public class LearningRecordServiceImplIntegrationTest
                 layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
                 "testUiLabel", 0.42, "Test confidence", NEVER);
 
-        sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
+        sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, feature,
                 LearningRecordType.REJECTED, DETAIL_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
@@ -155,25 +155,25 @@ public class LearningRecordServiceImplIntegrationTest
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
-                layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+                feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc1, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
-                layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+                feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
-                layer1, feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+                feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         sut.logSpanRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
-                layer2, feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
+                feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         assertThat(sut.listRecords(sourceDoc1, USER_NAME, feature1)).hasSize(1);
         assertThat(sut.listRecords(sourceDoc1, USER_NAME, feature2)).hasSize(1);

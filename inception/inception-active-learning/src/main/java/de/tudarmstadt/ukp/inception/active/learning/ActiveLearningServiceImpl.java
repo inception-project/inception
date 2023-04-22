@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
@@ -170,16 +168,7 @@ public class ActiveLearningServiceImpl
                                 && r.getOffsetBegin() == s.getBegin()
                                 && r.getOffsetEnd() == s.getEnd()
                                 && s.labelEquals(r.getAnnotation()))
-                        .forEach(record -> {
-                            if (REJECTED.equals(record.getUserAction())) {
-                                s.hide(FLAG_REJECTED);
-                            }
-                            else if (filterSkippedRecommendation
-                                    && SKIPPED.equals(record.getUserAction())) {
-                                s.hide(FLAG_SKIPPED);
-                            }
-                        });
-
+                        .forEach(record -> s.hideSuggestion(record.getUserAction()));
             }
         }
     }
@@ -219,25 +208,24 @@ public class ActiveLearningServiceImpl
     public void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion, LearningRecordType aUserAction, String aAnnotationValue)
     {
-
-        AnnotationFeature feat = schemaService.getFeature(aSuggestion.getFeature(), aLayer);
-        SourceDocument sourceDoc = documentService.getSourceDocument(aLayer.getProject(),
+        var feat = schemaService.getFeature(aSuggestion.getFeature(), aLayer);
+        var sourceDoc = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());
 
-        List<SpanSuggestion> alternativeSuggestions = recommendationService
+        var alternativeSuggestions = recommendationService
                 .getPredictions(aUser, aLayer.getProject())
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
 
         // Log the action to the learning record
         learningHistoryService.logSpanRecord(sourceDoc, aUser.getUsername(), aSuggestion,
-                aAnnotationValue, aLayer, feat, aUserAction, AL_SIDEBAR);
+                aAnnotationValue, feat, aUserAction, AL_SIDEBAR);
 
         // If the action was a correction (i.e. suggestion label != annotation value) then generate
         // a rejection for the original value - we do not want the original value to re-appear
         if (aUserAction == CORRECTED) {
             learningHistoryService.logSpanRecord(sourceDoc, aUser.getUsername(), aSuggestion,
-                    aSuggestion.getLabel(), aLayer, feat, REJECTED, AL_SIDEBAR);
+                    aSuggestion.getLabel(), feat, REJECTED, AL_SIDEBAR);
         }
 
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected

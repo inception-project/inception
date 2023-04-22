@@ -63,12 +63,11 @@ public interface LearningRecordService
     void deleteById(long id);
 
     void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aPrediction,
-            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
+            AnnotationFeature aFeature, LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     void logRelationRecord(SourceDocument aDocument, String aUsername,
-            RelationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+            RelationSuggestion aPrediction, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation);
 
     /**
      * Updates the learning log with an entry for the given suggestion. Any entries which are
@@ -83,8 +82,6 @@ public interface LearningRecordService
      *            the suggestion
      * @param aAlternativeLabel
      *            the label assigned by the annotator
-     * @param aLayer
-     *            the layer
      * @param aFeature
      *            the feature on the given layer
      * @param aUserAction
@@ -93,34 +90,7 @@ public interface LearningRecordService
      *            where the action on the suggestion was triggered
      */
     void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
-            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
-
-    /**
-     * Updates the learning log with an entry for the given suggestion. Any entries which are
-     * duplicates of the new action are removed as part of this action. Note that the actual action
-     * the user performed is not taken into account to determine duplicateness.
-     * 
-     * @param aDocument
-     *            the document
-     * @param aUsername
-     *            the annotator user the annotations belong to
-     * @param aSuggestion
-     *            the suggestion
-     * @param aAlternativeLabel
-     *            the label assigned by the annotator
-     * @param aLayer
-     *            the layer
-     * @param aFeature
-     *            the feature on the given layer
-     * @param aUserAction
-     *            the annotators reaction to the suggestion
-     * @param aLocation
-     *            where the action on the suggestion was triggered
-     */
-    void logRelationRecord(SourceDocument aDocument, String aUsername,
-            RelationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordType aUserAction,
+            String aAlternativeLabel, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
     /**

@@ -25,8 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TA
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
@@ -144,7 +142,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -2070,7 +2067,7 @@ public class RecommendationServiceImpl
         var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
 
         // Collect all suggestions of the given layer within the view window
-        List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow = aRecommendations.stream()
+        var suggestionsInWindow = aRecommendations.stream()
                 // Only suggestions for the given layer
                 .filter(group -> group.getLayerId() == aLayer.getId())
                 // ... and in the given window
@@ -2081,10 +2078,10 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
-        List<LearningRecord> recordedAnnotations = learningRecordService.listRecords(aUser, aLayer);
+        var recordedAnnotations = learningRecordService.listRecords(aUser, aLayer);
 
-        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
-            Feature feat = type.getFeatureByBaseName(feature.getName());
+        for (var feature : schemaService.listSupportedFeatures(aLayer)) {
+            var feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
@@ -2297,7 +2294,7 @@ public class RecommendationServiceImpl
                 for (LearningRecord learningRecord : groupedRecordedAnnotations.get(position)) {
                     for (RelationSuggestion suggestion : group) {
                         if (suggestion.labelEquals(learningRecord.getAnnotation())) {
-                            hideSuggestion(suggestion, learningRecord.getUserAction());
+                            suggestion.hideSuggestion(learningRecord.getUserAction());
                         }
                     }
                 }
@@ -2305,36 +2302,20 @@ public class RecommendationServiceImpl
         }
     }
 
-    static boolean hideSuggestion(AnnotationSuggestion aSuggestion, LearningRecordType aAction)
-    {
-        switch (aAction) {
-        case REJECTED:
-            aSuggestion.hide(FLAG_REJECTED);
-            return true;
-        case SKIPPED:
-            aSuggestion.hide(FLAG_SKIPPED);
-            return true;
-        default:
-            // Nothing to do for the other cases.
-            // ACCEPTED annotation are filtered out anyway because the overlap with a created
-            // annotation and the same for CORRECTED
-            return false;
-        }
-    }
-
     static void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
             List<LearningRecord> aRecordedRecommendations)
     {
         aRecordedRecommendations.stream() //
-                .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId()))
+                .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId())) //
                 .filter(r -> Objects.equals(r.getAnnotationFeature().getName(),
-                        aSuggestion.getFeature()))
+                        aSuggestion.getFeature())) //
                 .filter(r -> Objects.equals(r.getSourceDocument().getName(),
-                        aSuggestion.getDocumentName()))
-                .filter(r -> aSuggestion.labelEquals(r.getAnnotation()))
+                        aSuggestion.getDocumentName())) //
+                .filter(r -> aSuggestion.labelEquals(r.getAnnotation())) //
                 .filter(r -> r.getOffsetBegin() == aSuggestion.getBegin()
-                        && r.getOffsetEnd() == aSuggestion.getEnd())
-                .filter(r -> hideSuggestion(aSuggestion, r.getUserAction())).findAny();
+                        && r.getOffsetEnd() == aSuggestion.getEnd()) //
+                .filter(r -> aSuggestion.hideSuggestion(r.getUserAction())) //
+                .findAny();
     }
 
     @Nullable
