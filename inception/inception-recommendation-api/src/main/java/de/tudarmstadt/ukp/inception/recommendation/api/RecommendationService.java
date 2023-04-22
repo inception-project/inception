@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
@@ -41,6 +42,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
@@ -247,4 +250,7 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
+
+    void rejectSuggestion(AnnotatorState aState, SourceDocument aDocument, VID aRecommendationVID,
+            AnnotationSuggestion aSuggestion);
 }

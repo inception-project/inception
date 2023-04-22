@@ -26,7 +26,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TY
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.lang.Math.max;
@@ -157,6 +160,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
@@ -168,6 +172,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -2479,6 +2484,37 @@ public class RecommendationServiceImpl
         synchronized (state) {
             return new Progress(state.getPredictionsSinceLastEvaluation(),
                     state.getPredictionsUntilNextEvaluation());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void rejectSuggestion(AnnotatorState aState, SourceDocument document,
+            VID recommendationVID, AnnotationSuggestion suggestion)
+    {
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+
+        if (suggestion instanceof SpanSuggestion) {
+            var recommender = getRecommender(recommendationVID.getId());
+            var feature = recommender.getFeature();
+            var spanSuggestion = (SpanSuggestion) suggestion;
+            // Log the action to the learning record
+            learningRecordService.logSpanRecord(document, aState.getUser().getUsername(),
+                    spanSuggestion, feature, REJECTED, MAIN_EDITOR);
+
+            // Send an application event that the suggestion has been rejected
+            applicationEventPublisher.publishEvent(
+                    new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
+                            spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+                            spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+
+        }
+        else if (suggestion instanceof RelationSuggestion) {
+            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
+            // TODO: Log rejection
+            // TODO: Publish rejection event
         }
     }
 
