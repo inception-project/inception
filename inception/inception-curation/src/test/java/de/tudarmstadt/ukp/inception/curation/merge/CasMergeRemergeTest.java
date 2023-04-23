@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;

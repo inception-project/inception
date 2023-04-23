@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -75,7 +75,7 @@ public interface ActiveLearningService
     void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationFeature aFeature,
             SpanSuggestion aSuggestion, LearningRecordType aUserAction, String aAnnotationValue);
 
-    void acceptSpanSuggestion(Project aProject, User aUser, SpanSuggestion aSuggestion,
+    void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, SpanSuggestion aSuggestion,
             Object aValue)
         throws IOException, AnnotationException;
 

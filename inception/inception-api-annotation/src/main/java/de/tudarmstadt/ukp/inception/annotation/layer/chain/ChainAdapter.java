@@ -105,8 +105,8 @@ public class ChainAdapter
 
         AnnotationFS newSpan = createChainElementAnnotation(request);
 
-        publishEvent(new ChainSpanCreatedEvent(this, aRequest.getDocument(), aRequest.getDocumentOwner(),
-                getLayer(), newSpan));
+        publishEvent(new ChainSpanCreatedEvent(this, aRequest.getDocument(),
+                aRequest.getDocumentOwner(), getLayer(), newSpan));
 
         return newSpan;
     }

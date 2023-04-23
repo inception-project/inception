@@ -249,6 +249,23 @@ public class Predictions
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public List<SpanSuggestion> getAlternativeSuggestions(SpanSuggestion aSuggestion)
+    {
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentName(), emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> f.getValue() instanceof SpanSuggestion) //
+                    .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
+                    .filter(f -> f.getKey().getLayerId() == aSuggestion.getLayerId()) //
+                    .filter(f -> f.getValue().getBegin() == aSuggestion.getBegin()) //
+                    .filter(f -> f.getValue().getEnd() == aSuggestion.getEnd()) //
+                    .filter(f -> f.getValue().getFeature().equals(aSuggestion.getFeature())) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
+    }
+
     /**
      * TODO #176 use the document Id once it it available in the CAS Returns a list of predictions
      * for a given token that matches the given layer and the annotation feature in the given
