@@ -165,13 +165,8 @@ public interface RecommendationService
      *            the layer to upsert
      * @param aFeature
      *            the feature on the layer that should be upserted
-     * @param aValue
-     *            the new value
-     * @param aBegin
-     *            the position of the annotation (in case it is created)
-     * @param aEnd
-     *            the position of the annotation (in case it is created)
-     * 
+     * @param aSuggestion
+     *            the suggestion
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
@@ -193,10 +188,12 @@ public interface RecommendationService
      *            the project to compute the predictions for.
      * @param aDocuments
      *            the documents to compute the predictions for.
+     * @param aDataOwner
+     *            the owner of the annotations.
      * @return the new predictions.
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDocumentOwner);
+            List<SourceDocument> aDocuments, String aDataOwner);
 
     /**
      * Compute predictions.
@@ -207,6 +204,8 @@ public interface RecommendationService
      *            the project to compute the predictions for.
      * @param aCurrentDocument
      *            the document to compute the predictions for.
+     * @param aDataOwner
+     *            the owner of the annotations.
      * @param aInherit
      *            any documents for which to inherit the predictions from a previous run
      * @param aPredictionBegin
@@ -216,7 +215,7 @@ public interface RecommendationService
      * @return the new predictions.
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
-            SourceDocument aCurrentDocument, String aDocumentOwner, List<SourceDocument> aInherit,
+            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
             int aPredictionBegin, int aPredictionEnd);
 
     void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
