@@ -84,7 +84,7 @@ public class LearningRecordServiceImplIntegrationTest
                 feature.getName(), sourceDoc.getName(), 7, 14, "aCoveredText", "testLabel",
                 "testUiLabel", 0.42, "Test confidence", NEVER);
 
-        sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, feature, LearningRecordType.ACCEPTED,
+        sut.logRecord(sourceDoc, USER_NAME, suggestion, feature, LearningRecordType.ACCEPTED,
                 MAIN_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
@@ -118,8 +118,8 @@ public class LearningRecordServiceImplIntegrationTest
                 layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
                 "testUiLabel", 0.42, "Test confidence", NEVER);
 
-        sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, feature,
-                LearningRecordType.REJECTED, DETAIL_EDITOR);
+        sut.logRecord(sourceDoc, USER_NAME, suggestion, feature, LearningRecordType.REJECTED,
+                DETAIL_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
         assertThat(records).hasSize(1);
@@ -144,32 +144,32 @@ public class LearningRecordServiceImplIntegrationTest
     @Test
     void thatListingRecordsForRendering()
     {
-        SourceDocument sourceDoc1 = createSourceDocument("doc1");
-        SourceDocument sourceDoc2 = createSourceDocument("doc2");
-        AnnotationLayer layer1 = createAnnotationLayer("layer1");
-        AnnotationLayer layer2 = createAnnotationLayer("layer2");
-        AnnotationFeature feature1 = createAnnotationFeature(layer1, "feat1");
-        AnnotationFeature feature2 = createAnnotationFeature(layer2, "feat1");
+        var sourceDoc1 = createSourceDocument("doc1");
+        var sourceDoc2 = createSourceDocument("doc2");
+        var layer1 = createAnnotationLayer("layer1");
+        var layer2 = createAnnotationLayer("layer2");
+        var feature1 = createAnnotationFeature(layer1, "feat1");
+        var feature2 = createAnnotationFeature(layer2, "feat1");
 
-        sut.logSpanRecord(sourceDoc1, USER_NAME,
+        sut.logRecord(sourceDoc1, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
                 feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
-        sut.logSpanRecord(sourceDoc1, USER_NAME,
+        sut.logRecord(sourceDoc1, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
                 feature2, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
-        sut.logSpanRecord(sourceDoc2, USER_NAME,
+        sut.logRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),
                 feature1, LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
-        sut.logSpanRecord(sourceDoc2, USER_NAME,
+        sut.logRecord(sourceDoc2, USER_NAME,
                 new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
                         sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
                         0.42, "Test confidence", NEVER),

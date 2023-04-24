@@ -165,6 +165,7 @@ public abstract class TypeAdapter_ImplBase
                 .getFeatureValue(aFeature, aFs);
     }
 
+    @Override
     public void publishEvent(ApplicationEvent aEvent)
     {
         if (applicationEventPublisher != null) {
@@ -199,6 +200,12 @@ public abstract class TypeAdapter_ImplBase
     public void silenceEvents()
     {
         applicationEventPublisher = null;
+    }
+
+    @Override
+    public boolean isSilenced()
+    {
+        return applicationEventPublisher == null;
     }
 
     /**

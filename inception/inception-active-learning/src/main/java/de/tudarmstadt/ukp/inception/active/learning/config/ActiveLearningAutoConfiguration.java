@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
 import de.tudarmstadt.ukp.inception.active.learning.log.ActiveLearningRecommendationEventAdapter;
 import de.tudarmstadt.ukp.inception.active.learning.log.ActiveLearningSuggestionOfferedAdapter;
 import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningSidebarFactory;
-import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -53,11 +52,11 @@ public class ActiveLearningAutoConfiguration
             RecommendationService aRecommendationService, UserDao aUserDao,
             LearningRecordService aLearningHistoryService, AnnotationSchemaService aSchemaService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFeatureSupportRegistry, DocumentAccess aDocumentAccess)
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new ActiveLearningServiceImpl(aDocumentService, aRecommendationService, aUserDao,
                 aLearningHistoryService, aSchemaService, aApplicationEventPublisher,
-                aFeatureSupportRegistry, aDocumentAccess);
+                aFeatureSupportRegistry);
     }
 
     @Bean

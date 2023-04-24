@@ -45,9 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**
- * Stores references to the recommendationService, the currently used JCas and the annotatorState.
- * This class is widely used in the recommendation module.
- * 
  * If the prediction task has run it stores the predicted annotations for an annotation layer in the
  * predictions map.
  */

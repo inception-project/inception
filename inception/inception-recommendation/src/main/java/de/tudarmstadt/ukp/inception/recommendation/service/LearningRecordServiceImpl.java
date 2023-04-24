@@ -41,10 +41,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
 /**
@@ -80,53 +78,69 @@ public class LearningRecordServiceImpl
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
+        LearningRecord record = null;
         if (aSuggestion instanceof SpanSuggestion) {
-            logSpanRecord(aDocument, aDataOwner, (SpanSuggestion) aSuggestion,
-                    aSuggestion.getLabel(), aFeature, aUserAction, aLocation);
-        }
-        else if (aSuggestion instanceof RelationSuggestion) {
-            logRelationRecord(aDocument, aDataOwner, (RelationSuggestion) aSuggestion, aFeature,
+            record = toLearningRecord(aDocument, aDataOwner, (SpanSuggestion) aSuggestion, aFeature,
                     aUserAction, aLocation);
         }
+        else if (aSuggestion instanceof RelationSuggestion) {
+            record = toLearningRecord(aDocument, aDataOwner, (RelationSuggestion) aSuggestion,
+                    aFeature, aUserAction, aLocation);
+        }
 
+        if (record == null) {
+            throw new IllegalArgumentException(
+                    "Unsupported suggestion type [" + aSuggestion.getClass().getName() + "]");
+        }
+
+        removeRecords(record);
+        create(record);
     }
 
-    @Transactional
-    @Override
-    public void logSpanRecord(SourceDocument aDocument, String aUsername,
+    private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
             SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation)
     {
-        logSpanRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aFeature,
-                aUserAction, aLocation);
+        var record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(aSuggestion.getBegin());
+        record.setOffsetEnd(aSuggestion.getEnd());
+        record.setOffsetBegin2(-1);
+        record.setOffsetEnd2(-1);
+        record.setTokenText(aSuggestion.getCoveredText());
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(SPAN);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
     }
 
-    @Transactional
-    @Override
-    public void logSpanRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, String aAlternativeLabel, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
-    {
-        logRecord(aDocument, aUsername, aSuggestion.getBegin(), aSuggestion.getEnd(), -1, -1, SPAN,
-                aAlternativeLabel, aUserAction, aFeature, aSuggestion.getCoveredText(), aLocation);
-    }
-
-    @Transactional
-    @Override
-    public void logRelationRecord(SourceDocument aDocument, String aDataOwner,
+    private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             RelationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
-        RelationPosition pos = aSuggestion.getPosition();
-        logRecord(aDocument, aDataOwner, pos.getSourceBegin(), pos.getSourceEnd(),
-                pos.getTargetBegin(), pos.getTargetEnd(), RELATION, aSuggestion.getLabel(),
-                aUserAction, aFeature, "", aLocation);
+        var pos = aSuggestion.getPosition();
+        var record = new LearningRecord();
+        record.setUser(aDataOwner);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(pos.getSourceBegin());
+        record.setOffsetEnd(pos.getSourceEnd());
+        record.setOffsetBegin2(pos.getTargetBegin());
+        record.setOffsetEnd2(pos.getTargetEnd());
+        record.setTokenText("");
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(RELATION);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
     }
 
-    private void logRecord(SourceDocument aSourceDocument, String aUsername, int aOffsetBegin,
-            int aOffsetEnd, int aOffset2Begin, int aOffset2End, SuggestionType aSuggestionType,
-            String aLabel, LearningRecordType aUserAction, AnnotationFeature aFeature,
-            String aCoveredText, LearningRecordChangeLocation aLocation)
+    private void removeRecords(LearningRecord aRecord)
     {
         // It doesn't make any sense at all to have duplicate entries in the learning history,
         // so when adding a new entry, we dump any existing entries which basically are the
@@ -146,34 +160,17 @@ public class LearningRecordServiceImpl
                 "suggestionType = :suggestionType AND", //
                 "annotation = :annotation");
         entityManager.createQuery(query) //
-                .setParameter("user", aUsername) //
-                .setParameter("sourceDocument", aSourceDocument) //
-                .setParameter("offsetBegin", aOffsetBegin) //
-                .setParameter("offsetEnd", aOffsetEnd) //
-                .setParameter("offsetBegin2", aOffset2Begin) //
-                .setParameter("offsetEnd2", aOffset2End) //
-                .setParameter("layer", aFeature.getLayer()) //
-                .setParameter("annotationFeature", aFeature) //
-                .setParameter("suggestionType", aSuggestionType) //
-                .setParameter("annotation", aLabel) //
+                .setParameter("user", aRecord.getUser()) //
+                .setParameter("sourceDocument", aRecord.getSourceDocument()) //
+                .setParameter("offsetBegin", aRecord.getOffsetBegin()) //
+                .setParameter("offsetEnd", aRecord.getOffsetEnd()) //
+                .setParameter("offsetBegin2", aRecord.getOffsetBegin2()) //
+                .setParameter("offsetEnd2", aRecord.getOffsetEnd2()) //
+                .setParameter("layer", aRecord.getAnnotationFeature().getLayer()) //
+                .setParameter("annotationFeature", aRecord.getAnnotationFeature()) //
+                .setParameter("suggestionType", aRecord.getSuggestionType()) //
+                .setParameter("annotation", aRecord.getAnnotation()) //
                 .executeUpdate();
-
-        var record = new LearningRecord();
-        record.setUser(aUsername);
-        record.setSourceDocument(aSourceDocument);
-        record.setUserAction(aUserAction);
-        record.setOffsetBegin(aOffsetBegin);
-        record.setOffsetEnd(aOffsetEnd);
-        record.setOffsetBegin2(aOffset2Begin);
-        record.setOffsetEnd2(aOffset2End);
-        record.setTokenText(aCoveredText);
-        record.setAnnotation(aLabel);
-        record.setLayer(aFeature.getLayer());
-        record.setSuggestionType(aSuggestionType);
-        record.setChangeLocation(aLocation);
-        record.setAnnotationFeature(aFeature);
-
-        create(record);
     }
 
     @Transactional
@@ -200,9 +197,9 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public List<LearningRecord> listRecords(String aUsername, AnnotationLayer aLayer, int aLimit)
+    public List<LearningRecord> listRecords(String aDataOwner, AnnotationLayer aLayer, int aLimit)
     {
-        LOG.trace("listRecords({},{}, {})", aUsername, aLayer, aLimit);
+        LOG.trace("listRecords({},{}, {})", aDataOwner, aLayer, aLimit);
 
         String sql = String.join("\n", //
                 "FROM LearningRecord l WHERE", //
@@ -211,7 +208,7 @@ public class LearningRecordServiceImpl
                 "l.userAction != :action", //
                 "ORDER BY l.id desc");
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
-                .setParameter("user", aUsername) //
+                .setParameter("user", aDataOwner) //
                 .setParameter("layer", aLayer) //
                 .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
         if (aLimit > 0) {
@@ -222,9 +219,9 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public List<LearningRecord> listRecords(String aUsername, AnnotationLayer aLayer)
+    public List<LearningRecord> listRecords(String aDataOwner, AnnotationLayer aLayer)
     {
-        return listRecords(aUsername, aLayer, 0);
+        return listRecords(aDataOwner, aLayer, 0);
     }
 
     @Transactional

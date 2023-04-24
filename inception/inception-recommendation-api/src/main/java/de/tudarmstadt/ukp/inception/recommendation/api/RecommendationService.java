@@ -30,9 +30,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
@@ -151,32 +155,65 @@ public interface RecommendationService
      */
     void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
+    AnnotationFS correctSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aOriginalSuggestion,
+            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException;
+
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
      * 
      * @param aDocument
      *            the source document to which the annotations belong
-     * @param aDocumentOwner
+     * @param aDataOwner
      *            the annotator user to whom the annotations belong
      * @param aCas
      *            the CAS containing the annotations
-     * @param layer
-     *            the layer to upsert
+     * @param aAdapter
+     *            an adapter for the layer to upsert
      * @param aFeature
      *            the feature on the layer that should be upserted
      * @param aSuggestion
      *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, SpanSuggestion aSuggestion)
+    AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
-    AnnotationFS upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
+    /**
+     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
+     * existing annotation.
+     * 
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aCas
+     *            the CAS containing the annotations
+     * @param aAdapter
+     *            an adapter for the layer to upsert
+     * @param aFeature
+     *            the feature on the layer that should be upserted
+     * @param aSuggestion
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * @param aAction
+     *            TODO
+     * @return the created/updated annotation.
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            RelationAdapter aAdapter, AnnotationFeature aFeature, RelationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
         throws AnnotationException;
 
     /**

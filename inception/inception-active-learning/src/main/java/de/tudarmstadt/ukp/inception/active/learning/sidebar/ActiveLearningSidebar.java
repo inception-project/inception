@@ -657,6 +657,8 @@ public class ActiveLearningSidebar
     {
         LOG.trace("actionAnnotate()");
 
+        getAnnotationPage().ensureIsEditable();
+
         var state = getModelObject();
         var alState = alStateModel.getObject();
 
@@ -681,9 +683,12 @@ public class ActiveLearningSidebar
         }
     }
 
-    private void actionSkip(AjaxRequestTarget aTarget)
+    private void actionSkip(AjaxRequestTarget aTarget) throws AnnotationException
+
     {
         LOG.trace("actionSkip()");
+
+        getAnnotationPage().ensureIsEditable();
 
         alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
             requestClearningSelectionAndJumpingToSuggestion();
@@ -693,9 +698,11 @@ public class ActiveLearningSidebar
         });
     }
 
-    private void actionReject(AjaxRequestTarget aTarget)
+    private void actionReject(AjaxRequestTarget aTarget) throws AnnotationException
     {
         LOG.trace("actionReject()");
+
+        getAnnotationPage().ensureIsEditable();
 
         alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
             requestClearningSelectionAndJumpingToSuggestion();
@@ -712,14 +719,16 @@ public class ActiveLearningSidebar
         // Ensure that predictions are switched
         annotationPage.actionRefreshDocument(aTarget);
 
-        ActiveLearningUserState alState = alStateModel.getObject();
-        AnnotatorState state = getModelObject();
-        Project project = state.getProject();
-        User user = state.getUser();
+        var alState = alStateModel.getObject();
+        var state = getModelObject();
+        var project = state.getProject();
+        var dataOwner = state.getUser();
+        var sessionOwner = userDao.getCurrentUser();
 
         // Generate the next recommendation but remember the current one
         Optional<SpanSuggestion> prevSuggestion = alState.getSuggestion();
-        alState.setCurrentDifference(activeLearningService.generateNextSuggestion(user, alState));
+        alState.setCurrentDifference(
+                activeLearningService.generateNextSuggestion(sessionOwner, alState));
 
         // If there is no new suggestion, nothing left to do here
         if (!alState.getSuggestion().isPresent()) {
@@ -741,10 +750,9 @@ public class ActiveLearningSidebar
         }
 
         // If there is a suggestion, open it in the sidebar and take the main editor to its location
-        SpanSuggestion suggestion = alState.getSuggestion().get();
-        SourceDocument sourceDocument = documentService.getSourceDocument(project,
-                suggestion.getDocumentName());
-        loadSuggestionInActiveLearningSidebar(aTarget, suggestion, sourceDocument);
+        var suggestion = alState.getSuggestion().get();
+        var document = documentService.getSourceDocument(project, suggestion.getDocumentName());
+        loadSuggestionInActiveLearningSidebar(aTarget, suggestion, document);
 
         if (shouldBeClearningSelectionAndJumpingToSuggestion()) {
             clearSelectedAnnotationAndJumpToSuggestion(aTarget);
@@ -754,11 +762,11 @@ public class ActiveLearningSidebar
             LOG.trace("Not clearing and jumping");
         }
 
-        var alternativeSuggestions = recommendationService.getPredictions(user, project)
+        var alternativeSuggestions = recommendationService.getPredictions(dataOwner, project)
                 .getAlternativeSuggestions(suggestion);
         applicationEventPublisherHolder.get()
-                .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, sourceDocument,
-                        suggestion, user.getUsername(), alState.getLayer(), suggestion.getFeature(),
+                .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, document, suggestion,
+                        dataOwner.getUsername(), alState.getLayer(), suggestion.getFeature(),
                         alternativeSuggestions));
     }
 

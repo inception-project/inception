@@ -27,8 +27,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 public interface LearningRecordService
 {
@@ -63,14 +61,6 @@ public interface LearningRecordService
 
     void deleteById(long id);
 
-    void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aPrediction,
-            AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
-
-    void logRelationRecord(SourceDocument aDocument, String aUsername,
-            RelationSuggestion aPrediction, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
-
     /**
      * Updates the learning log with an entry for the given suggestion. Any entries which are
      * duplicates of the new action are removed as part of this action. Note that the actual action
@@ -82,8 +72,6 @@ public interface LearningRecordService
      *            the annotator user the annotations belong to
      * @param aSuggestion
      *            the suggestion
-     * @param aAlternativeLabel
-     *            the label assigned by the annotator
      * @param aFeature
      *            the feature on the given layer
      * @param aUserAction
@@ -91,8 +79,8 @@ public interface LearningRecordService
      * @param aLocation
      *            where the action on the suggestion was triggered
      */
-    void logSpanRecord(SourceDocument aDocument, String aDataOwner, SpanSuggestion aSuggestion,
-            String aAlternativeLabel, AnnotationFeature aFeature, LearningRecordType aUserAction,
+    void logRecord(SourceDocument aDocument, String aDataOwner, AnnotationSuggestion aSuggestion,
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
     /**
@@ -116,8 +104,4 @@ public interface LearningRecordService
      *            the layer
      */
     void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer);
-
-    void logRecord(SourceDocument aDocument, String aDataOwner, AnnotationSuggestion aSuggestion,
-            AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
 }

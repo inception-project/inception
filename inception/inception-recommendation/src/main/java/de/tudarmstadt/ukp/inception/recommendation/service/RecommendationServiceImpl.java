@@ -26,9 +26,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TY
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
@@ -145,6 +150,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -160,6 +167,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
@@ -178,6 +186,7 @@ import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 /**
  * The implementation of the RecommendationService.
@@ -650,19 +659,21 @@ public class RecommendationServiceImpl
 
             var layer = schemaService.getLayer(prediction.getLayerId());
             var feature = schemaService.getFeature(prediction.getFeature(), layer);
+            var adapter = schemaService.getAdapter(layer);
+            adapter.silenceEvents();
 
             try {
                 if (prediction instanceof SpanSuggestion) {
                     var spanPrediction = (SpanSuggestion) prediction;
-                    upsertSpanFeature(aDocument, aUser.getUsername(), cas, layer, feature,
-                            spanPrediction);
+                    acceptOrCorrectSuggestion(aDocument, aUser.getUsername(), cas,
+                            (SpanAdapter) adapter, feature, spanPrediction, AUTO_ACCEPT, ACCEPTED);
                     count++;
                 }
 
                 if (prediction instanceof RelationSuggestion) {
                     var relationPrediction = (RelationSuggestion) prediction;
-                    upsertRelationFeature(aDocument, aUser.getUsername(), cas, layer, feature,
-                            relationPrediction);
+                    acceptSuggestion(aDocument, aUser.getUsername(), cas, (RelationAdapter) adapter,
+                            feature, relationPrediction, AUTO_ACCEPT, ACCEPTED);
                     count++;
                 }
             }
@@ -1031,23 +1042,45 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public AnnotationFS upsertSpanFeature(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            AnnotationLayer aLayer, AnnotationFeature aFeature, SpanSuggestion aSuggestion)
+    public AnnotationFS correctSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aOriginalSuggestion,
+            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException
+    {
+        // If the action was a correction (i.e. suggestion label != annotation value) then generate
+        // a rejection for the original value - we do not want the original value to re-appear
+        learningRecordService.logRecord(aDocument, aDataOwner, aOriginalSuggestion, aFeature,
+                REJECTED, AL_SIDEBAR);
+
+        return acceptOrCorrectSuggestion(aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aCorrectedSuggestion, aLocation, CORRECTED);
+    }
+
+    @Override
+    public AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation)
+        throws AnnotationException
+    {
+        return acceptOrCorrectSuggestion(aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aLocation, ACCEPTED);
+    }
+
+    private AnnotationFS acceptOrCorrectSuggestion(SourceDocument aDocument, String aDataOwner,
+            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
         throws AnnotationException
     {
         var aBegin = aSuggestion.getBegin();
         var aEnd = aSuggestion.getEnd();
         var aValue = aSuggestion.getLabel();
 
-        // The feature of the predicted label
-        var adapter = (SpanAdapter) schemaService.getAdapter(aLayer);
-
-        var candidates = aCas.<Annotation> select(adapter.getAnnotationTypeName()) //
+        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
                 .at(aBegin, aEnd) //
                 .asList();
 
         var candidateWithEmptyLabel = candidates.stream() //
-                .filter(c -> adapter.getFeatureValue(aFeature, c) == null) //
+                .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
                 .findFirst();
 
         AnnotationFS annotation;
@@ -1055,10 +1088,10 @@ public class RecommendationServiceImpl
             // If there is an annotation where the predicted feature is unset, use it ...
             annotation = candidateWithEmptyLabel.get();
         }
-        else if (candidates.isEmpty() || aLayer.isAllowStacking()) {
+        else if (candidates.isEmpty() || aAdapter.getLayer().isAllowStacking()) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
-            var newAnnotation = adapter.add(aDocument, aDocumentOwner, aCas, aBegin, aEnd);
+            var newAnnotation = aAdapter.add(aDocument, aDataOwner, aCas, aBegin, aEnd);
             annotation = newAnnotation;
         }
         else {
@@ -1067,33 +1100,52 @@ public class RecommendationServiceImpl
             annotation = candidates.get(0);
         }
 
-        // Update the feature value
-        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, ICasUtil.getAddr(annotation),
-                aFeature, aValue);
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+        commmitAcceptedLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aValue,
+                annotation, aLocation, aAction);
 
         return annotation;
     }
 
-    @Override
-    public AnnotationFS upsertRelationFeature(SourceDocument aDocument, String aDocumentOwner,
-            CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            RelationSuggestion aSuggestion)
+    private void commmitAcceptedLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            TypeAdapter aAdapter, AnnotationFeature aFeature, AnnotationSuggestion aSuggestion,
+            String aValue, AnnotationFS annotation, LearningRecordChangeLocation aLocation,
+            LearningRecordType aAction)
         throws AnnotationException
     {
-        var adapter = (RelationAdapter) schemaService.getAdapter(layer);
+        // Update the feature value
+        aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
+                aFeature, aValue);
 
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        aSuggestion
+                .hide((aAction == ACCEPTED) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
+
+        // Log the action to the learning record
+        if (!aAdapter.isSilenced()) {
+            learningRecordService.logRecord(aDocument, aDataOwner, aSuggestion, aFeature, aAction,
+                    aLocation);
+
+            // Send an application event that the suggestion has been accepted
+            aAdapter.publishEvent(new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
+                    annotation, aFeature, aSuggestion.getLabel()));
+        }
+    }
+
+    @Override
+    public AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            RelationAdapter aAdapter, AnnotationFeature aFeature, RelationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+        throws AnnotationException
+    {
         var sourceBegin = aSuggestion.getPosition().getSourceBegin();
         var sourceEnd = aSuggestion.getPosition().getSourceEnd();
         var targetBegin = aSuggestion.getPosition().getTargetBegin();
         var targetEnd = aSuggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
-        var type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        var attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
+        var type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
+        var attachType = CasUtil.getType(aCas, aAdapter.getAttachTypeName());
 
         var sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
         var targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
@@ -1101,7 +1153,7 @@ public class RecommendationServiceImpl
         // The begin and end feature of a relation in the CAS are of the dependent/target
         // annotation. See also RelationAdapter::createRelationAnnotation.
         // We use that fact to search for existing relations for this relation suggestion
-        List<AnnotationFS> candidates = new ArrayList<>();
+        var candidates = new ArrayList<AnnotationFS>();
         for (AnnotationFS relationCandidate : selectAt(aCas, type, targetBegin, targetEnd)) {
             AnnotationFS source = (AnnotationFS) relationCandidate.getFeatureValue(sourceFeature);
             AnnotationFS target = (AnnotationFS) relationCandidate.getFeatureValue(targetFeature);
@@ -1116,27 +1168,27 @@ public class RecommendationServiceImpl
             }
         }
 
-        AnnotationFS relation = null;
+        AnnotationFS annotation = null;
         if (candidates.size() == 1) {
             // One candidate, we just return it
-            relation = candidates.get(0);
+            annotation = candidates.get(0);
         }
         else if (candidates.size() == 2) {
             LOG.warn("Found multiple candidates for upserting relation from suggestion");
-            relation = candidates.get(0);
+            annotation = candidates.get(0);
         }
 
         // We did not find a relation for this suggestion, so we create a new one
-        if (relation == null) {
+        if (annotation == null) {
             // FIXME: We get the first match for the (begin, end) span. With stacking, there can
             // be more than one and we need to get the right one then which does not need to be
             // the first. We wait for #2135 to fix this. When stacking is enabled, then also
             // consider creating a new relation instead of upserting an existing one.
 
-            AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream()
-                    .findFirst().orElse(null);
-            AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd).stream()
-                    .findFirst().orElse(null);
+            var source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream().findFirst()
+                    .orElse(null);
+            var target = selectAt(aCas, attachType, targetBegin, targetEnd).stream().findFirst()
+                    .orElse(null);
 
             if (source == null || target == null) {
                 String msg = "Cannot find source or target annotation for upserting relation";
@@ -1144,18 +1196,13 @@ public class RecommendationServiceImpl
                 throw new IllegalStateException(msg);
             }
 
-            relation = adapter.add(aDocument, aDocumentOwner, source, target, aCas);
+            annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
         }
 
-        // Update the feature value
-        adapter.setFeatureValue(aDocument, aDocumentOwner, aCas, ICasUtil.getAddr(relation),
-                aFeature, aSuggestion.getLabel());
+        commmitAcceptedLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
+                aSuggestion.getLabel(), annotation, aLocation, aAction);
 
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
-
-        return relation;
+        return annotation;
     }
 
     private static class CommittedDocument
@@ -1267,6 +1314,7 @@ public class RecommendationServiceImpl
         private Predictions activePredictions;
         private Predictions incomingPredictions;
         private boolean predictForAllDocuments;
+        private List<LearningRecord> learningRecords;
         private int predictionsSinceLastEvaluation;
         private int predictionsUntilNextEvaluation;
 
@@ -1274,6 +1322,7 @@ public class RecommendationServiceImpl
             preferences = new Preferences();
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
+            learningRecords = new ArrayList<>();
         }
 
         public Preferences getPreferences()
@@ -2509,7 +2558,7 @@ public class RecommendationServiceImpl
             var feature = recommender.getFeature();
             var spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
-            learningRecordService.logSpanRecord(document, aState.getUser().getUsername(),
+            learningRecordService.logRecord(document, aState.getUser().getUsername(),
                     spanSuggestion, feature, REJECTED, MAIN_EDITOR);
 
             // Send an application event that the suggestion has been rejected

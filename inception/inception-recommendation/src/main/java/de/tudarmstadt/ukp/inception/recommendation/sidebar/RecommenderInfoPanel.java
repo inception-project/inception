@@ -48,18 +48,18 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
@@ -300,12 +300,13 @@ public class RecommenderInfoPanel
 
             try {
                 // Upsert an annotation based on the suggestion
-                AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-                AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
-                        layer);
+                var layer = annotationService.getLayer(suggestion.getLayerId());
+                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
+                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
-                recommendationService.upsertSpanFeature(state.getDocument(),
-                        state.getUser().getUsername(), cas, layer, feature, suggestion);
+                recommendationService.acceptSuggestion(state.getDocument(),
+                        state.getUser().getUsername(), cas, adapter, feature, suggestion,
+                        LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

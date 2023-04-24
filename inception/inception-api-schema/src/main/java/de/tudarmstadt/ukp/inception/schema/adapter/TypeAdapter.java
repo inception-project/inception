@@ -29,6 +29,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -187,6 +188,13 @@ public interface TypeAdapter
      * that should not be tracked in detail.
      */
     void silenceEvents();
+
+    /**
+     * @return if events are silenced.
+     */
+    boolean isSilenced();
+
+    void publishEvent(ApplicationEvent aEvent);
 
     Selection select(VID aVid, AnnotationFS aAnnotation);
 

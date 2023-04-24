@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -52,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
@@ -69,7 +69,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -220,12 +219,11 @@ public class RecommendationEditorExtension
         var page = (AnnotationPage) aTarget.getPage();
         var dataOwner = aState.getUser().getUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
-        var adapter = annotationService.getAdapter(layer);
         var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
+        var adapter = (SpanAdapter) annotationService.getAdapter(layer);
 
-        var span = recommendationService.upsertSpanFeature(aSocument, dataOwner, aCas, layer,
-                feature, aSuggestion);
-        acceptSuggestion(aSuggestion, aSocument, dataOwner, span, feature);
+        var span = recommendationService.acceptSuggestion(aSocument, dataOwner, aCas, adapter,
+                feature, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
@@ -248,9 +246,8 @@ public class RecommendationEditorExtension
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
         var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
 
-        var relation = recommendationService.upsertRelationFeature(aDocument, dataOwner, aCas,
-                layer, feature, aSuggestion);
-        acceptSuggestion(aSuggestion, aDocument, dataOwner, relation, feature);
+        var relation = recommendationService.acceptSuggestion(aDocument, dataOwner, aCas, adapter,
+                feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
 
         page.writeEditorCas(aCas);
 
@@ -259,18 +256,6 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
-    }
-
-    private void acceptSuggestion(AnnotationSuggestion aSuggestion, SourceDocument aDocument,
-            String aDataOwner, AnnotationFS aAcceptedAnnotation, AnnotationFeature aFeature)
-    {
-        // Log the action to the learning record
-        learningRecordService.logRecord(aDocument, aDataOwner, aSuggestion, aFeature, ACCEPTED,
-                MAIN_EDITOR);
-
-        // Send an application event that the suggestion has been accepted
-        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this, aDocument,
-                aDataOwner, aAcceptedAnnotation, aFeature, aSuggestion.getLabel()));
     }
 
     /**
