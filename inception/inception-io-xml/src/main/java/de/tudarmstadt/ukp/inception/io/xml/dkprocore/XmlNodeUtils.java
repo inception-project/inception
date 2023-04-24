@@ -243,6 +243,10 @@ public class XmlNodeUtils
         }
 
         if (aPath.size() == 1) {
+            if (!aElement.getQName().equals(aPath.get(0))) {
+                return Collections.emptyList();
+            }
+
             return asList(aElement);
         }
 
@@ -251,6 +255,17 @@ public class XmlNodeUtils
             result.addAll(selectElements(child, aPath.subList(1, aPath.size())));
         }
         return result;
+    }
+
+    public static List<String> rootPath(XmlElement aElement)
+    {
+        var path = new ArrayList<String>();
+        var e = aElement;
+        while (e != null) {
+            path.add(0, e.getQName());
+            e = e.getParent();
+        }
+        return path;
     }
 
 }
