@@ -53,21 +53,20 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 @ExtendWith(MockitoExtension.class)
 public class RelationSuggestionVisibilityCalculationTest
 {
+    private static final String TEST_USER = "Testuser";
+
     private @Mock AnnotationSchemaService annoService;
 
     private Project project;
     private SourceDocument doc;
     private AnnotationLayer layer;
     private AnnotationFeature feature;
-    private String user;
 
     private RecommendationServiceImpl sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        user = "Testuser";
-
         layer = new AnnotationLayer();
         layer.setName(Dependency._TypeName);
         layer.setId(42l);
@@ -92,12 +91,13 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(user, layer);
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -113,12 +113,13 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(user, layer);
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -129,7 +130,8 @@ public class RelationSuggestionVisibilityCalculationTest
 
         cas.select(Dependency.class).forEach(Dependency::removeFromIndexes);
 
-        sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("No suggestions are hidden as they no longer overlap with annotations") //

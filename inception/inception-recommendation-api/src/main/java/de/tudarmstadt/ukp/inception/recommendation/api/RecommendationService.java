@@ -261,11 +261,13 @@ public interface RecommendationService
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
             int aPredictionBegin, int aPredictionEnd);
 
-    void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
-            AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
-            int aWindowBegin, int aWindowEnd);
+    void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
+            String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd);
 
-    void calculateRelationSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+    void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
+            AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 

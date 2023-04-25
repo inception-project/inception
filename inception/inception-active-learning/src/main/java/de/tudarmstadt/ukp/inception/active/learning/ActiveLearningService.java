@@ -62,13 +62,13 @@ public interface ActiveLearningService
      * @param aLayer
      *            layer to check suggestions for
      */
-    boolean hasSkippedSuggestions(User aDataOwner, AnnotationLayer aLayer);
+    boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
-    void hideRejectedOrSkippedAnnotations(User aDataOwner, AnnotationLayer aLayer,
+    void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             boolean aFilterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
-    Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aDataOwner,
+    Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
             ActiveLearningUserState aAlState);
 
     void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, SpanSuggestion aSuggestion,

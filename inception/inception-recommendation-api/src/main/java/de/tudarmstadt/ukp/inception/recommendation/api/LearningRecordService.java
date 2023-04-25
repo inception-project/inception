@@ -30,24 +30,26 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 public interface LearningRecordService
 {
-    List<LearningRecord> listLearningRecords(String user, AnnotationLayer layer);
+    List<LearningRecord> listLearningRecords(String aSessionOwner, String aDataOwner,
+            AnnotationLayer layer);
 
-    List<LearningRecord> listLearningRecords(SourceDocument aDocument, String aUser,
-            AnnotationFeature aFeature);
+    List<LearningRecord> listLearningRecords(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, AnnotationFeature aFeature);
 
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
      *         used, e.g. for loading only a reduced part of the history in the active learning
      *         sidebar. Learning records with the action {@link LearningRecordType#SHOWN} are
      *         <b>not</b> returned by this method.
-     * @param aUser
+     * @param aDataOwner
      *            the annotator user
      * @param aLayer
      *            the layer
      * @param aLimit
      *            the maximum number of records to retrieve
      */
-    List<LearningRecord> listLearningRecords(String aUser, AnnotationLayer aLayer, int aLimit);
+    List<LearningRecord> listLearningRecords(String aSessionOwner, String aDataOwner,
+            AnnotationLayer aLayer, int aLimit);
 
     void deleteLearningRecord(LearningRecord learningRecord);
 
@@ -74,7 +76,7 @@ public interface LearningRecordService
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
-     * @param aUser
+     * @param aDataOwner
      *            the annotator user
      * @param aLayer
      *            the layer
@@ -82,16 +84,16 @@ public interface LearningRecordService
      *         the given layer for the given user.
      * 
      */
-    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+    boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
     /**
      * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of the given
      * layer for the given user.
      * 
-     * @param aUser
+     * @param aDataOwner
      *            the annotator user
      * @param aLayer
      *            the layer
      */
-    void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+    void deleteSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 }

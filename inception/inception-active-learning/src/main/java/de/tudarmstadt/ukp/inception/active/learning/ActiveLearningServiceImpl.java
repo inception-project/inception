@@ -131,17 +131,19 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean hasSkippedSuggestions(User aSessionOwner, AnnotationLayer aLayer)
+    public boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner,
+            AnnotationLayer aLayer)
     {
-        return learningHistoryService.hasSkippedSuggestions(aSessionOwner, aLayer);
+        return learningHistoryService.hasSkippedSuggestions(aSessionOwner, aDataOwner, aLayer);
     }
 
     @Override
-    public void hideRejectedOrSkippedAnnotations(User aDataOwner, AnnotationLayer aLayer,
-            boolean filterSkippedRecommendation,
+    public void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner,
+            AnnotationLayer aLayer, boolean filterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups)
     {
-        var records = learningHistoryService.listLearningRecords(aDataOwner.getUsername(), aLayer);
+        var records = learningHistoryService.listLearningRecords(aSessionOwner,
+                aDataOwner.getUsername(), aLayer);
 
         for (var suggestionGroup : aSuggestionGroups) {
             for (var suggestion : suggestionGroup) {
@@ -165,8 +167,8 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aDataOwner,
-            ActiveLearningUserState alState)
+    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner,
+            User aDataOwner, ActiveLearningUserState alState)
     {
         // Fetch the next suggestion to present to the user (if there is any)
         long startTimer = System.currentTimeMillis();
@@ -184,7 +186,8 @@ public class ActiveLearningServiceImpl
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
         // hide rejected recommendations
-        hideRejectedOrSkippedAnnotations(aDataOwner, alState.getLayer(), true, suggestionGroups);
+        hideRejectedOrSkippedAnnotations(aSessionOwner, aDataOwner, alState.getLayer(), true,
+                suggestionGroups);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         log.trace("Removing rejected or skipped ones took {} ms.",
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
@@ -281,7 +284,7 @@ public class ActiveLearningServiceImpl
                 aSuggestion.getDocumentName());
         recommendationService.skipSuggestion(aSessionOwner, document, aDataOwner.getUsername(),
                 aSuggestion, AL_SIDEBAR);
-                
+
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService

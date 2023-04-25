@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TA
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
@@ -44,6 +45,7 @@ import static java.lang.Math.min;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -57,6 +59,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -948,9 +951,6 @@ public class RecommendationServiceImpl
         SourceDocument currentDocument = aEvent.getDocument().getDocument();
         String currentUser = aEvent.getDocument().getUser();
         clearState(currentUser);
-        // Project project = aEvent.getDocument().getProject();
-        // triggerTrainingAndPrediction(userName, project, "AfterDocumentResetEvent",
-        // aEvent.getDocument().getDocument());
         deleteLearningRecords(currentDocument, currentUser);
     }
 
@@ -1314,7 +1314,7 @@ public class RecommendationServiceImpl
      * We are assuming that the user is actively working on one project at a time. Otherwise, the
      * RecommendationUserState might take up a lot of memory.
      */
-    private static class RecommendationState
+    private class RecommendationState
     {
         private Preferences preferences;
         private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> evaluatedRecommenders;
@@ -1322,20 +1322,16 @@ public class RecommendationServiceImpl
         private Predictions activePredictions;
         private Predictions incomingPredictions;
         private boolean predictForAllDocuments;
-        private List<LearningRecord> learningRecords;
+        private Map<AnnotationLayer, List<LearningRecord>> learningRecords;
         private int predictionsSinceLastEvaluation;
         private int predictionsUntilNextEvaluation;
 
+        public RecommendationState()
         {
             preferences = new Preferences();
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
-            learningRecords = new ArrayList<>();
-        }
-
-        public void logRecord()
-        {
-
+            learningRecords = new ConcurrentHashMap<>();
         }
 
         public Preferences getPreferences()
@@ -1509,15 +1505,32 @@ public class RecommendationServiceImpl
             predictForAllDocuments = aPredictForAllDocuments;
         }
 
+        public void logRecord(LearningRecord aRecord)
+        {
+            var records = learningRecords.computeIfAbsent(aRecord.getLayer(),
+                    $ -> RecommendationServiceImpl.this.loadLearningRecords(aRecord.getUser(),
+                            aRecord.getLayer(), 0));
+            records.add(0, aRecord);
+        }
+
+        public List<LearningRecord> listLearningRecords(AnnotationLayer aLayer)
+        {
+            return learningRecords.getOrDefault(aLayer, Collections.emptyList());
+        }
+
         public void removeLearningRecords(LearningRecord aRecord)
         {
-            learningRecords.removeIf(r -> Objects.equals(r.getUser(), aRecord.getUser()) && //
+            var records = learningRecords.get(aRecord.getLayer());
+            if (records == null) {
+                return;
+            }
+
+            records.removeIf(r -> Objects.equals(r.getUser(), aRecord.getUser()) && //
                     Objects.equals(r.getSourceDocument(), aRecord.getSourceDocument()) && //
                     r.getOffsetBegin() == aRecord.getOffsetBegin() && //
                     r.getOffsetEnd() == aRecord.getOffsetEnd() && //
                     r.getOffsetBegin2() == aRecord.getOffsetBegin2() && //
                     r.getOffsetEnd2() == aRecord.getOffsetEnd2() && //
-                    Objects.equals(r.getLayer(), aRecord.getLayer()) && //
                     Objects.equals(r.getAnnotationFeature(), aRecord.getAnnotationFeature()) && //
                     Objects.equals(r.getSuggestionType(), aRecord.getSuggestionType()) && //
                     Objects.equals(r.getAnnotation(), aRecord.getAnnotation()));
@@ -1628,8 +1641,9 @@ public class RecommendationServiceImpl
                         engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
             }
             else {
-                generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
-                        originalCas, predictionCas, aSessionOwner, predictionBegin, predictionEnd);
+                generateSuggestions(aSessionOwner.getUsername(), aPredictions, ctx, engine,
+                        activePredictions, aDocument, originalCas, predictionCas, aSessionOwner,
+                        predictionBegin, predictionEnd);
             }
         }
         // Catching Throwable is intentional here as we want to continue the
@@ -1826,10 +1840,10 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(Predictions aPredictions, RecommenderContext aCtx,
-            RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
-            CAS aOriginalCas, CAS aPredictionCas, User aUser, int aPredictionBegin,
-            int aPredictionEnd)
+    void generateSuggestions(String aSessionOwner, Predictions aPredictions,
+            RecommenderContext aCtx, RecommendationEngine aEngine, Predictions aActivePredictions,
+            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas, User aUser,
+            int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
     {
         Recommender recommender = aEngine.getRecommender();
@@ -1873,8 +1887,8 @@ public class RecommendationServiceImpl
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
-        calculateSpanSuggestionVisibility(aDocument, aOriginalCas, aUser.getUsername(),
-                aEngine.getRecommender().getLayer(), groupedSuggestions, 0,
+        calculateSpanSuggestionVisibility(aSessionOwner, aDocument, aOriginalCas,
+                aUser.getUsername(), aEngine.getRecommender().getLayer(), groupedSuggestions, 0,
                 aOriginalCas.getDocumentText().length());
 
         aPredictions.putPredictions(suggestions);
@@ -2141,9 +2155,10 @@ public class RecommendationServiceImpl
      * Goes through all SpanSuggestions and determines the visibility of each one
      */
     @Override
-    public void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
-            AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
-            int aWindowBegin, int aWindowEnd)
+    public void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
+            CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd)
     {
         Type type = getAnnotationType(aCas, aLayer);
         if (type == null) {
@@ -2167,7 +2182,7 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
-        var recordedAnnotations = listLearningRecords(aUser, aLayer);
+        var recordedAnnotations = listLearningRecords(aSessionOwner, aUser, aLayer);
 
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
             var feat = type.getFeatureByBaseName(feature.getName());
@@ -2298,7 +2313,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void calculateRelationSuggestionVisibility(CAS aCas, String aUser,
+    public void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
             AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
@@ -2341,7 +2356,7 @@ public class RecommendationServiceImpl
 
         // Get previously rejected suggestions
         MultiValuedMap<Position, LearningRecord> groupedRecordedAnnotations = new ArrayListValuedHashMap<>();
-        for (var learningRecord : listLearningRecords(aUser, aLayer)) {
+        for (var learningRecord : listLearningRecords(aSessionOwner, aUser, aLayer)) {
             RelationPosition relationPosition = new RelationPosition(
                     learningRecord.getOffsetSourceBegin(), learningRecord.getOffsetSourceEnd(),
                     learningRecord.getOffsetTargetBegin(), learningRecord.getOffsetTargetEnd());
@@ -2607,7 +2622,7 @@ public class RecommendationServiceImpl
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
-        // suggestion.hide(FLAG_TRANSIENT_SKIPPED);
+        suggestion.hide(FLAG_SKIPPED);
 
         if (suggestion instanceof SpanSuggestion) {
             var recommender = getRecommender(suggestion.getVID().getId());
@@ -2656,11 +2671,11 @@ public class RecommendationServiceImpl
             var state = getState(aSessionOwner, aDocument.getProject());
             synchronized (state) {
                 state.removeLearningRecords(record);
-                state.learningRecords.add(record);
+                state.logRecord(record);
             }
         }
 
-        removeLearningRecords(record);
+        deleteLearningRecords(record);
         createLearningRecord(record);
     }
 
@@ -2707,7 +2722,7 @@ public class RecommendationServiceImpl
         return record;
     }
 
-    private void removeLearningRecords(LearningRecord aRecord)
+    private void deleteLearningRecords(LearningRecord aRecord)
     {
         // It doesn't make any sense at all to have duplicate entries in the learning history,
         // so when adding a new entry, we dump any existing entries which basically are the
@@ -2742,32 +2757,49 @@ public class RecommendationServiceImpl
 
     @Transactional
     @Override
-    public List<LearningRecord> listLearningRecords(SourceDocument aDocument, String aUsername,
-            AnnotationFeature aFeature)
+    public List<LearningRecord> listLearningRecords(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, AnnotationFeature aFeature)
     {
-        LOG.trace("listRecords({},{}, {})", aDocument, aUsername, aFeature);
-
-        String sql = String.join("\n", //
-                "FROM LearningRecord l WHERE", //
-                "l.sourceDocument = :sourceDocument AND", //
-                "l.user = :user AND", //
-                "l.annotationFeature = :annotationFeature AND", //
-                "l.userAction != :action", //
-                "ORDER BY l.id desc");
-        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
-                .setParameter("sourceDocument", aDocument) //
-                .setParameter("user", aUsername) //
-                .setParameter("annotationFeature", aFeature) //
-                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
-        return query.getResultList();
+        var state = getState(aSessionOwner, aDocument.getProject());
+        synchronized (state) {
+            return state.listLearningRecords(aFeature.getLayer()).stream()
+                    .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
+                            && Objects.equals(r.getSourceDocument(), aDocument)
+                            && Objects.equals(r.getUser(), aDataOwner)
+                            && r.getUserAction() != LearningRecordType.SHOWN)
+                    .collect(toUnmodifiableList());
+        }
     }
 
     @Transactional
     @Override
-    public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer,
+    public List<LearningRecord> listLearningRecords(String aSessionOwner, String aDataOwner,
+            AnnotationLayer aLayer, int aLimit)
+    {
+        var state = getState(aSessionOwner, aLayer.getProject());
+        synchronized (state) {
+            var stream = state.listLearningRecords(aLayer).stream()
+                    .filter(r -> Objects.equals(r.getUser(), aDataOwner)
+                            && r.getUserAction() != LearningRecordType.SHOWN);
+            if (aLimit > 0) {
+                stream = stream.limit(aLimit);
+            }
+            return stream.collect(toUnmodifiableList());
+        }
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> listLearningRecords(String aSessionOwner, String aDataOwner,
+            AnnotationLayer aLayer)
+    {
+        return listLearningRecords(aSessionOwner, aDataOwner, aLayer, 0);
+    }
+
+    private List<LearningRecord> loadLearningRecords(String aDataOwner, AnnotationLayer aLayer,
             int aLimit)
     {
-        LOG.trace("listLearningRecords({},{}, {})", aDataOwner, aLayer, aLimit);
+        LOG.trace("loadLearningRecords({},{}, {})", aDataOwner, aLayer, aLimit);
 
         String sql = String.join("\n", //
                 "FROM LearningRecord l WHERE", //
@@ -2785,11 +2817,10 @@ public class RecommendationServiceImpl
         return query.getResultList();
     }
 
-    @Transactional
-    @Override
-    public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer)
+    private void createLearningRecord(LearningRecord aLearningRecord)
     {
-        return listLearningRecords(aDataOwner, aLayer, 0);
+        entityManager.persist(aLearningRecord);
+        entityManager.flush();
     }
 
     private void deleteLearningRecords(SourceDocument document, String user)
@@ -2802,12 +2833,6 @@ public class RecommendationServiceImpl
                 .executeUpdate();
     }
 
-    private void createLearningRecord(LearningRecord aLearningRecord)
-    {
-        entityManager.persist(aLearningRecord);
-        entityManager.flush();
-    }
-
     @Override
     @Transactional
     public void deleteLearningRecord(LearningRecord learningRecord)
@@ -2818,7 +2843,8 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    public boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner,
+            AnnotationLayer aLayer)
     {
         String sql = String.join("\n", //
                 "SELECT COUNT(*) FROM LearningRecord WHERE", //
@@ -2826,26 +2852,33 @@ public class RecommendationServiceImpl
                 "layer = :layer AND", //
                 "userAction = :action");
         long count = entityManager.createQuery(sql, Long.class) //
-                .setParameter("user", aUser.getUsername()) //
+                .setParameter("user", aDataOwner.getUsername()) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordType.SKIPPED) //
+                .setParameter("action", SKIPPED) //
                 .getSingleResult();
         return count > 0;
     }
 
     @Override
     @Transactional
-    public void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    public void deleteSkippedSuggestions(String aSessionOwner, User aDataOwner,
+            AnnotationLayer aLayer)
     {
+        var state = getState(aSessionOwner, aLayer.getProject());
+        synchronized (state) {
+            state.learningRecords.getOrDefault(aLayer, Collections.emptyList()).removeIf(
+                    r -> Objects.equals(r.getUser(), aDataOwner) && r.getUserAction() == SKIPPED);
+        }
+
         String sql = String.join("\n", //
                 "DELETE FROM LearningRecord WHERE", //
                 "user = :user AND", //
                 "layer = :layer AND", //
                 "userAction = :action");
         entityManager.createQuery(sql) //
-                .setParameter("user", aUser.getUsername()) //
+                .setParameter("user", aDataOwner.getUsername()) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordType.SKIPPED) //
+                .setParameter("action", SKIPPED) //
                 .executeUpdate();
     }
 

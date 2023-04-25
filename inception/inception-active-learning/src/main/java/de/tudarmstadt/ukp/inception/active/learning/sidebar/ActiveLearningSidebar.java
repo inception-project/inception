@@ -423,19 +423,23 @@ public class ActiveLearningSidebar
     {
         Label noRecommendation = new Label(CID_NO_RECOMMENDATION_LABEL,
                 "There are no further suggestions.");
-        noRecommendation.add(visibleWhen(alStateModel.map(alState -> alState.isSessionActive()
-                && !alState.getSuggestion().isPresent() && !activeLearningService
-                        .hasSkippedSuggestions(getModelObject().getUser(), alState.getLayer()))));
+        noRecommendation.add(visibleWhen(alStateModel
+                .map(alState -> alState.isSessionActive() && !alState.getSuggestion().isPresent()
+                        && !activeLearningService.hasSkippedSuggestions(
+                                userService.getCurrentUsername(), getModelObject().getUser(),
+                                alState.getLayer()))));
         noRecommendation.setOutputMarkupPlaceholderTag(true);
         return noRecommendation;
     }
 
     private Form<Void> clearSkippedRecommendationForm()
     {
-        Form<Void> form = new Form<>(CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
-        form.add(visibleWhen(alStateModel.map(alState -> alState.isSessionActive()
-                && !alState.getSuggestion().isPresent() && activeLearningService
-                        .hasSkippedSuggestions(getModelObject().getUser(), alState.getLayer()))));
+        var form = new Form<Void>(CID_LEARN_FROM_SKIPPED_RECOMMENDATION_FORM);
+        form.add(visibleWhen(alStateModel
+                .map(alState -> alState.isSessionActive() && !alState.getSuggestion().isPresent()
+                        && activeLearningService.hasSkippedSuggestions(
+                                userService.getCurrentUsername(), getModelObject().getUser(),
+                                alState.getLayer()))));
         form.setOutputMarkupPlaceholderTag(true);
         form.add(new Label(CID_ONLY_SKIPPED_RECOMMENDATION_LABEL,
                 "There are only skipped suggestions. Do you want to learn these again?"));
@@ -447,8 +451,8 @@ public class ActiveLearningSidebar
     private void actionClearSkippedRecommendations(AjaxRequestTarget aTarget, Form<Void> aForm)
         throws IOException
     {
-        learningRecordService.deleteSkippedSuggestions(getModelObject().getUser(),
-                alStateModel.getObject().getLayer());
+        learningRecordService.deleteSkippedSuggestions(userService.getCurrentUsername(),
+                getModelObject().getUser(), alStateModel.getObject().getLayer());
 
         // The history records caused suggestions to disappear. Since visibility is only fully
         // recalculated when new predictions come in, we need to update the visibility explicitly
@@ -466,7 +470,7 @@ public class ActiveLearningSidebar
     {
         recommendationForm = new Form<Void>(CID_RECOMMENDATION_FORM);
         recommendationForm.add(visibleWhen(() -> {
-            ActiveLearningUserState alState = alStateModel.getObject();
+            var alState = alStateModel.getObject();
             return alState.isSessionActive() && alState.getSuggestion().isPresent();
         }));
         recommendationForm.setOutputMarkupPlaceholderTag(true);
@@ -729,8 +733,8 @@ public class ActiveLearningSidebar
 
         // Generate the next recommendation but remember the current one
         Optional<SpanSuggestion> prevSuggestion = alState.getSuggestion();
-        alState.setCurrentDifference(
-                activeLearningService.generateNextSuggestion(sessionOwner, alState));
+        alState.setCurrentDifference(activeLearningService
+                .generateNextSuggestion(sessionOwner.getUsername(), dataOwner, alState));
 
         // If there is no new suggestion, nothing left to do here
         if (!alState.getSuggestion().isPresent()) {
@@ -979,8 +983,9 @@ public class ActiveLearningSidebar
 
     private List<LearningRecord> listLearningRecords()
     {
-        return learningRecordService.listLearningRecords(getModelObject().getUser().getUsername(),
-                alStateModel.getObject().getLayer(), 50);
+        var sessionOwner = userService.getCurrentUsername();
+        return learningRecordService.listLearningRecords(sessionOwner,
+                getModelObject().getUser().getUsername(), alStateModel.getObject().getLayer(), 50);
     }
 
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
@@ -1176,9 +1181,9 @@ public class ActiveLearningSidebar
         LOG.trace("reactToAnnotationsBeingCreatedOrDeleted()");
 
         try {
-            User user = getModelObject().getUser();
-            Predictions predictions = recommendationService.getPredictions(user,
-                    aLayer.getProject());
+            var sessionOwner = userService.getCurrentUsername();
+            var dataOwner = getModelObject().getUser();
+            var predictions = recommendationService.getPredictions(dataOwner, aLayer.getProject());
 
             if (predictions == null) {
                 return;
@@ -1189,12 +1194,11 @@ public class ActiveLearningSidebar
             annotationPage.actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
-            CAS cas = documentService.readAnnotationCas(aDocument, user.getUsername());
-            SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.groupsOfType(
-                    SpanSuggestion.class,
+            var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
+            var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
-            recommendationService.calculateSpanSuggestionVisibility(aDocument, cas,
-                    user.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
+            recommendationService.calculateSpanSuggestionVisibility(sessionOwner, aDocument, cas,
+                    dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
             moveToNextSuggestion(aTarget);
         }
