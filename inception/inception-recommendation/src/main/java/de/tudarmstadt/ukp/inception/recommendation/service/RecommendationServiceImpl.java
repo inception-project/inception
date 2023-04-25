@@ -31,11 +31,13 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -69,6 +71,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -180,7 +183,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -196,7 +198,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
  * </p>
  */
 public class RecommendationServiceImpl
-    implements RecommendationService
+    implements RecommendationService, LearningRecordService
 {
     private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
 
@@ -214,7 +216,6 @@ public class RecommendationServiceImpl
     private final SchedulingService schedulingService;
     private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
-    private final LearningRecordService learningRecordService;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PreferencesService preferencesService;
@@ -245,9 +246,8 @@ public class RecommendationServiceImpl
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService, EntityManager aEntityManager,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            DocumentService aDocumentService, ProjectService aProjectService,
+            EntityManager aEntityManager, ApplicationEventPublisher aApplicationEventPublisher)
     {
         preferencesService = aPreferencesService;
         sessionRegistry = aSessionRegistry;
@@ -256,7 +256,6 @@ public class RecommendationServiceImpl
         schedulingService = aSchedulingService;
         schemaService = aAnnoService;
         documentService = aDocumentService;
-        learningRecordService = aLearningRecordService;
         projectService = aProjectService;
         entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
@@ -269,12 +268,11 @@ public class RecommendationServiceImpl
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            EntityManager aEntityManager)
+            DocumentService aDocumentService, EntityManager aEntityManager)
     {
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
-                aSchedulingService, aAnnoService, aDocumentService, aLearningRecordService,
-                (ProjectService) null, aEntityManager, null);
+                aSchedulingService, aAnnoService, aDocumentService, (ProjectService) null,
+                aEntityManager, null);
     }
 
     @Override
@@ -665,15 +663,16 @@ public class RecommendationServiceImpl
             try {
                 if (prediction instanceof SpanSuggestion) {
                     var spanPrediction = (SpanSuggestion) prediction;
-                    acceptOrCorrectSuggestion(aDocument, aUser.getUsername(), cas,
+                    acceptOrCorrectSuggestion(null, aDocument, aUser.getUsername(), cas,
                             (SpanAdapter) adapter, feature, spanPrediction, AUTO_ACCEPT, ACCEPTED);
                     count++;
                 }
 
                 if (prediction instanceof RelationSuggestion) {
                     var relationPrediction = (RelationSuggestion) prediction;
-                    acceptSuggestion(aDocument, aUser.getUsername(), cas, (RelationAdapter) adapter,
-                            feature, relationPrediction, AUTO_ACCEPT, ACCEPTED);
+                    acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
+                            (RelationAdapter) adapter, feature, relationPrediction, AUTO_ACCEPT,
+                            ACCEPTED);
                     count++;
                 }
             }
@@ -942,14 +941,17 @@ public class RecommendationServiceImpl
         }
     }
 
+    @Transactional
     @EventListener
     public void afterDocumentReset(AfterDocumentResetEvent aEvent)
     {
-        String userName = aEvent.getDocument().getUser();
-        clearState(userName);
+        SourceDocument currentDocument = aEvent.getDocument().getDocument();
+        String currentUser = aEvent.getDocument().getUser();
+        clearState(currentUser);
         // Project project = aEvent.getDocument().getProject();
         // triggerTrainingAndPrediction(userName, project, "AfterDocumentResetEvent",
         // aEvent.getDocument().getDocument());
+        deleteLearningRecords(currentDocument, currentUser);
     }
 
     @Override
@@ -1042,33 +1044,37 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public AnnotationFS correctSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aOriginalSuggestion,
-            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+    @Transactional
+    public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
         // If the action was a correction (i.e. suggestion label != annotation value) then generate
         // a rejection for the original value - we do not want the original value to re-appear
-        learningRecordService.logRecord(aDocument, aDataOwner, aOriginalSuggestion, aFeature,
-                REJECTED, AL_SIDEBAR);
+        logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, aFeature, REJECTED,
+                AL_SIDEBAR);
 
-        return acceptOrCorrectSuggestion(aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aCorrectedSuggestion, aLocation, CORRECTED);
+        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
+                aFeature, aCorrectedSuggestion, aLocation, CORRECTED);
     }
 
     @Override
-    public AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation)
+    @Transactional
+    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
+            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        return acceptOrCorrectSuggestion(aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aLocation, ACCEPTED);
+        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
+                aFeature, aSuggestion, aLocation, ACCEPTED);
     }
 
-    private AnnotationFS acceptOrCorrectSuggestion(SourceDocument aDocument, String aDataOwner,
-            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+    private AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
+            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordType aAction)
         throws AnnotationException
     {
         var aBegin = aSuggestion.getBegin();
@@ -1100,16 +1106,16 @@ public class RecommendationServiceImpl
             annotation = candidates.get(0);
         }
 
-        commmitAcceptedLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aValue,
-                annotation, aLocation, aAction);
+        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aValue, annotation, aLocation, aAction);
 
         return annotation;
     }
 
-    private void commmitAcceptedLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            TypeAdapter aAdapter, AnnotationFeature aFeature, AnnotationSuggestion aSuggestion,
-            String aValue, AnnotationFS annotation, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+    private void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, String aValue, AnnotationFS annotation,
+            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
         throws AnnotationException
     {
         // Update the feature value
@@ -1123,7 +1129,7 @@ public class RecommendationServiceImpl
 
         // Log the action to the learning record
         if (!aAdapter.isSilenced()) {
-            learningRecordService.logRecord(aDocument, aDataOwner, aSuggestion, aFeature, aAction,
+            logRecord(aSessionOwner, aDocument, aDataOwner, aSuggestion, aFeature, aAction,
                     aLocation);
 
             // Send an application event that the suggestion has been accepted
@@ -1133,9 +1139,11 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            RelationAdapter aAdapter, AnnotationFeature aFeature, RelationSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+    @Transactional
+    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordType aAction)
         throws AnnotationException
     {
         var sourceBegin = aSuggestion.getPosition().getSourceBegin();
@@ -1199,8 +1207,8 @@ public class RecommendationServiceImpl
             annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
         }
 
-        commmitAcceptedLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
-                aSuggestion.getLabel(), annotation, aLocation, aAction);
+        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aSuggestion.getLabel(), annotation, aLocation, aAction);
 
         return annotation;
     }
@@ -1323,6 +1331,11 @@ public class RecommendationServiceImpl
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
             learningRecords = new ArrayList<>();
+        }
+
+        public void logRecord()
+        {
+
         }
 
         public Preferences getPreferences()
@@ -1494,6 +1507,20 @@ public class RecommendationServiceImpl
         public void setPredictForAllDocuments(boolean aPredictForAllDocuments)
         {
             predictForAllDocuments = aPredictForAllDocuments;
+        }
+
+        public void removeLearningRecords(LearningRecord aRecord)
+        {
+            learningRecords.removeIf(r -> Objects.equals(r.getUser(), aRecord.getUser()) && //
+                    Objects.equals(r.getSourceDocument(), aRecord.getSourceDocument()) && //
+                    r.getOffsetBegin() == aRecord.getOffsetBegin() && //
+                    r.getOffsetEnd() == aRecord.getOffsetEnd() && //
+                    r.getOffsetBegin2() == aRecord.getOffsetBegin2() && //
+                    r.getOffsetEnd2() == aRecord.getOffsetEnd2() && //
+                    Objects.equals(r.getLayer(), aRecord.getLayer()) && //
+                    Objects.equals(r.getAnnotationFeature(), aRecord.getAnnotationFeature()) && //
+                    Objects.equals(r.getSuggestionType(), aRecord.getSuggestionType()) && //
+                    Objects.equals(r.getAnnotation(), aRecord.getAnnotation()));
         }
     }
 
@@ -2140,7 +2167,7 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
-        var recordedAnnotations = learningRecordService.listRecords(aUser, aLayer);
+        var recordedAnnotations = listLearningRecords(aUser, aLayer);
 
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
             var feat = type.getFeatureByBaseName(feature.getName());
@@ -2276,7 +2303,7 @@ public class RecommendationServiceImpl
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        Type type = getAnnotationType(aCas, aLayer);
+        var type = getAnnotationType(aCas, aLayer);
 
         if (type == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
@@ -2285,37 +2312,36 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Feature governorFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature dependentFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
+        var governorFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var dependentFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
         if (dependentFeature == null || governorFeature == null) {
             LOG.warn("Missing Dependent or Governor feature on [{}]", aLayer.getName());
             return;
         }
 
-        List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
-                aWindowEnd);
+        var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
 
         // Group annotations by relation position, that is (source, target) address
         MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
         for (AnnotationFS annotationFS : annotationsInWindow) {
-            AnnotationFS source = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
-            AnnotationFS target = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
+            var source = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
+            var target = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
 
-            RelationPosition relationPosition = new RelationPosition(source.getBegin(),
-                    source.getEnd(), target.getBegin(), target.getEnd());
+            var relationPosition = new RelationPosition(source.getBegin(), source.getEnd(),
+                    target.getBegin(), target.getEnd());
 
             groupedAnnotations.put(relationPosition, annotationFS);
         }
 
         // Collect all suggestions of the given layer
-        List<SuggestionGroup<RelationSuggestion>> groupedSuggestions = aRecommendations.stream()
+        var groupedSuggestions = aRecommendations.stream()
                 .filter(group -> group.getLayerId() == aLayer.getId()) //
                 .collect(toList());
 
         // Get previously rejected suggestions
         MultiValuedMap<Position, LearningRecord> groupedRecordedAnnotations = new ArrayListValuedHashMap<>();
-        for (LearningRecord learningRecord : learningRecordService.listRecords(aUser, aLayer)) {
+        for (var learningRecord : listLearningRecords(aUser, aLayer)) {
             RelationPosition relationPosition = new RelationPosition(
                     learningRecord.getOffsetSourceBegin(), learningRecord.getOffsetSourceEnd(),
                     learningRecord.getOffsetTargetBegin(), learningRecord.getOffsetTargetEnd());
@@ -2546,26 +2572,25 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public void rejectSuggestion(AnnotatorState aState, SourceDocument document,
-            VID recommendationVID, AnnotationSuggestion suggestion)
+    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.
         suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
         if (suggestion instanceof SpanSuggestion) {
-            var recommender = getRecommender(recommendationVID.getId());
+            var recommender = getRecommender(suggestion.getVID().getId());
             var feature = recommender.getFeature();
             var spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
-            learningRecordService.logRecord(document, aState.getUser().getUsername(),
-                    spanSuggestion, feature, REJECTED, MAIN_EDITOR);
+            logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, REJECTED,
+                    aAction);
 
             // Send an application event that the suggestion has been rejected
-            applicationEventPublisher.publishEvent(
-                    new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
-                            spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-                            spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
+                    aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+                    spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
 
         }
         else if (suggestion instanceof RelationSuggestion) {
@@ -2573,6 +2598,255 @@ public class RecommendationServiceImpl
             // TODO: Log rejection
             // TODO: Publish rejection event
         }
+    }
+
+    @Override
+    @Transactional
+    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+    {
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        // suggestion.hide(FLAG_TRANSIENT_SKIPPED);
+
+        if (suggestion instanceof SpanSuggestion) {
+            var recommender = getRecommender(suggestion.getVID().getId());
+            var feature = recommender.getFeature();
+            var spanSuggestion = (SpanSuggestion) suggestion;
+            // Log the action to the learning record
+            logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, SKIPPED,
+                    aAction);
+
+            // // Send an application event that the suggestion has been rejected
+            // applicationEventPublisher.publishEvent(new RecommendationSkippedEvent(this,
+            // aDocument,
+            // aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+            // spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+
+        }
+        else if (suggestion instanceof RelationSuggestion) {
+            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
+            // TODO: Log rejection
+            // TODO: Publish rejection event
+        }
+    }
+
+    @Transactional
+    @Override
+    public void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        LearningRecord record = null;
+        if (aSuggestion instanceof SpanSuggestion) {
+            record = toLearningRecord(aDocument, aDataOwner, (SpanSuggestion) aSuggestion, aFeature,
+                    aUserAction, aLocation);
+        }
+        else if (aSuggestion instanceof RelationSuggestion) {
+            record = toLearningRecord(aDocument, aDataOwner, (RelationSuggestion) aSuggestion,
+                    aFeature, aUserAction, aLocation);
+        }
+
+        if (record == null) {
+            throw new IllegalArgumentException(
+                    "Unsupported suggestion type [" + aSuggestion.getClass().getName() + "]");
+        }
+
+        if (aSessionOwner != null) {
+            var state = getState(aSessionOwner, aDocument.getProject());
+            synchronized (state) {
+                state.removeLearningRecords(record);
+                state.learningRecords.add(record);
+            }
+        }
+
+        removeLearningRecords(record);
+        createLearningRecord(record);
+    }
+
+    private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation)
+    {
+        var record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(aSuggestion.getBegin());
+        record.setOffsetEnd(aSuggestion.getEnd());
+        record.setOffsetBegin2(-1);
+        record.setOffsetEnd2(-1);
+        record.setTokenText(aSuggestion.getCoveredText());
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(SPAN);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
+    }
+
+    private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
+            RelationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        var pos = aSuggestion.getPosition();
+        var record = new LearningRecord();
+        record.setUser(aDataOwner);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(pos.getSourceBegin());
+        record.setOffsetEnd(pos.getSourceEnd());
+        record.setOffsetBegin2(pos.getTargetBegin());
+        record.setOffsetEnd2(pos.getTargetEnd());
+        record.setTokenText("");
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(RELATION);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
+    }
+
+    private void removeLearningRecords(LearningRecord aRecord)
+    {
+        // It doesn't make any sense at all to have duplicate entries in the learning history,
+        // so when adding a new entry, we dump any existing entries which basically are the
+        // same as the one added. Mind that the actual action performed by the user does not
+        // matter since there should basically be only one action in the log for any suggestion,
+        // irrespective of what that action is.
+        String query = String.join("\n", //
+                "DELETE FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "sourceDocument = :sourceDocument AND", //
+                "offsetBegin = :offsetBegin AND", //
+                "offsetEnd = :offsetEnd AND", //
+                "offsetBegin2 = :offsetBegin2 AND", //
+                "offsetEnd2 = :offsetEnd2 AND", //
+                "layer = :layer AND", //
+                "annotationFeature = :annotationFeature AND", //
+                "suggestionType = :suggestionType AND", //
+                "annotation = :annotation");
+        entityManager.createQuery(query) //
+                .setParameter("user", aRecord.getUser()) //
+                .setParameter("sourceDocument", aRecord.getSourceDocument()) //
+                .setParameter("offsetBegin", aRecord.getOffsetBegin()) //
+                .setParameter("offsetEnd", aRecord.getOffsetEnd()) //
+                .setParameter("offsetBegin2", aRecord.getOffsetBegin2()) //
+                .setParameter("offsetEnd2", aRecord.getOffsetEnd2()) //
+                .setParameter("layer", aRecord.getAnnotationFeature().getLayer()) //
+                .setParameter("annotationFeature", aRecord.getAnnotationFeature()) //
+                .setParameter("suggestionType", aRecord.getSuggestionType()) //
+                .setParameter("annotation", aRecord.getAnnotation()) //
+                .executeUpdate();
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> listLearningRecords(SourceDocument aDocument, String aUsername,
+            AnnotationFeature aFeature)
+    {
+        LOG.trace("listRecords({},{}, {})", aDocument, aUsername, aFeature);
+
+        String sql = String.join("\n", //
+                "FROM LearningRecord l WHERE", //
+                "l.sourceDocument = :sourceDocument AND", //
+                "l.user = :user AND", //
+                "l.annotationFeature = :annotationFeature AND", //
+                "l.userAction != :action", //
+                "ORDER BY l.id desc");
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("sourceDocument", aDocument) //
+                .setParameter("user", aUsername) //
+                .setParameter("annotationFeature", aFeature) //
+                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer,
+            int aLimit)
+    {
+        LOG.trace("listLearningRecords({},{}, {})", aDataOwner, aLayer, aLimit);
+
+        String sql = String.join("\n", //
+                "FROM LearningRecord l WHERE", //
+                "l.user = :user AND", //
+                "l.layer = :layer AND", //
+                "l.userAction != :action", //
+                "ORDER BY l.id desc");
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("user", aDataOwner) //
+                .setParameter("layer", aLayer) //
+                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+        if (aLimit > 0) {
+            query = query.setMaxResults(aLimit);
+        }
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer)
+    {
+        return listLearningRecords(aDataOwner, aLayer, 0);
+    }
+
+    private void deleteLearningRecords(SourceDocument document, String user)
+    {
+        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
+                + "= :user";
+        entityManager.createQuery(sql) //
+                .setParameter("document", document) //
+                .setParameter("user", user) //
+                .executeUpdate();
+    }
+
+    private void createLearningRecord(LearningRecord aLearningRecord)
+    {
+        entityManager.persist(aLearningRecord);
+        entityManager.flush();
+    }
+
+    @Override
+    @Transactional
+    public void deleteLearningRecord(LearningRecord learningRecord)
+    {
+        entityManager.remove(entityManager.contains(learningRecord) ? learningRecord
+                : entityManager.merge(learningRecord));
+    }
+
+    @Override
+    @Transactional
+    public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        String sql = String.join("\n", //
+                "SELECT COUNT(*) FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "layer = :layer AND", //
+                "userAction = :action");
+        long count = entityManager.createQuery(sql, Long.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("action", LearningRecordType.SKIPPED) //
+                .getSingleResult();
+        return count > 0;
+    }
+
+    @Override
+    @Transactional
+    public void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer)
+    {
+        String sql = String.join("\n", //
+                "DELETE FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "layer = :layer AND", //
+                "userAction = :action");
+        entityManager.createQuery(sql) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("action", LearningRecordType.SKIPPED) //
+                .executeUpdate();
     }
 
     private class LazyCas

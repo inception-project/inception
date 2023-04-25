@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>28</version>
+    <version>30-SNAPSHOT</version>
   </parent>
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>

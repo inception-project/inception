@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeR
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -45,16 +47,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
 public class RelationSuggestionVisibilityCalculationTest
 {
-    private @Mock LearningRecordService recordService;
     private @Mock AnnotationSchemaService annoService;
 
     private Project project;
@@ -87,18 +85,18 @@ public class RelationSuggestionVisibilityCalculationTest
                 .add(new AnnotationFeature(Dependency._FeatName_DependencyType, TYPE_NAME_STRING));
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
-        sut = new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
-                recordService, null, (EntityManager) null, null);
+        sut = spy(new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
+                null, (EntityManager) null, null));
     }
 
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(user, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(doc,
-                feature, new int[][] { { 1, 0, 3, 13, 20 } });
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } });
         sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
@@ -115,11 +113,11 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(user, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<RelationSuggestion> suggestions = makeRelationSuggestionGroup(doc,
-                feature, new int[][] { { 1, 0, 3, 13, 20 } });
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } });
         sut.calculateRelationSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //

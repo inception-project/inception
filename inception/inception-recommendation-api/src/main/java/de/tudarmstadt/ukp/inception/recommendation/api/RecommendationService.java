@@ -47,8 +47,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
@@ -155,9 +153,10 @@ public interface RecommendationService
      */
     void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
-    AnnotationFS correctSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aOriginalSuggestion,
-            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+    AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
@@ -182,8 +181,8 @@ public interface RecommendationService
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
@@ -211,10 +210,17 @@ public interface RecommendationService
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS acceptSuggestion(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            RelationAdapter aAdapter, AnnotationFeature aFeature, RelationSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordType aAction)
         throws AnnotationException;
+
+    void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+
+    void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
 
     /**
      * Compute predictions.
@@ -287,7 +293,4 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
-
-    void rejectSuggestion(AnnotatorState aState, SourceDocument aDocument, VID aRecommendationVID,
-            AnnotationSuggestion aSuggestion);
 }

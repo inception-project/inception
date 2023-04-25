@@ -22,7 +22,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 public enum LearningRecordChangeLocation
     implements PersistentEnum
 {
-
     /**
      * Triggered through the active learning sidebar.
      */
@@ -43,7 +42,6 @@ public enum LearningRecordChangeLocation
      * Triggered automatically by recommender.
      */
     AUTO_ACCEPT("AUTO_ACCEPT");
-    ;
 
     private final String id;
 

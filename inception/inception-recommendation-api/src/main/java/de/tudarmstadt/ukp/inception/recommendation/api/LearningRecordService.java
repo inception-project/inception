@@ -30,9 +30,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 public interface LearningRecordService
 {
-    List<LearningRecord> listRecords(String user, AnnotationLayer layer);
+    List<LearningRecord> listLearningRecords(String user, AnnotationLayer layer);
 
-    List<LearningRecord> listRecords(SourceDocument aDocument, String aUser,
+    List<LearningRecord> listLearningRecords(SourceDocument aDocument, String aUser,
             AnnotationFeature aFeature);
 
     /**
@@ -47,19 +47,9 @@ public interface LearningRecordService
      * @param aLimit
      *            the maximum number of records to retrieve
      */
-    List<LearningRecord> listRecords(String aUser, AnnotationLayer aLayer, int aLimit);
+    List<LearningRecord> listLearningRecords(String aUser, AnnotationLayer aLayer, int aLimit);
 
-    void deleteRecords(SourceDocument document, String user);
-
-    LearningRecord getRecordById(long recordId);
-
-    void create(LearningRecord learningRecord);
-
-    void update(LearningRecord learningRecord);
-
-    void delete(LearningRecord learningRecord);
-
-    void deleteById(long id);
+    void deleteLearningRecord(LearningRecord learningRecord);
 
     /**
      * Updates the learning log with an entry for the given suggestion. Any entries which are
@@ -79,9 +69,9 @@ public interface LearningRecordService
      * @param aLocation
      *            where the action on the suggestion was triggered
      */
-    void logRecord(SourceDocument aDocument, String aDataOwner, AnnotationSuggestion aSuggestion,
-            AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
+    void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
      * @param aUser

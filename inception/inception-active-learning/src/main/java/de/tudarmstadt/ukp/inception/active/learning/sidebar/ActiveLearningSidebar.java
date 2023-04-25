@@ -171,7 +171,7 @@ public class ActiveLearningSidebar
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    private @SpringBean UserDao userDao;
+    private @SpringBean UserDao userService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private IModel<List<LearningRecord>> learningRecords;
@@ -690,9 +690,11 @@ public class ActiveLearningSidebar
 
         getAnnotationPage().ensureIsEditable();
 
+        var sessionOwner = userService.getCurrentUsername();
+
         alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
             requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.skipSpanSuggestion(getModelObject().getUser(),
+            activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
                     alStateModel.getObject().getLayer(), suggestion);
             moveToNextSuggestion(aTarget);
         });
@@ -706,8 +708,8 @@ public class ActiveLearningSidebar
 
         alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
             requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.rejectSpanSuggestion(getModelObject().getUser(),
-                    alStateModel.getObject().getLayer(), suggestion);
+            activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
+                    getModelObject().getUser(), alStateModel.getObject().getLayer(), suggestion);
             moveToNextSuggestion(aTarget);
         });
     }
@@ -723,7 +725,7 @@ public class ActiveLearningSidebar
         var state = getModelObject();
         var project = state.getProject();
         var dataOwner = state.getUser();
-        var sessionOwner = userDao.getCurrentUser();
+        var sessionOwner = userService.getCurrentUser();
 
         // Generate the next recommendation but remember the current one
         Optional<SpanSuggestion> prevSuggestion = alState.getSuggestion();
@@ -977,19 +979,21 @@ public class ActiveLearningSidebar
 
     private List<LearningRecord> listLearningRecords()
     {
-        return learningRecordService.listRecords(getModelObject().getUser().getUsername(),
+        return learningRecordService.listLearningRecords(getModelObject().getUser().getUsername(),
                 alStateModel.getObject().getLayer(), 50);
     }
 
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
-        throws IOException
+        throws IOException, AnnotationException
     {
+        getAnnotationPage().ensureIsEditable();
+
         aTarget.add(alMainContainer);
 
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
 
         annotationPage.actionRefreshDocument(aTarget);
-        learningRecordService.delete(aRecord);
+        learningRecordService.deleteLearningRecord(aRecord);
 
         // The history records caused suggestions to disappear. Since visibility is only fully
         // recalculated when new predictions come in, we need to update the visibility explicitly

@@ -256,21 +256,22 @@ public class RecommenderInfoPanel
     private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        User user = userService.getCurrentUser();
+        User sessionOwner = userService.getCurrentUser();
         AnnotatorState state = getModelObject();
 
         AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
         CAS cas = page.getEditorCas();
 
-        Predictions predictions = recommendationService.getPredictions(user, state.getProject());
+        Predictions predictions = recommendationService.getPredictions(sessionOwner,
+                state.getProject());
         if (predictions == null) {
             error("Recommenders did not yet provide any suggestions.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        Preferences pref = recommendationService.getPreferences(user, state.getProject());
+        Preferences pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
@@ -296,7 +297,7 @@ public class RecommenderInfoPanel
                 continue;
             }
 
-            SpanSuggestion suggestion = suggestions.get(0);
+            var suggestion = suggestions.get(0);
 
             try {
                 // Upsert an annotation based on the suggestion
@@ -304,9 +305,9 @@ public class RecommenderInfoPanel
                 var feature = annotationService.getFeature(suggestion.getFeature(), layer);
                 var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
-                recommendationService.acceptSuggestion(state.getDocument(),
-                        state.getUser().getUsername(), cas, adapter, feature, suggestion,
-                        LearningRecordChangeLocation.REC_SIDEBAR);
+                recommendationService.acceptSuggestion(sessionOwner.getUsername(),
+                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
+                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

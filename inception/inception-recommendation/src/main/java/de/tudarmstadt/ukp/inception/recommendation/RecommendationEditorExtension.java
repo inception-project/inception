@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -99,21 +98,18 @@ public class RecommendationEditorExtension
 
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
-    private final LearningRecordService learningRecordService;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final UserDao userRegistry;
+    private final UserDao userService;
 
     @Autowired
     public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRegistry)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
-        learningRecordService = aLearningRecordService;
         applicationEventPublisher = aApplicationEventPublisher;
-        userRegistry = aUserRegistry;
+        userService = aUserRegistry;
     }
 
     @Override
@@ -218,12 +214,13 @@ public class RecommendationEditorExtension
     {
         var page = (AnnotationPage) aTarget.getPage();
         var dataOwner = aState.getUser().getUsername();
+        var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
         var adapter = (SpanAdapter) annotationService.getAdapter(layer);
 
-        var span = recommendationService.acceptSuggestion(aSocument, dataOwner, aCas, adapter,
-                feature, aSuggestion, MAIN_EDITOR);
+        var span = recommendationService.acceptSuggestion(sessionOwner, aSocument, dataOwner, aCas,
+                adapter, feature, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
@@ -242,12 +239,13 @@ public class RecommendationEditorExtension
     {
         var page = (AnnotationPage) aTarget.getPage();
         var dataOwner = aState.getUser().getUsername();
+        var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
         var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
 
-        var relation = recommendationService.acceptSuggestion(aDocument, dataOwner, aCas, adapter,
-                feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
+        var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
+                aCas, adapter, feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
 
         page.writeEditorCas(aCas);
 
@@ -272,8 +270,8 @@ public class RecommendationEditorExtension
 
         throws AnnotationException, IOException
     {
-        var predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
+        var sessionOwner = userService.getCurrentUser();
+        var predictions = recommendationService.getPredictions(sessionOwner, aState.getProject());
 
         var document = aState.getDocument();
         var recommendationVID = VID.parse(aVID.getExtensionPayload());
@@ -287,8 +285,8 @@ public class RecommendationEditorExtension
             return;
         }
 
-        recommendationService.rejectSuggestion(aState, document, recommendationVID,
-                maybeSuggestion.get());
+        recommendationService.rejectSuggestion(sessionOwner.getUsername(), document,
+                aState.getUser().getUsername(), maybeSuggestion.get(), MAIN_EDITOR);
 
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), BREADTH,
@@ -305,7 +303,7 @@ public class RecommendationEditorExtension
         log.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        String sessionOwner = userRegistry.getCurrentUsername();
+        String sessionOwner = userService.getCurrentUsername();
         if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
