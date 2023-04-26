@@ -132,7 +132,6 @@ public class ProjectLayersPanel
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-        setOutputMarkupId(true);
 
         selectedLayer = Model.of();
         selectedFeature = Model.of();
