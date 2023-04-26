@@ -96,7 +96,8 @@ public class RecommendationRelationRenderer
             return;
         }
 
-        recommendationService.calculateRelationSuggestionVisibility(cas,
+        recommendationService.calculateRelationSuggestionVisibility(
+                aRequest.getSessionOwner().getUsername(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groupedPredictions,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 

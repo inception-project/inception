@@ -145,8 +145,8 @@ public class SpanAdapter
             AnnotationFS aAnnotation, int aBegin, int aEnd)
         throws AnnotationException
     {
-        return handle(new MoveSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aAnnotation, aBegin,
-                aEnd));
+        return handle(new MoveSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aAnnotation,
+                aBegin, aEnd));
     }
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException

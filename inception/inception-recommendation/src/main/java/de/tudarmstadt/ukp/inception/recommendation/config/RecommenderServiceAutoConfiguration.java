@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -54,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSet
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRelationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
@@ -78,18 +76,12 @@ public class RecommenderServiceAutoConfiguration
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            DocumentService aDocumentService, ProjectService aProjectService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
-                aLearningRecordService, aProjectService, entityManager, aApplicationEventPublisher);
-    }
-
-    @Bean
-    public LearningRecordService learningRecordService()
-    {
-        return new LearningRecordServiceImpl(entityManager);
+                aProjectService, entityManager, aApplicationEventPublisher);
     }
 
     @ConditionalOnWebApplication
@@ -160,11 +152,10 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationEditorExtension recommendationEditorExtension(
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher, aUserService);
+                aApplicationEventPublisher, aUserService);
     }
 
     @Bean

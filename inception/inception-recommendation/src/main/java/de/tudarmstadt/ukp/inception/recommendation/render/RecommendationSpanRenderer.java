@@ -91,7 +91,8 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        recommendationService.calculateSpanSuggestionVisibility(aRequest.getSourceDocument(), cas,
+        recommendationService.calculateSpanSuggestionVisibility(
+                aRequest.getSessionOwner().getUsername(), aRequest.getSourceDocument(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 

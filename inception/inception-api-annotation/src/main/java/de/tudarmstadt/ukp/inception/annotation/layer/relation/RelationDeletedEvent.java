@@ -33,6 +33,7 @@ public class RelationDeletedEvent
             AnnotationLayer aLayer, AnnotationFS aRelationFS, AnnotationFS aTargetAnnotation,
             AnnotationFS aSourceAnnotation)
     {
-        super(aSource, aDocument, aDocumentOwner, aLayer, aRelationFS, aTargetAnnotation, aSourceAnnotation);
+        super(aSource, aDocument, aDocumentOwner, aLayer, aRelationFS, aTargetAnnotation,
+                aSourceAnnotation);
     }
 }

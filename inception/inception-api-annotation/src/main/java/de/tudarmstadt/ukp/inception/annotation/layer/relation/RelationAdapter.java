@@ -234,7 +234,7 @@ public class RelationAdapter
             tgt = getFeature(tgt, getLayer().getAttachFeature().getName(), AnnotationFS.class);
         }
 
-        selection.selectArc(new VID(aAnno), src, tgt);
+        selection.selectArc(VID.of(aAnno), src, tgt);
         return selection;
     }
 

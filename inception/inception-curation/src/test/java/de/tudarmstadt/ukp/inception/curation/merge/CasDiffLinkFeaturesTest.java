@@ -58,8 +58,7 @@ public class CasDiffLinkFeaturesTest
 
         // Set up source CAS
         JCas sourceCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostFS(sourceCas, 0, 0, feature, "A",
-                makeLinkFS(sourceCas, "slot1", 0, 0));
+        makeLinkHostFS(sourceCas, 0, 0, feature, "A", makeLinkFS(sourceCas, "slot1", 0, 0));
 
         // Perform diff
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
@@ -85,8 +84,7 @@ public class CasDiffLinkFeaturesTest
 
         // Set up source CAS
         JCas sourceCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostFS(sourceCas, 0, 0, feature, "A",
-                makeLinkFS(sourceCas, "slot1", 0, 0));
+        makeLinkHostFS(sourceCas, 0, 0, feature, "A", makeLinkFS(sourceCas, "slot1", 0, 0));
 
         // Perform diff
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();

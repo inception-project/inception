@@ -45,9 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**
- * Stores references to the recommendationService, the currently used JCas and the annotatorState.
- * This class is widely used in the recommendation module.
- * 
  * If the prediction task has run it stores the predicted annotations for an annotation layer in the
  * predictions map.
  */
@@ -246,6 +243,23 @@ public class Predictions
         synchronized (predictions) {
             idxDocuments.values().forEach(docGroup -> docGroup.entrySet() //
                     .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId));
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public List<SpanSuggestion> getAlternativeSuggestions(SpanSuggestion aSuggestion)
+    {
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentName(), emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> f.getValue() instanceof SpanSuggestion) //
+                    .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
+                    .filter(f -> f.getKey().getLayerId() == aSuggestion.getLayerId()) //
+                    .filter(f -> f.getValue().getBegin() == aSuggestion.getBegin()) //
+                    .filter(f -> f.getValue().getEnd() == aSuggestion.getEnd()) //
+                    .filter(f -> f.getValue().getFeature().equals(aSuggestion.getFeature())) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
         }
     }
 

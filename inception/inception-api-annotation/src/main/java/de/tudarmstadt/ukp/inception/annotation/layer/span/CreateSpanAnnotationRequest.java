@@ -39,7 +39,7 @@ public class CreateSpanAnnotationRequest
     @Override
     public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new CreateSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(), aBegin,
-                aEnd);
+        return new CreateSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(),
+                aBegin, aEnd);
     }
 }

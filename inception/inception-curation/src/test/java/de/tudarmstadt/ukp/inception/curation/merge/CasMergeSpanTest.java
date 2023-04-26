@@ -152,8 +152,7 @@ public class CasMergeSpanTest
                 makeLinkFS(sourceCas, role, 0, 0));
 
         var targetCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
-        makeLinkHostFS(targetCas, 0, 0, sourceFeature, "C",
-                makeLinkFS(targetCas, role, 0, 0));
+        makeLinkHostFS(targetCas, 0, 0, sourceFeature, "C", makeLinkFS(targetCas, role, 0, 0));
 
         sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
                 false);

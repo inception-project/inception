@@ -345,7 +345,7 @@ public class CasStorageServiceImplTest
         log.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Wait for primary threads to complete ----");
+        log.info("---- Waiting for primary threads to complete ----");
         boolean done = false;
         while (!done) {
             long running = primaryTasks.stream().filter(Thread::isAlive).count();
@@ -357,7 +357,7 @@ public class CasStorageServiceImplTest
                     deleteCounter, deleteInitialCounter);
         }
 
-        log.info("---- Wait for threads secondary threads to wrap up ----");
+        log.info("---- Waiting for secondary threads to wrap up ----");
         rwTasksCompleted.set(true);
         for (Thread thread : secondaryTasks) {
             thread.join();
