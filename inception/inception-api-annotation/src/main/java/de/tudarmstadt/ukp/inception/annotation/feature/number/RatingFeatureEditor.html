@@ -18,13 +18,17 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="row form-row">
-    <label wicket:for="group" class="col-sm-3 col-form-label"><span wicket:id="feature"/></label>
-    <div class="col-sm-9" wicket:id="group">
-      <span wicket:id="radios">
-        <input wicket:id="radio" type="radio"/>
-        <label wicket:id="label" style="margin-right: 5%; padding-left: 20px;"></label>
-      </span>
+  <div class="row form-row fe-radio-group" wicket:enclosure="group">
+    <label wicket:for="group" wicket:enclosure="feature" class="feature-editor-label col-form-label">
+      <span wicket:id="feature"/>
+    </label>
+    <div class="feature-editor-value">
+      <div wicket:id="group" class="btn-group d-flex flex-wrap" role="group">
+        <wicket:container wicket:id="radios">
+          <input wicket:id="radio" type="radio" class="btn-check" autocomplete="off">
+          <label wicket:id="label" class="btn btn-outline-primary"/>
+        </wicket:container>
+      </div>
     </div>
   </div>
 </wicket:panel>
