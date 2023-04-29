@@ -132,7 +132,13 @@ public class ConceptFeatureSupport
         }
 
         ConceptFeatureTraits traits = readTraits(aFeature);
-        return labelCache.get(aFeature, traits.getRepositoryId(), aIdentifier).getUiLabel();
+        return getConceptHandle(aFeature, aIdentifier, traits).getUiLabel();
+    }
+
+    public KBHandle getConceptHandle(AnnotationFeature aFeature, String aIdentifier,
+            ConceptFeatureTraits traits)
+    {
+        return labelCache.get(aFeature, traits.getRepositoryId(), aIdentifier);
     }
 
     @SuppressWarnings("unchecked")
@@ -165,8 +171,7 @@ public class ConceptFeatureSupport
             String identifier = (String) aValue;
             String label = renderFeatureValue(aFeature, identifier);
             ConceptFeatureTraits traits = readTraits(aFeature);
-            String description = labelCache.get(aFeature, traits.getRepositoryId(), identifier)
-                    .getDescription();
+            String description = getConceptHandle(aFeature, identifier, traits).getDescription();
 
             return new KBHandle(identifier, label, description);
         }
@@ -274,7 +279,7 @@ public class ConceptFeatureSupport
         List<VLazyDetailResult> result = new ArrayList<>();
 
         ConceptFeatureTraits traits = readTraits(aFeature);
-        KBHandle handle = labelCache.get(aFeature, traits.getRepositoryId(), aQuery);
+        KBHandle handle = getConceptHandle(aFeature, aQuery, traits);
 
         result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
 
