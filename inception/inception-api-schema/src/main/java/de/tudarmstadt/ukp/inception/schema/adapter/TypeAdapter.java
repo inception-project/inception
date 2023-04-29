@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 
 /**
  * A type adapter encapsulates a specific kind of annotation layer, e.g. spans, relations or chains.
@@ -128,6 +129,8 @@ public interface TypeAdapter
      */
     Collection<AnnotationFeature> listFeatures();
 
+    Optional<AnnotationFeature> getFeature(String aName);
+
     /**
      * Set the value of the given feature.
      * 
@@ -209,4 +212,8 @@ public interface TypeAdapter
     {
         return isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
     }
+
+    <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
+
+    String renderFeatureValue(FeatureStructure aFS, String aFeature);
 }
