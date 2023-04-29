@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
@@ -103,6 +104,36 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
+        initFeaturesCacheIfNecessary();
+        return features.values();
+    }
+
+    @Override
+    public Optional<AnnotationFeature> getFeature(String aName)
+    {
+        initFeaturesCacheIfNecessary();
+        return Optional.ofNullable(features.get(aName));
+    }
+
+    @Override
+    public String renderFeatureValue(FeatureStructure aFS, String aFeature)
+    {
+        var feature = getFeature(aFeature);
+        if (!feature.isPresent()) {
+            return null;
+        }
+        return featureSupportRegistry.findExtension(feature.get())
+                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)).orElse(null);
+    }
+
+    @Override
+    public <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName)
+    {
+        return getFeature(aName).flatMap(featureSupportRegistry::findExtension);
+    }
+
+    private void initFeaturesCacheIfNecessary()
+    {
         if (features == null) {
             // Using a sorted map here so we have reliable positions in the map when iterating. We
             // use these positions to remember the armed slots!
@@ -111,8 +142,6 @@ public abstract class TypeAdapter_ImplBase
                 features.put(f.getName(), f);
             }
         }
-
-        return features.values();
     }
 
     @Override
