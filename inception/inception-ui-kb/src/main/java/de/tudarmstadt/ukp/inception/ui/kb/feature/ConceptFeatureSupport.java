@@ -169,11 +169,11 @@ public class ConceptFeatureSupport
 
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            String label = renderFeatureValue(aFeature, identifier);
             ConceptFeatureTraits traits = readTraits(aFeature);
-            String description = getConceptHandle(aFeature, identifier, traits).getDescription();
-
-            return new KBHandle(identifier, label, description);
+            KBHandle chbk = getConceptHandle(aFeature, identifier, traits);
+            var clone = new KBHandle(identifier, chbk.getUiLabel(), chbk.getDescription());
+            clone.setKB(chbk.getKB());
+            return clone;
         }
 
         throw new IllegalArgumentException(
