@@ -2757,6 +2757,16 @@ public class RecommendationServiceImpl
 
     @Transactional
     @Override
+    public List<LearningRecord> listLearningRecords(Project aProject)
+    {
+        String sql = "FROM LearningRecord l WHERE l.sourceDocument.project = :project";
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("project", aProject);
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
     public List<LearningRecord> listLearningRecords(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, AnnotationFeature aFeature)
     {
@@ -2817,7 +2827,9 @@ public class RecommendationServiceImpl
         return query.getResultList();
     }
 
-    private void createLearningRecord(LearningRecord aLearningRecord)
+    @Override
+    @Transactional
+    public void createLearningRecord(LearningRecord aLearningRecord)
     {
         entityManager.persist(aLearningRecord);
         entityManager.flush();

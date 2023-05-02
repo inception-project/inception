@@ -21,6 +21,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -35,6 +36,8 @@ public interface LearningRecordService
 
     List<LearningRecord> listLearningRecords(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, AnnotationFeature aFeature);
+
+    List<LearningRecord> listLearningRecords(Project aProject);
 
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
@@ -96,4 +99,6 @@ public interface LearningRecordService
      *            the layer
      */
     void deleteSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
+
+    void createLearningRecord(LearningRecord aRecord);
 }
