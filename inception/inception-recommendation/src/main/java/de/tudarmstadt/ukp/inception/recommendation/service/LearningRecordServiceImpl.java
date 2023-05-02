@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -163,6 +164,16 @@ public class LearningRecordServiceImpl
         record.setAnnotationFeature(aFeature);
 
         create(record);
+    }
+
+    @Transactional
+    @Override
+    public List<LearningRecord> listRecords(Project aProject)
+    {
+        String sql = "FROM LearningRecord l WHERE l.sourceDocument.project = :project";
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("project", aProject);
+        return query.getResultList();
     }
 
     @Transactional

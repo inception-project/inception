@@ -21,6 +21,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -35,6 +36,8 @@ public interface LearningRecordService
 
     List<LearningRecord> listRecords(SourceDocument aDocument, String aUser,
             AnnotationFeature aFeature);
+
+    List<LearningRecord> listRecords(Project aProject);
 
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
