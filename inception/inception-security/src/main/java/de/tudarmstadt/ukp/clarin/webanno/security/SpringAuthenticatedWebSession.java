@@ -108,6 +108,11 @@ public class SpringAuthenticatedWebSession
 
             springSecuritySignIn(authentication);
 
+            // If this is called, the authentication object has been created artificially and not
+            // via the authenticationManager, so we need to send the login even manually
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new AuthenticationSuccessEvent(authentication));
+
             return true;
         }
         catch (AuthenticationException e) {
