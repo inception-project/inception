@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
@@ -95,8 +93,7 @@ public class SpringAuthenticatedWebSession
         try {
             Request request = RequestCycle.get().getRequest();
             if (request instanceof ServletWebRequest) {
-                HttpServletRequest containerRequest = ((ServletWebRequest) request)
-                        .getContainerRequest();
+                var containerRequest = ((ServletWebRequest) request).getContainerRequest();
 
                 // Kill current session and create a new one as part of the authentication
                 containerRequest.getSession().invalidate();

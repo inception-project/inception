@@ -31,7 +31,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
@@ -173,7 +172,7 @@ public class RecommenderExporterTest
         recommender1.setThreshold(.1);
         recommender1.setSkipEvaluation(true);
         recommender1.setMaxRecommendations(3);
-        recommender1.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS, FINISHED));
+        recommender1.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS, FINISHED));
 
         Recommender recommender2 = buildRecommender("2");
         recommender2.setAlwaysSelected(false);
@@ -181,7 +180,7 @@ public class RecommenderExporterTest
         recommender2.setThreshold(.2);
         recommender2.setSkipEvaluation(false);
         recommender2.setMaxRecommendations(4);
-        recommender2.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS));
+        recommender2.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS));
 
         Recommender recommender3 = buildRecommender("3");
         recommender3.setAlwaysSelected(true);
@@ -189,7 +188,7 @@ public class RecommenderExporterTest
         recommender3.setThreshold(.3);
         recommender3.setSkipEvaluation(false);
         recommender3.setMaxRecommendations(5);
-        recommender3.setStatesIgnoredForTraining(asSet(AnnotationDocumentState.values()));
+        recommender3.setStatesIgnoredForTraining(Set.of(AnnotationDocumentState.values()));
 
         Recommender recommender4 = buildRecommender("4");
         recommender4.setAlwaysSelected(false);
@@ -197,7 +196,7 @@ public class RecommenderExporterTest
         recommender4.setThreshold(.4);
         recommender4.setSkipEvaluation(true);
         recommender4.setMaxRecommendations(6);
-        recommender4.setStatesIgnoredForTraining(asSet());
+        recommender4.setStatesIgnoredForTraining(Set.of());
 
         return asList(recommender1, recommender2, recommender3, recommender4);
     }
@@ -221,10 +220,5 @@ public class RecommenderExporterTest
         recommender.setLayer(layer);
         recommender.setProject(project);
         return recommender;
-    }
-
-    private static <T> Set<T> asSet(T... a)
-    {
-        return new HashSet<>(asList(a));
     }
 }

@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
+import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
@@ -71,7 +72,6 @@ public class RecommenderServiceAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    @Autowired
     public RecommendationService recommendationService(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
@@ -100,11 +100,18 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    @Autowired
     public RecommenderExporter recommenderExporter(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService)
     {
         return new RecommenderExporter(aAnnotationService, aRecommendationService);
+    }
+
+    @Bean
+    public LearningRecordExporter learningRecordExporter(AnnotationSchemaService aAnnotationService,
+            DocumentService aDocumentService, LearningRecordService aLearningRecordService)
+    {
+        return new LearningRecordExporter(aAnnotationService, aDocumentService,
+                aLearningRecordService);
     }
 
     @Bean
