@@ -26,10 +26,16 @@ This section describes settings related to the storage of CAS data objects (i.e.
 | Default
 | Example
 
-| cas-storage.compressed-cas-serialization
+| `cas-storage.compressed-cas-serialization`
 | Whether to compress annotation files
-| true
-| false
+| `true`
+| `false`
+
+| `cas-storage.file-system-timestamp-accuracy`
+| For file systems where timestamps are not exact, this can be used to configure some leniency. This setting should be used with extreme caution. If an editor accesses an annotation file that is out-of-sync with the editor, this can lead to unexpected behavior. However, when deploying {product-name} e.g. on certain cloud storage facilitites, the file system timestamps may not be exact down to the millisecond,
+this it may be helpful to configure a slight leniency here.
+| `0`
+| `500ms`
 |===
 
 The compression setting takes effect whenever a CAS is written to disk. Changing it does not 
@@ -49,19 +55,19 @@ This cache can be tuned using the following properties:
 | Default
 | Example
 
-| cas-storage.cache.shared-cas-cache-size
+| `cas-storage.cache.shared-cas-cache-size`
 | Number of shared read-only CASes to keep in memory
-| 10-5000 _(depending on heap size)_
-| 20000
+| `10`-`5000` _(depending on heap size)_
+| `20000`
 
-| cas-storage.cache.idle-cas-eviction-delay
+| `cas-storage.cache.idle-cas-eviction-delay`
 | Time a CAS is retained in the caches after the last access
-| 5m
-| 1h
+| `5m`
+| `1h`
 
-| cas-storage.cache.cas-borrow-wait-timeout
+| `cas-storage.cache.cas-borrow-wait-timeout`
 | Time for an exclusive action to wait for another exclusive action to finish
-| 3m
-| 5m
+| `3m`
+| `5m`
 |===
 
