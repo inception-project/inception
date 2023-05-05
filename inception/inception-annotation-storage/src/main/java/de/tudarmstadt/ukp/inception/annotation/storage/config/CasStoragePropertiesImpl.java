@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.config;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -34,6 +36,7 @@ public class CasStoragePropertiesImpl
     private boolean compressedCasSerialization = true;
     private boolean paranoidCasSerialization = false;
     private boolean traceAccess = false;
+    private Duration fileSystemTimestampAccuracy = Duration.ofMillis(0);
 
     @ManagedAttribute
     public void setTraceAccess(boolean aTraceAccess)
@@ -70,5 +73,18 @@ public class CasStoragePropertiesImpl
     public boolean isCompressedCasSerialization()
     {
         return compressedCasSerialization;
+    }
+
+    @ManagedAttribute
+    public void setFileSystemTimestampAccuracy(Duration aFileSystemTimestampAccuracy)
+    {
+        fileSystemTimestampAccuracy = aFileSystemTimestampAccuracy;
+    }
+
+    @Override
+    @ManagedAttribute
+    public Duration getFileSystemTimestampAccuracy()
+    {
+        return fileSystemTimestampAccuracy;
     }
 }
