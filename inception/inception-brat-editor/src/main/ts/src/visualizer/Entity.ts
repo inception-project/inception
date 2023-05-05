@@ -125,7 +125,7 @@ export class Entity {
   /**
    * @param {string} text
    */
-  splitMultilineOffsets (text) {
+  splitMultilineOffsets (text: string) {
     this.segmentedOffsetsMap = {}
 
     for (let fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {

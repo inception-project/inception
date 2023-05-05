@@ -216,7 +216,15 @@ export class AnnotatorUI {
   private startArcDrag (originId: string | undefined | null) {
     this.clearSelection()
 
-    if (!originId || !this.data.spans[originId]) {
+    if (!originId) return
+
+    const originEntity = this.data.spans[originId]
+    if (!originEntity) {
+      console.warn(`Unable to find origin entity with id ${originId}`)
+      return
+    }
+    if (!originEntity.headFragment.group) {
+      console.warn('Origin entity has no head-fragment group', originEntity)
       return
     }
 
@@ -227,10 +235,9 @@ export class AnnotatorUI {
       .fill('none')
       .attr('marker-end', 'url(#drag_arrow)')
       .addClass('drag_stroke')
-    this.arcDragOriginGroup = this.data.spans[this.arcDragOrigin].headFragment.group
+    this.arcDragOriginGroup = originEntity.headFragment.group
     this.arcDragOriginGroup.addClass('highlight')
-    this.arcDragOriginBox = Util.realBBox(this.data.spans[this.arcDragOrigin].headFragment)
-    this.arcDragOriginBox.center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2
+    this.arcDragOriginBox = Util.realBBox(originEntity.headFragment)
 
     this.arcDragJustStarted = true
   }
@@ -303,12 +310,13 @@ export class AnnotatorUI {
 
     this.clearSelection()
     const mx = evt.pageX - this.svgPosition.left
-    const my = evt.pageY - this.svgPosition.top + 5 // TODO FIXME why +5?!?
+    const my = evt.pageY - this.svgPosition.top
     const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight
-    const dx = (this.arcDragOriginBox.center - mx) / 4
+    const center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2
+    const dx = (center - mx) / 4
     this.arcDragArc.plot([
-      ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
-      ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]
+      ['M', center, this.arcDragOriginBox.y],
+      ['C', center - dx, y, mx + dx, y, mx, my]
     ])
   }
 
