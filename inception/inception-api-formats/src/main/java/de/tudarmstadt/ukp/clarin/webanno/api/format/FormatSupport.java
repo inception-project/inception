@@ -144,13 +144,16 @@ public interface FormatSupport
     }
 
     /**
+     * @param aProject
+     *            the project into which to import the document(s).
      * @param aTSD
      *            the project's type system
      * @return a UIMA reader description.
      * @throws ResourceInitializationException
      *             if the reader could not be initialized
      */
-    default CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    default CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be read");
@@ -174,10 +177,10 @@ public interface FormatSupport
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");
     }
 
-    default void read(CAS cas, File aFile)
+    default void read(Project aProject, CAS cas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
-        CollectionReaderDescription readerDescription = getReaderDescription(null);
+        CollectionReaderDescription readerDescription = getReaderDescription(aProject, null);
         addConfigurationParameters(readerDescription,
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
                 aFile.getParentFile().getAbsolutePath(),

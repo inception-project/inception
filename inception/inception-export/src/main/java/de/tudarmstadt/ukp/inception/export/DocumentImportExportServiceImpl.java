@@ -309,7 +309,7 @@ public class DocumentImportExportServiceImpl
 
         // Prepare a CAS with the project type system
         CAS cas = WebAnnoCasUtil.createCas(tsd);
-        format.read(WebAnnoCasUtil.getRealCas(cas), aFile);
+        format.read(aDocument.getProject(), WebAnnoCasUtil.getRealCas(cas), aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences

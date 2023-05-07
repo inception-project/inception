@@ -28,6 +28,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.request.resource.CssResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.intertext.config.IntertextAutoConfiguration;
 
 /**
@@ -67,7 +68,8 @@ public class IntertextFormatSupport
     // }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(IntertextReader.class, aTSD);
