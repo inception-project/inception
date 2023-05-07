@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsBy
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -30,9 +29,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.fit.util.FSUtil;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -163,25 +160,6 @@ public abstract class TypeAdapter_ImplBase
             publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
                     aFeature, newValue, oldValue));
         }
-    }
-
-    private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
-    {
-        Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (f == null) {
-            return null;
-        }
-
-        if (f.getRange().isPrimitive()) {
-            return FSUtil.getFeature(fs, aFeature.getName(), Object.class);
-        }
-
-        if (FSUtil.isMultiValuedFeature(fs, f)) {
-            return FSUtil.getFeature(fs, aFeature.getName(), List.class);
-        }
-
-        return FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
     }
 
     @SuppressWarnings("unchecked")
