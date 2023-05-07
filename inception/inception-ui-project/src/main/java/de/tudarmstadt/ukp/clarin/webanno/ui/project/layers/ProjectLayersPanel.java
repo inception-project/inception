@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
@@ -432,6 +433,10 @@ public class ProjectLayersPanel
 
         private static final long serialVersionUID = -1L;
 
+        private LambdaAjaxLink btnMoveUp;
+        private LambdaAjaxLink btnMoveDown;
+        private ListChoice<AnnotationFeature> overviewList;
+
         public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
         {
             super(id, aModel);
@@ -440,7 +445,7 @@ public class ProjectLayersPanel
 
             add(new DocLink("featuresHelpLink", "sect_projects_layers_features"));
 
-            add(new ListChoice<AnnotationFeature>("feature")
+            overviewList = new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
                 {
@@ -458,13 +463,16 @@ public class ProjectLayersPanel
                         }
                     });
                     setNullValid(false);
-                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-                        // list and detail panel share the same model, but they are not
-                        // automatically notified of updates to the model unless the
-                        // updates go through their respective setModelObject() calls
-                        featureDetailForm.modelChanged();
-                        _target.add(featureDetailForm);
-                    }));
+                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
+                }
+
+                private void onChange(AjaxRequestTarget _target)
+                {
+                    // list and detail panel share the same model, but they are not
+                    // automatically notified of updates to the model unless the
+                    // updates go through their respective setModelObject() calls
+                    featureDetailForm.modelChanged();
+                    _target.add(featureDetailForm, btnMoveDown, btnMoveUp);
                 }
 
                 @Override
@@ -472,7 +480,18 @@ public class ProjectLayersPanel
                 {
                     return "";
                 }
-            });
+            };
+            add(overviewList);
+
+            btnMoveUp = new LambdaAjaxLink("moveUp", this::moveTagUp);
+            btnMoveUp.setOutputMarkupPlaceholderTag(true);
+            btnMoveUp.add(visibleWhenModelIsNotNull(overviewList));
+            add(btnMoveUp);
+
+            btnMoveDown = new LambdaAjaxLink("moveDown", this::moveTagDown);
+            btnMoveDown.setOutputMarkupPlaceholderTag(true);
+            btnMoveDown.add(visibleWhenModelIsNotNull(overviewList));
+            add(btnMoveDown);
 
             LambdaAjaxLink createButton = new LambdaAjaxLink(CID_CREATE_FEATURE,
                     this::actionCreateFeature);
@@ -482,6 +501,53 @@ public class ProjectLayersPanel
 
             ));
             add(createButton);
+        }
+
+        private void moveTagUp(AjaxRequestTarget aTarget)
+        {
+            @SuppressWarnings("unchecked")
+            var tags = (List<AnnotationFeature>) overviewList.getChoices();
+            int i = tags.indexOf(overviewList.getModelObject());
+
+            if (i < 1) {
+                return;
+            }
+
+            var tag = tags.remove(i);
+            tags.add(i - 1, tag);
+
+            updateFeatureRanks(aTarget, tags);
+        }
+
+        private void moveTagDown(AjaxRequestTarget aTarget)
+        {
+            @SuppressWarnings("unchecked")
+            var tags = (List<AnnotationFeature>) overviewList.getChoices();
+            int i = tags.indexOf(overviewList.getModelObject());
+
+            if (i >= tags.size() - 1) {
+                return;
+            }
+
+            var tag = tags.remove(i);
+            tags.add(i + 1, tag);
+
+            updateFeatureRanks(aTarget, tags);
+        }
+
+        private void updateFeatureRanks(AjaxRequestTarget aTarget,
+                List<AnnotationFeature> aFeatures)
+        {
+            annotationService.updateFeatureRanks(selectedLayer.getObject(), aFeatures);
+
+            var selected = overviewList.getModelObject();
+            for (var t : aFeatures) {
+                if (t.equals(selected)) {
+                    selected.setRank(t.getRank());
+                }
+            }
+
+            aTarget.add(overviewList, btnMoveUp, btnMoveDown);
         }
 
         private void actionCreateFeature(AjaxRequestTarget aTarget)

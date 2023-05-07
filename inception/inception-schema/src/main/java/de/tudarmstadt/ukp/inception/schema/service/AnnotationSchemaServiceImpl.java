@@ -90,7 +90,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.TagDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature_;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
 import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -98,6 +100,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag_;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -241,16 +244,41 @@ public class AnnotationSchemaServiceImpl
         }
 
         int n = 0;
-        for (Tag t : aTags) {
-            if (!aTagSet.equals(t.getTagSet())) {
+        for (Tag tag : aTags) {
+            if (!aTagSet.equals(tag.getTagSet())) {
                 throw new IllegalArgumentException("All tags to be updated must belong to "
-                        + aTagSet + ", but [" + t + "] belongs to " + t.getTagSet());
+                        + aTagSet + ", but [" + tag + "] belongs to " + tag.getTagSet());
             }
 
-            Tag dbTag = dbTags.get(t);
+            Tag dbTag = dbTags.get(tag);
             if (dbTag != null) {
                 dbTag.setRank(n);
-                t.setRank(n);
+                tag.setRank(n);
+                n++;
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void updateFeatureRanks(AnnotationLayer aLayer, List<AnnotationFeature> aFeatures)
+    {
+        var dbFeatures = new HashMap<AnnotationFeature, AnnotationFeature>();
+        for (var t : listAnnotationFeature(aLayer)) {
+            dbFeatures.put(t, t);
+        }
+
+        int n = 0;
+        for (var feature : aFeatures) {
+            if (!aLayer.equals(feature.getLayer())) {
+                throw new IllegalArgumentException("All features to be updated must belong to "
+                        + aLayer + ", but " + feature + " belongs to " + feature.getLayer());
+            }
+
+            var dbFeature = dbFeatures.get(feature);
+            if (dbFeature != null) {
+                dbFeature.setRank(n);
+                feature.setRank(n);
                 n++;
             }
         }
@@ -727,7 +755,7 @@ public class AnnotationSchemaServiceImpl
                 "FROM AnnotationFeature ", //
                 "WHERE type    = :type AND", //
                 "      project = :project", //
-                "ORDER BY uiName");
+                "ORDER BY rank ASC, uiName ASC");
 
         // This should not be cached because we do not have a proper foreign key relation to
         // the type.
@@ -747,7 +775,7 @@ public class AnnotationSchemaServiceImpl
                 "WHERE linkMode in (:modes) AND ", //
                 "      project = :project AND ", //
                 "      type in (:attachType) ", //
-                "ORDER BY uiName");
+                "ORDER BY rank ASC, uiName ASC");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
                 .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
@@ -766,7 +794,7 @@ public class AnnotationSchemaServiceImpl
                 "SELECT l.attachFeature", //
                 "FROM AnnotationLayer AS l", //
                 "WHERE l.attachType = :layer", //
-                "ORDER BY l.attachFeature.uiName");
+                "ORDER BY l.attachFeature.rank ASC, l.attachFeature.uiName ASC");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
                 .setParameter("layer", aLayer).setHint(CACHEABLE, true) //
@@ -781,15 +809,16 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", //
-                "FROM AnnotationFeature", //
-                "WHERE layer = :layer", //
-                "ORDER BY uiName");
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationFeature.class);
+        var root = query.from(AnnotationFeature.class);
 
-        return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer) //
-                .setHint(CACHEABLE, true) //
-                .getResultList();
+        query //
+                .where(cb.equal(root.get(AnnotationFeature_.layer), aLayer))
+                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
+                        cb.asc(root.get(AnnotationFeature_.uiName)));
+
+        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
     }
 
     @Override
@@ -800,26 +829,35 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", //
-                "FROM AnnotationFeature", //
-                "WHERE layer = :layer", //
-                "AND enabled = true", //
-                "ORDER BY uiName"); //
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationFeature.class);
+        var root = query.from(AnnotationFeature.class);
 
-        return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer) //
-                .setHint(CACHEABLE, true) //
-                .getResultList();
+        query //
+                .where(cb.and( //
+                        cb.equal(root.get(AnnotationFeature_.layer), aLayer),
+                        cb.isTrue(root.get(AnnotationFeature_.enabled))))
+                .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
+                        cb.asc(root.get(AnnotationFeature_.uiName)));
+
+        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
     }
 
     @Override
     @Transactional
     public List<AnnotationFeature> listAnnotationFeature(Project aProject)
     {
-        return entityManager.createQuery(
-                "FROM AnnotationFeature f WHERE project =:project ORDER BY f.layer.uiName, f.uiName",
-                AnnotationFeature.class) //
-                .setParameter("project", aProject) //
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationFeature.class);
+        var root = query.from(AnnotationFeature.class);
+
+        query //
+                .where(cb.equal(root.get(AnnotationFeature_.project), aProject)) //
+                .orderBy(cb.asc(root.get(AnnotationFeature_.layer).get(AnnotationLayer_.uiName)),
+                        cb.asc(root.get(AnnotationFeature_.rank)),
+                        cb.asc(root.get(AnnotationFeature_.uiName)));
+
+        return entityManager.createQuery(query) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
     }
@@ -832,11 +870,16 @@ public class AnnotationSchemaServiceImpl
             return emptyList();
         }
 
-        return entityManager
-                .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY rank ASC, name ASC",
-                        Tag.class)
-                .setParameter("tagSet", aTagSet) //
-                .getResultList();
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Tag.class);
+        var root = query.from(Tag.class);
+
+        query //
+                .where(cb.equal(root.get(Tag_.tagSet), aTagSet)) //
+                .orderBy(cb.asc(root.get(Tag_.rank)), //
+                        cb.asc(root.get(Tag_.name)));
+
+        return entityManager.createQuery(query).getResultList();
     }
 
     private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
