@@ -93,9 +93,6 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.FeatureDescription;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -2478,28 +2475,38 @@ public class RecommendationServiceImpl
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
         throws UIMAException, IOException
     {
-        try (StopWatch watch = new StopWatch(LOG, "adding score features")) {
-            TypeSystemDescription tsd = schemaService.getFullProjectTypeSystem(aProject);
+        try (var watch = new StopWatch(LOG, "adding score features")) {
+            var tsd = schemaService.getFullProjectTypeSystem(aProject);
+            var features = schemaService.listAnnotationFeature(aProject);
 
-            for (AnnotationLayer layer : schemaService.listAnnotationLayer(aProject)) {
-                TypeDescription td = tsd.getType(layer.getName());
-
+            for (var feature : features) {
+                var td = tsd.getType(feature.getLayer().getName());
                 if (td == null) {
-                    LOG.trace("Could not monkey patch type [{}]", layer.getName());
+                    LOG.trace("Could not monkey patch feature {} because type for layer {} was not "
+                            + "found in the type system", feature, feature.getLayer());
                     continue;
                 }
 
-                for (FeatureDescription feature : td.getFeatures()) {
-                    var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-                    td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
+                var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
+                td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
 
-                    var scoreExplanationFeatureName = feature.getName()
-                            + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
-                            CAS.TYPE_NAME_STRING);
+                var scoreExplanationFeatureName = feature.getName()
+                        + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+                td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
+                        TYPE_NAME_STRING);
 
-                    var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-                    td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
+                var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+                td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
+            }
+
+            var layers = features.stream().map(AnnotationFeature::getLayer).distinct()
+                    .collect(toList());
+            for (var layer : layers) {
+                var td = tsd.getType(layer.getName());
+                if (td == null) {
+                    LOG.trace("Could not monkey patch layer {} because its type was not found in "
+                            + "the type system", layer);
+                    continue;
                 }
 
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
