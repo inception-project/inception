@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationPosition
     implements Serializable, Position, Comparable<RelationPosition>
@@ -31,6 +32,14 @@ public class RelationPosition
     private final int sourceEnd;
     private final int targetBegin;
     private final int targetEnd;
+
+    public RelationPosition(AnnotationFS aSource, AnnotationFS aTarget)
+    {
+        sourceBegin = aSource.getBegin();
+        sourceEnd = aSource.getEnd();
+        targetBegin = aTarget.getBegin();
+        targetEnd = aTarget.getEnd();
+    }
 
     public RelationPosition(int aSourceBegin, int aSourceEnd, int aTargetBegin, int aTargetEnd)
     {
