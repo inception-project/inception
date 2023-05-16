@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TY
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
@@ -192,8 +193,10 @@ public class LayerDetailForm
         // Behaviors of layers
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
-        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerJson));
-        add(new AjaxDownloadLink("exportLayersAsUima", this::exportUimaTypeSystem));
+        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerAsJson));
+        add(new AjaxDownloadLink("exportLayersAsUima", this::exportAllLayersAsUimaXml));
+        add(new AjaxDownloadLink("exportFullTypeSystemAsUima",
+                this::exportFullTypeSystemAsUimaXml));
 
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
@@ -391,13 +394,14 @@ public class LayerDetailForm
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private IResourceStream exportUimaTypeSystem()
+    private IResourceStream exportFullTypeSystemAsUimaXml()
     {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
+            var tsd = annotationService.getFullProjectTypeSystem(getModelObject().getProject(),
+                    false);
             tsd.toXML(bos);
             return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
-                    "typesystem.xml");
+                    "full-typesystem.xml");
         }
         catch (Exception e) {
             WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
@@ -405,12 +409,26 @@ public class LayerDetailForm
         }
     }
 
-    private IResourceStream exportLayerJson()
+    private IResourceStream exportAllLayersAsUimaXml()
+    {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
+            tsd.toXML(bos);
+            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
+                    "layers-typesystem.xml");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
+            return null;
+        }
+    }
+
+    private IResourceStream exportLayerAsJson()
     {
         try {
             String json = LayerImportExportUtils.exportLayerToJson(annotationService,
                     getModelObject());
-            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")),
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
                     "layer.json");
         }
         catch (Exception e) {
