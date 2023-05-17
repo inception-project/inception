@@ -2527,6 +2527,13 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-dependency-analyzer</artifactId>
+            <version>1.13.2</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <failOnWarning>true</failOnWarning>
           <ignoredUnusedDeclaredDependencies combine.children="append">

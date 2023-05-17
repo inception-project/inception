@@ -118,6 +118,16 @@
 
     <!-- TEST DEPENDENCIES -->
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diag</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-schema</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
       <scope>test</scope>
