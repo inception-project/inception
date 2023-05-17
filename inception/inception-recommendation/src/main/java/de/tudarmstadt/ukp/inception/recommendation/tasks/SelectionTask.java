@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -74,12 +75,35 @@ public class SelectionTask
     private @Autowired SchedulingService schedulingService;
 
     private final SourceDocument currentDocument;
+    private final String dataOwner;
 
+    /**
+     * Create a new selection task.
+     * 
+     * @param aUser
+     *            the user owning the selection session.
+     * @param aProject
+     *            the project to perform the selection on.
+     * @param aTrigger
+     *            the trigger that caused the selection to be scheduled.
+     * @param aCurrentDocument
+     *            the document currently open in the editor.
+     * @param aDataOwner
+     *            the user owning the annotations currently shown in the editor (this can differ
+     *            from the user owning the session e.g. if a manager views another users annotations
+     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
+     */
     public SelectionTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument, String aDataOwner)
     {
         super(aUser, aProject, aTrigger);
+
+        if (getUser().isEmpty()) {
+            throw new IllegalArgumentException("SelectionTask requires a user");
+        }
+
         currentDocument = aCurrentDocument;
+        dataOwner = aDataOwner;
     }
 
     @Override
@@ -87,18 +111,20 @@ public class SelectionTask
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
-            User user = getUser().orElseThrow();
-            String userName = user.getUsername();
+            User sessionOwner = getUser().orElseThrow();
+            String sessionOwnerName = sessionOwner.getUsername();
+
+            logEvaluationStarted(sessionOwner);
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
             // recommender requires evaluation.
-            LazyInitializer<List<CAS>> casses = new LazyInitializer<List<CAS>>()
+            var casLoader = new LazyInitializer<List<CAS>>()
             {
                 @Override
                 protected List<CAS> initialize()
                 {
-                    return readCasses(project, userName);
+                    return readCasses(project, dataOwner);
                 }
             };
 
@@ -108,74 +134,120 @@ public class SelectionTask
                     continue;
                 }
 
-                List<Recommender> recommenders = recommendationService.listRecommenders(layer);
+                var recommenders = recommendationService.listRecommenders(layer);
                 if (recommenders == null || recommenders.isEmpty()) {
-                    log.trace("[{}][{}]: No recommenders, skipping selection.", userName,
-                            layer.getUiName());
+                    logNoRecommenders(sessionOwnerName, layer);
                     continue;
                 }
 
                 seenRecommender = true;
 
-                List<EvaluatedRecommender> evaluatedRecommenders = new ArrayList<>();
+                var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
-                    Optional<Recommender> optRecommender = freshenRecommender(user, r);
+                    Optional<Recommender> optRecommender = freshenRecommender(sessionOwner, r);
                     if (optRecommender.isEmpty()) {
+                        logRecommenderGone(sessionOwner, r);
                         continue;
                     }
 
                     Recommender recommender = optRecommender.get();
-                    String recommenderName = recommender.getName();
-
                     try {
                         long start = System.currentTimeMillis();
 
-                        evaluate(user, recommender, casses).ifPresent(evaluatedRecommender -> {
-                            var result = evaluatedRecommender.getEvaluationResult();
+                        evaluate(sessionOwner, recommender, casLoader)
+                                .ifPresent(evaluatedRecommender -> {
+                                    var result = evaluatedRecommender.getEvaluationResult();
 
-                            evaluatedRecommenders.add(evaluatedRecommender);
-                            appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(
-                                    this, recommender, user.getUsername(), result,
-                                    currentTimeMillis() - start, evaluatedRecommender.isActive()));
-                        });
+                                    evaluatedRecommenders.add(evaluatedRecommender);
+                                    appEventPublisher
+                                            .publishEvent(new RecommenderEvaluationResultEvent(this,
+                                                    recommender, sessionOwner.getUsername(), result,
+                                                    currentTimeMillis() - start,
+                                                    evaluatedRecommender.isActive()));
+                                });
                     }
 
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
                     catch (Throwable e) {
-                        log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
-                        appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                                .builder(this, project, user.getUsername()) //
-                                .withMessage(LogMessage.error(this, e.getMessage())) //
-                                .build());
+                        logEvaluationFailed(project, sessionOwner, recommender.getName(), e);
                     }
                 }
 
-                recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
+                recommendationService.setEvaluatedRecommenders(sessionOwner, layer,
+                        evaluatedRecommenders);
 
-                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                        .builder(this, getProject(), user.getUsername()) //
-                        .withMessage(LogMessage.info(this, "Evaluation complete")) //
-                        .build());
+                logEvaluationSuccessful(sessionOwner);
             }
 
             if (!seenRecommender) {
-                log.trace("[{}]: No recommenders configured, skipping training.", userName);
+                logNoRecommendersSeen(sessionOwnerName);
                 return;
             }
 
-            if (!recommendationService.hasActiveRecommenders(user.getUsername(), project)) {
-                log.debug("[{}]: No recommenders active, skipping training.", userName);
+            if (!recommendationService.hasActiveRecommenders(sessionOwner.getUsername(), project)) {
+                logNoRecommendersActive(sessionOwnerName);
                 return;
             }
 
-            TrainingTask trainingTask = new TrainingTask(user, getProject(),
-                    "SelectionTask after activating recommenders", currentDocument);
-            trainingTask.inheritLog(this);
-            schedulingService.enqueue(trainingTask);
+            scheduleTrainingTask(sessionOwner);
         }
+    }
+
+    private void logRecommenderGone(User user, Recommender aRecommender)
+    {
+        log.debug("[{}][{}][{}]: Recommender no longer available... skipping", getId(),
+                user.getUsername(), aRecommender.getName());
+    }
+
+    private void logEvaluationStarted(User sessionOwner)
+    {
+        log.info("[{}]: Evaluation started", sessionOwner.getUsername());
+    }
+
+    private void scheduleTrainingTask(User sessionOwner)
+    {
+        TrainingTask trainingTask = new TrainingTask(sessionOwner, getProject(),
+                "SelectionTask after activating recommenders", currentDocument, dataOwner);
+        trainingTask.inheritLog(this);
+        schedulingService.enqueue(trainingTask);
+    }
+
+    private void logNoRecommendersActive(String sessionOwnerName)
+    {
+        log.debug("[{}]: No recommenders active, skipping training.", sessionOwnerName);
+    }
+
+    private void logNoRecommendersSeen(String sessionOwnerName)
+    {
+        log.trace("[{}]: No recommenders configured, skipping training.", sessionOwnerName);
+    }
+
+    private void logEvaluationSuccessful(User sessionOwner)
+    {
+        log.info("[{}]: Evaluation complete", sessionOwner.getUsername());
+        appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                .builder(this, getProject(), sessionOwner.getUsername()) //
+                .withMessage(LogMessage.info(this, "Evaluation complete")) //
+                .build());
+    }
+
+    private void logEvaluationFailed(Project project, User sessionOwner, String recommenderName,
+            Throwable e)
+    {
+        log.error("[{}][{}]: Evaluation failed", sessionOwner.getUsername(), recommenderName, e);
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, project, sessionOwner.getUsername()) //
+                        .withMessage(LogMessage.error(this, e.getMessage())) //
+                        .build());
+    }
+
+    private void logNoRecommenders(String sessionOwnerName, AnnotationLayer layer)
+    {
+        log.trace("[{}][{}]: No recommenders, skipping selection.", sessionOwnerName,
+                layer.getUiName());
     }
 
     private Optional<EvaluatedRecommender> evaluate(User user, Recommender recommender,

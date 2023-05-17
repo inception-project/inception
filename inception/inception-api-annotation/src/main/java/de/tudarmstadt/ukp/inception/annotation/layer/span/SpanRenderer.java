@@ -166,6 +166,7 @@ public class SpanRenderer
         int fi = 0;
         nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
             if (!feat.isEnabled()) {
+                fi++;
                 continue nextFeature;
             }
 
@@ -191,6 +192,7 @@ public class SpanRenderer
                     aSpansAndSlots.add(arc);
                 }
             }
+
             fi++;
         }
     }

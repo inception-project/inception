@@ -50,7 +50,7 @@ public class SpanEventAdapter
     @Override
     public String getAnnotator(SpanEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

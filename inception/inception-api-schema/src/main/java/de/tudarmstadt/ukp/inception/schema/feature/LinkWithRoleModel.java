@@ -44,6 +44,13 @@ public class LinkWithRoleModel
         // No-args constructor
     }
 
+    public LinkWithRoleModel(LinkWithRoleModel aOther)
+    {
+        role = aOther.role;
+        label = aOther.label;
+        targetAddr = aOther.targetAddr;
+    }
+
     public LinkWithRoleModel(String aRole, String aLabel, int aTargetAddr)
     {
         role = aRole;

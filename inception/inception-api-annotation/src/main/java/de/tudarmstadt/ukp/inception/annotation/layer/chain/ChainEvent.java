@@ -59,7 +59,7 @@ public class ChainEvent
             builder.append("docID=");
             builder.append(getDocument().getId());
             builder.append(", user=");
-            builder.append(getUser());
+            builder.append(getDocumentOwner());
             builder.append(", ");
         }
         builder.append("element=[");

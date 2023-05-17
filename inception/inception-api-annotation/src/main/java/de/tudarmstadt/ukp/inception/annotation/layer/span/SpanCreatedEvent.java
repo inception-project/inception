@@ -29,9 +29,9 @@ public class SpanCreatedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
 
-    public SpanCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public SpanCreatedEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
             AnnotationLayer aLayer, AnnotationFS aAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aDocumentOwner, aLayer, aAnnotation);
     }
 }

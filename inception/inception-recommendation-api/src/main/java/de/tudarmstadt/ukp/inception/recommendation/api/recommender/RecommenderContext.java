@@ -31,16 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class RecommenderContext
 {
-    /**
-     * Empty context which starts out being closed.
-     */
-    public static final RecommenderContext EMPTY_CONTEXT;
-
-    static {
-        EMPTY_CONTEXT = new RecommenderContext();
-        EMPTY_CONTEXT.close();
-    }
-
     private final Map<String, Object> store;
     private List<LogMessage> messages;
     private Optional<User> user;
@@ -137,5 +127,15 @@ public class RecommenderContext
     public void setUser(User aUser)
     {
         user = Optional.ofNullable(aUser);
+    }
+
+    /**
+     * Empty context which starts out being closed.
+     */
+    public static RecommenderContext emptyContext()
+    {
+        var ctx = new RecommenderContext();
+        ctx.close();
+        return ctx;
     }
 }

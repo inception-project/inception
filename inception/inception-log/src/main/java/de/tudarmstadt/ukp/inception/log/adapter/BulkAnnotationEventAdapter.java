@@ -48,6 +48,6 @@ public class BulkAnnotationEventAdapter
     @Override
     public String getAnnotator(BulkAnnotationEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 }

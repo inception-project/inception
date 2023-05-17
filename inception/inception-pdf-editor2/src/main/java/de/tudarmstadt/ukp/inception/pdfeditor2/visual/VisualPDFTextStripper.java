@@ -170,21 +170,24 @@ public class VisualPDFTextStripper
 
         int unicodeLength;
         assert (unicodeLength = aTextPositions.stream() //
-                .map(TextPosition::getUnicode)//
+                .map(TextPosition::getVisuallyOrderedUnicode)//
                 .map(g -> normalizeWord(g, null))//
                 .mapToInt(String::length).sum()) == aText.length() : "Line length ["
                         + aText.length() + "] should match glyph unicode length [" + unicodeLength
                         + "] - [" + aText + "] <-> [" + aTextPositions.stream() //
-                                .map(TextPosition::getUnicode) //
+                                .map(TextPosition::getVisuallyOrderedUnicode) //
                                 .map(g -> normalizeWord(g, null)) //
                                 .collect(joining())
                         + "]";
 
-        var originalWord = aTextPositions.stream().map(TextPosition::getUnicode).collect(joining());
+        var originalWord = aTextPositions.stream() //
+                .map(TextPosition::getVisuallyOrderedUnicode) //
+                .collect(joining());
         var glyphOrder = new ArrayList<Integer>();
         var text = normalizeWord(originalWord, glyphOrder);
 
-        assert text.equals(aText) : "Text from PDFbox should match text from TextPositions";
+        assert text.equals(aText) : "Text from PDFbox [" + aText
+                + "] should match text from TextPositions [" + text + "]";
 
         if (glyphOrder.isEmpty()) {
             var cs = new ProtoVChunk(getBuffer().length(), aText, 0, false);
@@ -200,7 +203,7 @@ public class VisualPDFTextStripper
 
                 // Account for glyphs that were mapped to more than one character by normalization
                 // e.g. expanded ligatures
-                String normalizedUnicode = normalizeWord(pos.getUnicode(), null);
+                String normalizedUnicode = normalizeWord(pos.getVisuallyOrderedUnicode(), null);
 
                 normalizedUnicode = reconcileGlyphWithText(aText, false, normalizedUnicode, cs.end);
 
@@ -250,7 +253,7 @@ public class VisualPDFTextStripper
 
                 // Account for glyphs that were mapped to more than one character by normalization
                 // e.g. expanded ligatures
-                String normalizedUnicode = normalizeWord(pos.getUnicode(), null);
+                String normalizedUnicode = normalizeWord(pos.getVisuallyOrderedUnicode(), null);
                 var begin = cs.rtl ? gPos - (normalizedUnicode.length() - 1) : gPos;
 
                 normalizedUnicode = reconcileGlyphWithText(aText, rtl, normalizedUnicode, begin);
@@ -396,7 +399,7 @@ public class VisualPDFTextStripper
     private void assertAlignedTextPositions(String aText, List<TextPosition> aTextPositions)
     {
         int cumulativePositionLength = aTextPositions.stream()
-                .mapToInt(t -> normalizeWord(t.getUnicode(), null).length()) //
+                .mapToInt(t -> normalizeWord(t.getVisuallyOrderedUnicode(), null).length()) //
                 .sum();
 
         if (aText.length() != cumulativePositionLength) {
@@ -405,7 +408,7 @@ public class VisualPDFTextStripper
             System.out.println(" Text [" + aText + "]");
             StringBuilder sb = new StringBuilder();
             for (TextPosition p : aTextPositions) {
-                sb.append(p.getUnicode());
+                sb.append(p.getVisuallyOrderedUnicode());
             }
             String posText = sb.toString();
             System.out.println(" Pos [" + posText + "]");

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -29,8 +30,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
@@ -98,53 +104,60 @@ public interface RecommendationService
      */
     Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
 
-    boolean hasActiveRecommenders(String aUser, Project aProject);
+    boolean hasActiveRecommenders(String aSessionOwner, Project aProject);
 
-    List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject);
+    List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner, Project aProject);
 
-    void setEvaluatedRecommenders(User aUser, AnnotationLayer layer,
+    void setEvaluatedRecommenders(User aSessionOwner, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
 
-    List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer);
+    List<EvaluatedRecommender> getEvaluatedRecommenders(User aSessionOwner, AnnotationLayer aLayer);
 
-    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser, Recommender aRecommender);
+    Optional<EvaluatedRecommender> getEvaluatedRecommender(User aSessionOwner,
+            Recommender aRecommender);
 
-    List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
+    List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner, AnnotationLayer aLayer);
 
-    void setPreferences(User aUser, Project aProject, Preferences aPreferences);
+    void setPreferences(User aSessionOwner, Project aProject, Preferences aPreferences);
 
-    Preferences getPreferences(User aUser, Project aProject);
+    Preferences getPreferences(User aSessionOwner, Project aProject);
 
-    Predictions getPredictions(User aUser, Project aProject);
+    Predictions getPredictions(User aSessionOwner, Project aProject);
 
-    Predictions getIncomingPredictions(User aUser, Project aProject);
+    Predictions getIncomingPredictions(User aSessionOwner, Project aProject);
 
-    void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
+    void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
 
-    boolean switchPredictions(User aUser, Project aProject);
+    boolean switchPredictions(String aSessionOwner, Project aProject);
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            The owner of the context
      * @param aRecommender
      *            The recommender to which the desired context belongs
      * @return The context of the given recommender if there is one, or an empty one
      */
-    Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender);
+    Optional<RecommenderContext> getContext(String aSessionOwner, Recommender aRecommender);
 
     /**
      * Publishes a new context for the given recommender.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            The owner of the context.
      * @param aRecommender
      *            The recommender to which the desired context belongs.
      * @param aContext
      *            The new active context of the given recommender.
      */
-    void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext);
+    void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
+
+    AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
+        throws AnnotationException;
 
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
@@ -152,55 +165,90 @@ public interface RecommendationService
      * 
      * @param aDocument
      *            the source document to which the annotations belong
-     * @param aUsername
+     * @param aDataOwner
      *            the annotator user to whom the annotations belong
      * @param aCas
      *            the CAS containing the annotations
-     * @param layer
-     *            the layer to upsert
+     * @param aAdapter
+     *            an adapter for the layer to upsert
      * @param aFeature
      *            the feature on the layer that should be upserted
-     * @param aValue
-     *            the new value
-     * @param aBegin
-     *            the position of the annotation (in case it is created)
-     * @param aEnd
-     *            the position of the annotation (in case it is created)
-     *
-     * @return the CAS address of the created/updated annotation.
+     * @param aSuggestion
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    int upsertSpanFeature(SourceDocument aDocument, String aUsername, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, String aValue, int aBegin, int aEnd)
+    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
-    int upsertRelationFeature(SourceDocument aDocument, String aUsername, CAS aCas,
-            AnnotationLayer layer, AnnotationFeature aFeature, RelationSuggestion aSuggestion)
+    /**
+     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
+     * existing annotation.
+     * 
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aCas
+     *            the CAS containing the annotations
+     * @param aAdapter
+     *            an adapter for the layer to upsert
+     * @param aFeature
+     *            the feature on the layer that should be upserted
+     * @param aSuggestion
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * @param aAction
+     *            TODO
+     * @return the created/updated annotation.
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
+            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordType aAction)
         throws AnnotationException;
+
+    void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+
+    void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
 
     /**
      * Compute predictions.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            the user to compute the predictions for.
      * @param aProject
      *            the project to compute the predictions for.
      * @param aDocuments
      *            the documents to compute the predictions for.
+     * @param aDataOwner
+     *            the owner of the annotations.
      * @return the new predictions.
      */
-    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
+    Predictions computePredictions(User aSessionOwner, Project aProject,
+            List<SourceDocument> aDocuments, String aDataOwner);
 
     /**
      * Compute predictions.
      *
-     * @param aUser
+     * @param aSessionOwner
      *            the user to compute the predictions for.
      * @param aProject
      *            the project to compute the predictions for.
      * @param aCurrentDocument
      *            the document to compute the predictions for.
+     * @param aDataOwner
+     *            the owner of the annotations.
      * @param aInherit
      *            any documents for which to inherit the predictions from a previous run
      * @param aPredictionBegin
@@ -209,37 +257,42 @@ public interface RecommendationService
      *            end of the prediction range (negative to predict until the end of the document)
      * @return the new predictions.
      */
-    Predictions computePredictions(User aUser, Project aProject, SourceDocument aCurrentDocument,
-            List<SourceDocument> aInherit, int aPredictionBegin, int aPredictionEnd);
+    Predictions computePredictions(User aSessionOwner, Project aProject,
+            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
+            int aPredictionBegin, int aPredictionEnd);
 
-    void calculateSpanSuggestionVisibility(SourceDocument aDocument, CAS aCas, String aUser,
-            AnnotationLayer aLayer, Collection<SuggestionGroup<SpanSuggestion>> aRecommendations,
-            int aWindowBegin, int aWindowEnd);
+    void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
+            String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd);
 
-    void calculateRelationSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+    void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
+            AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 
-    void clearState(String aUsername);
+    void clearState(String aSessionOwner);
 
-    void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
+    void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
+            String aDocumentOwner);
 
-    void triggerTrainingAndPrediction(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument);
+    void triggerTrainingAndPrediction(String aSessionOwner, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument, String aDocumentOwner);
 
-    void triggerSelectionTrainingAndPrediction(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument);
+    void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
+            String aEventName, SourceDocument aCurrentDocument, String aDocumentOwner);
 
-    boolean isPredictForAllDocuments(String aUser, Project aProject);
+    boolean isPredictForAllDocuments(String aSessionOwner, Project aProject);
 
-    void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
+    void setPredictForAllDocuments(String aSessionOwner, Project aProject,
+            boolean aPredictForAllDocuments);
 
-    List<LogMessageGroup> getLog(String aUser, Project aProject);
+    List<LogMessageGroup> getLog(String aSessionOwner, Project aProject);
 
     /**
      * @return the total amount of enabled recommenders
      */
     long countEnabledRecommenders();
 
-    Progress getProgressTowardsNextEvaluation(User aUser, Project aProject);
+    Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
 }

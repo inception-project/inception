@@ -12,7 +12,8 @@ MAINTAINER INCEpTION Team
 RUN set -ex \
       && DEBIAN_FRONTEND=noninteractive \
       && apt-get update \
-      && apt-get install -y --no-install-recommends locales
+      && apt-get install -y --no-install-recommends locales \
+      && apt-get upgrade -y
 RUN set -ex \
       && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
       && dpkg-reconfigure --frontend=noninteractive locales \

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" packages="de.tudarmstadt.ukp">
+<Configuration status="WARN">
   <properties>
     <SpringProfile name="!app &amp; !cli"> <!-- While booting before Spring is there-->
       <property name="pattern">%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [%encode{$${ctx:username:-SYSTEM}}{CRLF}] %logger{1} - %encode{%msg}{CRLF}%n</property>

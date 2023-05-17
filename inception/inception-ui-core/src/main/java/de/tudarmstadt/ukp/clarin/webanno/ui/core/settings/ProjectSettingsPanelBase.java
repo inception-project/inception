@@ -30,18 +30,12 @@ public abstract class ProjectSettingsPanelBase
     public ProjectSettingsPanelBase(String id)
     {
         super(id);
+        setOutputMarkupId(true);
     }
 
     public ProjectSettingsPanelBase(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-    }
-
-    @Override
-    protected void onInitialize()
-    {
-        super.onInitialize();
-
         setOutputMarkupId(true);
     }
 

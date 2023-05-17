@@ -27,21 +27,21 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.PubAnnotationProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.config.PubMedServicesAutoConfiguration;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 
-/**
- * Provides support for ElasticSearch-based document repositories.
- */
 @Configuration
-@AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
+@AutoConfigureAfter({ ExternalSearchAutoConfiguration.class,
+        PubMedServicesAutoConfiguration.class })
 @ConditionalOnProperty(prefix = "external-search.pub-annotation", //
         name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
 public class PubAnnotationDocumentRepositoryAutoConfiguration
 {
     @Bean
-    public PubAnnotationProviderFactory pubAnnotationProviderFactory()
+    public PubAnnotationProviderFactory pubAnnotationProviderFactory(EntrezClient aEntrezClient)
     {
-        return new PubAnnotationProviderFactory();
+        return new PubAnnotationProviderFactory(aEntrezClient);
     }
 
     @Bean

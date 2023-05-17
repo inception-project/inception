@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
+import org.apache.uima.cas.text.AnnotationFS;
+
 public class Offset
     implements Comparable<Offset>, Serializable, Position
 {
@@ -26,6 +28,12 @@ public class Offset
 
     private final int begin;
     private final int end;
+
+    public Offset(AnnotationFS aAnnotation)
+    {
+        begin = aAnnotation.getBegin();
+        end = aAnnotation.getEnd();
+    }
 
     public Offset(int aBeginCharacter, int aEndCharacter)
     {

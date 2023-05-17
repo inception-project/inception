@@ -27,16 +27,16 @@ public class MoveSpanAnnotationRequest
 {
     private final AnnotationFS annotation;
 
-    public MoveSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
+    public MoveSpanAnnotationRequest(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             AnnotationFS aAnnotation, int aBegin, int aEnd)
     {
-        this(null, aDocument, aUsername, aCas, aAnnotation, aBegin, aEnd);
+        this(null, aDocument, aDocumentOwner, aCas, aAnnotation, aBegin, aEnd);
     }
 
     private MoveSpanAnnotationRequest(MoveSpanAnnotationRequest aOriginal, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationFS aAnnotation, int aBegin, int aEnd)
+            String aDocumentOwner, CAS aCas, AnnotationFS aAnnotation, int aBegin, int aEnd)
     {
-        super(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        super(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
         annotation = aAnnotation;
     }
 
@@ -48,7 +48,7 @@ public class MoveSpanAnnotationRequest
     @Override
     public MoveSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new MoveSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(),
+        return new MoveSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(),
                 getAnnotation(), aBegin, aEnd);
     }
 }

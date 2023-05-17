@@ -257,8 +257,10 @@ public class MultiValueConceptFeatureSupport
                     String identifier = (String) item;
                     MultiValueConceptFeatureTraits traits = readTraits(aFeature);
                     KBHandle chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
-                    wrapped.add(new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
-                            chbk.getDescription(), chbk.getLanguage()));
+                    KBHandle clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
+                            chbk.getDescription(), chbk.getLanguage());
+                    clone.setKB(chbk.getKB());
+                    wrapped.add(clone);
                     continue;
                 }
 
@@ -340,6 +342,10 @@ public class MultiValueConceptFeatureSupport
         }
 
         List<KBHandle> handles = getFeatureValue(aFeature, aFs);
+        if (handles == null) {
+            return Collections.emptyList();
+        }
+
         return handles.stream() //
                 .flatMap(h -> getLazyDetails(aFeature, h.getIdentifier()).stream()) //
                 .collect(toList());

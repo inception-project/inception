@@ -53,4 +53,11 @@ public class ProjectDocumentsPanel
         sourceDocumentTable.getDataProvider().refresh();
         aEvent.getTarget().add(sourceDocumentTable);
     }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        sourceDocumentTable.getDataProvider().refresh();
+    }
 }

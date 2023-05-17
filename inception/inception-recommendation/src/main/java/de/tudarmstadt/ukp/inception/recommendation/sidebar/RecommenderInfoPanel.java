@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -49,18 +48,18 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
@@ -94,14 +93,14 @@ public class RecommenderInfoPanel
 
         setOutputMarkupId(true);
 
-        User user = aModel.getObject().getUser();
+        var sessionOwner = userService.getCurrentUser();
 
         detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
                 .closeOnClick();
         add(detailsDialog);
 
         add(new Label("progress", LoadableDetachableModel.of(() -> {
-            Progress p = recommendationService.getProgressTowardsNextEvaluation(user,
+            Progress p = recommendationService.getProgressTowardsNextEvaluation(sessionOwner,
                     aModel.getObject().getProject());
             return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
@@ -119,7 +118,7 @@ public class RecommenderInfoPanel
             {
                 Recommender recommender = item.getModelObject();
                 Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
-                        .getEvaluatedRecommender(user, recommender);
+                        .getEvaluatedRecommender(sessionOwner, recommender);
                 item.add(new Label("name", recommender.getName()));
 
                 WebMarkupContainer state = new WebMarkupContainer("state");
@@ -168,24 +167,27 @@ public class RecommenderInfoPanel
                 resultsContainer.add(new Label("testSampleCount",
                         evalResult.map(EvaluationResult::getTestSetSize).orElse(0)));
 
-                resultsContainer.add(new LambdaAjaxLink("acceptBest",
+                item.add(resultsContainer);
+
+                item.add(new LambdaAjaxLink("acceptBest",
                         _tgt -> actionAcceptBest(_tgt, recommender))
                                 .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
                                         .orElse(false)));
 
-                resultsContainer.add(new LambdaAjaxLink("showDetails",
-                        _tgt -> actionShowDetails(_tgt, recommender)));
+                item.add(new LambdaAjaxLink("showDetails",
+                        _tgt -> actionShowDetails(_tgt, recommender))
+                                .setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
+                                        .orElse(evalResult.isPresent())));
 
                 AjaxDownloadLink exportModel = new AjaxDownloadLink("exportModel",
                         LoadableDetachableModel.of(() -> exportModelName(recommender)),
-                        LoadableDetachableModel.of(() -> exportModel(user, recommender)));
+                        LoadableDetachableModel
+                                .of(() -> exportModel(sessionOwner.getUsername(), recommender)));
                 exportModel.add(visibleWhen(
                         () -> recommendationService.getRecommenderFactory(recommender).isPresent()
                                 && recommendationService.getRecommenderFactory(recommender).get()
                                         .isModelExportSupported()));
-                resultsContainer.add(exportModel);
-
-                item.add(resultsContainer);
+                item.add(exportModel);
 
                 item.add(new Label("noEvaluationMessage",
                         evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
@@ -208,7 +210,7 @@ public class RecommenderInfoPanel
                 .map(e -> e.getExportModelName(aRecommender)).orElse(null);
     }
 
-    private IResourceStream exportModel(User aUser, Recommender aRecommender)
+    private IResourceStream exportModel(String aSessionOwner, Recommender aRecommender)
     {
         Optional<RecommendationEngineFactory<?>> maybeEngine = recommendationService
                 .getRecommenderFactory(aRecommender);
@@ -220,7 +222,7 @@ public class RecommenderInfoPanel
 
         RecommendationEngine engine = maybeEngine.get().build(aRecommender);
 
-        Optional<RecommenderContext> context = recommendationService.getContext(aUser,
+        Optional<RecommenderContext> context = recommendationService.getContext(aSessionOwner,
                 aRecommender);
 
         if (context.isEmpty()) {
@@ -244,8 +246,7 @@ public class RecommenderInfoPanel
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
     {
-        RecommenderStatusDetailPanel panel = new RecommenderStatusDetailPanel(
-                ModalDialog.CONTENT_ID,
+        var panel = new RecommenderStatusDetailPanel(ModalDialog.CONTENT_ID,
                 LoadableDetachableModel.of(() -> recommendationService
                         .getEvaluatedRecommender(userService.getCurrentUser(), aRecommender).get())
                         .map(EvaluatedRecommender::getEvaluationResult));
@@ -255,21 +256,22 @@ public class RecommenderInfoPanel
     private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        User user = userService.getCurrentUser();
+        User sessionOwner = userService.getCurrentUser();
         AnnotatorState state = getModelObject();
 
         AnnotationPageBase page = findParent(AnnotationPageBase.class);
 
         CAS cas = page.getEditorCas();
 
-        Predictions predictions = recommendationService.getPredictions(user, state.getProject());
+        Predictions predictions = recommendationService.getPredictions(sessionOwner,
+                state.getProject());
         if (predictions == null) {
             error("Recommenders did not yet provide any suggestions.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        Preferences pref = recommendationService.getPreferences(user, state.getProject());
+        Preferences pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
@@ -295,21 +297,17 @@ public class RecommenderInfoPanel
                 continue;
             }
 
-            SpanSuggestion suggestion = suggestions.get(0);
+            var suggestion = suggestions.get(0);
 
             try {
                 // Upsert an annotation based on the suggestion
-                AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-                AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
-                        layer);
+                var layer = annotationService.getLayer(suggestion.getLayerId());
+                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
+                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
-                recommendationService.upsertSpanFeature(state.getDocument(),
-                        state.getUser().getUsername(), cas, layer, feature, suggestion.getLabel(),
-                        suggestion.getBegin(), suggestion.getEnd());
-
-                // Hide the suggestion. This is faster than having to recalculate the visibility
-                // status for the entire document or even for the part visible on screen.
-                suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+                recommendationService.acceptSuggestion(sessionOwner.getUsername(),
+                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
+                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

@@ -710,7 +710,7 @@ public interface DocumentService
      *            the user for whom documents should be returned.
      * @return documents.
      */
-    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser);
+    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);

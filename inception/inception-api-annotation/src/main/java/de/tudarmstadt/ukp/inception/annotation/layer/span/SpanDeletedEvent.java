@@ -29,9 +29,9 @@ public class SpanDeletedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
 
-    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
             AnnotationLayer aLayer, AnnotationFS aAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aDocumentOwner, aLayer, aAnnotation);
     }
 }
