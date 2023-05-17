@@ -48,6 +48,7 @@ installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
 installPrefs inception-external-search-mtas-embedded
 installPrefs inception-external-search-pubannotation
+installPrefs inception-external-search-pubmed
 installPrefs inception-external-search-solr
 installPrefs inception-guidelines
 installPrefs inception-html-editor
@@ -61,6 +62,7 @@ installPrefs inception-imls-lapps
 installPrefs inception-imls-opennlp
 installPrefs inception-imls-stringmatch
 installPrefs inception-imls-weblicht
+installPrefs inception-io-bioc
 installPrefs inception-io-conll
 installPrefs inception-io-html
 installPrefs inception-io-imscwb

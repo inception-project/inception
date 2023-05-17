@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAd
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +33,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -230,11 +230,13 @@ public class RelationAdapter
         AnnotationFS tgt = getTargetAnnotation(aAnno);
 
         if (getLayer().getAttachFeature() != null) {
-            src = getFeature(src, getLayer().getAttachFeature().getName(), AnnotationFS.class);
-            tgt = getFeature(tgt, getLayer().getAttachFeature().getName(), AnnotationFS.class);
+            src = FSUtil.getFeature(src, getLayer().getAttachFeature().getName(),
+                    AnnotationFS.class);
+            tgt = FSUtil.getFeature(tgt, getLayer().getAttachFeature().getName(),
+                    AnnotationFS.class);
         }
 
-        selection.selectArc(new VID(aAnno), src, tgt);
+        selection.selectArc(VID.of(aAnno), src, tgt);
         return selection;
     }
 

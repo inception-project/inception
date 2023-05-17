@@ -28,7 +28,7 @@ public interface AnnotationDeletedEvent
 {
     SourceDocument getDocument();
 
-    String getUser();
+    String getDocumentOwner();
 
     AnnotationLayer getLayer();
 

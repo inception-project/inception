@@ -78,6 +78,8 @@ public interface AnnotationSchemaService
 
     void updateTagRanks(TagSet aTagSet, List<Tag> aTags);
 
+    void updateFeatureRanks(AnnotationLayer aLayer, List<AnnotationFeature> aTags);
+
     /**
      * creates a {@link TagSet} object in the database
      *

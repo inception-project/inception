@@ -35,19 +35,19 @@ public class BeforeDocumentOpenedEvent
     private final CAS cas;
     private final SourceDocument document;
     // user who owns/annotates the opened document
-    private final String annotator;
+    private final String documentOwner;
     // user who opened the document
-    private final String opener;
+    private final String sessionOwner;
     private final boolean editable;
 
     public BeforeDocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
-            String aAnnotator, String aOpener, boolean aEditable)
+            String aDocumentOwner, String aSessionOwner, boolean aEditable)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
-        annotator = aAnnotator;
-        opener = aOpener;
+        documentOwner = aDocumentOwner;
+        sessionOwner = aSessionOwner;
         editable = aEditable;
     }
 
@@ -61,14 +61,14 @@ public class BeforeDocumentOpenedEvent
         return document;
     }
 
-    public String getUser()
+    public String getSessionOwner()
     {
-        return opener;
+        return sessionOwner;
     }
 
-    public String getAnnotator()
+    public String getDocumentOwner()
     {
-        return annotator;
+        return documentOwner;
     }
 
     public boolean isEditable()

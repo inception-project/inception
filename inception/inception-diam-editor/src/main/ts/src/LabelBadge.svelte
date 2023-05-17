@@ -49,7 +49,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if annotation.vid.toString().startsWith("rec:")}
-    <div class="btn-group mb-0 ms-1 btn-group-recommendation" role="group">
+    <div class="btn-group mb-0 ms-0 btn-group-recommendation bg-body" role="group">
         <button
             type="button"
             class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
@@ -58,7 +58,7 @@
         >
             <i class="far fa-check-circle" />
             {#if showText}
-                {annotation.label || "No label"}
+                <span class="label">{annotation.label || "No label"}</span>
             {/if}
             {#if annotation.score}
                 <span class="small font-monospace score"
@@ -85,7 +85,7 @@
     >
         <i class="fas fa-clipboard-check" />
         {#if showText}
-            {annotation.label || "No label"}
+            <span class="label">{annotation.label || "No label"}</span>
         {/if}
         {#if annotation.score}
             <span class="small font-monospace score"
@@ -94,7 +94,7 @@
         {/if}
     </button>
 {:else}
-    <div class="btn-group mb-0 ms-1" role="group">
+    <div class="btn-group mb-0 ms-1 bg-body" role="group">
         <button
             type="button"
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
@@ -121,6 +121,10 @@
 {/if}
 
 <style lang="scss">
+    .label {
+        word-break: break-all;
+    }
+
     .btn-colored:hover {
         filter: brightness(0.8);
     }

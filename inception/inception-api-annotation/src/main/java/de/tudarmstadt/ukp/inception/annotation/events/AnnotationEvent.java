@@ -34,23 +34,25 @@ public abstract class AnnotationEvent
 
     private final Project project;
     private final SourceDocument document;
-    private final String user;
+    private final String documentOwner;
     private final AnnotationLayer layer;
 
-    public AnnotationEvent(Object aSource, Project aProject, String aUser, AnnotationLayer aLayer)
-    {
-        this(aSource, aProject, null, aUser, aLayer);
-    }
-
-    public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public AnnotationEvent(Object aSource, Project aProject, String aDocumentOwner,
             AnnotationLayer aLayer)
     {
-        this(aSource, aDocument != null ? aDocument.getProject() : null, aDocument, aUser, aLayer);
+        this(aSource, aProject, null, aDocumentOwner, aLayer);
+    }
+
+    public AnnotationEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
+            AnnotationLayer aLayer)
+    {
+        this(aSource, aDocument != null ? aDocument.getProject() : null, aDocument, aDocumentOwner,
+                aLayer);
 
         Validate.notNull(getProject(), "Project must be specified");
         Validate.notNull(getDocument(), "Document must be specified");
         Validate.notNull(getLayer(), "Layer must be specified");
-        Validate.notNull(getUser(), "User must be specified");
+        Validate.notNull(getDocumentOwner(), "User must be specified");
     }
 
     public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser)
@@ -59,16 +61,16 @@ public abstract class AnnotationEvent
 
         Validate.notNull(getProject(), "Project must be specified");
         Validate.notNull(getDocument(), "Document must be specified");
-        Validate.notNull(getUser(), "User must be specified");
+        Validate.notNull(getDocumentOwner(), "Document owner must be specified");
     }
 
     private AnnotationEvent(Object aSource, Project aProject, SourceDocument aDocument,
-            String aUser, AnnotationLayer aLayer)
+            String aDocumentOwner, AnnotationLayer aLayer)
     {
         super(aSource);
         project = aProject;
         document = aDocument;
-        user = aUser;
+        documentOwner = aDocumentOwner;
         layer = aLayer;
     }
 
@@ -82,9 +84,9 @@ public abstract class AnnotationEvent
         return document;
     }
 
-    public String getUser()
+    public String getDocumentOwner()
     {
-        return user;
+        return documentOwner;
     }
 
     public AnnotationLayer getLayer()

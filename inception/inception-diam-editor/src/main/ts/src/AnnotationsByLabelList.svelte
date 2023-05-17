@@ -31,20 +31,23 @@
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
+    export let pinnedGroups: string[];
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
     let sortByScore: boolean = true;
     let recommendationsFirst: boolean = false;
 
-    $: sortedLabels = uniqueLabels(data);
     $: {
-        const relations = data?.relations.values() || [];
-        const spans = data?.spans.values() || [];
+        sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
+
+        const relations = data?.relations.values() || []
+        const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
             (s) => s.label || ""
-        );
+        )
+
         for (const items of Object.values(groupedAnnotations)) {
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
@@ -137,6 +140,7 @@
                             {label || "No label"}
                         </div>
                         <ul class="px-0 list-group list-group-flush">
+                            {#if groupedAnnotations[label]}
                             {#each groupedAnnotations[label] as ann}
                                 <li
                                     class="list-group-item list-group-item-action p-0 d-flex"
@@ -156,10 +160,10 @@
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="flex-grow-1 py-1 px-2"
+                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
                                         on:click={() => scrollTo(ann)}
                                     >
-                                        <div class="float-end">
+                                        <div class="float-end labels">
                                             <LabelBadge
                                                 annotation={ann}
                                                 {ajaxClient}
@@ -178,6 +182,11 @@
                                     </div>
                                 </li>
                             {/each}
+                            {:else}
+                            <li class="list-group-item list-group-item-action p-2 text-center text-secondary bg-light">
+                                No occurrences
+                            </li>
+                            {/if}
                         </ul>
                     </li>
                 {/each}
@@ -187,6 +196,13 @@
 {/if}
 
 <style lang="scss">
+    .labels {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .annotation-type-marker {
         width: 1em;
         text-align: center;

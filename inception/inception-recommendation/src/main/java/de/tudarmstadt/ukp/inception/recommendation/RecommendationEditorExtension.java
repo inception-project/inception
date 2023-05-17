@@ -22,14 +22,10 @@
 package de.tudarmstadt.ukp.inception.recommendation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.Collections.emptyList;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,13 +33,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,22 +46,21 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -78,8 +68,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -110,21 +98,18 @@ public class RecommendationEditorExtension
 
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
-    private final LearningRecordService learningRecordService;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final UserDao userRegistry;
+    private final UserDao userService;
 
     @Autowired
     public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRegistry)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
-        learningRecordService = aLearningRecordService;
         applicationEventPublisher = aApplicationEventPublisher;
-        userRegistry = aUserRegistry;
+        userService = aUserRegistry;
     }
 
     @Override
@@ -147,9 +132,9 @@ public class RecommendationEditorExtension
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
 
-            VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+            var recommendationVid = VID.parse(aVID.getExtensionPayload());
             var prediction = getPrediction(aState, recommendationVid);
-            SourceDocument document = aState.getDocument();
+            var document = aState.getDocument();
 
             if (prediction.isEmpty()) {
                 log.error("Could not find annotation in [{}] with id [{}]", document,
@@ -168,7 +153,7 @@ public class RecommendationEditorExtension
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
-            VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+            var recommendationVid = VID.parse(aVID.getExtensionPayload());
             var prediction = getPrediction(aState, recommendationVid);
             var page = (AnnotationPageBase) aTarget.getPage();
             if (prediction.map(p -> p instanceof SpanSuggestion).orElse(false)) {
@@ -191,13 +176,13 @@ public class RecommendationEditorExtension
         throws AnnotationException, IOException
     {
         if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
-            actionAcceptSpanRecommendation((SpanSuggestion) prediction.get(), document,
-                    aActionHandler, aState, aTarget, aCas, aVID);
+            actionAcceptSpanRecommendation(aTarget, (SpanSuggestion) prediction.get(), document,
+                    aActionHandler, aState, aCas, aVID);
         }
 
         if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
-            actionAcceptRelationRecommendation((RelationSuggestion) prediction.get(), document,
-                    aActionHandler, aState, aTarget, aCas, aVID);
+            actionAcceptRelationRecommendation(aTarget, (RelationSuggestion) prediction.get(),
+                    document, aActionHandler, aState, aCas, aVID);
         }
     }
 
@@ -221,87 +206,54 @@ public class RecommendationEditorExtension
      * <li>Sends events to the UI and application informing other components about the action.</li>
      * </ul>
      */
-    private void actionAcceptSpanRecommendation(SpanSuggestion suggestion, SourceDocument document,
-            AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+    private void actionAcceptSpanRecommendation(AjaxRequestTarget aTarget,
+            SpanSuggestion aSuggestion, SourceDocument aSocument,
+            AnnotationActionHandler aActionHandler, AnnotatorState aState, CAS aCas,
+            VID aSuggestionVid)
         throws AnnotationException, IOException
     {
-        // Upsert an annotation based on the suggestion
-        AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        int address = recommendationService.upsertSpanFeature(aState.getDocument(),
-                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
-                suggestion.getBegin(), suggestion.getEnd());
+        var page = (AnnotationPage) aTarget.getPage();
+        var dataOwner = aState.getUser().getUsername();
+        var sessionOwner = userService.getCurrentUsername();
+        var layer = annotationService.getLayer(aSuggestion.getLayerId());
+        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
+        var adapter = (SpanAdapter) annotationService.getAdapter(layer);
+
+        var span = recommendationService.acceptSuggestion(sessionOwner, aSocument, dataOwner, aCas,
+                adapter, feature, aSuggestion, MAIN_EDITOR);
+
+        page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        // panel
-        aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
-                suggestion.getEnd());
-        aActionHandler.actionSelect(aTarget);
-        aActionHandler.actionCreateOrUpdate(aTarget, aCas);
-
-        // Log the action to the learning record
-        learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion,
-                layer, feature, ACCEPTED, MAIN_EDITOR);
-
-        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
-    }
-
-    private void actionAcceptRelationRecommendation(RelationSuggestion suggestion,
-            SourceDocument document, AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aVID)
-        throws AnnotationException, IOException
-    {
-        AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-
-        int address = recommendationService.upsertRelationFeature(document,
-                aState.getUser().getUsername(), aCas, layer, feature, suggestion);
-
-        AnnotationFS relation = ICasUtil.selectAnnotationByAddr(aCas, address);
-
-        Type type = CasUtil.getType(aCas, layer.getName());
-
-        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        AnnotationFS source = (AnnotationFS) relation.getFeatureValue(sourceFeature);
-        AnnotationFS target = (AnnotationFS) relation.getFeatureValue(targetFeature);
-
-        // Set selection to the accepted annotation and select it and load it into the detail editor
-        // panel
-        aState.getSelection().selectArc(new VID(address), source, target);
-
-        aActionHandler.actionSelect(aTarget);
-        aActionHandler.actionCreateOrUpdate(aTarget, aCas);
-
-        // Log the action to the learning record
-        learningRecordService.logRelationRecord(document, aState.getUser().getUsername(),
-                suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
-
-        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
-    }
-
-    private void hideSuggestionAndPublishAceptedEvents(AnnotationSuggestion aSuggestion,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID,
-            int aNewAnnotationAddress)
-    {
-        AnnotationLayer layer = annotationService.getLayer(aSuggestion.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
-        SourceDocument document = aState.getDocument();
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
-
-        // Send an application event that the suggestion has been accepted
-        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aNewAnnotationAddress);
-        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this, document,
-                aState.getUser().getUsername(), fs, feature, aSuggestion.getLabel()));
+        adapter.select(VID.of(span), span);
 
         // Send a UI event that the suggestion has been accepted
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                new AjaxRecommendationAcceptedEvent(aTarget, aState, aSuggestionVID));
+        page.send(page, BREADTH,
+                new AjaxRecommendationAcceptedEvent(aTarget, aState, aSuggestionVid));
+    }
+
+    private void actionAcceptRelationRecommendation(AjaxRequestTarget aTarget,
+            RelationSuggestion aSuggestion, SourceDocument aDocument,
+            AnnotationActionHandler aActionHandler, AnnotatorState aState, CAS aCas, VID aVID)
+        throws AnnotationException, IOException
+    {
+        var page = (AnnotationPage) aTarget.getPage();
+        var dataOwner = aState.getUser().getUsername();
+        var sessionOwner = userService.getCurrentUsername();
+        var layer = annotationService.getLayer(aSuggestion.getLayerId());
+        var adapter = (RelationAdapter) annotationService.getAdapter(layer);
+        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
+
+        var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
+                aCas, adapter, feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
+
+        page.writeEditorCas(aCas);
+
+        // Set selection to the accepted annotation and select it and load it into the detail editor
+        adapter.select(aVID, relation);
+
+        // Send a UI event that the suggestion has been accepted
+        page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
     }
 
     /**
@@ -318,15 +270,14 @@ public class RecommendationEditorExtension
 
         throws AnnotationException, IOException
     {
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
+        var sessionOwner = userService.getCurrentUser();
+        var predictions = recommendationService.getPredictions(sessionOwner, aState.getProject());
 
-        SourceDocument document = aState.getDocument();
-        VID recommendationVID = VID.parse(aVID.getExtensionPayload());
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document,
-                recommendationVID);
+        var document = aState.getDocument();
+        var recommendationVID = VID.parse(aVID.getExtensionPayload());
+        var maybeSuggestion = predictions.getPredictionByVID(document, recommendationVID);
 
-        if (!oPrediction.isPresent()) {
+        if (!maybeSuggestion.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document,
                     recommendationVID);
             aTarget.getPage().error("Could not find annotation");
@@ -334,42 +285,16 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationSuggestion suggestion = oPrediction.get();
-
-        Recommender recommender = recommendationService.getRecommender(recommendationVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(recommendationVID.getLayerId());
-        AnnotationFeature feature = recommender.getFeature();
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+        recommendationService.rejectSuggestion(sessionOwner.getUsername(), document,
+                aState.getUser().getUsername(), maybeSuggestion.get(), MAIN_EDITOR);
 
         // Send a UI event that the suggestion has been rejected
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+        aTarget.getPage().send(aTarget.getPage(), BREADTH,
                 new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
-
-        if (suggestion instanceof SpanSuggestion) {
-            SpanSuggestion spanSuggestion = (SpanSuggestion) suggestion;
-            // Log the action to the learning record
-            learningRecordService.logSpanRecord(document, aState.getUser().getUsername(),
-                    spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
-
-            // Send an application event that the suggestion has been rejected
-            applicationEventPublisher.publishEvent(
-                    new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
-                            spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-                            spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
-
-        }
-        else if (suggestion instanceof RelationSuggestion) {
-            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
-            // TODO: Log rejection
-            // TODO: Publish rejection event
-        }
 
         // Trigger a re-rendering of the document
         Page page = aTarget.getPage();
-        page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
+        page.send(page, BREADTH, new SelectionChangedEvent(aTarget));
     }
 
     @Override
@@ -378,8 +303,8 @@ public class RecommendationEditorExtension
         log.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(ANNOTATION)
-                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
+        String sessionOwner = userService.getCurrentUsername();
+        if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
 
@@ -387,7 +312,7 @@ public class RecommendationEditorExtension
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
-        boolean switched = recommendationService.switchPredictions(aState.getUser(),
+        boolean switched = recommendationService.switchPredictions(sessionOwner,
                 aState.getProject());
         log.trace("switchPredictions() returned {}", switched);
 
@@ -395,20 +320,17 @@ public class RecommendationEditorExtension
             return;
         }
 
-        // Maybe later ;)
-        // recommendationService.autoAccept(aTarget, aState.getUser(), aState.getDocument());
-
         // Notify other UI components on the page about the prediction switch such that they can
         // also update their state to remain in sync with the new predictions
-        applicationEventPublisher.publishEvent(new PredictionsSwitchedEvent(this, aState));
+        applicationEventPublisher
+                .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
     }
 
     @Override
     public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
             AnnotationFeature aFeature, String aQuery)
     {
-        Predictions predictions = recommendationService.getPredictions(aUser,
-                aDocument.getProject());
+        var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
 
         if (predictions == null) {
             return emptyList();
@@ -416,9 +338,8 @@ public class RecommendationEditorExtension
 
         Preferences pref = recommendationService.getPreferences(aUser, aDocument.getProject());
 
-        VID vid = VID.parse(aVid.getExtensionPayload());
-        Optional<AnnotationSuggestion> representative = predictions.getPredictionByVID(aDocument,
-                vid);
+        var vid = VID.parse(aVid.getExtensionPayload());
+        var representative = predictions.getPredictionByVID(aDocument, vid);
         if (representative.isEmpty()) {
             return emptyList();
         }
@@ -427,14 +348,16 @@ public class RecommendationEditorExtension
         Optional<SuggestionGroup<AnnotationSuggestion>> group = predictions
                 .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
                         aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
-                .stream().filter(g -> g.contains(representative.get())).findFirst();
+                .stream() //
+                .filter(g -> g.contains(representative.get())) //
+                .findFirst();
 
         if (group.isEmpty()) {
             return emptyList();
         }
 
-        List<AnnotationSuggestion> sortedByScore = group.get()
-                .bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(), aQuery);
+        var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
+                aQuery);
 
         List<VLazyDetailResult> details = new ArrayList<>();
         for (AnnotationSuggestion ao : sortedByScore) {

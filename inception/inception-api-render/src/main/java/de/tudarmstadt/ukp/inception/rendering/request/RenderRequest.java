@@ -34,6 +34,7 @@ public class RenderRequest
     private final AnnotatorState state;
     private final SourceDocument sourceDocument;
     private final User annotationUser;
+    private final User sessionOwner;
     private final int windowBeginOffset;
     private final int windowEndOffset;
     private final boolean includeText;
@@ -56,6 +57,7 @@ public class RenderRequest
         this.allLayers = builder.allLayers;
         this.visibleLayers = builder.visibleLayers;
         this.coloringStrategyOverride = builder.coloringStrategyOverride;
+        this.sessionOwner = builder.sessionOwner;
     }
 
     public Optional<ColoringStrategy> getColoringStrategyOverride()
@@ -125,6 +127,11 @@ public class RenderRequest
         return state;
     }
 
+    public User getSessionOwner()
+    {
+        return sessionOwner;
+    }
+
     public static Builder builder()
     {
         return new Builder();
@@ -139,6 +146,7 @@ public class RenderRequest
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
+        private User sessionOwner;
         private CAS cas;
         private List<AnnotationLayer> allLayers;
         private List<AnnotationLayer> visibleLayers;
@@ -152,6 +160,12 @@ public class RenderRequest
         public Builder withCas(CAS aCas)
         {
             cas = aCas;
+            return this;
+        }
+
+        public Builder withSessionOwner(User aSessionOwner)
+        {
+            sessionOwner = aSessionOwner;
             return this;
         }
 

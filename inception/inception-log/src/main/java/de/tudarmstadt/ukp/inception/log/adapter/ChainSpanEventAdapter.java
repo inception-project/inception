@@ -50,7 +50,7 @@ public class ChainSpanEventAdapter
     @Override
     public String getAnnotator(ChainSpanEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

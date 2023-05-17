@@ -280,4 +280,21 @@ public abstract class AnnotationSuggestion
         return AnnotationPredicates.coveredBy(getWindowBegin(), getWindowEnd(), aRange.getBegin(),
                 aRange.getEnd());
     }
+
+    public boolean hideSuggestion(LearningRecordType aAction)
+    {
+        switch (aAction) {
+        case REJECTED:
+            hide(FLAG_REJECTED);
+            return true;
+        case SKIPPED:
+            hide(FLAG_SKIPPED);
+            return true;
+        default:
+            // Nothing to do for the other cases.
+            // ACCEPTED annotation are filtered out anyway because the overlap with a created
+            // annotation and the same for CORRECTED
+            return false;
+        }
+    }
 }

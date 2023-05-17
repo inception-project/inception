@@ -575,8 +575,11 @@ You can modify and create tagsets in the project settings.
 See section xref:tagsets_in_getting_started[Tagsets] in _Getting Started_ or check the main documentation for <<Tagsets>>.
 
 You have almost finished the _Getting Started_.
-One word about the left *Annotation Sidebar*.
-It folds out when clicking on the little arrow on top. Then you get detailed information about the currently chosen feature of the sidebar.
+One word can still be said about the *Sidebars* on the left. These offer access to various 
+additional functionalities such as an annotation overview, search, recommenders, etc. Which 
+functionalities are available to you is determined by the project settings. The sidebars can be
+opened by clicking on one of the sidebar icons and they can be closed by clicking on the arrow icon at the top.
+
 
 image::getting_started_Sidebar_closed.png[align="center"]
 

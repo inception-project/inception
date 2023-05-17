@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.diam.sidebar;
 
+import static de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarManagerPrefs.KEY_DIAM_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
-import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.Map;
 
@@ -33,13 +32,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class DiamAnnotationBrowser
@@ -47,9 +46,8 @@ public class DiamAnnotationBrowser
 {
     private static final long serialVersionUID = 3956364643964484470L;
 
-    private static final Logger LOG = getLogger(lookup().lookupClass());
-
     private @SpringBean ServletContext servletContext;
+    private @SpringBean PreferencesService userPrefService;
 
     private DiamAjaxBehavior diamBehavior;
 
@@ -82,12 +80,16 @@ public class DiamAnnotationBrowser
         var viewport = new ViewportDefinition(state.getDocument(), state.getUser().getUsername(), 0,
                 Integer.MAX_VALUE, CompactSerializerV2Impl.ID);
 
+        var managerPrefs = userPrefService
+                .loadDefaultTraitsForProject(KEY_DIAM_SIDEBAR_MANAGER_PREFS, state.getProject());
+
         Map<String, Object> properties = Map.of( //
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
-                "topicChannel", viewport.getTopic());
+                "topicChannel", viewport.getTopic(), //
+                "pinnedGroups", managerPrefs.getPinnedGroups());
 
-        // model will be added as props to vue component
+        // model will be added as props to Svelte component
         setDefaultModel(Model.ofMap(properties));
     }
 
@@ -102,7 +104,6 @@ public class DiamAnnotationBrowser
     protected DiamAjaxBehavior createDiamBehavior()
     {
         var diam = new DiamAjaxBehavior();
-        // diam.addPriorityHandler(new ShowContextMenuHandler());
         return diam;
     }
 

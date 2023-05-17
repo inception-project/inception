@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.CasUtil;
@@ -46,6 +47,12 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
     public FeatureStructureBuilder<T> withFeature(String aName, Object aValue)
     {
         features.put(aName, aValue);
+        return this;
+    }
+
+    public FeatureStructureBuilder<T> withFeature(Feature aFeature, Object aValue)
+    {
+        features.put(aFeature.getShortName(), aValue);
         return this;
     }
 

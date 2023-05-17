@@ -29,6 +29,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,6 +39,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 
 /**
  * A type adapter encapsulates a specific kind of annotation layer, e.g. spans, relations or chains.
@@ -106,14 +108,14 @@ public interface TypeAdapter
      *
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS object
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid);
+    void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid);
 
     /**
      * @return the layer for which this adapter has been created.
@@ -127,12 +129,14 @@ public interface TypeAdapter
      */
     Collection<AnnotationFeature> listFeatures();
 
+    Optional<AnnotationFeature> getFeature(String aName);
+
     /**
      * Set the value of the given feature.
      * 
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS.
@@ -145,7 +149,7 @@ public interface TypeAdapter
      * @throws AnnotationException
      *             if there was an error setting the feature value
      */
-    void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
+    void setFeatureValue(SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
 
@@ -183,10 +187,17 @@ public interface TypeAdapter
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
 
     /**
-     * Disable the adapter from dispatching any events. This is useful for backend bulk operations
+     * Disable the adapter from dispatching any events. This is useful for back-end bulk operations
      * that should not be tracked in detail.
      */
     void silenceEvents();
+
+    /**
+     * @return if events are silenced.
+     */
+    boolean isSilenced();
+
+    void publishEvent(ApplicationEvent aEvent);
 
     Selection select(VID aVid, AnnotationFS aAnnotation);
 
@@ -201,4 +212,8 @@ public interface TypeAdapter
     {
         return isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
     }
+
+    <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
+
+    String renderFeatureValue(FeatureStructure aFS, String aFeature);
 }

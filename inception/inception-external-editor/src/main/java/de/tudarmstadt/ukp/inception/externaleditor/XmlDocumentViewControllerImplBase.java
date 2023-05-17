@@ -54,16 +54,16 @@ public abstract class XmlDocumentViewControllerImplBase
         // Apply safety net
         var ch = new SanitizingContentHandler(aCh, safetyNetPolicy.getPolicy());
 
-        // Apply editor policy if it exists
-        var editorPolicy = getEditorPolicy(aEditor);
-        if (editorPolicy.isPresent()) {
-            ch = new SanitizingContentHandler(ch, editorPolicy.get());
-        }
-
         // Apply format policy if it exists
         var formatPolicy = formatRegistry.getFormatPolicy(doc);
         if (formatPolicy.isPresent()) {
             ch = new SanitizingContentHandler(ch, formatPolicy.get());
+        }
+
+        // Apply editor policy if it exists
+        var editorPolicy = getEditorPolicy(aEditor);
+        if (formatPolicy.isEmpty() && editorPolicy.isPresent()) {
+            ch = new SanitizingContentHandler(ch, editorPolicy.get());
         }
 
         // If neither a format nor an editor policy exists, apply the default policy

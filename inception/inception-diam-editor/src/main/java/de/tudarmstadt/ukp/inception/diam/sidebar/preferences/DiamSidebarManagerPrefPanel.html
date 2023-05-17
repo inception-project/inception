@@ -19,32 +19,21 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-h-container">
-      <div class="flex-content">
-        <h4>
-          <a wicket:id="titleLink"><wicket:container wicket:id="title"/></a>
-        </h4>
-        <ul>
-          <li wicket:id="highlights">
-            <wicket:container wicket:id="highlight"/>
-          </li>
-        </ul>
+    <form wicket:id="form" class="card">
+      <div class="card-header">
+        <wicket:message key="title"/>
       </div>
-      <div class="flex-v-container">
-        <a wicket:id="importLink" class="btn btn-secondary">
-          <i class="fas fa-plus"></i>
-          <wicket:message key="import"/>
-        </a>
-        <a wicket:id="openLink" class="btn btn-secondary">
-          <i class="fas fa-folder-open"></i>
-          <wicket:message key="open"/>
-        </a>
-        <div wicket:id="importStatus" class="badge bg-info"/>
-        <div class="text-center">
-          <wicket:container wicket:id="score"/>
+      <div class="card-body">
+        <div class="row form-row">
+          <label class="col-sm-4 col-form-label">
+            <wicket:message key="pinnedGroups"/>
+          </label>
+          <div class="col-sm-8">
+            <div wicket:id="pinnedGroups"/>
+          </div>
         </div>
       </div>
-    </div>
+    </form>
   </wicket:panel>
 </body>
 </html>

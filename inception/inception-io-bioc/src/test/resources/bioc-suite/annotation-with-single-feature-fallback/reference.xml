@@ -1,0 +1,23 @@
+
+<collection>
+    <source>example</source>
+    <date>2023-01-01</date>
+    <key>example.key</key>
+    <document>
+        <id>doc-1</id>
+        <passage>
+            <infon key="type">abstract</infon>
+            <offset>0</offset>
+            <sentence>
+                <offset>0</offset>
+                <text>Sentence 1.</text>
+                <annotation id="1">
+                    <infon key="type">custom.Span</infon>
+                    <infon key="label">span-annotation-value</infon>
+                    <location length="8" offset="0"/>
+                    <text>Sentence</text>
+                </annotation>
+            </sentence>
+        </passage>
+    </document>
+</collection>

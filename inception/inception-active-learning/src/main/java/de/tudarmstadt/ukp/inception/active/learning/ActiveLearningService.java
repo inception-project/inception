@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -34,14 +35,14 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public interface ActiveLearningService
 {
     /**
-     * @param aUser
+     * @param aDataOwner
      *            annotator user to get suggestions for
      * @param aLayer
      *            layer to get suggestions for
      * @return all suggestions for the given layer and user as a flat list (i.e. not grouped by
      *         documents, but grouped by alternatives).
      */
-    List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer);
+    List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aDataOwner, AnnotationLayer aLayer);
 
     /**
      * @param aRecord
@@ -56,28 +57,27 @@ public interface ActiveLearningService
      * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
      *         the given layer for the given user.
      * 
-     * @param aUser
+     * @param aDataOwner
      *            annotator user to check suggestions for
      * @param aLayer
      *            layer to check suggestions for
      */
-    boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
+    boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
-    void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
+    void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             boolean aFilterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
-    Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aUser,
+    Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
             ActiveLearningUserState aAlState);
 
-    void writeLearningRecordInDatabaseAndEventLog(User aUser, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion, LearningRecordType aUserAction, String aAnnotationValue);
-
-    void acceptSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion,
+    void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, SpanSuggestion aSuggestion,
             Object aValue)
         throws IOException, AnnotationException;
 
-    void rejectSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion);
+    void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
+            SpanSuggestion aSuggestion);
 
-    void skipSpanSuggestion(User aUser, AnnotationLayer aLayer, SpanSuggestion aSuggestion);
+    void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
+            SpanSuggestion aSuggestion);
 }

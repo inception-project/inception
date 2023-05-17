@@ -33,7 +33,7 @@ public class DirtySpot
     public DirtySpot(AnnotationEvent aEvent)
     {
         document = aEvent.getDocument();
-        user = aEvent.getUser();
+        user = aEvent.getDocumentOwner();
         affectedRange = aEvent.getAffectedRange();
     }
 

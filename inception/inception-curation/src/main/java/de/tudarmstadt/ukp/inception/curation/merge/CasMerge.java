@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
@@ -38,6 +39,7 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,16 +76,15 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosit
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
@@ -110,6 +112,7 @@ public class CasMerge
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
     private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
+    private LoadingCache<AnnotationFeature, LinkFeatureTraits> linkTraitsCache;
 
     public CasMerge(AnnotationSchemaService aSchemaService,
             ApplicationEventPublisher aEventPublisher)
@@ -117,7 +120,31 @@ public class CasMerge
         schemaService = aSchemaService;
         eventPublisher = aEventPublisher;
 
-        adapterCache = Caffeine.newBuilder().maximumSize(100).build(schemaService::getAdapter);
+        adapterCache = Caffeine.newBuilder() //
+                .maximumSize(100) //
+                .build(schemaService::getAdapter);
+        linkTraitsCache = Caffeine.newBuilder() //
+                .maximumSize(100) //
+                .build(this::readTraits);
+    }
+
+    // Would be better to use this from the LinkFeatureSupport - but I do not want to change the
+    // constructor at the moment to inject another dependency.
+    private LinkFeatureTraits readTraits(AnnotationFeature aFeature)
+    {
+        LinkFeatureTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(LinkFeatureTraits.class, aFeature.getTraits());
+        }
+        catch (IOException e) {
+            LOG.error("Unable to read traits", e);
+        }
+
+        if (traits == null) {
+            traits = new LinkFeatureTraits();
+        }
+
+        return traits;
     }
 
     public void setSilenceEvents(boolean aSilenceEvents)
@@ -516,7 +543,7 @@ public class CasMerge
             boolean aAllowStacking)
         throws AnnotationException
     {
-        SpanAdapter adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
+        var adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
         }
@@ -528,13 +555,13 @@ public class CasMerge
 
         // a) if stacking allowed add this new annotation to the mergeview
         Type targetType = CasUtil.getType(aTargetCas, adapter.getAnnotationTypeName());
-        List<AnnotationFS> existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
+        var existingAnnos = selectAt(aTargetCas, targetType, aSourceFs.getBegin(),
                 aSourceFs.getEnd());
         if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
-            AnnotationFS mergedSpan = adapter.add(aDocument, aUsername, aTargetCas,
-                    aSourceFs.getBegin(), aSourceFs.getEnd());
+            var mergedSpan = adapter.add(aDocument, aUsername, aTargetCas, aSourceFs.getBegin(),
+                    aSourceFs.getEnd());
 
             int mergedSpanAddr = -1;
             try {
@@ -544,7 +571,7 @@ public class CasMerge
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedSpan));
+                adapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedSpan));
                 throw e;
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
@@ -582,10 +609,8 @@ public class CasMerge
 
         SpanAdapter spanAdapter = (SpanAdapter) adapterCache.get(aAnnotationLayer.getAttachType());
 
-        List<AnnotationFS> candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter,
-                originFsClicked);
-        List<AnnotationFS> candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter,
-                targetFsClicked);
+        var candidateOrigins = getCandidateAnnotations(aTargetCas, spanAdapter, originFsClicked);
+        var candidateTargets = getCandidateAnnotations(aTargetCas, spanAdapter, targetFsClicked);
 
         // check if target/source exists in the mergeview
         if (candidateOrigins.isEmpty() || candidateTargets.isEmpty()) {
@@ -629,7 +654,7 @@ public class CasMerge
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                relationAdapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedRelation));
+                relationAdapter.delete(aDocument, aUsername, aTargetCas, VID.of(mergedRelation));
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
                     getAddr(mergedRelation));
@@ -654,56 +679,73 @@ public class CasMerge
 
         List<AnnotationFS> candidateHosts = getCandidateAnnotations(aTargetCas, adapter, aSourceFs);
 
-        AnnotationFS targetFs;
         if (candidateHosts.size() == 0) {
             throw new UnfulfilledPrerequisitesException(
-                    "The base annotation does not exist. Please add it first.");
+                    "There is no suitable [" + adapter.getLayer().getUiName() + "] annotation at ["
+                            + aSourceFs.getBegin() + "," + aSourceFs.getEnd()
+                            + "] into which the link could be merged. Please add one first.");
         }
         AnnotationFS mergeFs = candidateHosts.get(0);
         int liIndex = aSourceSlotIndex;
 
-        AnnotationFeature slotFeature = null;
-        LinkWithRoleModel linkRole = null;
-        f: for (AnnotationFeature feat : adapter.listFeatures()) {
-            if (!aSourceFeature.equals(feat.getName())) {
-                continue;
-            }
+        var slotFeature = adapter.listFeatures().stream() //
+                .filter(f -> aSourceFeature.equals(f.getName())) //
+                .findFirst() //
+                .orElseThrow(() -> new AnnotationException(
+                        "Feature [" + aSourceFeature + "] not found"));
 
-            if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
-                    && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
-                List<LinkWithRoleModel> links = adapter.getFeatureValue(feat, aSourceFs);
-                for (int li = 0; li < links.size(); li++) {
-                    LinkWithRoleModel link = links.get(li);
-                    if (li == liIndex) {
-                        slotFeature = feat;
-
-                        List<AnnotationFS> targets = checkAndGetTargets(aTargetCas,
-                                selectAnnotationByAddr(aSourceFs.getCAS(), link.targetAddr));
-                        targetFs = targets.get(0);
-                        link.targetAddr = getAddr(targetFs);
-                        linkRole = link;
-                        break f;
-                    }
-                }
-            }
+        if (slotFeature.getMultiValueMode() != ARRAY) {
+            throw new AnnotationException("Feature [" + aSourceFeature + "] is not a slot feature");
         }
+
+        List<LinkWithRoleModel> sourceLinks = adapter.getFeatureValue(slotFeature, aSourceFs);
+        List<AnnotationFS> targets = checkAndGetTargets(aTargetCas,
+                selectAnnotationByAddr(aSourceFs.getCAS(), sourceLinks.get(liIndex).targetAddr));
+
+        if (targets.isEmpty()) {
+            throw new AnnotationException("No suitable merge target found");
+        }
+
+        LinkWithRoleModel newLink = new LinkWithRoleModel(sourceLinks.get(liIndex));
+        newLink.targetAddr = getAddr(targets.get(0));
 
         List<LinkWithRoleModel> links = adapter.getFeatureValue(slotFeature, mergeFs);
-        LinkWithRoleModel duplicateLink = null; //
-        for (LinkWithRoleModel lr : links) {
-            if (lr.targetAddr == linkRole.targetAddr) {
-                duplicateLink = lr;
-                break;
+        // Override an existing link if no roles are used. If roles are used, then the user may want
+        // to link the same target multiple times with different roles - hence we simply add.
+        switch (slotFeature.getLinkMode()) {
+        case WITH_ROLE:
+            var traits = linkTraitsCache.get(slotFeature);
+            if (traits.isEnableRoleLabels()) {
+                if (links.stream().noneMatch(l -> l.targetAddr == newLink.targetAddr
+                        && Objects.equals(l.role, newLink.role))) {
+                    links.add(newLink);
+                }
             }
+            else {
+                links.remove(existingLinkWithTarget(newLink, links));
+                links.add(newLink);
+            }
+            break;
+        default:
+            throw new AnnotationException("Feature [" + aSourceFeature + "] is not a slot feature");
         }
-        links.add(linkRole);
-        links.remove(duplicateLink);
 
-        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, mergeFs.getAddress(), slotFeature,
+        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, getAddr(mergeFs), slotFeature,
                 links);
 
         return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
-                ICasUtil.getAddr(mergeFs));
+                getAddr(mergeFs));
+    }
+
+    private LinkWithRoleModel existingLinkWithTarget(LinkWithRoleModel aLink,
+            List<LinkWithRoleModel> aLinks)
+    {
+        for (LinkWithRoleModel lr : aLinks) {
+            if (lr.targetAddr == aLink.targetAddr) {
+                return lr;
+            }
+        }
+        return null;
     }
 
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTarget)

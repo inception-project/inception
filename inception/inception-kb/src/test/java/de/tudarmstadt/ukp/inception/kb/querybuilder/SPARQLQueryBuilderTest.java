@@ -60,6 +60,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -1684,6 +1685,7 @@ public class SPARQLQueryBuilderTest
                 "http://www.w3.org/2002/07/owl#Thing", 0);
     }
 
+    @Disabled("YAGO seems to have problem atm 29-04-2023")
     @Tag("slow")
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_YAGO()

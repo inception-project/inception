@@ -34,13 +34,7 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.SelectFSs;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.cas.TOP;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
@@ -66,14 +60,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -361,9 +352,9 @@ public abstract class AnnotationPageBase
             TypeAdapter aAdapter)
         throws ValidationException, IOException, AnnotationException
     {
-        CAS editorCas = aCas;
-        AnnotationLayer layer = aAdapter.getLayer();
-        List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+        var editorCas = aCas;
+        var layer = aAdapter.getLayer();
+        var features = aAdapter.listFeatures();
 
         // If no feature is required, then we can skip the whole procedure
         if (features.stream().allMatch((f) -> !f.isRequired())) {
@@ -371,16 +362,16 @@ public abstract class AnnotationPageBase
         }
 
         // Check each feature structure of this layer
-        Type layerType = aAdapter.getAnnotationType(editorCas);
-        Type annotationFsType = editorCas.getAnnotationType();
-        try (SelectFSs<TOP> fses = editorCas.select(layerType)) {
-            for (FeatureStructure fs : fses) {
-                for (AnnotationFeature f : features) {
+        var layerType = aAdapter.getAnnotationType(editorCas);
+        var annotationFsType = editorCas.getAnnotationType();
+        try (var fses = editorCas.select(layerType)) {
+            for (var fs : fses) {
+                for (var f : features) {
                     if (ValidationUtils.isRequiredFeatureMissing(f, fs)) {
                         // If it is an annotation, then we jump to it if it has required empty
                         // features
                         if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
-                            getAnnotationActionHandler().actionSelectAndJump(aTarget, new VID(fs));
+                            getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
                         }
 
                         // Inform the user
@@ -396,8 +387,8 @@ public abstract class AnnotationPageBase
     public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
         throws ValidationException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
+        var state = getModelObject();
+        for (var layer : annotationService.listAnnotationLayer(state.getProject())) {
             if (!layer.isEnabled()) {
                 // No validation for disabled layers since there is nothing the annotator could do
                 // about fixing annotations on disabled layers.
@@ -409,21 +400,20 @@ public abstract class AnnotationPageBase
                 continue;
             }
 
-            TypeAdapter adapter = annotationService.getAdapter(layer);
+            var adapter = annotationService.getAdapter(layer);
 
             validateRequiredFeatures(aTarget, aCas, adapter);
 
-            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aCas);
+            var messages = adapter.validate(aCas);
             if (!messages.isEmpty()) {
-                LogMessage message = messages.get(0).getLeft();
-                AnnotationFS fs = messages.get(0).getRight();
+                var message = messages.get(0).getLeft();
+                var fs = messages.get(0).getRight();
 
-                getAnnotationActionHandler().actionSelectAndJump(aTarget, new VID(fs));
+                getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
 
                 // Inform the user
-                throw new ValidationException(
-                        "Annotation with ID [" + ICasUtil.getAddr(fs) + "] on layer ["
-                                + layer.getUiName() + "] is invalid: " + message.getMessage());
+                throw new ValidationException("Annotation with ID [" + VID.of(fs) + "] on layer ["
+                        + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
     }

@@ -1,0 +1,40 @@
+<collection>
+  <source>example-with-sentences</source>
+  <date>2023-01-01</date>
+  <key>example-with-sentences.key</key>
+  <document>
+    <id>some-id-1234567</id>
+    <passage>
+      <infon key="type">abstract</infon>
+      <offset>0</offset>
+      <sentence>
+        <infon key="type">type 1</infon>
+        <offset>10</offset>
+        <text>Sentence 1.</text>
+        <annotation id="1">
+          <infon key="type">custom.Span</infon>
+          <infon key="label">span-annotation-value</infon>
+          <location offset="0" length="8"/>
+          <text>Sentence</text>
+        </annotation>
+        <annotation id="2">
+          <infon key="type">custom.Span</infon>
+          <infon key="label">span-annotation-value</infon>
+          <location offset="9" length="1"/>
+          <text>1</text>
+        </annotation>
+        <relation id="3">
+          <infon key="type">custom.Relation</infon>
+          <infon key="label">relation-annotation-value</infon>
+          <node refid="1" role="source"/>
+          <node refid="2" role="target"/>
+        </relation>
+      </sentence>
+      <sentence>
+        <infon key="type">type 2</infon>
+        <offset>30</offset>
+        <text>Sentence 2.</text>
+      </sentence>
+    </passage>
+  </document>
+</collection>

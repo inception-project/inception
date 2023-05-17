@@ -22,7 +22,7 @@ export function uniqueLabels (data: AnnotatedText): string[] {
   if (!data) return []
 
   const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => ann?.label || '')
-    .sort()
+    .sort((a, b) => a.localeCompare(b, undefined, { usage: 'sort', sensitivity: 'variant' }))
 
   const sortedLabels: string[] = []
   for (let i = 0; i < sortedLabelsWithDuplicates.length; i++) {
