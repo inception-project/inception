@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.project.export.legacy;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,7 +47,7 @@ public class LegacyExportProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Export";
+        return new ResourceModel("legacyexportprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

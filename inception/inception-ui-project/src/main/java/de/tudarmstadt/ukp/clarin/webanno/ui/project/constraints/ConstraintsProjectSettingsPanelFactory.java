@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class ConstraintsProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Constraints";
+        return new ResourceModel("constraintsprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

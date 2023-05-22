@@ -23,6 +23,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -50,7 +51,7 @@ public class KnowledgeBaseProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Knowledge Bases";
+        return new ResourceModel("knowledgebaseprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

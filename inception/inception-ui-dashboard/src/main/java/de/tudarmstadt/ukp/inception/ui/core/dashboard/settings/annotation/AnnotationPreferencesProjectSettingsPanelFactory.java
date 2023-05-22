@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,8 @@ public class AnnotationPreferencesProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return new ResourceModel("annotationpreferencesprojectsettings.panel.factory.label")
+                .getObject();
     }
 
     @Override

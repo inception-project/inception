@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class LayersProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Layers";
+        return new ResourceModel("layersprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

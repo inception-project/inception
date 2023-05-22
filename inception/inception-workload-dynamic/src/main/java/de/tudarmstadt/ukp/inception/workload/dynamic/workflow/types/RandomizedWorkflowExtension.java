@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.wicket.model.ResourceModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
@@ -34,7 +36,7 @@ public class RandomizedWorkflowExtension
     @Override
     public String getLabel()
     {
-        return "Randomized workflow";
+        return new ResourceModel("randomizedworkflow.extension.label").getObject();
     }
 
     @Override

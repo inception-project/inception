@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class DocumentsProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Documents";
+        return new ResourceModel("documentsprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

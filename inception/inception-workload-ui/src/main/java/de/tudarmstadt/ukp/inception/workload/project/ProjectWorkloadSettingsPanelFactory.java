@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -52,7 +53,7 @@ public class ProjectWorkloadSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Workload";
+        return new ResourceModel("projectworkloadsettings.panel.factory.label").getObject();
     }
 
     @Override

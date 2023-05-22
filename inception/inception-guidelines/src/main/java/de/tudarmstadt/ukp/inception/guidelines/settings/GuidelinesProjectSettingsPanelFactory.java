@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.guidelines.settings;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class GuidelinesProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Guidelines";
+        return new ResourceModel("guidelinesprojectsettings.panel.factory.label").getObject();
     }
 
     @Override
