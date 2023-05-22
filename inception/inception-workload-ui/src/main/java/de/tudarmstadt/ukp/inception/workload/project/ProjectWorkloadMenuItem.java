@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.project;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +46,7 @@ public class ProjectWorkloadMenuItem
     @Override
     public String getLabel()
     {
-        return "Workload";
+        return new ResourceModel("projectworkload.menuitem.label").getObject();
     }
 
     @Override

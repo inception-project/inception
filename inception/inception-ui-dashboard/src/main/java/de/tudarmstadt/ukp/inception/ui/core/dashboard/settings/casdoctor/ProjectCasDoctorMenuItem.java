@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.casdoctor;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,7 @@ public class ProjectCasDoctorMenuItem
     @Override
     public String getLabel()
     {
-        return "CAS Doctor";
+        return new ResourceModel("projectcasdoctor.menuitem.label").getObject();
     }
 
     @Override

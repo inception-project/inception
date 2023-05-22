@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 
@@ -75,7 +76,7 @@ public class CurationPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Curation";
+        return new ResourceModel("curation.page.menuitem.label").getObject();
     }
 
     @Override

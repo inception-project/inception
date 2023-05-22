@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,7 @@ public class ProjectUsersMenuItem
     @Override
     public String getLabel()
     {
-        return "Users";
+        return new ResourceModel("projectusers.menuitem.label").getObject();
     }
 
     @Override

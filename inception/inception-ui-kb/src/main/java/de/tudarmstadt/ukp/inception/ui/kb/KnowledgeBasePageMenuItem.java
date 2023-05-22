@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -76,7 +77,7 @@ public class KnowledgeBasePageMenuItem
     @Override
     public String getLabel()
     {
-        return "Knowledge Base";
+        return new ResourceModel("knowledgebase.page.menuitem.label").getObject();
     }
 
     @Override

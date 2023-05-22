@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -51,7 +52,7 @@ public class LegacyProjectExportMenuItem
     @Override
     public String getLabel()
     {
-        return "Export";
+        return new ResourceModel("legacyprojectexport.menuitem.label").getObject();
     }
 
     @Override

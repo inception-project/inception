@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.layers;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,7 @@ public class ProjectLayersMenuItem
     @Override
     public String getLabel()
     {
-        return "Layers";
+        return new ResourceModel("projectlayers.menuitem.label").getObject();
     }
 
     @Override

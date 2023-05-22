@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -69,7 +70,7 @@ public class MatrixWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Monitoring";
+        return new ResourceModel("matrixworloadmanagement.page.menuitem.label").getObject();
     }
 
     /**

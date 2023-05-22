@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -50,7 +51,7 @@ public class ProjectKnowledgeBaseMenuItem
     @Override
     public String getLabel()
     {
-        return "Knowledge Bases";
+        return new ResourceModel("projectknowledgebase.menuitem.label").getObject();
     }
 
     @Override

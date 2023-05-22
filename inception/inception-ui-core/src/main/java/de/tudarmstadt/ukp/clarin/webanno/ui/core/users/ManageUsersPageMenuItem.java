@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +49,7 @@ public class ManageUsersPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Users";
+        return new ResourceModel("manageusers.page.menuitem.label").getObject();
     }
 
     /**
