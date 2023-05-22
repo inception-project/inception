@@ -23,6 +23,7 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,7 +52,8 @@ public class DocumentRepositoryProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Document Repositories";
+        return new ResourceModel("documentrepositoryprojectsettings.panel.factory.label")
+                .getObject();
     }
 
     @Override

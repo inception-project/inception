@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,7 +47,7 @@ public class VersioningSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Versioning";
+        return new ResourceModel("versioningsettings.panel.factory.label").getObject();
     }
 
     @Override

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,7 +47,7 @@ public class InviteProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Share Project";
+        return new ResourceModel("inviteprojectsettings.panel.factory.label").getObject();
     }
 
     @Override

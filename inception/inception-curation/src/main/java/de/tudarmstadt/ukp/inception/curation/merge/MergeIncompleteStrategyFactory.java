@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
@@ -45,7 +46,7 @@ public class MergeIncompleteStrategyFactory
     @Override
     public String getLabel()
     {
-        return "Merge incomplete agreeing non-stacked annotations";
+        return new ResourceModel("mergeincompletestrategy.factory.label").getObject();
     }
 
     @Override

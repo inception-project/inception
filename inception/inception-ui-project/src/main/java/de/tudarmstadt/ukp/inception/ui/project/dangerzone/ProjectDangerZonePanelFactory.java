@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.project.dangerzone;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +42,7 @@ public class ProjectDangerZonePanelFactory
     @Override
     public String getLabel()
     {
-        return "Danger Zone";
+        return new ResourceModel("projectdangerzone.panel.factory.label").getObject();
     }
 
     @Override

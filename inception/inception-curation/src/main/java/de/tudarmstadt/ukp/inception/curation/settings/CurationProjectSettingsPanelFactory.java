@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.curation.settings;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,7 +47,7 @@ public class CurationProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Curation";
+        return new ResourceModel("curationprojectsettings.panel.factory.label").getObject();
     }
 
     @Override
