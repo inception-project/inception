@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.documents;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,7 @@ public class ProjectDocumentsMenuItem
     @Override
     public String getLabel()
     {
-        return "Documents";
+        return new ResourceModel("projectdocuments.menuitem.label").getObject();
     }
 
     @Override

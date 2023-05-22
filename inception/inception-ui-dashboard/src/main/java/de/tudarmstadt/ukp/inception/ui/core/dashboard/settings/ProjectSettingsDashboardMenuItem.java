@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -56,7 +57,7 @@ public class ProjectSettingsDashboardMenuItem
     @Override
     public String getLabel()
     {
-        return "Settings";
+        return new ResourceModel("projectsettingsdashboard.menuitem.label").getObject();
     }
 
     @Override

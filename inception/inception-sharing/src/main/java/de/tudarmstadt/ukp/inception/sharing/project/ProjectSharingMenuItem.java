@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -50,7 +51,7 @@ public class ProjectSharingMenuItem
     @Override
     public String getLabel()
     {
-        return "Sharing";
+        return new ResourceModel("projectsharing.menuitem.label").getObject();
     }
 
     @Override

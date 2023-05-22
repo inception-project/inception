@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.*;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -58,7 +57,7 @@ public class AgreementPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Agreement";
+        return new ResourceModel("agreement.page.menuitem.label").getObject();
     }
 
     /**

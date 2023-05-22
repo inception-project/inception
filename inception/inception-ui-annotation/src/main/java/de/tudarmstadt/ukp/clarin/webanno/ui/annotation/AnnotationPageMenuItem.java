@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -81,7 +82,7 @@ public class AnnotationPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return new ResourceModel("annotation.page.menuitem.label").getObject();
     }
 
     /**

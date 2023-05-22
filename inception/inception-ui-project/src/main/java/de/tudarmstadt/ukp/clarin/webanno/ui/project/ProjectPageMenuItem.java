@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -52,7 +53,7 @@ public class ProjectPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Projects";
+        return new ResourceModel("project.page.menuitem.label").getObject();
     }
 
     /**
