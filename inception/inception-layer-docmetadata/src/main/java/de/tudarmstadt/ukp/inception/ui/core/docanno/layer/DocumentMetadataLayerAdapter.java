@@ -106,7 +106,7 @@ public class DocumentMetadataLayerAdapter
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
 
-        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
+        publishEvent(() -> new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
                 newAnnotation));
 
         return newAnnotation;
@@ -118,7 +118,8 @@ public class DocumentMetadataLayerAdapter
         AnnotationBaseFS fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
-        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
+        publishEvent(
+                () -> new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
 
     public AnnotationBaseFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
@@ -127,7 +128,8 @@ public class DocumentMetadataLayerAdapter
 
         aCas.addFsToIndexes(fs);
 
-        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(), fs));
+        publishEvent(
+                () -> new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(), fs));
         return fs;
     }
 

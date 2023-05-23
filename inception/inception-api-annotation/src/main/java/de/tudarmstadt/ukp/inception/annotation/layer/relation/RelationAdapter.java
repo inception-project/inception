@@ -124,17 +124,19 @@ public class RelationAdapter
 
     public AnnotationFS handle(CreateRelationAnnotationRequest aRequest) throws AnnotationException
     {
-        CreateRelationAnnotationRequest request = aRequest;
+        var request = aRequest;
 
-        for (RelationLayerBehavior behavior : behaviors) {
+        for (var behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
 
-        AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
-                request.getOriginFs(), request.getTargetFs());
-        publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
-                getLayer(), relationAnno, getTargetAnnotation(relationAnno),
-                getSourceAnnotation(relationAnno)));
+        var relationAnno = createRelationAnnotation(request.getCas(), request.getOriginFs(),
+                request.getTargetFs());
+
+        var finalRequest = request;
+        publishEvent(() -> new RelationCreatedEvent(this, finalRequest.getDocument(),
+                finalRequest.getUsername(), getLayer(), relationAnno,
+                getTargetAnnotation(relationAnno), getSourceAnnotation(relationAnno)));
 
         return relationAnno;
     }
@@ -156,8 +158,7 @@ public class RelationAdapter
         final Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
         final Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
-        AnnotationFS newAnnotation = cas.createAnnotation(type, targetFS.getBegin(),
-                targetFS.getEnd());
+        var newAnnotation = cas.createAnnotation(type, targetFS.getBegin(), targetFS.getEnd());
         newAnnotation.setFeatureValue(dependentFeature, targetFS);
         newAnnotation.setFeatureValue(governorFeature, originFS);
         cas.addFsToIndexes(newAnnotation);
@@ -169,7 +170,7 @@ public class RelationAdapter
     {
         AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
-        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
+        publishEvent(() -> new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
                 getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
@@ -179,7 +180,7 @@ public class RelationAdapter
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.addFsToIndexes(fs);
 
-        publishEvent(new RelationCreatedEvent(this, aDocument, aUsername, getLayer(), fs,
+        publishEvent(() -> new RelationCreatedEvent(this, aDocument, aUsername, getLayer(), fs,
                 getTargetAnnotation(fs), getSourceAnnotation(fs)));
 
         return fs;
