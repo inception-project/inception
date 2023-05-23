@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 @Configuration
 @AutoConfigureAfter({ ExternalSearchAutoConfiguration.class, BioCAutoConfiguration.class,
         PubMedServicesAutoConfiguration.class })
-@ConditionalOnProperty(prefix = "external-search.pubmed", //
+@ConditionalOnProperty(prefix = "external-search.pmc", //
         name = "enabled", havingValue = "true", matchIfMissing = false)
 @ConditionalOnBean({ ExternalSearchService.class, BioCFormatSupport.class })
 public class PubMedDocumentRepositoryAutoConfiguration
