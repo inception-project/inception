@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUt
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -197,7 +198,14 @@ public interface TypeAdapter
      */
     boolean isSilenced();
 
+    /**
+     * @deprecated Use {@link #publishEvent(Supplier)} instead. This allows to not initialize events
+     *             that are not sent.
+     */
+    @Deprecated
     void publishEvent(ApplicationEvent aEvent);
+
+    void publishEvent(Supplier<ApplicationEvent> aEventSupplier);
 
     Selection select(VID aVid, AnnotationFS aAnnotation);
 

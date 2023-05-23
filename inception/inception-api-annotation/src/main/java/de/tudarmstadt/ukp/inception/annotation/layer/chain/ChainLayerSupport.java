@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.chain;
 
 import static java.util.Arrays.asList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
@@ -54,7 +55,7 @@ public class ChainLayerSupport
     extends LayerSupport_ImplBase<ChainAdapter, ChainLayerTraits>
     implements InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;

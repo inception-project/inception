@@ -1129,7 +1129,7 @@ public class RecommendationServiceImpl
                     aLocation);
 
             // Send an application event that the suggestion has been accepted
-            aAdapter.publishEvent(new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
+            aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
                     annotation, aFeature, aSuggestion.getLabel()));
         }
     }

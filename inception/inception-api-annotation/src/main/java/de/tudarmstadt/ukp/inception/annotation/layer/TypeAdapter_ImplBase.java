@@ -157,8 +157,8 @@ public abstract class TypeAdapter_ImplBase
         var newValue = featureSupport.getFeatureValue(aFeature, fs);
 
         if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
-                    aFeature, newValue, oldValue));
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, aFeature, newValue, oldValue));
         }
     }
 
@@ -172,11 +172,20 @@ public abstract class TypeAdapter_ImplBase
                 .getFeatureValue(aFeature, aFs);
     }
 
+    @Deprecated
     @Override
     public void publishEvent(ApplicationEvent aEvent)
     {
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(aEvent);
+        }
+    }
+
+    @Override
+    public void publishEvent(Supplier<ApplicationEvent> aEventSupplier)
+    {
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(aEventSupplier.get());
         }
     }
 
