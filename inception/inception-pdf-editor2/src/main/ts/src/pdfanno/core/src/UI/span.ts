@@ -22,7 +22,8 @@ export function installSpanSelection () {
 
   window.addEventListener('annotationHoverIn', () => { otherAnnotationTreating = true })
   window.addEventListener('annotationHoverOut', () => { otherAnnotationTreating = false })
-  window.addEventListener('annotationDeleted', () => { otherAnnotationTreating = false })
+  // See https://github.com/inception-project/inception/issues/4008
+  window.addEventListener('doubleClickAnnotation', () => { otherAnnotationTreating = false })
 }
 
 function startSelection () {
