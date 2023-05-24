@@ -34,7 +34,6 @@ import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -75,7 +74,6 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     @Transactional
     public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
