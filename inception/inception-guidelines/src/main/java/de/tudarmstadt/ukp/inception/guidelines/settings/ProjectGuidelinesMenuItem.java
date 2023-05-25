@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.inception.guidelines.settings;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -47,8 +46,10 @@ public class ProjectGuidelinesMenuItem
     @Override
     public String getLabel()
     {
-        return new StringResourceModel("projectguidelines.menuitem.label",
-                new ProjectGuidelinesPage(new PageParameters())).getString();
+        return new ResourceModel("projectguidelines.menuitem.label").getObject();
+
+        // return new StringResourceModel("projectguidelines.menuitem.label",
+        // new ProjectGuidelinesPage(new PageParameters())).getString();
     }
 
     @Override
