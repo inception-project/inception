@@ -140,8 +140,8 @@ public class LazyDetailsLookupServiceImpl
             StringValue keyParam, String topic, AnnotationLayer layer,
             List<VLazyDetailResult> details)
     {
-        // Only applies to synthetic annotations (i.e. from extensions) and the key is mandatory
-        if (!paramId.isSynthetic() || keyParam.isEmpty()) {
+        // Only applies to synthetic annotations (i.e. from extensions)
+        if (!paramId.isSynthetic()) {
             return;
         }
 
@@ -149,7 +149,8 @@ public class LazyDetailsLookupServiceImpl
 
         String extensionId = paramId.getExtensionId();
         extensionRegistry.getExtension(extensionId)
-                .renderLazyDetails(aSourceDocument, aUser, paramId, feature, keyParam.toString()) //
+                .renderLazyDetails(aSourceDocument, aUser, paramId, feature,
+                        keyParam.toOptionalString()) //
                 .forEach(details::add);
     }
 }
