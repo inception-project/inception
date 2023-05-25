@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -52,7 +53,8 @@ public class ProjectDocumentRepositoriesMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectdocument.menuitem.label").getObject();
+        return new StringResourceModel("projectdocumentrepositories.menuitem.label",
+                new ProjectDocumentRepositoriesPage(new PageParameters())).getString();
     }
 
     @Override

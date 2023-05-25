@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -64,7 +65,8 @@ public class EvaluationSimulationPageMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("evaluationsimulation.page.menuitem.label").getObject();
+        return new StringResourceModel("evaluationsimulation.page.menuitem.label",
+                new EvaluationSimulationPage(new PageParameters())).getString();
     }
 
     @Override

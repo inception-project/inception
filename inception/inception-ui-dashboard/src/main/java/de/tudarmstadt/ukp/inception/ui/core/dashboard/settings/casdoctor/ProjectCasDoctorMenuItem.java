@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.casdoctor;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +48,8 @@ public class ProjectCasDoctorMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectcasdoctor.menuitem.label").getObject();
+        return new StringResourceModel("projectcasdoctor.menuitem.label",
+                new ProjectCasDoctorPage(new PageParameters())).getString();
     }
 
     @Override
