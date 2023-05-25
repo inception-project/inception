@@ -24,8 +24,7 @@ import static java.lang.String.format;
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -83,8 +82,9 @@ public class AnnotationPageMenuItem
     @Override
     public String getLabel()
     {
-        return new StringResourceModel("annotation.page.menuitem.label",
-                new AnnotationPage(new PageParameters())).getString();
+        return new ResourceModel("annotation.page.menuitem.label").getObject();
+        // return new StringResourceModel("annotation.page.menuitem.label",
+        // new AnnotationPage(new PageParameters())).getString();
     }
 
     /**

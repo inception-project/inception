@@ -22,8 +22,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -63,8 +62,9 @@ public class SearchPageMenuItem
     @Override
     public String getLabel()
     {
-        return new StringResourceModel("search.page.menuitem.label",
-                new SearchPage(new PageParameters())).getString();
+        return new ResourceModel("search.page.menuitem.label").getObject();
+        // return new StringResourceModel("search.page.menuitem.label",
+        // new SearchPage(new PageParameters())).getString();
     }
 
     @Override

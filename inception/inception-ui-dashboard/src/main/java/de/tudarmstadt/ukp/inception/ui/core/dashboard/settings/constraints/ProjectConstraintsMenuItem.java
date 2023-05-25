@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.constraints;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +47,10 @@ public class ProjectConstraintsMenuItem
     @Override
     public String getLabel()
     {
-        return new StringResourceModel("projectconstraints.menuitem.label",
-                new ProjectConstraintsPage(new PageParameters())).getString();
+        return new ResourceModel("projectconstraints.menuitem.label").getObject();
+
+        // return new StringResourceModel("projectconstraints.menuitem.label",
+        // new ProjectConstraintsPage(new PageParameters())).getString();
     }
 
     @Override
