@@ -90,6 +90,7 @@ public class PdfAnnotationEditor
                 referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,
                 PdfAnnotationEditorJavascriptResourceReference.get())));
+        props.setLoadingIndicatorDisabled(true);
         return props;
     }
 }
