@@ -101,7 +101,7 @@ public class OverlapIterator
         return curb;
     }
 
-    public void ignoraA()
+    public void ignoreA()
     {
         ignorea[na] = true;
     }
