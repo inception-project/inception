@@ -2262,36 +2262,35 @@ public class RecommendationServiceImpl
 
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
         // must be sorted in the same way. The suggestion offsets are sorted because they are
-        // the keys in a TreeSet - and the annotation offsets are sorted in the same way
-        // manually
-        OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
-                sortedAnnotationKeys);
+        // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
+        var oi = new OverlapIterator(sortedAnnotationKeys, new ArrayList<>(suggestions.keySet()));
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
         while (oi.hasNext()) {
             if (oi.getA().overlaps(oi.getB())) {
                 // Fetch the current suggestion and annotation
-                SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
-                for (AnnotationFS annotation : annotations.get(oi.getB())) {
-                    String label = annotation.getFeatureValueAsString(feat);
-                    for (SpanSuggestion suggestion : group) {
+                var group = suggestions.get(oi.getB());
+                for (var annotation : annotations.get(oi.getA())) {
+                    var label = annotation.getFeatureValueAsString(feat);
+                    for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
                         // feature
+                        boolean colocated = colocated(annotation, suggestion.getBegin(),
+                                suggestion.getEnd());
                         if (suggestion.getLabel() == null) {
                             // If there is already an annotation, then we hide any suggestions
                             // that would just trigger the creation of the same annotation and
                             // not set any new feature. This applies whether stacking is allowed
                             // or not.
-                            if (colocated(annotation, suggestion.getBegin(), suggestion.getEnd())) {
+                            if (colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
 
                             // If stacking is enabled, we do allow suggestions that create an
                             // annotation with no label, but only if the offsets differ
-                            if (feature.getLayer().isAllowStacking() && !colocated(annotation,
-                                    suggestion.getBegin(), suggestion.getEnd())) {
+                            if (feature.getLayer().isAllowStacking() && !colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2303,14 +2302,13 @@ public class RecommendationServiceImpl
                             // Is the feature still unset in the current annotation - i.e. would
                             // accepting the suggestion merge the feature into it? If yes, we do
                             // not hide
-                            if (label == null && colocated(annotation, suggestion.getBegin(),
-                                    suggestion.getEnd())) {
+                            if (label == null && colocated) {
                                 continue;
                             }
 
-                            // Does the suggested label match the label of an existing
-                            // annotation, then we hide
-                            if (label != null && label.equals(suggestion.getLabel())) {
+                            // Does the suggested label match the label of an existing annotation
+                            // at the same position then we hide
+                            if (label != null && label.equals(suggestion.getLabel()) && colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2325,10 +2323,11 @@ public class RecommendationServiceImpl
                     }
                 }
 
-                // Do not want to process the group again since the relevant annotations are
+                // Do not want to process the annotation again since the relevant suggestions are
                 // already hidden
-                oi.ignoraA();
+                oi.ignoreA();
             }
+
             oi.step();
         }
     }

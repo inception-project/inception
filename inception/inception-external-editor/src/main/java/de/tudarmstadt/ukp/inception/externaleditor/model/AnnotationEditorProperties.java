@@ -26,6 +26,7 @@ public class AnnotationEditorProperties
     private String diamWsUrl;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
+    private boolean loadingIndicatorDisabled = false;
 
     public String getEditorFactory()
     {
@@ -75,5 +76,15 @@ public class AnnotationEditorProperties
     public void setStylesheetSources(List<String> aStylesheetSources)
     {
         stylesheetSources = aStylesheetSources;
+    }
+
+    public boolean isLoadingIndicatorDisabled()
+    {
+        return loadingIndicatorDisabled;
+    }
+
+    public void setLoadingIndicatorDisabled(boolean aLoadingIndicatorDisabled)
+    {
+        loadingIndicatorDisabled = aLoadingIndicatorDisabled;
     }
 }
