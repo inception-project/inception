@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -51,7 +51,14 @@ public class VersioningMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("versioning.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("versioning.menuitem.label",
+        // new VersioningPreferencesPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("versioning.menuitem.label").getString();
     }
 
     @Override

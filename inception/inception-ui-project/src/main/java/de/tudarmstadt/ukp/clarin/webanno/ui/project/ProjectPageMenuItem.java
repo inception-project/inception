@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -53,7 +53,14 @@ public class ProjectPageMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("project.page.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("project.page.menuitem.label",
+        // new ProjectSettingsPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("project.page.menuitem.label").getString();
     }
 
     /**

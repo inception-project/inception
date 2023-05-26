@@ -23,9 +23,6 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensi
 
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -73,11 +70,14 @@ public class MatrixWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("matrixworloadmanagement.page.menuitem.label",
+        // new MatrixWorkloadManagementPage(currentPage.getPageParameters())).getString();
 
-        return new StringResourceModel("matrixworloadmanagement.page.menuitem.label",
-                new MatrixWorkloadManagementPage(currentPage.getPageParameters())).getString();
+        return new StringResourceModel("matrixworloadmanagement.page.menuitem.label").getString();
     }
 
     /**

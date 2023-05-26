@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -51,7 +51,14 @@ public class ProjectKnowledgeBaseMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectknowledgebase.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("projectknowledgebase.menuitem.label",
+        // new ProjectKnowledgeBasePage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("projectknowledgebase.menuitem.label").getString();
     }
 
     @Override

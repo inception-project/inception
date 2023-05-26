@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,14 @@ public class ProjectTagSetsMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projecttagsets.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("projecttagsets.menuitem.label",
+        // new ProjectTagSetsPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("projecttagsets.menuitem.label").getString();
     }
 
     @Override

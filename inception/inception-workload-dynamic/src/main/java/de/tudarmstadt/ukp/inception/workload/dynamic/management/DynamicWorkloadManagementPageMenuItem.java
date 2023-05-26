@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
@@ -72,7 +72,14 @@ public class DynamicWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("dynamicworkloadmanagement.page.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("dynamicworkloadmanagement.page.menuitem.label",
+        // new DynamicWorkloadManagementPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("dynamicworkloadmanagement.page.menuitem.label").getString();
     }
 
     /**
