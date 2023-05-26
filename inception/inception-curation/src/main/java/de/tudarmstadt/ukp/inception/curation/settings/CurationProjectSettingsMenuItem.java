@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.curation.settings;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -51,10 +51,14 @@ public class CurationProjectSettingsMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("curationprojectsettings.menuitem.label").getObject();
-
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
         // return new StringResourceModel("curationprojectsettings.menuitem.label",
-        // new CurationProjectSettingsPage(new PageParameters())).getString();
+        // new CurationProjectSettingsPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("curationprojectsettings.menuitem.label").getString();
     }
 
     @Override

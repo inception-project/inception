@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +47,14 @@ public class ProjectUsersMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectusers.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("projectusers.menuitem.label",
+        // new ProjectUsersPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("projectusers.menuitem.label").getString();
     }
 
     @Override

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -46,10 +46,14 @@ public class ProjectWorkloadMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectworkload.menuitem.label").getObject();
-
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
         // return new StringResourceModel("projectworkload.menuitem.label",
-        // new ProjectWorkloadPage(new PageParameters())).getString();
+        // new ProjectWorkloadPage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("projectworkload.menuitem.label").getString();
     }
 
     @Override

@@ -24,7 +24,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -77,7 +77,14 @@ public class KnowledgeBasePageMenuItem
     @Override
     public String getLabel()
     {
-        return new ResourceModel("knowledgebase.page.menuitem.label").getObject();
+        // IRequestablePage currentPage =
+        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+        // .getPage();
+        //
+        // return new StringResourceModel("knowledgebase.page.menuitem.label",
+        // new KnowledgeBasePage(currentPage.getPageParameters())).getString();
+
+        return new StringResourceModel("knowledgebase.page.menuitem.label").getString();
     }
 
     @Override
