@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
+import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF;
 import static java.lang.Integer.parseInt;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.springframework.http.HttpMethod.GET;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +36,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -73,8 +74,8 @@ public class PubAnnotationProvider
 
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<PubAnnotationDocumentHandle[]> response = restTemplate.exchange(
-                aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}",
-                HttpMethod.GET, null, PubAnnotationDocumentHandle[].class, variables);
+                aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}", GET,
+                null, PubAnnotationDocumentHandle[].class, variables);
 
         return asList(response.getBody());
     }
@@ -165,19 +166,17 @@ public class PubAnnotationProvider
 
         RestTemplate restTemplate = new RestTemplate();
 
+        var url = aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}.json";
         try {
             // If the document has multiple sections, a list is returned...
-            ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(
-                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
-                    HttpMethod.GET, null, PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF,
-                    variables);
+            ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(url,
+                    GET, null, SPRING_LIST_TYPE_REF, variables);
 
             return response.getBody();
         }
         catch (RestClientException e) {
             // If the document has as single section, an object is returned...
-            PubAnnotationDocumentSection section = restTemplate.getForObject(
-                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
+            PubAnnotationDocumentSection section = restTemplate.getForObject(url,
                     PubAnnotationDocumentSection.class, variables);
 
             return asList(section);
