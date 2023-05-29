@@ -35,7 +35,6 @@ public class DiamSidebarManagerPrefs
 
     public List<String> getPinnedGroups()
     {
-        System.out.println("[" + hashCode() + "] GET " + String.join(",", pinnedGroups));
         return pinnedGroups;
     }
 
@@ -45,6 +44,5 @@ public class DiamSidebarManagerPrefs
         if (aPinnedGroups != null) {
             pinnedGroups.addAll(aPinnedGroups);
         }
-        System.out.println("[" + hashCode() + "] SET " + String.join(",", aPinnedGroups));
     }
 }
