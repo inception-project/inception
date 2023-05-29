@@ -15,28 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.config;
+package de.tudarmstadt.ukp.inception.annotatorjs.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
+import de.tudarmstadt.ukp.inception.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
 
 /**
- * Provides support for an HTML-oriented annotation editor.
+ * Provides support for an AnnotatorJS-based HTML-oriented annotation editor.
  */
 @ConditionalOnWebApplication
 @Configuration
-public class HtmlAnnotationEditorSupportAutoConfiguration
+public class AnnotatorJsAnnotationEditorSupportAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "ui.html.legacy-iframe-view", name = "enabled", //
+    @ConditionalOnProperty(prefix = "ui.html-annotatorjs", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
     @Bean
-    @Deprecated
-    public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
+    public AnnotatorJsHtmlAnnotationEditorFactory annotatorJsHtmlAnnotationEditorFactory()
     {
-        return new HtmlDocumentIFrameViewFactory();
+        return new AnnotatorJsHtmlAnnotationEditorFactory();
     }
 }

@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources;
+package de.tudarmstadt.ukp.inception.annotatorjs.resources;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class AnnotatorJsCssResourceReference
-    extends CssResourceReference
+public class AnnotatorJsJavascriptResourceReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final AnnotatorJsCssResourceReference INSTANCE = new AnnotatorJsCssResourceReference();
+    private static final AnnotatorJsJavascriptResourceReference INSTANCE = new AnnotatorJsJavascriptResourceReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static AnnotatorJsCssResourceReference get()
+    public static AnnotatorJsJavascriptResourceReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class AnnotatorJsCssResourceReference
     /**
      * Private constructor
      */
-    private AnnotatorJsCssResourceReference()
+    private AnnotatorJsJavascriptResourceReference()
     {
-        super(AnnotatorJsCssResourceReference.class, "AnnotatorJsEditor.min.css");
+        super(AnnotatorJsJavascriptResourceReference.class, "AnnotatorJsEditor.min.js");
     }
 }
