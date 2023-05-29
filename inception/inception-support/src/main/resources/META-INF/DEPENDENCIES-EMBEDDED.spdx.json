@@ -12,17 +12,6 @@
       "hasFiles": [
         "de/tudarmstadt/ukp/clarin/webanno/support/wicket/AjaxDownloadBehavior.java"
       ]
-    },
-    {
-      "name": "vue3-sfc-loader",
-      "versionInfo": "0.2.21",
-      "originator": "Franck Freiburger",
-      "homepage": "https://github.com/FranckFreiburger/vue3-sfc-loader",
-      "licenseDeclared": "MIT",
-      "hasFiles": [
-        "de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js",
-        "de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js.map"
-      ]
     }
   ]
 }

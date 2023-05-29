@@ -37,6 +37,9 @@ public interface AnnotationEditorFactory
      */
     String getBeanName();
 
+    /**
+     * @return the name of the editor as shown to the user.
+     */
     String getDisplayName();
 
     default int accepts(Project aProject, String aFormat)

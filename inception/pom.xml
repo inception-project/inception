@@ -130,6 +130,8 @@
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
     <!--   4.7.0    depends on Lucene 9.4.2 -->
 
+    <props-to-constants-generator.version>1.0.0</props-to-constants-generator.version>
+  
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.8</asciidoctor.version>
     <asciidoctor-diagram.version>2.2.7</asciidoctor-diagram.version>
@@ -333,6 +335,14 @@
       <artifactId>spring-boot-configuration-processor</artifactId>
       <optional>true</optional>
     </dependency>
+    
+    <!-- Generation of constants for I18N properties files -->
+    <dependency>
+      <groupId>com.github.kklisura.java.processing</groupId>
+      <artifactId>props-to-constants-generator</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
 
     <!-- JAXB is no longer included with Java 9+ by default -->
     <dependency>
@@ -2281,6 +2291,12 @@
         <artifactId>ivy</artifactId>
         <version>2.5.1</version>
       </dependency>
+      
+      <dependency>
+        <groupId>com.github.kklisura.java.processing</groupId>
+        <artifactId>props-to-constants-generator</artifactId>
+        <version>${props-to-constants-generator.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -2447,6 +2463,16 @@
         <configuration>
           <annotationProcessorPaths>
             <path>
+              <groupId>com.github.kklisura.java.processing</groupId>
+              <artifactId>props-to-constants-generator</artifactId>
+              <version>${props-to-constants-generator.version}</version>
+            </path>
+            <path>
+              <groupId>org.hibernate</groupId>
+              <artifactId>hibernate-jpamodelgen</artifactId>
+              <version>${hibernate.version}</version>
+            </path>
+            <path>
               <groupId>org.hibernate</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
               <version>${hibernate.version}</version>
@@ -2568,6 +2594,10 @@
               - Generation of Spring Property Metadata files 
               -->
             <dependency>org.springframework.boot:spring-boot-configuration-processor</dependency>
+            <!-- 
+              - Generation of constants for I18N properties files
+              -->
+            <dependency>com.github.kklisura.java.processing:props-to-constants-generator</dependency>
             <!--
               - Common test dependencies
             -->

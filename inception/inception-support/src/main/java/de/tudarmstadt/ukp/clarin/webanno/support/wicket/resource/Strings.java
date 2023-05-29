@@ -19,6 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource;
 
 public class Strings
 {
+    public static String getString(String aKey)
+    {
+        return getString(aKey);
+    }
+
     public static String getString(String aKey, String aDefaultValue)
     {
         return org.apache.wicket.Application.get().getResourceSettings().getLocalizer()
