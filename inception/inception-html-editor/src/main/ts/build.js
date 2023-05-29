@@ -66,7 +66,7 @@ const defaults = {
   logLevel: 'info'
 }
 
-let outbase = '../../../target/js/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/'
+let outbase = '../../../target/js/de/tudarmstadt/ukp/inception/annotatorjs/resources/'
 
 const argv = yargs(hideBin(process.argv)).argv
 
@@ -77,7 +77,7 @@ if (argv.live) {
       else console.log('watch build succeeded:', result)
     }
   }
-  outbase = '../../../target/classes/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/'
+  outbase = '../../../target/classes/de/tudarmstadt/ukp/inception/annotatorjs/resources/'
 }
 
 esbuild.build(Object.assign({
