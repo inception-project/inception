@@ -21,7 +21,7 @@ public class Strings
 {
     public static String getString(String aKey)
     {
-        return getString(aKey);
+        return getString(aKey, null);
     }
 
     public static String getString(String aKey, String aDefaultValue)
