@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
@@ -85,7 +84,6 @@ public abstract class ExternalAnnotationEditorBase
 
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
-    private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ServletContext context;
 

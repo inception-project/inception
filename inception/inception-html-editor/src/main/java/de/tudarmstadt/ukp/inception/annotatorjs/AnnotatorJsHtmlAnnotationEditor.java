@@ -27,6 +27,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import com.github.kklisura.java.processing.annotations.PropertySourceConstants;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.annotatorjs.resources.AnnotatorJsCssResourceReference;
@@ -38,6 +40,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
+@PropertySourceConstants(resourceName = "de/tudarmstadt/ukp/inception/annotatorjs/wicket-package.properties", className = "Messages_")
 public class AnnotatorJsHtmlAnnotationEditor
     extends ExternalAnnotationEditorBase
 {

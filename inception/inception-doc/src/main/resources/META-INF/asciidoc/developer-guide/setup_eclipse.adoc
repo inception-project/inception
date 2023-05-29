@@ -26,8 +26,8 @@ We recommend you start from a *Eclipse IDE for Java Developers* package.
 
 == Use a JDK
 
-On Linux or OS X, the following setting is not necessary. Having a full JDK installed on your
-system is generally sufficient. You can skip on to the next section.
+On Linux or OS X, having a full JDK installed on your system is generally sufficient. You can skip
+on to the next section.
 
 On Windows, you need to edit the `eclipse.ini` file and directly before the `-vmargs` line, you
 have to add the following two lines. Mind to replace `C:/Program Files/Java/jdk11` with the actual
@@ -59,8 +59,9 @@ C:/Program Files/Java/jdk11/jre/bin/server/jvm.dll
 
 == Eclipse Workspace Settings
 
-* You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
-  your Eclipse install.
+* You should check that Text file encoding is `UTF-8` in *Preferences -> General -> Workspace*.
+* You need to enable Java annotation preprocessors. Go to *Preferences -> Maven -> Annotation Processing*
+  and set the *Annotation Processing Mode* to *Automatic*.
 
 == Importing {product-name} into the Workspace
 
