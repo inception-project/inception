@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs;
+package de.tudarmstadt.ukp.inception.annotatorjs;
 
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotatorjs.config.AnnotatorJsAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * Support for HTML-oriented editor component.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlAnnotationEditorFactory()}.
+ * {@link AnnotatorJsAnnotationEditorSupportAutoConfiguration#annotatorJsHtmlAnnotationEditorFactory()}.
  * </p>
  */
 public class AnnotatorJsHtmlAnnotationEditorFactory
