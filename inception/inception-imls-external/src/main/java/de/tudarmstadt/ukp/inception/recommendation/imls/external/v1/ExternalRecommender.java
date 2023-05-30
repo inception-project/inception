@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Tra
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 
 public class ExternalRecommender
     extends RecommendationEngine
@@ -194,7 +195,7 @@ public class ExternalRecommender
             throw new RecommendationException("Error while deserializing CAS!", e);
         }
 
-        return new Range(aCas);
+        return Range.rangeCoveringDocument(aCas);
     }
 
     private String serializeTypeSystem(CAS aCas) throws RecommendationException
@@ -210,13 +211,13 @@ public class ExternalRecommender
 
     private String serializeCas(CAS aCas) throws RecommendationException
     {
-        try (StringWriter out = new StringWriter()) {
+        try (var out = new StringWriter()) {
             // Passing "null" as the type system to the XmiCasSerializer means that we want
             // to serialize all types (i.e. no filtering for a specific target type system).
             XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
-            XMLSerializer sax2xml = new XMLSerializer(out, true);
-            xmiCasSerializer.serialize(getRealCas(aCas), sax2xml.getContentHandler(), null, null,
-                    null);
+            var contentHandler = new XMLSerializer(out, true).getContentHandler();
+            contentHandler = new IllegalXmlCharacterSanitizingContentHandler(contentHandler);
+            xmiCasSerializer.serialize(getRealCas(aCas), contentHandler, null, null, null);
             return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
