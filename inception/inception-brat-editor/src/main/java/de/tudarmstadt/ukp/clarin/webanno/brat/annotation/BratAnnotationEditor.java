@@ -81,9 +81,10 @@ public class BratAnnotationEditor
     private DifferentialRenderingSupport diffRenderSupport;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(id, aModel, aActionHandler, aCasProvider);
+        super(id, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
 
         add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
 

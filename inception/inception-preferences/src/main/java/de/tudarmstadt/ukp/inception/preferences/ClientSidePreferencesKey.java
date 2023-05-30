@@ -15,42 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.editor;
+package de.tudarmstadt.ukp.inception.preferences;
 
-import java.io.IOException;
-import java.util.Optional;
-
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
-
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
-
-public abstract class AnnotationEditorFactoryImplBase
-    implements BeanNameAware, Ordered, AnnotationEditorFactory
+public class ClientSidePreferencesKey<T>
+    extends Key<T>
 {
-    private String beanName;
+    public static final String KEY_PREFIX_CLIENT_SIDE_ANNOTATION = "client-side/";
 
-    @Override
-    public void setBeanName(String aName)
+    private final String clientSideKey;
+
+    public ClientSidePreferencesKey(Class<T> aTraitClass, String aClientSideKey)
     {
-        beanName = aName;
+        super(aTraitClass, KEY_PREFIX_CLIENT_SIDE_ANNOTATION + aClientSideKey);
+        clientSideKey = aClientSideKey;
     }
 
-    @Override
-    public String getBeanName()
+    public String getClientSideKey()
     {
-        return beanName;
-    }
-
-    @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
-    }
-
-    @Override
-    public Optional<PolicyCollection> getPolicy() throws IOException
-    {
-        return Optional.empty();
+        return clientSideKey;
     }
 }

@@ -51,9 +51,10 @@ public class AnnotatorJsHtmlAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public AnnotatorJsHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override

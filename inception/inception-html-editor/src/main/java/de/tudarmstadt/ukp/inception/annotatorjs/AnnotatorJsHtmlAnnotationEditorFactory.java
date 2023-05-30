@@ -44,7 +44,10 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        return Strings.getString(Messages_.ANNOTATORJS_EDITOR_NAME);
+        // return Strings.getString(Messages_.ANNOTATORJS_EDITOR_NAME);
+        // FIXME: For some reason the annotation processor does not seem to work in Eclipse full
+        // builds. Needs to be debugged....
+        return Strings.getString("annotatorjs-editor.name");
     }
 
     @Override
@@ -63,7 +66,8 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+                getBeanName());
     }
 
     @Override
