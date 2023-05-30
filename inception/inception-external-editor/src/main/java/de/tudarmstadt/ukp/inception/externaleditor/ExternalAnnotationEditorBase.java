@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
@@ -129,11 +130,9 @@ public abstract class ExternalAnnotationEditorBase
         LOG.trace("[{}][{}] {}", getMarkupId(), vis.getMarkupId(), getClass().getSimpleName());
     }
 
-    protected ExternalAnnotationEditorFactory getFactory()
+    protected AnnotationEditorFactory getFactory()
     {
-        var factory = (ExternalAnnotationEditorFactory) annotationEditorRegistry
-                .getEditorFactory(editorFactoryId);
-        return factory;
+        return annotationEditorRegistry.getEditorFactory(editorFactoryId);
     }
 
     protected DiamAjaxBehavior createDiamBehavior()
@@ -218,25 +217,6 @@ public abstract class ExternalAnnotationEditorBase
         }
     }
 
-    private String getUserPreferencesAsJson()
-    {
-        var userPreferencesKey = getFactory().getUserPreferencesKey();
-        if (userPreferencesKey.isEmpty()) {
-            return "{}";
-        }
-
-        try {
-            var sessionOwner = userService.getCurrentUser();
-            var prefs = preferencesService.loadTraitsForUserAndProject(userPreferencesKey.get(),
-                    sessionOwner, getModelObject().getProject());
-
-            return JSONUtil.toInterpretableJsonString(prefs);
-        }
-        catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     private CharSequence destroyScript()
     {
         return "ExternalEditor.destroy(document.getElementById('" + vis.getMarkupId() + "'));";
@@ -268,8 +248,8 @@ public abstract class ExternalAnnotationEditorBase
     private String getOrInitializeEditorScript()
     {
         return format(
-                "ExternalEditor.getOrInitialize(document.getElementById('%s'), Diam.factory(), %s, %s)",
-                vis.getMarkupId(), getPropertiesAsJson(), getUserPreferencesAsJson());
+                "ExternalEditor.getOrInitialize(document.getElementById('%s'), Diam.factory(), %s)",
+                vis.getMarkupId(), getPropertiesAsJson());
     }
 
     @Override
