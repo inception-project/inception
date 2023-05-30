@@ -27,12 +27,20 @@ import org.dkpro.core.io.json.JsonWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.io.jsoncas.config.LegacyUimaJsonCasFormatProperties;
 
 public class LegacyUimaJsonFormatSupport
     implements FormatSupport
 {
     public static final String ID = "json";
     public static final String NAME = "UIMA CAS JSON (legacy)";
+
+    private final LegacyUimaJsonCasFormatProperties properties;
+
+    public LegacyUimaJsonFormatSupport(LegacyUimaJsonCasFormatProperties aProps)
+    {
+        properties = aProps;
+    }
 
     @Override
     public String getId()
@@ -57,6 +65,7 @@ public class LegacyUimaJsonFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(JsonWriter.class, aTSD);
+        return createEngineDescription(JsonWriter.class, aTSD, //
+                JsonWriter.PARAM_OMIT_DEFAULT_VALUES, properties.isOmitDefaultValues());
     }
 }
