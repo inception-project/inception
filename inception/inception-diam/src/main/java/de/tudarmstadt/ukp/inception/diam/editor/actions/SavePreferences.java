@@ -18,14 +18,12 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromValidatedJsonString;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
-import org.springframework.beans.factory.BeanNotOfRequiredTypeException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -71,22 +69,22 @@ public class SavePreferences
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            var userPreferencesContext = aRequest.getRequestParameters()
-                    .getParameterValue(PARAM_KEY).toOptionalString();
-            if (StringUtils.isBlank(userPreferencesContext)) {
+            var keyParameter = aRequest.getRequestParameters().getParameterValue(PARAM_KEY)
+                    .toOptionalString();
+            if (isBlank(keyParameter)) {
                 throw new IllegalArgumentException("No key specified");
             }
 
-            var bean = clientSiderUserPreferencesProviderRegistry
-                    .getProviderForClientSideKey(userPreferencesContext);
+            var prefProvider = clientSiderUserPreferencesProviderRegistry
+                    .getProviderForClientSideKey(keyParameter);
 
-            if (bean.isEmpty()) {
+            if (prefProvider.isEmpty()) {
                 throw new IllegalStateException(
                         "Client-side user preferences not allowed for given key");
             }
 
-            var key = bean.get().getUserPreferencesKey();
-            var schema = bean.get().getUserPreferencesSchema();
+            var key = prefProvider.get().getUserPreferencesKey();
+            var schema = prefProvider.get().getUserPreferencesSchema();
 
             if (key.isEmpty() || schema.isEmpty()) {
                 throw new IllegalStateException(
@@ -99,9 +97,6 @@ public class SavePreferences
             var data = fromValidatedJsonString(Map.class, dataString.toString(), schema.get());
             preferencesService.saveTraitsForUserAndProject(key.get(), sessionOwner, project, data);
             return new DefaultAjaxResponse();
-        }
-        catch (BeanNotOfRequiredTypeException | NoSuchBeanDefinitionException e) {
-            return handleError("Client-side user preferences not supported", e);
         }
         catch (Exception e) {
             return handleError("Unable to save client-side user preferences", e);

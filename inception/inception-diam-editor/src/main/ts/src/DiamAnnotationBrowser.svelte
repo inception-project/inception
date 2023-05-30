@@ -17,80 +17,116 @@
      * limitations under the License.
      */
 
-    import { onMount, onDestroy } from "svelte"
-    import { get_current_component } from 'svelte/internal'
-    import { AnnotatedText, unpackCompactAnnotatedTextV2 } from "@inception-project/inception-js-api"
-    import { factory } from "@inception-project/inception-diam"
-    import { groupingMode } from "./AnnotationBrowserState"
-    import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte"
-    import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte"
+    import { onMount, onDestroy } from "svelte";
+    import { get_current_component } from "svelte/internal";
+    import {
+        AnnotatedText,
+        unpackCompactAnnotatedTextV2,
+    } from "@inception-project/inception-js-api";
+    import { factory } from "@inception-project/inception-diam";
+    import {
+        groupingMode,
+        recommendationsFirst,
+        sortByScore,
+    } from "./AnnotationBrowserState";
+    import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
+    import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte";
 
-    export let wsEndpointUrl: string
-    export let topicChannel: string
-    export let ajaxEndpointUrl: string
-    export let pinnedGroups: string[]
-    export let userPreferencesKey: string
-    
-    let connected = false
+    export let wsEndpointUrl: string;
+    export let topicChannel: string;
+    export let ajaxEndpointUrl: string;
+    export let pinnedGroups: string[];
+    export let userPreferencesKey: string;
+
+    let connected = false;
     let element = null;
-    let self = get_current_component()
+    let self = get_current_component();
 
-    let defaultPreferences = { 'mode': 'by-label' }
-    let preferences = Object.assign({}, defaultPreferences)
-	let modes = {
-		'by-position': 'Group by position',
-		'by-label': 'Group by label'
-    }
+    let defaultPreferences = {
+        mode: "by-label",
+        sortByScore: true,
+        recommendationsFirst: false,
+    };
+    let preferences = Object.assign({}, defaultPreferences);
+    let modes = {
+        "by-position": "Group by position",
+        "by-label": "Group by label",
+    };
 
-    let data: AnnotatedText
+    let data: AnnotatedText;
 
-    let wsClient = factory().createWebsocketClient()
-    wsClient.onConnect = () => wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d))
+    let wsClient = factory().createWebsocketClient();
+    wsClient.onConnect = () =>
+        wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d));
 
-    let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl)
+    let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl);
 
     ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
-        preferences = Object.assign(preferences, defaultPreferences, p)
-        console.log('Loaded preferences', preferences)
-        groupingMode.set(preferences.mode || defaultPreferences.mode)
+        preferences = Object.assign(preferences, defaultPreferences, p);
+        console.log("Loaded preferences", preferences);
+        groupingMode.set(preferences.mode || defaultPreferences.mode);
+        sortByScore.set(
+            preferences.sortByScore !== undefined
+                ? preferences.sortByScore
+                : defaultPreferences.sortByScore
+        );
+        recommendationsFirst.set(
+            preferences.recommendationsFirst !== undefined
+                ? preferences.recommendationsFirst
+                : defaultPreferences.recommendationsFirst
+        );
 
-        groupingMode.subscribe(mode => {
-            preferences.mode = mode
-            ajaxClient.savePreferences(userPreferencesKey, preferences)
-        })
+        groupingMode.subscribe((mode) => {
+            preferences.mode = mode;
+            ajaxClient.savePreferences(userPreferencesKey, preferences);
+        });
+
+        sortByScore.subscribe((mode) => {
+            preferences.sortByScore = mode;
+            ajaxClient.savePreferences(userPreferencesKey, preferences);
+        });
+
+        recommendationsFirst.subscribe((mode) => {
+            preferences.recommendationsFirst = mode;
+            ajaxClient.savePreferences(userPreferencesKey, preferences);
+        });
     });
 
     export function messageRecieved(d) {
         if (!document.body.contains(element)) {
-            console.debug("Element is not part of the DOM anymore. Disconnecting and suiciding.")
-            self.$destroy()
-            return
+            console.debug(
+                "Element is not part of the DOM anymore. Disconnecting and suiciding."
+            );
+            self.$destroy();
+            return;
         }
 
-        data = unpackCompactAnnotatedTextV2(d)
+        data = unpackCompactAnnotatedTextV2(d);
     }
 
     export function connect(): void {
-        if (connected) return
-        wsClient.connect(wsEndpointUrl)
+        if (connected) return;
+        wsClient.connect(wsEndpointUrl);
     }
 
     export function disconnect() {
-        wsClient.unsubscribeFromViewport()
-        wsClient.disconnect()
-        connected = false
+        wsClient.unsubscribeFromViewport();
+        wsClient.disconnect();
+        connected = false;
     }
 
-    onMount(async () =>  connect())
+    onMount(async () => connect());
 
-    onDestroy(async () => disconnect())
+    onDestroy(async () => disconnect());
 </script>
 
 <div class="flex-content flex-v-container" bind:this={element}>
     <select bind:value={$groupingMode} class="form-select">
-        {#each Object.keys(modes) as value}<option {value}>{modes[value]}</option>{/each}
+        {#each Object.keys(modes) as value}<option {value}
+                >{modes[value]}</option
+            >{/each}
     </select>
-    {#if $groupingMode=='by-position'}
+    {#if $groupingMode == "by-position"}
         <AnnotationsByPositionList {ajaxClient} {data} />
     {:else}
         <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />

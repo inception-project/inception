@@ -19,3 +19,7 @@
 import { writable } from 'svelte/store'
 
 export const groupingMode = writable('by-label')
+
+export const sortByScore = writable(true)
+
+export const recommendationsFirst = writable(false)

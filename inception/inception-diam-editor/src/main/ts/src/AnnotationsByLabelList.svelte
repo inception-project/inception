@@ -28,6 +28,7 @@
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import { compareSpanText, groupBy, renderLabel, uniqueLabels } from "./Utils";
+    import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
@@ -35,8 +36,6 @@
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
-    let sortByScore: boolean = true;
-    let recommendationsFirst: boolean = false;
 
     $: {
         sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
@@ -60,12 +59,12 @@
 
                 const aIsRec = a.vid.toString().startsWith("rec:")
                 const bIsRec = b.vid.toString().startsWith("rec:")
-                if (sortByScore && aIsRec && !bIsRec) {
-                    return recommendationsFirst ? -1 : 1;
+                if ($sortByScore && aIsRec && !bIsRec) {
+                    return $recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if (sortByScore && aIsRec && bIsRec) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return (
@@ -75,7 +74,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if (sortByScore && aIsRec && bIsRec) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return compareOffsets(
@@ -110,19 +109,19 @@
                 type="checkbox"
                 role="switch"
                 id="sortByScore"
-                bind:checked={sortByScore}
+                bind:checked={$sortByScore}
             />
             <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
             >
         </div>
-        <div class="form-check form-switch mx-2" class:d-none={!sortByScore}>
+        <div class="form-check form-switch mx-2" class:d-none={!$sortByScore}>
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
                 id="recommendationsFirst"
-                bind:checked={recommendationsFirst}
+                bind:checked={$recommendationsFirst}
             />
             <label class="form-check-label" for="recommendationsFirst"
                 >Recommendations first</label

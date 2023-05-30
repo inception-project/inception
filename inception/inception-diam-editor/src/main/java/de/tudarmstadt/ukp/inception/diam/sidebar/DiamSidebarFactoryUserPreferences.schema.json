@@ -5,7 +5,14 @@
     "mode": {
       "type": "string",
       "enum": ["by-label", "by-position"]
+    },
+    "sortByScore": {
+      "type": "boolean"
+    },
+    "recommendationsFirst": {
+      "type": "boolean"
     }
   },
-  "required": ["mode"]
+  "required": ["mode"],
+  "additionalProperties": false
 }
