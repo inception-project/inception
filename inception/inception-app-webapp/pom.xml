@@ -522,7 +522,13 @@
       <artifactId>commons-logging</artifactId>
       <scope>provided</scope>
     </dependency>
-
+    
+    <!-- SENTRY DEPENDENCIES -->
+    <dependency>
+      <groupId>io.sentry</groupId>
+      <artifactId>sentry-spring-boot-starter</artifactId>
+    </dependency>
+      
     <!-- DATABASE / HIBERNATE -->
 
     <dependency>
@@ -946,6 +952,8 @@
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
               <usedDependency>commons-logging:commons-logging</usedDependency>
+              <!-- Monitoring - used via reflection / optional -->
+              <usedDependency>io.sentry:sentry-spring-boot-starter</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
