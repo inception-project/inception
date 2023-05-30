@@ -77,6 +77,12 @@ public class ExternalAnnotationEditor
                         "Unsupported view: [" + getDescription().getView() + "]"));
     }
 
+    @Override
+    protected ExternalAnnotationEditorFactory getFactory()
+    {
+        return (ExternalAnnotationEditorFactory) super.getFactory();
+    }
+
     private ExternalEditorPluginDescripion getDescription()
     {
         return getFactory().getDescription();
