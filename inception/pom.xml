@@ -1657,6 +1657,12 @@
         <version>${jackson.version}.2</version>
       </dependency>
       
+      <dependency>
+        <groupId>com.networknt</groupId>
+        <artifactId>json-schema-validator</artifactId>
+        <version>1.0.83</version>
+      </dependency>
+      
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>

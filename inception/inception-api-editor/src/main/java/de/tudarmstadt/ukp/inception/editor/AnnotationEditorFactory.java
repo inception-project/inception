@@ -19,12 +19,16 @@ package de.tudarmstadt.ukp.inception.editor;
 
 import static java.lang.Integer.MIN_VALUE;
 
+import java.io.IOException;
+import java.util.Optional;
+
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface AnnotationEditorFactory
 {
@@ -58,4 +62,6 @@ public interface AnnotationEditorFactory
      *            the annotator state
      */
     void initState(AnnotatorState aState);
+
+    Optional<PolicyCollection> getPolicy() throws IOException;
 }

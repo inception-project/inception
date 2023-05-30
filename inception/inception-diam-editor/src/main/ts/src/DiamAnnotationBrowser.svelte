@@ -21,6 +21,7 @@
     import { get_current_component } from 'svelte/internal'
     import { AnnotatedText, unpackCompactAnnotatedTextV2 } from "@inception-project/inception-js-api"
     import { factory } from "@inception-project/inception-diam"
+    import { groupingMode } from "./AnnotationBrowserState"
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte"
     import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte"
 
@@ -28,16 +29,18 @@
     export let topicChannel: string
     export let ajaxEndpointUrl: string
     export let pinnedGroups: string[]
+    export let userPreferencesKey: string
     
     let connected = false
     let element = null;
     let self = get_current_component()
 
-    let mode = 'Group by label';
-	let modes = [
-		'Group by position',
-		'Group by label'
-	]
+    let defaultPreferences = { 'mode': 'by-label' }
+    let preferences = Object.assign({}, defaultPreferences)
+	let modes = {
+		'by-position': 'Group by position',
+		'by-label': 'Group by label'
+    }
 
     let data: AnnotatedText
 
@@ -45,6 +48,17 @@
     wsClient.onConnect = () => wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d))
 
     let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl)
+
+    ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
+        preferences = Object.assign(preferences, defaultPreferences, p)
+        console.log('Loaded preferences', preferences)
+        groupingMode.set(preferences.mode || defaultPreferences.mode)
+
+        groupingMode.subscribe(mode => {
+            preferences.mode = mode
+            ajaxClient.savePreferences(userPreferencesKey, preferences)
+        })
+    });
 
     export function messageRecieved(d) {
         if (!document.body.contains(element)) {
@@ -67,16 +81,16 @@
         connected = false
     }
 
-    onMount(async () => connect())
+    onMount(async () =>  connect())
 
     onDestroy(async () => disconnect())
 </script>
 
 <div class="flex-content flex-v-container" bind:this={element}>
-    <select bind:value={mode} class="form-select">
-        {#each modes as value}<option {value}>{value}</option>{/each}
+    <select bind:value={$groupingMode} class="form-select">
+        {#each Object.keys(modes) as value}<option {value}>{modes[value]}</option>{/each}
     </select>
-    {#if mode=='Group by position'}
+    {#if $groupingMode=='by-position'}
         <AnnotationsByPositionList {ajaxClient} {data} />
     {:else}
         <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />

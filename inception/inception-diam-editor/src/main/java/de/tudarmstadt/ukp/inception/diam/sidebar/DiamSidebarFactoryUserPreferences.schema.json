@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema#",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["by-label", "by-position"]
+    }
+  },
+  "required": ["mode"]
+}

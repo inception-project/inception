@@ -49,11 +49,14 @@ public class DiamAnnotationBrowser
     private @SpringBean ServletContext servletContext;
     private @SpringBean PreferencesService userPrefService;
 
+    private final String userPreferencesKey;
+
     private DiamAjaxBehavior diamBehavior;
 
-    public DiamAnnotationBrowser(String aId)
+    public DiamAnnotationBrowser(String aId, String aUserPreferencesKey)
     {
         super(aId);
+        userPreferencesKey = aUserPreferencesKey;
     }
 
     @Override
@@ -87,7 +90,8 @@ public class DiamAnnotationBrowser
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
                 "topicChannel", viewport.getTopic(), //
-                "pinnedGroups", managerPrefs.getPinnedGroups());
+                "pinnedGroups", managerPrefs.getPinnedGroups(), "userPreferencesKey",
+                userPreferencesKey);
 
         // model will be added as props to Svelte component
         setDefaultModel(Model.ofMap(properties));

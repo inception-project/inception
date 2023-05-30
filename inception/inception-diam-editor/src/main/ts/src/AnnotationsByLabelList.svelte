@@ -27,7 +27,7 @@
     import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { compareSpanText, groupBy, uniqueLabels } from "./Utils";
+    import { compareSpanText, groupBy, renderLabel, uniqueLabels } from "./Utils";
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
@@ -45,7 +45,7 @@
         const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
-            (s) => s.label || ""
+            (s) => renderLabel(s)
         )
 
         for (const items of Object.values(groupedAnnotations)) {

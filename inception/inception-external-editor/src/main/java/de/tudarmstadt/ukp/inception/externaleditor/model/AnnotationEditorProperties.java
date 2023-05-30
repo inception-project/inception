@@ -21,6 +21,7 @@ import java.util.List;
 
 public class AnnotationEditorProperties
 {
+    private String editorFactoryId;
     private String editorFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
@@ -86,5 +87,15 @@ public class AnnotationEditorProperties
     public void setLoadingIndicatorDisabled(boolean aLoadingIndicatorDisabled)
     {
         loadingIndicatorDisabled = aLoadingIndicatorDisabled;
+    }
+
+    public void setEditorFactoryId(String aEditorFactoryId)
+    {
+        editorFactoryId = aEditorFactoryId;
+    }
+
+    public String getEditorFactoryId()
+    {
+        return editorFactoryId;
     }
 }

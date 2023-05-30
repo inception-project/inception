@@ -48,6 +48,7 @@ import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsM
 import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -82,19 +85,27 @@ public abstract class ExternalAnnotationEditorBase
 
     protected static final String CID_VIS = "vis";
 
+    private @SpringBean PreferencesService preferencesService;
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
+    private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ServletContext context;
+    private @SpringBean UserDao userService;
+
+    private final String editorFactoryId;
 
     private DiamAjaxBehavior diamBehavior;
     private Component vis;
     private ContextMenu contextMenu;
 
     public ExternalAnnotationEditorBase(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
+
+        editorFactoryId = aEditorFactoryId;
 
         setOutputMarkupPlaceholderTag(true);
         add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
@@ -116,6 +127,13 @@ public abstract class ExternalAnnotationEditorBase
         add(diamBehavior);
 
         LOG.trace("[{}][{}] {}", getMarkupId(), vis.getMarkupId(), getClass().getSimpleName());
+    }
+
+    protected ExternalAnnotationEditorFactory getFactory()
+    {
+        var factory = (ExternalAnnotationEditorFactory) annotationEditorRegistry
+                .getEditorFactory(editorFactoryId);
+        return factory;
     }
 
     protected DiamAjaxBehavior createDiamBehavior()
@@ -200,6 +218,25 @@ public abstract class ExternalAnnotationEditorBase
         }
     }
 
+    private String getUserPreferencesAsJson()
+    {
+        var userPreferencesKey = getFactory().getUserPreferencesKey();
+        if (userPreferencesKey.isEmpty()) {
+            return "{}";
+        }
+
+        try {
+            var sessionOwner = userService.getCurrentUser();
+            var prefs = preferencesService.loadTraitsForUserAndProject(userPreferencesKey.get(),
+                    sessionOwner, getModelObject().getProject());
+
+            return JSONUtil.toInterpretableJsonString(prefs);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private CharSequence destroyScript()
     {
         return "ExternalEditor.destroy(document.getElementById('" + vis.getMarkupId() + "'));";
@@ -231,8 +268,8 @@ public abstract class ExternalAnnotationEditorBase
     private String getOrInitializeEditorScript()
     {
         return format(
-                "ExternalEditor.getOrInitialize(document.getElementById('%s'), Diam.factory(), %s)",
-                vis.getMarkupId(), getPropertiesAsJson());
+                "ExternalEditor.getOrInitialize(document.getElementById('%s'), Diam.factory(), %s, %s)",
+                vis.getMarkupId(), getPropertiesAsJson(), getUserPreferencesAsJson());
     }
 
     @Override
