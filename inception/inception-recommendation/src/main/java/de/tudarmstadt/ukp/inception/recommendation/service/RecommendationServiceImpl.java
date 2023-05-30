@@ -1730,9 +1730,6 @@ public class RecommendationServiceImpl
                 computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
             }
 
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
-
             return predictions;
         }
         catch (ResourceInitializationException e) {
@@ -1767,9 +1764,6 @@ public class RecommendationServiceImpl
             // Generate new predictions or inherit at the recommender level
             computePredictions(predictions, predictionCas, aCurrentDocument, aDataOwner,
                     aPredictionBegin, aPredictionEnd);
-
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
         }
         catch (ResourceInitializationException e) {
             predictions.log(
