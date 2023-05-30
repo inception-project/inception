@@ -37,6 +37,11 @@ public class ContentHandlerAdapter
 
     protected final ContentHandler delegate;
 
+    public ContentHandlerAdapter()
+    {
+        delegate = null;
+    }
+
     public ContentHandlerAdapter(ContentHandler aDelegate)
     {
         delegate = aDelegate;
@@ -45,30 +50,50 @@ public class ContentHandlerAdapter
     @Override
     public void setDocumentLocator(Locator aLocator)
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.setDocumentLocator(aLocator);
     }
 
     @Override
     public void startDocument() throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.startDocument();
     }
 
     @Override
     public void endDocument() throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.endDocument();
     }
 
     @Override
     public void startPrefixMapping(String aPrefix, String aUri) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.startPrefixMapping(aPrefix, aUri);
     }
 
     @Override
     public void endPrefixMapping(String aPrefix) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.endPrefixMapping(aPrefix);
     }
 
@@ -117,6 +142,10 @@ public class ContentHandlerAdapter
     public void startElement(String aUri, String aLocalName, String aQName, Attributes aAtts)
         throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.startElement(aUri, aLocalName, aQName, aAtts);
     }
 
@@ -133,6 +162,10 @@ public class ContentHandlerAdapter
     @Override
     public void endElement(String aUri, String aLocalName, String aQName) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.endElement(aUri, aLocalName, aQName);
     }
 
@@ -144,24 +177,40 @@ public class ContentHandlerAdapter
     @Override
     public void characters(char[] aCh, int aStart, int aLength) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.characters(aCh, aStart, aLength);
     }
 
     @Override
     public void ignorableWhitespace(char[] aCh, int aStart, int aLength) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.ignorableWhitespace(aCh, aStart, aLength);
     }
 
     @Override
     public void processingInstruction(String aTarget, String aData) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.processingInstruction(aTarget, aData);
     }
 
     @Override
     public void skippedEntity(String aName) throws SAXException
     {
+        if (delegate == null) {
+            return;
+        }
+
         delegate.skippedEntity(aName);
     }
 }
