@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 
 /**
@@ -36,4 +38,6 @@ public interface DocumentAccess
 
     boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator);
+
+    boolean canExportAnnotationDocument(User aUser, Project aProject);
 }
