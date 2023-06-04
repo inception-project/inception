@@ -16,6 +16,12 @@
  * limitations under the License.
  */
 
+.k-input {
+  color: var(--bs-body-color) !important;
+  background-color: var(--bs-body-bg) !important;
+  border-color: var(--bs-border-color) !important;
+}
+
 .k-block, .k-widget {
     background-color: var(--bs-body-bg) !important;
 }
