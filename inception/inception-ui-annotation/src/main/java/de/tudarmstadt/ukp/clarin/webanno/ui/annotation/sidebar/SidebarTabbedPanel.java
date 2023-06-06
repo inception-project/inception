@@ -82,7 +82,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     {
         expanded = !expanded;
         saveSidebarState();
-        WicketUtil.refreshPage(aTarget, getPage());
+        aTarget.add(findParent(SidebarPanel.class));
     }
 
     public boolean isExpanded()

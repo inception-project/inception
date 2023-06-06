@@ -447,7 +447,7 @@ export class VisualizerUI {
 
   resizerTimeout: number
   onResize (evt: Event) {
-    if (evt.target === window) {
+    if (!evt || evt.target === window) {
       clearTimeout(this.resizerTimeout)
       this.resizerTimeout = setTimeout(() => this.dispatcher.post('rerender'), 300)
     }
