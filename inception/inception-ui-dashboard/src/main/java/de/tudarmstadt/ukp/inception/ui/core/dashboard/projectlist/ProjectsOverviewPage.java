@@ -586,10 +586,11 @@ public class ProjectsOverviewPage
 
     private List<ProjectEntry> loadProjects()
     {
+        var isAdmin = userRepository.isAdministrator(currentUser.getObject());
         return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
                 .entrySet().stream() //
                 .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
-                .filter(e -> e.getLevels().contains(MANAGER)
+                .filter(e -> isAdmin || e.getLevels().contains(MANAGER)
                         || containsAny(e.getLevels(), dashboardProperties.getAccessibleByRoles()))
                 .sorted(comparing(ProjectEntry::getName)) //
                 .collect(toList());
