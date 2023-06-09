@@ -87,6 +87,7 @@
     <slf4j.version>2.0.7</slf4j.version>
     <log4j2.version>2.20.0</log4j2.version>
     <jboss.logging.version>3.5.0.Final</jboss.logging.version>
+    <sentry.version>6.22.0</sentry.version>
 
     <tomcat.version>9.0.75</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -1534,7 +1535,7 @@
       <dependency>
         <groupId>io.sentry</groupId>
         <artifactId>sentry-bom</artifactId>
-        <version>6.20.0</version>
+        <version>${sentry.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
