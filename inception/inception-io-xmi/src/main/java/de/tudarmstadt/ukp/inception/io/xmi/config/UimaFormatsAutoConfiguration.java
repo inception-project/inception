@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.xmi.config;
+package de.tudarmstadt.ukp.inception.io.xmi.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.xmi.BinaryCasFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.UimaInlineXmlFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiXml11FormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.BinaryCasFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.UimaInlineXmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiXml11FormatSupport;
 
 @Configuration
 public class UimaFormatsAutoConfiguration
