@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.dangerzone;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -47,14 +50,13 @@ public class ProjectDangerZoneMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("projectdangerzone.menuitem.label",
-        // new ProjectDangerZonePage(currentPage.getPageParameters())).getString();
+        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                .getPage();
 
-        return new StringResourceModel("projectdangerzone.menuitem.label").getString();
+         return new StringResourceModel("projectdangerzone.menuitem.label",
+                 new ProjectDangerZonePage(currentPage.getPageParameters())).getString();
+
+         // return new StringResourceModel("projectdangerzone.menuitem.label").getString();
     }
 
     @Override

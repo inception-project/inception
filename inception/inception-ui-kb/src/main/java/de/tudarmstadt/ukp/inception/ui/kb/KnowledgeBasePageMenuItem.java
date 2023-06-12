@@ -25,6 +25,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -37,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
+import de.tudarmstadt.ukp.inception.ui.kb.project.ProjectKnowledgeBasePage;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -77,14 +81,13 @@ public class KnowledgeBasePageMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("knowledgebase.page.menuitem.label",
-        // new KnowledgeBasePage(currentPage.getPageParameters())).getString();
+        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                .getPage();
 
-        return new StringResourceModel("knowledgebase.page.menuitem.label").getString();
+        return new StringResourceModel("knowledgebase.page.menuitem.label",
+                new ProjectKnowledgeBasePage(currentPage.getPageParameters())).getString();
+
+        // return new StringResourceModel("knowledgebase.page.menuitem.label").getString();
     }
 
     @Override

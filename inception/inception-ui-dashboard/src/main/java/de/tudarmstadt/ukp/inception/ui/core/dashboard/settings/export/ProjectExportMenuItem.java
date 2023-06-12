@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
@@ -52,14 +55,13 @@ public class ProjectExportMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("projectexport.menuitem.label",
-        // new ProjectExportPage(currentPage.getPageParameters())).getString();
+        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                .getPage();
 
-        return new StringResourceModel("projectexport.menuitem.label").getString();
+         return new StringResourceModel("projectexport.menuitem.label",
+                 new ProjectExportPage(currentPage.getPageParameters())).getString();
+
+         // return new StringResourceModel("projectexport.menuitem.label").getString();
     }
 
     @Override
