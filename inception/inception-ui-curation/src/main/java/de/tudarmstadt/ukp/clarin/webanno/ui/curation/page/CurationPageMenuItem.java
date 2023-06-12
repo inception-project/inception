@@ -24,6 +24,9 @@ import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 
@@ -76,14 +79,13 @@ public class CurationPageMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("curation.page.menuitem.label",
-        // new CurationPage(currentPage.getPageParameters())).getString();
+        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                .getPage();
 
-        return new StringResourceModel("curation.page.menuitem.label").getString();
+         return new StringResourceModel("curation.page.menuitem.label",
+                 new CurationPage(currentPage.getPageParameters())).getString();
+
+         // return new StringResourceModel("curation.page.menuitem.label").getString();
     }
 
     @Override
