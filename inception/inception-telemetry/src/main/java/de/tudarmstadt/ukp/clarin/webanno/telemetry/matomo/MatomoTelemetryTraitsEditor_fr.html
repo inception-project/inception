@@ -1,0 +1,66 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+    <form wicket:id="form" class="flex-content flex-v-container">
+        <div class="col-sm-12">
+            <div class="" wicket:enclosure="enabled">
+                <div class="flex-h-container flex-gutter">
+                    <div class="flex-content">
+                        <p>
+                            Ce collecteur de données d'utilisation aide l'équipe de développeurs de
+                            <wicket:message key="product.name"/>
+                            à découvrir le nombre d'installations et la taille de la base d'utilisateurs. Il s'agit
+                            d'indicateurs importants pour le succès du produit, qui sont par exemple inclus dans les
+                            rapports destinés aux financeurs. Soutenez le développement futur de
+                            <wicket:message key="product.name"/>
+                            en soumettant ces <b>statistiques d'utilisation anonymes</b> aux développeurs à l'adresse
+                            suivante: Laboratoire UKP,
+                            Université Technique de Darmstadt, Allemagne.
+                        </p>
+                        <p>
+                            Lorsqu'elles sont activées, les statistiques d'utilisation anonymes sont envoyées à notre
+                            serveur chaque fois que l'application est lancée et immédiatement lorsque la collecte est
+                            activée ici. Une mise à jour est également envoyée à intervalles réguliers pour les
+                            instances de longue durée.
+                        </p>
+                        <p>
+                            <b>REMARQUE:</b> Ce collecteur ne recueille <b>pas</b> de données sur les utilisateurs (par
+                            exemple, les annotateurs) qui se connectent au système. Il collecte cependant le nombre de
+                            comptes d'utilisateurs activés dans le serveur, car cela est important pour évaluer la
+                            taille de la
+                            base d'utilisateurs pour un système multi-utilisateurs tel que
+                            <wicket:message key="product.name"/>
+                            .
+                        </p>
+                        <p>
+                            Utilisez le bouton <b>Basculer les détails...</b> ci-dessus pour voir en détail quelles
+                            données
+                            nous collectons et pourquoi.
+                        </p>
+                    </div>
+                    <div>
+                        <select wicket:id="enabled"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</wicket:panel>
+</html>
