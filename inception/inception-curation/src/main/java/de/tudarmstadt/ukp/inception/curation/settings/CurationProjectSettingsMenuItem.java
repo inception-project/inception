@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.settings;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -57,8 +56,8 @@ public class CurationProjectSettingsMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("curationprojectsettings.menuitem.label",
-                 new CurationProjectSettingsPage(currentPage.getPageParameters())).getString();
+        return new CurationProjectSettingsPage(currentPage.getPageParameters())
+                .getString("curationprojectsettings.menuitem.label");
 
          // return new StringResourceModel("curationprojectsettings.menuitem.label").getString();
     }

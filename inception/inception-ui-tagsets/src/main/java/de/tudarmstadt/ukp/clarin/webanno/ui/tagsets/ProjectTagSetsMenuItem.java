@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -52,8 +51,8 @@ public class ProjectTagSetsMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-        return new StringResourceModel("projecttagsets.menuitem.label",
-                new ProjectTagSetsPage(currentPage.getPageParameters())).getString();
+        return new ProjectTagSetsPage(currentPage.getPageParameters())
+                .getString("projecttagsets.menuitem.label");
 
         // return new StringResourceModel("projecttagsets.menuitem.label").getString();
     }

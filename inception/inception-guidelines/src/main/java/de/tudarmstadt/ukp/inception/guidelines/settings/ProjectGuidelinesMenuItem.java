@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.guidelines.settings;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -52,8 +51,8 @@ public class ProjectGuidelinesMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("projectguidelines.menuitem.label",
-                 new ProjectGuidelinesPage(currentPage.getPageParameters())).getString();
+        return new ProjectGuidelinesPage(currentPage.getPageParameters())
+                .getString("projectguidelines.menuitem.label");
 
          // return new StringResourceModel("projectguidelines.menuitem.label").getString();
     }

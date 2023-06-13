@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.casdoctor;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -53,8 +52,8 @@ public class ProjectCasDoctorMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("projectcasdoctor.menuitem.label",
-                 new ProjectCasDoctorPage(currentPage.getPageParameters())).getString();
+        return new ProjectCasDoctorPage(currentPage.getPageParameters())
+                .getString("projectcasdoctor.menuitem.label");
 
          // return new StringResourceModel("projectcasdoctor.menuitem.label").getString();
     }

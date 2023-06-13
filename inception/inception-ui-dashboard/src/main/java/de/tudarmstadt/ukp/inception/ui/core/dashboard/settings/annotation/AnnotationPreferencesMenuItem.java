@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -52,8 +51,8 @@ public class AnnotationPreferencesMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("annotationpreferences.menuitem.label",
-                 new AnnotationPreferencesPage(currentPage.getPageParameters())).getString();
+        return new AnnotationPreferencesPage(currentPage.getPageParameters())
+                .getString("annotationpreferences.menuitem.label");
 
          // return new StringResourceModel("annotationpreferences.menuitem.label").getString();
     }

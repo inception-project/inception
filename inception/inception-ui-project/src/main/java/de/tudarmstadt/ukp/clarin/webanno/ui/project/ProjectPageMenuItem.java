@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -68,8 +67,7 @@ public class ProjectPageMenuItem
             pageParameters.add(PAGE_PARAM_PROJECT, ProjectSettingsPage.NEW_PROJECT_ID);
         }
 
-        return new StringResourceModel("project.page.menuitem.label",
-                new ProjectSettingsPage(pageParameters)).getString();
+        return new ProjectSettingsPage(pageParameters).getString("project.page.menuitem.label");
 
         // return new StringResourceModel("project.page.menuitem.label").getString();
     }

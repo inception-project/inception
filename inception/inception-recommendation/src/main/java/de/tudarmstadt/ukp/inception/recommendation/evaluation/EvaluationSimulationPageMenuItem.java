@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -70,8 +69,8 @@ public class EvaluationSimulationPageMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("evaluationsimulation.page.menuitem.label",
-                 new EvaluationSimulationPage(currentPage.getPageParameters())).getString();
+        return new EvaluationSimulationPage(currentPage.getPageParameters())
+                .getString("evaluationsimulation.page.menuitem.label");
 
          // return new StringResourceModel("evaluationsimulation.page.menuitem.label").getString();
     }
