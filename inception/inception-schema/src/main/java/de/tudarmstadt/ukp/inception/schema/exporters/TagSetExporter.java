@@ -63,7 +63,6 @@ public class TagSetExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         List<ExportedTagSet> extTagSets = new ArrayList<>();
         for (TagSet tagSet : annotationService.listTagSets(aRequest.getProject())) {

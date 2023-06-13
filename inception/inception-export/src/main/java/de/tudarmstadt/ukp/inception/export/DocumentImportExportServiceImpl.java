@@ -210,7 +210,7 @@ public class DocumentImportExportServiceImpl
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
                 null);
@@ -220,7 +220,7 @@ public class DocumentImportExportServiceImpl
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
     }
@@ -230,7 +230,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
                 aStripExtension, aBulkOperationContext);
@@ -241,7 +241,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
