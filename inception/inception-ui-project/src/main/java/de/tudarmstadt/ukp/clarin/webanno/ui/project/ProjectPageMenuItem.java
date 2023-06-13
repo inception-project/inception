@@ -17,8 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -53,14 +59,19 @@ public class ProjectPageMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("project.page.menuitem.label",
-        // new ProjectSettingsPage(currentPage.getPageParameters())).getString();
+        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                .getPage();
 
-        return new StringResourceModel("project.page.menuitem.label").getString();
+        PageParameters pageParameters = currentPage.getPageParameters();
+
+        if (pageParameters.get(PAGE_PARAM_PROJECT).isNull()) {
+            pageParameters.add(PAGE_PARAM_PROJECT, ProjectSettingsPage.NEW_PROJECT_ID);
+        }
+
+        return new StringResourceModel("project.page.menuitem.label",
+                new ProjectSettingsPage(pageParameters)).getString();
+
+        // return new StringResourceModel("project.page.menuitem.label").getString();
     }
 
     /**
