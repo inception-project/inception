@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -82,6 +83,7 @@ public class KnowledgeBase
     private String name;
 
     @Enumerated
+    @Type(KnowledgeBaseType.class)
     private RepositoryType type;
 
     /**
