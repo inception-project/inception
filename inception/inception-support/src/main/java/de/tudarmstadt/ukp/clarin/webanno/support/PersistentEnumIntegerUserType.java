@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
@@ -103,7 +104,8 @@ public abstract class PersistentEnumIntegerUserType<T extends Enum<T>>
             st.setNull(index, Types.INTEGER);
         }
         else {
-            st.setString(index, ((PersistentEnum) value).getId());
+            var dbValue = ArrayUtils.indexOf(returnedClass().getEnumConstants(), value);
+            st.setInt(index, dbValue);
         }
     }
 

@@ -233,6 +233,14 @@
       <artifactId>dkpro-core-io-conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
+      <version>1.33</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -242,6 +250,8 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
+              <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
+              <ignoredDependency>org.yaml:snakeyaml</ignoredDependency>
               <!-- Dependency analysis does not get it... -->
               <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
               <ignoredDependency>javax.persistence:javax.persistence-api</ignoredDependency>
