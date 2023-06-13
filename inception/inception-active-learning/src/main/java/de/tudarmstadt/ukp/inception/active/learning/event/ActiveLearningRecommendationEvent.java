@@ -34,21 +34,21 @@ public class ActiveLearningRecommendationEvent
 
     private final SourceDocument document;
     private final SpanSuggestion currentRecommendation;
-    private final String user;
+    private final String dataOwner;
     private final AnnotationLayer layer;
     private final String annotationFeature;
     private final LearningRecordType action;
     private final List<? extends AnnotationSuggestion> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
-            SpanSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            SpanSuggestion aCurrentRecommendation, String aDataOwner, AnnotationLayer aLayer,
             String aAnnotationFeature, LearningRecordType aAction,
             List<? extends AnnotationSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
         currentRecommendation = aCurrentRecommendation;
-        user = aUser;
+        dataOwner = aDataOwner;
         layer = aLayer;
         annotationFeature = aAnnotationFeature;
         action = aAction;
@@ -67,7 +67,7 @@ public class ActiveLearningRecommendationEvent
 
     public String getUser()
     {
-        return user;
+        return dataOwner;
     }
 
     public AnnotationLayer getLayer()

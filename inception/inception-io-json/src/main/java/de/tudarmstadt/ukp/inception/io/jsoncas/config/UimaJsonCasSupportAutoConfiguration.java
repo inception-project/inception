@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.jsoncas.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,14 +27,16 @@ import de.tudarmstadt.ukp.inception.io.jsoncas.LegacyUimaJsonFormatSupport;
 import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
 
 @Configuration
+@EnableConfigurationProperties(LegacyUimaJsonCasFormatProperties.class)
 public class UimaJsonCasSupportAutoConfiguration
 {
     @ConditionalOnProperty(prefix = "format.json-cas-legacy", name = "enabled", //
             havingValue = "true", matchIfMissing = false)
     @Bean
-    public LegacyUimaJsonFormatSupport legacyUimaJsonFormatSupport()
+    public LegacyUimaJsonFormatSupport legacyUimaJsonFormatSupport(
+            LegacyUimaJsonCasFormatProperties aProps)
     {
-        return new LegacyUimaJsonFormatSupport();
+        return new LegacyUimaJsonFormatSupport(aProps);
     }
 
     @ConditionalOnProperty(prefix = "format.json-cas", name = "enabled", //

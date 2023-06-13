@@ -62,7 +62,7 @@ export class DiamWebsocketImpl implements DiamWebsocket {
 
   disconnect () {
     this.stompClient.deactivate()
-    this.stompClient.webSocket.close()
+    this.stompClient.webSocket?.close()
   }
 
   private handleBrokerError (receipt: IFrame) {

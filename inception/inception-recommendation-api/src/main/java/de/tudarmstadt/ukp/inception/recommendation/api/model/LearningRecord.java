@@ -23,6 +23,8 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
@@ -504,5 +506,19 @@ public class LearningRecord
         {
             return new LearningRecord(this);
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("id", id)
+                .append("sourceDocument", sourceDocument).append("layer", layer)
+                .append("annotationFeature", annotationFeature).append("offsetBegin", offsetBegin)
+                .append("offsetEnd", offsetEnd).append("offsetBegin2", offsetBegin2)
+                .append("offsetEnd2", offsetEnd2).append("tokenText", tokenText)
+                .append("annotation", annotation).append("userAction", userAction)
+                .append("user", user).append("changeLocation", changeLocation)
+                .append("suggestionType", suggestionType).append("actionDate", actionDate)
+                .toString();
     }
 }

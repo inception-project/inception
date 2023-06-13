@@ -38,8 +38,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
-import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
-import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.DESCENDING;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -53,7 +51,6 @@ import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -94,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -102,6 +100,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
@@ -111,6 +111,9 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
+    public static final Key<ProjectListSortState> KEY_PROJECT_LIST_SORT_MODE = new Key<>(
+            ProjectListSortState.class, "project-overview/project-list-sort-mode");
+
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
     private static final String MID_DESCRIPTION = "description";
@@ -138,9 +141,11 @@ public class ProjectsOverviewPage
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
     private @SpringBean DashboardProperties dashboardProperties;
+    private @SpringBean PreferencesService userPrefService;
 
     private IModel<List<ProjectEntry>> allAccessibleProjects;
     private IModel<User> currentUser;
+    private IModel<ProjectListSortStrategy> sortStrategy;
 
     private WebMarkupContainer projectListContainer;
     private DataView<ProjectEntry> projectList;
@@ -157,9 +162,16 @@ public class ProjectsOverviewPage
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
         allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
 
-        var defaultSortOrder = SortStrategy.NAME;
+        User user = userRepository.getCurrentUser();
+        sortStrategy = new LambdaModelAdapter.Builder<ProjectListSortStrategy>() //
+                .getting(() -> userPrefService.loadTraitsForUser(KEY_PROJECT_LIST_SORT_MODE,
+                        user).strategy)
+                .setting(v -> userPrefService.saveTraitsForUser(KEY_PROJECT_LIST_SORT_MODE, user,
+                        new ProjectListSortState(v)))
+                .build();
+
         dataProvider = new ProjectListDataProvider(allAccessibleProjects);
-        dataProvider.setSort(defaultSortOrder.key, defaultSortOrder.order);
+        dataProvider.setSort(sortStrategy.getObject().key, sortStrategy.getObject().order);
 
         fastTrackAnnotatorsToProject();
 
@@ -184,10 +196,10 @@ public class ProjectsOverviewPage
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
 
-        DropDownChoice<SortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
-        sortOrder.setModel(Model.of(defaultSortOrder));
+        DropDownChoice<ProjectListSortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
+        sortOrder.setModel(sortStrategy);
         sortOrder.setChoiceRenderer(new EnumChoiceRenderer<>(sortOrder));
-        sortOrder.setChoices(asList(SortStrategy.values()));
+        sortOrder.setChoices(asList(ProjectListSortStrategy.values()));
         sortOrder.setNullValid(false);
         sortOrder.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
             var s = sortOrder.getModelObject();
@@ -574,28 +586,13 @@ public class ProjectsOverviewPage
 
     private List<ProjectEntry> loadProjects()
     {
+        var isAdmin = userRepository.isAdministrator(currentUser.getObject());
         return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
                 .entrySet().stream() //
                 .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
-                .filter(e -> e.getLevels().contains(MANAGER)
+                .filter(e -> isAdmin || e.getLevels().contains(MANAGER)
                         || containsAny(e.getLevels(), dashboardProperties.getAccessibleByRoles()))
                 .sorted(comparing(ProjectEntry::getName)) //
                 .collect(toList());
-    }
-
-    private enum SortStrategy
-    {
-        NAME(ProjectListSortKeys.NAME, ASCENDING),
-        CREATED_OLDEST(ProjectListSortKeys.CREATED, ASCENDING),
-        CREATED_NEWEST(ProjectListSortKeys.CREATED, DESCENDING);
-
-        final ProjectListSortKeys key;
-        final SortOrder order;
-
-        SortStrategy(ProjectListSortKeys aKey, SortOrder aOrder)
-        {
-            key = aKey;
-            order = aOrder;
-        }
     }
 }

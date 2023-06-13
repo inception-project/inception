@@ -73,7 +73,8 @@ public class FormatSupportDescription
 
     @SuppressWarnings("unchecked")
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         if (!isReadable()) {

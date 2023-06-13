@@ -93,7 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -193,7 +192,7 @@ public class CurationPage
     private void commonInit()
     {
         // Ensure that a user is set
-        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
+        getModelObject().setUser(userRepository.getCurationUser());
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         curationUnits = new ListModel<>(new ArrayList<>());
 
@@ -523,7 +522,7 @@ public class CurationPage
 
         AnnotatorState state = getModelObject();
 
-        state.setUser(new User(CURATION_USER, Role.ROLE_USER));
+        state.setUser(userRepository.getCurationUser());
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not

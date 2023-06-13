@@ -31,16 +31,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 
-/**
- * This consumer predicts new annotations for a given annotation layer, if a classification tool for
- * this layer was selected previously.
- */
 public class PredictionTask
     extends RecommendationTask_ImplBase
 {
@@ -53,71 +50,111 @@ public class PredictionTask
     private final SourceDocument currentDocument;
     private final int predictionBegin;
     private final int predictionEnd;
+    private final String dataOwner;
 
-    public PredictionTask(User aUser, String aTrigger, SourceDocument aCurrentDocument)
+    /**
+     * Create a new training task.
+     * 
+     * @param aSessionOwner
+     *            the user owning the training session.
+     * @param aTrigger
+     *            the trigger that caused the selection to be scheduled.
+     * @param aCurrentDocument
+     *            the document currently open in the editor.
+     * @param aDataOwner
+     *            the user owning the annotations currently shown in the editor (this can differ
+     *            from the user owning the session e.g. if a manager views another users annotations
+     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
+     */
+    public PredictionTask(User aSessionOwner, String aTrigger, SourceDocument aCurrentDocument,
+            String aDataOwner)
     {
-        this(aUser, aTrigger, aCurrentDocument, -1, -1);
+        this(aSessionOwner, aTrigger, aCurrentDocument, -1, -1, aDataOwner);
     }
 
-    public PredictionTask(User aUser, String aTrigger, SourceDocument aCurrentDocument, int aBegin,
-            int aEnd)
+    public PredictionTask(User aSessionOwner, String aTrigger, SourceDocument aCurrentDocument,
+            int aBegin, int aEnd, String aDataOwner)
     {
-        super(aUser, aCurrentDocument.getProject(), aTrigger);
+        super(aSessionOwner, aCurrentDocument.getProject(), aTrigger);
         currentDocument = aCurrentDocument;
         predictionBegin = aBegin;
         predictionEnd = aEnd;
+        dataOwner = aDataOwner;
     }
 
     @Override
     public void execute()
     {
-        try (CasStorageSession session = CasStorageSession.openNested()) {
-            long startTime = System.currentTimeMillis();
-            User user = getUser().orElseThrow();
-            String username = user.getUsername();
-            Project project = getProject();
-            Predictions predictions;
+        try (var session = CasStorageSession.openNested()) {
+            var project = getProject();
+            var sessionOwner = getUser().orElseThrow();
+            var sessionOwnerName = sessionOwner.getUsername();
 
-            List<SourceDocument> docs = documentService.listSourceDocuments(project);
-
-            // Limit prediction to a single document and inherit the rest?
-            if (recommendationService.isPredictForAllDocuments(username, project)) {
-                log.debug(
-                        "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
-                        getId(), username, project, docs.size(), getTrigger());
-
-                predictions = recommendationService.computePredictions(user, project, docs);
-            }
-            else {
-                List<SourceDocument> inherit = docs.stream() //
-                        .filter(d -> !d.equals(currentDocument)) //
-                        .collect(toList());
-
-                log.debug(
-                        "[{}][{}]: Starting prediction for project [{}] on one doc "
-                                + "(inheriting [{}]) triggered by [{}]",
-                        getId(), username, project, inherit.size(), getTrigger());
-
-                predictions = recommendationService.computePredictions(user, project,
-                        currentDocument, inherit, predictionBegin, predictionEnd);
-            }
-
+            var startTime = System.currentTimeMillis();
+            var predictions = generatePredictions(sessionOwner);
             predictions.inheritLog(getLogMessages());
+            logPredictionComplete(predictions, startTime, sessionOwnerName);
 
-            log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
-                    currentTimeMillis() - startTime);
+            recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
-            recommendationService.putIncomingPredictions(user, project, predictions);
-
-            appEventPublisher.publishEvent(
-                    RecommenderTaskNotificationEvent.builder(this, project, user.getUsername()) //
-                            .withMessage(LogMessage.info(this, "New preditions available")) //
-                            .build());
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, sessionOwner.getUsername()) //
+                    .withMessage(LogMessage.info(this, "New predictions available")) //
+                    .build());
 
             // We reset this in case the state was not properly cleared, e.g. the AL session
             // was started but then the browser closed. Places where it is set include
             // - ActiveLearningSideBar::moveToNextRecommendation
-            recommendationService.setPredictForAllDocuments(username, project, false);
+            recommendationService.setPredictForAllDocuments(sessionOwnerName, project, false);
         }
+    }
+
+    private Predictions generatePredictions(User sessionOwner)
+    {
+        var project = getProject();
+        var sessionOwnerName = sessionOwner.getUsername();
+        var docs = documentService.listSourceDocuments(project);
+
+        // Do we need to predict ALL documents (e.g. in active learning mode)
+        if (recommendationService.isPredictForAllDocuments(sessionOwnerName, project)) {
+            logPredictionStartedForAllDocuments(sessionOwnerName, project, docs);
+            return recommendationService.computePredictions(sessionOwner, project, docs, dataOwner);
+        }
+
+        // Limit prediction to a single document and inherit the rest
+        var inherit = docs.stream() //
+                .filter(d -> !d.equals(currentDocument)) //
+                .collect(toList());
+
+        logPredictionStartedForOneDocument(sessionOwnerName, project, inherit);
+
+        return recommendationService.computePredictions(sessionOwner, project, currentDocument,
+                dataOwner, inherit, predictionBegin, predictionEnd);
+    }
+
+    private void logPredictionComplete(Predictions aPredictions, long startTime, String username)
+    {
+        var duration = currentTimeMillis() - startTime;
+        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username, duration);
+        aPredictions.log(LogMessage.info(this, "Prediction complete (%d ms).", duration));
+    }
+
+    private void logPredictionStartedForOneDocument(String username, Project project,
+            List<SourceDocument> inherit)
+    {
+        log.debug(
+                "[{}][{}]: Starting prediction for project [{}] on one document "
+                        + "(inheriting [{}]) triggered by [{}]",
+                getId(), username, project, inherit.size(), getTrigger());
+        info("Starting prediction triggered by [%s]...", getTrigger());
+    }
+
+    private void logPredictionStartedForAllDocuments(String username, Project project,
+            List<SourceDocument> docs)
+    {
+        log.debug(
+                "[{}][{}]: Starting prediction for project [{}] on [{}] documents triggered by [{}]",
+                getId(), username, project, docs.size(), getTrigger());
+        info("Starting prediction triggered by [%s]...", getTrigger());
     }
 }

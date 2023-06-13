@@ -15,23 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.feature-editor-label {
-  @include media-breakpoint-up(sm) {
-    @include make-col(3);
-  }
-}
-
-.feature-editor-label + .feature-editor-value {
-  @include media-breakpoint-up(sm) {
-    @include make-col(9);
-  }
-}
-
-.feature-editor-value {
-  @include media-breakpoint-up(sm) {
-    @include make-col(12);
-  }
-}
 
 /*
  * When displaying feature editors in a sidebar, move the labels on top of the feature editors so

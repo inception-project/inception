@@ -51,6 +51,10 @@ export interface DiamAjax {
 
   loadLazyDetails(id: VID, type: string, database: string, key: string): Promise<any>;
 
+  loadPreferences (key: string): Promise<any>;
+
+  savePreferences (key: string, data: Record<string, any>): Promise<void>;
+
   triggerExtensionAction(id: VID): void;
 
   openContextMenu(id: VID, evt: MouseEvent): void;

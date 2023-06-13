@@ -1,0 +1,28 @@
+<collection>
+  <source>example-with-text-in-passage.xml</source>
+  <date>2023-01-01</date>
+  <key>example-with-text-in-passage.key</key>
+  <document>
+    <id>1</id>
+    <passage>
+      <infon key="passage-infon-key">passage-infon-value</infon>
+      <offset>0</offset>
+      <text>Sentence 1.</text>
+      <annotation id="S1">
+        <infon key="span-annotation-key">span-annotation-value</infon>
+        <location offset="0" length="8"/>
+        <text>annotation text</text>
+      </annotation>
+      <annotation id="S2">
+        <infon key="span-annotation-key">span-annotation-value</infon>
+        <location offset="9" length="1"/>
+        <text>annotation text</text>
+      </annotation>
+      <relation id="R1">
+        <infon key="relation-annotation-key">relation-annotation-value</infon>
+        <node refid="S1" role="source"/>
+        <node refid="S2" role="target"/>
+      </relation>
+    </passage>
+  </document>
+</collection>

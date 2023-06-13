@@ -24,22 +24,22 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class CreateSpanAnnotationRequest
     extends SpanAnnotationRequest_ImplBase<CreateSpanAnnotationRequest>
 {
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
+    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             int aBegin, int aEnd)
     {
-        this(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        this(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
     }
 
     private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
+            SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aBegin, int aEnd)
     {
-        super(null, aDocument, aUsername, aCas, aBegin, aEnd);
+        super(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
     }
 
     @Override
     public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new CreateSpanAnnotationRequest(this, getDocument(), getUsername(), getCas(), aBegin,
-                aEnd);
+        return new CreateSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(),
+                aBegin, aEnd);
     }
 }

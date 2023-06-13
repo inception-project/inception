@@ -78,7 +78,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
@@ -1212,7 +1211,7 @@ public abstract class AnnotationDetailEditorPanel
             return false;
         }
 
-        if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+        if (!state.getUser().getUsername().equals(aEvent.getDocumentOwner())) {
             return false;
         }
 
@@ -1291,10 +1290,10 @@ public abstract class AnnotationDetailEditorPanel
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            FeatureStructure featureStructure = selectFsByAddr(aCas,
+            var featureStructure = selectFsByAddr(aCas,
                     state.getSelection().getAnnotation().getId());
 
-            Evaluator evaluator = new ValuesGenerator();
+            var evaluator = new ValuesGenerator();
             // Only show indicator if this feature can be affected by Constraint rules!
             aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
                     restrictionFeaturePath, state.getConstraints()));

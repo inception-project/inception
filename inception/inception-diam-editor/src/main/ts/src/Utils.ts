@@ -15,14 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
+import { AnnotatedText, Annotation, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
 import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
+
+export function renderLabel (ann?: Annotation): string {
+  if (!ann) return ''
+  return `${ann.label || `[${ann.layer.name}]`}`
+}
 
 export function uniqueLabels (data: AnnotatedText): string[] {
   if (!data) return []
 
-  const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => ann?.label || '')
-    .sort()
+  const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => renderLabel(ann))
+    .sort((a, b) => a.localeCompare(b, undefined, { usage: 'sort', sensitivity: 'variant' }))
 
   const sortedLabels: string[] = []
   for (let i = 0; i < sortedLabelsWithDuplicates.length; i++) {
@@ -79,7 +84,7 @@ export function groupBy<T> (data: Iterable<T>, keyMapper: (s: T) => string): Rec
  * @returns grouped spans
  */
 export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> {
-  const groups = groupBy(data?.spans.values(), (s) => s.label || '')
+  const groups = groupBy(data?.spans.values(), (s) => renderLabel(s))
   for (const items of Object.values(groups)) {
     items.sort((a, b) => compareSpanText(data, a, b) || compareOffsets(a.offsets[0], b.offsets[0]))
   }
@@ -100,7 +105,7 @@ export function compareSpanText (data: AnnotatedText, a: Span, b: Span): number 
  * @returns grouped relations
  */
 export function groupRelationsByLabel (data: AnnotatedText): Record<string, Relation[]> {
-  const groups = groupBy(data?.relations.values(), (s) => s.label || '')
+  const groups = groupBy(data?.relations.values(), (s) => renderLabel(s))
   for (const items of Object.values(groups)) {
     items.sort((a, b) => compareOffsets(
       (a.arguments[0].target as Span).offsets[0],

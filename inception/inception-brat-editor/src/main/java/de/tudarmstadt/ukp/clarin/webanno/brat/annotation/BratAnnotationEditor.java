@@ -47,10 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
@@ -58,7 +56,6 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsComman
 import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsMetaDataKey;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import jakarta.servlet.ServletContext;
 
 /**
@@ -72,11 +69,8 @@ public class BratAnnotationEditor
 
     private static final long serialVersionUID = -1537506294440056609L;
 
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
-    private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
     private @SpringBean BratSerializer bratSerializer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
     private @SpringBean ServletContext servletContext;
@@ -86,9 +80,10 @@ public class BratAnnotationEditor
     private DifferentialRenderingSupport diffRenderSupport;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(id, aModel, aActionHandler, aCasProvider);
+        super(id, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
 
         add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
 

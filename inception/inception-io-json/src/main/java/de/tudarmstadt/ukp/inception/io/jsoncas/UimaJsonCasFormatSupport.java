@@ -92,11 +92,11 @@ public class UimaJsonCasFormatSupport
     }
 
     @Override
-    public void read(CAS aCas, File aFile)
+    public void read(Project aProject, CAS aCas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
         // We need to perform a little hack here because the JSON CAS IO does not support lenient
-        // deserialization yet. INCEpTION includes some types in exports that are specific only to
+        // de-serialization yet. INCEpTION includes some types in exports that are specific only to
         // exports. They are usually discarded by the lenient XMI import, but here they bite us.
         var tsd = mergeTypeSystems(asList( //
                 TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()),
@@ -104,7 +104,7 @@ public class UimaJsonCasFormatSupport
 
         upgradeCas(aCas, tsd);
 
-        FormatSupport.super.read(aCas, aFile);
+        FormatSupport.super.read(aProject, aCas, aFile);
 
         // No need to go back to the original CAS TS because another upgrade happens after
         // project import anyway.
@@ -122,7 +122,8 @@ public class UimaJsonCasFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(UimaJsonCasReader.class, aTSD);

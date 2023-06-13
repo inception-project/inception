@@ -34,6 +34,8 @@ public class MatrixWorkloadTraits
 
     private boolean randomDocumentAccessAllowed = true;
 
+    private boolean documentResetAllowed = true;
+
     public boolean isReopenableByAnnotator()
     {
         return reopenableByAnnotator;
@@ -52,5 +54,15 @@ public class MatrixWorkloadTraits
     public void setRandomDocumentAccessAllowed(boolean aRandomDocumentAccessAllowed)
     {
         randomDocumentAccessAllowed = aRandomDocumentAccessAllowed;
+    }
+
+    public boolean isDocumentResetAllowed()
+    {
+        return documentResetAllowed;
+    }
+
+    public void setDocumentResetAllowed(boolean aDocumentResetAllowed)
+    {
+        documentResetAllowed = aDocumentResetAllowed;
     }
 }

@@ -43,7 +43,6 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 /**
@@ -95,8 +94,7 @@ public class SpringAuthenticatedWebSession
         try {
             Request request = RequestCycle.get().getRequest();
             if (request instanceof ServletWebRequest) {
-                HttpServletRequest containerRequest = ((ServletWebRequest) request)
-                        .getContainerRequest();
+                var containerRequest = ((ServletWebRequest) request).getContainerRequest();
 
                 // Kill current session and create a new one
                 containerRequest.getSession().invalidate();
@@ -108,6 +106,11 @@ public class SpringAuthenticatedWebSession
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
             springSecuritySignIn(authentication);
+
+            // If this is called, the authentication object has been created artificially and not
+            // via the authenticationManager, so we need to send the login even manually
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new AuthenticationSuccessEvent(authentication));
 
             return true;
         }

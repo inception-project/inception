@@ -35,19 +35,21 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
+
 public class Cas2SaxEvents
 {
     private static final String XMLNS = "xmlns";
     private static final String XMLNS_PREFIX = "xmlns:";
 
-    protected final ContentHandler handler;
+    protected final ContentHandlerAdapter handler;
     private final LinkedHashMap<String, String> namespaceMappings = new LinkedHashMap<>();
 
     private boolean namespaces = false;
 
     public Cas2SaxEvents(ContentHandler aHandler)
     {
-        handler = aHandler;
+        handler = new ContentHandlerAdapter(aHandler);
     }
 
     public void setNamespaces(boolean aNamespaces)
@@ -97,6 +99,19 @@ public class Cas2SaxEvents
 
         handler.startElement(uri, localName, qName, attributes);
 
+        processChildren(aElement);
+
+        handler.endElement(uri, localName, qName);
+
+        if (namespaces) {
+            for (String xmlns : localMappings.keySet()) {
+                handler.endPrefixMapping(xmlns);
+            }
+        }
+    }
+
+    public void processChildren(XmlElement aElement) throws SAXException
+    {
         if (aElement.getChildren() != null) {
             for (XmlNode child : aElement.getChildren()) {
                 if (child instanceof XmlElement) {
@@ -105,15 +120,6 @@ public class Cas2SaxEvents
                 else if (child instanceof XmlTextNode) {
                     process((XmlTextNode) child);
                 }
-            }
-        }
-
-        handler.endElement(uri, localName, qName);
-
-        if (namespaces) {
-            for (Entry<String, String> xmlns : localMappings.entrySet()) {
-                handler.endPrefixMapping(xmlns.getKey());
-                localMappings.remove(xmlns.getKey());
             }
         }
     }

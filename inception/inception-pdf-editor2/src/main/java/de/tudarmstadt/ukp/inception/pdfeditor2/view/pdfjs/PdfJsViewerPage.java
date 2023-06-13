@@ -67,6 +67,12 @@ public class PdfJsViewerPage
                 // the sidebar automatically opens and causes a re-scaling which leads to a wrong
                 // scroll position!
                 "  PDFViewerApplicationOptions.set('sidebarViewOnLoad', 0);", //
+                // Disable the PDF.js search and instead delegate to the browser search
+                "  delete PDFViewerApplication.supportsIntegratedFind;", //
+                "  PDFViewerApplication.supportsIntegratedFind = true;", //
+                // Disable the PDF.js printing
+                "  delete PDFViewerApplication.supportsPrinting;", //
+                "  PDFViewerApplication.supportsPrinting = false;", //
                 "});");
         aResponse.render(JavaScriptHeaderItem.forScript(script, "initialization"));
     }

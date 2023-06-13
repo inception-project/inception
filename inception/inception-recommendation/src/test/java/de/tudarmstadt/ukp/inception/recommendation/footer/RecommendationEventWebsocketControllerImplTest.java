@@ -71,7 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -99,11 +98,10 @@ import jakarta.persistence.EntityManager;
         exclude = { //
                 LiquibaseAutoConfiguration.class })
 @ImportAutoConfiguration({ //
-        InceptionSecurityAutoConfiguration.class, //
-        CasDoctorAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
+        CasDoctorAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketSecurityConfig.class, //
         WebsocketAutoConfiguration.class, //

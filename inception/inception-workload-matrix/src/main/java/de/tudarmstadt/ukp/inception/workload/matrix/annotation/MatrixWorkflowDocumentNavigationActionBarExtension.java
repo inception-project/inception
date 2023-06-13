@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -51,6 +52,7 @@ public class MatrixWorkflowDocumentNavigationActionBarExtension
     private final WorkloadManagementService workloadManagementService;
     private final MatrixWorkloadExtension matrixWorkloadExtension;
     private final ProjectService projectService;
+    private final UserDao userService;
 
     // SpringBeans
     private @SpringBean EntityManager entityManager;
@@ -58,11 +60,13 @@ public class MatrixWorkflowDocumentNavigationActionBarExtension
     @Autowired
     public MatrixWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
             WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService)
+            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService,
+            UserDao aUserService)
     {
         workloadManagementService = aWorkloadManagementService;
         matrixWorkloadExtension = aMatrixWorkloadExtension;
         projectService = aProjectService;
+        userService = aUserService;
     }
 
     @Override
@@ -91,7 +95,8 @@ public class MatrixWorkflowDocumentNavigationActionBarExtension
             return false;
         }
 
-        if (projectService.hasRole(aPage.getModelObject().getUser(), project, MANAGER)) {
+        var sessionOwner = userService.getCurrentUser();
+        if (projectService.hasRole(sessionOwner, project, MANAGER)) {
             return false;
         }
 

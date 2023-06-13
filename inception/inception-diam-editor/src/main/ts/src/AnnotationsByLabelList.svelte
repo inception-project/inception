@@ -27,23 +27,26 @@
     import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { compareSpanText, groupBy, uniqueLabels } from "./Utils";
+    import { compareSpanText, groupBy, renderLabel, uniqueLabels } from "./Utils";
+    import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
+    export let pinnedGroups: string[];
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
-    let sortByScore: boolean = false;
 
-    $: sortedLabels = uniqueLabels(data);
     $: {
-        const relations = data?.relations.values() || [];
-        const spans = data?.spans.values() || [];
+        sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
+
+        const relations = data?.relations.values() || []
+        const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
-            (s) => s.label || ""
-        );
+            (s) => renderLabel(s)
+        )
+
         for (const items of Object.values(groupedAnnotations)) {
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
@@ -54,12 +57,14 @@
                     return 1;
                 }
 
-                if (sortByScore && a.vid.toString().startsWith("rec:") && !b.vid.toString().startsWith("rec:")) {
-                    return -1;
+                const aIsRec = a.vid.toString().startsWith("rec:")
+                const bIsRec = b.vid.toString().startsWith("rec:")
+                if ($sortByScore && aIsRec && !bIsRec) {
+                    return $recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if (sortByScore) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return (
@@ -69,7 +74,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if (sortByScore) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return compareOffsets(
@@ -97,17 +102,29 @@
         </div>
     </div>
 {:else}
-    <div class="d-flex">
+    <div class="d-flex flex-column">
         <div class="form-check form-switch mx-2">
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                id="inlineLabelsEnabled"
-                bind:checked={sortByScore}
+                id="sortByScore"
+                bind:checked={$sortByScore}
             />
-            <label class="form-check-label" for="inlineLabelsEnabled"
+            <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
+            >
+        </div>
+        <div class="form-check form-switch mx-2" class:d-none={!$sortByScore}>
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="recommendationsFirst"
+                bind:checked={$recommendationsFirst}
+            />
+            <label class="form-check-label" for="recommendationsFirst"
+                >Recommendations first</label
             >
         </div>
     </div>
@@ -122,6 +139,7 @@
                             {label || "No label"}
                         </div>
                         <ul class="px-0 list-group list-group-flush">
+                            {#if groupedAnnotations[label]}
                             {#each groupedAnnotations[label] as ann}
                                 <li
                                     class="list-group-item list-group-item-action p-0 d-flex"
@@ -141,10 +159,10 @@
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="flex-grow-1 py-1 px-2"
+                                        class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
                                         on:click={() => scrollTo(ann)}
                                     >
-                                        <div class="float-end">
+                                        <div class="float-end labels">
                                             <LabelBadge
                                                 annotation={ann}
                                                 {ajaxClient}
@@ -163,6 +181,11 @@
                                     </div>
                                 </li>
                             {/each}
+                            {:else}
+                            <li class="list-group-item list-group-item-action p-2 text-center text-secondary bg-light">
+                                No occurrences
+                            </li>
+                            {/if}
                         </ul>
                     </li>
                 {/each}
@@ -172,6 +195,13 @@
 {/if}
 
 <style lang="scss">
+    .labels {
+        background: linear-gradient(to right, transparent 0px, white 15px);
+        padding-left: 20px;
+        z-index: 10;
+        position: relative;
+    }
+
     .annotation-type-marker {
         width: 1em;
         text-align: center;

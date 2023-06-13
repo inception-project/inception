@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation</artifactId>
   <name>INCEpTION - Recommendation - Core</name>
@@ -215,6 +215,10 @@
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>jakarta.persistence</groupId>
@@ -335,6 +339,21 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diag</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-documents</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

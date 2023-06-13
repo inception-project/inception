@@ -122,10 +122,10 @@ public class AnnotationEditorExtensionRegistryImpl
     }
 
     @Override
-    public void fireRenderRequested(AnnotatorState aState)
+    public void fireRenderRequested(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.renderRequested(aState);
+            ext.renderRequested(aTarget, aState);
         }
     }
 

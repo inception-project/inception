@@ -22,11 +22,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 
 public class DocumentViewExtensionPointImpl
-    extends ExtensionPoint_ImplBase<AnnotationDocument, DocumentViewFactory>
+    extends ExtensionPoint_ImplBase<SourceDocument, DocumentViewFactory>
     implements DocumentViewExtensionPoint
 {
 

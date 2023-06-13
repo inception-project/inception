@@ -69,7 +69,8 @@ public class Conll2009FormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(Conll2009Reader.class, aTSD);

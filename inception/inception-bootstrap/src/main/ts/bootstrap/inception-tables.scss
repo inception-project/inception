@@ -39,6 +39,7 @@ tr.even:hover{
 .headers,
 .headers a:link,
 .headers a:visited{
+    --bs-table-bg: #B90F22 !important;
     background-color:#B90F22 !important;
     color:white !important;
 }

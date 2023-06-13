@@ -60,7 +60,11 @@ export class ViewportTracker {
     if (!style.display) {
       return false
     }
-    return !style.display.startsWith('inline')
+
+    return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
+      style.display.includes('table')
+
+    // return !style.display.startsWith('inline') && !style.display.includes('math')
   }
 
   private initializeElementTracking (element: Element): void {
@@ -73,6 +77,10 @@ export class ViewportTracker {
     let trackingCandidates = Array.from(element.querySelectorAll('*'))
       .filter(e => this.shouldTrack(e))
     console.debug(`Found ${trackingCandidates.length} tracking candidates`)
+
+    // const displayStyles = new Set<string>()
+    // trackingCandidates.map(e => getComputedStyle(e).display).forEach(e => displayStyles.add(e))
+    // console.debug('Display styles found: ', displayStyles)
 
     if (trackingCandidates.length > 0) {
       trackingCandidates = trackingCandidates.map(e => {
@@ -100,7 +108,7 @@ export class ViewportTracker {
     leafTrackingCandidates.forEach(e => this.observer.observe(e))
 
     const endTime = new Date().getTime()
-    console.log(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
+    console.debug(`Tracking visibility of ${leafTrackingCandidates.size} elements in ${Math.abs(endTime - startTime)}ms`)
   }
 
   private handleIntersectRange (entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
@@ -109,15 +117,16 @@ export class ViewportTracker {
 
     entries.forEach(entry => {
       if (entry.isIntersecting) {
+        const sizeBefore = this._visibleElements.size
         this._visibleElements.add(entry.target)
-        visibleElementsAdded++
+        if (sizeBefore < this._visibleElements.size) visibleElementsAdded++
       } else {
         this._visibleElements.delete(entry.target)
       }
     })
 
     if (visibleElementsAdded || !this.initialized) {
-      console.log(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
+      console.debug(`Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`)
       // the first time the callback is called, we want to make sure that the annotations are
       // loaded at least once
       this.initialized = true
@@ -143,7 +152,7 @@ export class ViewportTracker {
     })
     const endTime = new Date().getTime()
 
-    console.log(`Visible: ${begin}-${end} (${this._visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
+    console.debug(`Visible: ${begin}-${end} (${this._visibleElements.size} visible elements, ${Math.abs(endTime - startTime)}ms)`)
     return [begin, end]
   }
 }

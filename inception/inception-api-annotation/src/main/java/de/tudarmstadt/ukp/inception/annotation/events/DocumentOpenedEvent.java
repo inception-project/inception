@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.events;
 import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
@@ -32,18 +33,21 @@ public class DocumentOpenedEvent
     private final CAS cas;
     private final SourceDocument document;
     // user who owns/annotates the opened document
-    private final String annotator;
+    private final String documentOwner;
     // user who opened the document
-    private final String opener;
+    private final String sessionOwner;
+    private final AnnotationDocumentState stateBeforeOpening;
 
     public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
-            String aAnnotator, String aOpener)
+            AnnotationDocumentState aStateBeforeOpening, String aDocumentOwner,
+            String aSessionOwner)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
-        annotator = aAnnotator;
-        opener = aOpener;
+        documentOwner = aDocumentOwner;
+        sessionOwner = aSessionOwner;
+        stateBeforeOpening = aStateBeforeOpening;
     }
 
     public CAS getCas()
@@ -56,13 +60,18 @@ public class DocumentOpenedEvent
         return document;
     }
 
-    public String getUser()
+    public String getSessionOwner()
     {
-        return opener;
+        return sessionOwner;
     }
 
-    public String getAnnotator()
+    public String getDocumentOwner()
     {
-        return annotator;
+        return documentOwner;
+    }
+
+    public AnnotationDocumentState getStateBeforeOpening()
+    {
+        return stateBeforeOpening;
     }
 }

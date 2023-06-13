@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.List;
@@ -26,10 +26,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -49,6 +51,7 @@ public class DefaultAnnotationEditorStatePanel
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean PreferencesService preferencesService;
 
+    private IModel<AnnotationEditorState> state;
     private IModel<Pair<String, String>> defaultEditor;
 
     public DefaultAnnotationEditorStatePanel(String aId, IModel<Project> aProjectModel)
@@ -56,9 +59,10 @@ public class DefaultAnnotationEditorStatePanel
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
+        state = CompoundPropertyModel.of(null);
         defaultEditor = Model.of();
 
-        LambdaForm<Void> form = new LambdaForm<>("form");
+        var form = new LambdaForm<AnnotationEditorState>("form", state);
 
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("defaultEditor");
         editor.setModel(defaultEditor);
@@ -67,6 +71,8 @@ public class DefaultAnnotationEditorStatePanel
         editor.setNullValid(true);
         editor.add(visibleWhen(() -> editor.getChoices().size() > 1));
         form.add(editor);
+
+        form.add(new CheckBox("preferencesAccessAllowed").setOutputMarkupId(true));
 
         form.onSubmit(this::actionSave);
 
@@ -91,15 +97,16 @@ public class DefaultAnnotationEditorStatePanel
 
     private void actionLoad()
     {
-        AnnotationEditorState state = preferencesService
-                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject());
+        state.setObject(preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
+                getModel().getObject()));
 
+        var defaultEditorId = state.getObject().getDefaultEditor();
         AnnotationEditorFactory factory = annotationEditorRegistry
-                .getEditorFactory(state.getDefaultEditor());
+                .getEditorFactory(defaultEditorId);
 
         if (factory != null) {
             defaultEditor.setObject(listAvailableEditors().stream() //
-                    .filter(e -> Objects.equals(state.getDefaultEditor(), e.getKey())) //
+                    .filter(e -> Objects.equals(defaultEditorId, e.getKey())) //
                     .findFirst() //
                     .orElse(null));
         }
@@ -108,14 +115,12 @@ public class DefaultAnnotationEditorStatePanel
         }
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationEditorState> aDummy)
     {
-        AnnotationEditorState state = preferencesService
-                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject());
-
-        state.setDefaultEditor(defaultEditor.map(Pair::getKey).orElse(null).getObject());
+        state.getObject()
+                .setDefaultEditor(defaultEditor.map(Pair::getKey).orElse(null).getObject());
 
         preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject(),
-                state);
+                state.getObject());
     }
 }

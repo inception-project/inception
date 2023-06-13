@@ -62,7 +62,8 @@ public class XmlFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(XmlDocumentReader.class, aTSD);

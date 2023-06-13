@@ -45,7 +45,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.FixedBinaryCasSerDes;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
@@ -73,7 +72,6 @@ public class WebAnnoCasUtil
     public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
     {
         CAS cas = CasCreationUtils.createCas(aTSD, null, null);
-        FixedBinaryCasSerDes.inject(cas);
 
         if (ENFORCE_CAS_THREAD_LOCK) {
             cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
@@ -100,7 +98,6 @@ public class WebAnnoCasUtil
     public static CAS createCasCopy(CAS aOriginal) throws UIMAException
     {
         CAS copy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        FixedBinaryCasSerDes.inject(copy);
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aOriginal));
         deserializeCASComplete(serializer, (CASImpl) getRealCas(copy));
         return copy;

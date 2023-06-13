@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.config;
 
+import java.time.Duration;
+
 public interface CasStorageProperties
 {
     boolean isTraceAccess();
@@ -24,4 +26,6 @@ public interface CasStorageProperties
     boolean isParanoidCasSerialization();
 
     boolean isCompressedCasSerialization();
+
+    Duration getFileSystemTimestampAccuracy();
 }

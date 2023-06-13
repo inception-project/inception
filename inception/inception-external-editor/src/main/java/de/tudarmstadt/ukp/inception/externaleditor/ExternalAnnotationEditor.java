@@ -33,8 +33,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
@@ -51,18 +49,13 @@ public class ExternalAnnotationEditor
 
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
-    private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean ServletContext context;
-
-    private final String editorFactoryId;
 
     public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
-
-        editorFactoryId = aEditorFactoryId;
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override
@@ -76,20 +69,22 @@ public class ExternalAnnotationEditor
 
         AnnotatorState state = getModelObject();
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
-                state.getUser());
-
         return documentViewExtensionPoint.getExtension(getDescription().getView()) //
-                .map(ext -> ext.createView(CID_VIS, Model.of(annDoc), editorFactoryId)) //
+                .map(ext -> ext.createView(CID_VIS, Model.of(state.getDocument()),
+                        getFactory().getBeanName())) //
                 .orElseGet(() -> new Label(CID_VIS,
                         "Unsupported view: [" + getDescription().getView() + "]"));
     }
 
+    @Override
+    protected ExternalAnnotationEditorFactory getFactory()
+    {
+        return (ExternalAnnotationEditorFactory) super.getFactory();
+    }
+
     private ExternalEditorPluginDescripion getDescription()
     {
-        ExternalAnnotationEditorFactory factory = (ExternalAnnotationEditorFactory) annotationEditorRegistry
-                .getEditorFactory(editorFactoryId);
-        return factory.getDescription();
+        return getFactory().getDescription();
     }
 
     private String getUrlForPluginAsset(String aAssetPath)
@@ -107,7 +102,7 @@ public class ExternalAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        var props = new AnnotationEditorProperties();
         ExternalEditorPluginDescripion pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
@@ -118,6 +113,7 @@ public class ExternalAnnotationEditor
         props.setScriptSources(pluginDesc.getScripts().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
+        props.setEditorFactoryId(getFactory().getBeanName());
 
         return props;
     }

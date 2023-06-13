@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <properties>
+    <SpringProfile name="!app &amp; !cli"> <!-- While booting before Spring is there-->
+      <property name="pattern">%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [%encode{$${ctx:username:-SYSTEM}}{CRLF}] %logger{1} - %encode{%msg}{CRLF}%n</property>
+    </SpringProfile>
+    <SpringProfile name="app &amp; !development">
+      <property name="pattern">%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [%encode{$${ctx:username:-SYSTEM}}{CRLF}] %logger{1} - %encode{%msg}{CRLF}%n</property>
+    </SpringProfile>
+    <SpringProfile name="app &amp; development">
+      <property name="pattern">%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [$${ctx:username:-SYSTEM}] %logger{1} - %msg%n</property>
+    </SpringProfile>
+    <SpringProfile name="cli">
+      <property name="pattern">%highlight{[%level{length=5}] %msg}%n</property>
+    </SpringProfile>
+  </properties>
+  
+  <Appenders>
+    <RingBufferAppender name="RingBufferAppender"/>
+  
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout noConsoleNoAnsi="true" pattern="${pattern}" />
+    </Console>
+
+    <Routing name="GlobalLogAppender">
+      <Routes pattern="$${sys:GLOBAL_LOG_FOLDER:-NONE}">
+        <!--
+          - This route is used when we do *not* have a an application home set (yet).
+          -->
+        <Route key="NONE">
+          <Null name="null"/>
+        </Route>
+        
+        <Route>
+          <RollingFile name="rollingFile"
+            fileName="${sys:GLOBAL_LOG_FOLDER}/application.log"
+            filePattern="${sys:GLOBAL_LOG_FOLDER}/application.%d{dd-MMM}.log.gz"
+            ignoreExceptions="false">
+            <PatternLayout pattern="${pattern}" />
+            <Policies>
+              <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+          </RollingFile>
+        </Route>
+      </Routes>
+    </Routing>
+
+    <Routing name="ProjectAppender">
+      <Routes pattern="$${ctx:projectId}">
+        <!--
+          This route is used when we do *not* have a project ID set, i.e. the variable reference
+          "${ctx:projectId}" is not resolved and remains as the plain string "${ctx:projectId}"
+        -->
+        <Route key="${ctx:projectId}">
+          <!-- 
+            Do not log anywhere if there is no project ID. In this case logging is going only to
+            the console.
+           -->
+          <Null name="null"/>
+        </Route>
+
+        <!-- 
+          This route is used when we have a project ID set (i.e. in case the key is not
+          "${ctx:projectId}")
+        -->
+        <Route>
+          <File name="Project-${ctx:projectId}"
+            fileName="${ctx:repositoryPath}/project/project-${ctx:projectId}.log">
+            <PatternLayout pattern="${pattern}" />
+          </File>
+        </Route>
+      </Routes>
+    </Routing>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="de.tudarmstadt" level="INFO"/>
+    <Logger name="de.tudarmstadt.ukp.inception" level="INFO"/>
+    <Logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="INFO"/>
+    <Logger name="liquibase" level="ERROR"/>
+    <Logger name="org.apache.uima" level="ERROR"/>
+    <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
+    <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
+    <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
+    <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
+    <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    <!-- Avoid warning when components is not rerendered because it has been removed from page -->
+    <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
+    <!-- Avoid the broker stats spamming the logs -->
+    <Logger name="org.springframework.web.socket.config.WebSocketMessageBrokerStats" level="WARN"/>
+    
+    <SpringProfile name="app">
+      <Logger name="inception.boot" level="INFO"/>
+    </SpringProfile>
+    <SpringProfile name="cli">
+      <Logger name="inception.boot" level="WARN"/>
+      <Logger name="de.tudarmstadt.ukp.inception.support.spring.DatabaseInfoService" level="WARN"/>
+      <Logger name="de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer" level="WARN"/>
+    </SpringProfile>
+    
+    <Root level="WARN">
+      <AppenderRef ref="RingBufferAppender" />
+      <AppenderRef ref="ConsoleAppender" />
+      <AppenderRef ref="ProjectAppender" />
+      <AppenderRef ref="GlobalLogAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

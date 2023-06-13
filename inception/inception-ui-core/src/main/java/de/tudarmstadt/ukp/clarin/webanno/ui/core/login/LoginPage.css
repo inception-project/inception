@@ -21,8 +21,6 @@
 }
 
 .login-form {
-  background: white; 
-  padding: 3rem 3rem; 
   min-width: 440px; 
   max-width: 30%;
 }
@@ -37,4 +35,8 @@
   letter-spacing: 0.05rem !important;
   padding: 0.75rem 1rem !important;
   border-radius: 2rem !important;
+}
+
+.form-floating > .form-control:not(:placeholder-shown) ~ label::after {
+  background-color: unset !important;
 }

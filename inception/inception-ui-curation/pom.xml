@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-curation</artifactId>
   <name>INCEpTION - UI - Curation</name>
@@ -55,6 +55,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-documents</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -196,6 +200,14 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-urlfragment</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>

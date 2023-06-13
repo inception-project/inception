@@ -42,6 +42,7 @@ import static org.apache.wicket.csp.CSPDirectiveSrcValue.UNSAFE_INLINE;
 import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +56,6 @@ import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
-import org.apache.wicket.markup.html.IPackageResourceGuard;
-import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -85,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.kendo.KendoFixDisabledInputComponentStylingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
@@ -106,7 +106,7 @@ import de.tudarmstadt.ukp.inception.ui.core.config.CspProperties;
 public abstract class WicketApplicationBase
     extends WicketBootSecuredWebApplication
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired CspProperties cspProperties;
 
@@ -197,6 +197,8 @@ public abstract class WicketApplicationBase
 
     protected void initOnce()
     {
+        initContextSensitivePackageStringResourceLoader();
+
         // Allow nested string resource resolving using "#(key)"
         initNestedStringResourceLoader();
 
@@ -209,8 +211,6 @@ public abstract class WicketApplicationBase
 
         initNonCachingInDevEnvironment();
 
-        initAccessToVueComponents();
-
         initErrorPage();
     }
 
@@ -218,13 +218,15 @@ public abstract class WicketApplicationBase
     {
         if (DEVELOPMENT.equals(getConfigurationType())) {
             // Do not cache pages in development mode - allows us to make changes to the HMTL
-            // without
-            // having to reload the application
+            // without having to reload the application
             getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
             getResourceSettings().setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
 
             // Same for resources
             getResourceSettings().setDefaultCacheDuration(Duration.ZERO);
+
+            // Same for properties
+            getResourceSettings().getLocalizer().setEnableCache(false);
         }
     }
 
@@ -265,7 +267,7 @@ public abstract class WicketApplicationBase
         File customBootstrap = new File(getApplicationHome(), "bootstrap.css");
 
         if (customBootstrap.exists()) {
-            log.info("Using custom bootstrap at [{}]", customBootstrap);
+            LOG.info("Using custom bootstrap at [{}]", customBootstrap);
             settings.setCssResourceReference(new FileSystemResourceReference(
                     "inception-bootstrap.css", customBootstrap.toPath()));
         }
@@ -281,7 +283,7 @@ public abstract class WicketApplicationBase
         File customCss = new File(getApplicationHome(), "theme.css");
 
         if (customCss.exists()) {
-            log.info("Using custom CSS at [{}]", customCss);
+            LOG.info("Using custom CSS at [{}]", customCss);
             getComponentInstantiationListeners().add(component -> {
                 if (component instanceof ApplicationPageBase) {
                     component.add(new CustomThemeCssResourceBehavior());
@@ -352,6 +354,12 @@ public abstract class WicketApplicationBase
         getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV3());
     }
 
+    protected void initContextSensitivePackageStringResourceLoader()
+    {
+        getResourceSettings().getStringResourceLoaders()
+                .add(new ContextSensitivePackageStringResourceLoader());
+    }
+
     protected void initNestedStringResourceLoader()
     {
         List<IStringResourceLoader> loaders = new ArrayList<>(
@@ -409,24 +417,5 @@ public abstract class WicketApplicationBase
         if (DEVELOPMENT.equals(getConfigurationType())) {
             mountPage("/whoops/test", ErrorTestPage.class);
         }
-    }
-
-    private void initAccessToVueComponents()
-    {
-        IPackageResourceGuard resourceGuard = getResourceSettings().getPackageResourceGuard();
-        if (resourceGuard instanceof SecurePackageResourceGuard) {
-            SecurePackageResourceGuard securePackageResourceGuard = (SecurePackageResourceGuard) resourceGuard;
-            securePackageResourceGuard.addPattern("+*.vue");
-        }
-    }
-
-    @Override
-    public String getMimeType(String aFileName)
-    {
-        if (aFileName.endsWith(".vue")) {
-            return "text/javascript";
-        }
-
-        return super.getMimeType(aFileName);
     }
 }

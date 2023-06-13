@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation-api</artifactId>
   <name>INCEpTION - Recommendation - API</name>
@@ -37,6 +37,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-schema</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -99,6 +103,17 @@
     <dependency>
     	<groupId>it.unimi.dsi</groupId>
     	<artifactId>fastutil</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

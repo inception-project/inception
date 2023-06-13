@@ -18,20 +18,20 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 
@@ -45,9 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**
- * Stores references to the recommendationService, the currently used JCas and the annotatorState.
- * This class is widely used in the recommendation module.
- * 
  * If the prediction task has run it stores the predicted annotations for an annotation layer in the
  * predictions map.
  */
@@ -56,29 +53,35 @@ public class Predictions
 {
     private static final long serialVersionUID = -1598768729246662885L;
 
-    private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
-    private Set<String> seenDocumentsForPrediction = newSetFromMap(new ConcurrentHashMap<>());
-
     private final Project project;
-    private final User user;
+    private final User sessionOwner;
+    private final String dataOwner;
+
+    private final Map<String, Map<ExtendedId, AnnotationSuggestion>> idxDocuments = new HashMap<>();
+
+    private final Object predictions = new Object();
+    private final Set<String> seenDocumentsForPrediction = new HashSet<>();
     private final List<LogMessage> log = new ArrayList<>();
 
-    public Predictions(Project aProject, User aUser, Map<ExtendedId, SpanSuggestion> aPredictions)
+    public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
-        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aSessionOwner, "Session owner must be specified");
+        Validate.notNull(aSessionOwner, "Data owner must be specified");
 
         project = aProject;
-        user = aUser;
-
-        if (aPredictions != null) {
-            predictions = new ConcurrentHashMap<>(aPredictions);
-        }
+        sessionOwner = aSessionOwner;
+        dataOwner = aDataOwner;
     }
 
-    public Predictions(User aUser, Project aProject)
+    public User getSessionOwner()
     {
-        this(aProject, aUser, null);
+        return sessionOwner;
+    }
+
+    public String getDataOwner()
+    {
+        return dataOwner;
     }
 
     /**
@@ -97,14 +100,13 @@ public class Predictions
     public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
             Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
     {
-        Map<String, SuggestionDocumentGroup<T>> result = new HashMap<>();
+        var result = new HashMap<String, SuggestionDocumentGroup<T>>();
 
-        List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
+        var docs = aDocumentService.listAnnotationDocuments(project, sessionOwner);
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
-            SuggestionDocumentGroup<T> p = getGroupedPredictions(type, doc.getName(), aLayer, -1,
-                    -1);
+            var p = getGroupedPredictions(type, doc.getName(), aLayer, -1, -1);
             result.put(doc.getName(), p);
         }
 
@@ -149,19 +151,23 @@ public class Predictions
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return predictions.entrySet().stream() //
-                .filter(f -> type.isInstance(f.getValue())) //
-                .map(f -> (Entry<ExtendedId, T>) (Entry) f) //
-                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName)) //
-                .filter(f -> f.getKey().getLayerId() == aLayer.getId()) //
-                // .filter(f -> overlapping(f.getValue().getWindowBegin(),
-                // f.getValue().getWindowEnd(),
-                // aWindowBegin == -1 ? 0 : aWindowBegin,
-                // aWindowEnd == -1 ? MAX_VALUE : aWindowEnd))
-                .filter(f -> aWindowBegin == -1 || (f.getValue().getWindowBegin() >= aWindowBegin))
-                .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
-                .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())).map(Map.Entry::getValue)
-                .collect(toList());
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> type.isInstance(f.getValue())) //
+                    .map(f -> (Entry<ExtendedId, T>) (Entry) f) //
+                    .filter(f -> f.getKey().getLayerId() == aLayer.getId()) //
+                    // .filter(f -> overlapping(f.getValue().getWindowBegin(),
+                    // f.getValue().getWindowEnd(),
+                    // aWindowBegin == -1 ? 0 : aWindowBegin,
+                    // aWindowEnd == -1 ? MAX_VALUE : aWindowEnd))
+                    .filter(f -> aWindowBegin == -1
+                            || (f.getValue().getWindowBegin() >= aWindowBegin))
+                    .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
+                    .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
     }
 
     /**
@@ -174,11 +180,13 @@ public class Predictions
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
-        return predictions.values().stream() //
-                .filter(f -> f.getDocumentName().equals(aDocument.getName())) //
-                .filter(f -> f.getId() == aVID.getSubId()) //
-                .filter(f -> f.getRecommenderId() == aVID.getId()) //
-                .findFirst();
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aDocument.getName(), emptyMap());
+            return byDocument.values().stream() //
+                    .filter(f -> f.getId() == aVID.getSubId()) //
+                    .filter(f -> f.getRecommenderId() == aVID.getId()) //
+                    .findFirst();
+        }
     }
 
     /**
@@ -187,10 +195,16 @@ public class Predictions
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> predictions.put(new ExtendedId(user.getUsername(),
-                project.getId(), prediction.getDocumentName(), prediction.getLayerId(),
-                prediction.getPosition(), prediction.getRecommenderId(), prediction.getId(), -1),
-                prediction));
+        synchronized (predictions) {
+            for (var prediction : aPredictions) {
+                var xid = new ExtendedId(prediction.getDocumentName(), prediction.getLayerId(),
+                        prediction.getPosition(), prediction.getRecommenderId(),
+                        prediction.getId());
+                var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
+                        $ -> new HashMap<>());
+                byDocument.put(xid, prediction);
+            }
+        }
     }
 
     public Project getProject()
@@ -198,25 +212,55 @@ public class Predictions
         return project;
     }
 
+    /**
+     * @return whether there are any predictions.
+     * @deprecated Use {@link #isEmpty()} instead.
+     */
+    @Deprecated
     public boolean hasPredictions()
     {
-        return !predictions.isEmpty();
+        synchronized (predictions) {
+            return !idxDocuments.isEmpty();
+        }
     }
 
-    public Map<ExtendedId, AnnotationSuggestion> getGroupedPredictions()
+    public boolean isEmpty()
     {
-        return predictions;
+        synchronized (predictions) {
+            return idxDocuments.values().stream().allMatch(Map::isEmpty);
+        }
     }
 
-    public void clearPredictions()
+    public int size()
     {
-        predictions.clear();
-        seenDocumentsForPrediction.clear();
+        synchronized (predictions) {
+            return idxDocuments.values().stream().mapToInt(Map::size).sum();
+        }
     }
 
     public void removePredictions(Long recommenderId)
     {
-        predictions.entrySet().removeIf((p) -> p.getKey().getRecommenderId() == recommenderId);
+        synchronized (predictions) {
+            idxDocuments.values().forEach(docGroup -> docGroup.entrySet() //
+                    .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId));
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public List<SpanSuggestion> getAlternativeSuggestions(SpanSuggestion aSuggestion)
+    {
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentName(), emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> f.getValue() instanceof SpanSuggestion) //
+                    .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
+                    .filter(f -> f.getKey().getLayerId() == aSuggestion.getLayerId()) //
+                    .filter(f -> f.getValue().getBegin() == aSuggestion.getBegin()) //
+                    .filter(f -> f.getValue().getEnd() == aSuggestion.getEnd()) //
+                    .filter(f -> f.getValue().getFeature().equals(aSuggestion.getFeature())) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
     }
 
     /**
@@ -240,40 +284,59 @@ public class Predictions
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
-        return predictions.entrySet().stream().filter(f -> f.getValue() instanceof SpanSuggestion)
-                .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f)
-                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-                .filter(f -> f.getValue().getBegin() == aBegin)
-                .filter(f -> f.getValue().getEnd() == aEnd)
-                .filter(f -> f.getValue().getFeature().equals(aFeature)).map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> f.getValue() instanceof SpanSuggestion) //
+                    .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
+                    .filter(f -> f.getKey().getLayerId() == aLayer.getId()) //
+                    .filter(f -> f.getValue().getBegin() == aBegin) //
+                    .filter(f -> f.getValue().getEnd() == aEnd) //
+                    .filter(f -> f.getValue().getFeature().equals(aFeature)) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
     }
 
     public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
-            Recommender aRecommender, String aDocument)
+            Recommender aRecommender, String aDocumentName)
     {
-        return predictions.entrySet().stream()
-                .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId()
-                        && f.getKey().getDocumentName().equals(aDocument))
-                .map(Map.Entry::getValue).collect(Collectors.toList());
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
     }
 
-    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocument)
+    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName)
     {
-        return predictions.entrySet().stream()
-                .filter(f -> f.getKey().getDocumentName().equals(aDocument))
-                .map(Map.Entry::getValue).collect(Collectors.toList());
+        synchronized (predictions) {
+            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            return byDocument.entrySet().stream() //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
     }
 
     public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
     {
-        seenDocumentsForPrediction.add(aDocument.getName());
+        synchronized (seenDocumentsForPrediction) {
+            seenDocumentsForPrediction.add(aDocument.getName());
+        }
+    }
+
+    Set<String> documentsSeen()
+    {
+        return unmodifiableSet(seenDocumentsForPrediction);
     }
 
     public boolean hasRunPredictionOnDocument(SourceDocument aDocument)
     {
-        return seenDocumentsForPrediction.contains(aDocument.getName());
+        synchronized (seenDocumentsForPrediction) {
+            return seenDocumentsForPrediction.contains(aDocument.getName());
+        }
     }
 
     public void log(LogMessage aMessage)

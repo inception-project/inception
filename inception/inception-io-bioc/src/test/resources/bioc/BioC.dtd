@@ -1,0 +1,146 @@
+<!-- Combination DTD that will work with any document so far. -->
+
+<!--
+
+    Some believe XML is easily read by humans and that should be
+    supported by clearly formatting the elements. In the long run,
+    this is destracting. While the only meaningful spaces are in text
+    elements and the other spaces can be ignored, current tools add no
+    additional space.  Formatters and editors may be used to make the
+    XML file appear more readable.
+
+    The possible variety of annotations that one might want to produce
+    or use is nearly countless. There is no guarantee that these are
+    organized in the nice nested structure required for XML
+    elements. Even if they were, it would be nice to more easily
+    ignore unwanted annotations.  So annotations are recorded in a
+    stand off manner, external to the annotated text. The exceptions
+    are passages and sentences because of their fundamental place in
+    text.
+
+    The text is expected to be encoded in Unicode, specifically
+    utf-8. This is one of the encodings required to be implented by
+    XML tools, is portable between big-endian and little-endian
+    machines and is a superset of 7-bit ASCII. Code points beyond 127
+    may be expressed directly in utf-8 or indirectly using numeric
+    entities.  Since many tools today still only directly process
+    ASCII characters, conversion should be available and
+    standardized.  Offsets should be in 8 bit code units (bytes) for
+    easier processing by naive programs.
+
+    Nothing final. Just current thoughts.
+
+    collection:  Group of documents, usually from a larger corpus. If
+    a group of documents is from several corpora, use several
+    collections.
+
+    source:  Name of the source corpus from which the documents were selected
+
+    date:  Date documents extracted from original source. Can be as
+    simple as yyyymmdd or an ISO timestamp.
+
+    key: Separate file describing the types used and any other useful
+    information about the data in the file. For example, if a file
+    includes part-of-speech tags, this file should describe the
+    part-of-speech tags used.
+
+    infon: key-value pairs. Can record essentially arbitrary
+    information. "type" will be a particular common key in the major
+    sub elements below. For PubMed references, passage "type" might
+    signal "title" or "abstract". For annotations, it might indicate
+    "noun phrase", "gene", or "disease". In the programming language
+    data structures, infons are typically represented as a map from
+    strings to strings.  This means keys should be unique within each
+    parent element.
+
+    document:  A document in the collection. A single, complete
+    stand-alone document as described by it's parent source.
+
+    id:  Typically, the id of the document in the parent
+    source. Should at least be unique in the collection.
+
+    passage:  One portion of the document.  For now PubMed documents
+    have a title and an abstract. Structured abstracts could have
+    additional passages. For a full text document, passages could be
+    sections such as Introduction, Materials and Methods, or
+    Conclusion. Another option would be paragraphs. Passages impose a
+    linear structure on the document. Further structure in the
+    document can be implied by the infon["type"] value.
+
+    offset: Where the passage occurs in the parent document. Depending
+    on the source corpus, this might be a very relevant number.  They
+    should be sequential and identify a passage's position in
+    the document.  Since pubmed is extracted from an XML file, the
+    title has an offset of zero, while the abstract is assumed to
+    begin after the title and one space.
+
+    text: The original text of the passage.
+
+    sentence:  One sentence of the passage.
+
+    offset: A document offset to where the sentence begins in the
+    passage. This value is the sum of the passage offset and the local
+    offset within the passage.
+
+    text: The original text of the sentence.
+
+    annotation:  Stand-off annotation
+
+    id: Used to refer to this annotation in ie.
+
+    location: Location of the annotated text. Multiple locations
+    indicate a multi-span annotation.
+
+    offset: Document offset to where the annotated text begins in
+    the passage or sentence. The value is the sum of the passage or
+    sentence offset and the local offset within the passage or
+    sentence.
+
+    length: Length of the annotated text. While unlikely, this could
+    be zero to describe an annotation that belongs between two
+    characters.
+
+    text:  Unless something else is defined one would be expect the
+    annotated text. The length is redundant in this case. Other uses
+    for this text could be the normalized ID for a gene in a gene
+    database. 
+
+    relation: Relationship between multiple annotations.
+
+    id: Used to refer to this relation in other relationships.
+
+    refid: Id of an annotated object or other relation.
+
+    role: Describes how the referenced annotated object or other
+    relation participates in the current relationship. Has a default
+    value so can be left out if there is no meaningful value.
+
+-->
+
+<!ELEMENT collection ( source, date, key, infon*, document+ ) >
+<!ELEMENT source (#PCDATA)>
+<!ELEMENT date (#PCDATA)>
+<!ELEMENT key (#PCDATA)>
+<!ELEMENT infon (#PCDATA)>
+<!ATTLIST infon key CDATA #REQUIRED >
+
+<!ELEMENT document ( id, infon*, passage+, relation* ) >
+<!ELEMENT id (#PCDATA)>
+
+<!ELEMENT passage ( infon*, offset, ( ( text?, annotation* ) | sentence* ), relation* ) >
+<!ELEMENT offset (#PCDATA)>
+<!ELEMENT text (#PCDATA)>
+
+<!ELEMENT sentence ( infon*, offset, text?, annotation*, relation* ) >
+
+<!ELEMENT annotation ( infon*, location*, text ) >
+<!ATTLIST annotation id CDATA #IMPLIED >
+<!ELEMENT location EMPTY>
+<!ATTLIST location offset CDATA #REQUIRED >
+<!ATTLIST location length CDATA #REQUIRED >
+
+<!ELEMENT relation ( infon*, node* ) >
+<!ATTLIST relation id CDATA #IMPLIED >
+<!ELEMENT node EMPTY>
+<!ATTLIST node refid CDATA #REQUIRED >
+<!ATTLIST node role CDATA "" >

@@ -41,7 +41,6 @@ import jakarta.persistence.UniqueConstraint;
 /**
  * A persistence object for meta-data of annotation documents. The content of annotation document is
  * stored in a file system.
- *
  */
 @Entity
 @Table(name = "annotation_document", uniqueConstraints = {
@@ -123,7 +122,7 @@ public class AnnotationDocument
 
     public AnnotationDocument(String aUser, SourceDocument aDocument)
     {
-        user = aUser;
+        setUser(aUser);
         document = aDocument;
         name = aDocument.getName();
         project = aDocument.getProject();

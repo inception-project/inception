@@ -50,8 +50,6 @@ include::{include-dir}annotation_open.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_undo.adoc[leveloffset=+2]
-
 include::{include-dir}annotation_create-annotations.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+3]
@@ -69,6 +67,10 @@ include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffs
 include::{include-dir}annotation_create-annotations_image-features.adoc[leveloffset=+3]
 
 include::{include-dir}annotation_create-annotations_concept-features.adoc[leveloffset=+3]
+
+include::{include-dir}annotation-sidebar.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_undo.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_settings.adoc[leveloffset=+2]
 
@@ -131,6 +133,8 @@ include::{include-dir}projects_layers_feature_lookup.adoc[leveloffset=+4]
 
 include::{include-dir}projects_annotation.adoc[leveloffset=+2]
 
+include::{include-dir}projects_annotation_sidebar.adoc[leveloffset=+3]
+
 include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation.adoc[leveloffset=+2]
@@ -185,6 +189,8 @@ include::{include-dir}external-search-repos-solr.adoc[leveloffset=+3]
 
 include::{include-dir}external-search-repos-pubannotation.adoc[leveloffset=+3]
 
+include::{include-dir}external-search-repos-pmc.adoc[leveloffset=+3]
+
 <<<
 
 include::{include-dir}constraints.adoc[leveloffset=+1]
@@ -234,6 +240,11 @@ data in a particular format. The **feature flag** column shows which flags you c
 .Formats overview
 |====
 | Format | Remote API format ID | Feature flag
+
+| <<sect_formats_bioc>>
+| `bioc`
+| `format.bioc.enabled`
+
 
 | <<sect_formats_conll2000>>
 | `conll2000`
@@ -356,6 +367,8 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `format.generic-xml.enabled`
 |====
 
+
+include::{include-dir}formats-bioc.adoc[leveloffset=+2]
 
 include::{include-dir}formats-conll2000.adoc[leveloffset=+2]
 

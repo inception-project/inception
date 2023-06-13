@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
@@ -32,9 +31,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
-import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -67,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -76,10 +72,8 @@ import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import jakarta.persistence.NoResultException;
@@ -280,33 +274,28 @@ public class DiamWebsocketController
             int aViewportEnd, String aFormat)
         throws IOException
     {
-        SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
-        User user;
-        if (CURATION_USER.equals(aUser)) {
-            user = new User(CURATION_USER);
-        }
-        else {
-            user = userRepository.get(aUser);
-        }
+        var doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
+        var user = userRepository.getUserOrCurationUser(aUser);
 
-        CAS cas = documentService.readAnnotationCas(doc, aUser);
+        var cas = documentService.readAnnotationCas(doc, aUser);
 
-        AnnotationPreference prefs = userPreferencesService.loadPreferences(doc.getProject(),
-                user.getUsername(), Mode.ANNOTATION);
+        var prefs = userPreferencesService.loadPreferences(doc.getProject(), user.getUsername(),
+                Mode.ANNOTATION);
 
-        List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
+        var layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
                 .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(toList());
 
-        RenderRequest request = RenderRequest.builder() //
+        var request = RenderRequest.builder() //
+                .withSessionOwner(userRepository.getCurrentUser()) //
                 .withDocument(doc, user) //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //
                 .build();
 
-        VDocument vdoc = renderingPipeline.render(request);
+        var vdoc = renderingPipeline.render(request);
 
         if (FORMAT_LEGACY.equals(aFormat)) {
             return JSONUtil.getObjectMapper().valueToTree(new MViewportInit(vdoc));

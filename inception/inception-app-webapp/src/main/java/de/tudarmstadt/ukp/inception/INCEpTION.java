@@ -39,7 +39,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
 @EnableCaching
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 //@formatter:on
 public class INCEpTION
     extends SpringBootServletInitializer
@@ -163,6 +163,7 @@ public class INCEpTION
         else {
             builder.web(SERVLET);
             splash = LoadingSplashScreen.setupScreen("INCEpTION");
+            builder.headless(splash.isEmpty());
             builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
         }
 

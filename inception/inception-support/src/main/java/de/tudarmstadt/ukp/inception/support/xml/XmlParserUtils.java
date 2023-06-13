@@ -32,6 +32,9 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
@@ -147,5 +150,20 @@ public class XmlParserUtils
         SAXException
     {
         return newSaxParser(newSaxParserFactory());
+    }
+
+    public static XMLInputFactory newXmlInputFactory()
+    {
+        XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
+        xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        xmlInputFactory.setProperty(XMLInputFactory.IS_VALIDATING, false);
+        return xmlInputFactory;
+    }
+
+    public static boolean isStartElement(XMLEvent aEvent, String aElement)
+    {
+        return aEvent.isStartElement()
+                && ((StartElement) aEvent).getName().getLocalPart().equals(aElement);
     }
 }

@@ -21,11 +21,13 @@ import java.util.List;
 
 public class AnnotationEditorProperties
 {
+    private String editorFactoryId;
     private String editorFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
+    private boolean loadingIndicatorDisabled = false;
 
     public String getEditorFactory()
     {
@@ -75,5 +77,25 @@ public class AnnotationEditorProperties
     public void setStylesheetSources(List<String> aStylesheetSources)
     {
         stylesheetSources = aStylesheetSources;
+    }
+
+    public boolean isLoadingIndicatorDisabled()
+    {
+        return loadingIndicatorDisabled;
+    }
+
+    public void setLoadingIndicatorDisabled(boolean aLoadingIndicatorDisabled)
+    {
+        loadingIndicatorDisabled = aLoadingIndicatorDisabled;
+    }
+
+    public void setEditorFactoryId(String aEditorFactoryId)
+    {
+        editorFactoryId = aEditorFactoryId;
+    }
+
+    public String getEditorFactoryId()
+    {
+        return editorFactoryId;
     }
 }

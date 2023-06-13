@@ -51,7 +51,7 @@ public class Nif2DKPro
     {
         posMappingProvider = aPosMappingProvider;
     }
-    
+
     public void convert(Statement aContext, JCas aJCas)
     {
         Model m = aContext.getModel();
@@ -60,7 +60,7 @@ public class Nif2DKPro
         final Resource tWord = m.createResource(NIF.TYPE_WORD);
         final Resource tTitle = m.createResource(NIF.TYPE_TITLE);
         final Resource tParagraph = m.createResource(NIF.TYPE_PARAGRAPH);
-        
+
         final Property pReferenceContext = m.createProperty(NIF.PROP_REFERENCE_CONTEXT);
         final Property pIsString = m.createProperty(NIF.PROP_IS_STRING);
         final Property pBeginIndex = m.createProperty(NIF.PROP_BEGIN_INDEX);
@@ -73,44 +73,39 @@ public class Nif2DKPro
         final Property pTaClassRef = m.createProperty(ITS.PROP_TA_CLASS_REF);
 
         // Convert context node -> document text
-        String text = m
-                .getProperty(aContext.getSubject(), pIsString)
-                .getString();
+        String text = m.getProperty(aContext.getSubject(), pIsString).getString();
         aJCas.setDocumentText(text);
 
         // Convert headings/titles
-        Iterator<Resource> headingIterator = m
-                .listResourcesWithProperty(RDF.type, tTitle)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()));
+        Iterator<Resource> headingIterator = m.listResourcesWithProperty(RDF.type, tTitle)
+                .filterKeep(res -> res.getProperty(pReferenceContext).getResource()
+                        .equals(aContext.getSubject()));
         for (Resource nifTitle : new IteratorIterable<Resource>(headingIterator)) {
             int begin = nifTitle.getProperty(pBeginIndex).getInt();
             int end = nifTitle.getProperty(pEndIndex).getInt();
             Heading uimaHeading = new Heading(aJCas, begin, end);
             uimaHeading.addToIndexes();
-            
+
             assert assertSanity(nifTitle, uimaHeading);
         }
 
         // Convert paragraphs
-        Iterator<Resource> paragraphIterator = m
-                .listResourcesWithProperty(RDF.type, tParagraph)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()));
+        Iterator<Resource> paragraphIterator = m.listResourcesWithProperty(RDF.type, tParagraph)
+                .filterKeep(res -> res.getProperty(pReferenceContext).getResource()
+                        .equals(aContext.getSubject()));
         for (Resource nifParagraph : new IteratorIterable<Resource>(paragraphIterator)) {
             int begin = nifParagraph.getProperty(pBeginIndex).getInt();
             int end = nifParagraph.getProperty(pEndIndex).getInt();
             Paragraph uimaParagraph = new Paragraph(aJCas, begin, end);
             uimaParagraph.addToIndexes();
-            
+
             assert assertSanity(nifParagraph, uimaParagraph);
         }
 
         // Convert sentences
         List<Resource> nifSentences = m
-                .listResourcesWithProperty(RDF.type, tSentence)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()))
+                .listResourcesWithProperty(RDF.type, tSentence).filterKeep(res -> res
+                        .getProperty(pReferenceContext).getResource().equals(aContext.getSubject()))
                 .toList();
         nifSentences.sort((a, b) -> a.getProperty(pBeginIndex).getInt()
                 - b.getProperty(pBeginIndex).getInt());
@@ -119,15 +114,14 @@ public class Nif2DKPro
             int end = nifSentence.getProperty(pEndIndex).getInt();
             Sentence uimaSentence = new Sentence(aJCas, begin, end);
             uimaSentence.addToIndexes();
-            
+
             assert assertSanity(nifSentence, uimaSentence);
         }
-        
+
         // Convert tokens
-        Iterator<Resource> tokenIterator = m
-                .listResourcesWithProperty(RDF.type, tWord)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()));
+        Iterator<Resource> tokenIterator = m.listResourcesWithProperty(RDF.type, tWord)
+                .filterKeep(res -> res.getProperty(pReferenceContext).getResource()
+                        .equals(aContext.getSubject()));
         for (Resource nifWord : new IteratorIterable<Resource>(tokenIterator)) {
             int begin = nifWord.getProperty(pBeginIndex).getInt();
             int end = nifWord.getProperty(pEndIndex).getInt();
@@ -135,7 +129,7 @@ public class Nif2DKPro
             uimaToken.addToIndexes();
 
             assert assertSanity(nifWord, uimaToken);
-            
+
             // Convert lemma
             if (nifWord.hasProperty(pLemma)) {
                 Lemma uimaLemma = new Lemma(aJCas, uimaToken.getBegin(), uimaToken.getEnd());
@@ -143,7 +137,7 @@ public class Nif2DKPro
                 uimaLemma.addToIndexes();
                 uimaToken.setLemma(uimaLemma);
             }
-            
+
             // Convert stem
             if (nifWord.hasProperty(pLemma)) {
                 Stem uimaStem = new Stem(aJCas, uimaToken.getBegin(), uimaToken.getEnd());
@@ -151,7 +145,7 @@ public class Nif2DKPro
                 uimaStem.addToIndexes();
                 uimaToken.setStem(uimaStem);
             }
-            
+
             // Convert posTag (this is discouraged, the better alternative should be oliaLink)
             if (nifWord.hasProperty(pPosTag)) {
                 String tag = nifWord.getProperty(pStem).getString();
@@ -164,18 +158,18 @@ public class Nif2DKPro
                 uimaToken.setPos(uimaPos);
             }
         }
-        
+
         // Convert named entities
         //
         // NIF uses taIdentRef to link to a unique instance of an entity and taClassRef to identify
         // the category of the entity. Named entity recognizers in DKPro Core just categorizes the
         // entity, e.g. as a person, location, or whatnot. For what NIF uses, we'd need a named
         // entity linker, not just a recognizer. Furthermore, the DKPro Core named entity
-        // recognizers are not mapped to a common tag set (unlike e.g. POS which is mapped to 
+        // recognizers are not mapped to a common tag set (unlike e.g. POS which is mapped to
         // the universal POS tags).
-        // 
+        //
         // So, what we do here is treating the URI of the taClassRef in NIF simply as the
-        // named entity category and store it. 
+        // named entity category and store it.
         //
         // Here we use duck-typing, i.e. it has a taClassRef property then it is likely a named
         // entity. NIF 2.1 [1] appears to introduce a representation of named entities using the
@@ -185,19 +179,16 @@ public class Nif2DKPro
         // [1] http://nif.readthedocs.io/en/2.1-rc/prov-and-conf.html
         // [2] https://datahub.io/dataset/kore-50-nif-ner-corpus
         Set<Resource> nifNamedEntitiesTaIdentRef = m
-                .listResourcesWithProperty(pTaIdentRef)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()))
+                .listResourcesWithProperty(pTaIdentRef).filterKeep(res -> res
+                        .getProperty(pReferenceContext).getResource().equals(aContext.getSubject()))
                 .toSet();
         Set<Resource> nifNamedEntitiesTaClassRef = m
-                .listResourcesWithProperty(pTaClassRef)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()))
+                .listResourcesWithProperty(pTaClassRef).filterKeep(res -> res
+                        .getProperty(pReferenceContext).getResource().equals(aContext.getSubject()))
                 .toSet();
         Set<Resource> nifNamedEntitiesTaMsClassRef = m
-                .listResourcesWithProperty(pTaMsClassRef)
-                .filterKeep(res -> res.getProperty(
-                        pReferenceContext).getResource().equals(aContext.getSubject()))
+                .listResourcesWithProperty(pTaMsClassRef).filterKeep(res -> res
+                        .getProperty(pReferenceContext).getResource().equals(aContext.getSubject()))
                 .toSet();
         Set<Resource> nifNamedEntities = new HashSet<Resource>();
         nifNamedEntities.addAll(nifNamedEntitiesTaIdentRef);
@@ -207,7 +198,7 @@ public class Nif2DKPro
             int begin = nifNamedEntity.getProperty(pBeginIndex).getInt();
             int end = nifNamedEntity.getProperty(pEndIndex).getInt();
             NamedEntity uimaNamedEntity = new NamedEntity(aJCas, begin, end);
-            
+
             // If there is a most-specific class, then we use that
             if (nifNamedEntity.hasProperty(pTaMsClassRef)) {
                 uimaNamedEntity
@@ -218,24 +209,24 @@ public class Nif2DKPro
                 uimaNamedEntity
                         .setValue(nifNamedEntity.getProperty(pTaClassRef).getResource().getURI());
             }
-            
-            // If the entity is linked, then we keep the identifier 
+
+            // If the entity is linked, then we keep the identifier
             if (nifNamedEntity.hasProperty(pTaIdentRef)) {
                 uimaNamedEntity.setIdentifier(
                         nifNamedEntity.getProperty(pTaIdentRef).getResource().getURI());
             }
             uimaNamedEntity.addToIndexes();
-            
+
             assert assertSanity(nifNamedEntity, uimaNamedEntity);
         }
     }
-    
+
     private static boolean assertSanity(Resource aNif, Annotation aUima)
     {
         final Property pAnchorOf = aNif.getModel().createProperty(NIF.PROP_ANCHOR_OF);
-        
+
         int docLength = aUima.getCAS().getDocumentText().length();
-        
+
         if (aNif.hasProperty(pAnchorOf)) {
             String nifText = aNif.getProperty(pAnchorOf).getString();
             String uimaText = aUima.getCoveredText();
@@ -243,7 +234,7 @@ public class Nif2DKPro
         }
         assert aUima.getBegin() >= 0 && aUima.getBegin() <= docLength;
         assert aUima.getEnd() >= 0 && aUima.getEnd() <= docLength;
-        
+
         return true;
     }
 }

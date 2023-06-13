@@ -83,7 +83,7 @@ public class SpanAdapter
      *
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS.
@@ -95,16 +95,17 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationFS add(SourceDocument aDocument, String aUsername, CAS aCas, int aBegin,
+    public AnnotationFS add(SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aBegin,
             int aEnd)
         throws AnnotationException
     {
-        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
+        return handle(
+                new CreateSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aBegin, aEnd));
     }
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
-        CreateSpanAnnotationRequest request = aRequest;
+        var request = aRequest;
 
         // Adjust the creation request (e.g. adjust offsets to the configured granularity) or
         // reject the creation (e.g. reject cross-sentence annotations)
@@ -112,11 +113,12 @@ public class SpanAdapter
             request = behavior.onCreate(this, request);
         }
 
-        AnnotationFS newAnnotation = createSpanAnnotation(request.getCas(), request.getBegin(),
+        var newAnnotation = createSpanAnnotation(request.getCas(), request.getBegin(),
                 request.getEnd());
 
-        publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getUsername(),
-                getLayer(), newAnnotation));
+        var finalRequest = request;
+        publishEvent(() -> new SpanCreatedEvent(this, finalRequest.getDocument(),
+                finalRequest.getDocumentOwner(), getLayer(), newAnnotation));
 
         return newAnnotation;
     }
@@ -126,7 +128,7 @@ public class SpanAdapter
      *
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aUsername
+     * @param aDocumentOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS.
@@ -140,12 +142,12 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationFS move(SourceDocument aDocument, String aUsername, CAS aCas,
+    public AnnotationFS move(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
             AnnotationFS aAnnotation, int aBegin, int aEnd)
         throws AnnotationException
     {
-        return handle(new MoveSpanAnnotationRequest(aDocument, aUsername, aCas, aAnnotation, aBegin,
-                aEnd));
+        return handle(new MoveSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aAnnotation,
+                aBegin, aEnd));
     }
 
     public AnnotationFS handle(MoveSpanAnnotationRequest aRequest) throws AnnotationException
@@ -163,8 +165,10 @@ public class SpanAdapter
         moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
                 request.getEnd());
 
-        publishEvent(new SpanMovedEvent(this, request.getDocument(), request.getUsername(),
-                getLayer(), request.getAnnotation(), oldBegin, oldEnd));
+        var finalRequest = request;
+        publishEvent(() -> new SpanMovedEvent(this, finalRequest.getDocument(),
+                finalRequest.getDocumentOwner(), getLayer(), finalRequest.getAnnotation(), oldBegin,
+                oldEnd));
 
         return request.getAnnotation();
     }
@@ -210,7 +214,7 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
     {
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
@@ -220,10 +224,10 @@ public class SpanAdapter
             detatch(aCas, fs);
         }
 
-        publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
+        publishEvent(() -> new SpanDeletedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
     }
 
-    public AnnotationFS restore(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
+    public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
         throws AnnotationException
     {
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
@@ -234,7 +238,7 @@ public class SpanAdapter
 
         aCas.addFsToIndexes(fs);
 
-        publishEvent(new SpanCreatedEvent(this, aDocument, aUsername, getLayer(), fs));
+        publishEvent(() -> new SpanCreatedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
 
         return fs;
     }

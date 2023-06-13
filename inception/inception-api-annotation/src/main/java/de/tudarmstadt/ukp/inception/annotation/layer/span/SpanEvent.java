@@ -58,8 +58,8 @@ public abstract class SpanEvent
         if (getDocument() != null) {
             builder.append("docID=");
             builder.append(getDocument().getId());
-            builder.append(", user=");
-            builder.append(getUser());
+            builder.append(", docOwner=");
+            builder.append(getDocumentOwner());
             builder.append(", ");
         }
         builder.append("span=[");

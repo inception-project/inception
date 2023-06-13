@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler.getOffsetsFromRequest;
+import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler.getRangeFromRequest;
 
 import java.io.IOException;
 
@@ -70,7 +70,7 @@ public class MoveSpanAnnotationHandler
             CAS cas = page.getEditorCas();
             var vid = getVid(aRequest);
             AnnotatorState state = getAnnotatorState();
-            var range = getOffsetsFromRequest(state, aRequest.getRequestParameters(), cas);
+            var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
             moveSpan(aTarget, cas, vid, range);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
@@ -84,10 +84,10 @@ public class MoveSpanAnnotationHandler
     {
         AnnotatorState state = getAnnotatorState();
 
-        SpanAdapter adapter = (SpanAdapter) annotationService
-                .getAdapter(state.getSelectedAnnotationLayer());
-
         AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
+
+        SpanAdapter adapter = (SpanAdapter) annotationService.findAdapter(state.getProject(),
+                annoFs);
 
         adapter.move(state.getDocument(), state.getUser().getUsername(), aCas, annoFs,
                 aRange.getBegin(), aRange.getEnd());

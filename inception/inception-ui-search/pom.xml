@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-search</artifactId>
   <name>INCEpTION - Search - UI</name>
@@ -129,6 +129,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-extensions</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <!-- TEST DEPENDENCIES -->

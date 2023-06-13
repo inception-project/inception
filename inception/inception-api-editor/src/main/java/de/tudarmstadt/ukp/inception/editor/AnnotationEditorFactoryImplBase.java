@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.editor;
 
+import java.io.IOException;
+import java.util.Optional;
+
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
+
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public abstract class AnnotationEditorFactoryImplBase
     implements BeanNameAware, Ordered, AnnotationEditorFactory
@@ -41,5 +46,11 @@ public abstract class AnnotationEditorFactoryImplBase
     public int getOrder()
     {
         return Ordered.LOWEST_PRECEDENCE;
+    }
+
+    @Override
+    public Optional<PolicyCollection> getPolicy() throws IOException
+    {
+        return Optional.empty();
     }
 }

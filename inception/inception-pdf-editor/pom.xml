@@ -20,13 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF (pdfbox ${pdfbox.version})</name>
   <artifactId>inception-pdf-editor</artifactId>
-  <properties>
-    <pdfbox.version>2.0.26</pdfbox.version>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -94,12 +91,10 @@
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
-      <version>${pdfbox.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>fontbox</artifactId>
-      <version>${pdfbox.version}</version>
     </dependency>
 
     <dependency>

@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
@@ -36,7 +37,9 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithNewAnnotatio
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadPreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.SavePreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
@@ -46,6 +49,8 @@ import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
@@ -145,9 +150,11 @@ public class DiamAutoConfig
 
     @Bean
     public LoadAnnotationsHandler loadAnnotationsHandler(RenderingPipeline aRenderingPipeline,
-            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint,
+            UserDao aUserService)
     {
-        return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint);
+        return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint,
+                aUserService);
     }
 
     @Bean
@@ -160,5 +167,21 @@ public class DiamAutoConfig
     public CompactSerializerV2 compactSerializerV2(AnnotationEditorProperties aProperties)
     {
         return new CompactSerializerV2Impl(aProperties);
+    }
+
+    @Bean
+    public LoadPreferences loadPreferences(UserDao aUserService,
+            PreferencesService aPreferencesService)
+    {
+        return new LoadPreferences(aUserService, aPreferencesService);
+    }
+
+    @Bean
+    public SavePreferences savePreferences(UserDao aUserService,
+            PreferencesService aPreferencesService,
+            ClientSiderUserPreferencesProviderRegistry aClientSiderUserPreferencesProviderRegistry)
+    {
+        return new SavePreferences(aUserService, aPreferencesService,
+                aClientSiderUserPreferencesProviderRegistry);
     }
 }

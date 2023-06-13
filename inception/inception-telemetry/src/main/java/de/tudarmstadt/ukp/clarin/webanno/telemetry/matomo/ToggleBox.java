@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.markup.html.form.IChoiceRenderer;
+
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
@@ -36,7 +38,31 @@ public class ToggleBox
 
         setRequired(true);
         setNullValid(false);
-        setChoices(asList(true, false));
+        setChoices(asList(false, true));
+        setChoiceRenderer(new IChoiceRenderer<Boolean>()
+        {
+            private static final long serialVersionUID = -180513167658049798L;
+
+            @Override
+            public String getDisplayValue(Boolean aObject)
+            {
+                if (aObject == null) {
+                    return null;
+                }
+
+                return aObject ? "enabled" : "disabled";
+            }
+
+            @Override
+            public String getIdValue(Boolean aObject, int aIndex)
+            {
+                if (aObject == null) {
+                    return null;
+                }
+
+                return aObject ? "true" : "false";
+            }
+        });
         setEscapeModelStrings(false); // SAFE - ONLY RENDERING A FEW HARD-CODED CHOICES WITH ICONS
     }
 
@@ -46,9 +72,9 @@ public class ToggleBox
         super.onConfigure(aBehavior);
 
         var template = Options.asString(String.join("\n", //
-                "# if (data.value == '0') { #", //
+                "# if (data.value == 'false') { #", //
                 "<i class='fa fa-ban'></i> Disabled", //
-                "# } else if (data.value == '1') { #", //
+                "# } else if (data.value == 'true') { #", //
                 "<i class='fa fa-check'></i> Enabled", //
                 "# } else { #", //
                 "<i class='fa fa-question'></i> Choose...", //

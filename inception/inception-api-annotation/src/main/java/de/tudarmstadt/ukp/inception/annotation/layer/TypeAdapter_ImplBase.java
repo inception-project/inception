@@ -21,17 +21,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsBy
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.fit.util.FSUtil;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -42,6 +40,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
@@ -102,6 +101,36 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
+        initFeaturesCacheIfNecessary();
+        return features.values();
+    }
+
+    @Override
+    public Optional<AnnotationFeature> getFeature(String aName)
+    {
+        initFeaturesCacheIfNecessary();
+        return Optional.ofNullable(features.get(aName));
+    }
+
+    @Override
+    public String renderFeatureValue(FeatureStructure aFS, String aFeature)
+    {
+        var feature = getFeature(aFeature);
+        if (!feature.isPresent()) {
+            return null;
+        }
+        return featureSupportRegistry.findExtension(feature.get())
+                .map(fs -> fs.renderFeatureValue(feature.get(), aFS)).orElse(null);
+    }
+
+    @Override
+    public <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName)
+    {
+        return getFeature(aName).flatMap(featureSupportRegistry::findExtension);
+    }
+
+    private void initFeaturesCacheIfNecessary()
+    {
         if (features == null) {
             // Using a sorted map here so we have reliable positions in the map when iterating. We
             // use these positions to remember the armed slots!
@@ -110,8 +139,6 @@ public abstract class TypeAdapter_ImplBase
                 features.put(f.getName(), f);
             }
         }
-
-        return features.values();
     }
 
     @Override
@@ -130,42 +157,35 @@ public abstract class TypeAdapter_ImplBase
         var newValue = featureSupport.getFeatureValue(aFeature, fs);
 
         if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
-                    aFeature, newValue, oldValue));
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, aFeature, newValue, oldValue));
         }
-    }
-
-    private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
-    {
-        Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (f == null) {
-            return null;
-        }
-
-        if (f.getRange().isPrimitive()) {
-            return FSUtil.getFeature(fs, aFeature.getName(), Object.class);
-        }
-
-        if (FSUtil.isMultiValuedFeature(fs, f)) {
-            return FSUtil.getFeature(fs, aFeature.getName(), List.class);
-        }
-
-        return FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return (T) featureSupportRegistry.findExtension(aFeature).orElseThrow()
+        return (T) featureSupportRegistry.findExtension(aFeature) //
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Unsupported feature type [" + aFeature.getType() + "]"))
                 .getFeatureValue(aFeature, aFs);
     }
 
+    @Deprecated
+    @Override
     public void publishEvent(ApplicationEvent aEvent)
     {
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(aEvent);
+        }
+    }
+
+    @Override
+    public void publishEvent(Supplier<ApplicationEvent> aEventSupplier)
+    {
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(aEventSupplier.get());
         }
     }
 
@@ -196,6 +216,12 @@ public abstract class TypeAdapter_ImplBase
     public void silenceEvents()
     {
         applicationEventPublisher = null;
+    }
+
+    @Override
+    public boolean isSilenced()
+    {
+        return applicationEventPublisher == null;
     }
 
     /**

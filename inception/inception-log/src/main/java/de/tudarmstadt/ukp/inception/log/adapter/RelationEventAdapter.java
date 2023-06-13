@@ -54,7 +54,7 @@ public class RelationEventAdapter
     @Override
     public String getAnnotator(RelationEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

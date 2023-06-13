@@ -319,24 +319,24 @@ public class LoginPage
             // Wicket continueToOriginalDestination();
 
             if (aRedirectUrl == null || aRedirectUrl.contains(".IBehaviorListener.")
-                    || aRedirectUrl.contains("-logoutPanel-")) {
+                    || aRedirectUrl.contains("-logoutPanel-") || aRedirectUrl.endsWith("/ws")) {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
+                return;
             }
-            else {
-                log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
-                if (isNotBlank(localLoginPanel.urlfragment)
-                        && localLoginPanel.urlfragment.startsWith("!")) {
-                    Url url = Url.parse("http://dummy?" + localLoginPanel.urlfragment.substring(1));
-                    UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
-                    LinkedHashMap<String, StringValue> params = new LinkedHashMap<>();
-                    for (String name : adapter.getParameterNames()) {
-                        params.put(name, adapter.getParameterValue(name));
-                    }
-                    Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, params);
+
+            log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
+            if (isNotBlank(localLoginPanel.urlfragment)
+                    && localLoginPanel.urlfragment.startsWith("!")) {
+                Url url = Url.parse("http://dummy?" + localLoginPanel.urlfragment.substring(1));
+                UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
+                LinkedHashMap<String, StringValue> params = new LinkedHashMap<>();
+                for (String name : adapter.getParameterNames()) {
+                    params.put(name, adapter.getParameterValue(name));
                 }
-                throw new NonResettingRestartException(aRedirectUrl);
+                Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, params);
             }
+            throw new NonResettingRestartException(aRedirectUrl);
         }
     }
 

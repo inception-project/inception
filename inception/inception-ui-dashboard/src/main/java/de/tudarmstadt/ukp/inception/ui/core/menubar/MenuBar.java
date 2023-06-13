@@ -151,8 +151,22 @@ public class MenuBar
 
     private boolean isMenubarVisibleToCurrentUser()
     {
-        if (userRepository.isAdministrator(user.getObject()) || !project.isPresent().getObject()) {
+        // E.g. on the invite page, we do not have a user object, but we would still like to see
+        // the empty menu bar saying "INCEpTION".
+        if (!user.isPresent().getObject() || !project.isPresent().getObject()) {
             return true;
+        }
+
+        if (userRepository.isAdministrator(user.getObject())
+                || userRepository.isProjectCreator(user.getObject())) {
+            return true;
+        }
+
+        // The project might be null if it is in the process of being created. Normally, this can
+        // only be done by admisn and project creators that are handled above - so returning false
+        // here is really just a sanity fallback that should never kick in.
+        if (project.getObject().getId() == null) {
+            return false;
         }
 
         var roles = dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new);

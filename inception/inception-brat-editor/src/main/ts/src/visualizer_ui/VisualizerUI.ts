@@ -284,7 +284,7 @@ export class VisualizerUI {
           if (label && value) {
             // special treatment for some label values
             if (label.toLowerCase() === '<img>') {
-              norminfo += `<img class="norm_info_img" src="${value}"/>`
+              norminfo += `<img class="norm_info_img" crossorigin src="${value}"/>`
             } else {
               // normal, as text max length restriction
               if (value.length > 300) {
@@ -447,7 +447,7 @@ export class VisualizerUI {
 
   resizerTimeout: number
   onResize (evt: Event) {
-    if (evt.target === window) {
+    if (!evt || evt.target === window) {
       clearTimeout(this.resizerTimeout)
       this.resizerTimeout = setTimeout(() => this.dispatcher.post('rerender'), 300)
     }

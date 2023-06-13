@@ -253,15 +253,33 @@ public class UserDaoImpl
 
             return usersInRealm.size();
         }
-        else {
-            String query = String.join("\n", //
-                    "DELETE FROM " + User.class.getName(), //
-                    "WHERE realm = :realm");
 
-            return entityManager.createQuery(query) //
-                    .setParameter("realm", aRealm) //
-                    .executeUpdate();
+        String query = String.join("\n", //
+                "DELETE FROM " + User.class.getName(), //
+                "WHERE realm = :realm");
+
+        return entityManager.createQuery(query) //
+                .setParameter("realm", aRealm) //
+                .executeUpdate();
+    }
+
+    @Override
+    public User getCurationUser()
+    {
+        return new User(CURATION_USER);
+    }
+
+    @Override
+    @Transactional
+    public User getUserOrCurationUser(String aUsername)
+    {
+        Validate.notBlank(aUsername, "User must be specified");
+
+        if (CURATION_USER.equals(aUsername)) {
+            return getCurationUser();
         }
+
+        return get(aUsername);
     }
 
     @Override

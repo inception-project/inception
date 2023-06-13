@@ -20,9 +20,12 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeSpanSuggestionGroup;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -30,7 +33,6 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,13 +41,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -54,22 +57,20 @@ import jakarta.persistence.EntityManager;
 @ExtendWith(MockitoExtension.class)
 public class SpanSuggestionVisibilityCalculationTest
 {
-    private @Mock LearningRecordService recordService;
+    private static final String TEST_USER = "Testuser";
+
     private @Mock AnnotationSchemaService annoService;
 
     private Project project;
     private SourceDocument doc;
     private AnnotationLayer layer;
     private AnnotationFeature feature;
-    private String user;
 
     private RecommendationServiceImpl sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        user = "Testuser";
-
         layer = new AnnotationLayer();
         layer.setName(NamedEntity._TypeName);
         layer.setId(42l);
@@ -86,22 +87,23 @@ public class SpanSuggestionVisibilityCalculationTest
         featureList.add(new AnnotationFeature(NamedEntity._FeatName_value, TYPE_NAME_STRING));
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
-        sut = new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
-                recordService, (EntityManager) null);
+        sut = spy(new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
+                (EntityManager) null));
     }
 
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+        var cas = getTestCas();
+        var suggestions = makeSpanSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
-        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        var invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        var visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
@@ -119,15 +121,15 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void testCalculateVisibilityNoRecordsNotHidden() throws Exception
     {
-        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
-                new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
+        var cas = getTestCas();
+        var suggestions = makeSpanSuggestionGroup(doc, feature, new int[][] { { 1, 5, 10 } });
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
-        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        var invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        var visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isNotEmpty();
@@ -146,15 +148,15 @@ public class SpanSuggestionVisibilityCalculationTest
         rejectedRecord.setOffsetBegin(5);
         rejectedRecord.setOffsetEnd(10);
         records.add(rejectedRecord);
-        when(recordService.listRecords(user, layer)).thenReturn(records);
+        doReturn(records).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
-                new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
+        var cas = getTestCas();
+        var suggestions = makeSpanSuggestionGroup(doc, feature, new int[][] { { 1, 5, 10 } });
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
-        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        var invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        var visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isEmpty();
@@ -168,12 +170,13 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
 
-        CAS cas = getTestCas();
-        SuggestionDocumentGroup<SpanSuggestion> suggestions = makeSpanSuggestionGroup(doc, feature,
+        var cas = getTestCas();
+        var suggestions = makeSpanSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -184,29 +187,95 @@ public class SpanSuggestionVisibilityCalculationTest
 
         cas.select(NamedEntity.class).forEach(NamedEntity::removeFromIndexes);
 
-        sut.calculateSpanSuggestionVisibility(doc, cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("No suggestions are hidden as they no longer overlap with annotations") //
-                .containsExactly();
+                .isEmpty();
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("All suggestions are visible as they no longer overlap with annotations") //
                 .containsExactlyInAnyOrderElementsOf(
                         suggestions.stream().flatMap(g -> g.stream()).collect(toList()));
     }
 
+    @Test
+    public void thatOverlappingSuggestionsAreNotHiddenWhenStackingIsEnabled() throws Exception
+    {
+        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+
+        var cas = JCasFactory.createText("a b", "de");
+
+        var suggestion1 = SpanSuggestion.builder() //
+                .withId(1) //
+                .withDocumentName(doc.getName()) //
+                .withLayerId(layer.getId()) //
+                .withFeature(NamedEntity._FeatName_value) //
+                .withLabel("blah") //
+                .withPosition(new Offset(0, 1)) //
+                .build();
+        var suggestion2 = SpanSuggestion.builder() //
+                .withId(2) //
+                .withDocumentName(doc.getName()) //
+                .withLayerId(layer.getId()) //
+                .withFeature(NamedEntity._FeatName_value) //
+                .withLabel("blah") //
+                .withPosition(new Offset(1, 2)) //
+                .build();
+        var suggestions = new SuggestionDocumentGroup<>(asList(suggestion1, suggestion2));
+
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+                suggestions, 0, 2);
+
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("No suggestions are hidden as they do not overlap with annotations") //
+                .containsExactly();
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("All suggestions are visible as they do not overlap with annotations") //
+                .containsExactlyInAnyOrderElementsOf(
+                        suggestions.stream().flatMap(g -> g.stream()).collect(toList()));
+
+        var ne1 = new NamedEntity(cas, 0, 1);
+        ne1.addToIndexes();
+
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("First suggestion is still visible because as its label does not match the "
+                        + "label of the annotation at the same position") //
+                .isEmpty();
+
+        ne1.setValue("blah");
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+                suggestions, 0, 2);
+
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("First suggestion is no longer visible because annotation with the same label exists") //
+                .containsExactly(suggestion1);
+
+        var ne2 = new NamedEntity(cas, 1, 2);
+        ne2.setValue("blah");
+        ne2.addToIndexes();
+        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+                suggestions, 0, 2);
+
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("Second suggestion is noew also no longer visible because annotation with the same label exists") //
+                .containsExactly(suggestion1, suggestion2);
+    }
+
     private CAS getTestCas() throws Exception
     {
-        String documentText = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen"
+        var documentText = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen"
                 + " Testtexten.";
-        JCas jcas = JCasFactory.createText(documentText, "de");
+        var jcas = JCasFactory.createText(documentText, "de");
 
-        NamedEntity neLabel = new NamedEntity(jcas, 0, 3);
+        var neLabel = new NamedEntity(jcas, 0, 3);
         neLabel.setValue("LOC");
         neLabel.addToIndexes();
 
         // the annotation's feature value is initialized as null
-        NamedEntity neNoLabel = new NamedEntity(jcas, 13, 20);
+        var neNoLabel = new NamedEntity(jcas, 13, 20);
         neNoLabel.addToIndexes();
 
         return jcas.getCas();

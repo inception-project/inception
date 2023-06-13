@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.config.PubAnnotationDocumentRepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraitsEditor;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 
 /**
  * Support for PubAnnotation.
@@ -49,7 +50,14 @@ public class PubAnnotationProviderFactory
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private final EntrezClient entrezClient;
+
     private String beanName;
+
+    public PubAnnotationProviderFactory(EntrezClient aEntrezClient)
+    {
+        entrezClient = aEntrezClient;
+    }
 
     @Override
     public void setBeanName(String aName)
@@ -72,7 +80,7 @@ public class PubAnnotationProviderFactory
     @Override
     public ExternalSearchProvider<PubAnnotationProviderTraits> getNewExternalSearchProvider()
     {
-        return new PubAnnotationProvider();
+        return new PubAnnotationProvider(entrezClient);
     }
 
     @Override

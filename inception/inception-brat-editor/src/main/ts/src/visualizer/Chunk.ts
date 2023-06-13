@@ -59,7 +59,7 @@ export class Chunk {
   to: number
   space: string
   fragments: Fragment[] = []
-  lastSpace: number[]
+  lastSpace: string
   nextSpace: string
   sentence: number
   group: SVGTypeMapping<SVGGElement>

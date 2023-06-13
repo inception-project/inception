@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.editor.view;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
 public interface DocumentViewExtensionPoint
-    extends ExtensionPoint<AnnotationDocument, DocumentViewFactory>
+    extends ExtensionPoint<SourceDocument, DocumentViewFactory>
 {
 
 }

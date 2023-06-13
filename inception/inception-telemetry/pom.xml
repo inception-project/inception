@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>27.0-SNAPSHOT</version>
+    <version>29.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-telemetry</artifactId>
   <name>INCEpTION - Telemetry</name>
@@ -108,6 +108,10 @@
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <dependency>

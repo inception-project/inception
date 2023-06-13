@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.preferences;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -318,6 +320,13 @@ public class PreferencesServiceImpl
     {
         try {
             return aClass.getConstructor().newInstance();
+        }
+        catch (NoSuchMethodException e) {
+            if (Map.class.isAssignableFrom(aClass)) {
+                return (T) new LinkedHashMap();
+            }
+
+            return ExceptionUtils.rethrow(e);
         }
         catch (Exception e) {
             return ExceptionUtils.rethrow(e);

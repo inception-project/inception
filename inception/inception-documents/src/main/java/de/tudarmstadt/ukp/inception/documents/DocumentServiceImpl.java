@@ -70,7 +70,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1214,9 +1213,9 @@ public class DocumentServiceImpl
     public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
             User aUser)
     {
-        Map<SourceDocument, AnnotationDocument> map = listAllDocuments(aProject, aUser);
+        var map = listAllDocuments(aProject, aUser.getUsername());
 
-        Iterator<Entry<SourceDocument, AnnotationDocument>> i = map.entrySet().iterator();
+        var i = map.entrySet().iterator();
         while (i.hasNext()) {
             Entry<SourceDocument, AnnotationDocument> e = i.next();
             if (e.getValue() != null && IGNORE == e.getValue().getState()) {
@@ -1229,7 +1228,7 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser)
+    public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser)
     {
         // First get the source documents
         var sourceDocsQuery = "FROM SourceDocument WHERE project = (:project)";
@@ -1242,8 +1241,7 @@ public class DocumentServiceImpl
         // documents which are IGNOREed for given users.
         var annDocsQuery = "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)";
         List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(annDocsQuery, AnnotationDocument.class)
-                .setParameter("username", aUser.getUsername()) //
+                .createQuery(annDocsQuery, AnnotationDocument.class).setParameter("username", aUser) //
                 .setParameter("project", aProject) //
                 .getResultList();
 

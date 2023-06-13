@@ -67,17 +67,27 @@ public class LoadingSplashScreen
             return Optional.empty();
         }
 
-        SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl, aApplicationName);
-        window.setVisible(true);
+        try {
+            SplashWindow window = new SplashWindow(aSplashScreenImageUrl, aIconUrl,
+                    aApplicationName);
+            window.setVisible(true);
 
-        return Optional.of(window);
+            return Optional.of(window);
+        }
+        catch (UnsatisfiedLinkError e) {
+            return Optional.empty();
+        }
     }
 
     public static Optional<SplashWindow> setupScreen(String aApplicationName)
     {
-        URL splasHScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
+        URL splashScreenImageUrl = LoadingSplashScreen.class.getResource("/splash.png");
         URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
-        return setupScreen(splasHScreenImageUrl, iconUrl, aApplicationName);
+        if (splashScreenImageUrl == null || iconUrl == null) {
+            LOG.error("Unable to locate splash screen and icon resources");
+            return Optional.empty();
+        }
+        return setupScreen(splashScreenImageUrl, iconUrl, aApplicationName);
     }
 
     public static class SplashWindow

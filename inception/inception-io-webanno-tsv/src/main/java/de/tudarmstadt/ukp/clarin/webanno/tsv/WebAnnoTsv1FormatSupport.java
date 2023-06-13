@@ -24,6 +24,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.config.WebAnnoFormatsAutoConfiguration;
 
 /**
@@ -63,7 +64,8 @@ public class WebAnnoTsv1FormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(WebannoTsv1Reader.class, aTSD);

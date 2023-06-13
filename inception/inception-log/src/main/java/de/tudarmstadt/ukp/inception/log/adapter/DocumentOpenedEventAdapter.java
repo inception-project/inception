@@ -47,12 +47,12 @@ public class DocumentOpenedEventAdapter
     @Override
     public String getUser(DocumentOpenedEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getSessionOwner();
     }
 
     @Override
     public String getAnnotator(DocumentOpenedEvent aEvent)
     {
-        return aEvent.getAnnotator();
+        return aEvent.getDocumentOwner();
     }
 }

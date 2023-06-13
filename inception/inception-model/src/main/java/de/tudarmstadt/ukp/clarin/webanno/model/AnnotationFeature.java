@@ -133,6 +133,9 @@ public class AnnotationFeature
 
     private boolean curatable = true;
 
+    @Column(nullable = false)
+    private int rank;
+
     public AnnotationFeature()
     {
         // Nothing to do
@@ -202,6 +205,7 @@ public class AnnotationFeature
         this.linkTypeTargetFeatureName = builder.linkTypeTargetFeatureName;
         this.traits = builder.traits;
         this.curatable = builder.curatable;
+        this.rank = builder.rank;
     }
 
     public Long getId()
@@ -560,6 +564,16 @@ public class AnnotationFeature
         curatable = aCuratable;
     }
 
+    public int getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(int aRank)
+    {
+        rank = aRank;
+    }
+
     @Override
     public String toString()
     {
@@ -655,6 +669,7 @@ public class AnnotationFeature
         private String linkTypeTargetFeatureName;
         private String traits;
         private boolean curatable = true;
+        private int rank = 0;
 
         private Builder()
         {
@@ -805,6 +820,12 @@ public class AnnotationFeature
         public Builder withCuratable(boolean curatable)
         {
             this.curatable = curatable;
+            return this;
+        }
+
+        public Builder withRank(int aRank)
+        {
+            this.rank = aRank;
             return this;
         }
 

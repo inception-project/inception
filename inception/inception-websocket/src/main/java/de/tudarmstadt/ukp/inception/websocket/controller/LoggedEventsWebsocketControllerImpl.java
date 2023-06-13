@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -38,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import jakarta.persistence.NoResultException;
 
 @Controller
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.logged-events.enabled:false}")
@@ -99,7 +101,7 @@ public class LoggedEventsWebsocketControllerImpl
         return eventRepo.listRecentActivity(aUsername, aMaxEvents).stream()
                 .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
                         event.getCreated(), event.getEvent(), event.getDocument()))
-                .collect(toList());
+                .filter(Objects::nonNull).collect(toList());
     }
 
     private LoggedEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
@@ -109,10 +111,16 @@ public class LoggedEventsWebsocketControllerImpl
         String docName = null;
 
         if (aProjectId > -1) {
-            projectName = projectService.getProject(aProjectId).getName();
+            try {
+                projectName = projectService.getProject(aProjectId).getName();
 
-            if (aDocId > -1) {
-                docName = docService.getSourceDocument(aProjectId, aDocId).getName();
+                if (aDocId > -1) {
+                    docName = docService.getSourceDocument(aProjectId, aDocId).getName();
+                }
+            }
+            catch (NoResultException e) {
+                // This may happen if the document or project have meanwhile been deleted
+                return null;
             }
         }
 

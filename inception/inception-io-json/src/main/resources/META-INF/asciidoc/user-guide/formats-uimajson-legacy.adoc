@@ -18,11 +18,10 @@
 = UIMA CAS JSON (legacy)
 
 ====
-CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.json-cas-legacy.enabled=true` to the `settings.properties` file. 
+CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `format.json-cas-legacy.enabled=true` to the `settings.properties` file. 
 
 Support for this feature will be removed in a future version. The replacement is <<sect_formats_uimajson>>.
 ====
-
 
 This is an old and deprecated UIMA CAS JSON format which can be exported but not imported.
 It should no longer be used. Instead, one should turn to <<sect_formats_uimajson>>.
@@ -30,6 +29,10 @@ It should no longer be used. Instead, one should turn to <<sect_formats_uimajson
 The format does support custom layers.
 
 For more details on this format, please refer to the link:https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.json[UIMA Reference Guide].
+
+By default, the format writes all values to the JSON output, even if the values are the default values
+in JSON (e.g. `0` for numbers or `false` for booleans). You can configure this behavior by setting
+`format.json-cas-legacy.omit-default-values` to `true` or `false` (default) respectively.
 
 [cols="2,1,1,1,3"]
 |====
@@ -41,4 +44,3 @@ For more details on this format, please refer to the link:https://uima.apache.or
 | yes
 | UIMA CAS JSON (legacy)
 |====
-

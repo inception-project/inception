@@ -186,7 +186,16 @@ public class DashboardMenu
         menulink.add(AttributeAppender.append("class",
                 () -> getPage().getClass().equals(pageClass) ? "active" : ""));
         if (item.shortcut() != null && item.shortcut().length > 0) {
-            menulink.add(new InputBehavior(item.shortcut(), EventType.click));
+            menulink.add(new InputBehavior(item.shortcut(), EventType.click)
+            {
+                private static final long serialVersionUID = -3230776977218522942L;
+
+                @Override
+                protected Boolean getDisable_in_input()
+                {
+                    return true;
+                };
+            });
             menulink.add(AttributeModifier.append("title",
                     "[" + Stream.of(item.shortcut()).map(Object::toString).collect(joining(" + "))
                             + "]"));

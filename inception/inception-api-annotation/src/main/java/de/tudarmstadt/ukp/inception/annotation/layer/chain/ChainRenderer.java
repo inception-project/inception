@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
@@ -164,11 +163,11 @@ public class ChainRenderer
                         continue;
                     }
 
-                    String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
+                    String label = getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, range.get(), colorIndex,
-                            bratLabelText);
+                            label);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
 
@@ -178,21 +177,20 @@ public class ChainRenderer
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
                 // and last link are within the window ;)
                 if (prevLinkFs != null) {
-                    String bratLabelText = null;
+                    String label;
 
                     if (typeAdapter.isLinkedListBehavior() && arcLabelFeature != null) {
                         // Render arc label
-                        bratLabelText = getUiLabelText(typeAdapter, prevLinkFs,
-                                asList(arcLabelFeature));
+                        label = getUiLabelText(typeAdapter, prevLinkFs, asList(arcLabelFeature));
                     }
                     else {
                         // Render only chain type
-                        bratLabelText = getUiLabelText(typeAdapter, prevLinkFs, emptyList());
+                        label = getUiLabelText(typeAdapter, prevLinkFs, emptyList());
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
                             new VID(prevLinkFs, 1, VID.NONE, VID.NONE), prevLinkFs, linkFs,
-                            colorIndex, bratLabelText));
+                            colorIndex, label));
                 }
 
                 // Render errors if required features are missing

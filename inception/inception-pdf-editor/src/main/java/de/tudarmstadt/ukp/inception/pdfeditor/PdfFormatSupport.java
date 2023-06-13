@@ -25,6 +25,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.pdf.PdfReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
 /**
@@ -62,7 +63,8 @@ public class PdfFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(PdfReader.class, aTSD);

@@ -264,6 +264,66 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  loadPreferences (key: string): Promise<any> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'loadPreferences',
+      token,
+      key
+    }
+
+    return new Promise((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          const result = DiamAjaxImpl.clearResult(token)
+          if (result === undefined) {
+            reject(new Error('Server did not place result into transport buffer'))
+            return
+          }
+
+          resolve(result)
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to load preferences'))
+        }]
+      })
+    })
+  }
+
+  savePreferences (key: string, data: Record<string, any>): Promise<void> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'savePreferences',
+      token,
+      key,
+      data: JSON.stringify(data)
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          DiamAjaxImpl.clearResult(token)
+          resolve()
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to save preferences'))
+        }]
+      })
+    })
+  }
+
   openContextMenu (id: VID, evt: MouseEvent): void {
     let clientX = evt.clientX
     let clientY = evt.clientY

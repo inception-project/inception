@@ -27,11 +27,32 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
     if (element instanceof HTMLIFrameElement) {
       const iframe = element as HTMLIFrameElement
+      let loadingIndicator : HTMLDivElement | undefined
 
       // Hiding editor because loading the editor resources and in particular CSS files for large
       // documents can take a while. This might cause the browser to render the document first
       // without CSS and then re-render with CSS - which causes an undesired "flickering"
-      iframe.style.visibility = 'hidden'
+      if (!props.loadingIndicatorDisabled) {
+        iframe.style.display = 'none'
+        loadingIndicator = document.createElement('div')
+        loadingIndicator.classList.add('flex-content')
+        loadingIndicator.style.display = 'flex'
+        loadingIndicator.style.justifyContent = 'center'
+        loadingIndicator.style.alignItems = 'center'
+
+        const spinner = document.createElement('div')
+        spinner.classList.add('spinner-border')
+        spinner.classList.add('text-muted')
+        spinner.setAttribute('role', 'status')
+
+        const spinnerText = document.createElement('span')
+        spinnerText.classList.add('sr-only')
+        spinnerText.innerText = 'Loading...'
+        spinner.appendChild(spinnerText)
+        loadingIndicator.appendChild(spinner)
+
+        iframe.before(loadingIndicator)
+      }
 
       element[PROP_EDITOR] = await this.loadIFrameContent(iframe)
         .then(win => this.loadEditorResources(win, props))
@@ -47,7 +68,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         })
 
       // Restoring visibility
-      iframe.style.visibility = 'visible'
+      if (!props.loadingIndicatorDisabled) {
+        loadingIndicator?.remove()
+        iframe.style.display = ''
+      }
 
       return element[PROP_EDITOR]
     }

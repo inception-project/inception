@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TY
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
@@ -28,6 +29,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -49,7 +52,6 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
@@ -58,7 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -102,7 +104,7 @@ public class LayerDetailForm
     private FeatureDetailForm featureDetailForm;
 
     private WebMarkupContainer traitsContainer;
-    private final ChallengeResponseDialog confirmationDialog;
+    private ModalDialog confirmationDialog;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
@@ -191,20 +193,20 @@ public class LayerDetailForm
         // Behaviors of layers
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
-        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerJson));
-        add(new AjaxDownloadLink("exportLayersAsUima", this::exportUimaTypeSystem));
+        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerAsJson));
+        add(new AjaxDownloadLink("exportLayersAsUima", this::exportAllLayersAsUimaXml));
+        add(new AjaxDownloadLink("exportFullTypeSystemAsUima",
+                this::exportFullTypeSystemAsUimaXml));
 
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<AnnotationLayer>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete).add(enabledWhen(
-                () -> !isNull(getModelObject().getId()) && isLayerDeletable(getModelObject()))));
+        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete) //
+                .add(enabledWhen(() -> !isNull(getModelObject().getId()))));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
 
-        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new ResourceModel("DeleteLayerDialog.title"));
-        add(confirmationDialog);
+        queue(confirmationDialog = new BootstrapModalDialog("confirmationDialog").trapFocus());
     }
 
     private String getEffectiveAttachTypeName()
@@ -298,26 +300,24 @@ public class LayerDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog.setMessageModel(new ResourceModel("DeleteLayerDialog.text"));
-        confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationLayer::getName));
+        var dialogContent = new DeleteLayerConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                getModel());
 
-        confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeLayer(getModelObject());
+        dialogContent.setConfirmAction((_target) -> actionDeleteLayerConfirmed(_target));
 
-            Project project = getModelObject().getProject();
+        confirmationDialog.open(dialogContent, aTarget);
+    }
 
-            setModelObject(null);
-
-            documentService.upgradeAllAnnotationDocuments(project);
-
-            // Trigger LayerConfigurationChangedEvent
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
-
-            _target.add(getPage());
-        });
-
-        confirmationDialog.show(aTarget);
+    private void actionDeleteLayerConfirmed(AjaxRequestTarget _target) throws IOException
+    {
+        annotationService.removeLayer(getModelObject());
+        Project project = getModelObject().getProject();
+        setModelObject(null);
+        documentService.upgradeAllAnnotationDocuments(project);
+        // Trigger LayerConfigurationChangedEvent
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, project));
+        _target.add(getPage());
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
@@ -394,13 +394,14 @@ public class LayerDetailForm
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private IResourceStream exportUimaTypeSystem()
+    private IResourceStream exportFullTypeSystemAsUimaXml()
     {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
+            var tsd = annotationService.getFullProjectTypeSystem(getModelObject().getProject(),
+                    false);
             tsd.toXML(bos);
             return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
-                    "typesystem.xml");
+                    "full-typesystem.xml");
         }
         catch (Exception e) {
             WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
@@ -408,12 +409,26 @@ public class LayerDetailForm
         }
     }
 
-    private IResourceStream exportLayerJson()
+    private IResourceStream exportAllLayersAsUimaXml()
+    {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
+            tsd.toXML(bos);
+            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
+                    "layers-typesystem.xml");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
+            return null;
+        }
+    }
+
+    private IResourceStream exportLayerAsJson()
     {
         try {
             String json = LayerImportExportUtils.exportLayerToJson(annotationService,
                     getModelObject());
-            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")),
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
                     "layer.json");
         }
         catch (Exception e) {
