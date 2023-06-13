@@ -210,7 +210,7 @@ public class DocumentImportExportServiceImpl
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
                 null);
@@ -220,7 +220,7 @@ public class DocumentImportExportServiceImpl
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
     }
@@ -230,7 +230,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
                 aStripExtension, aBulkOperationContext);
@@ -241,7 +241,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
@@ -309,7 +309,7 @@ public class DocumentImportExportServiceImpl
 
         // Prepare a CAS with the project type system
         CAS cas = WebAnnoCasUtil.createCas(tsd);
-        format.read(WebAnnoCasUtil.getRealCas(cas), aFile);
+        format.read(aDocument.getProject(), WebAnnoCasUtil.getRealCas(cas), aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences

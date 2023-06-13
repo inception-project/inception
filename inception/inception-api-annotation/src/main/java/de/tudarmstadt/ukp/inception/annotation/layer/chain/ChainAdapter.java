@@ -105,7 +105,7 @@ public class ChainAdapter
 
         AnnotationFS newSpan = createChainElementAnnotation(request);
 
-        publishEvent(new ChainSpanCreatedEvent(this, aRequest.getDocument(),
+        publishEvent(() -> new ChainSpanCreatedEvent(this, aRequest.getDocument(),
                 aRequest.getDocumentOwner(), getLayer(), newSpan));
 
         return newSpan;
@@ -217,8 +217,8 @@ public class ChainAdapter
         }
 
         AnnotationFS nextLink = getNextLink(aOriginFs);
-        publishEvent(new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(), aOriginFs,
-                nextLink));
+        publishEvent(() -> new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(),
+                aOriginFs, nextLink));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
         return ICasUtil.getAddr(aOriginFs);
@@ -247,8 +247,8 @@ public class ChainAdapter
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
 
-        publishEvent(new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete,
-                nextLink));
+        publishEvent(() -> new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(),
+                linkToDelete, nextLink));
     }
 
     private void deleteSpan(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)
@@ -325,8 +325,8 @@ public class ChainAdapter
                     "Unexpected situation while removing link. Please contact developers.");
         }
 
-        publishEvent(
-                new ChainSpanDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
+        publishEvent(() -> new ChainSpanDeletedEvent(this, aDocument, aUsername, getLayer(),
+                linkToDelete));
     }
 
     @Override

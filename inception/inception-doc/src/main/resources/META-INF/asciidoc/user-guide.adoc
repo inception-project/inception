@@ -189,6 +189,8 @@ include::{include-dir}external-search-repos-solr.adoc[leveloffset=+3]
 
 include::{include-dir}external-search-repos-pubannotation.adoc[leveloffset=+3]
 
+include::{include-dir}external-search-repos-pmc.adoc[leveloffset=+3]
+
 <<<
 
 include::{include-dir}constraints.adoc[leveloffset=+1]
@@ -238,6 +240,11 @@ data in a particular format. The **feature flag** column shows which flags you c
 .Formats overview
 |====
 | Format | Remote API format ID | Feature flag
+
+| <<sect_formats_bioc>>
+| `bioc`
+| `format.bioc.enabled`
+
 
 | <<sect_formats_conll2000>>
 | `conll2000`
@@ -360,6 +367,8 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `format.generic-xml.enabled`
 |====
 
+
+include::{include-dir}formats-bioc.adoc[leveloffset=+2]
 
 include::{include-dir}formats-conll2000.adoc[leveloffset=+2]
 

@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
@@ -356,8 +357,9 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
+        var label = defaultIfBlank(aQuery, null);
         var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
-                aQuery);
+                label);
 
         List<VLazyDetailResult> details = new ArrayList<>();
         for (AnnotationSuggestion ao : sortedByScore) {

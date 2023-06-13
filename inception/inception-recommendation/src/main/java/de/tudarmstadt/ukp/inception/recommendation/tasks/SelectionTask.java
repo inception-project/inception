@@ -110,11 +110,11 @@ public class SelectionTask
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            Project project = getProject();
-            User sessionOwner = getUser().orElseThrow();
+            var sessionOwner = getUser().orElseThrow();
             String sessionOwnerName = sessionOwner.getUsername();
-
-            logEvaluationStarted(sessionOwner);
+            var startTime = System.currentTimeMillis();
+            Project project = getProject();
+            logSelectionStarted(sessionOwner);
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -192,8 +192,17 @@ public class SelectionTask
                 return;
             }
 
+            logSelectionComplete(startTime, sessionOwnerName);
+
             scheduleTrainingTask(sessionOwner);
         }
+    }
+
+    private void logSelectionComplete(long startTime, String username)
+    {
+        var duration = currentTimeMillis() - startTime;
+        log.debug("[{}][{}]: Selection complete ({} ms)", getId(), username, duration);
+        info("Selection complete (%d ms).", duration);
     }
 
     private void logRecommenderGone(User user, Recommender aRecommender)
@@ -202,9 +211,11 @@ public class SelectionTask
                 user.getUsername(), aRecommender.getName());
     }
 
-    private void logEvaluationStarted(User sessionOwner)
+    private void logSelectionStarted(User sessionOwner)
     {
-        log.info("[{}]: Evaluation started", sessionOwner.getUsername());
+        log.info("[{}]: Starting selection triggered by [{}]", sessionOwner.getUsername(),
+                getTrigger());
+        info("Starting selection triggered by [%s]", getTrigger());
     }
 
     private void scheduleTrainingTask(User sessionOwner)

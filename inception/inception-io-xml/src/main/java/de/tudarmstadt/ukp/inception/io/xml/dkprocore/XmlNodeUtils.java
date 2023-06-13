@@ -257,6 +257,16 @@ public class XmlNodeUtils
         return result;
     }
 
+    public static Optional<XmlElement> firstChild(XmlElement aElement, String aQName)
+    {
+        if (aElement.getChildren() == null) {
+            return Optional.empty();
+        }
+
+        return aElement.getChildren().select(XmlElement.class)
+                .filter(e -> aQName.equals(e.getQName())).findFirst();
+    }
+
     public static List<String> rootPath(XmlElement aElement)
     {
         var path = new ArrayList<String>();

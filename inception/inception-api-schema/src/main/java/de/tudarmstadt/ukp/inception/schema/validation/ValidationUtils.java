@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.schema.validation;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.uima.cas.CAS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 
@@ -28,8 +29,15 @@ public class ValidationUtils
 {
     public static boolean isRequiredFeatureMissing(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        return aFeature.isRequired() && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                && StringUtils.isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
-    }
+        if (!aFeature.isRequired()) {
+            return false;
+        }
 
+        if (TYPE_NAME_STRING.equals(aFeature.getType())) {
+            // Only string features can have null values and be required
+            return isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        }
+
+        return false;
+    }
 }

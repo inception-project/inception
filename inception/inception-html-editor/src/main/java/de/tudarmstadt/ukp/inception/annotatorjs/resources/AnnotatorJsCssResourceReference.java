@@ -15,27 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.docview;
+package de.tudarmstadt.ukp.inception.annotatorjs.resources;
 
-import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_VIEW_URL;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-import java.security.Principal;
-
-import org.springframework.http.ResponseEntity;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
-
-/**
- * @deprecated Use {@link XHtmlXmlDocumentIFrameViewFactory} instead
- */
-@Deprecated
-public interface HtmlDocumentViewController
+public class AnnotatorJsCssResourceReference
+    extends CssResourceReference
 {
-    String BASE_URL = BASE_VIEW_URL + "/html";
+    private static final long serialVersionUID = 1L;
 
-    String getDocumentUrl(SourceDocument aDoc);
+    private static final AnnotatorJsCssResourceReference INSTANCE = new AnnotatorJsCssResourceReference();
 
-    ResponseEntity<String> getDocument(long aProjectId, long aDocumentId, Principal aPrincipal)
-        throws Exception;
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static AnnotatorJsCssResourceReference get()
+    {
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private AnnotatorJsCssResourceReference()
+    {
+        super(AnnotatorJsCssResourceReference.class, "AnnotatorJsEditor.min.css");
+    }
 }

@@ -17,13 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.preferences.config;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
+import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesServiceImpl;
 import de.tudarmstadt.ukp.inception.preferences.exporter.DefaultProjectPreferencesExporter;
@@ -52,5 +58,12 @@ public class PreferencesServiceAutoConfig
             PreferencesService aPreferencesService, UserDao aUserRepository)
     {
         return new UserProjectPreferencesExporter(aPreferencesService, aUserRepository);
+    }
+
+    @Bean
+    public ClientSiderUserPreferencesProviderRegistry clientSiderUserPreferencesProviderRegistry(
+            @Lazy @Autowired(required = false) List<ClientSideUserPreferencesProvider> aExtensions)
+    {
+        return new ClientSiderUserPreferencesProviderRegistry(aExtensions);
     }
 }

@@ -49,9 +49,10 @@ public class RecogitoHtmlAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override

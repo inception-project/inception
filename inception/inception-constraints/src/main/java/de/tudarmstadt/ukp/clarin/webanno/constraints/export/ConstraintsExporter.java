@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.export;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -52,7 +53,7 @@ public class ConstraintsExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException
     {
         File constraintsDir = new File(aStage + CONSTRAINTS);
         FileUtils.forceMkdir(constraintsDir);

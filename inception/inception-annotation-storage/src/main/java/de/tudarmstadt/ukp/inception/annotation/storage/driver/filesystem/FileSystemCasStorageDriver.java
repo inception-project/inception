@@ -463,7 +463,8 @@ public class FileSystemCasStorageDriver
         }
 
         long diskLastModified = casFile.lastModified();
-        if (diskLastModified != aExpectedTimeStamp) {
+        if (Math.abs(diskLastModified - aExpectedTimeStamp) > casStorageProperties
+                .getFileSystemTimestampAccuracy().toMillis()) {
             StringBuilder lastWriteMsg = new StringBuilder();
             if (metadataCache != null) {
                 InternalMetadata meta = metadataCache.get(casFile);
@@ -485,7 +486,8 @@ public class FileSystemCasStorageDriver
                     + " (expected: " + formatTimestamp(aExpectedTimeStamp) + " actual on storage: "
                     + formatTimestamp(diskLastModified) + ", delta: "
                     + formatDurationHMS(Math.abs(diskLastModified - aExpectedTimeStamp)) + ")"
-                    + lastWriteMsg);
+                    + lastWriteMsg + ", accuracy: "
+                    + casStorageProperties.getFileSystemTimestampAccuracy().toMillis() + "ms");
 
         }
 

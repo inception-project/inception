@@ -88,7 +88,6 @@ public class LayerExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
 
@@ -186,6 +185,7 @@ public class LayerExporter
         exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
         exFeature.setTraits(feature.getTraits());
         exFeature.setCuratable(feature.isCuratable());
+        exFeature.setRank(feature.getRank());
 
         if (feature.getTagset() != null) {
             TagSet tagSet = feature.getTagset();
@@ -332,6 +332,7 @@ public class LayerExporter
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
         aFeature.setTraits(aExFeature.getTraits());
         aFeature.setCuratable(aExFeature.isCuratable());
+        aFeature.setRank(aExFeature.getRank());
 
         if (aExFeature.getTagSet() != null) {
             TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);

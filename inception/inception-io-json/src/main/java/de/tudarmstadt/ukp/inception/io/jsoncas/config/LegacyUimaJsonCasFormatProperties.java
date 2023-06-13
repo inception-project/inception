@@ -15,32 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources;
+package de.tudarmstadt.ukp.inception.io.jsoncas.config;
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-public class AnnotatorJsJavascriptResourceReference
-    extends JavaScriptResourceReference
+@ConfigurationProperties("format.json-cas-legacy")
+public class LegacyUimaJsonCasFormatProperties
 {
-    private static final long serialVersionUID = 1L;
+    private boolean omitDefaultValues = false;
 
-    private static final AnnotatorJsJavascriptResourceReference INSTANCE = new AnnotatorJsJavascriptResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static AnnotatorJsJavascriptResourceReference get()
+    public void setOmitDefaultValues(boolean aOmitDefaultValues)
     {
-        return INSTANCE;
+        omitDefaultValues = aOmitDefaultValues;
     }
 
-    /**
-     * Private constructor
-     */
-    private AnnotatorJsJavascriptResourceReference()
+    public boolean isOmitDefaultValues()
     {
-        super(AnnotatorJsJavascriptResourceReference.class, "AnnotatorJsEditor.min.js");
+        return omitDefaultValues;
     }
 }

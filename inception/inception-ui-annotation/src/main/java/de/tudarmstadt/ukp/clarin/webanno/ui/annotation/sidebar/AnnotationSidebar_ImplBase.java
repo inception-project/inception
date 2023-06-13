@@ -36,9 +36,9 @@ public abstract class AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 8637373389151630602L;
 
-    private AnnotationActionHandler actionHandler;
-    private CasProvider casProvider;
-    private AnnotationPage annotationPage;
+    private final AnnotationActionHandler actionHandler;
+    private final CasProvider casProvider;
+    private final AnnotationPage annotationPage;
     private @SpringBean DocumentService documentService;
 
     public AnnotationSidebar_ImplBase(final String aId, final IModel<AnnotatorState> aModel,
@@ -46,9 +46,9 @@ public abstract class AnnotationSidebar_ImplBase
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel);
+
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
-
         annotationPage = aAnnotationPage;
 
         // Allow AJAX updates.

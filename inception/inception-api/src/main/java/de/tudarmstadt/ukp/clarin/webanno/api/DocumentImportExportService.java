@@ -264,12 +264,12 @@ public interface DocumentImportExportService
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode, boolean stripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws UIMAException, IOException;
 
     File exportAnnotationDocument(SourceDocument aDocument, String aUser, FormatSupport aFormat,
             Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws UIMAException, IOException;
 
     /**
      * @return a type system with all the types that should be present in an exported CAS. This

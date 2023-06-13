@@ -61,9 +61,11 @@ public class MatrixWorkloadManagerAutoConfiguration
     @Bean
     public MatrixWorkflowDocumentNavigationActionBarExtension matrixWorkflowDocumentNavigationActionBarExtension(
             DocumentService aDocumentService, WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService)
+            MatrixWorkloadExtension aMatrixWorkloadExtension, ProjectService aProjectService,
+            UserDao aUserService)
     {
         return new MatrixWorkflowDocumentNavigationActionBarExtension(aDocumentService,
-                aWorkloadManagementService, aMatrixWorkloadExtension, aProjectService);
+                aWorkloadManagementService, aMatrixWorkloadExtension, aProjectService,
+                aUserService);
     }
 }

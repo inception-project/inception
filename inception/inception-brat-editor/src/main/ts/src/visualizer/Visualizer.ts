@@ -59,7 +59,7 @@ import '@svgdotjs/svg.filter.js'
 import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { Offsets, VID } from '@inception-project/inception-js-api'
+import { Offsets } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
@@ -133,18 +133,17 @@ export class Visualizer {
   private baseCanvasWidth = 0
   private canvasWidth = 0
 
-  readonly data?: DocumentData
+  data?: DocumentData
   private sourceData?: SourceData
   private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
 
-  private args: Record<MarkerType, MarkerDto> = {}
+  private args: Partial<Record<MarkerType, MarkerDto>> = {}
 
   private selectionInProgress = false
   private dataChangedButNotRendered = false
   private isRenderRequested = false
   private drawing = false
   private redraw = false
-  private arcDragOrigin // Seems this field is declared and checked in this file but never set!
 
   private entityTypes: Record<string, EntityTypeDto> = {}
   private relationTypes: Record<string, RelationTypeDto> = {}
@@ -155,7 +154,6 @@ export class Visualizer {
   private markedText: Array<MarkedText> = []
   private highlight: Array<Rect> = []
   private highlightArcs?: SVGJSElement[]
-  private highlightSpans?: SVGJSElement[]
 
   // OPTIONS
   private collapseArcs = false
@@ -526,7 +524,7 @@ export class Visualizer {
   }
 
   applyNormalizations (normalizations: Array<NormalizationDto>) {
-    if (!normalizations) {
+    if (!normalizations || !this.data) {
       return
     }
 
@@ -596,7 +594,7 @@ export class Visualizer {
    * @deprecated Triggers are not used by INCEptION
    */
   buildSpansFromTriggers (triggers: Array<TriggerDto>): Record<string, [Entity, Array<EventDesc>]> {
-    if (!triggers) {
+    if (!triggers || !this.data) {
       return {}
     }
 
@@ -847,9 +845,9 @@ export class Visualizer {
     let chunkNo = 0
     let space: string
     let chunk: Chunk
-    const chunks = []
+    const chunks : Chunk[] = []
 
-    tokenOffsets.map(offset => {
+    tokenOffsets.forEach(offset => {
       const from = offset[0]
       const to = offset[1]
       if (firstFrom === null) {
@@ -1559,7 +1557,7 @@ export class Visualizer {
 
     const arcTexts = {}
     if (arcs) {
-      arcs.map(arc => {
+      arcs.forEach(arc => {
         let labels = Util.getArcLabels(this.entityTypes, spans[arc.origin].type, arc.type, this.relationTypes)
         if (!labels.length) {
           labels = [arc.type]
@@ -1569,7 +1567,7 @@ export class Visualizer {
           labels = [eventDescs[arc.eventDescId].labelText]
         }
 
-        labels.map(label => arcTexts[label] = true)
+        labels.forEach(label => { arcTexts[label] = true })
       })
     }
 
@@ -1581,10 +1579,10 @@ export class Visualizer {
    */
   private adjustTowerAnnotationSizes (docData: DocumentData) {
     const fragmentWidths = docData.sizes.fragments.widths
-    Object.values(docData.towers).map(tower => {
+    Object.values(docData.towers).forEach(tower => {
       let maxWidth = 0
-      tower.map(fragment => maxWidth = Math.max(maxWidth, fragmentWidths[fragment.glyphedLabelText]))
-      tower.map(fragment => fragment.width = maxWidth)
+      tower.forEach(fragment => { maxWidth = Math.max(maxWidth, fragmentWidths[fragment.glyphedLabelText]) })
+      tower.forEach(fragment => { fragment.width = maxWidth })
     })
   }
 
@@ -1799,7 +1797,7 @@ export class Visualizer {
     const textMarkedRows: Array<MarkedRow> = []
     let rowIndex = 0
 
-    chunks.map((chunk: Chunk) => {
+    chunks.forEach((chunk: Chunk) => {
       let spaceWidth = 0
       if (chunk.lastSpace) {
         const spaceLen = chunk.lastSpace.length || 0
@@ -1833,7 +1831,7 @@ export class Visualizer {
       let spacingChunkId: number
       let spacingRowBreak = 0
 
-      chunk.fragments.map(fragment => {
+      chunk.fragments.forEach(fragment => {
         const span = fragment.span
 
         if (span.hidden) {
@@ -2310,7 +2308,7 @@ export class Visualizer {
 
       // chunk backgrounds
       if (chunk.fragments.length) {
-        const orderedIdx = []
+        const orderedIdx : number[] = []
         for (let i = chunk.fragments.length - 1; i >= 0; i--) {
           orderedIdx.push(i)
         }
@@ -3549,6 +3547,9 @@ export class Visualizer {
     const target = $(evt.target)
     const id = target.attr('data-span-id')
     const span = this.data.spans[id]
+
+    if (span.hidden) { return }
+
     this.dispatcher.post('displaySpanComment', [
       evt, target, id, span.type, span.attributeText,
       span.text,
@@ -3562,14 +3563,7 @@ export class Visualizer {
       this.dispatcher.post('displaySpanButtons', [evt, target])
     }
 
-    if (span.hidden) { return }
-
     this.renderHighlightBoxes(span)
-
-    if (this.arcDragOrigin) {
-      target.parent().addClass('highlight')
-      return
-    }
 
     const equivs: Record<string, boolean> = {}
     const spans: Record<string, boolean> = {}
@@ -3605,7 +3599,7 @@ export class Visualizer {
 
     const spanIds = Object.keys(spans).map(spanId => `[data-span-id="${spanId}"]`)
     if (spanIds.length) {
-      this.highlightSpans = this.svg
+      this.svg
         .find(spanIds.join(', '))
         .map(e => {
           e.parent()?.addClass('highlight')
@@ -3615,6 +3609,8 @@ export class Visualizer {
   }
 
   private renderHighlightBoxes (span: Entity) {
+    if (span.hidden) return
+
     const spanDesc = this.entityTypes[span.type]
     const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff')
 
@@ -3625,6 +3621,8 @@ export class Visualizer {
   }
 
   private renderHighlightBox (fragment: Fragment, bgColor: string) {
+    if (!fragment.highlightPos) return
+
     const highlightBox = this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
       .translate(fragment.highlightPos.x, fragment.highlightPos.y)
       .fill(bgColor)
@@ -3653,7 +3651,7 @@ export class Visualizer {
     /** @type {string} */ const arcEventDescId: string = target.attr('data-arc-ed')
     let commentText = ''
     let commentType = ''
-    let arcId
+    let arcId: string | undefined
 
     if (arcEventDescId) {
       const eventDesc = this.data.eventDescs[arcEventDescId]
@@ -3696,7 +3694,7 @@ export class Visualizer {
         .map(e => e.addClass('highlight'))
     }
 
-    this.highlightSpans = this.svg
+    this.svg
       .find(`[data-span-id="${originSpanId}"], [data-span-id="${targetSpanId}"]`)
       .map(e => {
         e.parent()?.addClass('highlight')
@@ -3725,7 +3723,7 @@ export class Visualizer {
       return
     }
 
-    if (!this.arcDragOrigin && target.getAttribute('data-arc-role')) {
+    if (target.getAttribute('data-arc-role')) {
       this.onMouseOverArc(evt)
       return
     }
@@ -3748,20 +3746,12 @@ export class Visualizer {
     }
 
     this.svg.node.querySelectorAll('.highlight').forEach(e => e.classList.remove('highlight'))
-    this.highlightSpans = undefined
     this.highlightArcs = undefined
 
     // if (this.highlightArcs) {
     //   for (const arc of this.highlightArcs) {
     //     arc.removeClass('highlight')
     //   }
-    // }
-
-    // if (this.highlightSpans) {
-    //   for (const arc of this.highlightSpans) {
-    //     arc.removeClass('highlight')
-    //   }
-    //   this.highlightSpans = undefined
     // }
   }
 
@@ -3777,7 +3767,7 @@ export class Visualizer {
     }
   }
 
-  setAbbrevs (_abbrevsOn) {
+  setAbbrevs (_abbrevsOn: boolean) {
     // TODO: this is a slightly weird place to tweak the configuration
     Configuration.abbrevsOn = _abbrevsOn
     this.dispatcher.post('configurationChanged')
@@ -3850,7 +3840,7 @@ export class Visualizer {
     $.each(responseTypes, (aTypeNo, aType) => {
       processed[aType.type] = aType
       // count the values; if only one, it's a boolean attribute
-      const values = []
+      const values: string[] = []
       for (const i in aType.values) {
         if (Object.prototype.hasOwnProperty.call(aType.values, i)) {
           values.push(i)
@@ -4030,12 +4020,14 @@ export class Visualizer {
   renderFragmentCrossOut (xx: number, yy: number, hh: number, fragment: Fragment) {
     const span = fragment.span
 
-    this.svg.path([['M', xx, yy - Configuration.visual.margin.y - span.floor],
+    this.svg.path([ //
+      ['M', xx, yy - Configuration.visual.margin.y - span.floor],
       ['L', xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(fragment.group)
 
-    this.svg.path([['M', xx + fragment.width, yy - Configuration.visual.margin.y - span.floor],
+    this.svg.path([ //
+      ['M', xx + fragment.width, yy - Configuration.visual.margin.y - span.floor],
       ['L', xx, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(fragment.group)

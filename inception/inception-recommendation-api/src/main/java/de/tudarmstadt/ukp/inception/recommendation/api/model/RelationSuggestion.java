@@ -140,6 +140,15 @@ public class RelationSuggestion
             return this;
         }
 
+        public Builder withRecommender(Recommender aRecommender)
+        {
+            this.recommenderId = aRecommender.getId();
+            this.recommenderName = aRecommender.getName();
+            this.feature = aRecommender.getFeature().getName();
+            this.layerId = aRecommender.getLayer().getId();
+            return this;
+        }
+
         public Builder withRecommenderId(long aRecommenderId)
         {
             this.recommenderId = aRecommenderId;

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opensearch.LegacyESVersion;
 import org.opensearch.common.settings.Settings;
+import org.opensearch.common.settings.Settings.Builder;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -52,7 +53,16 @@ public class OpenSearchProviderTest
     public void setup()
     {
         osRunner = new OpenSearchRunner();
-        osRunner.build(newConfigs());
+        osRunner.onBuild(new OpenSearchRunner.Builder()
+        {
+            @Override
+            public void build(int aIndex, Builder aBuilder)
+            {
+                // This should hopefully allow running tests on machines with less than the 
+                // default 90% high watermark disk space free (e.g on a 1TB drive less than 100 GB).
+                aBuilder.put("cluster.routing.allocation.disk.threshold_enabled", false);
+            }
+        }).build(newConfigs());
 
         var port = osRunner.client().settings().get("http.port");
         osRunner.ensureYellow();

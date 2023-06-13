@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs;
+package de.tudarmstadt.ukp.inception.annotatorjs;
 
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
+import de.tudarmstadt.ukp.inception.annotatorjs.config.AnnotatorJsAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -34,7 +35,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * Support for HTML-oriented editor component.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlAnnotationEditorFactory()}.
+ * {@link AnnotatorJsAnnotationEditorSupportAutoConfiguration#annotatorJsHtmlAnnotationEditorFactory()}.
  * </p>
  */
 public class AnnotatorJsHtmlAnnotationEditorFactory
@@ -43,7 +44,10 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        return "HTML (AnnotatorJS)";
+        // return Strings.getString(Messages_.ANNOTATORJS_EDITOR_NAME);
+        // FIXME: For some reason the annotation processor does not seem to work in Eclipse full
+        // builds. Needs to be debugged....
+        return Strings.getString("annotatorjs-editor.name");
     }
 
     @Override
@@ -62,7 +66,8 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+                getBeanName());
     }
 
     @Override

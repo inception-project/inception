@@ -70,7 +70,7 @@ export class Fragment {
   nestingDepth: number
   nestingDepthLR: number
   nestingDepthRL: number
-  highlightPos: {x: number, y: number, w: number, h: number}
+  highlightPos: {x: number, y: number, w: number, h: number} | undefined
 
   constructor (id: number, span: Entity, from: number, to: number) {
     this.id = id

@@ -218,7 +218,7 @@ public class RecommendationServiceImplIntegrationTest
 
             when(schemaService.getFullProjectTypeSystem(project))
                     .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-            when(schemaService.listAnnotationLayer(project)).thenReturn(asList(layer));
+            when(schemaService.listAnnotationFeature(project)).thenReturn(asList(feature));
             doCallRealMethod().when(schemaService).upgradeCas(any(CAS.class), any(CAS.class),
                     any(TypeSystemDescription.class));
 
@@ -226,11 +226,18 @@ public class RecommendationServiceImplIntegrationTest
 
             Type type = CasUtil.getType(jCas.getCas(), layer.getName());
 
-            assertThat(type.getFeatures()).extracting(Feature::getShortName)
-                    .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
-                    .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
-                    .contains(feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX)
-                    .contains(FEATURE_NAME_IS_PREDICTION);
+            assertThat(type.getFeatures()) //
+                    .extracting(Feature::getShortName) //
+                    .containsExactlyInAnyOrder( //
+                            "sofa", //
+                            "begin", //
+                            "end", //
+                            "value", //
+                            feature.getName() + FEATURE_NAME_SCORE_SUFFIX, //
+                            feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, //
+                            feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, //
+                            "identifier", //
+                            FEATURE_NAME_IS_PREDICTION);
         }
     }
 

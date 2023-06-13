@@ -116,8 +116,9 @@ public class SpanAdapter
         var newAnnotation = createSpanAnnotation(request.getCas(), request.getBegin(),
                 request.getEnd());
 
-        publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getDocumentOwner(),
-                getLayer(), newAnnotation));
+        var finalRequest = request;
+        publishEvent(() -> new SpanCreatedEvent(this, finalRequest.getDocument(),
+                finalRequest.getDocumentOwner(), getLayer(), newAnnotation));
 
         return newAnnotation;
     }
@@ -164,8 +165,10 @@ public class SpanAdapter
         moveSpanAnnotation(request.getCas(), request.getAnnotation(), request.getBegin(),
                 request.getEnd());
 
-        publishEvent(new SpanMovedEvent(this, request.getDocument(), request.getDocumentOwner(),
-                getLayer(), request.getAnnotation(), oldBegin, oldEnd));
+        var finalRequest = request;
+        publishEvent(() -> new SpanMovedEvent(this, finalRequest.getDocument(),
+                finalRequest.getDocumentOwner(), getLayer(), finalRequest.getAnnotation(), oldBegin,
+                oldEnd));
 
         return request.getAnnotation();
     }
@@ -221,7 +224,7 @@ public class SpanAdapter
             detatch(aCas, fs);
         }
 
-        publishEvent(new SpanDeletedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
+        publishEvent(() -> new SpanDeletedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
     }
 
     public AnnotationFS restore(SourceDocument aDocument, String aDocumentOwner, CAS aCas, VID aVid)
@@ -235,7 +238,7 @@ public class SpanAdapter
 
         aCas.addFsToIndexes(fs);
 
-        publishEvent(new SpanCreatedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
+        publishEvent(() -> new SpanCreatedEvent(this, aDocument, aDocumentOwner, getLayer(), fs));
 
         return fs;
     }

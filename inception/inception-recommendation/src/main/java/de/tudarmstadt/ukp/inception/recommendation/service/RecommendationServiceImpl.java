@@ -93,9 +93,6 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.FeatureDescription;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -185,7 +182,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -1133,7 +1129,7 @@ public class RecommendationServiceImpl
                     aLocation);
 
             // Send an application event that the suggestion has been accepted
-            aAdapter.publishEvent(new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
+            aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
                     annotation, aFeature, aSuggestion.getLabel()));
         }
     }
@@ -1641,9 +1637,8 @@ public class RecommendationServiceImpl
                         engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
             }
             else {
-                generateSuggestions(aSessionOwner.getUsername(), aPredictions, ctx, engine,
-                        activePredictions, aDocument, originalCas, predictionCas, aSessionOwner,
-                        predictionBegin, predictionEnd);
+                generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
+                        originalCas, predictionCas, predictionBegin, predictionEnd);
             }
         }
         // Catching Throwable is intentional here as we want to continue the
@@ -1735,9 +1730,6 @@ public class RecommendationServiceImpl
                 computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
             }
 
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
-
             return predictions;
         }
         catch (ResourceInitializationException e) {
@@ -1772,9 +1764,6 @@ public class RecommendationServiceImpl
             // Generate new predictions or inherit at the recommender level
             computePredictions(predictions, predictionCas, aCurrentDocument, aDataOwner,
                     aPredictionBegin, aPredictionEnd);
-
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
         }
         catch (ResourceInitializationException e) {
             predictions.log(
@@ -1840,21 +1829,21 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(String aSessionOwner, Predictions aPredictions,
-            RecommenderContext aCtx, RecommendationEngine aEngine, Predictions aActivePredictions,
-            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas, User aUser,
-            int aPredictionBegin, int aPredictionEnd)
+    void generateSuggestions(Predictions aPredictions, RecommenderContext aCtx,
+            RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
+            CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
     {
-        Recommender recommender = aEngine.getRecommender();
+        var sessionOwner = aPredictions.getSessionOwner();
+        var recommender = aEngine.getRecommender();
 
         aPredictions.log(LogMessage.info(recommender.getName(),
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
-        LOG.trace("{}[{}]: Generating predictions for layer [{}]", aUser, recommender.getName(),
-                recommender.getLayer().getUiName());
+        LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
+                recommender.getName(), recommender.getLayer().getUiName());
 
         // Perform the actual prediction
-        Range predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
+        var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
                 aPredictionEnd);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
@@ -1862,7 +1851,7 @@ public class RecommendationServiceImpl
 
         LOG.debug(
                 "{} for user {} on document {} in project {} generated {} predictions within range {}",
-                recommender, aUser, aDocument, recommender.getProject(), suggestions.size(),
+                recommender, sessionOwner, aDocument, recommender.getProject(), suggestions.size(),
                 predictedRange);
         aPredictions.log(LogMessage.info(recommender.getName(), //
                 "Generated [%d] predictions within range %s", suggestions.size(), predictedRange));
@@ -1876,7 +1865,7 @@ public class RecommendationServiceImpl
                     .collect(toList());
 
             LOG.debug("{} for user {} on document {} in project {} inherited {} " //
-                    + "predictions", recommender, aUser, aDocument, recommender.getProject(),
+                    + "predictions", recommender, sessionOwner, aDocument, recommender.getProject(),
                     inheritableSuggestions.size());
             aPredictions.log(LogMessage.info(recommender.getName(),
                     "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
@@ -1887,9 +1876,9 @@ public class RecommendationServiceImpl
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
-        calculateSpanSuggestionVisibility(aSessionOwner, aDocument, aOriginalCas,
-                aUser.getUsername(), aEngine.getRecommender().getLayer(), groupedSuggestions, 0,
-                aOriginalCas.getDocumentText().length());
+        calculateSpanSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
+                aPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
+                groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
 
         aPredictions.putPredictions(suggestions);
     }
@@ -1901,85 +1890,111 @@ public class RecommendationServiceImpl
         var featureName = aRecommender.getFeature().getName();
         var typeName = layer.getName();
 
-        Type predictedType = CasUtil.getType(aPredictionCas, typeName);
-        Feature labelFeature = predictedType.getFeatureByBaseName(featureName);
-        Feature sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-        Feature scoreFeature = predictedType
+        var predictedType = CasUtil.getType(aPredictionCas, typeName);
+        var labelFeature = predictedType.getFeatureByBaseName(featureName);
+        var sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+        var scoreFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
-        Feature scoreExplanationFeature = predictedType
+        var scoreExplanationFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
-        Feature modeFeature = predictedType
+        var modeFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
-        Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
         var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
 
-        List<AnnotationSuggestion> result = new ArrayList<>();
+        var result = new ArrayList<AnnotationSuggestion>();
         int id = 0;
 
         var documentText = aOriginalCas.getDocumentText();
-        for (FeatureStructure predictedFS : aPredictionCas.select(predictedType)) {
+        for (var predictedFS : aPredictionCas.select(predictedType)) {
             if (!predictedFS.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
-            var autoAcceptFeatureValue = predictedFS.getStringValue(modeFeature);
-            var autoAcceptMode = AutoAcceptMode.NEVER;
-            if (autoAcceptFeatureValue != null) {
-                switch (autoAcceptFeatureValue) {
-                case AUTO_ACCEPT_ON_FIRST_ACCESS:
-                    autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, modeFeature);
+            var labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
+            var score = predictedFS.getDoubleValue(scoreFeature);
+            var scoreExplanation = predictedFS.getStringValue(scoreExplanationFeature);
+
+            switch (layer.getType()) {
+            case SPAN_TYPE: {
+                var predictedAnnotation = (Annotation) predictedFS;
+                var targetOffsets = getOffsets(layer.getAnchoringMode(), aOriginalCas,
+                        predictedAnnotation);
+
+                if (targetOffsets.isEmpty()) {
+                    continue;
                 }
+
+                var offsets = targetOffsets.get();
+                var coveredText = documentText.substring(offsets.getBegin(), offsets.getEnd());
+
+                for (var label : labels) {
+                    var suggestion = SpanSuggestion.builder() //
+                            .withId(id) //
+                            .withRecommender(aRecommender) //
+                            .withDocumentName(aDocument.getName()) //
+                            .withPosition(offsets) //
+                            .withCoveredText(coveredText) //
+                            .withLabel(label) //
+                            .withUiLabel(label) //
+                            .withScore(score) //
+                            .withScoreExplanation(scoreExplanation) //
+                            .withAutoAcceptMode(autoAcceptMode) //
+                            .build();
+                    result.add(suggestion);
+                    id++;
+                }
+                break;
             }
+            case RELATION_TYPE: {
+                var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
+                var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
 
-            String[] labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
-            double score = predictedFS.getDoubleValue(scoreFeature);
-            String scoreExplanation = predictedFS.getStringValue(scoreExplanationFeature);
-
-            for (String label : labels) {
-                AnnotationSuggestion suggestion;
-
-                switch (layer.getType()) {
-                case SPAN_TYPE: {
-                    var predictedAnnotation = (Annotation) predictedFS;
-                    var targetOffsets = getOffsets(layer.getAnchoringMode(), aOriginalCas,
-                            predictedAnnotation);
-
-                    if (!targetOffsets.isPresent()) {
-                        continue;
-                    }
-
-                    var offsets = targetOffsets.get();
-                    var coveredText = documentText.substring(offsets.getBegin(), offsets.getEnd());
-
-                    suggestion = new SpanSuggestion(id, aRecommender, layer.getId(), featureName,
-                            aDocument.getName(), targetOffsets.get(), coveredText, label, label,
-                            score, scoreExplanation, autoAcceptMode);
-                    break;
-                }
-                case RELATION_TYPE: {
-                    var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
-                    var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
-
-                    var originalSource = findEquivalent(aOriginalCas, source).get();
-                    var originalTarget = findEquivalent(aOriginalCas, target).get();
-
-                    suggestion = new RelationSuggestion(id, aRecommender, layer.getId(),
-                            featureName, aDocument.getName(), originalSource, originalTarget, label,
-                            label, score, scoreExplanation, autoAcceptMode);
-                    break;
-                }
-                default:
-                    throw new IllegalStateException(
-                            "Unsupported layer type [" + layer.getType() + "]");
+                var originalSource = findEquivalent(aOriginalCas, source);
+                var originalTarget = findEquivalent(aOriginalCas, target);
+                if (originalSource.isEmpty() || originalTarget.isEmpty()) {
+                    continue;
                 }
 
-                result.add(suggestion);
-                id++;
+                var position = new RelationPosition(originalSource.get(), originalTarget.get());
+
+                for (var label : labels) {
+                    var suggestion = RelationSuggestion.builder() //
+                            .withId(id) //
+                            .withRecommender(aRecommender) //
+                            .withDocumentName(aDocument.getName()) //
+                            .withPosition(position).withLabel(label) //
+                            .withUiLabel(label) //
+                            .withScore(score) //
+                            .withScoreExplanation(scoreExplanation) //
+                            .withAutoAcceptMode(autoAcceptMode) //
+                            .build();
+                    result.add(suggestion);
+                    id++;
+                }
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unsupported layer type [" + layer.getType() + "]");
             }
         }
 
         return result;
+    }
+
+    private static AutoAcceptMode getAutoAcceptMode(FeatureStructure aFS, Feature aModeFeature)
+    {
+        var autoAcceptMode = AutoAcceptMode.NEVER;
+        var autoAcceptFeatureValue = aFS.getStringValue(aModeFeature);
+        if (autoAcceptFeatureValue != null) {
+            switch (autoAcceptFeatureValue) {
+            case AUTO_ACCEPT_ON_FIRST_ACCESS:
+                autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
+            }
+        }
+        return autoAcceptMode;
     }
 
     private static String[] getPredictedLabels(FeatureStructure predictedFS,
@@ -2156,7 +2171,7 @@ public class RecommendationServiceImpl
      */
     @Override
     public void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
-            CAS aCas, String aUser, AnnotationLayer aLayer,
+            CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
@@ -2182,7 +2197,7 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
-        var recordedAnnotations = listLearningRecords(aSessionOwner, aUser, aLayer);
+        var recordedAnnotations = listLearningRecords(aSessionOwner, aDataOwner, aLayer);
 
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
             var feat = type.getFeatureByBaseName(feature.getName());
@@ -2241,36 +2256,35 @@ public class RecommendationServiceImpl
 
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
         // must be sorted in the same way. The suggestion offsets are sorted because they are
-        // the keys in a TreeSet - and the annotation offsets are sorted in the same way
-        // manually
-        OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
-                sortedAnnotationKeys);
+        // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
+        var oi = new OverlapIterator(sortedAnnotationKeys, new ArrayList<>(suggestions.keySet()));
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
         while (oi.hasNext()) {
             if (oi.getA().overlaps(oi.getB())) {
                 // Fetch the current suggestion and annotation
-                SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
-                for (AnnotationFS annotation : annotations.get(oi.getB())) {
-                    String label = annotation.getFeatureValueAsString(feat);
-                    for (SpanSuggestion suggestion : group) {
+                var group = suggestions.get(oi.getB());
+                for (var annotation : annotations.get(oi.getA())) {
+                    var label = annotation.getFeatureValueAsString(feat);
+                    for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
                         // feature
+                        boolean colocated = colocated(annotation, suggestion.getBegin(),
+                                suggestion.getEnd());
                         if (suggestion.getLabel() == null) {
                             // If there is already an annotation, then we hide any suggestions
                             // that would just trigger the creation of the same annotation and
                             // not set any new feature. This applies whether stacking is allowed
                             // or not.
-                            if (colocated(annotation, suggestion.getBegin(), suggestion.getEnd())) {
+                            if (colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
 
                             // If stacking is enabled, we do allow suggestions that create an
                             // annotation with no label, but only if the offsets differ
-                            if (feature.getLayer().isAllowStacking() && !colocated(annotation,
-                                    suggestion.getBegin(), suggestion.getEnd())) {
+                            if (feature.getLayer().isAllowStacking() && !colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2282,14 +2296,13 @@ public class RecommendationServiceImpl
                             // Is the feature still unset in the current annotation - i.e. would
                             // accepting the suggestion merge the feature into it? If yes, we do
                             // not hide
-                            if (label == null && colocated(annotation, suggestion.getBegin(),
-                                    suggestion.getEnd())) {
+                            if (label == null && colocated) {
                                 continue;
                             }
 
-                            // Does the suggested label match the label of an existing
-                            // annotation, then we hide
-                            if (label != null && label.equals(suggestion.getLabel())) {
+                            // Does the suggested label match the label of an existing annotation
+                            // at the same position then we hide
+                            if (label != null && label.equals(suggestion.getLabel()) && colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2304,10 +2317,11 @@ public class RecommendationServiceImpl
                     }
                 }
 
-                // Do not want to process the group again since the relevant annotations are
+                // Do not want to process the annotation again since the relevant suggestions are
                 // already hidden
-                oi.ignoraA();
+                oi.ignoreA();
             }
+
             oi.step();
         }
     }
@@ -2454,28 +2468,38 @@ public class RecommendationServiceImpl
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
         throws UIMAException, IOException
     {
-        try (StopWatch watch = new StopWatch(LOG, "adding score features")) {
-            TypeSystemDescription tsd = schemaService.getFullProjectTypeSystem(aProject);
+        try (var watch = new StopWatch(LOG, "adding score features")) {
+            var tsd = schemaService.getFullProjectTypeSystem(aProject);
+            var features = schemaService.listAnnotationFeature(aProject);
 
-            for (AnnotationLayer layer : schemaService.listAnnotationLayer(aProject)) {
-                TypeDescription td = tsd.getType(layer.getName());
-
+            for (var feature : features) {
+                var td = tsd.getType(feature.getLayer().getName());
                 if (td == null) {
-                    LOG.trace("Could not monkey patch type [{}]", layer.getName());
+                    LOG.trace("Could not monkey patch feature {} because type for layer {} was not "
+                            + "found in the type system", feature, feature.getLayer());
                     continue;
                 }
 
-                for (FeatureDescription feature : td.getFeatures()) {
-                    var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-                    td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
+                var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
+                td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
 
-                    var scoreExplanationFeatureName = feature.getName()
-                            + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
-                            CAS.TYPE_NAME_STRING);
+                var scoreExplanationFeatureName = feature.getName()
+                        + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+                td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
+                        TYPE_NAME_STRING);
 
-                    var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-                    td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
+                var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+                td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
+            }
+
+            var layers = features.stream().map(AnnotationFeature::getLayer).distinct()
+                    .collect(toList());
+            for (var layer : layers) {
+                var td = tsd.getType(layer.getName());
+                if (td == null) {
+                    LOG.trace("Could not monkey patch layer {} because its type was not found in "
+                            + "the type system", layer);
+                    continue;
                 }
 
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
@@ -2757,6 +2781,16 @@ public class RecommendationServiceImpl
 
     @Transactional
     @Override
+    public List<LearningRecord> listLearningRecords(Project aProject)
+    {
+        String sql = "FROM LearningRecord l WHERE l.sourceDocument.project = :project";
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("project", aProject);
+        return query.getResultList();
+    }
+
+    @Transactional
+    @Override
     public List<LearningRecord> listLearningRecords(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, AnnotationFeature aFeature)
     {
@@ -2817,7 +2851,9 @@ public class RecommendationServiceImpl
         return query.getResultList();
     }
 
-    private void createLearningRecord(LearningRecord aLearningRecord)
+    @Override
+    @Transactional
+    public void createLearningRecord(LearningRecord aLearningRecord)
     {
         entityManager.persist(aLearningRecord);
         entityManager.flush();

@@ -15,37 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.config;
+package de.tudarmstadt.ukp.inception.diam.sidebar.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
+import de.tudarmstadt.ukp.inception.diam.sidebar.DiamSidebarFactory;
 
-/**
- * Provides support for an HTML-oriented annotation editor.
- */
 @ConditionalOnWebApplication
 @Configuration
-public class HtmlAnnotationEditorSupportAutoConfiguration
+public class AnnotationBrowserSidebarAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "ui.html-annotatorjs", name = "enabled", //
-            havingValue = "true", matchIfMissing = false)
+    @ConditionalOnExpression("${websocket.enabled:true}")
     @Bean
-    public AnnotatorJsHtmlAnnotationEditorFactory htmlAnnotationEditorFactory()
+    public DiamSidebarFactory annotationBrowserSidebarFactory()
     {
-        return new AnnotatorJsHtmlAnnotationEditorFactory();
-    }
-
-    @ConditionalOnProperty(prefix = "ui.html.legacy-iframe-view", name = "enabled", //
-            havingValue = "true", matchIfMissing = false)
-    @Bean
-    @Deprecated
-    public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
-    {
-        return new HtmlDocumentIFrameViewFactory();
+        return new DiamSidebarFactory();
     }
 }

@@ -85,7 +85,7 @@ public class PredictionTask
     @Override
     public void execute()
     {
-        try (CasStorageSession session = CasStorageSession.openNested()) {
+        try (var session = CasStorageSession.openNested()) {
             var project = getProject();
             var sessionOwner = getUser().orElseThrow();
             var sessionOwnerName = sessionOwner.getUsername();
@@ -93,7 +93,7 @@ public class PredictionTask
             var startTime = System.currentTimeMillis();
             var predictions = generatePredictions(sessionOwner);
             predictions.inheritLog(getLogMessages());
-            logPredictionComplete(startTime, sessionOwnerName);
+            logPredictionComplete(predictions, startTime, sessionOwnerName);
 
             recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
@@ -132,11 +132,11 @@ public class PredictionTask
                 dataOwner, inherit, predictionBegin, predictionEnd);
     }
 
-    private void logPredictionComplete(long startTime, String username)
+    private void logPredictionComplete(Predictions aPredictions, long startTime, String username)
     {
         var duration = currentTimeMillis() - startTime;
         log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username, duration);
-        info("Prediction complete ({} ms).", duration);
+        aPredictions.log(LogMessage.info(this, "Prediction complete (%d ms).", duration));
     }
 
     private void logPredictionStartedForOneDocument(String username, Project project,

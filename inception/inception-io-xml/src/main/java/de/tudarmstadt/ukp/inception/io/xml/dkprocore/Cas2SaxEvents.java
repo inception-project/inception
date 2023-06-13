@@ -104,9 +104,8 @@ public class Cas2SaxEvents
         handler.endElement(uri, localName, qName);
 
         if (namespaces) {
-            for (Entry<String, String> xmlns : localMappings.entrySet()) {
-                handler.endPrefixMapping(xmlns.getKey());
-                localMappings.remove(xmlns.getKey());
+            for (String xmlns : localMappings.keySet()) {
+                handler.endPrefixMapping(xmlns);
             }
         }
     }
