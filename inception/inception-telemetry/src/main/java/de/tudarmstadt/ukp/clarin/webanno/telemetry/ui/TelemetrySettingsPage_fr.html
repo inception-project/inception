@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:extend>
+    <div class="scrolling flex-content flex-h-container justify-content-center">
+        <div class="container pt-3" style="max-width: 60em;">
+            <form wicket:id="form">
+                <div class="flex-h-container flex-gutter">
+                    <div class="flex-content">
+                        <p>
+                            Afin de soutenir le développement de
+                            <wicket:message key="product.name"/>
+                            , nous souhaiterions collecter quelques données et les envoyer chez nous. Veuillez consulter
+                            les paramètres ci-dessous et accepter ou refuser les collectes de données correspondantes.
+                            Une fois que vous aurez
+                            terminé, cliquez sur le bouton <b>
+                            <wicket:message key="save"/>
+                        </b> sur le côté droit pour enregistrer vos choix. Si des modifications ont été apportées au
+                            processus de collecte des données, cette page apparaîtra à nouveau lorsqu'un administrateur
+                            se connectera. Vous pouvez toujours revoir vos choix en accédant à cette page par le biais
+                            de l'icone <i class="fa fa-heartbeat"></i> dans le pied de page.
+                        </p>
+                    </div>
+                    <div>
+                        <button wicket:id="save" class="btn btn-primary">
+                            <i class="fas fa-save"></i>&nbsp;
+                            <wicket:message key="save"/>
+                        </button>
+                    </div>
+                </div>
+                <div wicket:id="settings" class="card">
+                    <div class="card-header">
+                        <span wicket:id="name"/>
+                        <div class="actions">
+                            <button wicket:id="toggleDetails" class="btn btn-sm btn-secondary">
+                                Basculer les détails...
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning" wicket:id="reviewRequiredMessage">
+                            Le comportement de ce collecteur de données a changé. Veuillez revoir la description
+                            et les paramètres.
+                        </div>
+                        <div wicket:id="traitsEditor"/>
+                        <div wicket:id="details"/>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</wicket:extend>
+</body>
+</html>
