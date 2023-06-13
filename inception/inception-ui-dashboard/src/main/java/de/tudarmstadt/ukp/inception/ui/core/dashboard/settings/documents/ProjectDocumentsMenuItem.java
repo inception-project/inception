@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.documents;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -53,8 +52,8 @@ public class ProjectDocumentsMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("projectdocuments.menuitem.label",
-                 new ProjectDocumentsPage(currentPage.getPageParameters())).getString();
+        return new ProjectDocumentsPage(currentPage.getPageParameters())
+                .getString("projectdocuments.menuitem.label");
 
          // return new StringResourceModel("projectdocuments.menuitem.label").getString();
     }

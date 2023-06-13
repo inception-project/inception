@@ -23,7 +23,6 @@ import static java.lang.String.format;
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -82,8 +81,8 @@ public class CurationPageMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("curation.page.menuitem.label",
-                 new CurationPage(currentPage.getPageParameters())).getString();
+        return new CurationPage(currentPage.getPageParameters())
+                .getString("curation.page.menuitem.label");
 
          // return new StringResourceModel("curation.page.menuitem.label").getString();
     }

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -57,8 +56,8 @@ public class ProjectSharingMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("projectsharing.menuitem.label",
-                 new ProjectSharingPage(currentPage.getPageParameters())).getString();
+        return new ProjectSharingPage(currentPage.getPageParameters())
+                .getString("projectsharing.menuitem.label");
 
          // return new StringResourceModel("projectsharing.menuitem.label").getString();
     }

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -57,8 +56,8 @@ public class ProjectRecommendersMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-        return new StringResourceModel("projectrecommenders.menuitem.label",
-                new ProjectRecommendersPage(currentPage.getPageParameters())).getString();
+        return new ProjectRecommendersPage(currentPage.getPageParameters())
+                .getString("projectrecommenders.menuitem.label");
 
         // return new StringResourceModel("projectrecommenders.menuitem.label").getString();
     }

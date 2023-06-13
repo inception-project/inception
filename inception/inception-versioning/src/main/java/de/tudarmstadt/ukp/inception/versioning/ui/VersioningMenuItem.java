@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -57,8 +56,8 @@ public class VersioningMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-         return new StringResourceModel("versioning.menuitem.label",
-                 new VersioningPreferencesPage(currentPage.getPageParameters())).getString();
+        return new VersioningPreferencesPage(currentPage.getPageParameters())
+                .getString("versioning.menuitem.label");
 
          // return new StringResourceModel("versioning.menuitem.label").getString();
     }
