@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.component.IRequestablePage;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -76,8 +75,8 @@ public class MatrixWorkloadManagementPageMenuItem
         IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
                 .getPage();
 
-        return new StringResourceModel("matrixworloadmanagement.page.menuitem.label",
-                new MatrixWorkloadManagementPage(currentPage.getPageParameters())).getString();
+        return new MatrixWorkloadManagementPage(currentPage.getPageParameters())
+                .getString("matrixworloadmanagement.page.menuitem.label");
 
         // return new
         // StringResourceModel("matrixworloadmanagement.page.menuitem.label").getString();
