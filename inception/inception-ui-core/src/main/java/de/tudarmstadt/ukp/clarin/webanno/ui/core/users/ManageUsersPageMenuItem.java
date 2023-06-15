@@ -18,15 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -51,13 +49,7 @@ public class ManageUsersPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ManageUsersPage(currentPage.getPageParameters())
-                .getString("manageusers.page.menuitem.label");
-
-         // return new StringResourceModel("manageusers.page.menuitem.label").getString();
+        return Strings.getString("manageusers.page.menuitem.label");
     }
 
     /**
