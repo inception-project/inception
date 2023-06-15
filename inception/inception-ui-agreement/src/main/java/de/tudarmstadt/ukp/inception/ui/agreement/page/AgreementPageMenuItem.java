@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.*;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.request.component.IRequestablePage;
