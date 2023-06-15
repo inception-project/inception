@@ -32,9 +32,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.dkpro.core.io.xmi.XmiWriter;
-import org.dkpro.core.testing.DkproTestContext;
 import org.dkpro.core.testing.TestOptions;
-import org.junit.Rule;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -153,7 +151,4 @@ public class HtmlDocumentReaderTest
             throw new RuntimeException(e);
         }
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }
