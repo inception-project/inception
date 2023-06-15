@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.xmi.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,6 +28,7 @@ import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiXml11FormatSupport;
 
 @Configuration
+@EnableConfigurationProperties(UimaFormatsPropertiesImpl.class)
 public class UimaFormatsAutoConfiguration
 {
     @ConditionalOnProperty(prefix = "format.uima-binary-cas", name = "enabled", //
@@ -40,17 +42,17 @@ public class UimaFormatsAutoConfiguration
     @ConditionalOnProperty(prefix = "format.uima-xmi-xml1_1", name = "enabled", //
             havingValue = "true", matchIfMissing = true)
     @Bean
-    public XmiXml11FormatSupport xmiXml11FormatSupport()
+    public XmiXml11FormatSupport xmiXml11FormatSupport(UimaFormatsProperties aProperties)
     {
-        return new XmiXml11FormatSupport();
+        return new XmiXml11FormatSupport(aProperties.getUimaXmiXml1_1());
     }
 
     @ConditionalOnProperty(prefix = "format.uima-xmi", name = "enabled", //
             havingValue = "true", matchIfMissing = true)
     @Bean
-    public XmiFormatSupport xmiFormatSupport()
+    public XmiFormatSupport xmiFormatSupport(UimaFormatsProperties aProperties)
     {
-        return new XmiFormatSupport();
+        return new XmiFormatSupport(aProperties.getUimaXmi());
     }
 
     @ConditionalOnProperty(prefix = "format.uima-inline-xml", name = "enabled", //

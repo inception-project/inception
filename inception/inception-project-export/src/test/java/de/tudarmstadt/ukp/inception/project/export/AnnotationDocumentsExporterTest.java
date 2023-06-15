@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 
@@ -99,9 +100,10 @@ public class AnnotationDocumentsExporterTest
         casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, schemaService);
 
+        var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry);
+                asList(xmiFormatSupport), casStorageService, schemaService, properties,
+                checksRegistry, repairsRegistry, xmiFormatSupport);
 
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);
