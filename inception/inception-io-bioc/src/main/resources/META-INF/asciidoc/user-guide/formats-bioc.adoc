@@ -43,9 +43,10 @@ This is a new and still experimental BioC format.
   `Div` annotations from any other source either, then on export a single passage containing the
   entire document is created.
 * Cross-passage relations are not supported.
+* Sentence-level infons are not supported.
 * Passage-level infons are not supported.
 * Document-level infons are not supported.
-
+* The writer writes one BioC file per CAS (i.e. writing multiple documents to a single collection file is not supported).
 
 [cols="2,1,1,1,3"]
 |====

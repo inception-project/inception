@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -108,10 +109,21 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
         catch (ClosedByInterruptException | InterruptedException e) {
             monitor.setStateAndProgress(CANCELLED, 100);
         }
+        catch (ProjectExportException e) {
+            // This marks the progression as complete and causes ProgressBar#onFinished
+            // to be called where we display the messages
+            // Message needs to be added before setting the state, otherwise the notification for
+            // the
+            // message may be throttled and it may never be displayed
+            monitor.addMessage(LogMessage.error(this, "Project export failed: %s", e.getMessage()));
+            monitor.setStateAndProgress(FAILED, 100);
+            log.error("Error during project export", e);
+        }
         catch (Throwable e) {
             // This marks the progression as complete and causes ProgressBar#onFinished
             // to be called where we display the messages
-            // Message needs to be aded before setting the state, otherwise the notification for the
+            // Message needs to be added before setting the state, otherwise the notification for
+            // the
             // message may be throttled and it may never be displayed
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
                     getRootCauseMessage(e)));

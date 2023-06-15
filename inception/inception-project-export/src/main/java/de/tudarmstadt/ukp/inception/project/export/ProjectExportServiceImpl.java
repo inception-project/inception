@@ -268,6 +268,9 @@ public class ProjectExportServiceImpl
                 }
             }
         }
+        catch (ProjectExportException e) {
+            throw e;
+        }
         catch (InterruptedException | IOException e) {
             // IOExceptions like java.nio.channels.ClosedByInterruptException should be thrown up
             // as-is. This allows us to handle export cancellation in the project export UI panel
