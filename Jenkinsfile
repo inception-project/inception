@@ -27,8 +27,10 @@ pipeline {
       description: "Wipe workspace after build (for testing; next build only)")
   }
 
-  agent none
-
+  agent {
+    label labelValue ? "(${labelValue}) && ${PLATFORM}" : "${PLATFORM}"
+  }
+  
   tools {
     maven config.maven
     jdk config.jdk
@@ -39,14 +41,6 @@ pipeline {
       numToKeepStr: '25',
       artifactNumToKeepStr: '5'
     ))
-    skipDefaultCheckout()
-  }
-    
-  agent {
-    label labelValue ? "(${labelValue}) && ${PLATFORM}" : "${PLATFORM}"
-  }
-  
-  options {
     skipDefaultCheckout()
   }
 
