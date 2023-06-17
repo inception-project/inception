@@ -28,7 +28,7 @@ pipeline {
   }
 
   agent {
-    label labelValue ? "(${labelValue}) && ${PLATFORM}" : "${PLATFORM}"
+    label agentLabel
   }
   
   tools {
