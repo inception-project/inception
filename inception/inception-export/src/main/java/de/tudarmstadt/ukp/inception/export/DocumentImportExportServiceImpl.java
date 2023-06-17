@@ -90,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -128,6 +127,8 @@ public class DocumentImportExportServiceImpl
     private final ChecksRegistry checksRegistry;
     private final RepairsRegistry repairsRegistry;
 
+    private final FormatSupport fallbackFormat;
+
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
 
@@ -137,7 +138,8 @@ public class DocumentImportExportServiceImpl
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
             DocumentImportExportServiceProperties aServiceProperties,
-            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
+            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry,
+            FormatSupport aFallbackFormat)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
@@ -146,6 +148,7 @@ public class DocumentImportExportServiceImpl
         properties = aServiceProperties;
         checksRegistry = aChecksRegistry;
         repairsRegistry = aRepairsRegistry;
+        fallbackFormat = aFallbackFormat;
 
         schemaTypeSystem = createTypeSystemDescription(
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/schema-types");
@@ -203,7 +206,7 @@ public class DocumentImportExportServiceImpl
     @Override
     public FormatSupport getFallbackFormat()
     {
-        return new XmiFormatSupport();
+        return fallbackFormat;
     }
 
     @Override
