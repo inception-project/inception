@@ -12,7 +12,7 @@ pipeline {
     string(
       name: 'extraMavenArguments',
       defaultValue: config.extraMavenArguments,
-      description: "Extra arguments to be passed to maven (for testing; overrides only current build)")
+      description: "Extra arguments to be passed to Maven (for testing; overrides only current build)")
     string(
       name: 'agentLabel',
       defaultValue: config.agentLabel,
@@ -97,7 +97,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                   params.extraMavenArguments +
-                  ' -U -Dmaven.test.failure.ignore=true clean verify';
+                  ' -B -Dmaven.test.failure.ignore=true clean verify';
                   
               if (isUnix()) {
                 sh script: mavenCommand
@@ -130,7 +130,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                 params.extraMavenArguments +
-                ' -U -Dmaven.test.failure.ignore=true clean deploy'
+                ' -B -Dmaven.test.failure.ignore=true clean verify'
                 
               if (isUnix()) {
                 sh script: mavenCommand
