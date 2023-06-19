@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -46,7 +46,7 @@ public class MergeIncompleteStrategyFactory
     @Override
     public String getLabel()
     {
-        return new ResourceModel("mergeincompletestrategy.factory.label").getObject();
+        return Strings.getString("mergeincompletestrategy.factory.label");
     }
 
     @Override

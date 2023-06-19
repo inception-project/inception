@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
@@ -53,13 +51,7 @@ public class ProjectRecommendersMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ProjectRecommendersPage(currentPage.getPageParameters())
-                .getString("projectrecommenders.menuitem.label");
-
-        // return new StringResourceModel("projectrecommenders.menuitem.label").getString();
+        return Strings.getString("projectrecommenders.menuitem.label");
     }
 
     @Override
