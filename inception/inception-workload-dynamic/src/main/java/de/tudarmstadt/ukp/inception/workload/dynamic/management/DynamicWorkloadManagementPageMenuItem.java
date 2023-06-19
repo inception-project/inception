@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.model.StringResourceModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
@@ -34,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import wicket.contrib.input.events.key.KeyType;
@@ -72,14 +72,7 @@ public class DynamicWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        // IRequestablePage currentPage =
-        // PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-        // .getPage();
-        //
-        // return new StringResourceModel("dynamicworkloadmanagement.page.menuitem.label",
-        // new DynamicWorkloadManagementPage(currentPage.getPageParameters())).getString();
-
-        return new StringResourceModel("dynamicworkloadmanagement.page.menuitem.label").getString();
+        return Strings.getString("dynamicworkloadmanagement.page.menuitem.label");
     }
 
     /**

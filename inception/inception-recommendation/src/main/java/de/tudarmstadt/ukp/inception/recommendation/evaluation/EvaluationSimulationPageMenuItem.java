@@ -20,9 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -32,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -66,13 +64,7 @@ public class EvaluationSimulationPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new EvaluationSimulationPage(currentPage.getPageParameters())
-                .getString("evaluationsimulation.page.menuitem.label");
-
-         // return new StringResourceModel("evaluationsimulation.page.menuitem.label").getString();
+        return Strings.getString("evaluationsimulation.page.menuitem.label");
     }
 
     @Override

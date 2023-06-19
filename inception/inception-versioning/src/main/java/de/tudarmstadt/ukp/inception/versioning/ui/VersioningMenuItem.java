@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
@@ -53,13 +51,7 @@ public class VersioningMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new VersioningPreferencesPage(currentPage.getPageParameters())
-                .getString("versioning.menuitem.label");
-
-         // return new StringResourceModel("versioning.menuitem.label").getString();
+        return Strings.getString("versioning.menuitem.label");
     }
 
     @Override

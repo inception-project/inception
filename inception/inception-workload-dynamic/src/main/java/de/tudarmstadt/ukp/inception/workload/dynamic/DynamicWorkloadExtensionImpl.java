@@ -40,7 +40,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
-import org.apache.wicket.model.ResourceModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.session.SessionRegistry;
@@ -58,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
@@ -107,7 +107,7 @@ public class DynamicWorkloadExtensionImpl
     @Override
     public String getLabel()
     {
-        return new ResourceModel("dynamicworkload.extension.impl.label").getObject();
+        return Strings.getString("dynamicworkload.extension.impl.label");
     }
 
     @Override

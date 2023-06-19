@@ -17,13 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -32,6 +26,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -58,18 +53,7 @@ public class ProjectPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        PageParameters pageParameters = currentPage.getPageParameters();
-
-        if (pageParameters.get(PAGE_PARAM_PROJECT).isNull()) {
-            pageParameters.add(PAGE_PARAM_PROJECT, ProjectSettingsPage.NEW_PROJECT_ID);
-        }
-
-        return new ProjectSettingsPage(pageParameters).getString("project.page.menuitem.label");
-
-        // return new StringResourceModel("project.page.menuitem.label").getString();
+        return Strings.getString("project.page.menuitem.label");
     }
 
     /**
