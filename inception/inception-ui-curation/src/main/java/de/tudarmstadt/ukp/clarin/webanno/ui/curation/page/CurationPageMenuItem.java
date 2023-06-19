@@ -23,9 +23,6 @@ import static java.lang.String.format;
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 
@@ -35,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -78,13 +76,7 @@ public class CurationPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new CurationPage(currentPage.getPageParameters())
-                .getString("curation.page.menuitem.label");
-
-         // return new StringResourceModel("curation.page.menuitem.label").getString();
+        return Strings.getString("curation.page.menuitem.label");
     }
 
     @Override

@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.sharing.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
@@ -53,13 +51,7 @@ public class ProjectSharingMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ProjectSharingPage(currentPage.getPageParameters())
-                .getString("projectsharing.menuitem.label");
-
-         // return new StringResourceModel("projectsharing.menuitem.label").getString();
+        return Strings.getString("projectsharing.menuitem.label");
     }
 
     @Override

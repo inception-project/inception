@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.project;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
@@ -54,14 +52,7 @@ public class ProjectDocumentRepositoriesMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ProjectDocumentRepositoriesPage(currentPage.getPageParameters())
-                .getString("projectdocumentrepositories.menuitem.label");
-
-         // return new
-         // StringResourceModel("projectdocumentrepositories.menuitem.label").getString();
+        return Strings.getString("projectdocumentrepositories.menuitem.label");
     }
 
     @Override

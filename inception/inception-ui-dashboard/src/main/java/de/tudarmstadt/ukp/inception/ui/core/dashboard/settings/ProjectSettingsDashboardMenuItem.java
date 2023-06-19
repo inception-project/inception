@@ -18,9 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
@@ -28,6 +25,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDetailPage;
 import wicket.contrib.input.events.key.KeyType;
@@ -59,13 +57,7 @@ public class ProjectSettingsDashboardMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ProjectSettingsDashboardPageBase(currentPage.getPageParameters())
-                .getString("projectsettingsdashboard.menuitem.label");
-
-         // return new StringResourceModel("projectsettingsdashboard.menuitem.label").getString();
+        return Strings.getString("projectsettingsdashboard.menuitem.label");
     }
 
     @Override

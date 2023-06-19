@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraitsEditor;
@@ -88,7 +88,7 @@ public class MatrixWorkloadExtensionImpl
     @Override
     public String getLabel()
     {
-        return new ResourceModel("matrixworloadextension.impl.label").getObject();
+        return Strings.getString("matrixworloadextension.impl.label");
     }
 
     @Override

@@ -18,14 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.UsersProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
@@ -49,13 +47,7 @@ public class ProjectUsersMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new ProjectUsersPage(currentPage.getPageParameters())
-                .getString("projectusers.menuitem.label");
-
-         // return new StringResourceModel("projectusers.menuitem.label").getString();
+        return Strings.getString("projectusers.menuitem.label");
     }
 
     @Override

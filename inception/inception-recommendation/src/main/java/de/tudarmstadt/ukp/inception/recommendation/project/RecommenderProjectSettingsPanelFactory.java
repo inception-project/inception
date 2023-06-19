@@ -23,10 +23,10 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
@@ -51,7 +51,7 @@ public class RecommenderProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return new ResourceModel("recommenderprojectsettings.panel.factory.label").getObject();
+        return Strings.getString("recommenderprojectsettings.panel.factory.label");
     }
 
     @Override

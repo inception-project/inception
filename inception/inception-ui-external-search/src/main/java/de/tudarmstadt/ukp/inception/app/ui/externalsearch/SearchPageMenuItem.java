@@ -22,15 +22,13 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.request.component.IRequestablePage;
-import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -64,13 +62,7 @@ public class SearchPageMenuItem
     @Override
     public String getLabel()
     {
-        IRequestablePage currentPage = PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
-                .getPage();
-
-        return new SearchPage(currentPage.getPageParameters())
-                .getString("search.page.menuitem.label");
-
-         // return new StringResourceModel("search.page.menuitem.label").getString();
+        return Strings.getString("search.page.menuitem.label");
     }
 
     @Override

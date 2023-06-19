@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.ui.project.dangerzone;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
@@ -42,7 +42,7 @@ public class ProjectDangerZonePanelFactory
     @Override
     public String getLabel()
     {
-        return new ResourceModel("projectdangerzone.panel.factory.label").getObject();
+        return Strings.getString("projectdangerzone.panel.factory.label");
     }
 
     @Override
