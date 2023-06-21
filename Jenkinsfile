@@ -112,7 +112,7 @@ pipeline {
             def mavenConsoleIssues = scanForIssues tool: mavenConsole()
             def javaIssues = scanForIssues tool: java()
             def javaDocIssues = scanForIssues tool: javaDoc()
-            publishIssues id: "analysis-${PLATFORM}", issues: [mavenConsoleIssues, javaIssues, javaDocIssues]
+            publishIssues id: "analysis", issues: [mavenConsoleIssues, javaIssues, javaDocIssues]
           }
         }
       }
@@ -147,7 +147,7 @@ pipeline {
             def javaDocIssues = scanForIssues tool: javaDoc()
             def spotBugsIssues = scanForIssues tool: spotBugs()
             def taskScannerIssues = scanForIssues tool: taskScanner()
-            publishIssues id: "analysis-${PLATFORM}", issues: [mavenConsoleIssues, javaIssues, javaDocIssues, spotBugsIssues, taskScannerIssues]
+            publishIssues id: "analysis", issues: [mavenConsoleIssues, javaIssues, javaDocIssues, spotBugsIssues, taskScannerIssues]
           }
         }
       }
