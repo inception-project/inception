@@ -39,8 +39,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
-import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryIntro;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryStrings;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -100,10 +100,10 @@ public class TelemetrySettingsPage
 
         form.add(new LambdaAjaxButton<Void>("save", this::actionSave).triggerAfterSubmit());
 
-        Label intro = new Label("intro",
-                new StringResourceModel("introText", Model.of(new TelemetryIntro())));
-        intro.setEscapeModelStrings(false);
-        form.add(intro);
+        Label introText = new Label("intro",
+                new StringResourceModel("settingsIntro", Model.of(new TelemetryStrings())));
+        introText.setEscapeModelStrings(false);
+        form.add(introText);
 
         add(form);
     }

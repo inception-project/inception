@@ -21,18 +21,18 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 
-public class TelemetryIntro
+public class TelemetryStrings
     implements Serializable
 {
     private final String productName;
     private final String save;
 
-    public TelemetryIntro()
+    public TelemetryStrings()
     {
         this(Strings.getString("product.name"), Strings.getString("save"));
     }
 
-    public TelemetryIntro(String aProductName, String aSave)
+    public TelemetryStrings(String aProductName, String aSave)
     {
         super();
         productName = aProductName;
