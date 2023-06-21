@@ -19,14 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import java.util.Optional;
 
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryStrings;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 
@@ -68,6 +71,17 @@ public class MatomoTelemetryTraitsEditor
         };
 
         form.add(new ToggleBox("enabled"));
+
+        TelemetryStrings telemetryStrings = new TelemetryStrings();
+        Label firstParagraph = new Label("firstParagraph",
+                new StringResourceModel("traitsEditorFirstParagraph", Model.of(telemetryStrings)));
+        firstParagraph.setEscapeModelStrings(false);
+        form.add(firstParagraph);
+
+        Label thirdParagraph = new Label("thirdParagraph",
+                new StringResourceModel("traitsEditorThirdParagraph", Model.of(telemetryStrings)));
+        thirdParagraph.setEscapeModelStrings(false);
+        form.add(thirdParagraph);
 
         add(form);
     }
