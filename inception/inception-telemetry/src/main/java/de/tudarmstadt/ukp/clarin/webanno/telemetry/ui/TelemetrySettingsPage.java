@@ -30,8 +30,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -40,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
-import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryStrings;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -100,8 +98,7 @@ public class TelemetrySettingsPage
 
         form.add(new LambdaAjaxButton<Void>("save", this::actionSave).triggerAfterSubmit());
 
-        Label introText = new Label("intro",
-                new StringResourceModel("settingsIntro", Model.of(new TelemetryStrings())));
+        Label introText = new Label("intro", new ResourceModel("settingsIntro"));
         introText.setEscapeModelStrings(false);
         form.add(introText);
 
