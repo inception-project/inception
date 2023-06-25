@@ -15,10 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.io.xmi.config;
 
-/**
- * Support for (de)serializing the CAS to/from XMI files.
- *
- * @since 1.1.0
- */
-package de.tudarmstadt.ukp.clarin.webanno.xmi;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
+
+public interface UimaFormatsProperties
+{
+    XmiFormatProperties getUimaXmiXml1_1();
+
+    XmiFormatProperties getUimaXmi();
+}

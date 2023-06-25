@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.xmi;
+package de.tudarmstadt.ukp.inception.io.xmi;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
@@ -30,19 +30,27 @@ import org.dkpro.core.io.xmi.XmiWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link UimaFormatsAutoConfiguration#xmiXml11FormatSupport}.
+ * {@link UimaFormatsAutoConfiguration#xmiFormatSupport}.
  * </p>
  */
-public class XmiXml11FormatSupport
+public class XmiFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "xmi-xml1.1";
-    public static final String NAME = "UIMA CAS XMI (XML 1.1)";
+    public static final String ID = "xmi";
+    public static final String NAME = "UIMA CAS XMI (XML 1.0)";
+
+    private final XmiFormatProperties properties;
+
+    public XmiFormatSupport(XmiFormatProperties aProperties)
+    {
+        properties = aProperties;
+    }
 
     @Override
     public String getId()
@@ -79,7 +87,9 @@ public class XmiXml11FormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(XmiReader.class, XmiReader.PARAM_LENIENT, true);
+        return createReaderDescription( //
+                XmiReader.class, //
+                XmiReader.PARAM_LENIENT, true);
     }
 
     @Override
@@ -87,6 +97,10 @@ public class XmiXml11FormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(XmiWriter.class, aTSD, XmiWriter.PARAM_VERSION, "1.1");
+        return createEngineDescription( //
+                XmiWriter.class, aTSD, //
+                XmiWriter.PARAM_VERSION, "1.0", //
+                XmiWriter.PARAM_SANITIZE_ILLEGAL_CHARACTERS,
+                properties.isSanitizeIllegalCharacters());
     }
 }

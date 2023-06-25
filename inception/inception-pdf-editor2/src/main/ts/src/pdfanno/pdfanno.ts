@@ -47,6 +47,10 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   // UI.enableViewMode()
 
   const initPromise = new Promise<void>((resolve) => {
+    if (!globalThis.PDFViewerApplication.initializedPromise) {
+      return
+    }
+
     console.log('Waiting for the document to load...')
     globalThis.PDFViewerApplication.initializedPromise.then(function () {
       // The event called at page rendered by pdfjs.

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.xmi;
+package de.tudarmstadt.ukp.inception.io.xmi;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
@@ -25,24 +25,32 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.bincas.BinaryCasReader;
-import org.dkpro.core.io.bincas.BinaryCasWriter;
+import org.dkpro.core.io.xmi.XmiReader;
+import org.dkpro.core.io.xmi.XmiWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link UimaFormatsAutoConfiguration#binaryCasFormatSupport}.
+ * {@link UimaFormatsAutoConfiguration#xmiXml11FormatSupport}.
  * </p>
  */
-public class BinaryCasFormatSupport
+public class XmiXml11FormatSupport
     implements FormatSupport
 {
-    public static final String ID = "bin";
-    public static final String NAME = "UIMA binary CAS";
+    public static final String ID = "xmi-xml1.1";
+    public static final String NAME = "UIMA CAS XMI (XML 1.1)";
+
+    private final XmiFormatProperties properties;
+
+    public XmiXml11FormatSupport(XmiFormatProperties aProperties)
+    {
+        properties = aProperties;
+    }
 
     @Override
     public String getId()
@@ -79,7 +87,9 @@ public class BinaryCasFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(BinaryCasReader.class, aTSD);
+        return createReaderDescription( //
+                XmiReader.class, //
+                XmiReader.PARAM_LENIENT, true);
     }
 
     @Override
@@ -87,6 +97,10 @@ public class BinaryCasFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(BinaryCasWriter.class, aTSD);
+        return createEngineDescription( //
+                XmiWriter.class, aTSD, //
+                XmiWriter.PARAM_VERSION, "1.1", //
+                XmiWriter.PARAM_SANITIZE_ILLEGAL_CHARACTERS,
+                properties.isSanitizeIllegalCharacters());
     }
 }

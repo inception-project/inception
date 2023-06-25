@@ -20,7 +20,14 @@
 The probably most commonly used formats supported by the Apache UIMA framework is UIMA CAS XMI.
 It is able to capture all the information contained in the CAS. This is the de-facto standard for exchanging data in the UIMA world. Most UIMA-related tools support it.
 
-The XMI format does not include type system information. When exporting files in the XMI format, a ZIP file is created for each document which contains the XMI file itself as well as an XML file containing the type system.
+The XMI format does not include type system information. When exporting files in the XMI format, a ZIP file is created for each document which contains the XMI file itself as well as an XML file containing the type system. In order to import such files
+again, the ZIPs would need to be extracted and only the XMI files contained within should be imported.
+
+XML 1.0 and XML 1.1 do not allow all Unicode characters. In particular, certain control characters are not permitted. 
+{product-name} by default will replace illegal characters with a space character on export. This behavior can be
+disabled using the boolean properties `format.uima-xmi.sanitize-illegal-characters` and
+`format.uima-xmi-xml1_1.sanitize-illegal-characters`. When disabled, an error is produced when trying to export texts
+containing illegal characters.
 
 There are two flavors of CAS XMI, namely link:http://www.w3.org/TR/2006/REC-xml-20060816/Overview.html[XML 1.0] and link:http://www.w3.org/TR/xml11/Overview.html[XML 1.1]. XML 1.0 is more widely supported in
 the world of XML parsers, so you may expect better interoperability with other programming languages

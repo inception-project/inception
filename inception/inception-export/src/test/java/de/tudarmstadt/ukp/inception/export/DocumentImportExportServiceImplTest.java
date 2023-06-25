@@ -76,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -86,6 +85,8 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperti
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
@@ -124,9 +125,10 @@ public class DocumentImportExportServiceImplTest
         var storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
                 null, null);
 
-        sut = new DocumentImportExportServiceImpl(repositoryProperties,
-                List.of(new XmiFormatSupport()), storageService, schemaService, properties,
-                checksRegistry, repairsRegistry);
+        var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
+        sut = new DocumentImportExportServiceImpl(repositoryProperties, List.of(xmiFormatSupport),
+                storageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
         sut.onContextRefreshedEvent();
 
         doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
