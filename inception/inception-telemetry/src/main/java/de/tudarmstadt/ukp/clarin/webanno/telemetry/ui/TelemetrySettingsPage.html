@@ -24,7 +24,12 @@
         <form wicket:id="form">
           <div class="flex-h-container flex-gutter">
             <div class="flex-content">
-              <p wicket:id="intro"/>
+              <p>
+                <wicket:message key="settingsIntro">
+                  <b wicket:id="boldSave"/>
+                  <i wicket:id="heartIcon" class="fa fa-heartbeat"/>
+                </wicket:message>
+              </p>
             </div>
             <div>
               <button wicket:id="save" class="btn btn-primary">

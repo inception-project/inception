@@ -23,10 +23,25 @@
       <div class="" wicket:enclosure="enabled">
         <div class="flex-h-container flex-gutter">
           <div class="flex-content">
-            <p wicket:id="firstParagraph"/>
-            <p><wicket:message key="traitsEditorSecondParagraph"/></p>
-            <p wicket:id="thirdParagraph"/>
-            <p><wicket:message key="traitsEditorFourthParagraph"/></p>
+            <p>
+              <wicket:message key="traitsEditorFirstParagraph">
+                <b wicket:id="boldAnonymousUsageStatistics"/>
+              </wicket:message>
+            </p>
+            <p>
+              <wicket:message key="traitsEditorSecondParagraph"/>
+            </p>
+            <p>
+              <wicket:message key="traitsEditorThirdParagraph">
+                <b wicket:id="boldNote"/>
+                <b wicket:id="boldNot"/>
+              </wicket:message>
+            </p>
+            <p>
+              <wicket:message key="traitsEditorFourthParagraph">
+                <b wicket:id="boldToggleDetails"/>
+              </wicket:message>
+            </p>
           </div>
           <div>
             <select wicket:id="enabled"/>

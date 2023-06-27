@@ -98,9 +98,11 @@ public class TelemetrySettingsPage
 
         form.add(new LambdaAjaxButton<Void>("save", this::actionSave).triggerAfterSubmit());
 
-        Label introText = new Label("intro", new ResourceModel("settingsIntro"));
-        introText.setEscapeModelStrings(false);
-        form.add(introText);
+        Label boldSave = new Label("boldSave", new ResourceModel("save"));
+        form.add(boldSave);
+
+        Label heartIcon = new Label("heartIcon", "");
+        form.add(heartIcon);
 
         add(form);
     }

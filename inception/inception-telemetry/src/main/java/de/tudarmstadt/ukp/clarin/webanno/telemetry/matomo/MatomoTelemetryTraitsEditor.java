@@ -71,15 +71,19 @@ public class MatomoTelemetryTraitsEditor
 
         form.add(new ToggleBox("enabled"));
 
-        Label firstParagraph = new Label("firstParagraph",
-                new ResourceModel("traitsEditorFirstParagraph"));
-        firstParagraph.setEscapeModelStrings(false);
-        form.add(firstParagraph);
+        Label boldAnonymousUsageStatistics = new Label("boldAnonymousUsageStatistics",
+                new ResourceModel("anonymousUsageStatistics"));
+        form.add(boldAnonymousUsageStatistics);
 
-        Label thirdParagraph = new Label("thirdParagraph",
-                new ResourceModel("traitsEditorThirdParagraph"));
-        thirdParagraph.setEscapeModelStrings(false);
-        form.add(thirdParagraph);
+        Label boldNote = new Label("boldNote", new ResourceModel("note"));
+        form.add(boldNote);
+
+        Label boldNot = new Label("boldNot", new ResourceModel("not"));
+        form.add(boldNot);
+
+        Label boldToggleDetails = new Label("boldToggleDetails",
+                new ResourceModel("toggleDetails"));
+        form.add(boldToggleDetails);
 
         add(form);
     }
