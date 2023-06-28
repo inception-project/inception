@@ -41,6 +41,7 @@ import org.apache.wicket.validation.validator.PatternValidator;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.ColorPickerTextField;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.Coloring;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRule;
@@ -108,6 +109,7 @@ public class ColoringRulesConfigurationPanel
                     @Override
                     protected Map<String, String> update(Map<String, String> aStyles)
                     {
+                        aStyles.put("color", Coloring.bgToFgColor(coloringRule.getColor()));
                         aStyles.put("background-color", coloringRule.getColor());
                         return aStyles;
                     }
