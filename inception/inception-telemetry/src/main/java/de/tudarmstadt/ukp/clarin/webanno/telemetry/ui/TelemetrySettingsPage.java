@@ -30,7 +30,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -97,12 +96,6 @@ public class TelemetrySettingsPage
         form.add(settings);
 
         form.add(new LambdaAjaxButton<Void>("save", this::actionSave).triggerAfterSubmit());
-
-        Label boldSave = new Label("boldSave", new ResourceModel("save"));
-        form.add(boldSave);
-
-        Label heartIcon = new Label("heartIcon", "");
-        form.add(heartIcon);
 
         add(form);
     }
