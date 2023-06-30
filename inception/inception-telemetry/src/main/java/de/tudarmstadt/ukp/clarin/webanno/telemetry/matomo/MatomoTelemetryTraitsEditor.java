@@ -19,13 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import java.util.Optional;
 
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
@@ -70,20 +68,6 @@ public class MatomoTelemetryTraitsEditor
         };
 
         form.add(new ToggleBox("enabled"));
-
-        Label boldAnonymousUsageStatistics = new Label("boldAnonymousUsageStatistics",
-                new ResourceModel("anonymousUsageStatistics"));
-        form.add(boldAnonymousUsageStatistics);
-
-        Label boldNote = new Label("boldNote", new ResourceModel("note"));
-        form.add(boldNote);
-
-        Label boldNot = new Label("boldNot", new ResourceModel("not"));
-        form.add(boldNot);
-
-        Label boldToggleDetails = new Label("boldToggleDetails",
-                new ResourceModel("toggleDetails"));
-        form.add(boldToggleDetails);
 
         add(form);
     }
