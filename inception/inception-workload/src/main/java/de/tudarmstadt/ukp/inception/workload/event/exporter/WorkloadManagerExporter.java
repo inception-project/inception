@@ -58,7 +58,6 @@ public class WorkloadManagerExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
-        throws Exception
     {
         Project project = aRequest.getProject();
         WorkloadManager workloadManager = workloadManagementService

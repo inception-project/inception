@@ -50,7 +50,6 @@ public class ProjectSettingsExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         Project project = aRequest.getProject();
         aExProject.setDescription(project.getDescription());

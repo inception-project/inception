@@ -60,7 +60,11 @@ export class ViewportTracker {
     if (!style.display) {
       return false
     }
-    return !style.display.startsWith('inline')
+
+    return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
+      style.display.includes('table')
+
+    // return !style.display.startsWith('inline') && !style.display.includes('math')
   }
 
   private initializeElementTracking (element: Element): void {
@@ -73,6 +77,10 @@ export class ViewportTracker {
     let trackingCandidates = Array.from(element.querySelectorAll('*'))
       .filter(e => this.shouldTrack(e))
     console.debug(`Found ${trackingCandidates.length} tracking candidates`)
+
+    // const displayStyles = new Set<string>()
+    // trackingCandidates.map(e => getComputedStyle(e).display).forEach(e => displayStyles.add(e))
+    // console.debug('Display styles found: ', displayStyles)
 
     if (trackingCandidates.length > 0) {
       trackingCandidates = trackingCandidates.map(e => {
@@ -109,8 +117,9 @@ export class ViewportTracker {
 
     entries.forEach(entry => {
       if (entry.isIntersecting) {
+        const sizeBefore = this._visibleElements.size
         this._visibleElements.add(entry.target)
-        visibleElementsAdded++
+        if (sizeBefore < this._visibleElements.size) visibleElementsAdded++
       } else {
         this._visibleElements.delete(entry.target)
       }

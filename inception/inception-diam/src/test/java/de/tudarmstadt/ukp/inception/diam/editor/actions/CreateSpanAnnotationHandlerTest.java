@@ -62,7 +62,7 @@ class CreateSpanAnnotationHandlerTest
         params.setParameterValue(CreateSpanAnnotationHandler.PARAM_OFFSETS,
                 toJsonString(new CompactRangeList(new CompactRange(begin, end))));
 
-        var range = sut.getOffsetsFromRequest(state, params, cas);
+        var range = sut.getRangeFromRequest(state, params, cas);
 
         assertThat(range.getBegin()).isEqualTo(0);
         assertThat(range.getEnd()).isEqualTo(cas.getDocumentText().length());
@@ -81,7 +81,7 @@ class CreateSpanAnnotationHandlerTest
         params.setParameterValue(CreateSpanAnnotationHandler.PARAM_OFFSETS,
                 toJsonString(new CompactRangeList(new CompactRange(begin, end))));
 
-        var range = sut.getOffsetsFromRequest(state, params, cas);
+        var range = sut.getRangeFromRequest(state, params, cas);
 
         assertThat(range.getBegin()).isEqualTo(0);
         assertThat(range.getEnd()).isEqualTo(end);

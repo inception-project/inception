@@ -101,7 +101,7 @@ public class KnowledgeBaseExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
-        throws Exception
+        throws InterruptedException, IOException
     {
         Project project = aRequest.getProject();
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();

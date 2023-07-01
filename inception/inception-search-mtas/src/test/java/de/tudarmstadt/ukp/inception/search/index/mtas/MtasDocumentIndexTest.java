@@ -82,6 +82,8 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
@@ -720,6 +722,12 @@ public class MtasDocumentIndexTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+
+        @Bean
+        public XmiFormatSupport xmiFormatSupport()
+        {
+            return new XmiFormatSupport(new XmiFormatProperties());
         }
     }
 }
