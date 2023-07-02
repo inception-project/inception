@@ -16,6 +16,24 @@
  * limitations under the License.
  */
 
+.k-input {
+  color: var(--bs-body-color) !important;
+  background-color: var(--bs-body-bg) !important;
+  border-color: var(--bs-border-color) !important;
+}
+
+.k-block, .k-widget {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.k-splitbar {
+    background-color: var(--bs-body-color) !important;
+}
+
+.k-splitbar .k-resize-handle {
+    background-color: var(--bs-body-bg) !important;
+}
+
  // Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line
 // with the other Bootstrap inputs
 .k-dropdown-wrap {

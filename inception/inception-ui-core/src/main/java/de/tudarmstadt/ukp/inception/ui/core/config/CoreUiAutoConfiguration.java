@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,9 +26,12 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.VersionFooterItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.WarningsFooterItem;
 import de.tudarmstadt.ukp.inception.ui.core.about.AboutFooterItem;
+import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeMenuBarItemSupport;
+import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModePropertiesImpl;
+import de.tudarmstadt.ukp.inception.ui.core.menubar.HelpMenuBarItemSupport;
 
 @Configuration
-@EnableConfigurationProperties(CspPropertiesImpl.class)
+@EnableConfigurationProperties({ CspPropertiesImpl.class, DarkModePropertiesImpl.class })
 public class CoreUiAutoConfiguration
 {
     @ConditionalOnMissingBean(value = VersionFooterItem.class)
@@ -47,5 +51,18 @@ public class CoreUiAutoConfiguration
     public AboutFooterItem aboutFooterItem()
     {
         return new AboutFooterItem();
+    }
+
+    @Bean
+    public HelpMenuBarItemSupport helpMenuBarItemSupport()
+    {
+        return new HelpMenuBarItemSupport();
+    }
+
+    @ConditionalOnProperty(prefix = "ui.dark-mode", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public DarkModeMenuBarItemSupport darkModeMenuBarItemSupport()
+    {
+        return new DarkModeMenuBarItemSupport();
     }
 }

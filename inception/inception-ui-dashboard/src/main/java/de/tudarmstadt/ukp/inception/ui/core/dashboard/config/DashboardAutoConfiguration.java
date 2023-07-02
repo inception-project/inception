@@ -28,9 +28,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardPropertiesImpl;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPageMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPageMenuBarItemSupport;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPageMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.LegacyProjectExportMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExportMenuItem;
@@ -62,9 +65,27 @@ public class DashboardAutoConfiguration
     }
 
     @Bean
-    ProjectDashboardDashletExtensionPoint projectDashboardDashletExtensionPoint(
+    public ProjectDashboardDashletExtensionPoint projectDashboardDashletExtensionPoint(
             @Lazy @Autowired(required = false) List<ProjectDashboardDashletExtension> aExtensions)
     {
         return new ProjectDashboardDashletExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public ProjectsOverviewPageMenuBarItemSupport projectsOverviewPageMenuBarItemSupport()
+    {
+        return new ProjectsOverviewPageMenuBarItemSupport();
+    }
+
+    @Bean
+    public ProjectDashboardPageMenuBarItemSupport projectDashboardPageMenuBarItemSupport()
+    {
+        return new ProjectDashboardPageMenuBarItemSupport();
+    }
+
+    @Bean
+    public AdminDashboardPageMenuBarItemSupport adminDashboardPageMenuBarItemSupport()
+    {
+        return new AdminDashboardPageMenuBarItemSupport();
     }
 }

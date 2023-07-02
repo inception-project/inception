@@ -17,16 +17,11 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <div wicket:id="guidelinesDialog"></div>
-    <div class="action-bar-group">
-      <div class="btn-group">
-        <button wicket:id="showGuidelinesDialog" class="btn btn-action-bar" type="button" title="Guidelines">
-          <i class="fas fa-book" aria-hidden="true"></i>
-        </button>
-      </div>
-    </div>
-  </wicket:panel>
-</body>
+<wicket:panel>
+<div class="nav-item" wicket:enclosure="darkModeSwitch">
+  <a class="nav-link" wicket:id="darkModeSwitch">
+    <span wicket:id="icon"/>
+  </a>
+</div>
+</wicket:panel>
 </html>
