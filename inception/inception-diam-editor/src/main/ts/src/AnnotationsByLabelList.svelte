@@ -134,7 +134,7 @@
                 {#each sortedLabels as label}
                     <li class="list-group-item py-0 px-0 border-0">
                         <div
-                            class="px-2 py-1 bg.-light fw-bold sticky-top bg-light border-top border-bottom"
+                            class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom"
                         >
                             {label || "No label"}
                         </div>
@@ -145,7 +145,7 @@
                                     class="list-group-item list-group-item-action p-0 d-flex"
                                 >
                                     <div
-                                        class="text-secondary bg-light border-end px-2 d-flex align-items-center"
+                                        class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
                                     >
                                         {#if ann instanceof Span}
                                             <div class="annotation-type-marker">
@@ -196,7 +196,7 @@
 
 <style lang="scss">
     .labels {
-        background: linear-gradient(to right, transparent 0px, white 15px);
+        background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;
         z-index: 10;
         position: relative;

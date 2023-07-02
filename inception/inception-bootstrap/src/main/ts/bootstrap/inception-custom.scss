@@ -59,7 +59,7 @@ html, body {
   z-index: 2000; // Display above modal dialogs (1000)
 
   a, a:hover, a:focus {
-    color: black;
+    color: var(--bs-body-color);
   }
 }
 

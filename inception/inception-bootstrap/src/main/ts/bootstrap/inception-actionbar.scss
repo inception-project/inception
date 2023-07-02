@@ -19,7 +19,7 @@
 .action-bar {
   @extend .border-bottom;
   padding: 5px;
-  background-color: $card-cap-bg;
+  background-color: var(--bs-body-bg);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -55,10 +55,15 @@
       padding-right: calc($grid-gutter-width / 8);
     }
   }
+  
+  .btn-action-bar {
+    @extend .btn-outline-secondary;
+    @extend .bg-body;
+  }
     
   .action-bar-group {
     padding: 2px;
-    background-color: lightgrey;
+    background-color: var(--bs-light-border-subtle);
     border-radius: 5px;
     display: flex;
     flex-direction: row;
