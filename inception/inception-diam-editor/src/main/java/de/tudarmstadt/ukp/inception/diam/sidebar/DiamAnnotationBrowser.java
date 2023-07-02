@@ -90,8 +90,8 @@ public class DiamAnnotationBrowser
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //
                 "wsEndpointUrl", constructEndpointUrl(), //
                 "topicChannel", viewport.getTopic(), //
-                "pinnedGroups", managerPrefs.getPinnedGroups(), "userPreferencesKey",
-                userPreferencesKey);
+                "pinnedGroups", managerPrefs.getPinnedGroups(), //
+                "userPreferencesKey", userPreferencesKey);
 
         // model will be added as props to Svelte component
         setDefaultModel(Model.ofMap(properties));
