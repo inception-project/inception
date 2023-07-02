@@ -50,7 +50,7 @@
 | `/usr/bin/open %u -a "/Applications/Google Chrome.app"`
 
 | `plugins.enabled`
-| Whether to enable the ability to install plugins into {product-name}
+| Whether to enable the ability to install plugins into {product-name} (experimental).
 | `false`
 | `true`
 |===

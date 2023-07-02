@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
 import io.swagger.v3.oas.models.info.Info;
@@ -107,5 +108,12 @@ public class RemoteApiAutoConfiguration
         throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
     {
         return new WebhookService(aConfiguration, aRestTemplateBuilder);
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public SwaggerUiMenuBarItemSupport swaggerUiMenuBarItemSupport()
+    {
+        return new SwaggerUiMenuBarItemSupport();
     }
 }

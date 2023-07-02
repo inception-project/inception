@@ -26,7 +26,6 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -34,7 +33,6 @@ import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.MetaDataHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
-import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -42,7 +40,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -58,8 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
-import de.tudarmstadt.ukp.inception.preferences.Key;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -67,8 +63,6 @@ public abstract class ApplicationPageBase
     private final static Logger LOG = LoggerFactory.getLogger(ApplicationPageBase.class);
 
     private static final long serialVersionUID = -1690130604031181803L;
-
-    public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");
 
     public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = //
             new MetaDataKey<Class<? extends Component>>()
@@ -82,7 +76,6 @@ public abstract class ApplicationPageBase
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
-    private @SpringBean PreferencesService preferencesService;
     private @SpringBean UserDao userService;
 
     private IModel<List<Component>> footerItems;
@@ -106,9 +99,7 @@ public abstract class ApplicationPageBase
             interceptor.intercept(this);
         }
 
-        add(body = new TransparentWebMarkupContainer("body"));
-        body.add(AttributeModifier.replace("data-bs-theme",
-                LoadableDetachableModel.of(this::getTheme)));
+        add(body = new DarkModeWrapper("body"));
 
         footerItems = new ListModel<>(new ArrayList<>());
         footerItemRegistry.getFooterItems().stream() //
@@ -119,17 +110,6 @@ public abstract class ApplicationPageBase
         body.add(createMenuBar("menubar"));
 
         body.add(feedbackPanel = createFeedbackPanel());
-    }
-
-    private String getTheme()
-    {
-        var user = userService.getCurrentUser();
-        if (user != null) {
-            return preferencesService.loadTraitsForUser(KEY_UI, user).getTheme();
-        }
-        else {
-            return UIState.DEFAULT_THEME;
-        }
     }
 
     private Component createMenuBar(String aId)

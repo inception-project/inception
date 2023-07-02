@@ -15,43 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.inception.ui.core.darkmode;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-public class UIState
+@ConfigurationProperties("ui.dark-mode")
+public class DarkModePropertiesImpl
+    implements DarkModeProperties
 {
-    public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");
-
-    public static final String LIGHT_THEME = "light";
-    public static final String DARK_THEME = "dark";
-    public static final String DEFAULT_THEME = LIGHT_THEME;
-
-    private String theme;
-
-    public UIState()
-    {
-        theme = DEFAULT_THEME;
-    }
-
-    public UIState(String aTheme)
-    {
-        theme = aTheme;
-    }
-
-    public String getTheme()
-    {
-        return theme;
-    }
-
-    public void setTheme(String aTheme)
-    {
-        theme = aTheme;
-    }
+    private boolean enabled;
 
     @Override
-    public String toString()
+    public boolean isEnabled()
     {
-        return "UIState{" + "theme=" + theme + '}';
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
     }
 }

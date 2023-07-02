@@ -15,43 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import org.springframework.beans.factory.BeanNameAware;
 
-public class UIState
+public abstract class MenuBarItem_ImplBase
+    implements MenuBarItem, BeanNameAware
 {
-    public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");
+    private String featureSupportId;
 
-    public static final String LIGHT_THEME = "light";
-    public static final String DARK_THEME = "dark";
-    public static final String DEFAULT_THEME = LIGHT_THEME;
-
-    private String theme;
-
-    public UIState()
+    @Override
+    public String getId()
     {
-        theme = DEFAULT_THEME;
-    }
-
-    public UIState(String aTheme)
-    {
-        theme = aTheme;
-    }
-
-    public String getTheme()
-    {
-        return theme;
-    }
-
-    public void setTheme(String aTheme)
-    {
-        theme = aTheme;
+        return featureSupportId;
     }
 
     @Override
-    public String toString()
+    public void setBeanName(String aBeanName)
     {
-        return "UIState{" + "theme=" + theme + '}';
+        featureSupportId = aBeanName;
     }
 }

@@ -15,43 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
-import de.tudarmstadt.ukp.inception.preferences.Key;
+import org.apache.wicket.Component;
+import org.apache.wicket.Page;
+import org.springframework.core.annotation.Order;
 
-public class UIState
+@Order(1000)
+public class HelpMenuBarItemSupport
+    extends MenuBarItem_ImplBase
 {
-    public static final Key<UIState> KEY_UI = new Key<>(UIState.class, "global/ui");
-
-    public static final String LIGHT_THEME = "light";
-    public static final String DARK_THEME = "dark";
-    public static final String DEFAULT_THEME = LIGHT_THEME;
-
-    private String theme;
-
-    public UIState()
+    @Override
+    public Component create(String aId)
     {
-        theme = DEFAULT_THEME;
-    }
-
-    public UIState(String aTheme)
-    {
-        theme = aTheme;
-    }
-
-    public String getTheme()
-    {
-        return theme;
-    }
-
-    public void setTheme(String aTheme)
-    {
-        theme = aTheme;
+        return new HelpMenuBarItem(aId);
     }
 
     @Override
-    public String toString()
+    public boolean accepts(Page aContext)
     {
-        return "UIState{" + "theme=" + theme + '}';
+        return true;
+    }
+
+    @Override
+    public MenuBarItemJusification getJustification()
+    {
+        return MenuBarItemJusification.RIGHT;
     }
 }
