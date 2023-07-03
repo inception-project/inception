@@ -18,6 +18,7 @@
 
 export interface AnnotationEditorProperties {
   editorFactory: string
+  editorFactoryId: string
   scriptSources: ReadonlyArray<string>
   stylesheetSources: ReadonlyArray<string>
   diamAjaxCallbackUrl: string
