@@ -25,11 +25,8 @@
       <div class="row form-row">
         <div class="col-sm-12 flex-h-container">
           <div class="flex-content">
-            <h5>Delete this project</h5>
-            Deleting a project is an irreversible action. Be sure this is really what you want.
-            There is no going back. You may want to export the project first to have a backup
-            before deleting it. Mind you might also want to check that you can successfully
-            re-import the project before you finally delete it.
+            <h5><wicket:message key="deleteProjectTitle"/></h5>
+            <wicket:message key="deleteProjectWarning"/>
           </div>
           <div class="ms-5">
             <button wicket:id="delete" class="btn btn-danger">
