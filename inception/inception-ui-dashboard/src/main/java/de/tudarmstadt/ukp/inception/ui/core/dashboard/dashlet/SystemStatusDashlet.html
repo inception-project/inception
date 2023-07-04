@@ -19,10 +19,10 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <h1>System Status</h1>
+    <h1><wicket:message key="systemStatus"/></h1>
   
     <p>
-      Active users: <wicket:container wicket:id="activeUsers"/>
+      <wicket:message key="activeUsers"/> <wicket:container wicket:id="activeUsers"/>
     </p>
     <p>
       <wicket:container wicket:id="activeUsersDetail"/>
