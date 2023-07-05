@@ -50,8 +50,8 @@
           </div>
           <div class="offset-sm-3 col-sm-9 small text-muted">
             <div>
-              Obtain an API key <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey"><i class="fas fa-external-link-alt"></i> here</a>.
-              A key is valid for three months. If the recommender does not work anymore, your key might have expired.
+              <wicket:message key="obtainApiKeyHere"/>
+              <wicket:message key="keyValidThreeMonths"/>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@
   <div wicket:id="saveToAddChainAlert" class="row form-row">
     <div class="col-sm-12">
       <div class="offset-sm-3 col-sm-9 alert alert-info" role="alert">
-        Please save the recommender to allow uploading a WebLicht chain definition file.
+        <wicket:message key="pleaseSaveRecommender"/>
       </div>
     </div>
   </div>
@@ -92,8 +92,8 @@
             <input type="file" class="form-control" wicket:id="upload"/>
           </div>
           <div class="offset-sm-3 col-sm-9 small text-muted">
-            Build your chain using <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/weblicht/"><i class="fas fa-external-link-alt"></i> WebLicht</a>
-            then download it and upload it here again.
+            <wicket:message key="buildYourChainUsingWebLicht"/>
+            <wicket:message key="uploadAgain"/>
           </div>
         </div>
         <div class="row form-row" wicket:enclosure="chain">
@@ -109,7 +109,7 @@
         <div wicket:id="missingChainAlert" class="row form-row">
           <div class="offset-sm-3 col-sm-9">
             <div class="alert alert-danger px-2" role="alert">
-              Please upload a chain definition to enable the recommender.
+              <wicket:message key="uploadChainDef"/>
             </div>
           </div>
         </div>
