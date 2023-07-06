@@ -54,6 +54,8 @@ public class MultiValueConceptFeatureEditor
     private final IModel<AnnotatorState> stateModel;
 
     private FormComponent<Collection<KBHandle>> focusComponent;
+    private boolean featureUpdateBehaviorRequested = false;
+    private boolean featureUpdateBehaviorAdded = false;
 
     public MultiValueConceptFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel, IModel<AnnotatorState> aStateModel,
@@ -80,16 +82,28 @@ public class MultiValueConceptFeatureEditor
             focusComponent = (FormComponent<Collection<KBHandle>>) focusComponent
                     .replaceWith(createInput());
         }
+
+        if (featureUpdateBehaviorRequested && !featureUpdateBehaviorAdded) {
+            super.addFeatureUpdateBehavior();
+            featureUpdateBehaviorAdded = true;
+        }
     }
 
     private FormComponent<Collection<KBHandle>> createInput()
     {
+        featureUpdateBehaviorAdded = false;
         if (isEnabledInHierarchy()) {
             return createEditableInput();
         }
         else {
             return createReadOnlyInput();
         }
+    }
+
+    @Override
+    public void addFeatureUpdateBehavior()
+    {
+        featureUpdateBehaviorRequested = true;
     }
 
     private FormComponent<Collection<KBHandle>> createEditableInput()
