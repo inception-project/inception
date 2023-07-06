@@ -22,9 +22,13 @@
 <wicket:panel>
   <div class="flex-content" style="display: flex; align-items: center; justify-content: center;">
     <div class="alert alert-danger">
-      <h4 class="text-center">Incompatible file format</h4>
-      <p>The original document is not a PDF file, but a <b wicket:id="format"></b> file.</p>
-      <p>Switch to another editor via the <b>Settings</b> dialog accessible from the action bar above.</p>
+      <h4 class="text-center"><wicket:message key="incompatibleFileFormat"/></h4>
+      <p>
+        <wicket:message key="documentFileFormat">
+          <b wicket:id="format"/>
+        </wicket:message>
+      </p>
+      <p><wicket:message key="switchEditor"/></p>
     </div>
   </div>
 </wicket:panel>
