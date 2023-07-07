@@ -3305,6 +3305,12 @@ export class Visualizer {
    * @param {SourceData} sourceData
    */
   renderDataReal (sourceData?: SourceData) {
+    // Check if the SVG is actually on the page
+    if (!this.svgContainer.ownerDocument.contains(this.svg.node)) {
+      console.trace('Recieved render request for stale SVG that is no longer on the page. Ignoring.')
+      return
+    }
+
     try {
       Util.profileEnd('before render')
       Util.profileStart('render')
