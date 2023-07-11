@@ -513,20 +513,19 @@ public class CurationPage
     }
 
     /**
-     * Open a document or to a different document. This method should be used only the first time
-     * that a document is accessed. It reset the annotator state and upgrades the CAS.
+     * Open a document. This method should be used only the first time that a document is accessed.
+     * It resets the editor state and upgrades the CAS.
      */
     private void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
-        AnnotatorState state = getModelObject();
-
-        state.setUser(userRepository.getCurationUser());
-
         try {
-            // Update source document state to CURRATION_INPROGRESS, if it was not
-            // CURATION_FINISHED
+            AnnotatorState state = getModelObject();
+            state.setUser(userRepository.getCurationUser());
+            state.reset();
+
+            // Update source document state to CURRATION_INPROGRESS, if it was not CURATION_FINISHED
             if (!CURATION_FINISHED.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
@@ -546,9 +545,6 @@ public class CurationPage
 
             CAS mergeCas = readOrCreateCurationCas(
                     curationService.getDefaultMergeStrategy(getProject()), false);
-
-            // (Re)initialize brat model after potential creating / upgrading CAS
-            state.reset();
 
             // Initialize timestamp in state
             curationDocumentService.getCurationCasTimestamp(state.getDocument())
