@@ -179,14 +179,14 @@ class ExportServiceControllerImplTest
     {
         projectService.revokeRole(project, user, PermissionLevel.MANAGER);
 
-        CountDownLatch responseRecievedLatch = new CountDownLatch(1);
-        AtomicBoolean messageRecieved = new AtomicBoolean(false);
-        AtomicBoolean errorRecieved = new AtomicBoolean(false);
+        var responseRecievedLatch = new CountDownLatch(1);
+        var messageRecieved = new AtomicBoolean(false);
+        var errorRecieved = new AtomicBoolean(false);
 
-        SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
+        var sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(1, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
         try {
@@ -207,14 +207,14 @@ class ExportServiceControllerImplTest
     {
         projectService.assignRole(project, user, PermissionLevel.MANAGER);
 
-        CountDownLatch responseRecievedLatch = new CountDownLatch(1);
-        AtomicBoolean messageRecieved = new AtomicBoolean(false);
-        AtomicBoolean errorRecieved = new AtomicBoolean(false);
+        var responseRecievedLatch = new CountDownLatch(1);
+        var messageRecieved = new AtomicBoolean(false);
+        var errorRecieved = new AtomicBoolean(false);
 
-        SessionHandler sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
+        var sessionHandler = new SessionHandler(responseRecievedLatch, messageRecieved,
                 errorRecieved);
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
         session.disconnect();
