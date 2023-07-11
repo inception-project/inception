@@ -35,11 +35,11 @@
                 <wicket:message key="logInUsingCredentials"/>
               </h6>
               <div class="row mb-3 form-floating">
-                <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus autocomplete="username"/>
+                <input wicket:id="username" type="text" class="form-control" wicket:message="placeholder:userId" autofocus autocomplete="username"/>
                 <label wicket:for="username"><wicket:message key="userId"/></label>
               </div>
               <div class="row mb-3 form-floating">
-                <input wicket:id="password" type="password" class="form-control" placeholder="Password" autocomplete="current-password"/>
+                <input wicket:id="password" type="password" class="form-control" wicket:message="placeholder:loginPassword" autocomplete="current-password"/>
                 <label wicket:for="password"><wicket:message key="loginPassword"/></label>
               </div>
               <div class="row justify-content-md-center">
