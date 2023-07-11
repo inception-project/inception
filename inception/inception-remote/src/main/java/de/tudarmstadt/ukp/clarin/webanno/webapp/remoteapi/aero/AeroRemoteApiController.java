@@ -130,12 +130,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.NoResultException;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
- * </p>
- */
 @Controller
 @ConditionalOnWebApplication
 @ConditionalOnExpression(RemoteApiAutoConfiguration.REMOTE_API_ENABLED_CONDITION)
