@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
@@ -46,7 +47,7 @@ public class ThresholdBasedMergeStrategyFactoryImpl
     @Override
     public String getLabel()
     {
-        return "Merge using thresholds";
+        return Strings.getString("thresholdbasedmergestrategy.factory.impl.label");
     }
 
     @Override

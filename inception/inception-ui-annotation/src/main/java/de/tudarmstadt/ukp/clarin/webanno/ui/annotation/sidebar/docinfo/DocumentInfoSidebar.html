@@ -21,11 +21,11 @@
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div class="flex-content card">
       <div class="card-header">
-        Document Information
+        <wicket:message key="documentInformation"/>
       </div>
       <div class="scrolling card-body">
         <div class="row form-row" >
-          <label class="col-sm-4 col-form-label">ID</label>
+          <label class="col-sm-4 col-form-label"><wicket:message key="id"/></label>
           <div class="col-sm-8">
             <span class="form-control" readonly>
               <wicket:container wicket:id="id"/>
@@ -33,7 +33,7 @@
           </div>
         </div>
         <div class="row form-row" >
-          <label class="col-sm-4 col-form-label">Format</label>
+          <label class="col-sm-4 col-form-label"><wicket:message key="format"/></label>
           <div class="col-sm-8">
             <span class="form-control" style="word-break: break-all;" readonly>
               <wicket:container wicket:id="format"/>
@@ -41,7 +41,7 @@
           </div>
         </div>
         <div class="row form-row" >
-          <label class="col-sm-4 col-form-label">Last change</label>
+          <label class="col-sm-4 col-form-label"><wicket:message key="lastChange"/></label>
           <div class="col-sm-8">
             <span class="form-control" style="word-break: break-all;" readonly>
               <wicket:container wicket:id="timestamp"/>

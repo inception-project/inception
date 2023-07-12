@@ -19,7 +19,7 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="modal-header">
-    <h5 class="modal-title">Confusion Matrix</h5>
+    <h5 class="modal-title"><wicket:message key="confusionMatrix"/></h5>
     <!--
     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
       <span aria-hidden="true">&times;</span>
@@ -28,7 +28,7 @@
   </div>
   <div class="modal-body small p-0 flex-v-container" style="overflow: auto;">
     <div class="p-2 text-center">
-      Expected label in rows, predicted label in columns.
+      <wicket:message key="expectedLabel"/>
     </div>
     <div class="scrolling flex-content" style="flex-basis: auto;">
       <table style="width: 100%;">
@@ -41,14 +41,14 @@
     </div>
     <div>
       <div class="px-2 pt-2">
-        <label>Evaluation datapoints</label>
+        <label><wicket:message key="evaluationDatapoints"/></label>
         <span class="float-end">
           <wicket:container wicket:id="totalDatapoints"/> @ 
           <wicket:container wicket:id="datapointUnit"/>
         </span>
       </div>
       <div class="px-2">
-        <label>Ignored as expected</label>
+        <label><wicket:message key="ignoredAsExpected"/></label>
         <span class="float-end" wicket:id="ignoredLabels"/>
       </div>
     </div>

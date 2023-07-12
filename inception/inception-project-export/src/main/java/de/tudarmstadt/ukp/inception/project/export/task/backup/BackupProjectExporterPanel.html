@@ -19,21 +19,13 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <h2>Export backup archive</h2>
+    <h2><wicket:message key="exportBackupArchive"/></h2>
     
     <p class="small">
-      Exports an archive containing the entire project. You can use this archive as a backup. The
-      archive can be imported into this installation or into another installation of INCEpTION 
-      that is using the same version as this one or a more recent version.
+      <wicket:message key="exportDescriptionStart"/>
     </p>
     <p class="small">
-      You can optionally choose to include the annotations in a secondary format in the archive.
-      This means that the annotation data is then contained twice in the archive. Once in the 
-      mandatory archival format used by INCEpTION and once in the format that you chose.
-      Including a secondary format is useful when you want to further process the annotation data
-      outside of INCEpTION. E.g. if you want to further process the data with Python, you might
-      choose the <i>UIMA CAS XMI (XML 1.0)</i> format as the secondary format and then use 
-      <a href="https://pypi.org/project/dkpro-cassis/">DKPro Cassis</a> to process the data further.
+      <wicket:message key="exportDescriptionEnd"/>
     </p>
 
     <div class="container">

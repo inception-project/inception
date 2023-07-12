@@ -25,13 +25,7 @@
           <div class="flex-h-container flex-gutter">
             <div class="flex-content">
               <p>
-                In order to support the development of <wicket:message key="product.name"/>, it would
-                like to collect some data and send it home. Please review the settings below and 
-                opt in or out of the respective data collections. Once you are done, use the
-                <b><wicket:message key="save"/></b> button on the right side to save your choices. If
-                there were any changes to the data collection process, this page will appear again
-                when an administrator logs in. You can always revise your choices by accessing this
-                page via the <i class="fa fa-heartbeat"></i> icon in the page footer.
+                <wicket:message key="settingsIntro"/>
               </p>
             </div>
             <div>
@@ -46,14 +40,13 @@
               <span wicket:id="name"/>
               <div class="actions">
                 <button wicket:id="toggleDetails" class="btn btn-sm btn-secondary">
-                  Toggle details...
-                </button> 
+                  <wicket:message key="toggleDetails"/>
+                </button>
               </div>
             </div>
             <div class="card-body">
               <div class="alert alert-warning" wicket:id="reviewRequiredMessage">
-                The behavior of this data collector has changed. Please review the description
-                and settings.
+                <wicket:message key="changeAlert"/>
               </div>
               <div wicket:id="traitsEditor"/>
               <div wicket:id="details"/>

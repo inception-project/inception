@@ -23,6 +23,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
@@ -41,7 +42,7 @@ public class GuidelinesProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Guidelines";
+        return Strings.getString("guidelinesprojectsettings.panel.factory.label");
     }
 
     @Override

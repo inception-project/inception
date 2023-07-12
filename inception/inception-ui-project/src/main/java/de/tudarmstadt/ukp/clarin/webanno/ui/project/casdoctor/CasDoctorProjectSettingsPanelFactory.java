@@ -23,6 +23,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
@@ -41,7 +42,7 @@ public class CasDoctorProjectSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "CAS Doctor";
+        return Strings.getString("casdoctorprojectsettings.panel.factory.label");
     }
 
     @Override

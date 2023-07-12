@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import wicket.contrib.input.events.key.KeyType;
@@ -69,7 +70,7 @@ public class MatrixWorkloadManagementPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Monitoring";
+        return Strings.getString("matrixworloadmanagement.page.menuitem.label");
     }
 
     /**

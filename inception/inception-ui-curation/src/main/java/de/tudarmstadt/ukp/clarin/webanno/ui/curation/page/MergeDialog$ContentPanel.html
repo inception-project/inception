@@ -34,7 +34,7 @@
               <wicket:container wicket:id="expectedResponse" />
             </p>
             <div>
-              <input wicket:id="response" class="form-control" placeholder="Enter value here..."/>
+              <input wicket:id="response" class="form-control" wicket:message="placeholder:enterValueHere"/>
             </div>
           </div>
         </div>
@@ -48,7 +48,7 @@
             <div class="form-check">
               <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox" />
               <label wicket:for="saveSettingsAsDefault" class="form-check-label">
-                Update project merge strategy settings
+                <wicket:message key="updateProjectMergeStrategySettings"/>
               </label>
             </div>
           </div>

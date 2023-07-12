@@ -42,21 +42,21 @@
         </div>
         <div class="card-footer small flex-h-container">
           <div class="flex-content">
-            <input wicket:id="newRole" style="width: 100%;" placeholder="Enter role name..."></input>
+            <input wicket:id="newRole" style="width: 100%;" wicket:message="placeholder:enterRoleName"></input>
           </div>
           <div class="text-nowrap">
             <button wicket:id="add" class="btn btn-sm btn-primary ms-3">
               <i class="fas fa-plus"></i>&nbsp;
-              Add
+              <wicket:message key="add"/>
             </button>
             <div class="btn-group ms-3" role="group" wicket:enclosure="del">
               <button wicket:id="del" class="btn btn-sm btn-danger">
                 <i class="fas fa-trash"></i>&nbsp;
-                Del
+                <wicket:message key="del"/>
               </button>
               <button wicket:id="set" class="btn btn-sm btn-secondary">
                 <i class="fas fa-check"></i>&nbsp;
-                Set
+                <wicket:message key="set"/>
               </button>
             </div>
           </div>

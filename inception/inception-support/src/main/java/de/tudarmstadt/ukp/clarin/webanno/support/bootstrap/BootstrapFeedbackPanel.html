@@ -21,8 +21,8 @@
 <wicket:panel>
   <ul wicket:id="feedbackul" class="feedbackPanel">
     <li wicket:id="closeAll" class="alert alert-warning alert-dismissible">
-      <button class="btn btn-primary">Dismiss all messages</button>
-      After checking the messages below, you can use this button to dismiss all messages at once.
+      <button class="btn btn-primary"><wicket:message key="dismissAllMessages"/></button>
+      <wicket:message key="afterCheck"/>
     </li>
     <li wicket:id="messages">
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>

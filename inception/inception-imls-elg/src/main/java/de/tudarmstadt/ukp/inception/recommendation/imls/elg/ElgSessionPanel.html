@@ -23,14 +23,14 @@
       <div class="col-sm-12">
         <ol class="list-group list-group-numbered">
           <li wicket:enclosure="signInLink" class="list-group-item">
-            <a wicket:id="signInLink" target="_blank">Obtain an ELG sign-in code.</a>
+            <a wicket:id="signInLink" target="_blank"><wicket:message key="obtainElgSignInCode"/></a>
           </li>
           <li wicket:enclosure="code" class="list-group-item">
             <wicket:message key="code"/>
             <textarea wicket:id="code" class="form-control"/>
           </li>
           <li class="list-group-item">
-            <button wicket:id="signIn" class="btn btn-primary">Sign in</button>
+            <button wicket:id="signIn" class="btn btn-primary"><wicket:message key="signIn"/></button>
           </li>
         </ol>
       </div>
@@ -40,22 +40,22 @@
     <div class="row form-row">
       <div class="col-sm-12 flex-h-container flex-gutter flex-only-internal-gutter">
         <div class="form-control" readonly>
-          Signed in
+          <wicket:message key="signedIn"/>
           <span wicket:enclosure="identity">
-            as <span wicket:id="identity"/>
+            <wicket:message key="as"/> <span wicket:id="identity"/>
           </span>
           <span wicket:enclosure="signInValidUntil"> 
-            until <span wicket:id="signInValidUntil"/> 
-            (<span wicket:id="expiresIn"/> remaining)
+            <wicket:message key="until"/> <span wicket:id="signInValidUntil"/>
+            (<span wicket:id="expiresIn"/> <wicket:message key="remaining"/>)
           </span>
         </div>
-        <button wicket:id="signOut" class="btn btn-danger float-end text-nowrap">Sign out</button>
+        <button wicket:id="signOut" class="btn btn-danger float-end text-nowrap"><wicket:message key="signOut"/></button>
       </div>
       <div wicket:enclosure="accessTokenValidUntil" class="pt-2">
-        Access token valid until 
+        <wicket:message key="accessTokenValidUntil"/>
         <span wicket:id="accessTokenValidUntil"/> 
-        <button wicket:id="invalidateAccessToken" class="btn btn-sm btn-outline-secondary">Invalidate</button>
-        <button wicket:id="refreshAccessToken" class="btn btn-sm btn-outline-secondary">Refresh</button>
+        <button wicket:id="invalidateAccessToken" class="btn btn-sm btn-outline-secondary"><wicket:message key="invalidate"/></button>
+        <button wicket:id="refreshAccessToken" class="btn btn-sm btn-outline-secondary"><wicket:message key="refresh"/></button>
       </div>
     </div>
   </div>

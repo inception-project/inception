@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -48,7 +49,7 @@ public class ManageUsersPageMenuItem
     @Override
     public String getLabel()
     {
-        return "Users";
+        return Strings.getString("manageusers.page.menuitem.label");
     }
 
     /**

@@ -22,6 +22,7 @@ import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
@@ -46,7 +47,7 @@ public class VersioningSettingsPanelFactory
     @Override
     public String getLabel()
     {
-        return "Versioning";
+        return Strings.getString("versioningsettings.panel.factory.label");
     }
 
     @Override

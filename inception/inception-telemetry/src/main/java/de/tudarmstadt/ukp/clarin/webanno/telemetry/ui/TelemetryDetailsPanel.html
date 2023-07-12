@@ -21,13 +21,13 @@
   <wicket:panel>
     <div class="col-sm-12">
       <table class="table table-bordered table-sm table-hover">
-        <caption style="caption-side:top">Details</caption>
+        <caption style="caption-side:top"><wicket:message key="details"/></caption>
         <thead>
-          <tr>
-            <th>Key</th>
-            <th>Value</th>
-            <th>Description</th>
-          </tr>
+        <tr>
+          <th><wicket:message key="keyTitle"/></th>
+          <th><wicket:message key="valueTitle"/></th>
+          <th><wicket:message key="descriptionTitle"/></th>
+        </tr>
         </thead>
         <tbody>
           <tr wicket:id="details" >
