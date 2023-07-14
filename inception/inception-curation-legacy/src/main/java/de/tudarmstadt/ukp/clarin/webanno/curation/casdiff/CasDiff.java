@@ -688,8 +688,14 @@ public class CasDiff
 
             switch (range.getName()) {
             case CAS.TYPE_NAME_STRING_ARRAY: {
-                Set<?> value1 = FSUtil.getFeature(aFS1, f1, Set.class);
-                Set<?> value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                var value1 = FSUtil.getFeature(aFS1, f1, Set.class);
+                if (value1 == null) {
+                    value1 = Collections.emptySet();
+                }
+                var value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                if (value2 == null) {
+                    value2 = Collections.emptySet();
+                }
                 if (!value1.equals(value2)) {
                     return false;
                 }
