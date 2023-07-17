@@ -27,6 +27,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 
@@ -102,8 +103,9 @@ public class CasMergeLinkTest
                 .buildAndAddToIndexes();
 
         // Perform merge
-        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
-                slotFeature.getName(), 0);
+        assertThatExceptionOfType(AlreadyMergedException.class)
+                .isThrownBy(() -> sut.mergeSlotFeature(document, DUMMY_USER, slotLayer,
+                        targetCas.getCas(), sourceFs, slotFeature.getName(), 0));
 
         var adapter = schemaService.getAdapter(slotLayer);
         List<LinkWithRoleModel> mergedLinks = adapter.getFeatureValue(slotFeature, targetFs);
@@ -162,8 +164,9 @@ public class CasMergeLinkTest
                 .buildAndAddToIndexes();
 
         // Perform merge
-        sut.mergeSlotFeature(document, DUMMY_USER, slotLayer, targetCas.getCas(), sourceFs,
-                slotFeature.getName(), 0);
+        assertThatExceptionOfType(AlreadyMergedException.class)
+                .isThrownBy(() -> sut.mergeSlotFeature(document, DUMMY_USER, slotLayer,
+                        targetCas.getCas(), sourceFs, slotFeature.getName(), 0));
 
         var adapter = schemaService.getAdapter(slotLayer);
         List<LinkWithRoleModel> mergedLinks = adapter.getFeatureValue(slotFeature, targetFs);
