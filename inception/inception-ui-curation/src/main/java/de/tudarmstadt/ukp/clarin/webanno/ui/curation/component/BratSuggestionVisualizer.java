@@ -410,7 +410,7 @@ public abstract class BratSuggestionVisualizer
                 return new DefaultAjaxResponse(getAction(aRequest));
             }
             catch (Exception e) {
-                return handleError("Unable to scroll to annotation", e);
+                return handleError("Unable to merge", e);
             }
         }
 
