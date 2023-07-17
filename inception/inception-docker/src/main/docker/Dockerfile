@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM openjdk:17
+FROM eclipse-temurin:17
 
 MAINTAINER INCEpTION Team
 
