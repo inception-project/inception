@@ -26,17 +26,21 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.ValidationModeSelect;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 public class ChainLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<ChainLayerTraits, ChainLayerSupport>
 {
     private static final long serialVersionUID = -9082045435380184514L;
+
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     public ChainLayerTraitsEditor(String aId, ChainLayerSupport aLayerSupport,
             IModel<AnnotationLayer> aLayer)
@@ -65,6 +69,8 @@ public class ChainLayerTraitsEditor
         aForm.add(crossSentence);
 
         TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction
+                .setVisible(annotationEditorProperties.isConfigurableJavaScriptActionEnabled());
         onClickJavascriptAction
                 .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
