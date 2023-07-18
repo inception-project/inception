@@ -63,7 +63,7 @@
 
     <junit-jupiter.version>5.9.3</junit-jupiter.version>
     <junit-platform.version>1.9.3</junit-platform.version>
-    <mockito.version>4.11.0</mockito.version>
+    <mockito.version>5.4.0</mockito.version>
     <assertj.version>3.24.2</assertj.version>
 
     <awaitility.version>4.2.0</awaitility.version>
@@ -81,12 +81,12 @@
     <spring.data.version>2.7.13</spring.data.version>
     <spring.security.version>5.8.5</spring.security.version>
     <springdoc.version>1.6.14</springdoc.version>
-    <swagger.version>2.2.8</swagger.version>
+    <swagger.version>2.2.15</swagger.version>
     <jjwt.version>0.11.5</jjwt.version>
 
     <slf4j.version>2.0.7</slf4j.version>
     <log4j2.version>2.20.0</log4j2.version>
-    <jboss.logging.version>3.5.0.Final</jboss.logging.version>
+    <jboss.logging.version>3.5.3.Final</jboss.logging.version>
     <sentry.version>6.25.2</sentry.version>
 
     <tomcat.version>9.0.78</tomcat.version>
@@ -132,15 +132,15 @@
     <!--   4.7.0    depends on Lucene 9.4.2 -->
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.8</asciidoctor.version>
-    <asciidoctor-diagram.version>2.2.7</asciidoctor-diagram.version>
+    <asciidoctor.version>2.5.10</asciidoctor.version>
+    <asciidoctor-diagram.version>2.2.9</asciidoctor-diagram.version>
 
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.15.2</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.11.0</okhttp.version>
-    <okio.version>3.3.0</okio.version>
+    <okio.version>3.4.0</okio.version>
 
     <npm-install-command>ci</npm-install-command>
 
@@ -170,7 +170,7 @@
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>3.6.4</jquery.version>
+    <jquery.version>3.7.0</jquery.version>
     <jquery-ui.version>1.13.2</jquery-ui.version>
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
@@ -1539,7 +1539,7 @@
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
-        <version>6.5.0</version>
+        <version>6.5.1</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -1556,7 +1556,7 @@
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.11</version>
+        <version>8.5.12</version>
       </dependency>
 
       <dependency>
@@ -1608,12 +1608,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.14.0</version>
+        <version>1.14.5</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.14.0</version>
+        <version>1.14.5</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -1760,7 +1760,7 @@
       <dependency>
         <groupId>org.hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>2.7.1</version>
+        <version>2.7.2</version>
       </dependency>
 
       <dependency>
@@ -1800,7 +1800,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.15.4</version>
+        <version>1.16.1</version>
       </dependency>
 
       <!-- LUCENE MTAS -->
@@ -1893,7 +1893,7 @@
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.12.0</version>
+        <version>2.13.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -1913,7 +1913,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.15</version>
+        <version>1.16.0</version>
       </dependency>
       <dependency>
         <groupId>commons-validator</groupId>
@@ -1923,12 +1923,12 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.4</version>
+        <version>3.1.6</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
-        <version>1.1.8.4</version>
+        <version>1.1.10.2</version>
       </dependency>
 
       <!-- JAXB DEPENDENCIES -->
@@ -2198,7 +2198,7 @@
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
-        <version>4.7.0</version>
+        <version>4.7.4</version>
       </dependency>
       <dependency>
         <groupId>info.picocli</groupId>
@@ -2974,7 +2974,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.2.0</version>
+              <version>3.3.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -2985,7 +2985,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.45.1</version>
+                  <version>10.12.1</version>
                 </dependency>
               </dependencies>
               <configuration>
