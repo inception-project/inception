@@ -211,7 +211,13 @@ public class KnowledgeBaseExporterTest
         traits1.setRepositoryId("id-kb1");
         feat1.setTraits(JSONUtil.toJsonString(traits1));
 
-        return asList(feat1);
+        AnnotationFeature feat2 = new AnnotationFeature(1, layer1, "conceptFeature",
+                "kb-multi:conceptA");
+        ConceptFeatureTraits traits2 = new ConceptFeatureTraits();
+        traits2.setRepositoryId("id-kb1");
+        feat2.setTraits(JSONUtil.toJsonString(traits1));
+
+        return asList(feat1, feat2);
     }
 
     private KnowledgeBase buildKnowledgeBase(String name) throws Exception
