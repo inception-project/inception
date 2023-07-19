@@ -29,6 +29,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.nio.channels.ClosedByInterruptException;
 
 import javax.servlet.ServletContext;
@@ -52,7 +53,7 @@ import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>
     implements ProjectExportTask<R>, InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     // The task needs to hold on to the handle because it is used in a WeakHashMap in
     // ProjectExportService to allow access to tasks.
@@ -117,7 +118,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             // message may be throttled and it may never be displayed
             monitor.addMessage(LogMessage.error(this, "Project export failed: %s", e.getMessage()));
             monitor.setStateAndProgress(FAILED, 100);
-            log.error("Error during project export", e);
+            LOG.error("Error during project export", e);
         }
         catch (Throwable e) {
             // This marks the progression as complete and causes ProgressBar#onFinished
@@ -128,7 +129,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
                     getRootCauseMessage(e)));
             monitor.setStateAndProgress(FAILED, 100);
-            log.error("Unexpected error during project export", e);
+            LOG.error("Unexpected error during project export", e);
         }
     }
 
