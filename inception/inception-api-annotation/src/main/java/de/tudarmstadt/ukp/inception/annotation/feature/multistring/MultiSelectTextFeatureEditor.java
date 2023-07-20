@@ -68,6 +68,8 @@ public class MultiSelectTextFeatureEditor
     // private RulesIndicator indicator = new RulesIndicator();
 
     private FormComponent<?> field;
+    private boolean featureUpdateBehaviorRequested = false;
+    private boolean featureUpdateBehaviorAdded = false;
 
     public MultiSelectTextFeatureEditor(String aId, MarkupContainer aOwner,
             final IModel<FeatureState> aFeatureStateModel, AnnotationActionHandler aHandler)
@@ -92,6 +94,11 @@ public class MultiSelectTextFeatureEditor
             field = (FormComponent<ReorderableTag>) field.replaceWith(createInput());
         }
 
+        if (featureUpdateBehaviorRequested && !featureUpdateBehaviorAdded) {
+            super.addFeatureUpdateBehavior();
+            featureUpdateBehaviorAdded = true;
+        }
+        
         // Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied
         // and feature doesn't match any constraint rule
         // if enabled and constraints rule execution returns anything other than green
@@ -103,12 +110,19 @@ public class MultiSelectTextFeatureEditor
 
     private FormComponent<?> createInput()
     {
+        featureUpdateBehaviorAdded = false;
         if (isEnabledInHierarchy()) {
             return createEditableInput();
         }
         else {
             return createReadOnlyInput();
         }
+    }
+
+    @Override
+    public void addFeatureUpdateBehavior()
+    {
+        featureUpdateBehaviorRequested = true;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

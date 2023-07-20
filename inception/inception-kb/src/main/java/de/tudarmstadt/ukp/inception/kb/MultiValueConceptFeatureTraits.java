@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Traits for knowledge-base-related features.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MultiValueConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
     implements Serializable
