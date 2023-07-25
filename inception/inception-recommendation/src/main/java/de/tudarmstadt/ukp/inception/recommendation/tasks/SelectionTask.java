@@ -110,11 +110,9 @@ public class SelectionTask
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            Project project = getProject();
-            User sessionOwner = getUser().orElseThrow();
-            String sessionOwnerName = sessionOwner.getUsername();
-
-            logEvaluationStarted(sessionOwner);
+            var project = getProject();
+            var sessionOwner = getUser().orElseThrow();
+            var sessionOwnerName = sessionOwner.getUsername();
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -129,7 +127,8 @@ public class SelectionTask
             };
 
             boolean seenRecommender = false;
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+            var layers = annoService.listAnnotationLayer(getProject());
+            for (AnnotationLayer layer : layers) {
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -140,16 +139,19 @@ public class SelectionTask
                     continue;
                 }
 
-                seenRecommender = true;
-
                 var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
-                    Optional<Recommender> optRecommender = freshenRecommender(sessionOwner, r);
+                    var optRecommender = freshenRecommender(sessionOwner, r);
                     if (optRecommender.isEmpty()) {
                         logRecommenderGone(sessionOwner, r);
                         continue;
+                    }
+
+                    if (!seenRecommender) {
+                        logEvaluationStarted(sessionOwner);
+                        seenRecommender = true;
                     }
 
                     Recommender recommender = optRecommender.get();
