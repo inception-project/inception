@@ -37,6 +37,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
@@ -90,6 +91,17 @@ public class Selection
 
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
+        if (aVid.isSet()) {
+            try {
+                ICasUtil.selectAnnotationByAddr(aOriginFs.getCAS(), aVid.getId());
+            }
+            catch (Exception e) {
+                LOG.error("While selecting an arc the VID does not point to a valid annotation", e);
+                clear();
+                return;
+            }
+        }
+
         selectedAnnotationId = aVid;
         text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
         originText = aOriginFs.getCoveredText();
@@ -106,7 +118,7 @@ public class Selection
         originSpanId = getAddr(aOriginFs);
         targetSpanId = getAddr(aTargetFs);
 
-        LOG.debug("Arc: {}", this);
+        LOG.trace("Arc selected: {}", this);
 
         fireSelectionChanged();
     }
@@ -119,6 +131,17 @@ public class Selection
 
     public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
     {
+        if (aVid.isSet()) {
+            try {
+                ICasUtil.selectAnnotationByAddr(aCAS, aVid.getId());
+            }
+            catch (Exception e) {
+                LOG.error("While selecting a span the VID does not point to a valid annotation", e);
+                clear();
+                return;
+            }
+        }
+
         var clippedRange = Range.rangeClippedToDocument(aCAS, aBegin, aEnd);
 
         selectedAnnotationId = aVid;
@@ -132,7 +155,7 @@ public class Selection
         originText = null;
         targetText = null;
 
-        LOG.debug("Span: {}", this);
+        LOG.trace("Span selected: {}", this);
 
         fireSelectionChanged();
     }
@@ -153,7 +176,7 @@ public class Selection
         originSpanId = -1;
         targetSpanId = -1;
 
-        LOG.debug("Clear: {}", this);
+        LOG.trace("Selection cleared: {}", this);
 
         fireSelectionChanged();
     }
@@ -238,11 +261,6 @@ public class Selection
     public VID getAnnotation()
     {
         return selectedAnnotationId;
-    }
-
-    public void setAnnotation(VID aVID)
-    {
-        selectedAnnotationId = aVID;
     }
 
     public void reverseArc()

@@ -987,7 +987,7 @@ public abstract class AnnotationDetailEditorPanel
         // If no features, still create arc #256
         AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
                 state.getUser().getUsername(), targetFs, originFs, cas);
-        state.getSelection().setAnnotation(new VID(ICasUtil.getAddr(arc)));
+        state.getSelection().selectArc(arc);
 
         for (FeatureState featureState : featureStates) {
             adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
