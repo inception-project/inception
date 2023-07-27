@@ -65,6 +65,12 @@ public class NonTrainableRecommenderActivationTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Activating non-trainable recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         User user = getUser().orElseThrow();

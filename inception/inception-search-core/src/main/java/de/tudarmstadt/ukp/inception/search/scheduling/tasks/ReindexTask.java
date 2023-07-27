@@ -50,9 +50,15 @@ public class ReindexTask
 
     private Monitor monitor = new Monitor();
 
-    public ReindexTask(Project aProject, String aTrigger)
+    public ReindexTask(Project aProject, String aUser, String aTrigger)
     {
-        super(aProject, null, aTrigger);
+        super(aProject, aUser, aTrigger);
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Rebuilding index...";
     }
 
     @Override

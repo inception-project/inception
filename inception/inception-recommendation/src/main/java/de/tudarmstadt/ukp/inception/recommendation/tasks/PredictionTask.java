@@ -84,6 +84,12 @@ public class PredictionTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Generating annotation suggestions...";
+    }
+
+    @Override
     public void execute()
     {
         try (var session = CasStorageSession.openNested()) {
@@ -119,7 +125,8 @@ public class PredictionTask
         // Do we need to predict ALL documents (e.g. in active learning mode)
         if (recommendationService.isPredictForAllDocuments(sessionOwnerName, project)) {
             logPredictionStartedForAllDocuments(sessionOwnerName, project, docs);
-            return recommendationService.computePredictions(sessionOwner, project, docs, dataOwner);
+            return recommendationService.computePredictions(sessionOwner, project, docs, dataOwner,
+                    getMonitor());
         }
 
         // Limit prediction to a single document and inherit the rest
@@ -130,7 +137,7 @@ public class PredictionTask
         logPredictionStartedForOneDocument(sessionOwnerName, project, inherit);
 
         return recommendationService.computePredictions(sessionOwner, project, currentDocument,
-                dataOwner, inherit, predictionBegin, predictionEnd);
+                dataOwner, inherit, predictionBegin, predictionEnd, getMonitor());
     }
 
     private void logPredictionComplete(Predictions aPredictions, long startTime, String username)

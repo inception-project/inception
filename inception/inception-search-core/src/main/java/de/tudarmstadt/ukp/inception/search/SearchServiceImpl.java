@@ -439,7 +439,7 @@ public class SearchServiceImpl
         }
 
         // Schedule re-indexing of the physical index
-        enqueueReindexTask(aEvent.getProject(), "beforeLayerConfigurationChanged");
+        enqueueReindexTask(aEvent.getProject(), null, "beforeLayerConfigurationChanged");
     }
 
     @Override
@@ -806,7 +806,7 @@ public class SearchServiceImpl
         if (aIndex.getInvalid()) {
             if (getIndexProgress(aProject).isEmpty()) {
                 // Index is invalid, schedule a new index rebuild
-                enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[invalid]");
+                enqueueReindexTask(aProject, null, "ensureIndexIsCreatedAndValid[invalid]");
             }
 
             // Throw execution exception so that the user knows the query was not run
@@ -833,14 +833,14 @@ public class SearchServiceImpl
         aIndex.setInvalid(true);
         entityManager.merge(aIndex);
 
-        enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
+        enqueueReindexTask(aProject, null, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
     @Override
     @Transactional
-    public void enqueueReindexTask(Project aProject, String aTrigger)
+    public void enqueueReindexTask(Project aProject, String aUser, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, aTrigger));
+        enqueue(new ReindexTask(aProject, aUser, aTrigger));
     }
 
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)

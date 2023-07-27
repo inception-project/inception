@@ -127,7 +127,9 @@ public class SchedulingServiceTest
 
     private Task buildDummyTask(String aUsername, String aProjectName)
     {
-        return new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+        var task = new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+        task.afterPropertiesSet();
+        return task;
     }
 
     /**

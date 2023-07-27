@@ -123,6 +123,7 @@ installPrefs inception-ui-kb
 installPrefs inception-ui-monitoring
 installPrefs inception-ui-project
 installPrefs inception-ui-search
+installPrefs inception-ui-scheduling
 installPrefs inception-ui-tagsets
 installPrefs inception-versioning
 installPrefs inception-websocket

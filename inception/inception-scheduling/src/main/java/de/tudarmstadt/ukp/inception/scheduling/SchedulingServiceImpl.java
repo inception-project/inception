@@ -309,8 +309,22 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
     {
-        enqueuedTasks.removeIf(aPredicate);
-        executor.getQueue().removeIf(runnable -> aPredicate.test((Task) runnable));
+        enqueuedTasks.removeIf(task -> {
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
+
+        executor.getQueue().removeIf(runnable -> {
+            var task = (Task) runnable;
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
 
         // TODO: Stop the running tasks as well
     }
@@ -377,5 +391,6 @@ public class SchedulingServiceImpl
         factory.autowireBean(aTask);
         factory.initializeBean(aTask, "transientTask");
         aTask.execute(); // Execute synchronously - blocking
+        aTask.destroy();
     }
 }
