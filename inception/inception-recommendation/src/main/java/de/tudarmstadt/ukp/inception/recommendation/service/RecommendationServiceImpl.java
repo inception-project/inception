@@ -95,7 +95,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -161,6 +160,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -181,7 +181,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -730,7 +729,11 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Set<CommittedDocument> committed = requestCycle.getMetaData(COMMITTED);
+        if (!existsEnabledRecommender(aEvent.getDocument().getProject())) {
+            return;
+        }
+
+        var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
             committed = new HashSet<>();
             requestCycle.setMetaData(COMMITTED, committed);
@@ -750,10 +753,10 @@ public class RecommendationServiceImpl
             // Hack to figure out which annotations the user is viewing. This obviously works only
             // if the user is viewing annotations through an AnnotationPageBase ... still not a
             // bad guess
-            IPageRequestHandler handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
+            var handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
             if (handler.isPageInstanceCreated()
                     && handler.getPage() instanceof AnnotationPageBase) {
-                AnnotatorState state = ((AnnotationPageBase) handler.getPage()).getModelObject();
+                var state = ((AnnotationPageBase) handler.getPage()).getModelObject();
                 requestCycle.getListeners().add(new TriggerTrainingTaskListener(state.getDocument(),
                         state.getUser().getUsername()));
             }
@@ -840,14 +843,14 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
-        User user = userRepository.get(aSessionOwner);
+        var user = userRepository.get(aSessionOwner);
         // do not trigger training during when viewing others' work
         if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
         }
 
         // Update the task count
-        AtomicInteger count = trainingTaskCounter.computeIfAbsent(
+        var count = trainingTaskCounter.computeIfAbsent(
                 new RecommendationStateKey(user.getUsername(), aProject),
                 _key -> new AtomicInteger(0));
 
@@ -864,7 +867,7 @@ public class RecommendationServiceImpl
             Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
             schedulingService.enqueue(task);
 
-            RecommendationState state = getState(aSessionOwner, aProject);
+            var state = getState(aSessionOwner, aProject);
             synchronized (state) {
                 state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
                 state.setPredictionsSinceLastEvaluation(0);
@@ -873,10 +876,10 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
+        var task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
         schedulingService.enqueue(task);
 
-        RecommendationState state = getState(aSessionOwner, aProject);
+        var state = getState(aSessionOwner, aProject);
         synchronized (state) {
             int predictions = state.getPredictionsSinceLastEvaluation() + 1;
             state.setPredictionsSinceLastEvaluation(predictions);
@@ -2567,23 +2570,27 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    @Transactional
     public boolean existsEnabledRecommender(Project aProject)
     {
-        String query = String.join("\n", //
-                "FROM Recommender WHERE", //
-                "enabled = :enabled AND", //
-                "project = :project");
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var criteriaQuery = criteriaBuilder.createQuery(Recommender.class);
 
-        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
-                .setParameter("enabled", true) //
-                .setParameter("project", aProject) //
-                .getResultList();
+        var root = criteriaQuery.from(Recommender.class);
+        var predicate = criteriaBuilder.and( //
+                criteriaBuilder.equal(root.get(Recommender_.enabled), true), //
+                criteriaBuilder.equal(root.get(Recommender_.project), aProject));
+
+        criteriaQuery.select(root).where(predicate);
+
+        var recommenders = entityManager.createQuery(criteriaQuery).getResultList();
 
         return recommenders.stream() //
                 .anyMatch(rec -> getRecommenderFactory(rec).isPresent());
     }
 
     @Override
+    @Transactional
     public long countEnabledRecommenders()
     {
         String query = String.join("\n", //
