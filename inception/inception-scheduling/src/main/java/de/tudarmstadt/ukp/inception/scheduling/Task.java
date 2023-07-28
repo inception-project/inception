@@ -75,7 +75,7 @@ public abstract class Task
             monitor = new NotifyingTaskMonitor(handle, user.getUsername(), getTitle(), msgTemplate);
         }
         else {
-            monitor = new TaskMonitor(handle, user.getUsername(), getTitle());
+            monitor = new TaskMonitor(handle, user != null ? user.getUsername() : null, getTitle());
         }
     }
 
