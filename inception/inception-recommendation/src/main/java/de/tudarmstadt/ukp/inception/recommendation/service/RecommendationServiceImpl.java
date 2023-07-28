@@ -183,6 +183,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -1724,12 +1725,15 @@ public class RecommendationServiceImpl
 
     @Override
     public Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner)
+            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor)
     {
         try (var casHolder = new PredictionCasHolder()) {
             Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             // Generate new predictions or inherit at the recommender level
+            aMonitor.setMaxProgress(aDocuments.size());
             for (SourceDocument document : aDocuments) {
+                aMonitor.addMessage(LogMessage.info(this, "%s", document.getName()));
+                aMonitor.incrementProgress();
                 computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
             }
 
@@ -1747,10 +1751,12 @@ public class RecommendationServiceImpl
     @Override
     public Predictions computePredictions(User aSessionOwner, Project aProject,
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd)
+            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor)
     {
-        Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
-        Predictions activePredictions = getPredictions(aSessionOwner, aProject);
+        aMonitor.setMaxProgress(1);
+
+        var predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
+        var activePredictions = getPredictions(aSessionOwner, aProject);
 
         // Inherit at the document level. If inheritance at a recommender level is possible,
         // this is done below.
@@ -1773,6 +1779,8 @@ public class RecommendationServiceImpl
                     LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
             LOG.error("Cannot create prediction CAS, stopping predictions!");
         }
+
+        aMonitor.setProgress(1);
 
         return predictions;
     }

@@ -107,6 +107,12 @@ public class SelectionTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Activating trainable recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
@@ -127,9 +133,13 @@ public class SelectionTask
                 }
             };
 
+            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+            getMonitor().setMaxProgress(listAnnotationLayers.size());
             boolean seenRecommender = false;
             var layers = annoService.listAnnotationLayer(getProject());
             for (AnnotationLayer layer : layers) {
+                getMonitor().incrementProgress();
+
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -159,6 +169,7 @@ public class SelectionTask
                     try {
                         long start = System.currentTimeMillis();
 
+                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
                         evaluate(sessionOwner, recommender, casLoader)
                                 .ifPresent(evaluatedRecommender -> {
                                     var result = evaluatedRecommender.getEvaluationResult();

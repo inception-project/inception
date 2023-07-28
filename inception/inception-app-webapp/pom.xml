@@ -62,6 +62,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-scheduling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
     </dependency>
     <dependency>
@@ -905,9 +909,10 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-dashboard-activity</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-scheduling</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam-editor</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-dashboard-activity</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
