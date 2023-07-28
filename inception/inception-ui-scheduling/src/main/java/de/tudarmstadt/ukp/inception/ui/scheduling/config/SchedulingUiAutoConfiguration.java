@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.scheduling.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ import de.tudarmstadt.ukp.inception.ui.scheduling.TaskMonitorFooterItem;
 @Configuration
 public class SchedulingUiAutoConfiguration
 {
+    @ConditionalOnExpression("${websocket.enabled:true}")
     @Bean
     public TaskMonitorFooterItem taskMonitorFooterItem()
     {
