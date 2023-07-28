@@ -67,6 +67,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -149,33 +150,38 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
+        queue(new WebMarkupContainer("header")
+                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet())));
+        queue(new Label("layerType", getModel().map(m -> m.getSelectedAnnotationLayer())
+                .map(l -> l.getType()).map(t -> getString(t))).setOutputMarkupId(true));
+
         confirmationDialog = new BootstrapModalDialog("deleteAnnotationDialog");
         confirmationDialog.trapFocus();
-        add(confirmationDialog);
+        queue(confirmationDialog);
 
-        add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
-        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
+        queue(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
+        queue(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));
-        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
+        queue(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
                 getModel(), this));
-        add(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
+        queue(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
                 this, aModel));
         relationListPanel.setOutputMarkupPlaceholderTag(true);
 
         buttonContainer = new WebMarkupContainer("buttonContainer");
         buttonContainer.setOutputMarkupPlaceholderTag(true);
-        buttonContainer.add(createDeleteButton());
-        buttonContainer.add(createReverseButton());
-        buttonContainer.add(createClearButton());
-        add(buttonContainer);
+        queue(createDeleteButton());
+        queue(createReverseButton());
+        queue(createClearButton());
+        queue(buttonContainer);
 
         navContainer = new WebMarkupContainer("navContainer");
         navContainer
                 .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         navContainer.setOutputMarkupPlaceholderTag(true);
-        navContainer.add(createNextAnnotationButton());
-        navContainer.add(createPreviousAnnotationButton());
-        add(navContainer);
+        queue(createNextAnnotationButton());
+        queue(createPreviousAnnotationButton());
+        queue(navContainer);
     }
 
     @Override
@@ -296,7 +302,7 @@ public abstract class AnnotationDetailEditorPanel
         // Creating a relation
         AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
                 originFs, targetFs, aCas);
-        selection.selectArc(new VID(arc), originFs, targetFs);
+        selection.selectArc(VID.of(arc), originFs, targetFs);
     }
 
     private void createNewSpanAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter, CAS aCas)
@@ -1241,15 +1247,6 @@ public abstract class AnnotationDetailEditorPanel
         catch (Exception e) {
             handleException(this, aEvent.getRequestTarget(), e);
         }
-    }
-
-    /**
-     * @deprecated to be removed without replacement
-     */
-    @Deprecated
-    protected void onAutoForward(AjaxRequestTarget aTarget)
-    {
-        // Overridden in CurationPanel
     }
 
     @SuppressWarnings("unchecked")
