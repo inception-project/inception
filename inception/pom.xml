@@ -66,9 +66,9 @@
     <junit-platform.version>1.10.0</junit-platform.version>
     <mockito.version>5.4.0</mockito.version>
     <assertj.version>3.24.2</assertj.version>
+    <xmlunit.version>2.9.1</xmlunit.version>
 
     <awaitility.version>4.2.0</awaitility.version>
-    <xmlunit.version>1.6</xmlunit.version>
 
     <dkpro.version>2.4.0</dkpro.version>
     <uima.version>3.4.1</uima.version>
@@ -402,6 +402,16 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xmlunit</groupId>
+      <artifactId>xmlunit-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xmlunit</groupId>
+      <artifactId>xmlunit-assertj3</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -1104,6 +1114,16 @@
         <version>${assertj.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-core</artifactId>
+        <version>${xmlunit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-assertj3</artifactId>
+        <version>${xmlunit.version}</version>
+      </dependency>
+      <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
         <version>0.5.7</version>
@@ -1124,11 +1144,6 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>${awaitility.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>xmlunit</groupId>
-        <artifactId>xmlunit</artifactId>
-        <version>${xmlunit.version}</version>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -2597,6 +2612,8 @@
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>
+            <dependency>org.xmlunit:xmlunit-core</dependency>
+            <dependency>org.xmlunit:xmlunit-assertj3</dependency>
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>com.squareup.okhttp3:okhttp</dependency>
             <dependency>com.squareup.okio:okio</dependency>
