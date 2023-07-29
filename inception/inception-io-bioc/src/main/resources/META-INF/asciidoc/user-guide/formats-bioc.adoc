@@ -23,6 +23,10 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 This is a new and still experimental BioC format. 
 
+NOTE: This format dynamically maps information from the imported files to the layers and features configured in 
+      the project. For this process to work, the layers and features need to be set up **before** importing BioC files.
+
+.Supported features
 * Sentence information is supported
   * If sentences are present in a BioC document, they are imported. Otherwise, {product-name} will
     automatically try to determine sentence boundaries.
