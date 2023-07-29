@@ -81,7 +81,7 @@
     <spring.boot.version>2.7.14</spring.boot.version>
     <spring.data.version>2.7.14</spring.data.version>
     <spring.security.version>5.8.5</spring.security.version>
-    <springdoc.version>1.6.14</springdoc.version>
+    <springdoc.version>1.7.0</springdoc.version>
     <swagger.version>2.2.15</swagger.version>
     <jjwt.version>0.11.5</jjwt.version>
 
@@ -1100,13 +1100,10 @@
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
+        <artifactId>mockito-bom</artifactId>
         <version>${mockito.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mockito.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
@@ -1124,9 +1121,14 @@
         <version>${xmlunit.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-matchers</artifactId>
+        <version>${xmlunit.version}</version>
+      </dependency>
+      <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
-        <version>0.5.7</version>
+        <version>0.5.10</version>
         <scope>test</scope>
         <exclusions>
           <exclusion>
@@ -1534,6 +1536,11 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-jdk14</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
 
@@ -1949,7 +1956,7 @@
       <dependency>
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
-        <version>1.1.10.2</version>
+        <version>1.1.10.3</version>
       </dependency>
 
       <!-- JAXB DEPENDENCIES -->
