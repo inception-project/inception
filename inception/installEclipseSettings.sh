@@ -12,7 +12,7 @@ function installPrefs {
   cp -v $JDT_UI_PREFS $1/.settings/
 }
 
-installPrefsinception-active-learning
+installPrefs inception-active-learning
 installPrefs inception-agreement
 installPrefs inception-annotation-storage
 installPrefs inception-api
