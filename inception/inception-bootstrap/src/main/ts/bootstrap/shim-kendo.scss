@@ -22,6 +22,11 @@
   border-color: var(--bs-border-color) !important;
 }
 
+.k-tooltip.k-widget {
+    color: var(--bs-light) !important;
+    background-color: var(--bs-dark) !important;
+}
+
 .k-block, .k-widget {
     background-color: var(--bs-body-bg) !important;
 }
