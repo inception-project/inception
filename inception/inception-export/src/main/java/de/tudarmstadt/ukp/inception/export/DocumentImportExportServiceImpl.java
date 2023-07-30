@@ -43,6 +43,7 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.text.BreakIterator;
@@ -90,7 +91,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -119,7 +119,7 @@ public class DocumentImportExportServiceImpl
 
     private static final String EXPORT_CAS = "exportCas";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final RepositoryProperties repositoryProperties;
     private final CasStorageService casStorageService;
@@ -127,6 +127,8 @@ public class DocumentImportExportServiceImpl
     private final DocumentImportExportServiceProperties properties;
     private final ChecksRegistry checksRegistry;
     private final RepairsRegistry repairsRegistry;
+
+    private final FormatSupport fallbackFormat;
 
     private final List<FormatSupport> formatsProxy;
     private Map<String, FormatSupport> formats;
@@ -137,7 +139,8 @@ public class DocumentImportExportServiceImpl
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
             DocumentImportExportServiceProperties aServiceProperties,
-            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
+            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry,
+            FormatSupport aFallbackFormat)
     {
         repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
@@ -146,6 +149,7 @@ public class DocumentImportExportServiceImpl
         properties = aServiceProperties;
         checksRegistry = aChecksRegistry;
         repairsRegistry = aRepairsRegistry;
+        fallbackFormat = aFallbackFormat;
 
         schemaTypeSystem = createTypeSystemDescription(
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/schema-types");
@@ -166,7 +170,7 @@ public class DocumentImportExportServiceImpl
             AnnotationAwareOrderComparator.sort(forms);
             forms.forEach(format -> {
                 formatMap.put(format.getId(), format);
-                log.debug("Found format: {} ({}, {})",
+                LOG.debug("Found format: {} ({}, {})",
                         ClassUtils.getAbbreviatedName(format.getClass(), 20), format.getId(),
                         readWriteMsg(format));
             });
@@ -203,14 +207,14 @@ public class DocumentImportExportServiceImpl
     @Override
     public FormatSupport getFallbackFormat()
     {
-        return new XmiFormatSupport();
+        return fallbackFormat;
     }
 
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
                 null);
@@ -220,7 +224,7 @@ public class DocumentImportExportServiceImpl
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
     }
@@ -230,7 +234,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
                 aStripExtension, aBulkOperationContext);
@@ -241,7 +245,7 @@ public class DocumentImportExportServiceImpl
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
@@ -270,7 +274,7 @@ public class DocumentImportExportServiceImpl
                         bulkOperationContext);
             }
 
-            log.info("Exported annotations {} for user [{}] from project {} " + "using format [{}]",
+            LOG.info("Exported annotations {} for user [{}] from project {} " + "using format [{}]",
                     aDocument, aUser, aDocument.getProject(), aFormat.getId());
 
             return exportFile;
@@ -316,7 +320,7 @@ public class DocumentImportExportServiceImpl
         splitSenencesIfNecssaryAndCheckQuota(cas, format);
         splitTokensIfNecssaryAndCheckQuota(cas, format);
 
-        log.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
+        LOG.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
                 cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
 

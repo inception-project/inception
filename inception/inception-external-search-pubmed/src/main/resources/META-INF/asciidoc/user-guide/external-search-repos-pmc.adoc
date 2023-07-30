@@ -1,0 +1,31 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_external-search-repos-pmc]]
+= PubMed Central
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `external-search.pmc.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). You should also add `format.bioc.enabled=true` to enable
+support for the BioC format used by this repository connector.
+====
+
+link:https://www.ncbi.nlm.nih.gov/pmc/[PubMed Central]® (PMC) is a free full-text archive of biomedical and life sciences journal literature at the U.S. National Institutes of Health's National Library of Medicine (NIH/NLM). It can be added as an external document repository by
+selecting the **PubMed Central** repository type.
+
+NOTE: {product-name} uses the BioC version of the PMC documents for import. The search tries to
+      consider only documents that have full text available, but the BioC version of these texts may be
+      available only with a delay. Thus, if you cannot import a recently uploaded document from PMC into
+      {product-name}, you may try it again a day later and have more success.

@@ -95,7 +95,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -161,6 +160,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -181,9 +181,9 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -730,7 +730,11 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Set<CommittedDocument> committed = requestCycle.getMetaData(COMMITTED);
+        if (!existsEnabledRecommender(aEvent.getDocument().getProject())) {
+            return;
+        }
+
+        var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
             committed = new HashSet<>();
             requestCycle.setMetaData(COMMITTED, committed);
@@ -750,10 +754,10 @@ public class RecommendationServiceImpl
             // Hack to figure out which annotations the user is viewing. This obviously works only
             // if the user is viewing annotations through an AnnotationPageBase ... still not a
             // bad guess
-            IPageRequestHandler handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
+            var handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
             if (handler.isPageInstanceCreated()
                     && handler.getPage() instanceof AnnotationPageBase) {
-                AnnotatorState state = ((AnnotationPageBase) handler.getPage()).getModelObject();
+                var state = ((AnnotationPageBase) handler.getPage()).getModelObject();
                 requestCycle.getListeners().add(new TriggerTrainingTaskListener(state.getDocument(),
                         state.getUser().getUsername()));
             }
@@ -840,14 +844,14 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
-        User user = userRepository.get(aSessionOwner);
+        var user = userRepository.get(aSessionOwner);
         // do not trigger training during when viewing others' work
         if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
         }
 
         // Update the task count
-        AtomicInteger count = trainingTaskCounter.computeIfAbsent(
+        var count = trainingTaskCounter.computeIfAbsent(
                 new RecommendationStateKey(user.getUsername(), aProject),
                 _key -> new AtomicInteger(0));
 
@@ -864,7 +868,7 @@ public class RecommendationServiceImpl
             Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
             schedulingService.enqueue(task);
 
-            RecommendationState state = getState(aSessionOwner, aProject);
+            var state = getState(aSessionOwner, aProject);
             synchronized (state) {
                 state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
                 state.setPredictionsSinceLastEvaluation(0);
@@ -873,10 +877,10 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
+        var task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
         schedulingService.enqueue(task);
 
-        RecommendationState state = getState(aSessionOwner, aProject);
+        var state = getState(aSessionOwner, aProject);
         synchronized (state) {
             int predictions = state.getPredictionsSinceLastEvaluation() + 1;
             state.setPredictionsSinceLastEvaluation(predictions);
@@ -1129,7 +1133,7 @@ public class RecommendationServiceImpl
                     aLocation);
 
             // Send an application event that the suggestion has been accepted
-            aAdapter.publishEvent(new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
+            aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
                     annotation, aFeature, aSuggestion.getLabel()));
         }
     }
@@ -1721,17 +1725,17 @@ public class RecommendationServiceImpl
 
     @Override
     public Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner)
+            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor)
     {
         try (var casHolder = new PredictionCasHolder()) {
             Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             // Generate new predictions or inherit at the recommender level
+            aMonitor.setMaxProgress(aDocuments.size());
             for (SourceDocument document : aDocuments) {
+                aMonitor.addMessage(LogMessage.info(this, "%s", document.getName()));
+                aMonitor.incrementProgress();
                 computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
             }
-
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
 
             return predictions;
         }
@@ -1747,10 +1751,12 @@ public class RecommendationServiceImpl
     @Override
     public Predictions computePredictions(User aSessionOwner, Project aProject,
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd)
+            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor)
     {
-        Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
-        Predictions activePredictions = getPredictions(aSessionOwner, aProject);
+        aMonitor.setMaxProgress(1);
+
+        var predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
+        var activePredictions = getPredictions(aSessionOwner, aProject);
 
         // Inherit at the document level. If inheritance at a recommender level is possible,
         // this is done below.
@@ -1767,15 +1773,14 @@ public class RecommendationServiceImpl
             // Generate new predictions or inherit at the recommender level
             computePredictions(predictions, predictionCas, aCurrentDocument, aDataOwner,
                     aPredictionBegin, aPredictionEnd);
-
-            predictions.log(LogMessage.info(this, "Prediction complete"));
-            LOG.debug("Prediction complete");
         }
         catch (ResourceInitializationException e) {
             predictions.log(
                     LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
             LOG.error("Cannot create prediction CAS, stopping predictions!");
         }
+
+        aMonitor.setProgress(1);
 
         return predictions;
     }
@@ -2262,36 +2267,35 @@ public class RecommendationServiceImpl
 
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
         // must be sorted in the same way. The suggestion offsets are sorted because they are
-        // the keys in a TreeSet - and the annotation offsets are sorted in the same way
-        // manually
-        OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
-                sortedAnnotationKeys);
+        // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
+        var oi = new OverlapIterator(sortedAnnotationKeys, new ArrayList<>(suggestions.keySet()));
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
         while (oi.hasNext()) {
             if (oi.getA().overlaps(oi.getB())) {
                 // Fetch the current suggestion and annotation
-                SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
-                for (AnnotationFS annotation : annotations.get(oi.getB())) {
-                    String label = annotation.getFeatureValueAsString(feat);
-                    for (SpanSuggestion suggestion : group) {
+                var group = suggestions.get(oi.getB());
+                for (var annotation : annotations.get(oi.getA())) {
+                    var label = annotation.getFeatureValueAsString(feat);
+                    for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
                         // feature
+                        boolean colocated = colocated(annotation, suggestion.getBegin(),
+                                suggestion.getEnd());
                         if (suggestion.getLabel() == null) {
                             // If there is already an annotation, then we hide any suggestions
                             // that would just trigger the creation of the same annotation and
                             // not set any new feature. This applies whether stacking is allowed
                             // or not.
-                            if (colocated(annotation, suggestion.getBegin(), suggestion.getEnd())) {
+                            if (colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
 
                             // If stacking is enabled, we do allow suggestions that create an
                             // annotation with no label, but only if the offsets differ
-                            if (feature.getLayer().isAllowStacking() && !colocated(annotation,
-                                    suggestion.getBegin(), suggestion.getEnd())) {
+                            if (feature.getLayer().isAllowStacking() && !colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2303,14 +2307,13 @@ public class RecommendationServiceImpl
                             // Is the feature still unset in the current annotation - i.e. would
                             // accepting the suggestion merge the feature into it? If yes, we do
                             // not hide
-                            if (label == null && colocated(annotation, suggestion.getBegin(),
-                                    suggestion.getEnd())) {
+                            if (label == null && colocated) {
                                 continue;
                             }
 
-                            // Does the suggested label match the label of an existing
-                            // annotation, then we hide
-                            if (label != null && label.equals(suggestion.getLabel())) {
+                            // Does the suggested label match the label of an existing annotation
+                            // at the same position then we hide
+                            if (label != null && label.equals(suggestion.getLabel()) && colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 continue;
                             }
@@ -2325,10 +2328,11 @@ public class RecommendationServiceImpl
                     }
                 }
 
-                // Do not want to process the group again since the relevant annotations are
+                // Do not want to process the annotation again since the relevant suggestions are
                 // already hidden
-                oi.ignoraA();
+                oi.ignoreA();
             }
+
             oi.step();
         }
     }
@@ -2574,23 +2578,27 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    @Transactional
     public boolean existsEnabledRecommender(Project aProject)
     {
-        String query = String.join("\n", //
-                "FROM Recommender WHERE", //
-                "enabled = :enabled AND", //
-                "project = :project");
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var criteriaQuery = criteriaBuilder.createQuery(Recommender.class);
 
-        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
-                .setParameter("enabled", true) //
-                .setParameter("project", aProject) //
-                .getResultList();
+        var root = criteriaQuery.from(Recommender.class);
+        var predicate = criteriaBuilder.and( //
+                criteriaBuilder.equal(root.get(Recommender_.enabled), true), //
+                criteriaBuilder.equal(root.get(Recommender_.project), aProject));
+
+        criteriaQuery.select(root).where(predicate);
+
+        var recommenders = entityManager.createQuery(criteriaQuery).getResultList();
 
         return recommenders.stream() //
                 .anyMatch(rec -> getRecommenderFactory(rec).isPresent());
     }
 
     @Override
+    @Transactional
     public long countEnabledRecommenders()
     {
         String query = String.join("\n", //

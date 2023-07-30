@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler.getOffsetsFromRequest;
+import static de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler.getRangeFromRequest;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -58,7 +58,7 @@ public class ScrollToHandler
             IRequestParameters requestParameters = aRequest.getRequestParameters();
 
             if (!requestParameters.getParameterValue(PARAM_OFFSETS).isEmpty()) {
-                Range offsets = getOffsetsFromRequest(getAnnotatorState(), requestParameters, cas);
+                Range offsets = getRangeFromRequest(getAnnotatorState(), requestParameters, cas);
                 page.getAnnotationActionHandler().actionJump(aTarget, offsets.getBegin(),
                         offsets.getEnd());
             }

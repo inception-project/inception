@@ -24,7 +24,7 @@ public class PubAnnotationProviderTraits
 {
     private static final long serialVersionUID = -9198473282184073984L;
 
-    private String url = "http://pubannotation.org";
+    private String url = "https://pubannotation.org";
 
     public String getUrl()
     {

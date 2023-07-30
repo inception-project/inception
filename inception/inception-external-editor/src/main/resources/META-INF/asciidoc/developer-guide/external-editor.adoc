@@ -95,7 +95,6 @@ and CSS stylesheet files required are then injected into this IFrame as well.
 
 Currently supported views are:
 
-* `iframe:cas+html` (deprecated): Renders HTML contained in the CAS into a HTML IFrame in the editor area.
 * `iframe:cas+xml`: Renders XML contained in the CAS into a generic XML IFrame in the editor area.
 * `iframe:cas+xhtml+xml`: Renders XML contained in the CAS into an XHTML+XML IFrame in the editor area.
 HTML head and body elements are added automatically. The XML is rendered into the body.

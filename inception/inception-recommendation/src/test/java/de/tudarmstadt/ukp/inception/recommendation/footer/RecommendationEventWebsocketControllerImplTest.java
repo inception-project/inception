@@ -54,7 +54,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -190,7 +189,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         try {
             session.disconnect();
@@ -217,7 +216,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         try {
             session.disconnect();
@@ -246,7 +245,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         session.disconnect();
 

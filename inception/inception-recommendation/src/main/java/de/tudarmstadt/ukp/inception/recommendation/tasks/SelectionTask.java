@@ -107,14 +107,19 @@ public class SelectionTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Activating trainable recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            Project project = getProject();
-            User sessionOwner = getUser().orElseThrow();
-            String sessionOwnerName = sessionOwner.getUsername();
-
-            logEvaluationStarted(sessionOwner);
+            var sessionOwner = getUser().orElseThrow();
+            var sessionOwnerName = sessionOwner.getUsername();
+            var startTime = System.currentTimeMillis();
+            var project = getProject();
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -128,8 +133,13 @@ public class SelectionTask
                 }
             };
 
+            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+            getMonitor().setMaxProgress(listAnnotationLayers.size());
             boolean seenRecommender = false;
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+            var layers = annoService.listAnnotationLayer(getProject());
+            for (AnnotationLayer layer : layers) {
+                getMonitor().incrementProgress();
+
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -140,22 +150,26 @@ public class SelectionTask
                     continue;
                 }
 
-                seenRecommender = true;
-
                 var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
-                    Optional<Recommender> optRecommender = freshenRecommender(sessionOwner, r);
+                    var optRecommender = freshenRecommender(sessionOwner, r);
                     if (optRecommender.isEmpty()) {
                         logRecommenderGone(sessionOwner, r);
                         continue;
+                    }
+
+                    if (!seenRecommender) {
+                        logSelectionStarted(sessionOwner);
+                        seenRecommender = true;
                     }
 
                     Recommender recommender = optRecommender.get();
                     try {
                         long start = System.currentTimeMillis();
 
+                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
                         evaluate(sessionOwner, recommender, casLoader)
                                 .ifPresent(evaluatedRecommender -> {
                                     var result = evaluatedRecommender.getEvaluationResult();
@@ -192,8 +206,17 @@ public class SelectionTask
                 return;
             }
 
+            logSelectionComplete(startTime, sessionOwnerName);
+
             scheduleTrainingTask(sessionOwner);
         }
+    }
+
+    private void logSelectionComplete(long startTime, String username)
+    {
+        var duration = currentTimeMillis() - startTime;
+        log.debug("[{}][{}]: Selection complete ({} ms)", getId(), username, duration);
+        info("Selection complete (%d ms).", duration);
     }
 
     private void logRecommenderGone(User user, Recommender aRecommender)
@@ -202,9 +225,11 @@ public class SelectionTask
                 user.getUsername(), aRecommender.getName());
     }
 
-    private void logEvaluationStarted(User sessionOwner)
+    private void logSelectionStarted(User sessionOwner)
     {
-        log.info("[{}]: Evaluation started", sessionOwner.getUsername());
+        log.info("[{}]: Starting selection triggered by [{}]", sessionOwner.getUsername(),
+                getTrigger());
+        info("Starting selection triggered by [%s]", getTrigger());
     }
 
     private void scheduleTrainingTask(User sessionOwner)

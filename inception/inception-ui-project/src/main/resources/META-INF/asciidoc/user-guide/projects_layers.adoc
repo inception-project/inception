@@ -190,6 +190,9 @@ NOTE: It is currently not possible to create relations between spans in differen
 | Read-only
 | The layer may be viewed but not edited.
 
+| Show text on hover
+| Whether the text covered by the annotation is shown in the popup panel that appears when hovering with the mouse over an annotation label. Note that this popup may not be supported by all annotation editors.
+
 | Validation
 | When pre-annotated data is imported or when the  behaviors settings are changed, it is possible that annotations exist which are not conforming to the current behavior settings. This setting controls when a validation of annotations is performed. Possible settings are **Never** (no validation when a user marks a document as finished) and **Always** (validation is performed when a user marks a document as finished). Mind that changing the document state via the Monitoring page does not trigger a validation. Also, problematic annotations are highlighted using an error marker in the annotation interface. **NOTE:** the default setting for new projects/layers is **Always**, but for any existing projects or for projects imported from versions of {product-name} where this setting did not exist yet, the setting is initialized with **Never**.
 
@@ -204,10 +207,10 @@ can be annotated.
 | This setting controls if and how annotations may overlap. For **span layers**, overlap is defined in terms of the span offsets. If any character offset that is part of span A is also part of span B, then they are considered to be **overlapping**. If two spans have exactly the same offsets, then they are considered to be **stacking**. For **relation layers**, overlap is defined in terms of the end points of the relation. If two relations share any end point (source or target), they are considered to be **overlapping**. If two relations have exactly the same end points, they are considered to be **stacking**. Note that some export formats are unable to deal with stacked or overlapping annotations. E.g. the CoNLL formats cannot deal with overlapping or stacked named entities.
 
 | Allow crossing sentence boundary
-_(chain)_
 | Allow annotations to cross sentence boundaries.
 
 | Behave like a linked list
+_(chain)_
 | Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
 
@@ -272,8 +275,11 @@ _(Span layers)_
 | Enabled
 | Features cannot be deleted, but they can be disabled
 
-| Show
+| Show in label
 | Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
+
+| Show on hover
+| Whether the feature value is shown in the popup panel that appears when hovering with the mouse over an annotation label. Note that this popup may not be supported by all annotation editors.
 
 | Remember
 | Whether the annotation detail editor should carry values of this feature
@@ -333,6 +339,9 @@ only if the associated tagset does not allow annotators to add new tags.
 
 | Tagset
 | The tagset controlling the possible values for a string feature.
+
+| Show only when constraints apply
+| Display the feature only if any constraint rules apply to it (cf. <<sect_constraints_conditional_features>>)
 
 | Editor type
 | The type of input field shown to the annotators.

@@ -48,7 +48,7 @@ public class BratLineOrientedAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
     }
 
     @Override

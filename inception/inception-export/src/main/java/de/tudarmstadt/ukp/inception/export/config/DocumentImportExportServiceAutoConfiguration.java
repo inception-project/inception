@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectLogExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectSettingsExporter;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
@@ -47,11 +48,12 @@ public class DocumentImportExportServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
             DocumentImportExportServiceProperties aServiceProperties,
-            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
+            ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry,
+            XmiFormatSupport fallbackFormat)
     {
         return new DocumentImportExportServiceImpl(aRepositoryProperties, aFormats,
                 aCasStorageService, aAnnotationService, aServiceProperties, aChecksRegistry,
-                aRepairsRegistry);
+                aRepairsRegistry, fallbackFormat);
     }
 
     @Bean

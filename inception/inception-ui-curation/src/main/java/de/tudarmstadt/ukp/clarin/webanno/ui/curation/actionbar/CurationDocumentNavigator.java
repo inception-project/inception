@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
@@ -32,9 +31,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -44,6 +44,8 @@ public class CurationDocumentNavigator
     private static final long serialVersionUID = 7061696472939390003L;
 
     private @SpringBean ProjectService projectService;
+    private @SpringBean DocumentAccess documentAccess;
+    private @SpringBean UserDao userService;
 
     private AnnotationPageBase page;
 
@@ -71,10 +73,8 @@ public class CurationDocumentNavigator
 
     private boolean isExportable()
     {
-        AnnotatorState state = page.getModelObject();
-        return state.getProject() != null
-                && (projectService.hasRole(state.getUser(), state.getProject(), MANAGER)
-                        || !state.getProject().isDisableExport());
+        return documentAccess.canExportAnnotationDocument(userService.getCurrentUser(),
+                page.getModelObject().getProject());
     }
 
     /**

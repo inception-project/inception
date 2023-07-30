@@ -65,7 +65,7 @@ public class ProjectAccessImpl
             User user = getUser(aUser);
             Project project = getProject(aProjectId);
 
-            return projectService.hasAnyRole(user, project);
+            return userService.isAdministrator(user) || projectService.hasAnyRole(user, project);
         }
         catch (NoResultException | AccessDeniedException e) {
             // If any object does not exist, the user cannot view
@@ -87,7 +87,8 @@ public class ProjectAccessImpl
             User user = getUser(aUser);
             Project project = getProject(aProjectId);
 
-            return projectService.hasRole(user, project, PermissionLevel.MANAGER);
+            return userService.isAdministrator(user)
+                    || projectService.hasRole(user, project, PermissionLevel.MANAGER);
         }
         catch (NoResultException | AccessDeniedException e) {
             // If any object does not exist, the user cannot view

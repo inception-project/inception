@@ -457,6 +457,34 @@ public class CasDiffTest
     }
 
     @Test
+    public void multiValueStringFeatureDifferenceTestWithNull() throws Exception
+    {
+        var cas1 = createText("");
+        buildAnnotation(cas1, "webanno.custom.SpanMultiValue") //
+                .withFeature("values", asList("a", "b")) //
+                .buildAndAddToIndexes();
+
+        var cas2 = createText("");
+        buildAnnotation(cas2, "webanno.custom.SpanMultiValue") //
+                .buildAndAddToIndexes();
+
+        var casByUser = Map.of( //
+                "user1", asList(cas1), //
+                "user2", asList(cas2));
+
+        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+
+        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
+
+        // result.print(System.out);
+
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+    }
+
+    @Test
     public void multiValueStringFeatureDifferenceTest() throws Exception
     {
         var cas1 = createText("");
@@ -478,7 +506,7 @@ public class CasDiffTest
         CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
@@ -507,7 +535,7 @@ public class CasDiffTest
         CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();

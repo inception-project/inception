@@ -27,7 +27,8 @@
     import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
-    import { compareSpanText, groupBy, uniqueLabels } from "./Utils";
+    import { compareSpanText, groupBy, renderLabel, uniqueLabels } from "./Utils";
+    import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
 
     export let ajaxClient: DiamAjax;
     export let data: AnnotatedText;
@@ -35,8 +36,6 @@
 
     let groupedAnnotations: Record<string, Annotation[]>;
     let sortedLabels: string[];
-    let sortByScore: boolean = true;
-    let recommendationsFirst: boolean = false;
 
     $: {
         sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
@@ -45,7 +44,7 @@
         const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
-            (s) => s.label || ""
+            (s) => renderLabel(s)
         )
 
         for (const items of Object.values(groupedAnnotations)) {
@@ -60,12 +59,12 @@
 
                 const aIsRec = a.vid.toString().startsWith("rec:")
                 const bIsRec = b.vid.toString().startsWith("rec:")
-                if (sortByScore && aIsRec && !bIsRec) {
-                    return recommendationsFirst ? -1 : 1;
+                if ($sortByScore && aIsRec && !bIsRec) {
+                    return $recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if (sortByScore && aIsRec && bIsRec) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return (
@@ -75,7 +74,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if (sortByScore && aIsRec && bIsRec) {
+                    if ($sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
                     return compareOffsets(
@@ -110,19 +109,19 @@
                 type="checkbox"
                 role="switch"
                 id="sortByScore"
-                bind:checked={sortByScore}
+                bind:checked={$sortByScore}
             />
             <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
             >
         </div>
-        <div class="form-check form-switch mx-2" class:d-none={!sortByScore}>
+        <div class="form-check form-switch mx-2" class:d-none={!$sortByScore}>
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
                 id="recommendationsFirst"
-                bind:checked={recommendationsFirst}
+                bind:checked={$recommendationsFirst}
             />
             <label class="form-check-label" for="recommendationsFirst"
                 >Recommendations first</label
@@ -135,7 +134,7 @@
                 {#each sortedLabels as label}
                     <li class="list-group-item py-0 px-0 border-0">
                         <div
-                            class="px-2 py-1 bg.-light fw-bold sticky-top bg-light border-top border-bottom"
+                            class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom"
                         >
                             {label || "No label"}
                         </div>
@@ -146,7 +145,7 @@
                                     class="list-group-item list-group-item-action p-0 d-flex"
                                 >
                                     <div
-                                        class="text-secondary bg-light border-end px-2 d-flex align-items-center"
+                                        class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
                                     >
                                         {#if ann instanceof Span}
                                             <div class="annotation-type-marker">
@@ -197,7 +196,7 @@
 
 <style lang="scss">
     .labels {
-        background: linear-gradient(to right, transparent 0px, white 15px);
+        background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;
         z-index: 10;
         position: relative;

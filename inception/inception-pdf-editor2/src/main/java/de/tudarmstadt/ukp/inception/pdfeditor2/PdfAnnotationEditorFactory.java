@@ -64,7 +64,7 @@ public class PdfAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
     }
 
     @Override

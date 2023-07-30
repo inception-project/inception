@@ -62,6 +62,12 @@ public class IndexSourceDocumentTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Indexing document...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {

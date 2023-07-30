@@ -62,7 +62,6 @@ public class CurationWorkflowExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         Project project = aRequest.getProject();
 

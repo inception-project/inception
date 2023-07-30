@@ -50,11 +50,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
+import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -69,11 +70,13 @@ public abstract class ApplicationPageBase
                 private static final long serialVersionUID = 1L;
             };
 
+    private WebMarkupContainer body;
     private FeedbackPanel feedbackPanel;
     private WebMarkupContainer footer;
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
+    private @SpringBean UserDao userService;
 
     private IModel<List<Component>> footerItems;
 
@@ -90,65 +93,47 @@ public abstract class ApplicationPageBase
 
     private void commonInit()
     {
-        for (GlobalInterceptor interceptor : interceptorsRegistry.getInterceptors()) {
+        setLocale();
+
+        for (var interceptor : interceptorsRegistry.getInterceptors()) {
             interceptor.intercept(this);
         }
 
+        add(body = new DarkModeWrapper("body"));
+
         footerItems = new ListModel<>(new ArrayList<>());
-
-        footerItemRegistry.getFooterItems().stream().map(c -> c.create("item"))
+        footerItemRegistry.getFooterItems().stream() //
+                .map(c -> c.create("item")) //
                 .forEach(c -> footerItems.getObject().add(c));
+        body.add(footer = createFooter("footer", footerItems));
 
-        footer = new WebMarkupContainer("footer");
-        footer.setOutputMarkupId(true);
-        add(footer);
+        body.add(createMenuBar("menubar"));
 
-        footer.add(new ListView<Component>("footerItems", footerItems)
-        {
-            private static final long serialVersionUID = 5912513189482015963L;
+        body.add(feedbackPanel = createFeedbackPanel());
+    }
 
-            {
-                setReuseItems(true);
-            }
-
-            @Override
-            protected void populateItem(ListItem<Component> aItem)
-            {
-                aItem.setOutputMarkupPlaceholderTag(true);
-                aItem.add(aItem.getModelObject());
-            }
-        });
-
-        Properties settings = SettingsUtil.getSettings();
-
-        // Override locale to be used by application
-        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
-        switch (locale) {
-        case "auto":
-            // Do nothing - locale is picked up from browser
-            break;
-        default:
-            // Override the locale in the session
-            getSession().setLocale(Locale.forLanguageTag(locale));
-            break;
-        }
-
-        // Add menubar
+    private Component createMenuBar(String aId)
+    {
+        Component menubar;
         try {
             Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
             if (menubarClass == null) {
                 menubarClass = EmptyPanel.class;
             }
-            add(ConstructorUtils.invokeConstructor(menubarClass, "menubar"));
+            menubar = ConstructorUtils.invokeConstructor(menubarClass, aId);
         }
         catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
                 | InstantiationException e1) {
             throw new RuntimeException(e1);
         }
+        return menubar;
+    }
 
-        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
-        feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
+    private BootstrapFeedbackPanel createFeedbackPanel()
+    {
+        var panel = new BootstrapFeedbackPanel("feedbackPanel");
+        panel.setOutputMarkupId(true);
+        panel.setFilter((IFeedbackMessageFilter) aMessage -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth != null ? auth.getName() : "SYSTEM";
             if (aMessage.isFatal()) {
@@ -168,7 +153,47 @@ public abstract class ApplicationPageBase
             }
             return true;
         });
-        add(feedbackPanel);
+        return panel;
+    }
+
+    private void setLocale()
+    {
+        Properties settings = SettingsUtil.getSettings();
+
+        // Override locale to be used by application
+        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
+        switch (locale) {
+        case "auto":
+            // Do nothing - locale is picked up from browser
+            break;
+        default:
+            // Override the locale in the session
+            getSession().setLocale(Locale.forLanguageTag(locale));
+            break;
+        }
+    }
+
+    private WebMarkupContainer createFooter(String aId, IModel<List<Component>> aFooterItems)
+    {
+        var panel = new WebMarkupContainer(aId);
+        panel.setOutputMarkupId(true);
+        panel.add(new ListView<Component>("footerItems", aFooterItems)
+        {
+            private static final long serialVersionUID = 5912513189482015963L;
+
+            {
+                setReuseItems(true);
+            }
+
+            @Override
+            protected void populateItem(ListItem<Component> aItem)
+            {
+                aItem.setOutputMarkupPlaceholderTag(true);
+                aItem.add(aItem.getModelObject());
+            }
+        });
+
+        return panel;
     }
 
     @Override

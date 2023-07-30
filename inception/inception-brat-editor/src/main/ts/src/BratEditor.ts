@@ -41,6 +41,15 @@ export class BratEditor implements AnnotationEditor {
     element.dispatcher = this.dispatcher
     element.visualizer = this.visualizer
 
+    // Ensure that the visualizer is resized when the container element size changes, e.g. when
+    // the sidebars are opened or closed.
+    if (element.parentElement) {
+      new ResizeObserver(() => {
+        console.log(`resize: ${element.id} ${element.clientWidth} ${element.clientHeight}`)
+        this.dispatcher.post('resize')
+      }).observe(element.parentElement)
+    }
+
     this.resizer = new ResizeManager(this.dispatcher, this.visualizer, ajax)
   }
 

@@ -59,9 +59,10 @@ public class PdfAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override
@@ -90,6 +91,7 @@ public class PdfAnnotationEditor
                 referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,
                 PdfAnnotationEditorJavascriptResourceReference.get())));
+        props.setLoadingIndicatorDisabled(true);
         return props;
     }
 }

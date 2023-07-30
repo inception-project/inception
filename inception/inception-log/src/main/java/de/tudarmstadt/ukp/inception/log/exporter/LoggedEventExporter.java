@@ -90,7 +90,7 @@ public class LoggedEventExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
-        throws Exception
+        throws IOException
     {
         Project project = aRequest.getProject();
 

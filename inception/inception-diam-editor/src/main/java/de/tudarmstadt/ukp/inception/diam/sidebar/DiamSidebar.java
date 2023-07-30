@@ -32,20 +32,24 @@ public class DiamSidebar
 {
     private static final long serialVersionUID = -3062641971181309172L;
 
+    private final String userPreferencesKey;
+
     private DiamAnnotationBrowser browser;
 
     public DiamSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPage aAnnotationPage)
+            AnnotationPage aAnnotationPage, String aUserPreferencesKey)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        add(browser = new DiamAnnotationBrowser("vis"));
+        userPreferencesKey = aUserPreferencesKey;
+        add(browser = new DiamAnnotationBrowser("vis", userPreferencesKey));
     }
 
     @OnEvent
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
-        browser = (DiamAnnotationBrowser) browser.replaceWith(new DiamAnnotationBrowser("vis"));
+        browser = (DiamAnnotationBrowser) browser
+                .replaceWith(new DiamAnnotationBrowser("vis", userPreferencesKey));
     }
 }
