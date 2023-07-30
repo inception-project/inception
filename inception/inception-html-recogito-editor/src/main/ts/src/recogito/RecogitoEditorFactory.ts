@@ -28,7 +28,7 @@ export class RecogitoEditorFactory implements AnnotationEditorFactory {
 
     const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl)
 
-    let targetElement: Element
+    let targetElement: Element | undefined
     if ((element as any).querySelector) {
       targetElement = (element as any).querySelector('[data-capture-root]')
     }

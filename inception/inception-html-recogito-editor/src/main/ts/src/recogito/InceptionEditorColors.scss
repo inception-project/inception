@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RecogitoEditorFactory } from './recogito/RecogitoEditorFactory'
+$i7n-focus-color: rgba(255,165,0);
+$i7n-match-focus-color: rgb(0, 217, 255);
 
-const INSTANCE = new RecogitoEditorFactory()
-
-export function factory (): RecogitoEditorFactory {
-  return INSTANCE
+:root {
+  --i7n-focus-color: #{$i7n-focus-color};
+  --i7n-match-focus-color: #{$i7n-match-focus-color};
 }
