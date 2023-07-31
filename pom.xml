@@ -149,8 +149,9 @@
     <okio.version>3.4.0</okio.version>
 
     <node.version>18.14.2</node.version>
-    <bootstrap.version>5.3.0</bootstrap.version>
+    <apache-annotator.version>0.2.0</apache-annotator.version>
     <animate-css.version>3.2.6</animate-css.version>
+    <bootstrap.version>5.3.0</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
@@ -179,6 +180,7 @@
     <mocha.version>^10.0.0</mocha.version>
     <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
     <pdfjs.version>2.14.305</pdfjs.version>
+    <popperjs.version>2.11.7</popperjs.version>
     <recogitojs.version>1.8.2</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.7</recogito-client-core.version>

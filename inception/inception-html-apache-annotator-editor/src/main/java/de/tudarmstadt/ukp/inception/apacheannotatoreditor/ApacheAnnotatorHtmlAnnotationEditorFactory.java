@@ -15,42 +15,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.annotatorjs;
+package de.tudarmstadt.ukp.inception.apacheannotatoreditor;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
+
+import com.networknt.schema.JsonSchema;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
-import de.tudarmstadt.ukp.inception.annotatorjs.config.AnnotatorJsAnnotationEditorSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.apacheannotatoreditor.config.ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Support for HTML-oriented editor component.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotatorJsAnnotationEditorSupportAutoConfiguration#annotatorJsHtmlAnnotationEditorFactory()}.
+ * {@link ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration#apacheAnnotatorHtmlAnnotationEditorFactory()}.
  * </p>
  */
-public class AnnotatorJsHtmlAnnotationEditorFactory
+public class ApacheAnnotatorHtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
+    implements ClientSideUserPreferencesProvider
 {
+    public static final String PREF_KEY = "apache-annotator-editor";
+
+    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+
+    public ApacheAnnotatorHtmlAnnotationEditorFactory()
+    {
+        var userPreferencesSchemaFile = getClass().getResource(
+                "ApacheAnnotatorHtmlAnnotationEditorFactoryUserPreferences.schema.json");
+        userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
+                JSONUtil::loadJsonSchema);
+    }
+
     @Override
     public String getDisplayName()
     {
-        return Strings.getString("annotatorjs-editor.name");
+        return Strings.getString("apacheannotator-editor.name");
     }
 
     @Override
     public int accepts(Project aProject, String aFormat)
     {
         switch (aFormat) {
-        case LegacyHtmlFormatSupport.ID: // fall-through
+        case HtmlFormatSupport.ID: // fall-through
+        case XmlFormatSupport.ID:
             return PREFERRED;
         default:
             return DEFAULT;
@@ -61,7 +86,7 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new AnnotatorJsHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+        return new ApacheAnnotatorHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
                 getBeanName());
     }
 
@@ -69,5 +94,19 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     public void initState(AnnotatorState aModelObject)
     {
         aModelObject.setPagingStrategy(new NoPagingStrategy());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
+    {
+        return Optional
+                .of(new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
+    }
+
+    @Override
+    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    {
+        return userPreferencesSchema.get();
     }
 }

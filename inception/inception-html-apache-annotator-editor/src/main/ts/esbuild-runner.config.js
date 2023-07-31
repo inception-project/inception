@@ -15,10 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatorJsEditorFactory } from './AnnotatorJsEditorFactory';
+const esbuildSvelte = require('esbuild-svelte')
+const sveltePreprocess = require('svelte-preprocess')
 
-const INSTANCE = new AnnotatorJsEditorFactory()
-
-export function factory(): AnnotatorJsEditorFactory {
-  return INSTANCE;
+module.exports = {
+  type: 'bundle', // bundle or transform (see description above)
+  esbuild: {
+    target: 'es6',
+    plugins: [
+      esbuildSvelte({
+        compilerOptions: { css: true },
+        preprocess: sveltePreprocess({ sourceMap: true })
+      })
+    ]
+  }
 }

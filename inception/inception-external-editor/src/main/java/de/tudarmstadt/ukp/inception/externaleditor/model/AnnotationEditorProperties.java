@@ -25,6 +25,7 @@ public class AnnotationEditorProperties
     private String editorFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
+    private String userPreferencesKey;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
     private boolean loadingIndicatorDisabled = false;
@@ -97,5 +98,15 @@ public class AnnotationEditorProperties
     public String getEditorFactoryId()
     {
         return editorFactoryId;
+    }
+
+    public void setUserPreferencesKey(String aUserPreferencesKey)
+    {
+        userPreferencesKey = aUserPreferencesKey;
+    }
+
+    public String getUserPreferencesKey()
+    {
+        return userPreferencesKey;
     }
 }

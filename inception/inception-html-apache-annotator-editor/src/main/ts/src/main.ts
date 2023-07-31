@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatorJsEditorFactory } from './AnnotatorJsEditorFactory';
+import { ApacheAnnotatorEditorFactory } from './apache-annotator/ApacheAnnotatorEditorFactory'
 
-const INSTANCE = new AnnotatorJsEditorFactory()
+const INSTANCE = new ApacheAnnotatorEditorFactory()
 
-export function factory(): AnnotatorJsEditorFactory {
+export function factory (): ApacheAnnotatorEditorFactory {
   return INSTANCE;
 }
