@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Traini
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -113,7 +114,6 @@ public class ExternalRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         TrainingRequest trainingRequest = new TrainingRequest();
-        List<Document> documents = new ArrayList<>();
 
         // We assume that the type system for all CAS are the same
         String typeSystem = serializeTypeSystem(aCasses.get(0));
@@ -128,10 +128,10 @@ public class ExternalRecommender
 
         trainingRequest.setMetadata(buildMetadata(aCasses.get(0)));
 
+        List<Document> documents = new ArrayList<>();
         for (CAS cas : aCasses) {
             documents.add(buildDocument(cas));
         }
-
         trainingRequest.setDocuments(documents);
 
         HttpRequest request = HttpRequest.newBuilder() //
@@ -174,7 +174,8 @@ public class ExternalRecommender
                 .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout()) //
-                .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)).build();
+                .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)) //
+                .build();
 
         HttpResponse<String> response = sendRequest(request);
         // If the response indicates that the request was not successful,
@@ -200,8 +201,19 @@ public class ExternalRecommender
 
     private String serializeTypeSystem(CAS aCas) throws RecommendationException
     {
-        try (StringWriter out = new StringWriter()) {
-            TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()).toXML(out);
+        var layer = recommender.getLayer();
+        var feature = recommender.getFeature();
+
+        var tsd = TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem());
+
+        var type = tsd.getType(layer.getName());
+        type.setDescription(layer.getDescription());
+
+        stream(type.getFeatures()).filter(f -> f.getName().equals(feature.getName()))
+                .forEach(f -> f.setDescription(feature.getDescription()));
+
+        try (var out = new StringWriter()) {
+            tsd.toXML(out);
             return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {
