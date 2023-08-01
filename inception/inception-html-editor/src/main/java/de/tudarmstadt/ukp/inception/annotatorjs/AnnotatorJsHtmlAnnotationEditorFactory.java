@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.inception.annotatorjs.config.AnnotatorJsAnnotationEdit
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
@@ -44,9 +43,6 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        // return Strings.getString(Messages_.ANNOTATORJS_EDITOR_NAME);
-        // FIXME: For some reason the annotation processor does not seem to work in Eclipse full
-        // builds. Needs to be debugged....
         return Strings.getString("annotatorjs-editor.name");
     }
 
@@ -55,7 +51,6 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     {
         switch (aFormat) {
         case LegacyHtmlFormatSupport.ID: // fall-through
-        case HtmlFormatSupport.ID:
             return PREFERRED;
         default:
             return DEFAULT;

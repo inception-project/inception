@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTI
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,7 +65,7 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
 public class SchedulingServiceImpl
     implements SchedulingService, DisposableBean
 {
-    private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
@@ -93,13 +94,13 @@ public class SchedulingServiceImpl
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
         runningTasks.add((Task) aRunnable);
-        log.debug("Starting task [{}]", aRunnable);
+        LOG.debug("Starting task [{}]", aRunnable);
     }
 
     private void afterExecute(Runnable aRunnable, Throwable aThrowable)
     {
         runningTasks.remove(aRunnable);
-        log.debug("Completed task [{}]", aRunnable);
+        LOG.debug("Completed task [{}]", aRunnable);
         scheduleEligibleTasks();
     }
 
@@ -173,7 +174,7 @@ public class SchedulingServiceImpl
     public synchronized void enqueue(Task aTask)
     {
         if (aTask.getProject() != null && deletionPending.contains(aTask.getProject())) {
-            log.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
+            LOG.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
                     aTask.getProject());
             return;
         }
@@ -183,7 +184,7 @@ public class SchedulingServiceImpl
             switch (matchTask(aTask, enqueuedTask)) {
             case DISCARD_OR_QUEUE_THIS:
                 // Check if the incoming task should be discarded
-                log.debug("Matching task already queued - keeping existing: [{}] and discarding "
+                LOG.debug("Matching task already queued - keeping existing: [{}] and discarding "
                         + "incoming [{}]", enqueuedTask, aTask);
                 return;
             case UNQUEUE_EXISTING_AND_QUEUE_THIS:
@@ -198,25 +199,25 @@ public class SchedulingServiceImpl
         }
 
         for (Task taskToUnqueue : tasksToUnqueue) {
-            log.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
+            LOG.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
                     + "incoming [{}]", taskToUnqueue, aTask);
             enqueuedTasks.remove(taskToUnqueue);
         }
 
         if (containsMatchingTask(getScheduledTasks(), aTask)) {
-            log.debug("Matching task already scheduled - adding to queue: [{}]", aTask);
+            LOG.debug("Matching task already scheduled - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
 
         if (containsMatchingTask(getRunningTasks(), aTask)) {
-            log.debug("Matching task already running - adding to queue: [{}]", aTask);
+            LOG.debug("Matching task already running - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
 
         if (!aTask.isReadyToStart()) {
-            log.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
+            LOG.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
@@ -252,12 +253,17 @@ public class SchedulingServiceImpl
      */
     private void schedule(Task aTask)
     {
-        log.debug("Scheduling task [{}]", aTask);
+        LOG.debug("Scheduling task [{}]", aTask);
 
-        // This auto-wires the task fields manually
-        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
-        factory.autowireBean(aTask);
-        factory.initializeBean(aTask, "transientTask");
+        try {
+            // This auto-wires the task fields manually
+            AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+            factory.autowireBean(aTask);
+            factory.initializeBean(aTask, "transientTask");
+        }
+        catch (Exception e) {
+            LOG.error("Error initializing task [{}]", aTask, e);
+        }
 
         executor.execute(aTask);
     }
@@ -309,8 +315,22 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
     {
-        enqueuedTasks.removeIf(aPredicate);
-        executor.getQueue().removeIf(runnable -> aPredicate.test((Task) runnable));
+        enqueuedTasks.removeIf(task -> {
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
+
+        executor.getQueue().removeIf(runnable -> {
+            var task = (Task) runnable;
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
 
         // TODO: Stop the running tasks as well
     }
@@ -356,7 +376,7 @@ public class SchedulingServiceImpl
     @Override
     public void destroy()
     {
-        log.info("Shutting down scheduling service!");
+        LOG.info("Shutting down scheduling service!");
         enqueuedTasks.clear();
         executor.getQueue().clear();
         watchdog.shutdownNow();
@@ -365,9 +385,9 @@ public class SchedulingServiceImpl
 
     private void logState()
     {
-        getEnqueuedTasks().forEach(t -> log.debug("Queued   : {}", t));
-        getScheduledTasks().forEach(t -> log.debug("Scheduled: {}", t));
-        getRunningTasks().forEach(t -> log.debug("Running  : {}", t));
+        getEnqueuedTasks().forEach(t -> LOG.debug("Queued   : {}", t));
+        getScheduledTasks().forEach(t -> LOG.debug("Scheduled: {}", t));
+        getRunningTasks().forEach(t -> LOG.debug("Running  : {}", t));
     }
 
     @Override
@@ -377,5 +397,6 @@ public class SchedulingServiceImpl
         factory.autowireBean(aTask);
         factory.initializeBean(aTask, "transientTask");
         aTask.execute(); // Execute synchronously - blocking
+        aTask.destroy();
     }
 }

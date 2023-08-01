@@ -103,6 +103,12 @@ public class TrainingTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Training recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
@@ -132,7 +138,11 @@ public class TrainingTask
         boolean seenSuccessfulTraining = false;
         boolean seenNonTrainingRecommender = false;
 
-        for (var layer : annoService.listAnnotationLayer(getProject())) {
+        var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+        getMonitor().setMaxProgress(listAnnotationLayers.size());
+        for (var layer : listAnnotationLayers) {
+            getMonitor().incrementProgress();
+
             if (!layer.isEnabled()) {
                 continue;
             }
@@ -412,6 +422,7 @@ public class TrainingTask
             Recommender recommender, List<CAS> cassesForTraining)
         throws ConcurrentException
     {
+        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
         log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                 casses.get().size());

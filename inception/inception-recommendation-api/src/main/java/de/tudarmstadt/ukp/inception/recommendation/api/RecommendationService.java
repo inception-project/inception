@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
@@ -236,7 +237,7 @@ public interface RecommendationService
      * @return the new predictions.
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner);
+            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor);
 
     /**
      * Compute predictions.
@@ -259,7 +260,7 @@ public interface RecommendationService
      */
     Predictions computePredictions(User aSessionOwner, Project aProject,
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd);
+            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor);
 
     void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
             String aUser, AnnotationLayer aLayer,

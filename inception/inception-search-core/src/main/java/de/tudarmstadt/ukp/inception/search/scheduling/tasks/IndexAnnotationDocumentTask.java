@@ -62,6 +62,12 @@ public class IndexAnnotationDocumentTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Indexing annotations...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {

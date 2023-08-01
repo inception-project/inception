@@ -60,7 +60,10 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
+ *
+ * @deprecated Old export page code - to be removed in a future release.
  */
+@Deprecated
 public class LegacyProjectExportPanel
     extends ProjectSettingsPanelBase
 {

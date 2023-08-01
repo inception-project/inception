@@ -43,6 +43,7 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.text.BreakIterator;
@@ -118,7 +119,7 @@ public class DocumentImportExportServiceImpl
 
     private static final String EXPORT_CAS = "exportCas";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final RepositoryProperties repositoryProperties;
     private final CasStorageService casStorageService;
@@ -169,7 +170,7 @@ public class DocumentImportExportServiceImpl
             AnnotationAwareOrderComparator.sort(forms);
             forms.forEach(format -> {
                 formatMap.put(format.getId(), format);
-                log.debug("Found format: {} ({}, {})",
+                LOG.debug("Found format: {} ({}, {})",
                         ClassUtils.getAbbreviatedName(format.getClass(), 20), format.getId(),
                         readWriteMsg(format));
             });
@@ -273,7 +274,7 @@ public class DocumentImportExportServiceImpl
                         bulkOperationContext);
             }
 
-            log.info("Exported annotations {} for user [{}] from project {} " + "using format [{}]",
+            LOG.info("Exported annotations {} for user [{}] from project {} " + "using format [{}]",
                     aDocument, aUser, aDocument.getProject(), aFormat.getId());
 
             return exportFile;
@@ -319,7 +320,7 @@ public class DocumentImportExportServiceImpl
         splitSenencesIfNecssaryAndCheckQuota(cas, format);
         splitTokensIfNecssaryAndCheckQuota(cas, format);
 
-        log.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
+        LOG.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
                 cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
 

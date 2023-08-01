@@ -28,7 +28,8 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.render.WebAnnotationsSerial
  * Provides support for an HTML-oriented annotation editor.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html-recogitojs", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ui.html-recogitojs", name = "enabled", //
+        havingValue = "true", matchIfMissing = false)
 public class RecogitoHtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean

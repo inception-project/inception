@@ -161,6 +161,7 @@ In the UI, the tags that were matched by the constraints are bold and come first
 
 image::constraints.png[align="center"]
 
+[[sect_constraints_conditional_features]]
 === Conditional features
 
 Constraints can be used to set up conditional features, that is features that only become available

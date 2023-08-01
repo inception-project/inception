@@ -26,6 +26,10 @@ import org.wicketstuff.progressbar.ProgressionModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
+/**
+ * @deprecated Old export page code - to be removed in a future release.
+ */
+@Deprecated
 public class ExportProgressModel
     extends ProgressionModel
 {
