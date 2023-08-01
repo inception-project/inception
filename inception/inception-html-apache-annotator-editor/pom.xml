@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>29.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-html-recogito-editor</artifactId>
-  <name>INCEpTION - Editor - HTML + Recogito JS (${recogitojs.version})</name>
+  <artifactId>inception-html-apache-annotator-editor</artifactId>
+  <name>INCEpTION - Editor - HTML + Apache Annotator (v${apache-annotator.version})</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -61,6 +61,27 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-external-editor</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-html</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-preferences</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.networknt</groupId>
+      <artifactId>json-schema-validator</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.springframework</groupId>
@@ -81,11 +102,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
@@ -93,6 +109,21 @@
   </dependencies>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!-- Inlined constants are required for building but cannot be detected afterwards  -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-io-xml</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>com.github.eirslett</groupId>

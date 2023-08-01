@@ -15,32 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.config;
+package de.tudarmstadt.ukp.inception.apacheannotatoreditor.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.recogitojseditor.RecogitoHtmlAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.recogitojseditor.render.WebAnnotationsSerializer;
+import de.tudarmstadt.ukp.inception.apacheannotatoreditor.ApacheAnnotatorHtmlAnnotationEditorFactory;
 
-/**
- * Provides support for an HTML-oriented annotation editor.
- */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html-recogitojs", name = "enabled", //
-        havingValue = "true", matchIfMissing = false)
-public class RecogitoHtmlAnnotationEditorSupportAutoConfiguration
+@ConditionalOnProperty(prefix = "ui.html-apacheannotator", name = "enabled", //
+havingValue = "true", matchIfMissing = true)
+public class ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean
-    public RecogitoHtmlAnnotationEditorFactory recogitoHtmlAnnotationEditorFactory()
+    public ApacheAnnotatorHtmlAnnotationEditorFactory apacheAnnotatorHtmlAnnotationEditorFactory()
     {
-        return new RecogitoHtmlAnnotationEditorFactory();
-    }
-
-    @Bean
-    public WebAnnotationsSerializer recogitoJsSerializer()
-    {
-        return new WebAnnotationsSerializer();
+        return new ApacheAnnotatorHtmlAnnotationEditorFactory();
     }
 }

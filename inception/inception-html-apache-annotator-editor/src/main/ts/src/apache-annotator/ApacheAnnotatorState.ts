@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatorJsEditorFactory } from './AnnotatorJsEditorFactory';
 
-const INSTANCE = new AnnotatorJsEditorFactory()
+import { writable } from 'svelte/store'
 
-export function factory(): AnnotatorJsEditorFactory {
-  return INSTANCE;
-}
+export const showLabels = writable(true)
+
+export const showEmptyHighlights = writable(false)

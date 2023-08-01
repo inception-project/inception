@@ -114,6 +114,8 @@ public class ExternalAnnotationEditor
         props.setScriptSources(pluginDesc.getScripts().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
+        getFactory().getUserPreferencesKey()
+                .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         props.setEditorFactoryId(getFactory().getBeanName());
 
         return props;
