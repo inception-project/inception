@@ -134,4 +134,5 @@
 </div>
 
 <style>
+     @import '../node_modules/@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 </style>

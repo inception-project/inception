@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import './ApacheAnnotatorEditor.scss'
-import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets, AnnotationOverEvent, AnnotationOutEvent, Annotation } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
@@ -36,9 +36,13 @@ export class ApacheAnnotatorVisualizer {
   private showInlineLabels = false
   private showEmptyHighlights = false
 
+  private data? : AnnotatedText
+
   private removePingMarkers: (() => void)[] = []
   private removePingMarkersTimeout: number | undefined = undefined
   private alpha = '55'
+
+  private overAnnotation : Annotation | undefined
 
   constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
@@ -49,6 +53,17 @@ export class ApacheAnnotatorVisualizer {
 
     // Event handlers for the resizer component
     this.root.addEventListener('mouseover', e => this.showResizer(e))
+
+    // Event handlers for custom events
+    this.root.addEventListener('mouseover', event => {
+      if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
+      const vid = event.target.getAttribute('data-iaa-id')
+      if (!vid) return
+      const annotation = this.data?.getAnnotation(vid)
+      if (!annotation) return
+      this.overAnnotation = annotation
+      event.target.dispatchEvent(new AnnotationOverEvent(annotation, event))
+    })
 
     // Add event handlers for highlighting extent of the annotation the mouse is currently over
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
@@ -98,7 +113,10 @@ export class ApacheAnnotatorVisualizer {
     console.log(`Loading annotations for range ${JSON.stringify(options.range)}`)
 
     this.ajax.loadAnnotations(options)
-      .then((doc: CompactAnnotatedText) => this.renderAnnotations(unpackCompactAnnotatedTextV2(doc)))
+      .then((doc: CompactAnnotatedText) => {
+        this.data = unpackCompactAnnotatedTextV2(doc)
+        this.renderAnnotations(this.data)
+      })
   }
 
   private renderAnnotations (doc: AnnotatedText): void {

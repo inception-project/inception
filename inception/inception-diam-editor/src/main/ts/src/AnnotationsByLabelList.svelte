@@ -148,13 +148,9 @@
                                         class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
                                     >
                                         {#if ann instanceof Span}
-                                            <div class="annotation-type-marker">
-                                                ␣
-                                            </div>
+                                            <div class="annotation-type-marker i7n-icon-span"/>
                                         {:else if ann instanceof Relation}
-                                            <div class="annotation-type-marker">
-                                                →
-                                            </div>
+                                            <div class="annotation-type-marker i7n-icon-relation"/>
                                         {/if}
                                     </div>
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
