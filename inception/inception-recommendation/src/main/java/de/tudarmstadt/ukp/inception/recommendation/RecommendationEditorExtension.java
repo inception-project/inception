@@ -39,7 +39,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -61,10 +60,8 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
@@ -75,6 +72,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
  * This component hooks into the annotation editor in order to:
@@ -101,16 +99,18 @@ public class RecommendationEditorExtension
     private final RecommendationService recommendationService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final UserDao userService;
+    private final FeatureSupportRegistry featureSupportRegistry;
 
-    @Autowired
     public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRegistry)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
         applicationEventPublisher = aApplicationEventPublisher;
         userService = aUserRegistry;
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
@@ -328,8 +328,29 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
-            AnnotationFeature aFeature, String aQuery)
+    @SuppressWarnings("unchecked")
+    public <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
+            AnnotationFeature aFeature)
+    {
+        var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
+
+        if (predictions == null) {
+            return null;
+        }
+
+        var vid = VID.parse(aVid.getExtensionPayload());
+        var ao = predictions.getPredictionByVID(aDocument, vid);
+        if (ao.isEmpty() || !ao.get().getFeature().equals(aFeature.getName())) {
+            return null;
+        }
+
+        return (V) featureSupportRegistry.findExtension(aFeature)
+                .map(ext -> ext.wrapFeatureValue(aFeature, aCas, ao.get().getLabel())).orElse(null);
+    }
+
+    @Override
+    public List<VLazyDetailResult> lookupLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
+            AnnotationFeature aFeature)
     {
         var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
 
@@ -337,16 +358,14 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
-        Preferences pref = recommendationService.getPreferences(aUser, aDocument.getProject());
-
         var vid = VID.parse(aVid.getExtensionPayload());
         var representative = predictions.getPredictionByVID(aDocument, vid);
         if (representative.isEmpty()) {
             return emptyList();
         }
 
-        AnnotationSuggestion sao = representative.get();
-        Optional<SuggestionGroup<AnnotationSuggestion>> group = predictions
+        var sao = representative.get();
+        var group = predictions
                 .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
                         aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
                 .stream() //
@@ -357,13 +376,14 @@ public class RecommendationEditorExtension
             return emptyList();
         }
 
-        var label = defaultIfBlank(aQuery, null);
+        var pref = recommendationService.getPreferences(aUser, aDocument.getProject());
+        var label = defaultIfBlank(sao.getLabel(), null);
         var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
                 label);
 
-        List<VLazyDetailResult> details = new ArrayList<>();
-        for (AnnotationSuggestion ao : sortedByScore) {
-            List<String> items = new ArrayList<>();
+        var details = new ArrayList<VLazyDetailResult>();
+        for (var ao : sortedByScore) {
+            var items = new ArrayList<String>();
             if (ao.getScore() != -1) {
                 items.add(String.format("Score: %.2f", ao.getScore()));
             }

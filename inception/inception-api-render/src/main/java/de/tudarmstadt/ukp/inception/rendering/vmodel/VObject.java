@@ -18,9 +18,7 @@
 package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -35,7 +33,6 @@ public abstract class VObject
     private final int equivalenceSet;
 
     private VID vid;
-    private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String color;
     private String label;
     private double score;
@@ -78,26 +75,6 @@ public abstract class VObject
     public Map<String, String> getFeatures()
     {
         return features;
-    }
-
-    public List<VLazyDetailQuery> getLazyDetails()
-    {
-        return lazyDetails;
-    }
-
-    public void setLazyDetails(List<VLazyDetailQuery> aLazyDetails)
-    {
-        lazyDetails = aLazyDetails;
-    }
-
-    public void addLazyDetails(List<VLazyDetailQuery> aDetails)
-    {
-        lazyDetails.addAll(aDetails);
-    }
-
-    public void addLazyDetail(VLazyDetailQuery aDetail)
-    {
-        lazyDetails.add(aDetail);
     }
 
     public void setColorHint(String aColor)

@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -125,14 +124,6 @@ public class RecommendationSpanRenderer
                         COLOR);
                 v.setScore(suggestion.getScore());
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
-
-                var lazyDetails = featureSupport.getLazyDetails(feature, suggestion.getLabel());
-                if (!lazyDetails.isEmpty()) {
-                    v.addLazyDetails(lazyDetails);
-                }
-                else {
-                    v.addLazyDetail(new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
-                }
 
                 vdoc.add(v);
             }

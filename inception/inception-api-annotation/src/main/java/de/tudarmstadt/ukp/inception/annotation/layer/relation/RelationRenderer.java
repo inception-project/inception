@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -134,12 +133,6 @@ public class RelationRenderer
 
         RelationAdapter typeAdapter = getTypeAdapter();
 
-        // Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin,
-        // aWindowEnd);
-        //
-        // // if this is a governor for more than one dependent, avoid duplicate yield
-        // List<Integer> yieldDeps = new ArrayList<>();
-
         // Index mapping annotations to the corresponding rendered arcs
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
@@ -154,9 +147,6 @@ public class RelationRenderer
                 aResponse.add(arc);
                 annoToArcIdx.put(fs, (VArc) arc);
 
-                // renderYield(aResponse, fs, relationLinks, yieldDeps);
-
-                renderLazyDetails(fs, arc, aFeatures);
                 renderRequiredFeatureErrors(aFeatures, fs, aResponse);
             }
         }
@@ -261,28 +251,17 @@ public class RelationRenderer
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFS aFs,
-            List<AnnotationFeature> aFeatures)
+    public List<VLazyDetailResult> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
+            int aWindowEndOffset)
     {
-        List<VLazyDetailQuery> queries = super.getLazyDetails(aFs, aFeatures);
-
-        if (!queries.contains(VLazyDetailQuery.LAYER_LEVEL_QUERY)) {
-            queries.add(VLazyDetailQuery.LAYER_LEVEL_QUERY);
+        if (!checkTypeSystem(aCas)) {
+            return Collections.emptyList();
         }
-
-        return queries;
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
-            int windowEndOffset)
-    {
-        checkTypeSystem(aCas);
 
         // FIXME Should also handle relations that are only partially visible using
         // selectAnnotationsInWindow()
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, windowBeginOffset,
-                windowEndOffset);
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBeginOffset,
+                aWindowEndOffset);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
         List<Integer> yieldDeps = new ArrayList<>();
@@ -291,8 +270,8 @@ public class RelationRenderer
 
         Optional<String> yield = renderYield(fs, relationLinks, yieldDeps);
 
-        List<VLazyDetailResult> details = super.renderLazyDetails(aCas, aVid, windowBeginOffset,
-                windowEndOffset);
+        List<VLazyDetailResult> details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset,
+                aWindowEndOffset);
 
         if (yield.isPresent()) {
             details.add(new VLazyDetailResult("Yield", yield.get()));
