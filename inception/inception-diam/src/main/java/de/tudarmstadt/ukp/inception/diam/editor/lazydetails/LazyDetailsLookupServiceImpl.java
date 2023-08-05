@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import static de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler.PARAM_LAZY_DETAIL_DATABASE;
-import static de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler.PARAM_LAZY_DETAIL_KEY;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler.PARAM_TYPE;
 import static de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler.COMMAND;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
 
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -71,42 +71,35 @@ public class LazyDetailsLookupServiceImpl
     }
 
     @Override
-    public LazyDetailsResponse lookupLazyDetails(IRequestParameters request, VID paramId,
+    public LazyDetailsResponse lookupLazyDetails(IRequestParameters request, VID aVid,
             CasProvider aCas, SourceDocument aDocument, User aUser, int windowBeginOffset,
             int windowEndOffset)
         throws AnnotationException, IOException
     {
-        LazyDetailsResponse response = new LazyDetailsResponse(COMMAND);
+        var response = new LazyDetailsResponse(COMMAND);
 
-        var topicParam = request.getParameterValue(PARAM_LAZY_DETAIL_DATABASE);
-        var keyParam = request.getParameterValue(PARAM_LAZY_DETAIL_KEY);
         var layerParam = request.getParameterValue(PARAM_TYPE);
 
-        if (layerParam.isEmpty() || topicParam.isEmpty()) {
+        if (layerParam.isEmpty()) {
             return response;
         }
 
-        Project project = aDocument.getProject();
-        String topic = topicParam.toString();
-        long layerId = layerParam.toLong();
-        AnnotationLayer layer = annotationService.getLayer(project, layerId)
-                .orElseThrow(() -> new AnnotationException(
-                        "Layer with ID [" + layerId + "] does not exist in project " + project));
+        var cas = aCas.get();
+        var layer = findLayer(aVid, cas, layerParam, aDocument.getProject());
 
-        List<VLazyDetailResult> details = new ArrayList<>();
+        var details = new ArrayList<VLazyDetailResult>();
 
-        renderExtensionLevelDetail(paramId, aDocument, aUser, keyParam, topic, layer, details);
+        lookupLayerLevelDetails(aVid, cas, windowBeginOffset, windowEndOffset, layer)
+                .forEach(details::add);
 
-        // Is it a layer-level lazy detail?
-        if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(topic)) {
-            renderLayerLevelDetail(paramId, aCas, windowBeginOffset, windowEndOffset, layer,
-                    details);
-        }
-        // Is it a feature-level lazy detail?
-        // We interpret the key as the feature value or as a kind of query to be handled by the
-        // feature support
-        else if (!keyParam.isEmpty()) {
-            renderFeatureLevelDetail(paramId, aCas, keyParam, topic, layer, details);
+        for (var feature : annotationService.listAnnotationFeature(layer)) {
+            lookupExtensionLevelDetails(aVid, aDocument, cas, aUser, feature).forEach(details::add);
+
+            // FIXME: We would like to get feature-level lazy details for the annotation label
+            // provided by the extension or said otherwise, we want to e.g. get KB details for a
+            // concept
+            // feature suggestion... this worked when we used the "query", but now is broken!
+            lookupFeatureLevelDetail(aVid, cas, feature).forEach(details::add);
         }
 
         response.setResults(details.stream() //
@@ -116,41 +109,59 @@ public class LazyDetailsLookupServiceImpl
         return response;
     }
 
-    private void renderFeatureLevelDetail(VID paramId, CasProvider aCas, StringValue keyParam,
-            String topic, AnnotationLayer layer, List<VLazyDetailResult> details)
-        throws IOException
+    private AnnotationLayer findLayer(VID aVid, CAS aCas, StringValue aLayerParam, Project project)
+        throws AnnotationException, IOException
     {
-        AnnotationFeature feature = annotationService.getFeature(topic, layer);
-        featureSupportRegistry.findExtension(feature).orElseThrow()
-                .renderLazyDetails(aCas.get(), feature, paramId, keyParam.toString()) //
-                .forEach(details::add);
-    }
-
-    private void renderLayerLevelDetail(VID paramId, CasProvider aCas, int windowBeginOffset,
-            int windowEndOffset, AnnotationLayer layer, List<VLazyDetailResult> details)
-        throws IOException
-    {
-        layerSupportRegistry.getLayerSupport(layer)
-                .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
-                .renderLazyDetails(aCas.get(), paramId, windowBeginOffset, windowEndOffset)
-                .forEach(details::add);
-    }
-
-    private void renderExtensionLevelDetail(VID paramId, SourceDocument aSourceDocument, User aUser,
-            StringValue keyParam, String topic, AnnotationLayer layer,
-            List<VLazyDetailResult> details)
-    {
-        // Only applies to synthetic annotations (i.e. from extensions)
-        if (!paramId.isSynthetic()) {
-            return;
+        if (aVid.isSynthetic()) {
+            var layerId = aLayerParam.toLong();
+            return annotationService.getLayer(project, layerId)
+                    .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
+                            + "] does not exist in project " + project));
         }
 
-        AnnotationFeature feature = annotationService.getFeature(topic, layer);
+        var fs = selectFsByAddr(aCas, aVid.getId());
+        return annotationService.findLayer(project, fs);
+    }
 
-        String extensionId = paramId.getExtensionId();
-        extensionRegistry.getExtension(extensionId)
-                .renderLazyDetails(aSourceDocument, aUser, paramId, feature,
-                        keyParam.toOptionalString()) //
-                .forEach(details::add);
+    private List<VLazyDetailResult> lookupFeatureLevelDetail(VID aVid, CAS aCas,
+            AnnotationFeature aFeature)
+    {
+        if (aVid.isSynthetic()) {
+            return emptyList();
+        }
+
+        var fs = selectFsByAddr(aCas, aVid.getId());
+        var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        return ext.lookupLazyDetails(aFeature, ext.getFeatureValue(aFeature, fs));
+    }
+
+    private List<VLazyDetailResult> lookupLayerLevelDetails(VID aVid, CAS aCas,
+            int windowBeginOffset, int windowEndOffset, AnnotationLayer aLayer)
+    {
+        if (aVid.isSynthetic()) {
+            return emptyList();
+        }
+
+        return layerSupportRegistry.getLayerSupport(aLayer)
+                .createRenderer(aLayer, () -> annotationService.listAnnotationFeature(aLayer))
+                .lookupLazyDetails(aCas, aVid, windowBeginOffset, windowEndOffset);
+
+    }
+
+    private List<VLazyDetailResult> lookupExtensionLevelDetails(VID aVid, SourceDocument aDocument,
+            CAS aCas, User aUser, AnnotationFeature aFeature)
+        throws IOException
+    {
+        if (!aVid.isSynthetic()) {
+            return emptyList();
+        }
+
+        var result = new ArrayList<VLazyDetailResult>();
+        var extension = extensionRegistry.getExtension(aVid.getExtensionId());
+        var value = extension.getFeatureValue(aDocument, aUser, aCas, aVid, aFeature);
+        featureSupportRegistry.findExtension(aFeature).orElseThrow()
+                .lookupLazyDetails(aFeature, value).forEach(result::add);
+        extension.lookupLazyDetails(aDocument, aUser, aVid, aFeature).forEach(result::add);
+        return result;
     }
 }

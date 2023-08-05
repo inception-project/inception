@@ -23,7 +23,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.Type;
@@ -43,7 +42,6 @@ import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -147,16 +145,6 @@ public class RecommendationRelationRenderer
                 VArc arc = new VArc(layer, suggestion.getVID(), VID.of(source), VID.of(target),
                         "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
                 arc.setScore(suggestion.getScore());
-
-                List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
-                        suggestion.getLabel());
-                if (!lazyDetails.isEmpty()) {
-                    arc.addLazyDetails(lazyDetails);
-                }
-                else {
-                    arc.addLazyDetail(
-                            new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
-                }
 
                 aVDoc.add(arc);
             }

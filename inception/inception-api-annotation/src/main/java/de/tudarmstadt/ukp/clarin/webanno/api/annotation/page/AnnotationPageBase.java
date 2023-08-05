@@ -50,7 +50,6 @@ import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.wicketstuff.urlfragment.UrlFragment;
 import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
@@ -423,7 +422,7 @@ public abstract class AnnotationPageBase
      * is refreshed based on the visibility preferences and based on the project to which the
      * document being edited belongs.
      */
-    protected void loadPreferences() throws BeansException, IOException
+    protected void loadPreferences() throws IOException
     {
         AnnotatorState state = getModelObject();
         userPreferenceService.loadPreferences(state, userRepository.getCurrentUsername());

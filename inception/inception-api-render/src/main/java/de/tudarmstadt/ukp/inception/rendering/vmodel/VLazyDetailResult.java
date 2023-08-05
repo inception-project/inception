@@ -23,11 +23,8 @@ import java.io.Serializable;
  * Result for a lazy detail.
  * <p>
  * Some information is only to be shown when the user performs a particular "detail information"
- * action, e.g. hovering the mouse over an annotation. This class represents the result which is
- * returned by the server for a particular detail query.
+ * action, e.g. hovering the mouse over an annotation.
  * </p>
- * 
- * @see VLazyDetailQuery
  */
 public class VLazyDetailResult
     implements Serializable

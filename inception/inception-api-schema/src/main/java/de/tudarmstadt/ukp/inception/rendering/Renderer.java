@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils.isRequiredFeatureMissing;
 import static org.apache.commons.lang3.StringUtils.defaultString;
@@ -38,7 +37,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
@@ -49,8 +47,6 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
  */
 public interface Renderer
 {
-    static final String QUERY_LAYER_LEVEL_DETAILS = "#";
-
     TypeAdapter getTypeAdapter();
 
     /**
@@ -97,34 +93,6 @@ public interface Renderer
         return features;
     }
 
-    default List<VLazyDetailQuery> getLazyDetails(AnnotationFS aFs,
-            List<AnnotationFeature> aFeatures)
-    {
-        List<VLazyDetailQuery> details = new ArrayList<>();
-
-        boolean tiggerLayerLevelLazyDetails = false;
-
-        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-
-        for (AnnotationFeature feature : aFeatures) {
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
-            if (feature.isIncludeInHover() && NONE.equals(feature.getMultiValueMode())) {
-                tiggerLayerLevelLazyDetails = true;
-            }
-
-            details.addAll(fsr.findExtension(feature).orElseThrow().getLazyDetails(feature, aFs));
-        }
-
-        if (tiggerLayerLevelLazyDetails) {
-            details.add(VLazyDetailQuery.LAYER_LEVEL_QUERY);
-        }
-
-        return details;
-    }
-
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
             FeatureStructure aFS, VDocument aResponse)
     {
@@ -140,16 +108,22 @@ public interface Renderer
         }
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
+    default List<VLazyDetailResult> lookupLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
             int windowEndOffset)
     {
-        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
+        var fsr = getFeatureSupportRegistry();
 
-        List<VLazyDetailResult> details = new ArrayList<>();
+        var aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
-        AnnotationFS aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var details = new ArrayList<VLazyDetailResult>();
+        generateLazyDetailsForFeaturesIncludedInHover(fsr, details, aFs);
+        return details;
+    }
 
-        for (AnnotationFeature feature : getTypeAdapter().listFeatures()) {
+    default void generateLazyDetailsForFeaturesIncludedInHover(FeatureSupportRegistry fsr,
+            List<VLazyDetailResult> details, AnnotationFS aFs)
+    {
+        for (var feature : getTypeAdapter().listFeatures()) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
@@ -160,7 +134,5 @@ public interface Renderer
 
             details.add(new VLazyDetailResult(feature.getName(), text));
         }
-
-        return details;
     }
 }

@@ -229,16 +229,14 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  loadLazyDetails (id: VID, type: string, database: string, key: string): Promise<any> {
+  loadLazyDetails (id: VID, type: string): Promise<any> {
     const token = DiamAjaxImpl.newToken()
 
     const params: Record<string, any> = {
       action: 'normData',
       token,
       id,
-      type,
-      database,
-      key
+      type
     }
 
     return new Promise((resolve, reject) => {

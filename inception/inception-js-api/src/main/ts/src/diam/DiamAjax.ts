@@ -49,7 +49,7 @@ export interface DiamAjax {
 
   loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any>;
 
-  loadLazyDetails(id: VID, type: string, database: string, key: string): Promise<any>;
+  loadLazyDetails(id: VID, type: string): Promise<any>;
 
   loadPreferences (key: string): Promise<any>;
 

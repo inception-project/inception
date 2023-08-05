@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.image.feature;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,9 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -44,8 +44,6 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
@@ -199,21 +197,18 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        String label = renderFeatureValue(aFeature, aFs);
+        if (aValue instanceof String) {
+            var url = (String) aValue;
 
-        if (StringUtils.isEmpty(label)) {
-            return Collections.emptyList();
+            if (isBlank(url)) {
+                return emptyList();
+            }
+
+            return asList(new VLazyDetailResult("<img>", url));
         }
 
-        return asList(new VLazyDetailQuery(aFeature.getName(), label));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        return asList(new VLazyDetailResult("<img>", aQuery));
+        return Collections.emptyList();
     }
 }
