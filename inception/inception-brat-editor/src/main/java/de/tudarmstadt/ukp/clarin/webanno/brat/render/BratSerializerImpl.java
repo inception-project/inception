@@ -47,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
@@ -159,10 +158,6 @@ public class BratSerializerImpl
                         vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
 
                 aResponse.addEntity(entity);
-
-                vspan.getLazyDetails().stream()
-                        .map(d -> new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -171,10 +166,6 @@ public class BratSerializerImpl
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);
-
-                varc.getLazyDetails().stream()
-                        .map(d -> new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
             }
         }
     }

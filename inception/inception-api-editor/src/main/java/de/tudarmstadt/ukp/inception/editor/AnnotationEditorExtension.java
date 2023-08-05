@@ -79,9 +79,14 @@ public interface AnnotationEditorExtension
         // Do nothing by default
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser,
-            VID aVid, AnnotationFeature aFeature, String aQuery)
+    default List<VLazyDetailResult> lookupLazyDetails(SourceDocument aDocument, User aUser,
+            VID aVid, AnnotationFeature aFeature)
     {
         return Collections.emptyList();
     }
+
+    <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
+            AnnotationFeature aFeature)
+        throws IOException;
+
 }

@@ -170,8 +170,6 @@ public class ChainRenderer
                             label);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
-
-                    renderLazyDetails(linkFs, span, aFeatures);
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current

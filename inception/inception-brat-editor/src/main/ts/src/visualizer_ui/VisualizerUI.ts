@@ -60,7 +60,7 @@ export class VisualizerUI {
 
   private commentPopup: JQuery
   private commentDisplayed = false
-  private displayCommentTimer = null
+  private displayCommentTimer: number | undefined = undefined
 
   private ajax: DiamAjax
 
@@ -78,7 +78,6 @@ export class VisualizerUI {
       .on('displaySentComment', this, this.displaySentComment)
       .on('hideComment', this, this.hideComment)
       .on('resize', this, this.onResize)
-      .on('collectionLoaded', this, this.rememberNormDb)
       .on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded)
       .on('doneRendering', this, this.onDoneRendering)
       .on('mousemove', this, this.onMouseMove)
@@ -177,15 +176,13 @@ export class VisualizerUI {
       comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>')
     }
 
-    // process normalizations
-    const normsToQuery = []
-    comment += this.processNormalizations(normalizations, normsToQuery)
+    comment += '<div id="lazy_details_drop_point"></div>'
 
     // display initial comment HTML
     this.displayComment(evt, comment, commentText, commentType, immediately)
 
     // initiate AJAX calls for the normalization data to query
-    $.each(normsToQuery, (normNo, norm) => this.initiateNormalizationAjaxCall(spanId, spanType, norm))
+    this.initiateNormalizationAjaxCall(spanId, spanType)
   }
 
   displayArcComment (evt, target, symmetric, arcId, originSpanId, originSpanType,
@@ -200,65 +197,17 @@ export class VisualizerUI {
       '<span class="comment_id">' + (arcId ? 'ID:' + arcId : Util.escapeHTML(originSpanId) + arrowStr + Util.escapeHTML(targetSpanId)) + '</span>' +
       '</span>')
     comment += ('<div class="comment_text">' + Util.escapeHTML('"' + this.data.spans[originSpanId].text + '"') + arrowStr + Util.escapeHTML('"' + this.data.spans[targetSpanId].text + '"') + '</div>')
-
-    // process normalizations
-    const normsToQuery = []
-    comment += this.processNormalizations(normalizations, normsToQuery)
+    comment += '<div id="lazy_details_drop_point"></div>'
 
     this.displayComment(evt, comment, commentText, commentType)
 
     // initiate AJAX calls for the normalization data to query
-    $.each(normsToQuery, (normNo, norm) => this.initiateNormalizationAjaxCall(arcId, arcRole, norm))
+    this.initiateNormalizationAjaxCall(arcId, arcRole)
   }
 
-  processNormalizations (normalizations, normsToQuery) {
-    let comment = ''
-    $.each(normalizations != null ? normalizations : [], (normNo, norm) => {
-      if (norm[2]) {
-        const cateogory = norm[0]
-        const key = norm[1]
-        const value = norm[2]
-        // no DB, just attach "human-readable" text provided with the annotation, if any
-        if (cateogory) {
-          comment += `<hr/>
-                      <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
-                      `
-        }
-
-        if (key) {
-          comment += `<span class="norm_info_label">${Util.escapeHTML(key)}</span>
-                     `
-        }
-
-        comment += `<span class="norm_info_value">${Util.escapeHTML(value)?.replace(/\n/g, '<br/>')}</span>
-                    <br/>
-                    `
-      } else {
-        // DB available, add drop-off point to HTML and store query parameters
-        const dbName = norm[0]
-        const dbKey = norm[1]
-        this.commentPopupNormInfoSeqId++
-        if (dbKey) {
-          comment += `<hr/>
-                      <span class="comment_id">${Util.escapeHTML(dbName)}: ${Util.escapeHTML(dbKey)}</span>
-                      <br/>`
-        } else {
-          comment += '<hr/>'
-        }
-        comment += `<div id="norm_info_drop_point_${this.commentPopupNormInfoSeqId}"></div>`
-        normsToQuery.push([dbName, dbKey, this.commentPopupNormInfoSeqId])
-      }
-    })
-    return comment.replace(/^\s*/gm, '')
-  }
-
-  initiateNormalizationAjaxCall (id, type, normq) {
+  initiateNormalizationAjaxCall (id, type) {
     // TODO: cache some number of most recent norm_get_data results
-    const dbName = normq[0]
-    const dbKey = normq[1]
-    const infoSeqId = normq[2]
-
-    this.ajax.loadLazyDetails(id, type, dbName, dbKey).then(response => {
+    this.ajax.loadLazyDetails(id, type).then(response => {
       if (response.exception) {
         // TODO: response to error
       } else if (!response.results) {
@@ -297,11 +246,12 @@ export class VisualizerUI {
             }
           }
         }
-        const drop = $('#norm_info_drop_point_' + infoSeqId)
+
+        const drop = $('#lazy_details_drop_point')
         if (drop) {
           drop.html(norminfo)
         } else {
-          console.log('norm info drop point not found!') // TODO XXX
+          console.log('Lazy details drop point not found!') // TODO XXX
         }
       }
     })
@@ -333,7 +283,7 @@ export class VisualizerUI {
   /* END comment popup - related */
 
   // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
-  displayButtonsTimer = null
+  displayButtonsTimer: number | undefined = undefined
   buttonsShown = false
   acceptAction (evt: MouseEvent, offsets, editedSpan, id) {
     evt.preventDefault()
@@ -419,18 +369,6 @@ export class VisualizerUI {
   // END WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
 
   /* START form management - related */
-
-  rememberNormDb (response) {
-    // the visualizer needs to remember aspects of the norm setup
-    // so that it can avoid making queries for unconfigured or
-    // missing normalization DBs.
-    const norm_resources = response.normalization_config || []
-    $.each(norm_resources, (normNo, norm) => {
-      const normName = norm[0]
-      const serverDb = norm[3]
-      this.normServerDbByNormDbName[normName] = serverDb
-    })
-  }
 
   onDoneRendering (args) {
     if (args && !args.edited) {

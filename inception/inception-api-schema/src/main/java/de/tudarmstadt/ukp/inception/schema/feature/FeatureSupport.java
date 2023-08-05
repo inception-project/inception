@@ -43,8 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
@@ -221,23 +219,6 @@ public interface FeatureSupport<T>
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
 
-    default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
-    {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (labelFeature != null && labelFeature.getRange().isPrimitive()) {
-            return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
-        }
-        else {
-            return Collections.emptyList();
-        }
-    }
-
-    default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
-    {
-        return Collections.emptyList();
-    }
-
     /**
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
      * is an acceptable return value for this method.
@@ -253,8 +234,7 @@ public interface FeatureSupport<T>
         return aLabel;
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
+    default List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         return Collections.emptyList();
     }

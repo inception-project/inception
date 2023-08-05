@@ -160,10 +160,11 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationEditorExtension recommendationEditorExtension(
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aApplicationEventPublisher, aUserService);
+                aApplicationEventPublisher, aUserService, aFeatureSupportRegistry);
     }
 
     @Bean

@@ -26,10 +26,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -53,8 +51,6 @@ import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -245,7 +241,8 @@ public class MultiValueConceptFeatureSupport
         }
 
         if (aValue instanceof List) {
-            ArrayList<KBHandle> wrapped = new ArrayList<>();
+            var traits = readTraits(aFeature);
+            var wrapped = new ArrayList<KBHandle>();
 
             for (Object item : (List<?>) aValue) {
                 if (item instanceof KBHandle) {
@@ -254,10 +251,9 @@ public class MultiValueConceptFeatureSupport
                 }
 
                 if (item instanceof String) {
-                    String identifier = (String) item;
-                    MultiValueConceptFeatureTraits traits = readTraits(aFeature);
-                    KBHandle chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
-                    KBHandle clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
+                    var identifier = (String) item;
+                    var chbk = labelCache.get(aFeature, traits.getRepositoryId(), identifier);
+                    var clone = new KBHandle(chbk.getIdentifier(), chbk.getUiLabel(),
                             chbk.getDescription(), chbk.getLanguage());
                     clone.setKB(chbk.getKB());
                     wrapped.add(clone);
@@ -333,47 +329,22 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var result = new ArrayList<VLazyDetailResult>();
 
-        if (labelFeature == null) {
-            return Collections.emptyList();
-        }
+        if (aValue instanceof Iterable) {
+            var handles = (Iterable<?>) aValue;
+            for (var h : handles) {
+                if (h instanceof KBHandle) {
+                    var handle = (KBHandle) h;
+                    result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
 
-        List<KBHandle> handles = getFeatureValue(aFeature, aFs);
-        if (handles == null) {
-            return Collections.emptyList();
-        }
-
-        return handles.stream() //
-                .flatMap(h -> getLazyDetails(aFeature, h.getIdentifier()).stream()) //
-                .collect(toList());
-    }
-
-    @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aIdentifier)
-    {
-        if (StringUtils.isEmpty(aIdentifier)) {
-            return Collections.emptyList();
-        }
-
-        return asList(new VLazyDetailQuery(aFeature.getName(), aIdentifier));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        List<VLazyDetailResult> result = new ArrayList<>();
-
-        MultiValueConceptFeatureTraits traits = readTraits(aFeature);
-        KBHandle handle = labelCache.get(aFeature, traits.getRepositoryId(), aQuery);
-
-        result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
-
-        if (isNotBlank(handle.getDescription())) {
-            result.add(new VLazyDetailResult("Description", handle.getDescription()));
+                    if (isNotBlank(handle.getDescription())) {
+                        result.add(new VLazyDetailResult("Description", handle.getDescription()));
+                    }
+                }
+            }
         }
 
         return result;

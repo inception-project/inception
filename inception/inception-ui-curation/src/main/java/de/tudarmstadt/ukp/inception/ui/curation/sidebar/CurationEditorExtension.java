@@ -27,7 +27,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -37,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
 
@@ -72,17 +73,19 @@ public class CurationEditorExtension
     private final ApplicationEventPublisher applicationEventPublisher;
     private final UserDao userRepository;
     private final CurationSidebarService curationSidebarService;
+    private final FeatureSupportRegistry featureSupportRegistry;
 
-    @Autowired
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
-            UserDao aUserRepository, CurationSidebarService aCurationSidebarService)
+            UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
         applicationEventPublisher = aApplicationEventPublisher;
         userRepository = aUserRepository;
         curationSidebarService = aCurationSidebarService;
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
@@ -134,6 +137,35 @@ public class CurationEditorExtension
             page.getAnnotationActionHandler().actionJump(aTarget, sourceAnnotation.getBegin(),
                     sourceAnnotation.getEnd());
         }
+    }
+
+    @Override
+    public <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
+            AnnotationFeature aFeature)
+        throws IOException
+    {
+        // only process actions relevant to curation
+        if (!aVid.getExtensionId().equals(EXTENSION_ID)) {
+            return null;
+        }
+
+        var curationVid = CurationVID.parse(aVid.getExtensionPayload());
+        if (curationVid == null) {
+            return null;
+        }
+
+        var srcUser = curationVid.getUsername();
+
+        if (!documentService.existsAnnotationDocument(aDocument, srcUser)) {
+            log.error("Source CAS of [{}] for curation not found", srcUser);
+            return null;
+        }
+
+        var vid = VID.parse(curationVid.getExtensionPayload());
+        var cas = documentService.readAnnotationCas(aDocument, srcUser);
+        var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
+        var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        return ext.getFeatureValue(aFeature, fs);
     }
 
     /**

@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatu
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -44,8 +44,6 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTrait
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailQuery;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -232,37 +230,20 @@ public class StringFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
+    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        if (isBlank(aLabel) || aFeature.getTagset() == null) {
-            return emptyList();
+        if (aValue instanceof String) {
+            var value = (String) aValue;
+            var tag = schemaService.getTag(value, aFeature.getTagset());
+            if (tag.isEmpty()) {
+                return asList(new VLazyDetailResult(value, "Tag not in tagset"));
+            }
+
+            if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
+                return asList(new VLazyDetailResult(value, tag.get().getDescription()));
+            }
         }
 
-        // Checking here if the tag has a description would be nicer because it would avoid
-        // rendering an emtpy section for every string feature in the popover... but it also
-        // induces a database request for every single string feature on every annotation which
-        // would slow things down quite a bit...
-        // Tag tag = schemaService.getTag(aLabel, aFeature.getTagset());
-        // if (tag == null || isBlank(tag.getDescription())) {
-        // return emptyList();
-        // }
-
-        return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, AnnotationFeature aFeature,
-            VID aParamId, String aQuery)
-    {
-        var tag = schemaService.getTag(aQuery, aFeature.getTagset());
-        if (tag.isEmpty()) {
-            return asList(new VLazyDetailResult(aQuery, "Tag not in tagset"));
-        }
-
-        if (tag.map(t -> isBlank(t.getDescription())).orElse(true)) {
-            return emptyList();
-        }
-
-        return asList(new VLazyDetailResult(aQuery, tag.get().getDescription()));
+        return emptyList();
     }
 }
