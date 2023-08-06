@@ -51,7 +51,8 @@ import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
@@ -329,24 +330,24 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        var result = new ArrayList<VLazyDetailResult>();
+        var result = new VLazyDetailGroup();
 
         if (aValue instanceof Iterable) {
             var handles = (Iterable<?>) aValue;
             for (var h : handles) {
                 if (h instanceof KBHandle) {
                     var handle = (KBHandle) h;
-                    result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
+                    result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
 
                     if (isNotBlank(handle.getDescription())) {
-                        result.add(new VLazyDetailResult("Description", handle.getDescription()));
+                        result.addDetail(new VLazyDetail("Description", handle.getDescription()));
                     }
                 }
             }
         }
 
-        return result;
+        return asList(result);
     }
 }

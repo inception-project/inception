@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
@@ -197,7 +198,7 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof String) {
             var url = (String) aValue;
@@ -206,7 +207,7 @@ public class ImageFeatureSupport
                 return emptyList();
             }
 
-            return asList(new VLazyDetailResult("<img>", url));
+            return asList(new VLazyDetailGroup(new VLazyDetail("<img>", url)));
         }
 
         return Collections.emptyList();

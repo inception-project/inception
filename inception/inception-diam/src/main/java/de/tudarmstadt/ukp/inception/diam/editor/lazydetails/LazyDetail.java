@@ -17,28 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-public class LazyDetailsResponse
-    extends AjaxResponse
+@JsonSerialize(using = BeanAsArraySerializer.class)
+@JsonPropertyOrder(value = { "label", "value" })
+public class LazyDetail
 {
-    private List<LazyDetailGroup> groups = new ArrayList<>();
+    private String label;
+    private String value;
 
-    public LazyDetailsResponse(String aAction)
+    public LazyDetail(String aLabel, String aValue)
     {
-        super(aAction);
+        label = aLabel;
+        value = aValue;
     }
 
-    public List<LazyDetailGroup> getGroups()
+    public String getLabel()
     {
-        return groups;
+        return label;
     }
 
-    public void setGroups(List<LazyDetailGroup> aGroups)
+    public void setLabel(String aLabel)
     {
-        groups = aGroups;
+        label = aLabel;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue(String aValue)
+    {
+        value = aValue;
     }
 }

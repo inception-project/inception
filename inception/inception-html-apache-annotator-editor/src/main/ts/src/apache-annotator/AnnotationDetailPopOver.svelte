@@ -18,7 +18,7 @@
 <svelte:options accessors={true}/>
 
 <script lang="ts">
-  import { Annotation, AnnotationOverEvent, Relation, Span, DiamAjax } from '@inception-project/inception-js-api'
+  import { Annotation, AnnotationOverEvent, Relation, Span, DiamAjax, LazyDetailGroup } from '@inception-project/inception-js-api'
   import { onMount } from 'svelte'
 
   export let ajax : DiamAjax
@@ -29,6 +29,7 @@
   export let annotation : Annotation | undefined = undefined
 
   let popover : HTMLElement
+  let detailGroups : LazyDetailGroup[]
 
   onMount(() => {
     // React to mouse hovering over annotation
@@ -68,13 +69,13 @@
     root.addEventListener('mouseout', e => { 
       if (annotation) annotation = undefined 
     })
-
-    // $: {
-    //   if (annotation) {
-    //     ajax.loadLazyDetails(annotation.vid)
-    //   }
-    // }
   })
+
+  $: {
+    if (annotation) {
+      ajax.loadLazyDetails(annotation).then(response => detailGroups = response)
+    }
+  }
 </script>
 
 <div bind:this={popover} class="bootstrap popover position-fixed shadow" style:top="{top}px" style:left="{left}px" style:--width="{width}px" class:d-none={!annotation}>
@@ -92,6 +93,16 @@
       {#each annotation.comments as comment}
         <div class="i7n-marker-{comment.type}">{comment.comment}</div>
       {/each}
+      {#if detailGroups}
+        {#each detailGroups as detailGroup}
+          {#if detailGroup.title}
+            <div class="fw-bold">{detailGroup.title}</div>
+          {/if}
+          {#each detailGroup.details as detail}
+            <div><span class="fw-semibold">{detail.label}:</span> {detail.value}</div>
+          {/each}
+        {/each}
+      {/if}
     </div>
   {/if}
 </div>

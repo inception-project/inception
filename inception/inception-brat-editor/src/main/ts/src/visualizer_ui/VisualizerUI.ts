@@ -150,7 +150,7 @@ export class VisualizerUI {
   // to avoid clobbering on delayed response
   commentPopupNormInfoSeqId = 0
 
-  normInfoSortFunction (a, b) {
+  compareLazyDetails (a, b) {
     // images at the top
     if (a[0].toLowerCase() === '<img>') return -1
     if (b[0].toLowerCase() === '<img>') return 1
@@ -205,28 +205,30 @@ export class VisualizerUI {
     this.initiateNormalizationAjaxCall(arcId, arcRole)
   }
 
-  initiateNormalizationAjaxCall (id, type) {
-    // TODO: cache some number of most recent norm_get_data results
-    this.ajax.loadLazyDetails(id, type).then(response => {
-      if (response.exception) {
-        // TODO: response to error
-      } else if (!response.results) {
-        // TODO: response to missing key
-      } else {
-        // extend comment popup with normalization data
-        let norminfo = ''
+  initiateNormalizationAjaxCall (id: VID, type: number) {
+    this.ajax.loadLazyDetails(id, type).then(detailGroups => {
+      // extend comment popup with normalization data
+      let norminfo = ''
+
+      for (const group of detailGroups) {
+        const details = group.details
         // flatten outer (name, attr, info) array (idx for sort)
         let infos: [string, string, number][] = []
         let idx = 0
-        for (let j = 0; j < response.results.length; j++) {
-          const label = response.results[j][0] as string
-          const value = response.results[j][1] as string
-          infos.push([label, value, idx++])
+        for (let j = 0; j < details.length; j++) {
+          infos.push([details[j].label, details[j].value, idx++])
         }
 
         // sort, prioritizing images (to get floats right)
-        infos = infos.sort(this.normInfoSortFunction)
+        infos = infos.sort(this.compareLazyDetails)
+
         // generate HTML
+        if (group.title) {
+          norminfo += `<hr/>
+            <span class="comment_id">${group.title}</span>
+            <br/>`
+        }
+
         for (let i = 0; i < infos.length; i++) {
           const label = infos[i][0] as string
           let value = infos[i][1] as string
@@ -241,18 +243,18 @@ export class VisualizerUI {
               }
 
               norminfo += `<span class="norm_info_label">${Util.escapeHTML(label)}</span>
-                           <span class="norm_info_value">: ${Util.escapeHTML(value)?.replace(/\n/g, '<br/>')}</span>
-                           <br/>`
+                            <span class="norm_info_value">: ${Util.escapeHTML(value)?.replace(/\n/g, '<br/>')}</span>
+                            <br/>`
             }
           }
         }
+      }
 
-        const drop = $('#lazy_details_drop_point')
-        if (drop) {
-          drop.html(norminfo)
-        } else {
-          console.log('Lazy details drop point not found!') // TODO XXX
-        }
+      const drop = $('#lazy_details_drop_point')
+      if (drop) {
+        drop.html(norminfo)
+      } else {
+        console.log('Lazy details drop point not found!') // TODO XXX
       }
     })
   }

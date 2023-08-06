@@ -17,41 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.List;
 
-import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
-
-@JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "label", "value" })
-public class LazyDetailQuery
+public class LazyDetailGroup
 {
-    private String label;
-    private String value;
+    private String title;
+    private List<LazyDetail> details;
 
-    public LazyDetailQuery(String aLabel, String aValue)
+    public LazyDetailGroup(String aTitle)
     {
-        label = aLabel;
-        value = aValue;
+        title = aTitle;
     }
 
-    public String getLabel()
+    public String getTitle()
     {
-        return label;
+        return title;
     }
 
-    public void setLabel(String aLabel)
+    public void setTitle(String aTitle)
     {
-        label = aLabel;
+        title = aTitle;
     }
 
-    public String getValue()
+    public List<LazyDetail> getDetails()
     {
-        return value;
+        return details;
     }
 
-    public void setValue(String aValue)
+    public void setDetails(List<LazyDetail> aDetails)
     {
-        value = aValue;
+        details = aDetails;
     }
 }

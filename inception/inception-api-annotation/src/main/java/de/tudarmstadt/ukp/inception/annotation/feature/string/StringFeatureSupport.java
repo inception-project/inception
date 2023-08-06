@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTrait
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -230,17 +231,18 @@ public class StringFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof String) {
             var value = (String) aValue;
             var tag = schemaService.getTag(value, aFeature.getTagset());
             if (tag.isEmpty()) {
-                return asList(new VLazyDetailResult(value, "Tag not in tagset"));
+                return asList(new VLazyDetailGroup(new VLazyDetail(value, "Tag not in tagset")));
             }
 
             if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
-                return asList(new VLazyDetailResult(value, tag.get().getDescription()));
+                return asList(
+                        new VLazyDetailGroup(new VLazyDetail(value, tag.get().getDescription())));
             }
         }
 

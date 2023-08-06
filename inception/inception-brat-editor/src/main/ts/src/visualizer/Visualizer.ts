@@ -523,33 +523,6 @@ export class Visualizer {
     }) // markedText
   }
 
-  applyNormalizations (normalizations: Array<NormalizationDto>) {
-    if (!normalizations || !this.data) {
-      return
-    }
-
-    for (const norm of normalizations) {
-      const target = norm[0]
-      const refdb = norm.length > 1 ? norm[1] : '#' // See Renderer.QUERY_LAYER_LEVEL_DETAILS
-      const refid = norm.length > 2 ? norm[2] : ''
-      const reftext = norm.length > 3 ? norm[3] : undefined
-
-      const span = this.data.spans[target]
-      if (span) {
-        span.normalizations.push([refdb, refid, reftext])
-        continue
-      }
-
-      const arc = this.data.arcById[target]
-      if (arc) {
-        arc.normalizations.push([refdb, refid, reftext])
-        continue
-      }
-
-      this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]])
-    }
-  }
-
   buildSpansFromEntities (documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
     if (!entities) {
       return {}
@@ -670,7 +643,7 @@ export class Visualizer {
       for (let i = 1; i < len; i++) {
         const id = okEquivSpans[i - 1]
         const tiggerId = okEquivSpans[i - 1]
-        const roles: Array<RoleDto> = [[equiv[1], okEquivSpans[i]]]
+        const roles: Array<RoleDto> = [[parseInt(equiv[1]), okEquivSpans[i]]]
         const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, EQUIV)
         eventDesc.leftSpans = okEquivSpans.slice(0, i)
         eventDesc.rightSpans = okEquivSpans.slice(i)
@@ -1032,7 +1005,6 @@ export class Visualizer {
       this.sourceData.sentence_offsets, this.data.chunks)
     this.assignFragmentsToChunks(this.data.chunks, sortedFragments)
     this.data.arcs = this.assignArcsToSpans(this.data, this.data.eventDescs, this.data.spans)
-    this.applyNormalizations(this.sourceData.normalizations)
     this.applyHighlighting(this.data, this.sourceData)
 
     if (this.data.spans) {

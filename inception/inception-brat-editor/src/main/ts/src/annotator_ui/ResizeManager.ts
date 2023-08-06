@@ -122,7 +122,7 @@ export class ResizeManager {
   private handleMouseOver (e: Event): void {
     if (!(e instanceof MouseEvent) || !(e.target instanceof Element)) return
 
-    console.debug('ResizeManager.handleMouseOver')
+    // console.debug('ResizeManager.handleMouseOver')
 
     if (this.id === e.target.getAttribute('data-span-id')) {
       this.cancelAutoHide()

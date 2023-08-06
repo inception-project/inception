@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +43,8 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
@@ -260,18 +260,18 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof KBHandle) {
             var handle = (KBHandle) aValue;
-            var result = new ArrayList<VLazyDetailResult>();
-            result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
+            var result = new VLazyDetailGroup(handle.getIdentifier());
+            result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
 
             if (isNotBlank(handle.getDescription())) {
-                result.add(new VLazyDetailResult("Description", handle.getDescription()));
+                result.addDetail(new VLazyDetail("Description", handle.getDescription()));
             }
 
-            return result;
+            return asList(result);
         }
 
         return Collections.emptyList();

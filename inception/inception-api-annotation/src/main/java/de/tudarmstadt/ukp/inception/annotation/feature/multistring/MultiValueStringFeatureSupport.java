@@ -22,7 +22,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +48,8 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -232,9 +232,9 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        var results = new ArrayList<VLazyDetailResult>();
+        var results = new VLazyDetailGroup();
         if (aValue instanceof Iterable) {
             var values = (Iterable<?>) aValue;
             for (var v : values) {
@@ -243,15 +243,15 @@ public class MultiValueStringFeatureSupport
                     var tag = schemaService.getTag(value, aFeature.getTagset());
 
                     if (tag.isEmpty()) {
-                        results.add(new VLazyDetailResult(value, "Tag not in tagset"));
+                        results.addDetail(new VLazyDetail(value, "Tag not in tagset"));
                     }
 
                     if (tag.map(t -> isNotBlank(t.getDescription())).orElse(false)) {
-                        results.add(new VLazyDetailResult(value, tag.get().getDescription()));
+                        results.addDetail(new VLazyDetail(value, tag.get().getDescription()));
                     }
                 }
             }
         }
-        return results;
+        return asList(results);
     }
 }

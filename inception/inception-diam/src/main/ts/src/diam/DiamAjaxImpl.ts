@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
+import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 
 declare const Wicket: any
@@ -229,14 +229,28 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  loadLazyDetails (id: VID, type: string): Promise<any> {
+  loadLazyDetails (idOrAnnotation: VID | Annotation, optionaLayerId?: number): Promise<LazyDetailGroup[]> {
     const token = DiamAjaxImpl.newToken()
+
+    let id : VID
+    if (Object.prototype.hasOwnProperty.call(idOrAnnotation, 'vid')) {
+      id = (idOrAnnotation as Annotation).vid
+    } else {
+      id = idOrAnnotation as VID
+    }
+
+    let layerId : number
+    if (optionaLayerId) {
+      layerId = optionaLayerId
+    } else {
+      layerId = (idOrAnnotation as Annotation).layer.id
+    }
 
     const params: Record<string, any> = {
       action: 'normData',
       token,
       id,
-      type
+      layerId
     }
 
     return new Promise((resolve, reject) => {
@@ -251,12 +265,26 @@ export class DiamAjaxImpl implements DiamAjax {
             return
           }
 
-          resolve(result)
+          const detailGroups : LazyDetailGroup[] = []
+          for (const detailGroup of result) {
+            const group : LazyDetailGroup = {
+              title: detailGroup.title,
+              details: []
+            }
+
+            for (const detail of detailGroup.details as []) {
+              group.details.push({ label: detail[0], value: detail[1] })
+            }
+
+            detailGroups.push(group)
+          }
+
+          resolve(detailGroups)
         }],
         eh: [() => {
           DiamAjaxImpl.clearResult(token)
 
-          reject(new Error('Unable to load annotation'))
+          reject(new Error('Unable to load lazy details'))
         }]
       })
     })

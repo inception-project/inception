@@ -37,7 +37,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -108,20 +109,20 @@ public interface Renderer
         }
     }
 
-    default List<VLazyDetailResult> lookupLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
+    default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
             int windowEndOffset)
     {
         var fsr = getFeatureSupportRegistry();
 
         var aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
-        var details = new ArrayList<VLazyDetailResult>();
+        var details = new ArrayList<VLazyDetailGroup>();
         generateLazyDetailsForFeaturesIncludedInHover(fsr, details, aFs);
         return details;
     }
 
     default void generateLazyDetailsForFeaturesIncludedInHover(FeatureSupportRegistry fsr,
-            List<VLazyDetailResult> details, AnnotationFS aFs)
+            List<VLazyDetailGroup> details, AnnotationFS aFs)
     {
         for (var feature : getTypeAdapter().listFeatures()) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
@@ -132,7 +133,9 @@ public interface Renderer
             String text = defaultString(
                     fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
 
-            details.add(new VLazyDetailResult(feature.getName(), text));
+            var group = new VLazyDetailGroup();
+            group.addDetail(new VLazyDetail(feature.getName(), text));
+            details.add(group);
         }
     }
 }
