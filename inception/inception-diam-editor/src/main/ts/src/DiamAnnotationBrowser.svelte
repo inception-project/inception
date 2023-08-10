@@ -31,6 +31,7 @@
     } from "./AnnotationBrowserState";
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
     import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte";
+    import AnnotationDetailPopOver from "@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte"
 
     export let wsEndpointUrl: string;
     export let topicChannel: string;
@@ -115,7 +116,16 @@
         connected = false;
     }
 
-    onMount(async () => connect());
+    onMount(async () => { 
+        connect()
+        new AnnotationDetailPopOver({
+            target: element,
+            props: {
+                root: element,
+                ajax: ajaxClient
+            }
+        })
+    });
 
     onDestroy(async () => disconnect());
 </script>

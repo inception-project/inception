@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import './ApacheAnnotatorEditor.scss'
-import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets, AnnotationOverEvent, AnnotationOutEvent, Annotation } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, DiamLoadAnnotationsOptions, VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, Offsets, AnnotationOverEvent, AnnotationOutEvent } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
@@ -42,8 +42,6 @@ export class ApacheAnnotatorVisualizer {
   private removePingMarkersTimeout: number | undefined = undefined
   private alpha = '55'
 
-  private overAnnotation : Annotation | undefined
-
   constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
     this.root = element
@@ -61,8 +59,15 @@ export class ApacheAnnotatorVisualizer {
       if (!vid) return
       const annotation = this.data?.getAnnotation(vid)
       if (!annotation) return
-      this.overAnnotation = annotation
       event.target.dispatchEvent(new AnnotationOverEvent(annotation, event))
+    })
+    this.root.addEventListener('mouseout', event => {
+      if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
+      const vid = event.target.getAttribute('data-iaa-id')
+      if (!vid) return
+      const annotation = this.data?.getAnnotation(vid)
+      if (!annotation) return
+      event.target.dispatchEvent(new AnnotationOutEvent(annotation, event))
     })
 
     // Add event handlers for highlighting extent of the annotation the mouse is currently over

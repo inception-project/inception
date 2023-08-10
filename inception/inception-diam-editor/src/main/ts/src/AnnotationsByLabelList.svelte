@@ -20,6 +20,8 @@
     import {
         AnnotatedText,
         Annotation,
+        AnnotationOverEvent,
+        AnnotationOutEvent,
         DiamAjax,
         Relation,
         Span,
@@ -91,6 +93,13 @@
     function scrollTo(ann: Annotation) {
         ajaxClient.scrollTo({ id: ann.vid });
     }
+
+    function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
+      event.target.dispatchEvent(new AnnotationOverEvent(annotation, event))
+    }
+    function mouseOutAnnotation(event: MouseEvent, annotation: Annotation) {
+      event.target.dispatchEvent(new AnnotationOutEvent(annotation, event))
+    }
 </script>
 
 {#if !data}
@@ -141,8 +150,11 @@
                         <ul class="px-0 list-group list-group-flush">
                             {#if groupedAnnotations[label]}
                             {#each groupedAnnotations[label] as ann}
+                                <!-- svelte-ignore a11y-mouse-events-have-key-events -->
                                 <li
                                     class="list-group-item list-group-item-action p-0 d-flex"
+                                    on:mouseover={ev => mouseOverAnnotation(ev, ann)}
+                                    on:mouseout={ev => mouseOutAnnotation(ev, ann)}
                                 >
                                     <div
                                         class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"

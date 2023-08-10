@@ -20,7 +20,7 @@ import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualiz
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
-import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax

@@ -15,5 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { AnnotationOverEvent } from './AnnotationOverEvent'
-export { AnnotationOutEvent } from './AnnotationOutEvent'
+
+import { Annotation } from '../model'
+
+const eventType = 'i7n-annotation-out'
+export class AnnotationOutEvent extends Event {
+  static eventType = eventType
+
+  originalEvent: Event
+  annotation: Annotation
+
+  constructor (annotation: Annotation, originalEvent: Event) {
+    super(eventType, { bubbles: true })
+    this.originalEvent = originalEvent
+    this.annotation = annotation
+  }
+}
