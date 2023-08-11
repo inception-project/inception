@@ -105,7 +105,7 @@
             movePopover(e);
         });
 
-        root.addEventListener("mousedown", (e: MouseEvnet) => {
+        root.addEventListener("mousedown", (e: MouseEvent) => {
             if (popoverTimeoutId) {
                 window.clearTimeout(popoverTimeoutId);
                 popoverTimeoutId = undefined;
@@ -198,7 +198,7 @@
 
     .popover {
         width: var(--width);
-        max-width: min(var(--width), 90vw);
+        max-width: calc(min(var(--width), 90vw));
         pointer-events: none;
     }
 

@@ -2,13 +2,14 @@ import EventEmitter from 'events'
 import { appendChild } from '../render/appendChild'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
 import { dispatchWindowEvent } from '../../../shared/util'
-import { VID } from '@inception-project/inception-js-api'
+import { Annotation, AnnotationOutEvent, AnnotationOverEvent, VID } from '@inception-project/inception-js-api'
 
 /**
  * Abstract Annotation Class.
  */
 export default abstract class AbstractAnnotation extends EventEmitter {
   vid: VID | null = null
+  source: Annotation | null = null
   color?: string
   deleted = false
   disabled = false
@@ -112,21 +113,30 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a hoverIn event.
    */
-  handleHoverInEvent (e: Event) {
+  handleHoverInEvent (e: MouseEvent) {
     // console.log('handleHoverInEvent', this.element)
+
     this.highlight()
     this.emit('hoverin')
     dispatchWindowEvent('annotationHoverIn', this)
+
+    if (this.element && this.source) {
+      this.element.dispatchEvent(new AnnotationOverEvent(this.source, e))
+    }
   }
 
   /**
    * Handle a hoverOut event.
    */
-  handleHoverOutEvent (e: Event) {
+  handleHoverOutEvent (e: MouseEvent) {
     // console.log('handleHoverOutEvent')
     this.dehighlight()
     this.emit('hoverout')
     dispatchWindowEvent('annotationHoverOut', this)
+
+    if (this.element && this.source) {
+      this.element.dispatchEvent(new AnnotationOutEvent(this.source, e))
+    }
   }
 
   /**

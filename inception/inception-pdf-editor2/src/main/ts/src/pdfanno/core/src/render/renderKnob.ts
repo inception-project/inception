@@ -12,7 +12,6 @@ export function renderKnob ({ a, x, y, readOnly, text }): HTMLElement {
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
 
   const knob = document.createElement('div')
-  knob.setAttribute('title', text)
   knob.classList.add('anno-knob')
   a.classList.forEach(c => knob.classList.add(c))
   if (readOnly) {

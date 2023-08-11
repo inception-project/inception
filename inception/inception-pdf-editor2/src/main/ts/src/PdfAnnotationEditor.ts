@@ -18,7 +18,7 @@
 import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import './PdfAnnotationEditor.css'
 import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo } from './pdfanno/pdfanno'
-import AbstractAnnotation from './pdfanno/core/src/annotation/abstract'
+import AbstractAnnotation from './pdfanno/core/src/model/AbstractAnnotation'
 
 export class PdfAnnotationEditor implements AnnotationEditor {
   private ajax: DiamAjax

@@ -3,6 +3,7 @@
   "version": "${semver}",
   "author": "hshindo, yoheiMune, INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
+  "homepage": "https://github.com/inception-project/inception#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/inception-project/inception.git"
