@@ -69,7 +69,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       this.setHoverEvent()
     }
 
-    this.disabled && this.disable()
+    if (!this.disabled) this.disable()
   }
 
   /**
