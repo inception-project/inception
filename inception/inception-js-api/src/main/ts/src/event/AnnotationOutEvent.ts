@@ -15,13 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//import './src/style/InceptionEditorColors.scss'
 
-export * from './src/diam'
-export * from './src/editor'
-export * from './src/model'
-export * from './src/event'
-export * from './src/model/compact'
-export * from './src/util'
+import { Annotation } from '../model'
 
-export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText'
+const eventType = 'i7n-annotation-out'
+export class AnnotationOutEvent extends Event {
+  static eventType = eventType
+
+  originalEvent: Event
+  annotation: Annotation
+
+  constructor (annotation: Annotation, originalEvent: Event) {
+    super(eventType, { bubbles: true })
+    this.originalEvent = originalEvent
+    this.annotation = annotation
+  }
+}

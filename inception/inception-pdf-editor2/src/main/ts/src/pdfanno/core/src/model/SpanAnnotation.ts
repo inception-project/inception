@@ -1,4 +1,4 @@
-import AbstractAnnotation from './abstract'
+import AbstractAnnotation from './AbstractAnnotation'
 import { getGlyphsInRange } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { mergeRects } from '../render/renderSpan'

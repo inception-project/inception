@@ -4,19 +4,20 @@ import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
-import AnnotationContainer from './core/src/annotation/container'
-import AbstractAnnotation from './core/src/annotation/abstract'
+import AnnotationContainer from './core/src/model/AnnotationContainer'
+import AbstractAnnotation from './core/src/model/AbstractAnnotation'
 import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
-import { unpackCompactAnnotatedTextV2, DiamAjax, Offsets, VID, AnnotatedText, Span, Relation, TextMarker } from '@inception-project/inception-js-api'
+import { unpackCompactAnnotatedTextV2, DiamAjax, Offsets, AnnotatedText, Span, Relation, TextMarker } from '@inception-project/inception-js-api'
 import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
-import SpanAnnotation from './core/src/annotation/span'
+import SpanAnnotation from './core/src/model/SpanAnnotation'
 import { getGlyphAtTextOffset, getGlyphsInRange } from './page/textLayer'
-import RelationAnnotation from './core/src/annotation/relation'
+import RelationAnnotation from './core/src/model/RelationAnnotation'
 import { createRect, mapToDocumentCoordinates, mergeRects } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
 import { Rectangle } from '../vmodel/Rectangle'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -80,6 +81,14 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
 
   installSpanSelection()
   installRelationSelection()
+
+  new AnnotationDetailPopOver({
+    target: document.body,
+    props: {
+      root: document.body,
+      ajax: diamAjax
+    }
+  })
 
   // Show a content.
   displayViewer()
@@ -325,6 +334,7 @@ function renderSpan (doc: AnnotatedText, span: Span) {
   }
 
   const spanAnnotation = new SpanAnnotation()
+  spanAnnotation.source = span
   spanAnnotation.vid = span.vid
   spanAnnotation.textRange = range
   spanAnnotation.page = page
@@ -348,6 +358,7 @@ function renderRelation (doc: AnnotatedText, relation: Relation) {
   }
 
   const relationAnnotation = new RelationAnnotation()
+  relationAnnotation.source = relation
   relationAnnotation.vid = relation.vid
   relationAnnotation.rel1Annotation = source as SpanAnnotation
   relationAnnotation.rel2Annotation = target as SpanAnnotation

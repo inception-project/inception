@@ -151,14 +151,14 @@
     <node.version>18.14.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <animate-css.version>3.2.6</animate-css.version>
-    <bootstrap.version>5.3.0</bootstrap.version>
+    <bootstrap.version>5.3.1</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.4</dayjs.version>
-    <esbuild.version>~0.16.17</esbuild.version>
-    <esbuild-sass-plugin.version>~2.5.0</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>^0.7.3</esbuild-svelte.version>
+    <esbuild.version>~0.18.19</esbuild.version>
+    <esbuild-sass-plugin.version>~2.10.0</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>^0.7.4</esbuild-svelte.version>
     <esbuild-runner-plugins.version>^2.3.0-plugins.0</esbuild-runner-plugins.version>
     <eslint.version>^8.31.0</eslint.version>
     <eslint-plugin-chai-friendly.version>^0.7.2</eslint-plugin-chai-friendly.version>
@@ -177,26 +177,27 @@
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.0</jquery.version>
     <jquery-ui.version>1.13.2</jquery-ui.version>
-    <mocha.version>^10.0.0</mocha.version>
-    <mocha-junit-reporter.version>^2.1.0</mocha-junit-reporter.version>
+    <mocha.version>^10.2.0</mocha.version>
+    <mocha-junit-reporter.version>^2.2.1</mocha-junit-reporter.version>
     <pdfjs.version>2.14.305</pdfjs.version>
-    <popperjs.version>2.11.7</popperjs.version>
+    <popperjs.version>2.11.8</popperjs.version>
     <recogitojs.version>1.8.2</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.7</recogito-client-core.version>
-    <sass.version>^1.57.1</sass.version>
+    <sass.version>~1.64.2</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
-    <svelte.version>^3.55.0</svelte.version>
-    <svelte-preprocess.version>^5.0.0</svelte-preprocess.version>
+    <svelte.version>^3.59.2</svelte.version>
+    <svelte-preprocess.version>^5.0.4</svelte-preprocess.version>
     <svgdotjs-svg-js.version>^3.1.2</svgdotjs-svg-js.version>
     <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
     <testing-library-svelte.version>^3.1.3</testing-library-svelte.version>
+    <ts-mocha.version>^10.0.0</ts-mocha.version>
     <typescript.version>^4.9.4</typescript.version>
     <typescript-eslint-eslint-plugin.version>^5.47.1</typescript-eslint-eslint-plugin.version>
     <typescript-eslint-parser.version>^5.47.1</typescript-eslint-parser.version>
     <types-events.version>^3.0.0</types-events.version>
     <types-jquery.version>^3.5.14</types-jquery.version>
-    <types-mocha.version>^9.1.1</types-mocha.version>
+    <types-mocha.version>^10.0.1</types-mocha.version>
     <types-stompjs.version>^2.3.5</types-stompjs.version>
     <types-urijs.version>^1.19.19</types-urijs.version>
     <uuid.version>^8.3.2</uuid.version>

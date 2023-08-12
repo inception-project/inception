@@ -4,11 +4,11 @@
   "author": "INCEpTION Team",
   "license": "Apache-2.0",
   "homepage": "https://github.com/inception-project/inception#readme",
-  "scripts": {
-    "build": "node build.mjs"
-  },
   "bugs": {
     "url": "https://github.com/inception-project/issues"
+  },
+  "scripts": {
+    "build": "node build.mjs"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",

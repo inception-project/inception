@@ -55,7 +55,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
@@ -251,7 +252,7 @@ public class RelationRenderer
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
+    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
         if (!checkTypeSystem(aCas)) {
@@ -260,21 +261,19 @@ public class RelationRenderer
 
         // FIXME Should also handle relations that are only partially visible using
         // selectAnnotationsInWindow()
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBeginOffset,
-                aWindowEndOffset);
+        var relationLinks = getRelationLinks(aCas, aWindowBeginOffset, aWindowEndOffset);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
-        List<Integer> yieldDeps = new ArrayList<>();
+        var yieldDeps = new ArrayList<Integer>();
 
-        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
-        Optional<String> yield = renderYield(fs, relationLinks, yieldDeps);
+        var yield = renderYield(fs, relationLinks, yieldDeps);
 
-        List<VLazyDetailResult> details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset,
-                aWindowEndOffset);
+        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
 
         if (yield.isPresent()) {
-            details.add(new VLazyDetailResult("Yield", yield.get()));
+            details.add(new VLazyDetailGroup(new VLazyDetail("Yield", yield.get())));
         }
 
         return details;

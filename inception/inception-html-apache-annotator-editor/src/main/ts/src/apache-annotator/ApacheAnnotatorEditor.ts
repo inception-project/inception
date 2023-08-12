@@ -20,6 +20,7 @@ import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualiz
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax
@@ -27,6 +28,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private vis: ApacheAnnotatorVisualizer
   private selector: ApacheAnnotatorSelector
   private toolbar: ApacheAnnotatorToolbar
+  private popover: AnnotationDetailPopOver
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
@@ -67,6 +69,14 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
     this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
     this.toolbar = this.createToolbar()
+
+    this.popover = new AnnotationDetailPopOver({
+      target: this.root.ownerDocument.body,
+      props: {
+        root: this.root,
+        ajax: this.ajax
+      }
+    })
 
     // Event handler for creating an annotion or selecting an annotation
     this.root.addEventListener('mouseup', e => this.onMouseUp(e))

@@ -37,21 +37,18 @@ export class ResizeManager {
 
     this.visualizer.root.addEventListener('dragover', e => this.handleDragOver(e))
 
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
     this.beginHandle = new AnnotationResizeHandle({
       target: this.visualizer.root,
       props: { position: 'begin' }
     })
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
+
     this.endHandle = new AnnotationResizeHandle({
       target: this.visualizer.root,
       props: { position: 'end' }
     })
 
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
     this.beginHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
 
-    // @ts-expect-error - VSCode does not seem to understand the Svelte component
     this.endHandle.$on('resize-handle-released', e => this.handleResizeHandleReleased(e))
 
     this.hide()
@@ -65,8 +62,8 @@ export class ResizeManager {
 
     const highlights = Array.from(this.visualizer.getHighlightsForAnnotation(id))
     if (!highlights.length) return
-    this.beginHandle.highlight = highlights[0]
-    this.endHandle.highlight = highlights[highlights.length - 1]
+    this.beginHandle.highlight = highlights[0] as HTMLElement
+    this.endHandle.highlight = highlights[highlights.length - 1] as HTMLElement
 
     this.mouseOverHandler = e => this.handleMouseOver(e)
     this.visualizer.root.addEventListener('mouseover', this.mouseOverHandler)

@@ -1,6 +1,6 @@
-import AbstractAnnotation from './abstract'
+import AbstractAnnotation from './AbstractAnnotation'
 import { anyOf } from '../../../shared/util'
-import SpanAnnotation from './span'
+import SpanAnnotation from './SpanAnnotation'
 
 /**
  * Relation Annotation (one-way / two-way / link)
@@ -198,7 +198,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred in.
    */
-  handleHoverInEvent (e) {
+  handleHoverInEvent (e: MouseEvent) {
     super.handleHoverInEvent(e)
     this.highlightRelAnnotations()
   }
@@ -206,7 +206,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred out.
    */
-  handleHoverOutEvent (e) {
+  handleHoverOutEvent (e: MouseEvent) {
     super.handleHoverOutEvent(e)
     this.dehighlightRelAnnotations()
   }

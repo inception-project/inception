@@ -388,7 +388,8 @@ public abstract class BratSuggestionVisualizer
                         casProvider, state.getDocument(), segment.getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());
                 attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
-                return result;
+
+                return new DefaultAjaxResponse(LazyDetailsHandler.COMMAND);
             }
             catch (Exception e) {
                 return handleError("Unable to load lazy details", e);

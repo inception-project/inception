@@ -26,7 +26,7 @@ import java.io.Serializable;
  * action, e.g. hovering the mouse over an annotation.
  * </p>
  */
-public class VLazyDetailResult
+public class VLazyDetail
     implements Serializable
 {
     private static final long serialVersionUID = -2371700263138292842L;
@@ -34,7 +34,7 @@ public class VLazyDetailResult
     private final String label;
     private final String value;
 
-    public VLazyDetailResult(String aLabel, String aValue)
+    public VLazyDetail(String aLabel, String aValue)
     {
         label = aLabel;
         value = aValue;

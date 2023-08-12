@@ -23,8 +23,8 @@
 
   export let highlight: HTMLElement = undefined
   export let position: 'begin' | 'end'
-  export let handle: HTMLElement
-  export let marker: HTMLElement
+  export let handle: HTMLElement = undefined
+  export let marker: HTMLElement = undefined
   export let dragging = false
 
   let borderRadius = 0

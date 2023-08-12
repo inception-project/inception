@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.recommendation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -69,7 +70,8 @@ import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEven
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
@@ -349,7 +351,7 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailResult> lookupLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
+    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
             AnnotationFeature aFeature)
     {
         var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
@@ -360,7 +362,8 @@ public class RecommendationEditorExtension
 
         var vid = VID.parse(aVid.getExtensionPayload());
         var representative = predictions.getPredictionByVID(aDocument, vid);
-        if (representative.isEmpty()) {
+        if (representative.isEmpty()
+                || !representative.get().getFeature().equals(aFeature.getName())) {
             return emptyList();
         }
 
@@ -381,7 +384,7 @@ public class RecommendationEditorExtension
         var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
                 label);
 
-        var details = new ArrayList<VLazyDetailResult>();
+        var details = new VLazyDetailGroup();
         for (var ao : sortedByScore) {
             var items = new ArrayList<String>();
             if (ao.getScore() != -1) {
@@ -393,10 +396,10 @@ public class RecommendationEditorExtension
             if (pref.isShowAllPredictions() && !ao.isVisible()) {
                 items.add("Hidden: " + ao.getReasonForHiding());
             }
-            details.add(new VLazyDetailResult(ao.getRecommenderName(),
-                    "\n" + String.join("\n", items)));
+            details.addDetail(
+                    new VLazyDetail(ao.getRecommenderName(), "\n" + String.join("\n", items)));
         }
 
-        return details;
+        return asList(details);
     }
 }

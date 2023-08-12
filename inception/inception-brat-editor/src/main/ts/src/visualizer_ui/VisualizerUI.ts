@@ -49,12 +49,9 @@ import { Entity } from '../visualizer/Entity'
 import { AttributeType } from '../visualizer/AttributeType'
 
 export class VisualizerUI {
-  private spanTypes: Record<string, EntityTypeDto> | null = null
-  private relationTypesHash: Record<string, RelationTypeDto> | null = null
+  private spanTypes: Record<string, EntityTypeDto> = {}
+  private relationTypesHash: Record<string, RelationTypeDto> = {}
   private data: DocumentData | null = null
-
-  // normalization: server-side DB by norm DB name
-  private normServerDbByNormDbName = {}
 
   private dispatcher: Dispatcher
 
@@ -73,8 +70,8 @@ export class VisualizerUI {
     this.dispatcher
       .on('init', this, this.init)
       .on('dataReady', this, this.rememberData)
-      .on('displaySpanComment', this, this.displaySpanComment)
-      .on('displayArcComment', this, this.displayArcComment)
+//      .on('displaySpanComment', this, this.displaySpanComment)
+//      .on('displayArcComment', this, this.displayArcComment)
       .on('displaySentComment', this, this.displaySentComment)
       .on('hideComment', this, this.hideComment)
       .on('resize', this, this.onResize)
@@ -89,6 +86,9 @@ export class VisualizerUI {
 
   /* START comment popup - related */
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   adjustToCursor (evt: MouseEvent, element, offset, top, right) {
     // get the real width, without wrapping
     element.css({ left: 0, top: 0 })
@@ -117,10 +117,16 @@ export class VisualizerUI {
     element.css({ top: y, left: x })
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   displaySentComment (evt: MouseEvent, commentText: string, commentType: CommentType) {
     this.displayComment(evt, '', commentText, commentType)
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   displayComment (evt: MouseEvent, comment: string, commentText: string, commentType: CommentType, immediately?: boolean) {
     let idtype = ''
     if (commentType) {
@@ -150,7 +156,10 @@ export class VisualizerUI {
   // to avoid clobbering on delayed response
   commentPopupNormInfoSeqId = 0
 
-  normInfoSortFunction (a, b) {
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
+  compareLazyDetails (a, b) {
     // images at the top
     if (a[0].toLowerCase() === '<img>') return -1
     if (b[0].toLowerCase() === '<img>') return 1
@@ -158,8 +167,11 @@ export class VisualizerUI {
     return Util.cmp(a[2], b[2])
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   displaySpanComment (evt, target, spanId, spanType, mods, spanText, hoverText,
-    commentText, commentType, normalizations) {
+    commentText, commentType) {
     const immediately = false
     let comment = ('<div><span class="comment_type_id_wrapper">' +
       '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(this.spanTypes, spanType)) + '</span>' + ' ' +
@@ -185,8 +197,12 @@ export class VisualizerUI {
     this.initiateNormalizationAjaxCall(spanId, spanType)
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   displayArcComment (evt, target, symmetric, arcId, originSpanId, originSpanType,
-    role, targetSpanId, targetSpanType, commentText, commentType, normalizations) {
+    role, targetSpanId, targetSpanType, commentText, commentType) {
+    if (!this.data) return
     const arcRole = target.attr('data-arc-role')
     // in arrowStr, &#8212 == mdash, &#8594 == Unicode right arrow
     const arrowStr = symmetric ? '&#8212;' : '&#8594;'
@@ -205,28 +221,33 @@ export class VisualizerUI {
     this.initiateNormalizationAjaxCall(arcId, arcRole)
   }
 
-  initiateNormalizationAjaxCall (id, type) {
-    // TODO: cache some number of most recent norm_get_data results
-    this.ajax.loadLazyDetails(id, type).then(response => {
-      if (response.exception) {
-        // TODO: response to error
-      } else if (!response.results) {
-        // TODO: response to missing key
-      } else {
-        // extend comment popup with normalization data
-        let norminfo = ''
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
+  initiateNormalizationAjaxCall (id: VID, type: number) {
+    this.ajax.loadLazyDetails(id, type).then(detailGroups => {
+      // extend comment popup with normalization data
+      let norminfo = ''
+
+      for (const group of detailGroups) {
+        const details = group.details
         // flatten outer (name, attr, info) array (idx for sort)
         let infos: [string, string, number][] = []
         let idx = 0
-        for (let j = 0; j < response.results.length; j++) {
-          const label = response.results[j][0] as string
-          const value = response.results[j][1] as string
-          infos.push([label, value, idx++])
+        for (let j = 0; j < details.length; j++) {
+          infos.push([details[j].label, details[j].value, idx++])
         }
 
         // sort, prioritizing images (to get floats right)
-        infos = infos.sort(this.normInfoSortFunction)
+        infos = infos.sort(this.compareLazyDetails)
+
         // generate HTML
+        if (group.title) {
+          norminfo += `<hr/>
+            <span class="comment_id">${group.title}</span>
+            <br/>`
+        }
+
         for (let i = 0; i < infos.length; i++) {
           const label = infos[i][0] as string
           let value = infos[i][1] as string
@@ -241,22 +262,25 @@ export class VisualizerUI {
               }
 
               norminfo += `<span class="norm_info_label">${Util.escapeHTML(label)}</span>
-                           <span class="norm_info_value">: ${Util.escapeHTML(value)?.replace(/\n/g, '<br/>')}</span>
-                           <br/>`
+                            <span class="norm_info_value">: ${Util.escapeHTML(value)?.replace(/\n/g, '<br/>')}</span>
+                            <br/>`
             }
           }
         }
+      }
 
-        const drop = $('#lazy_details_drop_point')
-        if (drop) {
-          drop.html(norminfo)
-        } else {
-          console.log('Lazy details drop point not found!') // TODO XXX
-        }
+      const drop = $('#lazy_details_drop_point')
+      if (drop) {
+        drop.html(norminfo)
+      } else {
+        console.log('Lazy details drop point not found!') // TODO XXX
       }
     })
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   hideComment () {
     clearTimeout(this.displayCommentTimer)
     if (this.commentDisplayed) {
@@ -274,6 +298,9 @@ export class VisualizerUI {
     clearTimeout(this.displayButtonsTimer)
   }
 
+  /**
+   * @deprecated To be replaced with the new Popover component
+   */
   onMouseMove (evt: MouseEvent) {
     if (this.commentDisplayed) {
       this.adjustToCursor(evt, this.commentPopup, 10, true, true)

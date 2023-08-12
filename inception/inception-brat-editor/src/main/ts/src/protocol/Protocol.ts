@@ -82,7 +82,7 @@ export type MarkerDto = AnnotationMarkerDto | SentenceMarkerDto | TextMarkerDto;
  * @see
  */
 export type RoleDto = [
-  type: string,
+  type: number,
   target: VID
 ];
 
@@ -191,17 +191,6 @@ export type EntityTypeDto = {
 }
 
 /**
- * If the refText is set, no AJAX query is performed. If refText is set, then refId **MUST** also
- * be set!
- */
-export type NormalizationDto = [
-  target: VID,
-  refDb?: string,
-  refId?: string,
-  refText?: string
-]
-
-/**
  * @deprecated Not used by server side
  */
 export type AttributeDto = [
@@ -247,7 +236,6 @@ export type SourceData = {
   text: string;
   comments: Array<CommentDto>;
   entities: Array<EntityDto>;
-  normalizations: Array<NormalizationDto>;
   relations: Array<RelationDto>;
   sentence_offsets: Array<Offsets>;
   token_offsets: Array<Offsets>;
