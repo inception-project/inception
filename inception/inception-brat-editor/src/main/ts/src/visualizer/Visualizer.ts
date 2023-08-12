@@ -59,7 +59,7 @@ import '@svgdotjs/svg.filter.js'
 import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { Offsets } from '@inception-project/inception-js-api'
+import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
@@ -82,7 +82,6 @@ function setSourceDataDefaults (sourceData: SourceData) {
     'entities',
     'equivs',
     'events',
-    'normalizations',
     'relations',
     'triggers'
   ], (attrNo, attr) => {
@@ -3519,6 +3518,21 @@ export class Visualizer {
     this.triggerRender()
   }
 
+  onMouseOutSpan (evt: MouseEvent) {
+    if (!this.data) return
+
+    const target = $(evt.target)
+    const id = target.attr('data-span-id')
+    const span = this.data.spans[id]
+
+    if (span.hidden) { return }
+
+    if (evt.target) {
+      console.log(span)
+      evt.target.dispatchEvent(new AnnotationOutEvent({ vid: id, layer: { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) } }, evt.originalEvent))
+    }
+  }
+
   onMouseOverSpan (evt: MouseEvent) {
     if (!this.data) return
 
@@ -3528,13 +3542,19 @@ export class Visualizer {
 
     if (span.hidden) { return }
 
+    if (evt.target) {
+      const fakeSpan = new Span()
+      fakeSpan.vid = id
+      fakeSpan.layer = { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) }
+      evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
+    }
+
     this.dispatcher.post('displaySpanComment', [
       evt, target, id, span.type, span.attributeText,
       span.text,
       span.hovertext,
       span.comment && span.comment.text,
-      span.comment && span.comment.type,
-      span.normalizations
+      span.comment && span.comment.type
     ])
 
     if (span.actionButtons) {
@@ -3613,6 +3633,33 @@ export class Visualizer {
     this.highlight.push(highlightBox)
   }
 
+  onMouseOutArc (evt: MouseEvent) {
+    if (!this.data) return
+
+    const target = $(evt.target)
+    const originSpanId = target.attr('data-arc-origin')
+    const role = target.attr('data-arc-role')
+    const arcEventDescId: string = target.attr('data-arc-ed')
+    let arcId: string | undefined
+
+    if (arcEventDescId) {
+      const eventDesc = this.data.eventDescs[arcEventDescId]
+      if (eventDesc.relation) {
+        // among arcs, only ones corresponding to relations have "independent" IDs
+        arcId = arcEventDescId
+      }
+    }
+
+    const originSpanType = this.data.spans[originSpanId].type || ''
+
+    if (arcId) {
+      if (evt.target) {
+        const labelText = Util.arcDisplayForm(this.entityTypes, originSpanType, role, this.relationTypes)
+        evt.target.dispatchEvent(new AnnotationOutEvent({ vid: arcId, layer: { id: role, name: labelText } }, evt.originalEvent))
+      }
+    }
+  }
+
   onMouseOverArc (evt: MouseEvent) {
     if (!this.data) return
 
@@ -3650,19 +3697,23 @@ export class Visualizer {
 
     const originSpanType = this.data.spans[originSpanId].type || ''
     const targetSpanType = this.data.spans[targetSpanId].type || ''
-    let normalizations : Array<[string?, string?, string?]> = []
-    if (arcId) {
-      normalizations = this.data.arcById[arcId].normalizations
-    }
 
     this.dispatcher.post('displayArcComment', [
       evt, target, symmetric, arcId,
       originSpanId, originSpanType, role,
       targetSpanId, targetSpanType,
-      commentText, commentType, normalizations
+      commentText, commentType
     ])
 
     if (arcId) {
+      if (evt.target) {
+        const fakeRelation = new Relation()
+        fakeRelation.vid = arcId
+        const labelText = Util.arcDisplayForm(this.entityTypes, originSpanType, role, this.relationTypes)
+        fakeRelation.layer = { id: role, name: labelText }
+        evt.target.dispatchEvent(new AnnotationOverEvent(fakeRelation, evt.originalEvent))
+      }
+
       this.highlightArcs = this.svg
         .find(`g[data-id="${arcId}"]`)
         .map(e => e.addClass('highlight'))
@@ -3731,6 +3782,16 @@ export class Visualizer {
     //     arc.removeClass('highlight')
     //   }
     // }
+
+    if (target.getAttribute('data-span-id')) {
+      this.onMouseOutSpan(evt)
+      return
+    }
+
+    if (target.getAttribute('data-arc-role')) {
+      this.onMouseOutArc(evt)
+      return
+    }
   }
 
   onSelectionStarted () {

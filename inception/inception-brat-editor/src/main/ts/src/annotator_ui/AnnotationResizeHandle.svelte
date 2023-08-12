@@ -50,8 +50,6 @@
   })
 
   $: {
-    console.debug("reactive update")
-
     const rects = highlight ? highlight.getClientRects() : []
     visibility = rects.length > 0 ? 'visible' : 'hidden'
     opacity = dragging ? 0.0 : 1

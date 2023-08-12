@@ -23,11 +23,13 @@ import { Visualizer } from './visualizer/Visualizer'
 import { VisualizerUI } from './visualizer_ui/VisualizerUI'
 import './style-vis.scss'
 import { ResizeManager } from './annotator_ui/ResizeManager'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 export class BratEditor implements AnnotationEditor {
   dispatcher: Dispatcher
   visualizer: Visualizer
   resizer: ResizeManager
+  popover: AnnotationDetailPopOver
 
   public constructor (element: Element, ajax: DiamAjax, props: AnnotationEditorProperties) {
     const markupId = element.getAttribute('id')
@@ -51,6 +53,14 @@ export class BratEditor implements AnnotationEditor {
     }
 
     this.resizer = new ResizeManager(this.dispatcher, this.visualizer, ajax)
+
+    this.popover = new AnnotationDetailPopOver({
+      target: document.body,
+      props: {
+        root: element,
+        ajax
+      }
+    })
   }
 
   post (command: Message, data: any) : void {

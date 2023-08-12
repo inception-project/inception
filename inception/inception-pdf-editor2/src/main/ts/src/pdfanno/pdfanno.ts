@@ -82,7 +82,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   installSpanSelection()
   installRelationSelection()
 
-  this.popover = new AnnotationDetailPopOver({
+  new AnnotationDetailPopOver({
     target: document.body,
     props: {
       root: document.body,

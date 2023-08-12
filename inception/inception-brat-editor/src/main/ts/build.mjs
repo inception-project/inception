@@ -33,7 +33,7 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [

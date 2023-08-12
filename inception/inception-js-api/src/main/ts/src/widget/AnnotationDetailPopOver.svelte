@@ -50,10 +50,8 @@
         root.addEventListener(
             AnnotationOverEvent.eventType,
             (e: AnnotationOverEvent) => {
-                if (
-                    !(e.originalEvent instanceof MouseEvent) ||
-                    !(e.target instanceof HTMLElement)
-                )
+                const originalEvent = e.originalEvent;
+                if (!(originalEvent instanceof MouseEvent))
                     return;
 
                 if (popoverTimeoutId) window.clearTimeout(popoverTimeoutId);
@@ -67,7 +65,7 @@
                         popoverTimeoutId = undefined;
                         annotation = e.annotation;
                         popoverTimeoutId = window.setTimeout(() => {
-                            movePopover(e.originalEvent);
+                            movePopover(originalEvent);
                             popoverTimeoutId = undefined;
                         }, renderDelay);
                     }, showDelay);
@@ -79,10 +77,7 @@
         root.addEventListener(
             AnnotationOutEvent.eventType,
             (e: AnnotationOutEvent) => {
-                if (
-                    !(e.originalEvent instanceof MouseEvent) ||
-                    !(e.target instanceof HTMLElement)
-                )
+                if (!(e.originalEvent instanceof MouseEvent))
                     return;
                 // console.log("Popover out", e.target)
                 if (popoverTimeoutId) {
@@ -165,9 +160,11 @@
     </div>
     {#if annotation}
         <div class="popover-body p-1">
-            {#each annotation.comments as comment}
-                <div class="i7n-marker-{comment.type}">{comment.comment}</div>
-            {/each}
+            {#if annotation.comments}
+                {#each annotation.comments as comment}
+                    <div class="i7n-marker-{comment.type}">{comment.comment}</div>
+                {/each}
+            {/if}
             {#if detailGroups}
                 {#each detailGroups as detailGroup}
                     {#if detailGroup.title}

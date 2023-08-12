@@ -17,6 +17,7 @@
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
+    "bootstrap": "${bootstrap.version}",
     "fast-json-patch": "${fast-json-patch.version}",
     "@svgdotjs/svg.js": "${svgdotjs-svg-js.version}",
     "@svgdotjs/svg.filter.js": "${svgdotjs-svg-filter-js.version}"
