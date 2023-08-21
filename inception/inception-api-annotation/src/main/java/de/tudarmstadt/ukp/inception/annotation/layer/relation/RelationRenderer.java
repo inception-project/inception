@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -157,27 +159,24 @@ public class RelationRenderer
         }
     }
 
-    private Optional<String> renderYield(AnnotationFS fs, Map<Integer, Set<Integer>> relationLinks,
-            List<Integer> yieldDeps)
+    private Optional<String> renderYield(AnnotationFS fs)
     {
         FeatureStructure dependentFs = getDependentFs(fs);
 
-        if (relationLinks.keySet().contains(ICasUtil.getAddr(dependentFs))
-                && !yieldDeps.contains(ICasUtil.getAddr(dependentFs))) {
-            yieldDeps.add(ICasUtil.getAddr(dependentFs));
+        var relationLinks = getRelationLinks(fs.getCAS());
 
-            // sort the annotations (begin, end)
-            List<Integer> sortedDepFs = new ArrayList<>(
-                    relationLinks.get(ICasUtil.getAddr(dependentFs)));
-            sortedDepFs.sort(comparingInt(
-                    arg0 -> ICasUtil.selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
-
-            String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
-
-            return Optional.of(cm);
+        if (!relationLinks.keySet().contains(ICasUtil.getAddr(dependentFs))) {
+            return Optional.empty();
         }
 
-        return Optional.empty();
+        // sort the annotations (begin, end)
+        var sortedDepFs = new ArrayList<>(relationLinks.get(ICasUtil.getAddr(dependentFs)));
+        sortedDepFs.sort(comparingInt(
+                arg0 -> ICasUtil.selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
+
+        var cm = getYieldMessage(fs.getCAS(), sortedDepFs);
+
+        return Optional.of(cm);
     }
 
     @Override
@@ -188,9 +187,9 @@ public class RelationRenderer
             return Collections.emptyList();
         }
 
-        RelationAdapter typeAdapter = getTypeAdapter();
-        FeatureStructure dependentFs = getDependentFs(aFS);
-        FeatureStructure governorFs = getGovernorFs(aFS);
+        var typeAdapter = getTypeAdapter();
+        var dependentFs = getDependentFs(aFS);
+        var governorFs = getGovernorFs(aFS);
 
         if (dependentFs == null || governorFs == null) {
             StringBuilder message = new StringBuilder();
@@ -259,23 +258,29 @@ public class RelationRenderer
             return Collections.emptyList();
         }
 
-        // FIXME Should also handle relations that are only partially visible using
-        // selectAnnotationsInWindow()
-        var relationLinks = getRelationLinks(aCas, aWindowBeginOffset, aWindowEndOffset);
-
-        // if this is a governor for more than one dependent, avoid duplicate yield
-        var yieldDeps = new ArrayList<Integer>();
-
         var fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
-        var yield = renderYield(fs, relationLinks, yieldDeps);
+        var group = new VLazyDetailGroup();
 
-        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
-
-        if (yield.isPresent()) {
-            details.add(new VLazyDetailGroup(new VLazyDetail("Yield", yield.get())));
+        var dependentFs = getDependentFs(fs);
+        if (dependentFs instanceof AnnotationFS) {
+            group.addDetail(new VLazyDetail("Target",
+                    abbreviate(((AnnotationFS) dependentFs).getCoveredText(), 300)));
         }
 
+        var governorFs = getGovernorFs(fs);
+        if (governorFs instanceof AnnotationFS) {
+            group.addDetail(new VLazyDetail("Origin",
+                    abbreviate(((AnnotationFS) governorFs).getCoveredText(), 300)));
+        }
+
+        renderYield(fs).ifPresent(
+                yield -> group.addDetail(new VLazyDetail("Yield", abbreviate(yield, "...", 300))));
+
+        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
+        if (!group.getDetails().isEmpty()) {
+            details.add(0, group);
+        }
         return details;
     }
 
@@ -314,46 +319,48 @@ public class RelationRenderer
     /**
      * Get relation links to display in relation yield
      */
-    private Map<Integer, Set<Integer>> getRelationLinks(CAS aCas, int aWindowBegin, int aWindowEnd)
+    private Map<Integer, Set<Integer>> getRelationLinks(CAS aCas)
     {
-        RelationAdapter typeAdapter = getTypeAdapter();
-        Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
+        var typeAdapter = getTypeAdapter();
+        var relations = new ConcurrentHashMap<Integer, Set<Integer>>();
 
-        for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            FeatureStructure dependentFs = getGovernorFs(fs);
-            FeatureStructure governorFs = getDependentFs(fs);
+        for (var fs : aCas.<Annotation> select(type)) {
+            var govFs = getGovernorFs(fs);
+            var depFs = getDependentFs(fs);
 
-            if (dependentFs == null || governorFs == null) {
+            if (govFs == null || depFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + ICasUtil.getAddr(fs) + "] has loose ends - cannot render.");
+                        + VID.of(fs) + "] has loose ends - cannot render.");
                 continue;
             }
 
-            Set<Integer> links = relations.get(ICasUtil.getAddr(governorFs));
+            var links = relations.get(ICasUtil.getAddr(depFs));
             if (links == null) {
                 links = new ConcurrentSkipListSet<>();
             }
 
-            links.add(ICasUtil.getAddr(dependentFs));
-            relations.put(ICasUtil.getAddr(governorFs), links);
+            links.add(ICasUtil.getAddr(govFs));
+            relations.put(ICasUtil.getAddr(depFs), links);
         }
 
         // Update other subsequent links
         for (int i = 0; i < relations.keySet().size(); i++) {
-            for (Integer fs : relations.keySet()) {
+            for (var fs : relations.keySet()) {
                 updateLinks(relations, fs);
             }
         }
+
         // to start displaying the text from the governor, include it
-        for (Integer fs : relations.keySet()) {
+        for (var fs : relations.keySet()) {
             relations.get(fs).add(fs);
         }
+
         return relations;
     }
 
     private void updateLinks(Map<Integer, Set<Integer>> aRelLinks, Integer aGov)
     {
-        for (Integer dep : aRelLinks.get(aGov)) {
+        for (var dep : aRelLinks.get(aGov)) {
             if (aRelLinks.containsKey(dep)
                     && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
                 aRelLinks.get(aGov).addAll(aRelLinks.get(dep));

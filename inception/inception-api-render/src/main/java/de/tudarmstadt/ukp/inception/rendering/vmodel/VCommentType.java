@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
 public enum VCommentType
 {
-    INFO, ERROR, YIELD
+    INFO, ERROR
 }
