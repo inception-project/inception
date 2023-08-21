@@ -40,9 +40,6 @@ export type EntityAttributesDto = {
   cl: ClippedState;
 }
 
-/**
- * Use this "comments" to highlight "yield" of relation nodes
- */
 export type AnnotationCommentDto = [
   id: VID,
   commentType: CommentType,
