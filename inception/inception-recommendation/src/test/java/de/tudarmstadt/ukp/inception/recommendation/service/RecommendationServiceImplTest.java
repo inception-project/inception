@@ -43,6 +43,8 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.Arrays;
+
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -53,15 +55,19 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 class RecommendationServiceImplTest
 {
@@ -85,6 +91,60 @@ class RecommendationServiceImplTest
         layer2 = AnnotationLayer.builder().withId(2l).withName("layer2").build();
         feature1 = AnnotationFeature.builder().withName("feat1").build();
         feature2 = AnnotationFeature.builder().withName("feat2").build();
+    }
+
+    @Test
+    void testReconciliation() throws Exception
+    {
+        var sessionOwner = User.builder().withUsername("user").build();
+        var doc = SourceDocument.builder().withName("doc1").build();
+        var layer = AnnotationLayer.builder().withId(1l).build();
+        var feature = AnnotationFeature.builder().withName("feature").withLayer(layer).build();
+        var rec = Recommender.builder().withId(1l).withName("rec").withLayer(layer)
+                .withFeature(feature).build();
+        var project = Project.builder().withId(1l).build();
+
+        var existingSuggestions = Arrays.<AnnotationSuggestion> asList( //
+                SpanSuggestion.builder() //
+                        .withId(0) //
+                        .withPosition(new Offset(0, 10)) //
+                        .withDocumentName(doc.getName()) //
+                        .withLabel("aged") //
+                        .withRecommender(rec) //
+                        .build(),
+                SpanSuggestion.builder() //
+                        .withId(1) //
+                        .withPosition(new Offset(0, 10)) //
+                        .withDocumentName(doc.getName()) //
+                        .withLabel("removed") //
+                        .withRecommender(rec) //
+                        .build());
+        var activePredictions = new Predictions(sessionOwner, sessionOwner.getUsername(), project);
+        activePredictions.putPredictions(existingSuggestions);
+
+        var newSuggestions = Arrays.<AnnotationSuggestion> asList( //
+                SpanSuggestion.builder() //
+                        .withId(2) //
+                        .withPosition(new Offset(0, 10)) //
+                        .withDocumentName(doc.getName()) //
+                        .withLabel("aged") //
+                        .withRecommender(rec) //
+                        .build(),
+                SpanSuggestion.builder() //
+                        .withId(3) //
+                        .withPosition(new Offset(0, 10)) //
+                        .withDocumentName(doc.getName()) //
+                        .withLabel("added") //
+                        .withRecommender(rec) //
+                        .build());
+
+        var result = RecommendationServiceImpl.reconcile(activePredictions, doc, rec,
+                new Range(0, 10), newSuggestions);
+
+        assertThat(result.suggestions()) //
+                .extracting(AnnotationSuggestion::getId, AnnotationSuggestion::getLabel,
+                        AnnotationSuggestion::getAge) //
+                .containsExactlyInAnyOrder(tuple(0, "aged", 1), tuple(3, "added", 0));
     }
 
     @Test

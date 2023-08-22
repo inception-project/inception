@@ -39,7 +39,6 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -146,10 +145,11 @@ public class RecommendationServiceImplIntegrationTest
     {
         sut.createOrUpdateRecommender(rec);
 
-        List<Recommender> enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
+        var enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
 
-        assertThat(enabledRecommenders).as("Check that the previously created recommender is found")
-                .hasSize(1).contains(rec);
+        assertThat(enabledRecommenders) //
+                .as("Check that the previously created recommender is found") //
+                .containsExactly(rec);
     }
 
     @SuppressWarnings("unchecked")
@@ -174,16 +174,13 @@ public class RecommendationServiceImplIntegrationTest
         rec.setEnabled(false);
         testEntityManager.persist(rec);
 
-        long numOfRecommenders = sut.countEnabledRecommenders();
-        assertThat(numOfRecommenders).isEqualTo(0);
+        assertThat(sut.countEnabledRecommenders()).isEqualTo(0);
     }
 
     @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
-
-        assertThat(enabledRecommenders)
+        assertThat(sut.getEnabledRecommender(rec.getId()))
                 .as("Check that only the previously created recommender is found").isPresent()
                 .contains(rec);
     }
@@ -194,15 +191,14 @@ public class RecommendationServiceImplIntegrationTest
         rec.setEnabled(false);
         testEntityManager.persist(rec);
 
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
-
-        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
+        assertThat(sut.getEnabledRecommender(rec.getId())) //
+                .as("Check that no recommender is found") //
+                .isEmpty();
     }
 
     @Test
     public void getRecommenders_WithOtherRecommenderId_ShouldReturnEmptyList()
     {
-
         long otherId = 9999L;
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId);
 

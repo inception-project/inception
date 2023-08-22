@@ -62,20 +62,6 @@ public class SpanSuggestion
         coveredText = aCoveredText;
     }
 
-    /**
-     * Copy constructor.
-     *
-     * @param aObject
-     *            The annotationObject to copy
-     */
-    public SpanSuggestion(SpanSuggestion aObject)
-    {
-        super(aObject);
-
-        position = new Offset(aObject.position.getBegin(), aObject.position.getEnd());
-        coveredText = aObject.coveredText;
-    }
-
     // Getter and setter
 
     public String getCoveredText()
@@ -124,6 +110,17 @@ public class SpanSuggestion
                 .append("autoAcceptMode", getAutoAcceptMode()).toString();
     }
 
+    @Override
+    public AnnotationSuggestion assignId(int aId)
+    {
+        return toBuilder().withId(aId).build();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
     public Builder toBuilder()
     {
         return builder() //
@@ -140,11 +137,6 @@ public class SpanSuggestion
                 .withPosition(position) //
                 .withCoveredText(coveredText) //
                 .withAutoAcceptMode(getAutoAcceptMode());
-    }
-
-    public static Builder builder()
-    {
-        return new Builder();
     }
 
     public static final class Builder

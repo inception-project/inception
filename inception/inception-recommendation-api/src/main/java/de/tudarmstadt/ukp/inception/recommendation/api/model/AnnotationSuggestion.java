@@ -33,6 +33,8 @@ public abstract class AnnotationSuggestion
 {
     private static final long serialVersionUID = -7137765759688480950L;
 
+    public static final int NEW_ID = -1;
+
     public static final String EXTENSION_ID = "rec";
 
     /**
@@ -84,6 +86,7 @@ public abstract class AnnotationSuggestion
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
+    private int age = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
@@ -100,21 +103,6 @@ public abstract class AnnotationSuggestion
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
         autoAcceptMode = aAutoAcceptMode;
-    }
-
-    public AnnotationSuggestion(AnnotationSuggestion aObject)
-    {
-        label = aObject.label;
-        uiLabel = aObject.uiLabel;
-        id = aObject.id;
-        layerId = aObject.layerId;
-        feature = aObject.feature;
-        recommenderName = aObject.recommenderName;
-        score = aObject.score;
-        scoreExplanation = aObject.scoreExplanation;
-        recommenderId = aObject.recommenderId;
-        documentName = aObject.documentName;
-        autoAcceptMode = aObject.autoAcceptMode;
     }
 
     public int getId()
@@ -297,4 +285,24 @@ public abstract class AnnotationSuggestion
             return false;
         }
     }
+
+    public int incrementAge()
+    {
+        age++;
+        return age;
+    }
+
+    public int getAge()
+    {
+        return age;
+    }
+
+    /**
+     * @return a clone of the current suggestion with the new ID. This is used when adding a
+     *         suggestion to {@link Predictions} if the ID of the suggestion is set to
+     *         {@link #NEW_ID}.
+     * @param aId
+     *            the ID of the suggestion.
+     */
+    abstract public AnnotationSuggestion assignId(int aId);
 }

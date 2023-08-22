@@ -60,19 +60,6 @@ public class RelationSuggestion
         position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
     }
 
-    /**
-     * Copy constructor.
-     *
-     * @param aObject
-     *            The annotationObject to copy
-     */
-    public RelationSuggestion(RelationSuggestion aObject)
-    {
-        super(aObject);
-
-        position = new RelationPosition(aObject.position);
-    }
-
     // Getter and setter
 
     @Override
@@ -110,9 +97,32 @@ public class RelationSuggestion
                 .append("reasonForHiding", getReasonForHiding()).toString();
     }
 
+    @Override
+    public AnnotationSuggestion assignId(int aId)
+    {
+        return toBuilder().withId(aId).build();
+    }
+
     public static Builder builder()
     {
         return new Builder();
+    }
+
+    public Builder toBuilder()
+    {
+        return builder() //
+                .withId(id) //
+                .withRecommenderId(recommenderId) //
+                .withRecommenderName(recommenderName) //
+                .withLayerId(layerId) //
+                .withFeature(feature) //
+                .withDocumentName(documentName) //
+                .withLabel(label) //
+                .withUiLabel(uiLabel) //
+                .withScore(score) //
+                .withScoreExplanation(scoreExplanation) //
+                .withPosition(position) //
+                .withAutoAcceptMode(getAutoAcceptMode());
     }
 
     public static final class Builder
