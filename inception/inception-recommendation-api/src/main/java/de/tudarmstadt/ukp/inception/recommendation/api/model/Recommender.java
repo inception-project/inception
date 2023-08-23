@@ -195,6 +195,11 @@ public class Recommender
         return threshold;
     }
 
+    /**
+     * Activation score threshold.
+     * 
+     * @param aThreshold
+     */
     public void setThreshold(double aThreshold)
     {
         threshold = aThreshold;

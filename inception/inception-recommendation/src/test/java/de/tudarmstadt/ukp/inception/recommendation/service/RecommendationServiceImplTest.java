@@ -385,7 +385,7 @@ class RecommendationServiceImplTest
                 .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
                 .buildAndAddToIndexes();
 
-        var suggestions = extractSuggestions(targetCas, suggestionCas, doc1, recommender);
+        var suggestions = extractSuggestions(0, targetCas, suggestionCas, doc1, recommender);
 
         assertThat(suggestions) //
                 .extracting( //

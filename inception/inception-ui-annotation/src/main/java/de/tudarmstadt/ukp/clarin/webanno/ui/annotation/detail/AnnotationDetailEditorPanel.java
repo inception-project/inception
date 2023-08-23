@@ -195,15 +195,14 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createNextAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
+        var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
         return link;
     }
 
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("previousAnnotation",
-                this::actionPreviousAnnotation);
+        var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
         return link;
     }
@@ -1042,13 +1041,13 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("loadFeatureEditorModels()");
 
-        CAS aCas = getEditorCas();
+        var aCas = getEditorCas();
 
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
+        var state = getModelObject();
+        var selection = state.getSelection();
 
-        List<FeatureState> featureStates = state.getFeatureStates();
-        for (FeatureState featureState : featureStates) {
+        var featureStates = state.getFeatureStates();
+        for (var featureState : featureStates) {
             if (StringUtils.isNotBlank(featureState.feature.getLinkTypeName())) {
                 featureState.value = new ArrayList<>();
             }

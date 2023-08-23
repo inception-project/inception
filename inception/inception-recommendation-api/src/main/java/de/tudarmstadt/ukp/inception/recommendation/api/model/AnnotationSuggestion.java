@@ -73,6 +73,7 @@ public abstract class AnnotationSuggestion
     public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
             | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
 
+    protected final int generation;
     protected final int id;
     protected final long recommenderId;
     protected final String recommenderName;
@@ -88,10 +89,13 @@ public abstract class AnnotationSuggestion
     private int hidingFlags = 0;
     private int age = 0;
 
-    public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
-            double aScore, String aScoreExplanation, AutoAcceptMode aAutoAcceptMode)
+    public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
+            String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
+            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode, int aHidingFlags)
     {
+        generation = aGeneration;
+        age = aAge;
         label = aLabel;
         uiLabel = aUiLabel;
         id = aId;
@@ -103,6 +107,7 @@ public abstract class AnnotationSuggestion
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
         autoAcceptMode = aAutoAcceptMode;
+        hidingFlags = aHidingFlags;
     }
 
     public int getId()
@@ -170,6 +175,11 @@ public abstract class AnnotationSuggestion
     public void show(int aFlags)
     {
         hidingFlags &= ~aFlags;
+    }
+
+    protected int getHidingFlags()
+    {
+        return hidingFlags;
     }
 
     public String getReasonForHiding()

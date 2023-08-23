@@ -32,31 +32,26 @@ public class SpanSuggestion
 
     private SpanSuggestion(Builder builder)
     {
-        super(builder.id, builder.recommenderId, builder.recommenderName, builder.layerId,
-                builder.feature, builder.documentName, builder.label, builder.uiLabel,
-                builder.score, builder.scoreExplanation, builder.autoAcceptMode);
+        super(builder.id, builder.generation, builder.age, builder.recommenderId,
+                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
+                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
+                builder.autoAcceptMode, builder.hidingFlags);
 
         position = builder.position;
         coveredText = builder.coveredText;
     }
 
-    public SpanSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
-            String aDocumentName, Offset aOffset, String aCoveredText, String aLabel,
-            String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode)
-    {
-        this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
-                aOffset.getBegin(), aOffset.getEnd(), aCoveredText, aLabel, aUiLabel, aScore,
-                aScoreExplanation, aAutoAcceptMode);
-    }
-
+    /**
+     * @deprecated Use builder instead.
+     */
+    @Deprecated
     public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
             AutoAcceptMode aAutoAcceptMode)
     {
-        super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
+        super(aId, 0, 0, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName,
+                aLabel, aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode, 0);
 
         position = new Offset(aBegin, aEnd);
         coveredText = aCoveredText;
@@ -100,14 +95,25 @@ public class SpanSuggestion
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
-                .append("recommenderName", recommenderName).append("layerId", layerId)
-                .append("feature", feature).append("documentName", documentName)
-                .append("position", position).append("coveredText", coveredText)
-                .append("label", label).append("uiLabel", uiLabel).append("score", score)
-                .append("confindenceExplanation", scoreExplanation).append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding())
-                .append("autoAcceptMode", getAutoAcceptMode()).toString();
+        return new ToStringBuilder(this) //
+                .append("id", id) //
+                .append("generation", generation) //
+                .append("age", getAge()) //
+                .append("recommenderId", recommenderId) //
+                .append("recommenderName", recommenderName) //
+                .append("layerId", layerId) //
+                .append("feature", feature) //
+                .append("documentName", documentName) //
+                .append("position", position) //
+                .append("coveredText", coveredText) //
+                .append("label", label) //
+                .append("uiLabel", uiLabel) //
+                .append("score", score) //
+                .append("confindenceExplanation", scoreExplanation) //
+                .append("visible", isVisible()) //
+                .append("reasonForHiding", getReasonForHiding()) //
+                .append("autoAcceptMode", getAutoAcceptMode()) //
+                .toString();
     }
 
     @Override
@@ -125,6 +131,8 @@ public class SpanSuggestion
     {
         return builder() //
                 .withId(id) //
+                .withGeneration(generation) //
+                .withAge(getAge()) //
                 .withRecommenderId(recommenderId) //
                 .withRecommenderName(recommenderName) //
                 .withLayerId(layerId) //
@@ -136,12 +144,15 @@ public class SpanSuggestion
                 .withScoreExplanation(scoreExplanation) //
                 .withPosition(position) //
                 .withCoveredText(coveredText) //
-                .withAutoAcceptMode(getAutoAcceptMode());
+                .withAutoAcceptMode(getAutoAcceptMode()) //
+                .withHidingFlags(getHidingFlags());
     }
 
     public static final class Builder
     {
         private int id;
+        private int generation;
+        private int age;
         private long recommenderId;
         private String recommenderName;
         private long layerId;
@@ -154,6 +165,7 @@ public class SpanSuggestion
         private Offset position;
         private String coveredText;
         private AutoAcceptMode autoAcceptMode;
+        private int hidingFlags;
 
         private Builder()
         {
@@ -162,6 +174,18 @@ public class SpanSuggestion
         public Builder withId(int aId)
         {
             this.id = aId;
+            return this;
+        }
+
+        public Builder withAge(int aAge)
+        {
+            this.age = aAge;
+            return this;
+        }
+
+        public Builder withGeneration(int aGeneration)
+        {
+            this.generation = aGeneration;
             return this;
         }
 
@@ -243,6 +267,12 @@ public class SpanSuggestion
         public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
         {
             this.autoAcceptMode = aAutoAcceptMode;
+            return this;
+        }
+
+        public Builder withHidingFlags(int aFlags)
+        {
+            this.hidingFlags = aFlags;
             return this;
         }
 

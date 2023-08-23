@@ -53,6 +53,7 @@ public class Predictions
 {
     private static final long serialVersionUID = -1598768729246662885L;
 
+    private final int generation;
     private final Project project;
     private final User sessionOwner;
     private final String dataOwner;
@@ -77,6 +78,7 @@ public class Predictions
         sessionOwner = aSessionOwner;
         dataOwner = aDataOwner;
         nextId = 0;
+        generation = 1;
     }
 
     public Predictions(Predictions aPredecessor)
@@ -85,6 +87,7 @@ public class Predictions
         sessionOwner = aPredecessor.sessionOwner;
         dataOwner = aPredecessor.dataOwner;
         nextId = aPredecessor.nextId;
+        generation = aPredecessor.generation + 1;
     }
 
     public User getSessionOwner()
@@ -360,6 +363,11 @@ public class Predictions
         synchronized (log) {
             log.addAll(0, aLogMessages);
         }
+    }
+
+    public int getGeneration()
+    {
+        return generation;
     }
 
     public List<LogMessage> getLog()

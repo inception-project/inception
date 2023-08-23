@@ -34,9 +34,9 @@ public class UncertaintySamplingStrategy
 
     @Override
     public Optional<Delta<SpanSuggestion>> generateNextSuggestion(Preferences aPreferences,
-            List<SuggestionGroup<SpanSuggestion>> suggestions)
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions)
     {
-        return suggestions.stream()
+        return aSuggestions.stream()
                 // Fetch the top deltas per recommender
                 .flatMap(group -> group.getTopDeltas(aPreferences).values().stream())
                 // ... sort them in ascending order (smallest delta first)

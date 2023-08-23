@@ -135,6 +135,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
@@ -896,17 +897,21 @@ public class RecommendationServiceImpl
     @Override
     public List<LogMessageGroup> getLog(String aUser, Project aProject)
     {
-        Predictions activePredictions = getState(aUser, aProject).getActivePredictions();
-        Predictions incomingPredictions = getState(aUser, aProject).getIncomingPredictions();
+        var activePredictions = getState(aUser, aProject).getActivePredictions();
+        var incomingPredictions = getState(aUser, aProject).getIncomingPredictions();
 
-        List<LogMessageGroup> messageSets = new ArrayList<>();
+        var messageSets = new ArrayList<LogMessageGroup>();
 
         if (activePredictions != null) {
-            messageSets.add(new LogMessageGroup("Active", activePredictions.getLog()));
+            messageSets.add(
+                    new LogMessageGroup("Active (gen. " + activePredictions.getGeneration() + ")",
+                            activePredictions.getLog()));
         }
 
         if (incomingPredictions != null) {
-            messageSets.add(new LogMessageGroup("Incoming", incomingPredictions.getLog()));
+            messageSets.add(new LogMessageGroup(
+                    "Incoming (gen. " + incomingPredictions.getGeneration() + ")",
+                    incomingPredictions.getLog()));
         }
 
         return messageSets;
@@ -1848,16 +1853,16 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(Predictions aPredictions, RecommenderContext aCtx,
+    void generateSuggestions(Predictions aIncomingPredictions, RecommenderContext aCtx,
             RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
             CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
     {
-        var sessionOwner = aPredictions.getSessionOwner();
+        var sessionOwner = aIncomingPredictions.getSessionOwner();
         var recommender = aEngine.getRecommender();
 
         // Perform the actual prediction
-        aPredictions.log(LogMessage.info(recommender.getName(),
+        aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
         LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
                 recommender.getName(), recommender.getLayer().getUiName());
@@ -1865,8 +1870,8 @@ public class RecommendationServiceImpl
                 aPredictionEnd);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
-        var generatedSuggestions = extractSuggestions(aOriginalCas, aPredictionCas, aDocument,
-                recommender);
+        var generatedSuggestions = extractSuggestions(aIncomingPredictions.getGeneration(),
+                aOriginalCas, aPredictionCas, aDocument, recommender);
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,
@@ -1876,7 +1881,7 @@ public class RecommendationServiceImpl
                 recommender, sessionOwner, aDocument, recommender.getProject(),
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged);
-        aPredictions.log(LogMessage.info(recommender.getName(), //
+        aIncomingPredictions.log(LogMessage.info(recommender.getName(), //
                 "Generated [%d] predictions within range %s (+%d/-%d/=%d)",
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged));
@@ -1896,7 +1901,7 @@ public class RecommendationServiceImpl
             LOG.debug("{} for user {} on document {} in project {} inherited {} " //
                     + "predictions", recommender, sessionOwner, aDocument, recommender.getProject(),
                     inheritableSuggestions.size());
-            aPredictions.log(LogMessage.info(recommender.getName(),
+            aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                     "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
 
             suggestions.addAll(inheritableSuggestions);
@@ -1906,11 +1911,11 @@ public class RecommendationServiceImpl
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
         calculateSpanSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
-                aPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
+                aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
                 groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
         // FIXME calculateRelationSuggestionVisibility?
 
-        aPredictions.putPredictions(suggestions);
+        aIncomingPredictions.putPredictions(suggestions);
     }
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
@@ -1955,8 +1960,6 @@ public class RecommendationServiceImpl
 
             var existingSuggestion = existingSuggestions.get(0);
             existingSuggestion.incrementAge();
-            // Not sure if unhiding is necessary...
-            existingSuggestion.show(AnnotationSuggestion.FLAG_ALL);
             agedSuggestionsCount++;
             reconciledSuggestions.add(existingSuggestion);
         }
@@ -1970,8 +1973,8 @@ public class RecommendationServiceImpl
                 agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
     }
 
-    static List<AnnotationSuggestion> extractSuggestions(CAS aOriginalCas, CAS aPredictionCas,
-            SourceDocument aDocument, Recommender aRecommender)
+    static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
+            CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
     {
         var layer = aRecommender.getLayer();
         var featureName = aRecommender.getFeature().getName();
@@ -2019,6 +2022,7 @@ public class RecommendationServiceImpl
                 for (var label : labels) {
                     var suggestion = SpanSuggestion.builder() //
                             .withId(RelationSuggestion.NEW_ID) //
+                            .withGeneration(aGeneration) //
                             .withRecommender(aRecommender) //
                             .withDocumentName(aDocument.getName()) //
                             .withPosition(offsets) //
@@ -2048,6 +2052,7 @@ public class RecommendationServiceImpl
                 for (var label : labels) {
                     var suggestion = RelationSuggestion.builder() //
                             .withId(RelationSuggestion.NEW_ID) //
+                            .withGeneration(aGeneration) //
                             .withRecommender(aRecommender) //
                             .withDocumentName(aDocument.getName()) //
                             .withPosition(position).withLabel(label) //
@@ -2256,7 +2261,11 @@ public class RecommendationServiceImpl
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        Type type = getAnnotationType(aCas, aLayer);
+        LOG.trace(
+                "calculateSpanSuggestionVisibility() for layer {} on document {} in range [{}, {}]",
+                aLayer, aDocument, aWindowBegin, aWindowEnd);
+
+        var type = getAnnotationType(aCas, aLayer);
         if (type == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
             // been upgraded to the latest version of the type system yet. If this is the case,
@@ -2292,7 +2301,7 @@ public class RecommendationServiceImpl
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position
-            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions = new TreeMap<>(
+            var suggestions = new TreeMap<Offset, SuggestionGroup<SpanSuggestion>>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
                     .filter(group -> group.getFeature().equals(feature.getName())) //
@@ -2302,8 +2311,8 @@ public class RecommendationServiceImpl
                     }) //
                     .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
 
-            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, suggestionsInWindow,
-                    feature, feat, suggestions);
+            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, feature, feat,
+                    suggestions);
 
             // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream() //
@@ -2315,9 +2324,8 @@ public class RecommendationServiceImpl
     }
 
     private void hideSpanSuggestionsThatOverlapWithAnnotations(
-            List<AnnotationFS> annotationsInWindow,
-            List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow, AnnotationFeature feature,
-            Feature feat, Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
+            List<AnnotationFS> annotationsInWindow, AnnotationFeature feature, Feature feat,
+            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
     {
         // If there are no suggestions or annotations, there is nothing to do here
         if (annotationsInWindow.isEmpty() || suggestions.isEmpty()) {
@@ -2327,12 +2335,12 @@ public class RecommendationServiceImpl
         // Reduce the annotations to the ones which have a non-null feature value. We need to
         // use a multi-valued map here because there may be multiple annotations at a
         // given position.
-        MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
+        var annotations = new ArrayListValuedHashMap<Offset, AnnotationFS>();
         annotationsInWindow
                 .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
 
         // We need to constructed a sorted list of the keys for the OverlapIterator below
-        List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
+        var sortedAnnotationKeys = new ArrayList<Offset>(annotations.keySet());
         sortedAnnotationKeys.sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
 
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
@@ -2342,6 +2350,7 @@ public class RecommendationServiceImpl
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
+        var hiddenForOverlap = new ArrayList<AnnotationSuggestion>();
         while (oi.hasNext()) {
             if (oi.getA().overlaps(oi.getB())) {
                 // Fetch the current suggestion and annotation
@@ -2360,6 +2369,7 @@ public class RecommendationServiceImpl
                             // or not.
                             if (colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
 
@@ -2367,6 +2377,7 @@ public class RecommendationServiceImpl
                             // annotation with no label, but only if the offsets differ
                             if (feature.getLayer().isAllowStacking() && !colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
                         }
@@ -2385,6 +2396,7 @@ public class RecommendationServiceImpl
                             // at the same position then we hide
                             if (label != null && label.equals(suggestion.getLabel()) && colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
 
@@ -2392,6 +2404,7 @@ public class RecommendationServiceImpl
                             // stacking is not enabled - then we need to hide
                             if (!feature.getLayer().isAllowStacking()) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
                         }
@@ -2404,6 +2417,13 @@ public class RecommendationServiceImpl
             }
 
             oi.step();
+        }
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Hidden due to overlapping: {}", hiddenForOverlap.size());
+            for (var s : hiddenForOverlap) {
+                LOG.trace("- {}", s);
+            }
         }
     }
 
@@ -2556,8 +2576,12 @@ public class RecommendationServiceImpl
             for (var feature : features) {
                 var td = tsd.getType(feature.getLayer().getName());
                 if (td == null) {
-                    LOG.trace("Could not monkey patch feature {} because type for layer {} was not "
-                            + "found in the type system", feature, feature.getLayer());
+                    if (!WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                        LOG.trace(
+                                "Could not monkey patch feature {} because type for layer {} was not "
+                                        + "found in the type system",
+                                feature, feature.getLayer());
+                    }
                     continue;
                 }
 
