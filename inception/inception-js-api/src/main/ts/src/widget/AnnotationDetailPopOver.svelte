@@ -111,9 +111,12 @@
 
     $: {
         if (annotation) {
-            ajax.loadLazyDetails(annotation).then((response) => {
-                detailGroups = response;
-            });
+            ajax.loadLazyDetails(annotation)
+                .then((response) => detailGroups = response)
+                .catch(() => detailGroups = [{
+                    title: "Error", 
+                    details: [{label: "", value: "Unable to load details."
+                }]}])
         }
     }
 
