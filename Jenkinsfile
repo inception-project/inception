@@ -2,7 +2,7 @@ config = [
     agentLabel: '',
     maven: 'Maven 3',
     jdk: 'Zulu 11',
-    extraMavenArguments: '',
+    extraMavenArguments: '-U -Ddkpro.core.testCachePath="${WORKSPACE}/cache/dkpro-core-datasets" -Dmaven.artifact.threads=15',
     wipeWorkspaceBeforeBuild: true,
     wipeWorkspaceAfterBuild: true
   ]
@@ -97,7 +97,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                   params.extraMavenArguments +
-                  ' -B -Dmaven.test.failure.ignore=true clean verify';
+                  ' -B -Dmaven.test.failure.ignore=true -T 4 -Pjacoco clean verify javadoc:javadoc';
                   
               if (isUnix()) {
                 sh script: mavenCommand
@@ -130,7 +130,7 @@ pipeline {
             script {
               def mavenCommand = 'mvn ' +
                 params.extraMavenArguments +
-                ' -B -Dmaven.test.failure.ignore=true clean verify'
+                ' -B -Dmaven.test.failure.ignore=true -Pjacoco,full-tests clean verify javadoc:javadoc'
                 
               if (isUnix()) {
                 sh script: mavenCommand
