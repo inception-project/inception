@@ -28,8 +28,14 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['src/main.ts'],
+  globalName: 'PdfAnnotationEditor',
+  outfile: `${outbase}/PdfAnnotationEditor.min.js`,
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
@@ -53,26 +59,16 @@ const defaults = {
   ]
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
-
-esbuild.build(Object.assign({
-  entryPoints: ['src/main.ts'],
-  outfile: `${outbase}/PdfAnnotationEditor.min.js`,
-  globalName: 'PdfAnnotationEditor'
-}, defaults))
-
+fs.emptyDirSync(outbase)
 fs.copySync('pdfjs-web', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
 fs.copySync('node_modules/pdfjs-dist/standard_fonts', `${outbase}/standard_fonts`)
+
+if (argv.live) {
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
+}

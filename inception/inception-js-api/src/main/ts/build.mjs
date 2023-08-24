@@ -28,8 +28,14 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/diam/editor/api/resources/'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['index.ts'],
+  outfile: `${outbase}/InceptionJsAPI.min.js`,
+  globalName: 'InceptionJsAPI',
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
@@ -53,21 +59,12 @@ const defaults = {
   ]
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild.build(Object.assign({
-  entryPoints: ['index.ts'],
-  outfile: `${outbase}/InceptionJsAPI.min.js`,
-  globalName: 'InceptionJsAPI'
-}, defaults))
+if (argv.live) {
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
+}
