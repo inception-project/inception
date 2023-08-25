@@ -28,7 +28,7 @@ pipeline {
   }
 
   agent {
-    label agentLabel
+    label params.agentLabel
   }
   
   tools {
