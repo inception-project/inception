@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { LazyDetail } from "@inception-project/inception-js-api/src/model/LazyDetail"
+import { LazyDetail } from "./LazyDetail"
 
 export interface LazyDetailGroup {
   title: string
