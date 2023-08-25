@@ -106,7 +106,7 @@ public class RecommenderInfoPanel
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
         })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
 
-        WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
+        var recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
 
         ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
@@ -116,12 +116,12 @@ public class RecommenderInfoPanel
             @Override
             protected void populateItem(ListItem<Recommender> item)
             {
-                Recommender recommender = item.getModelObject();
+                var recommender = item.getModelObject();
                 Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
                         .getEvaluatedRecommender(sessionOwner, recommender);
                 item.add(new Label("name", recommender.getName()));
 
-                WebMarkupContainer state = new WebMarkupContainer("state");
+                var state = new WebMarkupContainer("state");
                 if (evaluatedRecommender.isPresent()) {
                     EvaluatedRecommender evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
@@ -147,7 +147,7 @@ public class RecommenderInfoPanel
 
                 Optional<EvaluationResult> evalResult = evaluatedRecommender
                         .map(EvaluatedRecommender::getEvaluationResult);
-                WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
+                var resultsContainer = new WebMarkupContainer("resultsContainer");
                 // Show results only if the evaluation was not skipped (and of course only if the
                 // result is actually present).
                 resultsContainer.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
@@ -189,10 +189,11 @@ public class RecommenderInfoPanel
                                         .isModelExportSupported()));
                 item.add(exportModel);
 
-                item.add(new Label("noEvaluationMessage",
-                        evaluatedRecommender.map(EvaluatedRecommender::getReasonForState)
-                                .orElse("Waiting for evalation..."))
-                                        .add(visibleWhen(() -> !resultsContainer.isVisible())));
+                item.add(new Label("noEvaluationMessage", evaluatedRecommender //
+                        .flatMap(r -> r.getEvaluationResult().getErrorMsg())
+                        // .map(EvaluatedRecommender::getReasonForState)
+                        .orElse("Waiting for evalation..."))
+                                .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
         IModel<List<Recommender>> recommenders = LoadableDetachableModel

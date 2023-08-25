@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationSuggestion
     extends AnnotationSuggestion
@@ -32,45 +31,27 @@ public class RelationSuggestion
 
     private RelationSuggestion(Builder builder)
     {
-        super(builder.id, builder.recommenderId, builder.recommenderName, builder.layerId,
-                builder.feature, builder.documentName, builder.label, builder.uiLabel,
-                builder.score, builder.scoreExplanation, builder.autoAcceptMode);
+        super(builder.id, builder.generation, builder.age, builder.recommenderId,
+                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
+                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
+                builder.autoAcceptMode, builder.hidingFlags);
 
         this.position = builder.position;
     }
 
-    public RelationSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
-            String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget, String aLabel,
-            String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode)
-    {
-        this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
-                aSource.getBegin(), aSource.getEnd(), aTarget.getBegin(), aTarget.getEnd(), aLabel,
-                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
-    }
-
+    /**
+     * @deprecated Use builder instead
+     */
+    @Deprecated
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,
             int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aScore,
             String aScoreExplanation, AutoAcceptMode aAutoAcceptMode)
     {
-        super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode);
+        super(aId, 0, 0, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName,
+                aLabel, aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode, 0);
 
         position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
-    }
-
-    /**
-     * Copy constructor.
-     *
-     * @param aObject
-     *            The annotationObject to copy
-     */
-    public RelationSuggestion(RelationSuggestion aObject)
-    {
-        super(aObject);
-
-        position = new RelationPosition(aObject.position);
     }
 
     // Getter and setter
@@ -100,14 +81,31 @@ public class RelationSuggestion
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
-                .append("recommenderName", recommenderName).append("layerId", layerId)
-                .append("feature", feature).append("documentName", documentName)
+        return new ToStringBuilder(this) //
+                .append("id", id) //
+                .append("generation", generation) //
+                .append("age", getAge()) //
+                .append("recommenderId", recommenderId) //
+                .append("recommenderName", recommenderName) //
+                .append("layerId", layerId) //
+                .append("feature", feature) //
+                .append("documentName", documentName) //
                 .append("position", position) //
-                .append("windowBegin", getWindowBegin()).append("windowEnd", getWindowEnd()) //
-                .append("label", label).append("uiLabel", uiLabel).append("score", score)
-                .append("confindenceExplanation", scoreExplanation).append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+                .append("windowBegin", getWindowBegin()) //
+                .append("windowEnd", getWindowEnd()) //
+                .append("label", label) //
+                .append("uiLabel", uiLabel) //
+                .append("score", score) //
+                .append("confindenceExplanation", scoreExplanation) //
+                .append("visible", isVisible()) //
+                .append("reasonForHiding", getReasonForHiding()) //
+                .toString();
+    }
+
+    @Override
+    public AnnotationSuggestion assignId(int aId)
+    {
+        return toBuilder().withId(aId).build();
     }
 
     public static Builder builder()
@@ -115,8 +113,30 @@ public class RelationSuggestion
         return new Builder();
     }
 
+    public Builder toBuilder()
+    {
+        return builder() //
+                .withId(id) //
+                .withGeneration(generation) //
+                .withAge(getAge()) //
+                .withRecommenderId(recommenderId) //
+                .withRecommenderName(recommenderName) //
+                .withLayerId(layerId) //
+                .withFeature(feature) //
+                .withDocumentName(documentName) //
+                .withLabel(label) //
+                .withUiLabel(uiLabel) //
+                .withScore(score) //
+                .withScoreExplanation(scoreExplanation) //
+                .withPosition(position) //
+                .withAutoAcceptMode(getAutoAcceptMode()) //
+                .withHidingFlags(getHidingFlags());
+    }
+
     public static final class Builder
     {
+        private int generation;
+        private int age;
         private int id;
         private long recommenderId;
         private String recommenderName;
@@ -129,6 +149,7 @@ public class RelationSuggestion
         private String scoreExplanation;
         private RelationPosition position;
         private AutoAcceptMode autoAcceptMode;
+        private int hidingFlags;
 
         private Builder()
         {
@@ -137,6 +158,18 @@ public class RelationSuggestion
         public Builder withId(int aId)
         {
             this.id = aId;
+            return this;
+        }
+
+        public Builder withGeneration(int aGeneration)
+        {
+            this.generation = aGeneration;
+            return this;
+        }
+
+        public Builder withAge(int aAge)
+        {
+            this.age = aAge;
             return this;
         }
 
@@ -212,6 +245,12 @@ public class RelationSuggestion
         public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
         {
             this.autoAcceptMode = aAutoAcceptMode;
+            return this;
+        }
+
+        public Builder withHidingFlags(int aFlags)
+        {
+            this.hidingFlags = aFlags;
             return this;
         }
 

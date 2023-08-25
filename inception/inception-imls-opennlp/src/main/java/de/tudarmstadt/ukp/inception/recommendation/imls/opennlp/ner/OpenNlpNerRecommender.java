@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -73,6 +74,9 @@ public class OpenNlpNerRecommender
     private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
     private static final Class<Token> DATAPOINT_UNIT = Token.class;
 
+    private static final int MIN_TRAINING_SET_SIZE = 2;
+    private static final int MIN_TEST_SET_SIZE = 2;
+
     private final OpenNlpNerRecommenderTraits traits;
 
     public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits)
@@ -121,40 +125,41 @@ public class OpenNlpNerRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(
+        var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
-        NameFinderME finder = new NameFinderME(model);
+        var finder = new NameFinderME(model);
 
-        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
-        Type tokenType = getType(aCas, Token.class);
-        Type predictedType = getPredictedType(aCas);
+        var sampleUnitType = getType(aCas, SAMPLE_UNIT);
+        var tokenType = getType(aCas, Token.class);
+        var predictedType = getPredictedType(aCas);
 
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-        Feature scoreFeature = getScoreFeature(aCas);
+        var predictedFeature = getPredictedFeature(aCas);
+        var isPredictionFeature = getIsPredictionFeature(aCas);
+        var scoreFeature = getScoreFeature(aCas);
 
         var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
-        int predictionCount = 0;
-        for (AnnotationFS sampleUnit : units) {
+        var predictionCount = 0;
+
+        for (var unit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
-            String[] tokens = tokenAnnotations.stream() //
+            var tokenAnnotations = selectCovered(tokenType, unit);
+            var tokens = tokenAnnotations.stream() //
                     .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
-            for (Span prediction : finder.find(tokens)) {
-                String label = prediction.getType();
+            for (var prediction : finder.find(tokens)) {
+                var label = prediction.getType();
                 if (NameSample.DEFAULT_TYPE.equals(label)) {
                     continue;
                 }
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
-                AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
+                var annotation = aCas.createAnnotation(predictedType, begin, end);
                 annotation.setStringValue(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
@@ -167,7 +172,7 @@ public class OpenNlpNerRecommender
             }
         }
 
-        return new Range(units);
+        return rangeCoveringAnnotations(units);
     }
 
     @Override
@@ -180,11 +185,11 @@ public class OpenNlpNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        List<NameSample> data = extractNameSamples(aCasses);
-        List<NameSample> trainingSet = new ArrayList<>();
-        List<NameSample> testSet = new ArrayList<>();
+        var data = extractNameSamples(aCasses);
+        var trainingSet = new ArrayList<NameSample>();
+        var testSet = new ArrayList<NameSample>();
 
-        for (NameSample nameSample : data) {
+        for (var nameSample : data) {
             switch (aDataSplitter.getTargetSet(nameSample)) {
             case TRAIN:
                 trainingSet.add(nameSample);
@@ -198,28 +203,22 @@ public class OpenNlpNerRecommender
             }
         }
 
-        int testSetSize = testSet.size();
-        int trainingSetSize = trainingSet.size();
-        double overallTrainingSize = data.size() - testSetSize;
-        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+        var testSetSize = testSet.size();
+        var trainingSetSize = trainingSet.size();
+        var overallTrainingSize = data.size() - testSetSize;
+        var trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        final int minTrainingSetSize = 2;
-        final int minTestSetSize = 2;
-        if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
-            if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
-                        SAMPLE_UNIT.getSimpleName());
-            }
+        if (trainingSetSize < MIN_TRAINING_SET_SIZE || testSetSize < MIN_TEST_SET_SIZE) {
+            String msg = String.format(
+                    "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
+                    trainingSetSize, MIN_TRAINING_SET_SIZE, testSetSize, MIN_TEST_SET_SIZE,
+                    data.size(), (MIN_TRAINING_SET_SIZE + MIN_TEST_SET_SIZE));
+            LOG.info(msg);
 
-            String info = String.format(
-                    "Not enough evaluation data: training set [%s] sentences, test set [%s] of total [%s]",
-                    trainingSetSize, testSetSize, data.size());
-            LOG.info(info);
-
-            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+            var result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
                     SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
-            result.setErrorMsg(info);
+            result.setErrorMsg(msg);
             return result;
         }
 
@@ -227,21 +226,21 @@ public class OpenNlpNerRecommender
                 testSet.size(), data.size());
 
         // Train model
-        TokenNameFinderModel model = train(trainingSet, traits.getParameters());
-        NameFinderME nameFinder = new NameFinderME(model);
+        var model = train(trainingSet, traits.getParameters());
+        var nameFinder = new NameFinderME(model);
 
         // Evaluate
-        List<LabelPair> labelPairs = new ArrayList<>();
-        for (NameSample sample : testSet) {
+        var labelPairs = new ArrayList<LabelPair>();
+        for (var sample : testSet) {
             // clear adaptive data from feature generators if necessary
             if (sample.isClearAdaptiveDataSet()) {
                 nameFinder.clearAdaptiveData();
             }
 
             // Span contains one NE, Array of them all in one sentence
-            String[] sentence = sample.getSentence();
-            Span[] predictedNames = nameFinder.find(sentence);
-            Span[] goldNames = sample.getNames();
+            var sentence = sample.getSentence();
+            var predictedNames = nameFinder.find(sentence);
+            var goldNames = sample.getNames();
 
             labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames, goldNames));
         }
@@ -309,7 +308,7 @@ public class OpenNlpNerRecommender
 
     private List<NameSample> extractNameSamples(List<CAS> aCasses)
     {
-        List<NameSample> nameSamples = new ArrayList<>();
+        var nameSamples = new ArrayList<NameSample>();
 
         casses: for (CAS cas : aCasses) {
             Type sampleUnitType = getType(cas, SAMPLE_UNIT);

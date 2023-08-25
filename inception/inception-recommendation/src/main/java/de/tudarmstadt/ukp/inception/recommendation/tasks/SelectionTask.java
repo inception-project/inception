@@ -46,12 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
@@ -60,8 +58,11 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
- * project. If a classifier exceeds its specific activation f-score limit during the evaluation it
- * is selected for active prediction.
+ * project. If a classifier exceeds its specific activation score limit during the evaluation it is
+ * selected for active prediction.
+ * 
+ * If the threshold is 0 (or less), the evaluation should be considered optional. That is, if the
+ * evaluation fails (e.g. because of too little data), then the training should still be scheduled.
  */
 public class SelectionTask
     extends RecommendationTask_ImplBase
@@ -301,17 +302,23 @@ public class SelectionTask
         }
 
         log.info("[{}][{}]: Evaluating...", userName, recommender.getName());
-        DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-        RecommendationEngine recommendationEngine = factory.build(recommender);
+        var splitter = new PercentageBasedSplitter(0.8, 10);
+        var recommendationEngine = factory.build(recommender);
 
-        EvaluationResult result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        var result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        double threshold = recommender.getThreshold();
 
         if (result.isEvaluationSkipped()) {
+            var evaluationIsOptional = recommender.getThreshold() <= 0.0d;
+            if (evaluationIsOptional) {
+                return Optional.of(
+                        activateRecommenderAboveThreshold(user, recommender, result, 0, threshold));
+            }
+
             return Optional.of(skipRecommenderDueToFailedEvaluation(user, recommender, result));
         }
 
         double score = result.computeF1Score();
-        double threshold = recommender.getThreshold();
         if (score >= threshold) {
             return Optional.of(
                     activateRecommenderAboveThreshold(user, recommender, result, score, threshold));
