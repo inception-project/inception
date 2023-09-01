@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
@@ -252,8 +251,7 @@ public class OpenNlpDoccatRecommender
             Type sampleUnitType = getType(cas, SAMPLE_UNIT);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sampleUnits = indexCovered(cas, sampleUnitType,
-                    tokenType);
+            var sampleUnits = indexCovered(cas, sampleUnitType, tokenType);
             for (Entry<AnnotationFS, List<AnnotationFS>> e : sampleUnits.entrySet()) {
                 AnnotationFS sampleUnit = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
