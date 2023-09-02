@@ -835,11 +835,16 @@ public class SearchServiceImpl
         enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
+    private void enqueueReindexTask(Project aProject, String aTrigger)
+    {
+        enqueue(new ReindexTask(aProject, null, aTrigger));
+    }
+
     @Override
     @Transactional
-    public void enqueueReindexTask(Project aProject, String aTrigger)
+    public void enqueueReindexTask(Project aProject, String aUser, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, aTrigger));
+        enqueue(new ReindexTask(aProject, aUser, aTrigger));
     }
 
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)

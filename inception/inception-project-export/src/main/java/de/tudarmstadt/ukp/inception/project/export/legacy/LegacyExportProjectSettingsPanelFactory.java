@@ -30,7 +30,10 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
  * This class is exposed as a Spring Component via
  * {@link ProjectExportServiceAutoConfiguration#legacyExportProjectSettingsPanelFactory}.
  * </p>
+ *
+ * @deprecated Old export page code - to be removed in a future release.
  */
+@Deprecated
 @Order(LegacyExportProjectSettingsPanelFactory.ORDER)
 public class LegacyExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory

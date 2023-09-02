@@ -121,7 +121,6 @@ public class SpanRenderer
                 if (vobj instanceof VSpan) {
                     annoToSpanIdx.put(fs, (VSpan) vobj);
 
-                    renderLazyDetails(fs, vobj, aFeatures);
                     renderRequiredFeatureErrors(aFeatures, fs, aResponse);
                 }
             }

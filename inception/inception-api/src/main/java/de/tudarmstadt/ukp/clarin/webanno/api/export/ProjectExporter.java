@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -40,7 +41,7 @@ public interface ProjectExporter
 
     void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception;
+        throws ProjectExportException, IOException, InterruptedException;
 
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,
             ZipFile aZip)

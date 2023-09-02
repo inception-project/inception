@@ -78,7 +78,6 @@ public class ProjectPermissionsExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         Project project = aRequest.getProject();
 

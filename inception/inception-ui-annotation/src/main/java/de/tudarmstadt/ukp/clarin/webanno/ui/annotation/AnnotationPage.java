@@ -420,12 +420,13 @@ public class AnnotationPage
     {
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
-        AnnotatorState state = getModelObject();
-        if (state.getUser() == null) {
-            state.setUser(userRepository.getCurrentUser());
-        }
-
         try {
+            AnnotatorState state = getModelObject();
+            if (state.getUser() == null) {
+                state.setUser(userRepository.getCurrentUser());
+            }
+            state.reset();
+
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
             AnnotationDocument annotationDocument = documentService
@@ -436,9 +437,6 @@ public class AnnotationPage
             // Update the annotation document CAS
             CAS editorCas = documentService.readAnnotationCas(annotationDocument,
                     FORCE_CAS_UPGRADE);
-
-            // (Re)initialize brat model after potential creating / upgrading CAS
-            state.reset();
 
             boolean editable = isEditable();
             applicationEventPublisherHolder.get()

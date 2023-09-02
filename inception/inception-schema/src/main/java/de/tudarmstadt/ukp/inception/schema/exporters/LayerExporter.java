@@ -88,7 +88,6 @@ public class LayerExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
     {
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
 

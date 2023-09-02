@@ -55,6 +55,12 @@ public class MatrixWorkloadUpdateDocumentStateTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Updating document states...";
+    }
+
+    @Override
     public void execute()
     {
         Project project;

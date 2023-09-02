@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotifica
 public class PredictionTask
     extends RecommendationTask_ImplBase
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
@@ -83,6 +84,12 @@ public class PredictionTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Generating annotation suggestions...";
+    }
+
+    @Override
     public void execute()
     {
         try (var session = CasStorageSession.openNested()) {
@@ -118,7 +125,8 @@ public class PredictionTask
         // Do we need to predict ALL documents (e.g. in active learning mode)
         if (recommendationService.isPredictForAllDocuments(sessionOwnerName, project)) {
             logPredictionStartedForAllDocuments(sessionOwnerName, project, docs);
-            return recommendationService.computePredictions(sessionOwner, project, docs, dataOwner);
+            return recommendationService.computePredictions(sessionOwner, project, docs, dataOwner,
+                    getMonitor());
         }
 
         // Limit prediction to a single document and inherit the rest
@@ -129,20 +137,20 @@ public class PredictionTask
         logPredictionStartedForOneDocument(sessionOwnerName, project, inherit);
 
         return recommendationService.computePredictions(sessionOwner, project, currentDocument,
-                dataOwner, inherit, predictionBegin, predictionEnd);
+                dataOwner, inherit, predictionBegin, predictionEnd, getMonitor());
     }
 
     private void logPredictionComplete(Predictions aPredictions, long startTime, String username)
     {
         var duration = currentTimeMillis() - startTime;
-        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username, duration);
+        LOG.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username, duration);
         aPredictions.log(LogMessage.info(this, "Prediction complete (%d ms).", duration));
     }
 
     private void logPredictionStartedForOneDocument(String username, Project project,
             List<SourceDocument> inherit)
     {
-        log.debug(
+        LOG.debug(
                 "[{}][{}]: Starting prediction for project [{}] on one document "
                         + "(inheriting [{}]) triggered by [{}]",
                 getId(), username, project, inherit.size(), getTrigger());
@@ -152,7 +160,7 @@ public class PredictionTask
     private void logPredictionStartedForAllDocuments(String username, Project project,
             List<SourceDocument> docs)
     {
-        log.debug(
+        LOG.debug(
                 "[{}][{}]: Starting prediction for project [{}] on [{}] documents triggered by [{}]",
                 getId(), username, project, docs.size(), getTrigger());
         info("Starting prediction triggered by [%s]...", getTrigger());

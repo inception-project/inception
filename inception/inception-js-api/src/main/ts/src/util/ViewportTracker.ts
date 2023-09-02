@@ -62,7 +62,7 @@ export class ViewportTracker {
     }
 
     return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
-      style.display.includes('table')
+      style.display === 'table-row'
 
     // return !style.display.startsWith('inline') && !style.display.includes('math')
   }

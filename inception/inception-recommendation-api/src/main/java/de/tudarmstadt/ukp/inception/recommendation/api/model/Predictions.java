@@ -53,25 +53,41 @@ public class Predictions
 {
     private static final long serialVersionUID = -1598768729246662885L;
 
+    private final int generation;
     private final Project project;
     private final User sessionOwner;
     private final String dataOwner;
 
     private final Map<String, Map<ExtendedId, AnnotationSuggestion>> idxDocuments = new HashMap<>();
 
-    private final Object predictions = new Object();
+    private final Object predictionsLock = new Object();
     private final Set<String> seenDocumentsForPrediction = new HashSet<>();
     private final List<LogMessage> log = new ArrayList<>();
+
+    // Predictions are (currently) scoped to a user session. We assume that within a single user
+    // session, the pool of IDs of positive integer values is never exhausted.
+    private int nextId;
 
     public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
         Validate.notNull(aSessionOwner, "Session owner must be specified");
-        Validate.notNull(aSessionOwner, "Data owner must be specified");
+        Validate.notNull(aDataOwner, "Data owner must be specified");
 
         project = aProject;
         sessionOwner = aSessionOwner;
         dataOwner = aDataOwner;
+        nextId = 0;
+        generation = 1;
+    }
+
+    public Predictions(Predictions aPredecessor)
+    {
+        project = aPredecessor.project;
+        sessionOwner = aPredecessor.sessionOwner;
+        dataOwner = aPredecessor.dataOwner;
+        nextId = aPredecessor.nextId;
+        generation = aPredecessor.generation + 1;
     }
 
     public User getSessionOwner()
@@ -151,7 +167,7 @@ public class Predictions
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> type.isInstance(f.getValue())) //
@@ -180,11 +196,11 @@ public class Predictions
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocument.getName(), emptyMap());
             return byDocument.values().stream() //
-                    .filter(f -> f.getId() == aVID.getSubId()) //
-                    .filter(f -> f.getRecommenderId() == aVID.getId()) //
+                    .filter(suggestion -> suggestion.getId() == aVID.getSubId()) //
+                    .filter(suggestion -> suggestion.getRecommenderId() == aVID.getId()) //
                     .findFirst();
         }
     }
@@ -195,11 +211,19 @@ public class Predictions
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             for (var prediction : aPredictions) {
-                var xid = new ExtendedId(prediction.getDocumentName(), prediction.getLayerId(),
-                        prediction.getPosition(), prediction.getRecommenderId(),
-                        prediction.getId());
+                // Assign ID to predictions that do not have an ID yet
+                if (prediction.getId() == AnnotationSuggestion.NEW_ID) {
+                    prediction = prediction.assignId(nextId);
+                    nextId++;
+                    if (nextId < 0) {
+                        throw new IllegalStateException(
+                                "Annotation suggestion ID overflow. Restart session.");
+                    }
+                }
+
+                var xid = new ExtendedId(prediction);
                 var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, prediction);
@@ -212,35 +236,23 @@ public class Predictions
         return project;
     }
 
-    /**
-     * @return whether there are any predictions.
-     * @deprecated Use {@link #isEmpty()} instead.
-     */
-    @Deprecated
-    public boolean hasPredictions()
-    {
-        synchronized (predictions) {
-            return !idxDocuments.isEmpty();
-        }
-    }
-
     public boolean isEmpty()
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             return idxDocuments.values().stream().allMatch(Map::isEmpty);
         }
     }
 
     public int size()
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             return idxDocuments.values().stream().mapToInt(Map::size).sum();
         }
     }
 
     public void removePredictions(Long recommenderId)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             idxDocuments.values().forEach(docGroup -> docGroup.entrySet() //
                     .removeIf((p) -> p.getKey().getRecommenderId() == recommenderId));
         }
@@ -249,7 +261,7 @@ public class Predictions
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public List<SpanSuggestion> getAlternativeSuggestions(SpanSuggestion aSuggestion)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentName(), emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getValue() instanceof SpanSuggestion) //
@@ -284,7 +296,7 @@ public class Predictions
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getValue() instanceof SpanSuggestion) //
@@ -301,7 +313,7 @@ public class Predictions
     public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
             Recommender aRecommender, String aDocumentName)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
@@ -312,7 +324,7 @@ public class Predictions
 
     public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName)
     {
-        synchronized (predictions) {
+        synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .map(Map.Entry::getValue) //
@@ -351,6 +363,11 @@ public class Predictions
         synchronized (log) {
             log.addAll(0, aLogMessages);
         }
+    }
+
+    public int getGeneration()
+    {
+        return generation;
     }
 
     public List<LogMessage> getLog()

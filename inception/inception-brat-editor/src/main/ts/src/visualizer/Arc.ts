@@ -38,26 +38,26 @@
  * SOFTWARE.
  */
 
-import { MarkerType } from '../protocol/Protocol'
+import { MarkerType, VID } from '../protocol/Protocol'
 import { EventDesc } from './EventDesc'
+import { Role } from './Role'
 
 export class Arc {
   annotatorNotes = undefined
   comment = undefined
-  origin: string
-  target: string
+  origin: VID
+  target: VID
   dist: number
-  type: string
+  type: number
   shadowClass: string
   jumpHeight = 0
   equiv = false
   eventDescId: string
   relation = false
-  normalizations: Array<[string?, string?, string?]> = []
   marked: MarkerType
   hidden = false
 
-  constructor (eventDesc: EventDesc, role, dist: number, eventNo: string) {
+  constructor (eventDesc: EventDesc, role: Role, dist: number, eventNo: string) {
     this.origin = eventDesc.id
     this.target = role.targetId
     this.dist = dist

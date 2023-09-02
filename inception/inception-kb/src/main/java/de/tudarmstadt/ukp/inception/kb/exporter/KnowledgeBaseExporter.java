@@ -46,8 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -101,7 +103,7 @@ public class KnowledgeBaseExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
-        throws Exception
+        throws InterruptedException, IOException
     {
         Project project = aRequest.getProject();
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();
@@ -288,10 +290,24 @@ public class KnowledgeBaseExporter
             }
 
             for (AnnotationFeature feature : schemaService.listAnnotationFeature(aProject)) {
-                if (feature.getType().startsWith("kb:")) {
+                if (feature.getType().startsWith("kb:")
+                        || feature.getType().startsWith("kb-multi:")) {
                     try {
-                        ConceptFeatureTraits traits = JSONUtil
-                                .fromJsonString(ConceptFeatureTraits.class, feature.getTraits());
+                        ConceptFeatureTraits_ImplBase traits;
+
+                        if (feature.getType().startsWith("kb:")) {
+                            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
+                                    feature.getTraits());
+                        }
+                        else if (feature.getType().startsWith("kb-multi:")) {
+                            traits = JSONUtil.fromJsonString(MultiValueConceptFeatureTraits.class,
+                                    feature.getTraits());
+                        }
+                        else {
+                            throw new IllegalStateException(
+                                    "Prefix must be [kb:] or [kb-multi:] in [" + feature.getType()
+                                            + "]");
+                        }
 
                         if (traits != null && exportedKB.getId().equals(traits.getRepositoryId())) {
                             traits.setRepositoryId(kb.getRepositoryId());

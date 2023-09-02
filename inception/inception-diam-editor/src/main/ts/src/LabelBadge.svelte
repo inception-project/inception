@@ -18,6 +18,7 @@
      */
     import { Annotation, DiamAjax } from "@inception-project/inception-js-api";
     import { bgToFgColor } from "@inception-project/inception-js-api/src/util/Coloring";
+    import { renderLabel } from "./Utils";
 
     export let annotation: Annotation;
     export let ajaxClient: DiamAjax;
@@ -58,7 +59,7 @@
         >
             <i class="far fa-check-circle" />
             {#if showText}
-                <span class="label">{annotation.label || "No label"}</span>
+                <span class="label">{renderLabel(annotation)}</span>
             {/if}
             {#if annotation.score}
                 <span class="small font-monospace score"
@@ -85,7 +86,7 @@
     >
         <i class="fas fa-clipboard-check" />
         {#if showText}
-            <span class="label">{annotation.label || "No label"}</span>
+            <span class="label">{renderLabel(annotation)}</span>
         {/if}
         {#if annotation.score}
             <span class="small font-monospace score"
@@ -103,7 +104,7 @@
             title="Select ({annotation.vid})"
         >
             {#if showText}
-                {annotation.label || "No label"}
+                {renderLabel(annotation)}
             {:else}
                 <i class="fas fa-crosshairs" />
             {/if}

@@ -1,7 +1,7 @@
 import setAttributes from '../utils/setAttributes'
 import { DEFAULT_RADIUS } from './renderKnob'
 import { findBezierControlPoint } from '../utils/relation.js'
-import RelationAnnotation from '../annotation/relation'
+import RelationAnnotation from '../model/RelationAnnotation'
 
 /**
  * Create a RELATION annotation.
@@ -111,7 +111,6 @@ export function renderRelation (a: RelationAnnotation): HTMLDivElement {
   group.appendChild(relation)
 
   const base = document.createElement('div')
-  base.title = a.text || ''
   base.style.position = 'absolute'
   base.style.top = '0'
   base.style.left = '0'

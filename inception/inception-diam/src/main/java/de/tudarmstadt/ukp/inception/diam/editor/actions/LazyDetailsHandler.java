@@ -28,8 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
@@ -59,19 +58,19 @@ public class LazyDetailsHandler
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            var page = (AnnotationPageBase) aTarget.getPage();
 
             CasProvider casProvider = () -> page.getEditorCas();
 
             // Parse annotation ID if present in request
-            final VID paramId = getVid(aRequest);
+            var paramId = getVid(aRequest);
+            var state = page.getModelObject();
+            var details = lazyDetailsLookupService.lookupLazyDetails(
+                    aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
+                    state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
+            attachResponse(aTarget, aRequest, toInterpretableJsonString(details));
 
-            AnnotatorState state = page.getModelObject();
-            var result = lazyDetailsLookupService.lookupLazyDetails(aRequest.getRequestParameters(),
-                    paramId, casProvider, state.getDocument(), state.getUser(),
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
-            attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
-            return result;
+            return new DefaultAjaxResponse(COMMAND);
         }
         catch (Exception e) {
             return handleError("Unable to load lazy details", e);

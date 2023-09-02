@@ -720,9 +720,18 @@ public class CasMerge
                         && Objects.equals(l.role, newLink.role))) {
                     links.add(newLink);
                 }
+                else {
+                    throw new AlreadyMergedException(
+                            "The slot has already been filled with this annotation in the target document.");
+                }
             }
             else {
-                links.remove(existingLinkWithTarget(newLink, links));
+                LinkWithRoleModel existing = existingLinkWithTarget(newLink, links);
+                if (existing != null && existing.equals(newLink)) {
+                    throw new AlreadyMergedException(
+                            "The slot has already been filled with this annotation in the target document.");
+                }
+                links.remove(existing);
                 links.add(newLink);
             }
             break;

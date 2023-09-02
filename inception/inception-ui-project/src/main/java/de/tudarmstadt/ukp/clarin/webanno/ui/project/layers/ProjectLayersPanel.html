@@ -354,18 +354,6 @@
                     <wicket:label key="required"/>
                   </label>
                 </div>
-                <div class="form-check" wicket:enclosure="visible">
-                  <input wicket:id="visible" class="form-check-input" type="checkbox">
-                  <label wicket:for="visible" class="form-check-label">
-                    <wicket:label key="visible"/>
-                  </label>
-                </div>
-                <div class="form-check" wicket:enclosure="includeInHover">
-                  <input wicket:id="includeInHover" class="form-check-input" type="checkbox">
-                  <label wicket:for="includeInHover" class="form-check-label">
-                    <wicket:label key="includeInHover"/>
-                  </label>
-                </div>
                 <div class="form-check" wicket:enclosure="remember">
                   <input wicket:id="remember" class="form-check-input" type="checkbox">
                   <label wicket:for="remember" class="form-check-label">
@@ -376,6 +364,25 @@
                   <input wicket:id="curatable" class="form-check-input" type="checkbox">
                   <label wicket:for="curatable" class="form-check-label">
                     <wicket:label key="curatable"/>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="row form-row">
+              <label class="col-sm-4 col-form-label">
+                <wicket:message key="visibility"/>
+              </label>
+              <div class="col-sm-8">
+                <div class="form-check" wicket:enclosure="visible">
+                  <input wicket:id="visible" class="form-check-input" type="checkbox">
+                  <label wicket:for="visible" class="form-check-label">
+                    <wicket:label key="visible"/>
+                  </label>
+                </div>
+                <div class="form-check" wicket:enclosure="includeInHover">
+                  <input wicket:id="includeInHover" class="form-check-input" type="checkbox">
+                  <label wicket:for="includeInHover" class="form-check-label">
+                    <wicket:label key="includeInHover"/>
                   </label>
                 </div>
                 <div class="form-check" wicket:enclosure="hideUnconstraintFeature">

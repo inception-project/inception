@@ -42,6 +42,12 @@ public class RecalculateProjectStateTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Updating project state...";
+    }
+
+    @Override
     public void execute()
     {
         Project project;

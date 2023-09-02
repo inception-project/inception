@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.number;
 
+import static org.apache.wicket.behavior.Behavior.onTag;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
@@ -24,14 +25,14 @@ import java.util.List;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.Radio;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
-
-import com.googlecode.wicket.kendo.ui.form.Radio;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
@@ -69,9 +70,10 @@ public class RatingFeatureEditor
             @Override
             protected void populateItem(ListItem<Integer> item)
             {
-                Radio<Integer> radio = new Radio<>("radio", item.getModel(), field);
-                Radio.Label label = new Radio.Label("label", item.getModel(), radio);
-                item.add(radio, label);
+                var radio = new Radio<>("radio", item.getModel(), field);
+                item.add(radio);
+                item.add(new Label("label", item.getModel())
+                        .add(onTag((c, t) -> t.put("for", radio.getMarkupId()))));
             }
         };
     }

@@ -195,9 +195,6 @@ public class CompactSerializerV2Impl
             case INFO:
                 code = CompactComment.INFO;
                 break;
-            case YIELD:
-                code = CompactComment.INFO;
-                break;
             default:
                 throw new IllegalStateException(
                         "Unsupported comment type [" + comment.getCommentType() + "]");

@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.inception.kb;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
 
 /**
  * Traits for knowledge-base-related features.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
     implements KeyBindingTrait

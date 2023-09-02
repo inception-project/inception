@@ -28,12 +28,15 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/clarin/webanno/brat/resource'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [
@@ -53,27 +56,30 @@ const defaults = {
   ]
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild.build(Object.assign({
-  entryPoints: ['src/brat.ts'],
-  outfile: `${outbase}/brat.min.js`,
-  globalName: 'Brat'
-}, defaults))
-
-esbuild.build(Object.assign({
-  entryPoints: ['src/brat_curation.ts'],
-  outfile: `${outbase}/brat_curation.min.js`,
-  globalName: 'BratCuration'
-}, defaults))
+if (argv.live) {
+  const context1 = await esbuild.context(Object.assign({
+    entryPoints: ['src/brat.ts'],
+    outfile: `${outbase}/brat.min.js`,
+    globalName: 'Brat'
+  }, defaults))
+  const context2 = await esbuild.context(Object.assign({
+    entryPoints: ['src/brat_curation.ts'],
+    outfile: `${outbase}/brat_curation.min.js`,
+    globalName: 'BratCuration'
+  }, defaults))
+  await Promise.all([context1.watch(), context2.watch()])
+} else {
+  esbuild.build(Object.assign({
+    entryPoints: ['src/brat.ts'],
+    outfile: `${outbase}/brat.min.js`,
+    globalName: 'Brat'
+  }, defaults))
+  esbuild.build(Object.assign({
+    entryPoints: ['src/brat_curation.ts'],
+    outfile: `${outbase}/brat_curation.min.js`,
+    globalName: 'BratCuration'
+  }, defaults))
+}

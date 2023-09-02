@@ -18,12 +18,12 @@
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
 import Connections from '@recogito/recogito-connections/src'
-import { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
+import { AnnotationEditor, CompactAnnotatedText, CompactAnnotationMarker, CompactSpan, DiamAjax, VID } from '@inception-project/inception-js-api'
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation'
 import './RecogitoEditor.scss'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
-import { calculateStartOffset, offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
+import { offsetToRange } from '@inception-project/inception-js-api/src/util/OffsetUtils'
 import convert from 'color-convert'
 
 interface WebAnnotationBodyItem {
@@ -84,7 +84,7 @@ export class RecogitoEditor implements AnnotationEditor {
     // this.recogito.on('updateConnection', annotation => this.createAnnotation(annotation))
     // this.recogito.on('deleteConnection', annotation => this.createAnnotation(annotation))
 
-    this.installColorRenderingPatch(this.recogito)
+    this.installRenderingPatch(this.recogito)
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
   }
@@ -92,7 +92,7 @@ export class RecogitoEditor implements AnnotationEditor {
   /**
    * Recogito does not support rendering annotations with a custom color. This is a workaround.
    */
-  private installColorRenderingPatch (recogito: Recogito) {
+  private installRenderingPatch (recogito: Recogito) {
     const _setAnnotations = recogito.setAnnotations
     recogito.setAnnotations = annotations => {
       // Set annotations on instance first
@@ -105,10 +105,12 @@ export class RecogitoEditor implements AnnotationEditor {
             if (element instanceof HTMLElement) {
               element.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.2)`
               element.style.borderBottomColor = annotation.body.color
+              annotation.body.classes.forEach(c => element.classList.add(c))
             }
 
             // Relation annotation
             if (element instanceof SVGElement) {
+              annotation.body.classes.forEach(c => element.classList.add(c))
               element.querySelectorAll('.r6o-connections-edge-path-inner').forEach(path => {
                 if (path instanceof SVGElement) {
                   path.style.stroke = annotation.body.color
@@ -198,13 +200,14 @@ export class RecogitoEditor implements AnnotationEditor {
 
   private convertAnnotations (doc: CompactAnnotatedText, view: Element) {
     const webAnnotations: Array<WebAnnotation> = []
+    const annotationMarkers = this.makeMarkerMap(doc.annotationMarkers)
 
     if (doc.spans) {
-      webAnnotations.push(...this.compactSpansToWebAnnotation(doc))
+      webAnnotations.push(...this.compactSpansToWebAnnotation(doc, annotationMarkers))
     }
 
     if (doc.relations) {
-      webAnnotations.push(...this.compactRelationsToWebAnnotation(doc))
+      webAnnotations.push(...this.compactRelationsToWebAnnotation(doc, annotationMarkers))
     }
 
     this.annotations = webAnnotations
@@ -212,11 +215,16 @@ export class RecogitoEditor implements AnnotationEditor {
     console.info(`Loaded ${webAnnotations.length} annotations from server (${doc.spans?.length || 0} spans and ${doc.relations?.length || 0} relations)`)
   }
 
-  private compactSpansToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
+  private compactSpansToWebAnnotation (doc: CompactAnnotatedText, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>): Array<WebAnnotation> {
     const offset = doc.window[0]
     const spans = doc.spans as Array<CompactSpan>
     return spans.map(span => {
       // console.log(`From ${span[1][0][0]}-${span[1][0][1]} +${offset}`, this.root)
+
+      const classList = ['i7n-highlighted']
+      const ms = annotationMarkers.get(span[0]) || []
+      ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
+
       return {
         id: '#' + span[0],
         type: 'Annotation',
@@ -224,7 +232,8 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: span[2]?.c || '#000000',
-          value: span[2]?.l || ''
+          value: span[2]?.l || '',
+          classes: classList
         },
         target: {
           selector: { type: 'TextPositionSelector', start: offset + span[1][0][0], end: offset + span[1][0][1] }
@@ -233,9 +242,13 @@ export class RecogitoEditor implements AnnotationEditor {
     })
   }
 
-  private compactRelationsToWebAnnotation (doc: CompactAnnotatedText): Array<WebAnnotation> {
+  private compactRelationsToWebAnnotation (doc: CompactAnnotatedText, annotationMarkers: Map<VID, Array<CompactAnnotationMarker>>): Array<WebAnnotation> {
     const relations = doc.relations as Array<CompactRelation>
     return relations.map(relation => {
+      const classList = ['i7n-highlighted']
+      const ms = annotationMarkers.get(relation[0]) || []
+      ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
+
       return {
         id: '#' + relation[0],
         type: 'Annotation',
@@ -243,7 +256,8 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: relation[2]?.c || '#000000',
-          value: relation[2]?.l || ''
+          value: relation[2]?.l || '',
+          classes: classList
         },
         motivation: 'linking',
         target: [
@@ -294,5 +308,22 @@ export class RecogitoEditor implements AnnotationEditor {
     if (!range) return
     range.startContainer?.parentElement?.scrollIntoView(
       { behavior: 'auto', block: 'center', inline: 'nearest' })
+  }
+
+  private makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
+    const markerMap = new Map<VID, Array<T>>()
+    if (markerList) {
+      markerList.forEach(marker => {
+        marker[1].forEach(vid => {
+          let ms = markerMap.get(vid)
+          if (!ms) {
+            ms = []
+            markerMap.set(vid, ms)
+          }
+          ms.push(marker)
+        })
+      })
+    }
+    return markerMap
   }
 }
