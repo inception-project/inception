@@ -112,6 +112,8 @@ public class FileSystemCasStorageDriver
     @Override
     public CAS readCas(SourceDocument aDocument, String aUser) throws IOException
     {
+        log.trace("Reading CAS [{}]@{}", aUser, aDocument);
+
         File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
         File oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
 
