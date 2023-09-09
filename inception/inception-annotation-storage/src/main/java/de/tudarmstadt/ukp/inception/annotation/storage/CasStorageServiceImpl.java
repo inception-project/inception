@@ -37,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +46,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultEvictionPolicy;
+import org.apache.commons.pool2.impl.EvictionConfig;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.uima.UIMAException;
@@ -61,6 +65,7 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -92,7 +97,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 public class CasStorageServiceImpl
     implements CasStorageService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final CasDoctor casDoctor;
     private final AnnotationSchemaService schemaService;
@@ -140,17 +145,19 @@ public class CasStorageServiceImpl
         schemaService = aSchemaService;
         casStorageProperties = aCasStorageProperties;
 
-        GenericKeyedObjectPoolConfig<CasHolder> config = new GenericKeyedObjectPoolConfig<>();
+        var config = new GenericKeyedObjectPoolConfig<CasHolder>();
+        config.setEvictionPolicy(new LoggingDefaultEvictionPolicy());
         // Since we want the pool to control exclusive access to a particular CAS, we only ever
         // must have one instance per key (the key uniquely identifies the CAS)
         config.setMaxTotalPerKey(1);
         config.setMaxIdlePerKey(1);
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
-        // Run an evictor thread every 5 minutes
+        // Run an evictor thread periodically
         config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
-        // Allow the evictor to drop idle CASes from the pool after 5 minutes (i.e. on each run)
-        config.setMinEvictableIdleTime(casStorageProperties.getIdleCasEvictionDelay());
+        // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
+        // CASes that are used regularly are dropped from the pool too quickly.
+        config.setMinEvictableIdleTime(casStorageProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -158,18 +165,24 @@ public class CasStorageServiceImpl
         config.setJmxNameBase(getClass().getPackage().getName() + ":type="
                 + getClass().getSimpleName() + ",name=");
         config.setJmxNamePrefix("exclusiveCasAccessPool");
-        // Check if the CAS is still valid or needs to be replaced when it is borrowed and when it
-        // is returned
+        // Check if the CAS needs to be replaced every time we do a significant action
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
+        config.setTestWhileIdle(true);
+        // Max. time we wait for a CAS to become available before giving up with an error
         config.setMaxWait(casStorageProperties.getCasBorrowWaitTimeout());
         // We do not have to set maxTotal because the default is already to have no limit (-1)
         exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
 
         sharedAccessCache = Caffeine.newBuilder() //
+                .scheduler(Scheduler.systemScheduler()) //
                 .expireAfterAccess(casStorageProperties.getIdleCasEvictionDelay()) //
                 .maximumSize(casStorageProperties.getSharedCasCacheSize()) //
                 .recordStats() //
+                .evictionListener((key, value, cause) -> {
+                    log.debug("Marked CAS for eviction from shared-access pool: {} [{}]", value,
+                            cause);
+                }) //
                 .build();
 
         if (casDoctor == null) {
@@ -292,6 +305,9 @@ public class CasStorageServiceImpl
             CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
+        log.debug("Reading annotations for [{}]@{} in {} with {} using {}", aUsername, aDocument,
+                aDocument.getProject(), aAccessMode, aUpgradeMode);
+
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             CasStorageSession session = CasStorageSession.get();
 
@@ -356,12 +372,12 @@ public class CasStorageServiceImpl
                         ((CASImpl) getRealCas(cas))
                                 .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
 
-                        log.trace(
+                        log.debug(
                                 "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} loaded from storage",
                                 session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
                     }
                     else {
-                        log.trace(
+                        log.debug(
                                 "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} was already in memory",
                                 session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
 
@@ -561,12 +577,10 @@ public class CasStorageServiceImpl
         CAS cas;
         String source;
 
+        log.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
-            log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
-                    aDocument.getName(), aDocument.getId(), aUsername,
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
-
             cas = driver.readCas(aDocument, aUsername);
             repairAndUpgradeCasIfRequired(aDocument, aUsername, cas, aUpgradeMode,
                     ISOLATED_SESSION);
@@ -593,8 +607,8 @@ public class CasStorageServiceImpl
                 .getTimestamp(), aDocument, aUsername);
 
         long duration = currentTimeMillis() - start;
-        log.debug("Loaded CAS [{}] [{},{}] from {} in {}ms", cas.hashCode(), aDocument.getId(),
-                aUsername, source, duration);
+        log.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(), aUsername,
+                aDocument, source, duration, aUpgradeMode);
 
         return cas;
     }
@@ -1062,10 +1076,25 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        log.debug("Writing annotation document [{}] ({}) for user [{}] in project [{}] ({})",
-                aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
-                aDocument.getProject().getId());
+        log.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
+                aDocument.getProject());
 
         driver.writeCas(aDocument, aUserName, aCas);
+    }
+
+    public static class LoggingDefaultEvictionPolicy
+        extends DefaultEvictionPolicy<CasHolder>
+    {
+        @Override
+        public boolean evict(EvictionConfig aConfig, PooledObject<CasHolder> aUnderTest,
+                int aIdleCount)
+        {
+            var result = super.evict(aConfig, aUnderTest, aIdleCount);
+            if (result) {
+                log.debug("Marked CAS for eviction from exclusive-access pool: {}",
+                        aUnderTest.getObject());
+            }
+            return result;
+        }
     }
 }

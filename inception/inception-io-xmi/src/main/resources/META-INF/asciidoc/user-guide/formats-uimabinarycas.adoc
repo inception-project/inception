@@ -17,6 +17,11 @@
 [[sect_formats_uimabinarycas]]
 = UIMA Binary CAS
 
+====
+CAUTION: This format is currently disabled by default. It can be enabled using the property 
+`format.uima-binary-cas.enabled` in the `settings.properties` file.
+====
+
 A binary format used by the Apache UIMA Java SDK.
 
 [cols="2,1,1,1,3"]

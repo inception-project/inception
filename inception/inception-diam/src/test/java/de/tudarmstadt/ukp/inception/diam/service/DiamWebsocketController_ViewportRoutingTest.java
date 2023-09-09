@@ -203,7 +203,8 @@ public class DiamWebsocketController_ViewportRoutingTest
         documentService.createAnnotationDocument(testAnnotationDocument);
 
         try (var session = CasStorageSession.open()) {
-            documentService.uploadSourceDocument(toInputStream("This is a test.", UTF_8),
+            documentService.uploadSourceDocument(
+                    toInputStream("This is a test. ".repeat(10).trim(), UTF_8),
                     testAnnotationDocument.getDocument());
         }
     }

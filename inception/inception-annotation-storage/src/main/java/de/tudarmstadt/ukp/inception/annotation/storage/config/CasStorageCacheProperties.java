@@ -28,10 +28,17 @@ public interface CasStorageCacheProperties
     Duration getCasBorrowWaitTimeout();
 
     /**
-     * @return time that exclusive-access CAS instances as well as shared CAS instances are kept in
-     *         memory after the last access to them.
+     * @return time how often the exclusive-access pool is checked for idle CASes that can be
+     *         removed and how long shared-access CASes remain the cache when not being used.
      */
     Duration getIdleCasEvictionDelay();
+
+    /**
+     * @return time that a CAS should remain in the exclusive-access pool before being evicted. This
+     *         is meant to ensure that CASes that are used regularly remain a while in the pool
+     *         before we have to read them from disk again.
+     */
+    Duration getMinIdleCasTime();
 
     /**
      * @return number of CAS instances that should be kept in memory for shared-read-only access.
