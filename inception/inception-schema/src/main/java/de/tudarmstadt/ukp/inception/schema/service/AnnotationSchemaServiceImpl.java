@@ -1195,8 +1195,7 @@ public class AnnotationSchemaServiceImpl
             if (!upgraded) {
                 try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
                     log.debug(
-                            "CAS of user [{}] for document {} in project {} is already "
-                                    + "compatible with project type system - skipping upgrade",
+                            "CAS [{}]@{} in {} is already compatible with project type system - skipping upgrade",
                             aUser, aSourceDocument, aSourceDocument.getProject());
                 }
             }
