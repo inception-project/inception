@@ -21,6 +21,9 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Ctrl;
+import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -51,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
@@ -58,6 +62,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is only enabled for annotators of a project with the dynamic workload enabled. An annotator
@@ -100,6 +105,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
         finishDocumentLink.add(enabledWhen(page::isEditable));
+        finishDocumentLink.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         queue(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
