@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.io.xmi.XmiXml11FormatSupport;
 public class UimaFormatsAutoConfiguration
 {
     @ConditionalOnProperty(prefix = "format.uima-binary-cas", name = "enabled", //
-            havingValue = "true", matchIfMissing = true)
+            havingValue = "true", matchIfMissing = false)
     @Bean
     public BinaryCasFormatSupport binaryCasFormatSupport()
     {
