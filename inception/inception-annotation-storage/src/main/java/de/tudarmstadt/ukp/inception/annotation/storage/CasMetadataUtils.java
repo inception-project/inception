@@ -21,6 +21,7 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CasMetadataUtils
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CasMetadataUtils.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static TypeSystemDescription getInternalTypeSystem()
     {

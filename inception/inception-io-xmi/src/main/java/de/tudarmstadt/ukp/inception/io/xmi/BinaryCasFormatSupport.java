@@ -25,12 +25,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.bincas.BinaryCasReader;
 import org.dkpro.core.io.bincas.BinaryCasWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.dkprobackport.BinaryCasReader;
 
 /**
  * <p>

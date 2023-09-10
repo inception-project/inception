@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -34,7 +35,7 @@ import org.springframework.stereotype.Component;
 public class OpenCasStorageSessionForRequestFilter
     implements Filter
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException
@@ -53,7 +54,7 @@ public class OpenCasStorageSessionForRequestFilter
             throw e;
         }
         catch (Exception e) {
-            log.error("Error creating a CAS storage session", e);
+            LOG.error("Error creating a CAS storage session", e);
         }
     }
 

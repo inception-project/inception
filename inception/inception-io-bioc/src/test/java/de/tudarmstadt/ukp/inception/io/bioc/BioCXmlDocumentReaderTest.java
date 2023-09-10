@@ -44,8 +44,6 @@ public class BioCXmlDocumentReaderTest
         var cas = CasFactory.createCas();
         reader.getNext(cas);
 
-        // CasIOUtils.save(cas, System.out, XMI_PRETTY);
-
         assertThat(cas.getDocumentText()) //
                 .contains("Sentence 1.") //
                 .contains("Sentence 2.");
