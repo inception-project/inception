@@ -21,29 +21,72 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
+import static java.io.ObjectInputFilter.Config.createFilter;
+import static java.lang.String.join;
+import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.util.CasIOUtils;
+import org.apache.uima.cas.impl.CASMgrSerializer;
+import org.apache.uima.cas.impl.CASSerializer;
+import org.apache.uima.resource.ResourceInitializationException;
 
 public class SearchCasUtils
 {
+    private final static ObjectInputFilter SERIALIZED_CAS_INPUT_FILTER = createFilter(join(";", //
+            CASCompleteSerializer.class.getName(), //
+            CASSerializer.class.getName(), //
+            CASMgrSerializer.class.getName(), //
+            String.class.getName(), //
+            "!*"));
+
     public static byte[] casToByteArray(CAS aCas) throws IOException
     {
         // Index annotation document
-        CAS realCas = getRealCas(aCas);
+        var realCas = (CASImpl) getRealCas(aCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
-        synchronized (((CASImpl) realCas).getBaseCAS()) {
-            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                // XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                CasIOUtils.save(realCas, bos, SERIALIZED_TSI);
+        synchronized (realCas.getBaseCAS()) {
+            try (var bos = new ByteArrayOutputStream()) {
+                try (var oos = new ObjectOutputStream(bos)) {
+                    oos.writeObject(serializeCASComplete(realCas));
+                }
                 return bos.toByteArray();
             }
         }
+    }
+
+    public static CAS byteArrayToCas(byte[] aByteArray) throws IOException
+    {
+        CAS cas;
+        try {
+            cas = createCas();
+        }
+        catch (ResourceInitializationException e) {
+            throw new IOException(e);
+        }
+
+        var realCas = (CASImpl) getRealCas(cas);
+        synchronized (realCas.getBaseCAS()) {
+            try (var ois = new ObjectInputStream(new ByteArrayInputStream(aByteArray))) {
+                ois.setObjectInputFilter(SERIALIZED_CAS_INPUT_FILTER);
+                var casCompleteSerializer = (CASCompleteSerializer) ois.readObject();
+                realCas.reinit(casCompleteSerializer);
+            }
+            catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+        }
+
+        return cas;
     }
 }
