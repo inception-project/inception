@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
-import static de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy.DEFAULT_POLICY_YAML;
+import static de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy.HTML_POLICY_OVERRIDE_YAML;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest.touch;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -36,7 +36,7 @@ class DefaultHtmlDocumentPolicyTest
     @Test
     void thatOverrideFileIsPickedUp(@TempDir Path aTemp) throws Exception
     {
-        Path policyFile = aTemp.resolve(DEFAULT_POLICY_YAML);
+        Path policyFile = aTemp.resolve(HTML_POLICY_OVERRIDE_YAML);
         setProperty(getPropApplicationHome(), aTemp.toString());
 
         var sut = new DefaultHtmlDocumentPolicy();
