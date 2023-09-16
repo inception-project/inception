@@ -133,7 +133,7 @@ class SafetyNetDocumentPolicyTest
         var sut = new SafetyNetDocumentPolicy(properties);
 
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(11);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -146,7 +146,7 @@ class SafetyNetDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(12);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(11);
     }
 
     static void touch(Path policyFile) throws IOException, InterruptedException
