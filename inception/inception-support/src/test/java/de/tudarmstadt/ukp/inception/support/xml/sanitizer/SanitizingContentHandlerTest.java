@@ -94,6 +94,31 @@ public class SanitizingContentHandlerTest
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("builderVariants")
+    void thatElementsCanBeSkippedSelectively(String aName, PolicyCollectionBuilder aBuilder)
+        throws Exception
+    {
+        var buffer = new StringWriter();
+        var policy = aBuilder //
+                .defaultElementAction(ElementAction.PASS) //
+                .defaultAttributeAction(AttributeAction.PASS) //
+                .skipElements("child") //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        sut.startDocument();
+        sut.startElement("root");
+        sut.startElement("child");
+        sut.characters("text");
+        sut.endElement("child");
+        sut.endElement("root");
+        sut.endDocument();
+
+        assertThat(buffer.toString()).isEqualTo("<root>text</root>");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("builderVariants")
     void thatChildElementsCanBePreservedSelectively(String aName, PolicyCollectionBuilder aBuilder)
         throws Exception
     {

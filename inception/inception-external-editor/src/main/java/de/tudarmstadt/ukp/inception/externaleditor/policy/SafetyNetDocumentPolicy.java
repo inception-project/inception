@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtil
 
 public class SafetyNetDocumentPolicy
 {
-    static final String DEFAULT_POLICY_YAML = "safety-net.yaml";
+    static final String SAFETY_NET_POLICY_OVERRIDE_YAML = "safety-net.yaml";
 
     private static final String[] JAVASCRIPT_EVENT_ATTRIBUTES = { "onafterprint", "onbeforeprint",
             "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage", "onoffline",
@@ -63,7 +63,7 @@ public class SafetyNetDocumentPolicy
 
         var appHome = SettingsUtil.getApplicationHome();
         policyOverrideFile = new WatchedResourceFile<>(
-                new File(appHome, DEFAULT_POLICY_YAML).toPath(),
+                new File(appHome, SAFETY_NET_POLICY_OVERRIDE_YAML).toPath(),
                 PolicyCollectionIOUtils::loadPolicies);
     }
 
@@ -74,7 +74,7 @@ public class SafetyNetDocumentPolicy
                 .defaultAttributeAction(AttributeAction.PASS) //
                 .defaultElementAction(ElementAction.PASS);
 
-        builder.disallowElements("script", "meta", "applet", "link", "iframe", "a");
+        builder.disallowElements("script", "meta", "applet", "link", "iframe");
 
         if (properties.isBlockStyle()) {
             builder.disallowElements("style");
