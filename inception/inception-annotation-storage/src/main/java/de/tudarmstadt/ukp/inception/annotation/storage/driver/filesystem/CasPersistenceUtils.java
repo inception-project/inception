@@ -25,6 +25,7 @@ import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -103,8 +104,8 @@ public final class CasPersistenceUtils
                 // Safeguard that we do NOT write a CAS which can afterwards not be read and thus
                 // would render the document broken within the project
                 // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
-                CAS dummy = WebAnnoCasUtil.createCas();
-                deserializeCASComplete(serializer, (CASImpl) getRealCas(dummy));
+                CAS dummy = getRealCas(WebAnnoCasUtil.createCas());
+                deserializeCASComplete(serializer, (CASImpl) dummy);
                 // END SAFEGUARD --------------
             }
             catch (Exception e) {
@@ -117,6 +118,22 @@ public final class CasPersistenceUtils
             try (var os = new FileOutputStream(aFile)) {
                 write(os, serializer);
             }
+        }
+    }
+
+    public static byte[] writeToByteArray(CAS aCas) throws IOException
+    {
+        try (var bos = new ByteArrayOutputStream()) {
+            write(bos, aCas);
+            return bos.toByteArray();
+        }
+    }
+
+    public static byte[] writeToCompressedByteArray(CAS aCas) throws IOException
+    {
+        try (var bos = new ByteArrayOutputStream()) {
+            writeSnappyCompressed(bos, aCas);
+            return bos.toByteArray();
         }
     }
 
@@ -184,7 +201,7 @@ public final class CasPersistenceUtils
         }
     }
 
-    private static void readSerializedCas(CAS aCas, InputStream is) throws IOException
+    public static void readSerializedCas(CAS aCas, InputStream is) throws IOException
     {
         try (var ois = new ObjectInputStream(is)) {
             ois.setObjectInputFilter(SERIALIZED_CAS_INPUT_FILTER);

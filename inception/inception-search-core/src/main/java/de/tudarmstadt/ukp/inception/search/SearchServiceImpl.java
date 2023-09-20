@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.search;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -56,6 +55,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
@@ -687,8 +687,8 @@ public class SearchServiceImpl
                     }
 
                     try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(documentService
-                                .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
+                        byte[] casAsByteArray = WebAnnoCasUtil.casToByteArray(documentService
+                        .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
                     }
 
@@ -702,9 +702,8 @@ public class SearchServiceImpl
                     }
 
                     try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(
-                                documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
-                                        casUpgradeMode, accessModeAnnotationCas));
+                        byte[] casAsByteArray = WebAnnoCasUtil.casToByteArray(documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
+                        casUpgradeMode, accessModeAnnotationCas));
                         indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
                     }
                     catch (FileNotFoundException e) {

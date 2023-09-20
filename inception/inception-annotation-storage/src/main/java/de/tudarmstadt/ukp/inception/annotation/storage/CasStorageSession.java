@@ -128,7 +128,7 @@ public class CasStorageSession
     }
 
     /**
-     * @return the current session. Returns {@code null} if there is no current session.
+     * @return the current session.
      * @throws CasSessionException
      *             if no session is available.
      */
@@ -141,6 +141,14 @@ public class CasStorageSession
         }
 
         return session;
+    }
+
+    /**
+     * @return if a session exists.
+     */
+    public static boolean exists()
+    {
+        return activeSession.get() != null;
     }
 
     /**

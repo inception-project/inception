@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RelationOffsetsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveUnreachableFeatureStructuresRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
@@ -228,5 +230,17 @@ public class CasDoctorAutoConfiguration
     public TokensAndSententencedDoNotOverlapCheck tokensAndSententencedDoNotOverlapCheck()
     {
         return new TokensAndSententencedDoNotOverlapCheck();
+    }
+
+    @Bean
+    public UnreachableAnnotationsCheck allAnnotationsHaveSpecificTypeCheck()
+    {
+        return new UnreachableAnnotationsCheck();
+    }
+
+    @Bean
+    public RemoveUnreachableFeatureStructuresRepair removeUntypedAnnotationsRepair()
+    {
+        return new RemoveUnreachableFeatureStructuresRepair();
     }
 }

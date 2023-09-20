@@ -76,7 +76,7 @@
     <awaitility.version>4.2.0</awaitility.version>
 
     <dkpro.version>2.4.0</dkpro.version>
-    <uima.version>3.4.1</uima.version>
+    <uima.version>3.5.0-SNAPSHOT</uima.version>
     <uimafit.version>3.4.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 

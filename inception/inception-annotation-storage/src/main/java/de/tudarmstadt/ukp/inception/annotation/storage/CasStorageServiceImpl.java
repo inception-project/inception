@@ -28,10 +28,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static java.lang.System.currentTimeMillis;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +46,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultEvictionPolicy;
@@ -70,6 +73,7 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
@@ -84,6 +88,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.CasPersistenceUtils;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
@@ -295,16 +301,18 @@ public class CasStorageServiceImpl
             CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
-        LOG.debug("Reading annotations for [{}]@{} in {} with {} using {}", aUsername, aDocument,
-                aDocument.getProject(), aAccessMode, aUpgradeMode);
 
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             CasStorageSession session = CasStorageSession.get();
 
+            LOG.debug(
+                    "CAS storage session [{}]: reading annotations for [{}]@{} in {} with {} using {}",
+                    session.hashCode(), aUsername, aDocument, aDocument.getProject(), aAccessMode,
+                    aUpgradeMode);
+
             // If the CAS is already present in the current session and the access mode is
-            // compatible
-            // with the requested access mode, then we can return it immediately
-            // THOUGHT: As it is written now - if the access more already recorded in the session
+            // compatible with the requested access mode, then we can return it immediately
+            // THOUGHT: As it is written now - if the access mode already recorded in the session
             // is insufficient, the access mode is upgraded because we simply continue after this
             // IF-clause. I am not entirely sure this is valid.
             // Case 1) CAS was added during the current session - the holder in the session is
@@ -316,6 +324,10 @@ public class CasStorageServiceImpl
             Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
                     aUsername);
             if (mCas.isPresent() && mCas.get().getMode().alsoPermits(aAccessMode)) {
+                LOG.debug(
+                        "CAS storage session [{}]: session already contains CAS [{}] for [{}]@{} with mode {}",
+                        session.hashCode(), mCas.get().getCas().hashCode(), aUsername, aDocument,
+                        mCas.get().getMode());
                 return mCas.get().getCas();
             }
 
@@ -566,7 +578,16 @@ public class CasStorageServiceImpl
         CAS cas;
         String source;
 
-        LOG.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+        if (LOG.isTraceEnabled()) {
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.trace("CAS storage session [{}]: loading CAS [{}]@{} [{}]", session.hashCode(),
+                        aUsername, aDocument, aUpgradeMode);
+            }
+            else {
+                LOG.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+            }
+        }
 
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
@@ -598,8 +619,17 @@ public class CasStorageServiceImpl
         var duration = currentTimeMillis() - start;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(), aUsername,
-                    aDocument, source, duration, aUpgradeMode);
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.debug(
+                        "CAS storage session [{}]: loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]",
+                        session.hashCode(), cas.hashCode(), aUsername, aDocument, source, duration,
+                        aUpgradeMode);
+            }
+            else {
+                LOG.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(),
+                        aUsername, aDocument, source, duration, aUpgradeMode);
+            }
         }
 
         return cas;
@@ -1067,8 +1097,16 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        LOG.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
-                aDocument.getProject());
+        if (CasStorageSession.exists()) {
+            var session = CasStorageSession.get();
+            LOG.debug("CAS storage session [{}]: writing annotations for [{}]@{} in {}",
+                    session.hashCode(), aUserName, aDocument, aDocument.getProject());
+
+        }
+        else {
+            LOG.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
+                    aDocument.getProject());
+        }
 
         driver.writeCas(aDocument, aUserName, aCas);
     }

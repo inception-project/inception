@@ -67,6 +67,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.xml.sax.SAXException;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -136,7 +137,7 @@ public class MtasUimaParserLuceneTest
         dmd.setDocumentTitle(aTitle);
         dmd.setDocumentId(Integer.toString(aDocId));
 
-        return casToByteArray(jcas.getCas());
+        return WebAnnoCasUtil.casToByteArray(jcas.getCas());
     }
 
     static void indexDocument(IndexWriter aWriter, int aDocId, String aTitle, String aField,
