@@ -69,7 +69,7 @@
   <properties>
     <junit-jupiter.version>5.10.0</junit-jupiter.version>
     <junit-platform.version>1.10.0</junit-platform.version>
-    <mockito.version>5.4.0</mockito.version>
+    <mockito.version>5.5.0</mockito.version>
     <assertj.version>3.24.2</assertj.version>
     <xmlunit.version>2.9.1</xmlunit.version>
 
@@ -82,23 +82,23 @@
 
     <pdfbox.version>2.0.29</pdfbox.version>
 
-    <spring.version>5.3.29</spring.version>
-    <spring.boot.version>2.7.14</spring.boot.version>
-    <spring.data.version>2.7.14</spring.data.version>
-    <spring.security.version>5.8.5</spring.security.version>
+    <spring.version>5.3.30</spring.version>
+    <spring.boot.version>2.7.15</spring.boot.version>
+    <spring.data.version>2.7.15</spring.data.version>
+    <spring.security.version>5.8.7</spring.security.version>
     <springdoc.version>1.7.0</springdoc.version>
-    <swagger.version>2.2.15</swagger.version>
+    <swagger.version>2.2.16</swagger.version>
     <jjwt.version>0.11.5</jjwt.version>
 
-    <slf4j.version>2.0.7</slf4j.version>
+    <slf4j.version>2.0.9</slf4j.version>
     <log4j2.version>2.20.0</log4j2.version>
     <jboss.logging.version>3.5.3.Final</jboss.logging.version>
-    <sentry.version>6.27.0</sentry.version>
+    <sentry.version>6.29.0</sentry.version>
 
-    <tomcat.version>9.0.78</tomcat.version>
+    <tomcat.version>9.0.80</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
-    <mariadb.driver.version>2.7.9</mariadb.driver.version>
+    <mariadb.driver.version>2.7.10</mariadb.driver.version>
     <postgres.driver.version>42.6.0</postgres.driver.version>
     <hibernate.version>5.6.15.Final</hibernate.version>
     <hibernate.validator.version>6.2.5.Final</hibernate.validator.version>
@@ -107,7 +107,7 @@
     <wicketstuff.version>9.14.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.12.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.4</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>3.0.5</wicket-jquery-selectors.version>
+    <wicket-jquery-selectors.version>3.0.6</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.7</wicket-webjars.version>
     <!-- Stuck with 3.1.6: https://github.com/MarcGiffing/wicket-spring-boot/issues/199 -->
     <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
@@ -121,16 +121,16 @@
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
     <!--   no mtas  depends on Lucene 9.x -->
 
-    <elasticsearch.version>7.17.12</elasticsearch.version> 
+    <elasticsearch.version>7.17.13</elasticsearch.version> 
     <!--   7.10.x   depends on Lucene 8.7.0 - last ASL 2.0 version! -->
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
 
-    <opensearch.version>1.3.11</opensearch.version>
+    <opensearch.version>1.3.12</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
     <!--   2.x      depends on Lucene 9.x -->
 
-    <rdf4j.version>4.3.5</rdf4j.version> 
+    <rdf4j.version>4.3.6</rdf4j.version> 
     <!-- * 4.3.x depends on Lucene 8.9.x -->
 
     <jena.version>4.6.1</jena.version>
@@ -146,12 +146,12 @@
     <jackson.version>2.15.2</jackson.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <okhttp.version>4.11.0</okhttp.version>
-    <okio.version>3.4.0</okio.version>
+    <okio.version>3.5.0</okio.version>
 
     <node.version>18.14.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <animate-css.version>3.2.6</animate-css.version>
-    <bootstrap.version>5.3.1</bootstrap.version>
+    <bootstrap.version>5.3.2</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
@@ -175,7 +175,7 @@
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>3.7.0</jquery.version>
+    <jquery.version>3.7.1</jquery.version>
     <jquery-ui.version>1.13.2</jquery-ui.version>
     <mocha.version>^10.2.0</mocha.version>
     <mocha-junit-reporter.version>^2.2.1</mocha-junit-reporter.version>
