@@ -309,7 +309,7 @@ export class ApacheAnnotatorVisualizer {
 
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${span.label || NO_LABEL}`,
+      'data-iaa-label': `${span.label || `[${span.layer.name}]` || NO_LABEL}`,
       class: classList.join(' '),
       style: styleList.join('; ')
     }
