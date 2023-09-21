@@ -147,6 +147,11 @@ public class FeatureUtil
     public static void setLinkFeatureValue(FeatureStructure aFS, Feature aFeature,
             List<FeatureStructure> linkFSes)
     {
+        if (linkFSes == null || linkFSes.isEmpty()) {
+            aFS.setFeatureValue(aFeature, null);
+            return;
+        }
+
         // Create a new array if size differs otherwise re-use existing one
         var array = (ArrayFS<FeatureStructure>) ICasUtil.getFeatureFS(aFS, aFeature.getShortName());
         if (array == null || (array.size() != linkFSes.size())) {
