@@ -295,16 +295,18 @@ public class CasStorageServiceImpl
             CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
-        LOG.debug("Reading annotations for [{}]@{} in {} with {} using {}", aUsername, aDocument,
-                aDocument.getProject(), aAccessMode, aUpgradeMode);
 
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
             CasStorageSession session = CasStorageSession.get();
 
+            LOG.debug(
+                    "CAS storage session [{}]: reading annotations for [{}]@{} in {} with {} using {}",
+                    session.hashCode(), aUsername, aDocument, aDocument.getProject(), aAccessMode,
+                    aUpgradeMode);
+
             // If the CAS is already present in the current session and the access mode is
-            // compatible
-            // with the requested access mode, then we can return it immediately
-            // THOUGHT: As it is written now - if the access more already recorded in the session
+            // compatible with the requested access mode, then we can return it immediately
+            // THOUGHT: As it is written now - if the access mode already recorded in the session
             // is insufficient, the access mode is upgraded because we simply continue after this
             // IF-clause. I am not entirely sure this is valid.
             // Case 1) CAS was added during the current session - the holder in the session is
@@ -316,6 +318,10 @@ public class CasStorageServiceImpl
             Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
                     aUsername);
             if (mCas.isPresent() && mCas.get().getMode().alsoPermits(aAccessMode)) {
+                LOG.debug(
+                        "CAS storage session [{}]: session already contains CAS [{}] for [{}]@{} with mode {}",
+                        session.hashCode(), mCas.get().getCas().hashCode(), aUsername, aDocument,
+                        mCas.get().getMode());
                 return mCas.get().getCas();
             }
 
@@ -566,7 +572,16 @@ public class CasStorageServiceImpl
         CAS cas;
         String source;
 
-        LOG.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+        if (LOG.isTraceEnabled()) {
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.trace("CAS storage session [{}]: loading CAS [{}]@{} [{}]", session.hashCode(),
+                        aUsername, aDocument, aUpgradeMode);
+            }
+            else {
+                LOG.trace("Loading CAS [{}]@{} [{}]", aUsername, aDocument, aUpgradeMode);
+            }
+        }
 
         // If the CAS exists on disk already, load it from there
         if (driver.existsCas(aDocument, aUsername)) {
@@ -598,8 +613,17 @@ public class CasStorageServiceImpl
         var duration = currentTimeMillis() - start;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(), aUsername,
-                    aDocument, source, duration, aUpgradeMode);
+            if (CasStorageSession.exists()) {
+                var session = CasStorageSession.get();
+                LOG.debug(
+                        "CAS storage session [{}]: loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]",
+                        session.hashCode(), cas.hashCode(), aUsername, aDocument, source, duration,
+                        aUpgradeMode);
+            }
+            else {
+                LOG.debug("Loaded CAS [{}] for [{}]@{} from {} in {}ms [{}]", cas.hashCode(),
+                        aUsername, aDocument, source, duration, aUpgradeMode);
+            }
         }
 
         return cas;
@@ -1067,8 +1091,16 @@ public class CasStorageServiceImpl
     {
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
-        LOG.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
-                aDocument.getProject());
+        if (CasStorageSession.exists()) {
+            var session = CasStorageSession.get();
+            LOG.debug("CAS storage session [{}]: writing annotations for [{}]@{} in {}",
+                    session.hashCode(), aUserName, aDocument, aDocument.getProject());
+
+        }
+        else {
+            LOG.debug("Writing annotations for [{}]@{} in {}", aUserName, aDocument,
+                    aDocument.getProject());
+        }
 
         driver.writeCas(aDocument, aUserName, aCas);
     }

@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.casToByteArray;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -681,13 +681,13 @@ public class SearchServiceImpl
             try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
                     prefs)) {
                 // Index all the source documents
-                for (SourceDocument doc : sourceDocuments) {
+                for (var doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(documentService
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(documentService
                                 .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
                     }
@@ -696,13 +696,13 @@ public class SearchServiceImpl
                 }
 
                 // Index all the annotation documents
-                for (AnnotationDocument doc : annotationDocuments) {
+                for (var doc : annotationDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(
                                 documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
                                         casUpgradeMode, accessModeAnnotationCas));
                         indexDocument(pooledIndex, doc, "reindex", casAsByteArray);

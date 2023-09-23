@@ -418,7 +418,7 @@ public class FileSystemCasStorageDriver
         }
     }
 
-    private File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
+    public File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
     {
         return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + SER_CAS_EXTENSION);
     }

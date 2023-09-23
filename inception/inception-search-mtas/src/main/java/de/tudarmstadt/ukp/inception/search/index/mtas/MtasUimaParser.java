@@ -57,6 +57,7 @@ import org.xml.sax.SAXException;
 import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -69,7 +70,6 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
-import de.tudarmstadt.ukp.inception.search.SearchCasUtils;
 import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import mtas.analysis.parser.MtasParser;
@@ -228,7 +228,7 @@ public class MtasUimaParser
 
     private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
     {
-        return getRealCas(SearchCasUtils.byteArrayToCas(charsToBytes(toCharArray(aReader))));
+        return getRealCas(WebAnnoCasUtil.byteArrayToCas(charsToBytes(toCharArray(aReader))));
     }
 
     public MtasTokenCollection createTokenCollection(CAS aJCas)

@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -36,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
@@ -74,7 +74,7 @@ public class IndexAnnotationDocumentTask
             var aDoc = getAnnotationDocument();
             var cas = documentService.readAnnotationCas(aDoc.getDocument(), aDoc.getUser(),
                     AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-            searchService.indexDocument(aDoc, casToByteArray(cas));
+            searchService.indexDocument(aDoc, WebAnnoCasUtil.casToByteArray(cas));
         }
         catch (IOException e) {
             log.error("Error indexing annotation document {}", getSourceDocument(), e);

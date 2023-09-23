@@ -19,16 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck.countFeatureStructures;
+import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -42,7 +46,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 public class UpgradeCasRepair
     implements Repair
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
 
@@ -58,11 +62,14 @@ public class UpgradeCasRepair
             var casImpl = (CASImpl) getRealCas(aCas);
 
             var annotationCountsBefore = countFeatureStructures(casImpl);
+            var bytesBefore = size(serializeCASComplete(casImpl));
+            int bytesAfter;
 
             annotationService.upgradeCas(aCas, aProject);
             aMessages.add(LogMessage.info(this, "CAS upgraded."));
 
             var annotationCountsAfter = countFeatureStructures(casImpl);
+            bytesAfter = size(serializeCASComplete(casImpl));
 
             var diffTypes = 0;
             var totalDiff = 0;
@@ -90,11 +97,25 @@ public class UpgradeCasRepair
                             "A total of [%d] unreachable instances that were removed (before: [%d], after: [%d])",
                             totalDiff, totalBefore, totalAfter));
                 }
+                aMessages.add(LogMessage.info(this,
+                        "Saved [%d] uncompressed bytes (before: [%d], after: [%d])",
+                        bytesBefore - bytesAfter, bytesBefore, bytesAfter));
             }
         }
         catch (UIMAException | IOException e) {
-            log.error("Unabled to access CAS", e);
+            LOG.error("Unabled to access CAS", e);
             aMessages.add(LogMessage.error(this, "Unabled to access CAS: %s", e.getMessage()));
+        }
+    }
+
+    private int size(CASCompleteSerializer aSer)
+    {
+        try {
+            return WebAnnoCasUtil.casToByteArray(aSer).length;
+        }
+        catch (IOException e) {
+            LOG.error("Unable to calculate size of CAS", e);
+            return -1;
         }
     }
 }
