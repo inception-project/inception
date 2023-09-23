@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck.countFeatureStructures;
+
 import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.CASImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +55,46 @@ public class UpgradeCasRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         try {
+            var casImpl = (CASImpl) getRealCas(aCas);
+
+            var annotationCountsBefore = countFeatureStructures(casImpl);
+
             annotationService.upgradeCas(aCas, aProject);
             aMessages.add(LogMessage.info(this, "CAS upgraded."));
+
+            var annotationCountsAfter = countFeatureStructures(casImpl);
+
+            var diffTypes = 0;
+            var totalDiff = 0;
+            var totalBefore = 0;
+            var totalAfter = 0;
+            for (var typeName : annotationCountsBefore.keySet().stream().sorted()
+                    .toArray(String[]::new)) {
+                var before = annotationCountsBefore.getOrDefault(typeName, 0l);
+                var after = annotationCountsAfter.getOrDefault(typeName, 0l);
+                var diff = before - after;
+                totalDiff += diff;
+                totalBefore += before;
+                totalAfter += after;
+                if (diff > 0) {
+                    diffTypes++;
+                    aMessages.add(LogMessage.info(this,
+                            "Type [%s] had [%d] unreachable instances that were removed (before: [%d], after: [%d])",
+                            typeName, diff, before, after));
+                }
+            }
+
+            if (totalDiff > 0) {
+                if (diffTypes > 1) {
+                    aMessages.add(LogMessage.info(this,
+                            "A total of [%d] unreachable instances that were removed (before: [%d], after: [%d])",
+                            totalDiff, totalBefore, totalAfter));
+                }
+            }
         }
         catch (UIMAException | IOException e) {
             log.error("Unabled to access CAS", e);
-            aMessages.add(LogMessage.error(this, "Unabled to access CAS", e.getMessage()));
+            aMessages.add(LogMessage.error(this, "Unabled to access CAS: %s", e.getMessage()));
         }
     }
 }

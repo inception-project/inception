@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.springframework.util.CollectionUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -76,10 +77,19 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
             }
 
             for (AnnotationFS ann : select(aCas, type)) {
-                var startsOutside = aCas.select(Sentence._TypeName)
-                        .covering(ann.getBegin(), ann.getBegin()).isEmpty();
-                var endsOutside = aCas.select(Sentence._TypeName)
-                        .covering(ann.getEnd(), ann.getEnd()).isEmpty();
+                // https://github.com/apache/uima-uimaj/issues/345
+                // var startsOutside = aCas.select(Sentence._TypeName)
+                // .covering(ann.getBegin(), ann.getBegin()).isEmpty();
+                var startsOutside = CasUtil
+                        .selectCovering(ann.getCAS(), CasUtil.getType(ann.getCAS(), Sentence.class),
+                                ann.getBegin(), ann.getBegin())
+                        .isEmpty();
+                // https://github.com/apache/uima-uimaj/issues/345
+                // var endsOutside = aCas.select(Sentence._TypeName)
+                // .covering(ann.getEnd(), ann.getEnd()).isEmpty();
+                var endsOutside = CasUtil.selectCovering(ann.getCAS(),
+                        CasUtil.getType(ann.getCAS(), Sentence.class), ann.getEnd(), ann.getEnd())
+                        .isEmpty();
 
                 if (!startsOutside && !endsOutside) {
                     continue;
