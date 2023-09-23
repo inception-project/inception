@@ -226,7 +226,7 @@ public class RecommendationEditorExtension
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        adapter.select(VID.of(span), span);
+        aState.getSelection().set(adapter.select(VID.of(span), span));
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH,
@@ -251,7 +251,7 @@ public class RecommendationEditorExtension
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        adapter.select(aVID, relation);
+        aState.getSelection().set(adapter.select(aVID, relation));
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));

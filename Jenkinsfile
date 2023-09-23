@@ -2,7 +2,7 @@ config = [
     agentLabel: '',
     maven: 'Maven 3',
     jdk: 'Zulu 11',
-    extraMavenArguments: '',
+    extraMavenArguments: '-Ddkpro.core.testCachePath="${WORKSPACE}/cache/dkpro-core-datasets" -T 4',
     wipeWorkspaceBeforeBuild: true,
     wipeWorkspaceAfterBuild: true
   ]
