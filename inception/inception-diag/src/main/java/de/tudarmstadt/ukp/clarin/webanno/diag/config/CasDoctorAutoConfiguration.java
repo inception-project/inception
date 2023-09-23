@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentence
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RelationOffsetsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveUnreachableFeatureStructuresRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
@@ -233,14 +232,8 @@ public class CasDoctorAutoConfiguration
     }
 
     @Bean
-    public UnreachableAnnotationsCheck allAnnotationsHaveSpecificTypeCheck()
+    public UnreachableAnnotationsCheck unreachableAnnotationsCheck()
     {
         return new UnreachableAnnotationsCheck();
-    }
-
-    @Bean
-    public RemoveUnreachableFeatureStructuresRepair removeUntypedAnnotationsRepair()
-    {
-        return new RemoveUnreachableFeatureStructuresRepair();
     }
 }

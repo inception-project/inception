@@ -66,14 +66,14 @@ public class UnreachableAnnotationsCheck
             totalDiff += diff;
             if (diff > 0) {
                 diffTypes++;
-                aMessages.add(LogMessage.warn(this, "Type [%s] has [%d] unreachable instances",
+                aMessages.add(LogMessage.info(this, "Type [%s] has [%d] unreachable instances",
                         typeName, diff));
             }
         }
 
         if (totalDiff > 0) {
             if (diffTypes > 1) {
-                aMessages.add(LogMessage.warn(this,
+                aMessages.add(LogMessage.info(this,
                         "A total of [%d] unreachable instances that were found", totalDiff));
             }
         }

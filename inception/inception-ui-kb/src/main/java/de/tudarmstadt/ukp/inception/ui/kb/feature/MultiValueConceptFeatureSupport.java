@@ -282,7 +282,7 @@ public class MultiValueConceptFeatureSupport
 
         FeatureStructure fs = getFS(aCas, aFeature, aAddress);
         List<String> values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
-        if (values == null) {
+        if (values == null || values.isEmpty()) {
             FSUtil.setFeature(fs, aFeature.getName(), (Collection<String>) null);
             return;
         }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.bytesToChars;
 import static java.util.stream.Collectors.toList;
 import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;

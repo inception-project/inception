@@ -1091,9 +1091,12 @@ public class RecommendationServiceImpl
         var aEnd = aSuggestion.getEnd();
         var aValue = aSuggestion.getLabel();
 
-        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
-                .at(aBegin, aEnd) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
+        // .at(aBegin, aEnd) //
+        // .asList();
+        var candidates = CasUtil.selectAt(aCas,
+                CasUtil.getType(aCas, aAdapter.getAnnotationTypeName()), aBegin, aEnd);
 
         var candidateWithEmptyLabel = candidates.stream() //
                 .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
@@ -2159,9 +2162,15 @@ public class RecommendationServiceImpl
             Annotation aPredictedAnnotation)
     {
         Type tokenType = getType(aOriginalCas, Token.class);
-        var tokens = aOriginalCas.<Annotation> select(tokenType) //
-                .coveredBy(aPredictedAnnotation) //
-                .limit(2).asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var tokens = aOriginalCas.<Annotation> select(tokenType) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .limit(2).asList();
+        var tokens = CasUtil
+                .selectCovered(aOriginalCas, tokenType, aPredictedAnnotation.getBegin(),
+                        aPredictedAnnotation.getEnd())
+                .stream() //
+                .limit(2).collect(toList());
 
         if (tokens.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2188,9 +2197,13 @@ public class RecommendationServiceImpl
     private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        var sentences = aOriginalCas.select(Sentence.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var sentences = aOriginalCas.select(Sentence.class) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .asList();
+        var sentences = CasUtil.selectCovered(aOriginalCas,
+                CasUtil.getType(aOriginalCas, Sentence.class), aPredictedAnnotation.getBegin(),
+                aPredictedAnnotation.getEnd());
 
         if (sentences.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2209,9 +2222,12 @@ public class RecommendationServiceImpl
     static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        var tokens = aOriginalCas.select(Token.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var tokens = aOriginalCas.select(Token.class) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .asList();
+        var tokens = CasUtil.selectCovered(aOriginalCas, CasUtil.getType(aOriginalCas, Token.class),
+                aPredictedAnnotation.getBegin(), aPredictedAnnotation.getEnd());
 
         if (tokens.isEmpty()) {
             if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
