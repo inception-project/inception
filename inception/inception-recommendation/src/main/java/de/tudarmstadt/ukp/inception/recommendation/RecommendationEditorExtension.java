@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarPanel;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -325,6 +326,9 @@ public class RecommendationEditorExtension
         // also update their state to remain in sync with the new predictions
         applicationEventPublisher
                 .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
+
+        aTarget.appendJavaScript("document.body.classList.remove('"
+                + RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE + "')");
     }
 
     @Override
