@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -219,5 +220,12 @@ public class RecommenderServiceAutoConfiguration
     {
         return new RecommendationRelationRenderer(aRecommendationService, aAnnotationService,
                 aFsRegistry);
+    }
+
+    @Bean
+    public RecommenderActionBarExtension recommenderActionBarExtension(
+            RecommendationService aRecommendationService)
+    {
+        return new RecommenderActionBarExtension(aRecommendationService);
     }
 }
