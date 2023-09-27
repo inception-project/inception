@@ -42,12 +42,10 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.str;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
@@ -63,6 +61,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfLanguage;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -115,7 +114,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.backport.Bind;
 
 /**
  * Build queries against the KB.
@@ -130,7 +128,7 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.backport.Bind;
 public class SPARQLQueryBuilder
     implements SPARQLQuery, SPARQLQueryPrimaryConditions, SPARQLQueryOptionalElements
 {
-    private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final int DEFAULT_LIMIT = 0;
 
@@ -162,14 +160,8 @@ public class SPARQLQueryBuilder
 
     public static final Prefix PREFIX_LUCENE_SEARCH = prefix("search",
             iri("http://www.openrdf.org/contrib/lucenesail#"));
-    public static final Iri LUCENE_QUERY = PREFIX_LUCENE_SEARCH.iri("query");
-    public static final Iri LUCENE_PROPERTY = PREFIX_LUCENE_SEARCH.iri("property");
-    public static final Iri LUCENE_SCORE = PREFIX_LUCENE_SEARCH.iri("score");
-    public static final Iri LUCENE_SNIPPET = PREFIX_LUCENE_SEARCH.iri("snippet");
-
     public static final Prefix PREFIX_FUSEKI_SEARCH = prefix("text",
             iri("http://jena.apache.org/text#"));
-    public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
 
     public static final Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
 
@@ -870,12 +862,9 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(sanitizedValue)).andHas(LUCENE_PROPERTY,
-                                    VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
+            valuePatterns.add(new Rdf4JFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue).withLimit(getLimit())
+                            .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
         return and( //
@@ -1163,28 +1152,9 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
-            labelFilterExpressions.add(matchKbLanguage(VAR_MATCH_TERM));
-
-            // If a KB item has multiple labels, we want to return only the ones which actually
-            // match the query term such that the user is not confused that the results contain
-            // items that don't match the query (even though they do through a label that is not
-            // returned). RDF4J only provides access to the matched term in a "highlighed" form
-            // where "<B>" and "</B>" match the search term. So we have to strip these markers
-            // out as part of the query.
-            valuePatterns.add(VAR_SUBJECT //
-                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
-                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY)
-                            .andHas(LUCENE_SNIPPET, var("snippet")))
-                    .and(new Bind(
-                            function(REPLACE,
-                                    function(REPLACE, var("snippet"), literalOf("</B>"),
-                                            literalOf("")),
-                                    literalOf("<B>"), literalOf("")),
-                            var("label")))
-                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
-                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+            valuePatterns.add(new Rdf4JFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue).withLimit(getLimit()).alternativeMode()
+                            .filter(matchKbLanguage(VAR_MATCH_TERM)));
         }
 
         return and( //
@@ -1267,12 +1237,9 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
-                                    .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    .filter(containsPattern(VAR_MATCH_TERM, value)));
+            valuePatterns.add(new Rdf4JFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue).withLimit(getLimit())
+                            .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1562,14 +1529,12 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
+
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                VAR_SUBJECT
-                        .has(FTS_LUCENE,
-                                bNode(LUCENE_QUERY, literalOf(queryString)).andHas(LUCENE_PROPERTY,
-                                        VAR_MATCH_TERM_PROPERTY))
-                        .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+                new Rdf4JFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM, VAR_MATCH_TERM_PROPERTY,
+                        sanitizedValue).withLimit(getLimit())
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
     private GraphPattern withLabelStartingWith_Fuseki_FTS(String aPrefixQuery)
