@@ -306,26 +306,33 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void defineBaseProperties(KnowledgeBase akb)
+    public void defineBaseProperties(KnowledgeBase aKB)
     {
         // KB will initialize base properties with base IRI schema properties defined by user
-        if (akb.getType() == RepositoryType.LOCAL) {
-            ValueFactory vf = SimpleValueFactory.getInstance();
+        if (aKB.getType() == RepositoryType.LOCAL) {
+            var readOnly = aKB.isReadOnly();
+            aKB.setReadOnly(false);
+            try {
+                ValueFactory vf = SimpleValueFactory.getInstance();
 
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri(),
-                    vf.createIRI(akb.getSubclassIri()).getLocalName()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getLabelIri(),
-                            vf.createIRI(akb.getLabelIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getDescriptionIri(),
-                            vf.createIRI(akb.getDescriptionIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri(),
-                    vf.createIRI(akb.getTypeIri()).getLocalName()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri(),
-                    vf.createIRI(akb.getSubPropertyIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubclassIri(),
+                        vf.createIRI(aKB.getSubclassIri()).getLocalName()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getLabelIri(),
+                                vf.createIRI(aKB.getLabelIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getDescriptionIri(),
+                                vf.createIRI(aKB.getDescriptionIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB, new KBProperty(aKB.getTypeIri(),
+                        vf.createIRI(aKB.getTypeIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubPropertyIri(),
+                        vf.createIRI(aKB.getSubPropertyIri()).getLocalName()));
+            }
+            finally {
+                aKB.setReadOnly(readOnly);
+            }
         }
     }
 
