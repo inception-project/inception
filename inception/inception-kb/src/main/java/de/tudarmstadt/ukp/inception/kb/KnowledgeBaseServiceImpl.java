@@ -60,6 +60,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
+import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -617,6 +618,7 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
+            conn.setIsolationLevel(IsolationLevels.NONE);
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
