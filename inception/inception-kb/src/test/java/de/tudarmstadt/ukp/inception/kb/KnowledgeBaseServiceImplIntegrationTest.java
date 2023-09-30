@@ -406,8 +406,16 @@ public class KnowledgeBaseServiceImplIntegrationTest
         String[] expectedProps = { kb.getSubclassIri(), kb.getLabelIri(), kb.getDescriptionIri(),
                 kb.getTypeIri() };
 
-        assertEquals(listProperties.size(), 5);
-        assertThat(listIdentifier).as("Check that base properties are created")
+        assertThat(listProperties) //
+                .extracting(KBProperty::getIdentifier) //
+                .containsExactly( //
+                        "http://www.w3.org/2000/01/rdf-schema#comment",
+                        "http://www.w3.org/2000/01/rdf-schema#label",
+                        "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+                        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+                        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        assertThat(listIdentifier) //
+                .as("Check that base properties are created") //
                 .contains(expectedProps);
     }
 

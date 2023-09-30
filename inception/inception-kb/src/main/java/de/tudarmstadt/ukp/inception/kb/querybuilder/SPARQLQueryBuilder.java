@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.bind;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
@@ -115,7 +116,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.backport.Bind;
 
 /**
  * Build queries against the KB.
@@ -1177,7 +1177,7 @@ public class SPARQLQueryBuilder
                     .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY)
                             .andHas(LUCENE_SNIPPET, var("snippet")))
-                    .and(new Bind(
+                    .and(bind(
                             function(REPLACE,
                                     function(REPLACE, var("snippet"), literalOf("</B>"),
                                             literalOf("")),
@@ -1827,9 +1827,10 @@ public class SPARQLQueryBuilder
 
         // An item is a property if ...
         // ... it is explicitly defined as being a property
-        propertyPatterns.add(VAR_SUBJECT.has(
-                PropertyPathBuilder.of(typeOfProperty).then(pSubClass).zeroOrMore().build(),
+        propertyPatterns.add(VAR_SUBJECT.has(typeOfProperty, propertyIri));
+        propertyPatterns.add(VAR_SUBJECT.has(PropertyPathBuilder.of(pSubClass).oneOrMore().build(),
                 propertyIri));
+        // propertyPatterns.add(VAR_SUBJECT.has(typeOfProperty, propertyIri));
         // ... it has any subproperties
         propertyPatterns.add(bNode().has(subPropertyProperty, VAR_SUBJECT));
         // ... it has any superproperties
