@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
@@ -352,8 +353,9 @@ public class AnnotationPage
                         getModelObject().getPreferences().getSidebarSizeRight()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
-        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getAnnotationLayers)
-                .map(List::isEmpty).map(b -> !b)));
+        rightSidebar.add(visibleWhen(getModel() //
+                .map(AnnotatorState::getAnnotationLayers) //
+                .map(layers -> layers.stream().anyMatch(l -> SPAN_TYPE.equals(l.getType())))));
         return rightSidebar;
     }
 

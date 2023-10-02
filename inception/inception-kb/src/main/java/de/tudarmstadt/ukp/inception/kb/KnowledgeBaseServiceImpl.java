@@ -26,6 +26,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.reflect.FieldUtils.readField;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -52,6 +54,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
+import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -72,6 +75,7 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
@@ -81,6 +85,8 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
+import org.eclipse.rdf4j.sail.lucene.LuceneSailConnection;
+import org.eclipse.rdf4j.sail.lucene.impl.LuceneIndex;
 import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
@@ -149,6 +155,8 @@ import jakarta.persistence.TypedQuery;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
+    private static final int LOCAL_FUZZY_PREFIX_LENGTH = 3;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -298,33 +306,40 @@ public class KnowledgeBaseServiceImpl
 
         // We want to have a separate Lucene index for every local repo, so we need to hack the
         // index dir in here because this is the place where we finally know the repo ID.
-        setIndexDir(aKB, aCfg);
+        syncIndexParameters(aKB, aCfg);
 
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
         entityManager.persist(aKB);
     }
 
     @Override
-    public void defineBaseProperties(KnowledgeBase akb)
+    public void defineBaseProperties(KnowledgeBase aKB)
     {
         // KB will initialize base properties with base IRI schema properties defined by user
-        if (akb.getType() == RepositoryType.LOCAL) {
-            ValueFactory vf = SimpleValueFactory.getInstance();
+        if (aKB.getType() == RepositoryType.LOCAL) {
+            var readOnly = aKB.isReadOnly();
+            aKB.setReadOnly(false);
+            try {
+                ValueFactory vf = SimpleValueFactory.getInstance();
 
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri(),
-                    vf.createIRI(akb.getSubclassIri()).getLocalName()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getLabelIri(),
-                            vf.createIRI(akb.getLabelIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getDescriptionIri(),
-                            vf.createIRI(akb.getDescriptionIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri(),
-                    vf.createIRI(akb.getTypeIri()).getLocalName()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri(),
-                    vf.createIRI(akb.getSubPropertyIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubclassIri(),
+                        vf.createIRI(aKB.getSubclassIri()).getLocalName()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getLabelIri(),
+                                vf.createIRI(aKB.getLabelIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getDescriptionIri(),
+                                vf.createIRI(aKB.getDescriptionIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB, new KBProperty(aKB.getTypeIri(),
+                        vf.createIRI(aKB.getTypeIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubPropertyIri(),
+                        vf.createIRI(aKB.getSubPropertyIri()).getLocalName()));
+            }
+            finally {
+                aKB.setReadOnly(readOnly);
+            }
         }
     }
 
@@ -491,6 +506,8 @@ public class KnowledgeBaseServiceImpl
         {
             {
                 skipCertificateChecks(kb.isSkipSslValidation());
+
+                syncIndexParameters(kb, getDelegate());
             }
 
             @Override
@@ -600,6 +617,7 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
+            conn.setIsolationLevel(IsolationLevels.NONE);
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
@@ -1365,24 +1383,55 @@ public class KnowledgeBaseServiceImpl
          */
 
         RepositoryImplConfig config = getNativeConfig();
-        setIndexDir(aKB, config);
+        syncIndexParameters(aKB, config);
         repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
     }
 
-    private void setIndexDir(KnowledgeBase aKB, RepositoryImplConfig aCfg)
+    private void syncIndexParameters(KnowledgeBase aKB, RepositoryImplConfig aCfg)
     {
         assertRegistration(aKB);
 
-        // We want to have a separate Lucene index for every local repo, so we need to hack the
-        // index dir in here because this is the place where we finally know the repo ID.
         if (aCfg instanceof SailRepositoryConfig) {
             SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
             if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
                 LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
+
+                // We want to have a separate Lucene index for every local repo, so we need to hack
+                // the index dir in here because this is the place where we finally know the repo
+                // ID.
                 luceneSailCfg.setIndexDir(
                         new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId())
                                 .getAbsolutePath());
+
+                // Apply the FTS results limit to the KB
+                luceneSailCfg.setParameter(LuceneSail.MAX_DOCUMENTS_KEY,
+                        Integer.toString(aKB.getMaxResults()));
+
+                // Improve fuzzy search speed
+                luceneSailCfg.setParameter(LuceneSail.FUZZY_PREFIX_LENGTH_KEY,
+                        Integer.toString(LOCAL_FUZZY_PREFIX_LENGTH));
             }
+        }
+    }
+
+    private void syncIndexParameters(KnowledgeBase kb, RepositoryConnection aConn)
+    {
+        try {
+            if (aConn instanceof SailRepositoryConnection) {
+                var sailRepo = (SailRepositoryConnection) aConn;
+                var sailConnection = sailRepo.getSailConnection();
+                if (sailConnection instanceof LuceneSailConnection) {
+                    var luceneSailConnection = (LuceneSailConnection) sailConnection;
+                    var luceneIndex = (LuceneIndex) readField(luceneSailConnection, "luceneIndex",
+                            true);
+                    writeField(luceneIndex, "maxDocs", kb.getMaxResults(), true);
+                    writeField(luceneIndex, "fuzzyPrefixLength", LOCAL_FUZZY_PREFIX_LENGTH, true);
+                }
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to sync query parameters into live index - "
+                    + "maybe the RDF4J Lucene index implementation has changed.", e);
         }
     }
 

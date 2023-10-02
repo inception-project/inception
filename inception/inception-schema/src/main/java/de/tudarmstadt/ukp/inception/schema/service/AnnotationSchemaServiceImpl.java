@@ -57,7 +57,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
@@ -67,7 +66,6 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
-import org.apache.uima.util.AutoCloseableNoException;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
@@ -1194,8 +1192,7 @@ public class AnnotationSchemaServiceImpl
             if (!upgraded) {
                 try (var logCtx = withProjectLogger(aSourceDocument.getProject())) {
                     log.debug(
-                            "CAS of user [{}] for document {} in project {} is already "
-                                    + "compatible with project type system - skipping upgrade",
+                            "CAS [{}]@{} in {} is already compatible with project type system - skipping upgrade",
                             aUser, aSourceDocument, aSourceDocument.getProject());
                 }
             }
@@ -1294,15 +1291,15 @@ public class AnnotationSchemaServiceImpl
         throws IOException, ResourceInitializationException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
-        TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
+        var sourceTypeSystem = aSourceCas.getTypeSystem();
 
         // Save source CAS contents
-        ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        CAS realSourceCas = getRealCas(aSourceCas);
+        var serializedCasContents = new ByteArrayOutputStream();
+        var realSourceCas = getRealCas(aSourceCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realSourceCas).getBaseCAS()) {
             // Workaround for https://github.com/apache/uima-uimaj/issues/238
-            try (AutoCloseableNoException a = ((CASImpl) realSourceCas).ll_enableV2IdRefs(false)) {
+            try (var context = ((CASImpl) realSourceCas).ll_enableV2IdRefs(false)) {
                 serializeWithCompression(realSourceCas, serializedCasContents, sourceTypeSystem);
             }
         }
@@ -1311,8 +1308,8 @@ public class AnnotationSchemaServiceImpl
         CAS realTargetCas = getRealCas(aTargetCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realTargetCas).getBaseCAS()) {
-            CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
-            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) tempCas);
+            var tempCas = CasFactory.createCas(aTargetTypeSystem);
+            var serializer = serializeCASComplete((CASImpl) tempCas);
             deserializeCASComplete(serializer, (CASImpl) realTargetCas);
 
             // Leniently load the source CAS contents into the target CAS

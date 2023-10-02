@@ -21,6 +21,7 @@ import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTyp
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CasMetadataUtils
 {
-    private static final Logger LOG = LoggerFactory.getLogger(CasMetadataUtils.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static TypeSystemDescription getInternalTypeSystem()
     {
@@ -64,14 +65,6 @@ public class CasMetadataUtils
         }
 
         cmds.forEach(aCas::removeFsFromIndexes);
-    }
-
-    public static long getLastChanged(CAS aCas)
-    {
-        Type casMetadataType = getType(aCas, CASMetadata.class);
-        Feature feature = casMetadataType.getFeatureByBaseName("lastChangedOnDisk");
-        return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
-                .orElse(-1l);
     }
 
     public static void addOrUpdateCasMetadata(CAS aCas, long aTimeStamp, SourceDocument aDocument,
@@ -131,11 +124,68 @@ public class CasMetadataUtils
         aCas.addFsToIndexes(cmd);
     }
 
+    public static Optional<FeatureStructure> getCasMetadataFS(CAS aCas)
+    {
+        return Optional.ofNullable(CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class)));
+    }
+
+    public static long getLastChanged(CAS aCas)
+    {
+        Type casMetadataType = getType(aCas, CASMetadata.class);
+        Feature feature = casMetadataType.getFeatureByBaseName("lastChangedOnDisk");
+        return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
+                .orElse(-1l);
+    }
+
+    public static Optional<String> getUsername(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "username", String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<Long> getSourceDocumentId(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "sourceDocumentId", Long.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
     public static Optional<String> getSourceDocumentName(CAS aCas)
     {
         try {
             FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
             return Optional.ofNullable(FSUtil.getFeature(fs, "sourceDocumentName", String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<Long> getProjectId(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "projectId", Long.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static Optional<String> getProjectName(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "projectName", String.class));
         }
         catch (IllegalArgumentException e) {
             return Optional.empty();

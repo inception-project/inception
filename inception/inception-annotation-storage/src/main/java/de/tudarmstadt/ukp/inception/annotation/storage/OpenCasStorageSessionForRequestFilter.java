@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ import jakarta.servlet.ServletResponse;
 public class OpenCasStorageSessionForRequestFilter
     implements Filter
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException
@@ -51,7 +52,7 @@ public class OpenCasStorageSessionForRequestFilter
             throw e;
         }
         catch (Exception e) {
-            log.error("Error creating a CAS storage session", e);
+            LOG.error("Error creating a CAS storage session", e);
         }
     }
 

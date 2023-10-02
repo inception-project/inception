@@ -38,8 +38,9 @@ export class ApacheAnnotatorVisualizer {
 
   private data? : AnnotatedText
 
-  private removePingMarkers: (() => void)[] = []
-  private removePingMarkersTimeout: number | undefined = undefined
+  private removeTransientMarkers: (() => void)[] = []
+  private removeTransientMarkersTimeout: number | undefined = undefined
+
   private alpha = '55'
 
   constructor (element: Element, ajax: DiamAjax) {
@@ -133,6 +134,7 @@ export class ApacheAnnotatorVisualizer {
     if (doc.spans) {
       console.log(`Loaded ${doc.spans.size} span annotations`)
       doc.spans.forEach(span => this.renderSpanAnnotation(doc, span))
+
       this.removeSpuriousZeroWidthHighlights()
       if (!this.showEmptyHighlights) {
         this.removeWhitepaceOnlyHighlights()
@@ -182,7 +184,7 @@ export class ApacheAnnotatorVisualizer {
 
     const vhl = this.root.ownerDocument.createElement('div')
     vhl.classList.add('iaa-vertical-marker-focus')
-    vhl.style.top = `${top - scrollerContainerRect.top + this.root.scrollTop}px`
+    vhl.style.top = `${top - scrollerContainerRect.top + (this.root.scrollTop || 0)}px`
     vhl.style.height = `${bottom - top}px`
     this.root.appendChild(vhl)
 
@@ -229,8 +231,8 @@ export class ApacheAnnotatorVisualizer {
   /**
    * Some highliths may only contain whitepace. This method removes such highlights.
    */
-  private removeWhitepaceOnlyHighlights () {
-    this.getAllHighlights().forEach(e => {
+  private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
+    this.root.querySelectorAll(selector).forEach(e => {
       if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
         e.after(...e.childNodes)
         e.remove()
@@ -309,7 +311,7 @@ export class ApacheAnnotatorVisualizer {
 
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${span.label || NO_LABEL}`,
+      'data-iaa-label': `${span.label || `[${span.layer.name}]` || NO_LABEL}`,
       class: classList.join(' '),
       style: styleList.join('; ')
     }
@@ -361,16 +363,21 @@ export class ApacheAnnotatorVisualizer {
     const range = offsetToRange(this.root, args.offset, args.offset)
     if (!range) return
 
-    window.clearTimeout(this.removePingMarkersTimeout)
-    this.removePingMarkers.forEach(remove => remove())
+    window.clearTimeout(this.removeTransientMarkersTimeout)
+    this.removeTransientMarkers.forEach(remove => remove())
 
     const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' })
-    this.removePingMarkers = []
+    this.removeTransientMarkers = [removeScrollMarker]
     for (const pingOffset of args.pingRanges || []) {
       const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1])
       if (!pingRange) continue
-      this.removePingMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
+      this.removeTransientMarkers.push(highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' }))
     }
+
+    if (!this.showEmptyHighlights) {
+      this.removeWhitepaceOnlyHighlights('.iaa-ping-marker')
+    }
+
     this.root.querySelectorAll('.iaa-ping-marker').forEach(e => {
       if (!e.textContent) e.remove()
     })
@@ -394,10 +401,9 @@ export class ApacheAnnotatorVisualizer {
       scrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
     }
 
-    removeScrollMarker()
-    this.removePingMarkersTimeout = window.setTimeout(() => {
-      this.removePingMarkers.forEach(remove => remove())
-      console.log('ping removed')
+    this.removeTransientMarkersTimeout = window.setTimeout(() => {
+      this.removeTransientMarkers.forEach(remove => remove())
+      this.removeTransientMarkers = []
     }, 2000)
   }
 

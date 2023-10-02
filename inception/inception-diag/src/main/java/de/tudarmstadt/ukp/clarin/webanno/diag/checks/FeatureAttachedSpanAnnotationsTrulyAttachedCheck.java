@@ -38,6 +38,8 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     implements Check
 {
+    private static final int LIMIT = 100;
+
     private final AnnotationSchemaService annotationService;
 
     public FeatureAttachedSpanAnnotationsTrulyAttachedCheck(
@@ -89,9 +91,10 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
             }
         }
 
-        if (count >= 100) {
+        if (count >= LIMIT) {
             aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                    "In total [%d] annotations were not properly attached", count));
+                    "In total [%d] annotations were not properly attached (only the first [%d] shown)",
+                    count, LIMIT));
         }
 
         return ok;

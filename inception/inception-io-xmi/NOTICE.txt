@@ -1,0 +1,8 @@
+== DKPro Core BinaryCasReader
+
+Classes in the package "de.tudarmstadt.ukp.inception.io.xmi.dkprobackport" have been backported to INCEpTION from the
+yet unreleased DKPro Core 2.5.0. They should be removed and instead the upstream classes be used once DKPro Core 2.5.0
+has been released.
+
+Source: https://github.com/dkpro/dkpro-core
+License: Apache License 2.0

@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarPanel;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -228,7 +229,7 @@ public class RecommendationEditorExtension
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        adapter.select(VID.of(span), span);
+        aState.getSelection().set(adapter.select(VID.of(span), span));
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH,
@@ -253,7 +254,7 @@ public class RecommendationEditorExtension
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        adapter.select(aVID, relation);
+        aState.getSelection().set(adapter.select(aVID, relation));
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
@@ -327,6 +328,9 @@ public class RecommendationEditorExtension
         // also update their state to remain in sync with the new predictions
         applicationEventPublisher
                 .publishEvent(new PredictionsSwitchedEvent(this, sessionOwner, aState));
+
+        aTarget.appendJavaScript("document.body.classList.remove('"
+                + RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE + "')");
     }
 
     @Override

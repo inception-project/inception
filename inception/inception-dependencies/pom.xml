@@ -150,7 +150,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>nimbus-jose-jwt</artifactId>
-        <version>9.31</version>
+        <version>9.35</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>
@@ -436,6 +436,16 @@
         <version>1.5</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-pool2</artifactId>
+        <version>2.12.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-dbcp2</artifactId>
+        <version>2.10.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
         <version>2.1.4</version>
@@ -553,6 +563,11 @@
         <artifactId>jul-to-slf4j</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-reload4j</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.jboss.logging</groupId>
@@ -588,7 +603,7 @@
       <dependency>
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
-        <version>1.0.12</version>
+        <version>1.0.13</version>
       </dependency>
 
       <dependency>
@@ -646,12 +661,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.14.5</version>
+        <version>1.14.8</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.14.5</version>
+        <version>1.14.8</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -697,7 +712,7 @@
       <dependency>
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>1.0.83</version>
+        <version>1.0.87</version>
       </dependency>
       
       <!-- SPRING SECURITY -->
@@ -711,7 +726,7 @@
       <dependency>
         <groupId>com.nimbusds</groupId>
         <artifactId>oauth2-oidc-sdk</artifactId>
-        <version>9.43.1</version>
+        <version>9.43.3</version>
       </dependency>
       <dependency>
         <groupId>io.jsonwebtoken</groupId>
@@ -941,7 +956,7 @@
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.13.0</version>
+        <version>2.14.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -956,7 +971,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.23.0</version>
+        <version>1.24.0</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
@@ -971,12 +986,12 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.1.7</version>
+        <version>3.1.8</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
-        <version>1.1.10.3</version>
+        <version>1.1.10.5</version>
       </dependency>
 
       <!-- JAXB DEPENDENCIES -->
@@ -1144,7 +1159,7 @@
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
 <!--    <version>${opensearch.version}.0</version>-->
-        <version>1.3.7.0</version>
+        <version>${opensearch.version}.0</version>
       </dependency>
       <dependency>
         <groupId>net.java.dev.jna</groupId>
@@ -1155,7 +1170,7 @@
       <dependency>
         <groupId>org.eclipse.jgit</groupId>
         <artifactId>org.eclipse.jgit</artifactId>
-        <version>5.13.1.202206130422-r</version>
+        <version>6.7.0.202309050840-r</version>
       </dependency>
 
       <dependency>
@@ -1240,18 +1255,18 @@
       <dependency>
         <groupId>org.apache.ant</groupId>
         <artifactId>ant</artifactId>
-        <version>1.10.13</version>
+        <version>1.10.14</version>
       </dependency>
 
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
-        <version>4.7.4</version>
+        <version>4.7.5</version>
       </dependency>
       <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli-spring-boot-starter</artifactId>
-        <version>4.7.4</version>
+        <version>4.7.5</version>
       </dependency>
 
       <dependency>
@@ -1285,6 +1300,11 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-spring-boot</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-to-slf4j</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
 
@@ -1342,7 +1362,7 @@
       <dependency>
         <groupId>org.apache.ivy</groupId>
         <artifactId>ivy</artifactId>
-        <version>2.5.1</version>
+        <version>2.5.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
