@@ -32,4 +32,4 @@ echo "Launching application..."
 COMMAND="$(which $1)" 
 shift
 ARGUMENTS="$(printf "\"%s\" " "$@")"
-exec su -l -c "${COMMAND} ${ARGUMENTS}" "$APP_USER"
+exec su -p -c "${COMMAND} ${ARGUMENTS}" "$APP_USER"
