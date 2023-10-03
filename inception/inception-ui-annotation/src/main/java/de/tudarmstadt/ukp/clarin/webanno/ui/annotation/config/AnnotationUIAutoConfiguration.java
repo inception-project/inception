@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.closesession.CloseSessionActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.AnnotationUndoActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.ChainAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.FeatureValueActionUndoSupport;
@@ -84,5 +85,11 @@ public class AnnotationUIAutoConfiguration
     public FeatureValueActionUndoSupport featureValueActionUndoSupport()
     {
         return new FeatureValueActionUndoSupport();
+    }
+    
+    @Bean
+    public CloseSessionActionBarExtension closeSessionActionBarExtension()
+    {
+        return new CloseSessionActionBarExtension();
     }
 }
