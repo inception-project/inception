@@ -36,7 +36,7 @@ ENV APP_UID=2000
 ENV APP_GROUP=inception
 ENV APP_GID=2000
 RUN groupadd -g ${APP_GID} ${APP_GROUP} \ 
-    && useradd -m \
+    && useradd \
       -d /opt/inception  \
       -s /bin/bash  \
       -g ${APP_GROUP} -u ${APP_UID} ${APP_USER} \
