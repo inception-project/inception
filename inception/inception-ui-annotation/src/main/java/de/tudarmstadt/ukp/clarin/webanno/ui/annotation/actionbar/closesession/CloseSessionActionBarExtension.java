@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationUIAutoConfiguration#annotationCloseSessionActionBarExtension}.
+ * {@link AnnotationUIAutoConfiguration#closeSessionActionBarExtension}.
  * </p>
  */
 @Order(10000)
