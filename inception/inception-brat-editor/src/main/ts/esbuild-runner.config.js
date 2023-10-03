@@ -17,16 +17,14 @@
  */
 const esbuildSvelte = require('esbuild-svelte')
 const sveltePreprocess = require('svelte-preprocess')
-const { sassPlugin } = require('esbuild-sass-plugin')
 
 module.exports = {
-  type: 'bundle',
+  type: 'bundle', // bundle or transform (see description above)
   esbuild: {
     target: 'es2018',
     plugins: [
-      sassPlugin(),
       esbuildSvelte({
-        compilerOptions: { css: true },
+        compilerOptions: { css: 'injected' },
         preprocess: sveltePreprocess({ sourceMap: true })
       })
     ]
