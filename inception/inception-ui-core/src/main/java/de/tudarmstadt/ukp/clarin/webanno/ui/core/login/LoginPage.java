@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 public class LoginPage
     extends ApplicationPageBase
 {
-    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutoLogin";
+    public static final String PARAM_SKIP_AUTO_LOGIN = "skipAutoLogin";
     private static final String PARAM_ERROR = "error";
 
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
@@ -124,7 +124,7 @@ public class LoginPage
         saml2LoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(saml2LoginPanel);
 
-        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
+        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTO_LOGIN).toBoolean(false)
                 || tooManyUsers.getObject();
 
         // Failed OAuth2/SAML call this page with the parameter `?error` so we display a message
