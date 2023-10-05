@@ -64,7 +64,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
@@ -236,9 +235,6 @@ public class LoginPage
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
 
         aResponse.render(CssHeaderItem.forReference(LoginPageCssResourceReference.get()));
 
