@@ -62,10 +62,6 @@
     </dependency>
     
     <dependency>
-      <groupId>org.webjars.bower</groupId>
-      <artifactId>hover</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
       <artifactId>enjoyhint</artifactId>
       <exclusions>

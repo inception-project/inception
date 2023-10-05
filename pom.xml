@@ -150,7 +150,6 @@
 
     <node.version>18.14.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
-    <animate-css.version>3.2.6</animate-css.version>
     <bootstrap.version>5.3.2</bootstrap.version>
     <chai.version>^4.3.6</chai.version>
     <cross-env.version>^7.0.3</cross-env.version>
@@ -170,7 +169,6 @@
     <eslint-plugin-svelte3.version>^4.0.0</eslint-plugin-svelte3.version>
     <events.version>^3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
-    <hover.version>2.0.2</hover.version>
     <types-chai.version>^4.3.1</types-chai.version>
     <fs-extra.version>^10.1.0</fs-extra.version>
     <jsdom.version>^20.0.0</jsdom.version>

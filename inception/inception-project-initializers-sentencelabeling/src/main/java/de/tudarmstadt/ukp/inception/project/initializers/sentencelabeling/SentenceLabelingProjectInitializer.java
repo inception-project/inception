@@ -23,6 +23,7 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 
@@ -71,5 +72,11 @@ public class SentenceLabelingProjectInitializer
                 // Empty line to avoid the this text showing up in the short description of the
                 // project overview
                 "\n" + IOUtils.toString(descriptionUrl, UTF_8));
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Annotate documents at the sentence level.");
     }
 }

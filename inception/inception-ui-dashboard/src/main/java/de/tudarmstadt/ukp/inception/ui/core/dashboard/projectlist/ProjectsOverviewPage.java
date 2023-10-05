@@ -27,8 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Duration.ofMillis;
@@ -97,7 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.preferences.Key;
@@ -127,7 +124,7 @@ public class ProjectsOverviewPage
     private static final String MID_IMPORT_PROJECT_PANEL = "importProjectPanel";
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
-    private static final String MID_CONFIRM_LEAVE = "confirmLeave";
+    private static final String MID_DIALOG = "dialog";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
     private static final String MID_START_TUTORIAL = "startTutorial";
     private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
@@ -150,7 +147,7 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private DataView<ProjectEntry> projectList;
     private PagingNavigator navigator;
-    private BootstrapModalDialog confirmationDialog;
+    private BootstrapModalDialog dialog;
     private Label noProjectsNotice;
     private TextField<String> nameFilter;
 
@@ -219,9 +216,9 @@ public class ProjectsOverviewPage
         nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
         queue(nameFilter);
 
-        confirmationDialog = new BootstrapModalDialog(MID_CONFIRM_LEAVE);
-        confirmationDialog.trapFocus();
-        queue(confirmationDialog);
+        dialog = new BootstrapModalDialog(MID_DIALOG);
+        dialog.trapFocus();
+        queue(dialog);
     }
 
     @Override
@@ -502,7 +499,7 @@ public class ProjectsOverviewPage
             success("You are no longer a member of project [" + aProject.getName() + "]");
         });
 
-        confirmationDialog.open(dialogContent, aTarget);
+        dialog.open(dialogContent, aTarget);
     }
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
@@ -524,9 +521,9 @@ public class ProjectsOverviewPage
 
     private void actionCreateProject(AjaxRequestTarget aTarget)
     {
-        PageParameters params = new PageParameters();
-        params.set(PAGE_PARAM_PROJECT, NEW_PROJECT_ID);
-        setResponsePage(ProjectSettingsPage.class, params);
+        var dialogContent = new ProjectTemplateSelectionDialogPanel(
+                BootstrapModalDialog.CONTENT_ID);
+        dialog.open(dialogContent, aTarget);
     }
 
     private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)

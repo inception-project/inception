@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,7 +68,13 @@ public class EmptyProjectInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        aProject.setDescription("This project has no pre-defined layers. You will only be able to "
+        aProject.setDescription(getDescription().get());
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("This project has no pre-defined layers. You will only be able to "
                 + "annotate after you have defined annotation layers in the project settings.");
     }
 }
