@@ -370,16 +370,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>hover</artifactId>
-        <version>${hover.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>animate.css</artifactId>
-        <version>${animate-css.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
         <version>1.4.1</version>
