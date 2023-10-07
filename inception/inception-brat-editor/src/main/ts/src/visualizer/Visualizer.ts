@@ -3545,6 +3545,7 @@ export class Visualizer {
     if (evt.target) {
       const fakeSpan = new Span()
       fakeSpan.vid = id
+      fakeSpan.document = { text: this.data.text }
       fakeSpan.layer = { id: span.type, name: Util.spanDisplayForm(this.entityTypes, span.type) }
       evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
     }
