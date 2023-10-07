@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, VID, Argument, Layer, Comment } from '.'
+import { Annotation, VID, Argument, Layer, Comment, AnnotatedText } from '.'
 
 export class Relation implements Annotation {
+  document: AnnotatedText
   layer: Layer
   vid: VID
   color?: string
@@ -25,4 +26,16 @@ export class Relation implements Annotation {
   score?: number
   comments?: Comment[]
   arguments: Array<Argument>
+
+  constructor (other?: Relation) {
+    if (other) {
+      this.document = other.document
+      this.layer = other.layer
+      this.vid = other.vid
+      this.color = other.color
+      this.label = other.label
+      this.comments = other.comments
+      this.arguments = other.arguments
+    }
+  }
 }

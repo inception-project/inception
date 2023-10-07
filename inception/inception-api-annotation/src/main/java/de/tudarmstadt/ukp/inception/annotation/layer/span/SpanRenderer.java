@@ -22,8 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +42,12 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
@@ -56,6 +61,8 @@ import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
+    private static final int MAX_HOVER_TEXT_LENGTH = 1000;
+
     private final List<SpanLayerBehavior> behaviors;
 
     private Type type;
@@ -128,6 +135,27 @@ public class SpanRenderer
                 .map(fs -> (AnnotationFS) fs) //
                 .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
                 .collect(toList());
+    }
+
+    @Override
+    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        if (!checkTypeSystem(aCas)) {
+            return Collections.emptyList();
+        }
+
+        var fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+
+        var group = new VLazyDetailGroup();
+        group.addDetail(
+                new VLazyDetail("Text", abbreviate(fs.getCoveredText(), MAX_HOVER_TEXT_LENGTH)));
+
+        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
+        if (!group.getDetails().isEmpty()) {
+            details.add(0, group);
+        }
+        return details;
     }
 
     @Override
