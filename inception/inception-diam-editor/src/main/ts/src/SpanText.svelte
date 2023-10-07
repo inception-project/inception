@@ -35,7 +35,9 @@
 {#if text.length === 0}
     <span class="text-muted">(empty)</span>
 {:else if text.length > maxLength}
-    <span title="{text.substring(0,1000)}">{text.substring(0, 50)}</span>
+    <!-- The AnnotationDetailPopOver displays the text now provided that the lazy detail provider
+         of the span layer sends it. - title="{text.substring(0,1000)}" -->
+    <span>{text.substring(0, 50)}</span>
     <span class="text-muted trailing-text">…</span>
 {:else}
     {text}
