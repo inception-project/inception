@@ -15,32 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
-public class ActivitiesDashletExtension
+public class DocumentHintDashletExtension
     implements ProjectDashboardDashletExtension
 {
-    private WorkloadManagementService workloadService;
-
-    @Autowired
-    public ActivitiesDashletExtension(WorkloadManagementService aWorkloadService)
-    {
-        workloadService = aWorkloadService;
-    }
+    private @SpringBean WorkloadManagementService workloadService;
+    private @SpringBean ProjectAccess projectAccess;
 
     @Override
     public String getId()
     {
-        return "activities";
+        return "noDocuments";
     }
 
     @Override
@@ -51,8 +46,8 @@ public class ActivitiesDashletExtension
     }
 
     @Override
-    public ActivitiesDashlet createDashlet(String aId, IModel<Project> aModel)
+    public DocumentHintDashlet createDashlet(String aId, IModel<Project> aModel)
     {
-        return new ActivitiesDashlet(aId, aModel);
+        return new DocumentHintDashlet(aId, aModel);
     }
 }

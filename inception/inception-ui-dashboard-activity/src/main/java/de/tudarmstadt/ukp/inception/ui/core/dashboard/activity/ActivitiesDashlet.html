@@ -1,4 +1,4 @@
-/*
+<!--
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
   distributed with this work for additional information
@@ -14,34 +14,12 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-*/
-:root {
-  --input-padding-x: 0.75rem;
-  --input-padding-y: 0.75rem;
-}
-
-.login-form {
-  min-width: 440px; 
-  max-width: 30%;
-  transition: box-shadow .3s;
-}
-
-.login-form:hover {
-  box-shadow: 0 0 10px var(--bs-tertiary-color); 
-}
-
-.login-form input[type=text],input[type=password] {
-  padding: var(--input-padding-y) var(--input-padding-x);
-  border-radius: 2rem;
-}
-
-.login-form .btn-login {
-  font-size: 0.9rem !important;
-  letter-spacing: 0.05rem !important;
-  padding: 0.75rem 1rem !important;
-  border-radius: 2rem !important;
-}
-
-.form-floating > .form-control:not(:placeholder-shown) ~ label::after {
-  background-color: unset !important;
-}
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+  <wicket:panel>
+    <div wicket:id="content" class="d-flex flex-grow-1"/>
+  </wicket:panel>
+</body>
+</html>

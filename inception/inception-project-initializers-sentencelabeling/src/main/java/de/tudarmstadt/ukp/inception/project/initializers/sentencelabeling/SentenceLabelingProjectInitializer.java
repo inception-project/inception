@@ -45,7 +45,7 @@ public class SentenceLabelingProjectInitializer
     @Override
     public String getName()
     {
-        return "Basic sentence labeling";
+        return "Sentence classification";
     }
 
     @Override

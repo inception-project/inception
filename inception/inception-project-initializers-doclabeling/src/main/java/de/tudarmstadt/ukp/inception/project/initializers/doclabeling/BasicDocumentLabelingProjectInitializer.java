@@ -65,7 +65,7 @@ public class BasicDocumentLabelingProjectInitializer
     @Override
     public String getName()
     {
-        return "Basic document labeling";
+        return "Document classification";
     }
 
     @Override

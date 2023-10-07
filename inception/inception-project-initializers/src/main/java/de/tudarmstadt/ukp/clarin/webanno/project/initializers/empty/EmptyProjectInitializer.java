@@ -42,7 +42,7 @@ public class EmptyProjectInitializer
     @Override
     public String getName()
     {
-        return "Empty project (no layers)";
+        return "Blank project (no layers)";
     }
 
     @Override

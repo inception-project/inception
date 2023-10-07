@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
@@ -38,7 +36,6 @@ import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -63,7 +60,6 @@ import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
@@ -78,10 +74,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -279,7 +273,6 @@ public class ProjectsOverviewPage
         authorize(projectCreationGroup, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         projectCreationGroup.add(createNewProjectLink());
-        projectCreationGroup.add(createQuickProjectCreationDropdown());
         return projectCreationGroup;
     }
 
@@ -330,37 +323,6 @@ public class ProjectsOverviewPage
             ProjectPageBase.setProjectPageParameter(pageParameters, soleAccessibleProject);
             throw new RestartResponseException(ProjectDashboardPage.class, pageParameters);
         }
-    }
-
-    private WebMarkupContainer createQuickProjectCreationDropdown()
-    {
-        ListView<ProjectInitializer> initializers = new ListView<ProjectInitializer>("templates",
-                LambdaModel.of(this::listInitializers))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void populateItem(ListItem<ProjectInitializer> aItem)
-            {
-                LambdaAjaxLink link = new LambdaAjaxLink("createProjectUsingTemplate",
-                        _target -> actionCreateProject(_target, aItem.getModelObject()));
-                link.add(new Label("name", Model.of(aItem.getModelObject().getName())));
-                aItem.add(link);
-            }
-        };
-
-        WebMarkupContainer initializersContainer = new WebMarkupContainer("templatesContainer");
-        initializersContainer.setOutputMarkupId(true);
-        initializersContainer.add(initializers);
-        return initializersContainer;
-    }
-
-    private List<ProjectInitializer> listInitializers()
-    {
-        return projectService.listProjectInitializers().stream()
-                .filter(initializer -> initializer instanceof QuickProjectInitializer)
-                .sorted(comparing(ProjectInitializer::getName)) //
-                .collect(toList());
     }
 
     private LambdaAjaxLink createNewProjectLink()
@@ -524,30 +486,6 @@ public class ProjectsOverviewPage
         var dialogContent = new ProjectTemplateSelectionDialogPanel(
                 BootstrapModalDialog.CONTENT_ID);
         dialog.open(dialogContent, aTarget);
-    }
-
-    private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
-    {
-        User user = currentUser.getObject();
-        aTarget.addChildren(getPage(), IFeedback.class);
-        String projectSlug = projectService.deriveSlugFromName(user.getUsername());
-        projectSlug = projectService.deriveUniqueSlug(projectSlug);
-
-        try {
-            Project project = new Project(projectSlug);
-            project.setName(user.getUsername() + " - New project");
-            projectService.createProject(project);
-            projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
-            projectService.initializeProject(project, asList(aInitializer));
-
-            PageParameters pageParameters = new PageParameters();
-            ProjectPageBase.setProjectPageParameter(pageParameters, project);
-            setResponsePage(ProjectDashboardPage.class, pageParameters);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to create project [{}]", projectSlug, e);
-            error("Unable to create project [" + projectSlug + "]");
-        }
     }
 
     @OnEvent

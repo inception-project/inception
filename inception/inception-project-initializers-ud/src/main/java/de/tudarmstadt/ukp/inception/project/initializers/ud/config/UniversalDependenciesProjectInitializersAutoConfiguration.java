@@ -15,32 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
+package de.tudarmstadt.ukp.inception.project.initializers.ud.config;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-public class LoginPageCssResourceReference
-    extends CssResourceReference
+import de.tudarmstadt.ukp.inception.project.initializers.ud.UniversalDependenciesProjectInitializer;
+
+@Configuration
+public class UniversalDependenciesProjectInitializersAutoConfiguration
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final LoginPageCssResourceReference INSTANCE = new LoginPageCssResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static LoginPageCssResourceReference get()
+    @Bean
+    public UniversalDependenciesProjectInitializer universalDependenciesProjectInitializer()
     {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private LoginPageCssResourceReference()
-    {
-        super(LoginPageCssResourceReference.class, "LoginPage.css");
+        return new UniversalDependenciesProjectInitializer();
     }
 }

@@ -15,19 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.ud;
+
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.DependencyLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LemmaLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.MorphologicalFeaturesLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 
 /**
@@ -36,21 +40,13 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
  * {@link ProjectInitializersAutoConfiguration#standardProjectInitializer}.
  * </p>
  */
-public class StandardProjectInitializer
+public class UniversalDependenciesProjectInitializer
     implements QuickProjectInitializer
 {
-    private final ProjectService projectService;
-
-    @Autowired
-    public StandardProjectInitializer(@Lazy ProjectService aProjectService)
-    {
-        projectService = aProjectService;
-    }
-
     @Override
     public String getName()
     {
-        return "Everything but the kitchen sink";
+        return "Universal Dependencies";
     }
 
     @Override
@@ -62,11 +58,14 @@ public class StandardProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return projectService.listProjectInitializers().stream() //
-                // .filter(initializer -> initializer instanceof LayerInitializer) //
-                .filter(initializer -> initializer.applyByDefault())
-                .map(initializer -> initializer.getClass()) //
-                .collect(Collectors.toList());
+        return asList(
+                // Because all projects should have a Token layer
+                TokenLayerInitializer.class, //
+                LemmaLayerInitializer.class, //
+                PartOfSpeechLayerInitializer.class, //
+                MorphologicalFeaturesLayerInitializer.class, //
+                DependencyLayerInitializer.class, //
+                SurfaceFormLayerInitializer.class);
     }
 
     @Override
@@ -78,6 +77,11 @@ public class StandardProjectInitializer
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of("Comes pre-configured for many linguistic annotation tasks.");
+        return Optional
+                .of("""
+                        Comes pre-configured for linguistic annotation tasks according to the Universal Dependencies
+                        guidelines. These include part-of-speech  tagging, dependency parsing, morphological features,
+                        lemmas, and surface forms. Importing and exporting these layers in the CoNLL-U format is
+                        possible.""");
     }
 }
