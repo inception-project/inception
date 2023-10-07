@@ -23,6 +23,11 @@
 .login-form {
   min-width: 440px; 
   max-width: 30%;
+  transition: box-shadow .3s;
+}
+
+.login-form:hover {
+  box-shadow: 0 0 10px var(--bs-tertiary-color); 
 }
 
 .login-form input[type=text],input[type=password] {
