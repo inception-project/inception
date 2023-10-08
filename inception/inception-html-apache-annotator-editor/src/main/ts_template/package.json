@@ -26,7 +26,7 @@
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "eslint-config-standard": "${eslint-config-standard.version}",
-    "eslint-plugin-svelte3": "${eslint-plugin-svelte3.version}",
+    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
     "fs-extra": "${fs-extra.version}",
     "svelte": "${svelte.version}",
     "svelte-preprocess": "${svelte-preprocess.version}",
