@@ -106,12 +106,12 @@ export class Util {
     return str.replace(/"/g, '&quot;')
   }
 
-  getSpanLabels (spanTypes, spanType) {
+  getSpanLabels (spanTypes: Record<string, EntityTypeDto>, spanType: string) : string[] {
     const type = spanTypes[spanType]
     return (type && type.labels) || []
   }
 
-  spanDisplayForm (spanTypes, spanType) {
+  spanDisplayForm (spanTypes: Record<string, EntityTypeDto>, spanType: string) : string {
     const labels = this.getSpanLabels(spanTypes, spanType)
     if (labels[0]) {
       return labels[0]

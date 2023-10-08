@@ -127,7 +127,7 @@
         const y = e.clientY;
 
         // Flip up if the popover is about to be clipped at the bottom
-        if (y + rect.height > window.innerHeight) {
+        if (y + rect.height + yOffset > window.innerHeight) {
             top = y - rect.height - yOffset;
         } else {
             top = y + yOffset;

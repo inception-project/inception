@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
@@ -83,15 +82,6 @@ public class RecommenderServiceAutoConfiguration
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
                 aProjectService, entityManager, aApplicationEventPublisher);
-    }
-
-    @ConditionalOnWebApplication
-    @ConditionalOnProperty(prefix = "recommender.evaluation-page", //
-            name = "enabled", havingValue = "true", matchIfMissing = true)
-    @Bean
-    public EvaluationSimulationPageMenuItem evaluationSimulationPageMenuItem()
-    {
-        return new EvaluationSimulationPageMenuItem();
     }
 
     @Bean

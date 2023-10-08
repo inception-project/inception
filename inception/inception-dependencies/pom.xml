@@ -370,16 +370,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>hover</artifactId>
-        <version>${hover.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>animate.css</artifactId>
-        <version>${animate-css.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
         <version>1.4.1</version>
@@ -1171,18 +1161,6 @@
         <groupId>org.eclipse.jgit</groupId>
         <artifactId>org.eclipse.jgit</artifactId>
         <version>6.7.0.202309050840-r</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>c3</artifactId>
-        <version>0.6.6</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>d3js</artifactId>
-        <version>5.5.0</version>
       </dependency>
 
       <dependency>

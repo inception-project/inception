@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -44,12 +44,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProper
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 import jakarta.servlet.http.HttpSession;
 
-/**
- * A wicket panel for logout.
- */
 @StatelessComponent
 public class LogoutPanel
     extends Panel
@@ -65,11 +63,10 @@ public class LogoutPanel
         super(id, aUser);
 
         var logoutLink = new LambdaStatelessLink("logout", this::actionLogout);
-        logoutLink.add(visibleWhen(this::isLogoutEnabled));
         add(logoutLink);
 
         var logoutTimer = new WebMarkupContainer("logoutTimer");
-        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0 && isLogoutEnabled()));
+        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
         add(logoutTimer);
 
         var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
@@ -84,18 +81,6 @@ public class LogoutPanel
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));
-    }
-
-    private boolean isLogoutEnabled()
-    {
-        // Logout is disabled for external (OAuth2) users if autoLogin is enabled.
-        // Pre-authenticated users do not count as external users here as we may have a logout
-        // link from the IdP configured
-        if (startsWith(getModel().getObject().getRealm(), UserDao.REALM_EXTERNAL_PREFIX)) {
-            return isBlank(securityProperties.getAutoLogin());
-        }
-
-        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -125,14 +110,26 @@ public class LogoutPanel
 
     private void actionLogout()
     {
+        actionLogout(this, preauthenticationProperties, securityProperties);
+    }
+
+    public static void actionLogout(Component aOwner,
+            PreauthenticationProperties aPreauthProperties, LoginProperties aSecProperties)
+    {
         ApplicationSession.get().signOut();
 
-        if (preauthenticationProperties.getLogoutUrl().isPresent()) {
-            throw new RedirectToUrlException(preauthenticationProperties.getLogoutUrl().get());
+        if (aPreauthProperties.getLogoutUrl().isPresent()) {
+            throw new RedirectToUrlException(aPreauthProperties.getLogoutUrl().get());
         }
-        else {
-            setResponsePage(getApplication().getHomePage());
+
+        if (isNotBlank(aSecProperties.getAutoLogin())) {
+            PageParameters parameters = new PageParameters();
+            parameters.set(LoginPage.PARAM_SKIP_AUTO_LOGIN, true);
+            aOwner.setResponsePage(LoginPage.class, parameters);
+            return;
         }
+
+        aOwner.setResponsePage(aOwner.getApplication().getHomePage());
     }
 
     /**

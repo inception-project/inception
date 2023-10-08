@@ -30,6 +30,8 @@ for module in $TS_MODULES ; do
   rm -f package-lock.json
   rm -f package.json
   rm -Rf node_modules
+
+  cp ../../../../inception-build/src/main/resources/inception/eslintrc.yml .eslintrc.yml 
   popd
 
   pushd "$module/../../.."
