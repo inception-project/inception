@@ -31,7 +31,7 @@
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-mocha": "${eslint-plugin-mocha.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
-    "eslint-plugin-svelte3": "${eslint-plugin-svelte3.version}",
+    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
     "fs-extra": "${fs-extra.version}",
     "jsdom": "${jsdom.version}",
     "jsdom-global": "${jsdom-global.version}",

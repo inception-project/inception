@@ -24,7 +24,7 @@ module.exports = {
     target: 'es2018',
     plugins: [
       esbuildSvelte({
-        compilerOptions: { css: true },
+        compilerOptions: { css: 'injected' },
         preprocess: sveltePreprocess({ sourceMap: true })
       })
     ]

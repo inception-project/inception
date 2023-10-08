@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const esbuildSvelte = require("esbuild-svelte")
-const sveltePreprocess = require( "svelte-preprocess")
+const esbuildSvelte = require('esbuild-svelte')
+const sveltePreprocess = require('svelte-preprocess')
 
 module.exports = {
-  type: "bundle", // bundle or transform (see description above)
+  type: 'bundle', // bundle or transform (see description above)
   esbuild: {
     target: 'es2018',
     plugins: [
       esbuildSvelte({
-        preprocess: sveltePreprocess(),
-      }),
-    ],
-  },
+        compilerOptions: { css: 'injected' },
+        preprocess: sveltePreprocess({ sourceMap: true })
+      })
+    ]
+  }
 }
