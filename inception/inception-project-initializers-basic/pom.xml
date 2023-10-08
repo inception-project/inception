@@ -58,6 +58,11 @@
       <artifactId>inception-project-initializers</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
