@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationContext;
 
@@ -89,5 +90,11 @@ public class EntityLinkingProjectInitializer
                 layer);
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Link entity mentions to WikiData.");
     }
 }

@@ -160,6 +160,7 @@
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>
     <module>inception-project-initializers-sentencelabeling</module>
+    <module>inception-project-initializers-ud</module>
     <module>inception-project-initializers-wikidatalinking</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>

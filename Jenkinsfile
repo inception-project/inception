@@ -155,7 +155,7 @@ pipeline {
   }
   
   post {
-    success {
+    always {
       script {
         if (params.wipeWorkspaceAfterBuild) {
           echo "Wiping workspace..."
