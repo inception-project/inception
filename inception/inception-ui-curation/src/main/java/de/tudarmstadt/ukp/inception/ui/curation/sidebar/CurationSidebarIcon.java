@@ -17,29 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
-import static java.util.Arrays.asList;
-
-import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
 import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class CurationSidebarIcon
@@ -47,18 +36,8 @@ public class CurationSidebarIcon
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private static final String STAY = "stay";
-    private static final String OFF = "off";
-    private static final String ON = "on";
-
-    private static final String PARAM_CURATION_SESSION = "curationSession";
-    private static final String PARAM_CURATION_TARGET_OWN = "curationTargetOwn";
-
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
-    private @SpringBean ProjectService projectService;
 
     public CurationSidebarIcon(String aId, IModel<AnnotatorState> aState)
     {
@@ -86,63 +65,6 @@ public class CurationSidebarIcon
                 }));
     }
 
-    @Override
-    protected void onInitialize()
-    {
-        super.onInitialize();
-
-        handleCurationSessionPageParameters();
-
-        if (isViewingPotentialCurationTarget() && isSessionActive()) {
-            String sessionOwner = userService.getCurrentUsername();
-            AnnotatorState state = getModelObject();
-
-            // If curation is possible and the curation target user is different from the user set
-            // in the annotation state, then we need to update the state and reload.
-            User curationTarget = curationSidebarService.getCurationTargetUser(sessionOwner,
-                    state.getProject().getId());
-            if (!state.getUser().equals(curationTarget)) {
-                state.setUser(curationTarget);
-                findParent(AnnotationPage.class).actionLoadDocument(null);
-                throw new RestartResponseException(getPage());
-            }
-        }
-    }
-
-    private void handleCurationSessionPageParameters()
-    {
-        var params = getPage().getPageParameters();
-        var curationSessionParameterValue = params.get(PARAM_CURATION_SESSION);
-        var curationTargetOwnParameterValue = params.get(PARAM_CURATION_TARGET_OWN);
-        var project = getModelObject().getProject();
-        String sessionOwner = userService.getCurrentUsername();
-
-        switch (curationSessionParameterValue.toString(STAY)) {
-        case ON:
-            // Start a new session or switch to new curation target
-            if (!isSessionActive() || !curationTargetOwnParameterValue.isEmpty()) {
-                curationSidebarService.startSession(sessionOwner, project,
-                        curationTargetOwnParameterValue.toBoolean(false));
-            }
-            break;
-        case OFF:
-            if (isSessionActive()) {
-                curationSidebarService.closeSession(sessionOwner, project.getId());
-            }
-            break;
-        default:
-            // Ignore
-        }
-
-        if (!curationSessionParameterValue.isEmpty()) {
-            params.remove(PARAM_CURATION_TARGET_OWN);
-            params.remove(PARAM_CURATION_SESSION);
-            setProjectPageParameter(params, project);
-            params.set(AnnotationPage.PAGE_PARAM_DOCUMENT, getModelObject().getDocument().getId());
-            throw new RestartResponseException(getPage().getClass(), params);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public IModel<AnnotatorState> getModel()
     {
@@ -154,6 +76,15 @@ public class CurationSidebarIcon
         return (AnnotatorState) getDefaultModelObject();
     }
 
+    private IconType getStateIcon()
+    {
+        if (isSessionActive()) {
+            return FontAwesome5IconType.play_circle_s;
+        }
+
+        return FontAwesome5IconType.stop_circle_s;
+    }
+
     private boolean isSessionActive()
     {
         var project = getModelObject().getProject();
@@ -163,22 +94,5 @@ public class CurationSidebarIcon
         }
 
         return false;
-    }
-
-    private boolean isViewingPotentialCurationTarget()
-    {
-        // Curation sidebar is not allowed when viewing another users annotations
-        String currentUsername = userService.getCurrentUsername();
-        AnnotatorState state = getModelObject();
-        return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
-    }
-
-    private IconType getStateIcon()
-    {
-        if (isSessionActive()) {
-            return FontAwesome5IconType.play_circle_s;
-        }
-
-        return FontAwesome5IconType.stop_circle_s;
     }
 }
