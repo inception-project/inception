@@ -73,7 +73,13 @@ public class CurationSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        var sidebar = new CurationSidebar(aId, aModel, aActionHandler, aCasProvider,
+                aAnnotationPage);
+        if (aAnnotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
+            aAnnotationPage.add(new CurationSidebarBehavior());
+        }
+
+        return sidebar;
     }
 
     @Override
