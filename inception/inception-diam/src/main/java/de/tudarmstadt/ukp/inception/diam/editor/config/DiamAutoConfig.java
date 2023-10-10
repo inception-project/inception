@@ -46,8 +46,6 @@ import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupSer
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
-import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2;
-import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -161,12 +159,6 @@ public class DiamAutoConfig
     public CompactSerializer compactSerializer(AnnotationEditorProperties aProperties)
     {
         return new CompactSerializerImpl(aProperties);
-    }
-
-    @Bean
-    public CompactSerializerV2 compactSerializerV2(AnnotationEditorProperties aProperties)
-    {
-        return new CompactSerializerV2Impl(aProperties);
     }
 
     @Bean

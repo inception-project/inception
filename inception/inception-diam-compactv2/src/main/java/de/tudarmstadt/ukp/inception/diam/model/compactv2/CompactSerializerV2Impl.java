@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.compactv2.config.DiamCompactV2AutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamAutoConfig#compactSerializerV2}.
+ * This class is exposed as a Spring Component via {@link DiamCompactV2AutoConfig#compactSerializerV2}.
  * </p>
  */
 public class CompactSerializerV2Impl

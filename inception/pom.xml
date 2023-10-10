@@ -234,7 +234,9 @@
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
     <module>inception-brat-editor</module>
+    <module>inception-diam-api</module>
     <module>inception-diam</module>
+    <module>inception-diam-compactv2</module>
     <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
     <module>inception-html-editor</module>

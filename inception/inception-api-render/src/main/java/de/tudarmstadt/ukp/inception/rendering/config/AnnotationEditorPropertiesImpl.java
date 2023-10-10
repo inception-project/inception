@@ -15,13 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.config;
+package de.tudarmstadt.ukp.inception.rendering.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 /**
  * <p>

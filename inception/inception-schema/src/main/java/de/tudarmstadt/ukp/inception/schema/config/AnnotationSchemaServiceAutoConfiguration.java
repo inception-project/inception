@@ -70,8 +70,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @Configuration
 @EnableConfigurationProperties({ //
         StringFeatureSupportPropertiesImpl.class, //
-        LinkFeatureSupportPropertiesImpl.class, //
-        AnnotationEditorPropertiesImpl.class })
+        LinkFeatureSupportPropertiesImpl.class })
 public class AnnotationSchemaServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
-import de.tudarmstadt.ukp.inception.schema.config.AnnotationEditorPropertiesImpl;
 
 public class CompactSerializerV2ImplTest
 {
