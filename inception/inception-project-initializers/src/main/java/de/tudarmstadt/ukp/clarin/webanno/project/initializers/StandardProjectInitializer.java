@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class StandardProjectInitializer
     @Override
     public String getName()
     {
-        return "Standard project";
+        return "Everything but the kitchen sink";
     }
 
     @Override
@@ -72,5 +73,11 @@ public class StandardProjectInitializer
     public void configure(Project aProject) throws IOException
     {
         // Nothing to do - all initialization is already done by the dependencies
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Comes pre-configured for many linguistic annotation tasks.");
     }
 }

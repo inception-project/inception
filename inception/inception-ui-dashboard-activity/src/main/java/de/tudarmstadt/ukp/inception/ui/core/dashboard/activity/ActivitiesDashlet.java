@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -29,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class ActivitiesDashlet
-    extends WebMarkupContainer
+    extends Panel
 {
     private static final long serialVersionUID = -2010294259619748756L;
 
@@ -44,7 +45,8 @@ public class ActivitiesDashlet
 
         setOutputMarkupPlaceholderTag(true);
 
-        add(new SvelteBehavior());
+        add(new WebMarkupContainer("content").setOutputMarkupId(true)
+                .add(new SvelteBehavior(this)));
     }
 
     @Override

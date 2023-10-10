@@ -122,6 +122,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -319,6 +320,21 @@ public class DocumentServiceImpl
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
         return existsCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+    }
+
+    @Override
+    @Transactional
+    public boolean existsSourceDocument(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Long.class);
+        var doc = query.from(SourceDocument.class);
+
+        query.select(cb.count(doc)).where(cb.equal(doc.get(SourceDocument_.project), aProject));
+
+        return entityManager.createQuery(query).getSingleResult() > 0;
     }
 
     @Override

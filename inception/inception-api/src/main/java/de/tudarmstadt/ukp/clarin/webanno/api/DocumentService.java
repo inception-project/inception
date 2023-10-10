@@ -75,6 +75,15 @@ public interface DocumentService
     SourceDocument createSourceDocument(SourceDocument document);
 
     /**
+     * Check if any source document exist in the project.
+     *
+     * @param project
+     *            the project.
+     * @return if any source document exists.
+     */
+    boolean existsSourceDocument(Project project);
+
+    /**
      * Check if a Source document with this same name exist in the project. The caller method then
      * can decide to override or throw an exception/message to the client
      *
