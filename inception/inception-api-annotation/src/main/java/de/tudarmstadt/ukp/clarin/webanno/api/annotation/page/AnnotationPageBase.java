@@ -42,7 +42,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -85,7 +84,7 @@ public abstract class AnnotationPageBase
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
-    public static final String PAGE_PARAM_USER = "u";
+    public static final String PAGE_PARAM_DATA_OWNER = "u";
     public static final String PAGE_PARAM_FOCUS = "f";
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -102,8 +101,8 @@ public abstract class AnnotationPageBase
         super(aParameters);
 
         var params = getPageParameters();
-        StringValue documentParameter = params.get(PAGE_PARAM_DOCUMENT);
-        StringValue userParameter = params.get(PAGE_PARAM_USER);
+        var documentParameter = params.get(PAGE_PARAM_DOCUMENT);
+        var userParameter = params.get(PAGE_PARAM_DATA_OWNER);
 
         // If the page was accessed using an URL form ending in a document ID, let's move
         // the document ID into the fragment and redirect to the form without the document ID.
@@ -111,21 +110,25 @@ public abstract class AnnotationPageBase
         // happily switch between documents using AJAX without having to worry about links with
         // a document ID potentially sending us back to a specific document.
         if (!documentParameter.isEmpty()) {
-            RequestCycle requestCycle = getRequestCycle();
-            Url clientUrl = requestCycle.getRequest().getClientUrl();
+            var requestCycle = getRequestCycle();
+            var clientUrl = requestCycle.getRequest().getClientUrl();
             clientUrl.resolveRelative(Url.parse("./"));
-            List<String> fragmentParams = new ArrayList<>();
+            var fragmentParams = new ArrayList<String>();
             fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
             params.remove(PAGE_PARAM_DOCUMENT);
             if (!userParameter.isEmpty()) {
-                fragmentParams.add(format("%s=%s", PAGE_PARAM_USER, userParameter.toString()));
-                params.remove(PAGE_PARAM_USER);
+                fragmentParams
+                        .add(format("%s=%s", PAGE_PARAM_DATA_OWNER, userParameter.toString()));
+                params.remove(PAGE_PARAM_DATA_OWNER);
             }
             for (var namedParam : params.getAllNamed()) {
                 clientUrl.setQueryParameter(namedParam.getKey(), namedParam.getValue());
             }
             clientUrl.setFragment("!" + fragmentParams.stream().collect(joining("&")));
-            String url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
+            var url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
+            LOG.trace(
+                    "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
+                    documentParameter, userParameter, url);
             throw new RedirectToUrlException(url.toString());
         }
     }
@@ -198,18 +201,18 @@ public abstract class AnnotationPageBase
             protected void onParameterArrival(IRequestParameters aRequestParameters,
                     AjaxRequestTarget aTarget)
             {
-                StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
-                StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
-                StringValue user = aRequestParameters.getParameterValue(PAGE_PARAM_USER);
+                var document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
+                var focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
+                var user = aRequestParameters.getParameterValue(PAGE_PARAM_DATA_OWNER);
 
-                // nothing changed, do not check for project, because inception always opens
-                // on a project
                 if (document.isEmpty() && focus.isEmpty()) {
                     return;
                 }
 
-                SourceDocument previousDoc = getModelObject().getDocument();
-                User aPreviousUser = getModelObject().getUser();
+                LOG.trace("URL fragment update: {}@{} focus {}", user, document, focus);
+
+                var previousDoc = getModelObject().getDocument();
+                var aPreviousUser = getModelObject().getUser();
                 handleParameters(document, focus, user);
 
                 updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
@@ -220,6 +223,20 @@ public abstract class AnnotationPageBase
     protected abstract void handleParameters(StringValue aDocumentParameter,
             StringValue aFocusParameter, StringValue aUser);
 
+    /**
+     * Switch between documents. Note that the document and data owner to switch to are obtained
+     * from the {@link AnnotatorState}. The parameters indicate the the old document and data owner
+     * before the switch!
+     * 
+     * @param aTarget
+     *            a request target.
+     * @param aPreviousDocument
+     *            the document before the switch.
+     * @param aPreviousUser
+     *            the data owner before the switch.
+     * @param aFocusParameter
+     *            the focus before the switch.
+     */
     protected abstract void updateDocumentView(AjaxRequestTarget aTarget,
             SourceDocument aPreviousDocument, User aPreviousUser, StringValue aFocusParameter);
 
@@ -512,14 +529,14 @@ public abstract class AnnotationPageBase
         @Override
         public void onTargetRespond(AjaxRequestTarget aTarget)
         {
-            AnnotatorState state = getModelObject();
+            var state = getModelObject();
 
             if (state.getDocument() == null) {
                 return;
             }
 
-            Long currentDocumentId = state.getDocument().getId();
-            int currentFocusUnitIndex = state.getFocusUnitIndex();
+            var currentDocumentId = state.getDocument().getId();
+            var currentFocusUnitIndex = state.getFocusUnitIndex();
 
             // Check if the relevant parameters have actually changed since the URL parameters were
             // last set - if this is not the case, then let's not set the parameters because that
@@ -533,7 +550,7 @@ public abstract class AnnotationPageBase
             urlFragmentLastDocumentId = currentDocumentId;
             urlFragmentLastFocusUnitIndex = currentFocusUnitIndex;
 
-            UrlFragment fragment = new UrlFragment(aTarget);
+            var fragment = new UrlFragment(aTarget);
 
             fragment.putParameter(PAGE_PARAM_DOCUMENT, currentDocumentId);
 
@@ -549,10 +566,10 @@ public abstract class AnnotationPageBase
             // the CURATION_USER here.
             if (Set.of(userRepository.getCurrentUsername(), CURATION_USER)
                     .contains(state.getUser().getUsername())) {
-                fragment.removeParameter(PAGE_PARAM_USER);
+                fragment.removeParameter(PAGE_PARAM_DATA_OWNER);
             }
             else {
-                fragment.putParameter(PAGE_PARAM_USER, state.getUser().getUsername());
+                fragment.putParameter(PAGE_PARAM_DATA_OWNER, state.getUser().getUsername());
             }
 
             // If we do not manually set editedFragment to false, then changing the URL
