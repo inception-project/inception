@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static java.lang.System.currentTimeMillis;
 import static java.text.MessageFormat.format;
 

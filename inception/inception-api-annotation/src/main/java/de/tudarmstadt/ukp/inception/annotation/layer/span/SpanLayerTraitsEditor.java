@@ -20,15 +20,14 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -37,14 +36,13 @@ import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.ValidationModeSelect;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 public class SpanLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<SpanLayerTraits, SpanLayerSupport>
 {
     private static final long serialVersionUID = -9082045435380184514L;
 
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     public SpanLayerTraitsEditor(String aId, SpanLayerSupport aLayerSupport,
             IModel<AnnotationLayer> aLayer)
@@ -76,16 +74,6 @@ public class SpanLayerTraitsEditor
         crossSentence.add(enabledWhen(this::isCrossSentenceModeEditable));
         crossSentence.add(visibleWhen(this::isCrossSentenceModeVisible));
         aForm.add(crossSentence);
-
-        var onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
-        onClickJavascriptAction
-                .setVisible(annotationEditorProperties.isConfigurableJavaScriptActionEnabled());
-        onClickJavascriptAction
-                .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
-        onClickJavascriptAction.add(new AttributeModifier("placeholder",
-                "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
-                        + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
-        aForm.add(onClickJavascriptAction);
 
         var showTextInHover = new CheckBox("showTextInHover");
         showTextInHover.setOutputMarkupPlaceholderTag(true);

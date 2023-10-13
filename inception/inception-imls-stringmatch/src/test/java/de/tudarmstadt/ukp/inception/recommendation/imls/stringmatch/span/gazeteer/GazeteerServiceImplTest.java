@@ -63,7 +63,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception", "de.tudarmstadt.ukp.clarin.webanno" })
 public class GazeteerServiceImplTest

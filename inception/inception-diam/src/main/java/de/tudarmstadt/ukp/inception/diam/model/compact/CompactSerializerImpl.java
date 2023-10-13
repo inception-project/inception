@@ -22,11 +22,11 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -46,9 +46,9 @@ public class CompactSerializerImpl
 {
     public static final String ID = "compact";
 
-    private final AnnotationEditorProperties properties;
+    private final AnnotationSchemaProperties properties;
 
-    public CompactSerializerImpl(AnnotationEditorProperties aProperties)
+    public CompactSerializerImpl(AnnotationSchemaProperties aProperties)
     {
         properties = aProperties;
     }

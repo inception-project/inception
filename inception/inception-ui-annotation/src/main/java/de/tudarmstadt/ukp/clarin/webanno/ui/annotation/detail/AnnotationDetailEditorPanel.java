@@ -81,6 +81,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
@@ -101,7 +102,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -126,7 +126,7 @@ public abstract class AnnotationDetailEditorPanel
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;

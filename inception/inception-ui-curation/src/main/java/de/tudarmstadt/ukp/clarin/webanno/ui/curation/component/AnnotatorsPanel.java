@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -91,13 +92,12 @@ import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.feature.TypeUtil;
 
 /**
  * Panel with the annotator's annotations.
@@ -127,7 +127,7 @@ public class AnnotatorsPanel
     private @SpringBean UserDao userService;
     private @SpringBean CurationRenderer curationRenderer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
     {

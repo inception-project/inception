@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.annotatorjs;
 
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.annotatorjs.config.AnnotatorJsAnnotationEditorSupportAutoConfiguration;

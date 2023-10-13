@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.config;
+package de.tudarmstadt.ukp.clarin.webanno.api.config;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public interface AnnotationEditorProperties
+public interface AnnotationSchemaProperties
 {
     boolean isTokenLayerEditable();
 
@@ -39,11 +39,4 @@ public interface AnnotationEditorProperties
 
         return false;
     }
-
-    /**
-     * @deprecated Configurable JavaScript action to be removed soon.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    boolean isConfigurableJavaScriptActionEnabled();
 }

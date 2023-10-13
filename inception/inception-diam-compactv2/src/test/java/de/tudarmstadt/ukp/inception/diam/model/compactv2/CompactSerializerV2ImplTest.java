@@ -24,10 +24,10 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -83,7 +83,7 @@ public class CompactSerializerV2ImplTest
         var req = RenderRequest.builder() //
                 .withWindow(0, Integer.MAX_VALUE) //
                 .build();
-        var sut = new CompactSerializerV2Impl(new AnnotationEditorPropertiesImpl());
+        var sut = new CompactSerializerV2Impl(new AnnotationSchemaPropertiesImpl());
         var cdoc = sut.render(vdoc, req);
         var actual = JSONUtil.toPrettyJsonString(cdoc);
 

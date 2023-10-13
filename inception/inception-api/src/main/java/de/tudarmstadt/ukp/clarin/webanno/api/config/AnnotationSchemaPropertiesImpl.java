@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.config;
+package de.tudarmstadt.ukp.clarin.webanno.api.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
@@ -23,17 +23,16 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@code AnnotationSchemaServiceAutoConfiguration}.
+ * This class is exposed as a Spring Component via {@link RepositoryAutoConfiguration}.
  * </p>
  */
 @ConfigurationProperties("ui")
 @ManagedResource
-public class AnnotationEditorPropertiesImpl
-    implements AnnotationEditorProperties
+public class AnnotationSchemaPropertiesImpl
+    implements AnnotationSchemaProperties
 {
     private boolean tokenLayerEditable;
     private boolean sentenceLayerEditable;
-    private boolean configurableJavaScriptActionEnabled = false;
 
     @ManagedAttribute
     @Override
@@ -59,17 +58,5 @@ public class AnnotationEditorPropertiesImpl
     public void setSentenceLayerEditable(boolean aSentenceLayerEditable)
     {
         sentenceLayerEditable = aSentenceLayerEditable;
-    }
-
-    public void setConfigurableJavaScriptActionEnabled(boolean aConfigurableJavaScriptActionEnabled)
-    {
-        configurableJavaScriptActionEnabled = aConfigurableJavaScriptActionEnabled;
-    }
-
-    @Deprecated
-    @Override
-    public boolean isConfigurableJavaScriptActionEnabled()
-    {
-        return configurableJavaScriptActionEnabled;
     }
 }

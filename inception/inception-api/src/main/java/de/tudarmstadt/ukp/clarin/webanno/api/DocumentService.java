@@ -35,6 +35,7 @@ import org.apache.wicket.validation.ValidationError;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;

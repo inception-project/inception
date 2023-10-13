@@ -24,7 +24,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-bootstrap</artifactId>
-  <name>INCEpTION - Bootstrap</name>
+  <name>INCEpTION - UI - Bootstrap</name>
   <dependencies>
     <dependency>
       <groupId>org.apache.wicket</groupId>

@@ -15,29 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
-public enum CasUpgradeMode
+import java.io.IOException;
+import java.io.Serializable;
+
+import org.apache.uima.cas.CAS;
+
+@FunctionalInterface
+public interface CasProvider
+    extends Serializable
 {
-    /**
-     * Do not upgrade the CAS to the current project type system. Avoiding the CAS upgrade has two
-     * important effects:
-     * <ul>
-     * <li>The feature structure addresses in the CAS do not change. This is important because these
-     * addresses are used e.g. in UI layer to uniquely identify and access annotations.</li>
-     * <li>The access is faster because the upgrade is skipped.</li>
-     * </ul>
-     */
-    NO_CAS_UPGRADE,
-
-    /**
-     * Try automatically detecting if the CAS type system is not up-to-date and perform and upgrade
-     * if this is the case.
-     */
-    AUTO_CAS_UPGRADE,
-
-    /**
-     * Require a CAS upgrade.
-     */
-    FORCE_CAS_UPGRADE;
+    CAS get() throws IOException;
 }

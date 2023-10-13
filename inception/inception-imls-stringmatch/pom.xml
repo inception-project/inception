@@ -56,6 +56,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
@@ -148,6 +152,11 @@
     </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-annotation-storage-api</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-annotation-storage</artifactId>

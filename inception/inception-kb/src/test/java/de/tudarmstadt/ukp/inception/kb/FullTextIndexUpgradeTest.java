@@ -54,7 +54,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 @Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan(basePackages = { //
         "de.tudarmstadt.ukp.inception.kb.model", //

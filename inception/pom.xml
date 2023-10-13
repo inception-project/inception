@@ -154,6 +154,7 @@
     <module>inception-support</module>
     <module>inception-support-standalone</module>
     <module>inception-model</module>
+    <module>inception-model-vdoc</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
     <module>inception-project-initializers</module>
@@ -172,6 +173,7 @@
     <module>inception-api</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
+    <module>inception-annotation-storage-api</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
     <module>inception-documents</module>
@@ -179,6 +181,7 @@
     <module>inception-api-render</module>
     <module>inception-api-schema</module>
     <module>inception-export</module>
+    <module>inception-export-api</module>
     <module>inception-diag</module>
     <module>inception-tutorial</module>
     <module>inception-testing</module>

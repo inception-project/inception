@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
@@ -49,7 +50,6 @@ import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -156,7 +156,7 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public CompactSerializer compactSerializer(AnnotationEditorProperties aProperties)
+    public CompactSerializer compactSerializer(AnnotationSchemaProperties aProperties)
     {
         return new CompactSerializerImpl(aProperties);
     }

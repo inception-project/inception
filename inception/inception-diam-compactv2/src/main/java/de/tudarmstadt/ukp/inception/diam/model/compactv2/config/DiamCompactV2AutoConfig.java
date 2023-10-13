@@ -20,15 +20,15 @@ package de.tudarmstadt.ukp.inception.diam.model.compactv2.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 @Configuration
 public class DiamCompactV2AutoConfig
 {
     @Bean
-    public CompactSerializerV2 compactSerializerV2(AnnotationEditorProperties aProperties)
+    public CompactSerializerV2 compactSerializerV2(AnnotationSchemaProperties aProperties)
     {
         return new CompactSerializerV2Impl(aProperties);
     }

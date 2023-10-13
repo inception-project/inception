@@ -30,7 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;

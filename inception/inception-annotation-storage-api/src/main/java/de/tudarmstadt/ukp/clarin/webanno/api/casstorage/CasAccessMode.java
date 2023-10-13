@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
-
 public enum CasAccessMode
 {
     /**

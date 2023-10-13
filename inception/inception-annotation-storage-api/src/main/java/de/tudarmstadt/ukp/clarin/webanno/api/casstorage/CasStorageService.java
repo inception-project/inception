@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,11 +24,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService

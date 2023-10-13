@@ -1496,6 +1496,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Tag("slow")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {

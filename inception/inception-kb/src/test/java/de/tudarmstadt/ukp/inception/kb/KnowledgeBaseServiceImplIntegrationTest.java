@@ -77,7 +77,11 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //

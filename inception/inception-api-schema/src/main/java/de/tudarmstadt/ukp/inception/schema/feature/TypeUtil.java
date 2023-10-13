@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.adapter;
+package de.tudarmstadt.ukp.inception.schema.feature;
 
 import static java.lang.Long.parseLong;
 
@@ -32,6 +32,7 @@ import org.apache.uima.cas.Type;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as getting {@link TypeAdapter}

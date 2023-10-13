@@ -117,12 +117,12 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-annotation-storage</artifactId>
+      <artifactId>inception-annotation-storage-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api</artifactId>
+      <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
