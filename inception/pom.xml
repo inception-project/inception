@@ -176,6 +176,7 @@
     <module>inception-annotation-storage-api</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
+    <module>inception-documents-api</module>
     <module>inception-documents</module>
     <module>inception-api-editor</module>
     <module>inception-api-render</module>

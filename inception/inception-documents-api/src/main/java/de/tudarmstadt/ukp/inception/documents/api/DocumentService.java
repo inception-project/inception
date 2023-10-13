@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.inception.documents.api;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +37,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
@@ -727,7 +725,7 @@ public interface DocumentService
 
     /**
      * Sets the state of multiple annotation documents at once. This method does not generate
-     * {@link AnnotationStateChangeEvent} events. This means in particular that webhooks for
+     * {@code AnnotationStateChangeEvent} events. This means in particular that webhooks for
      * annotation document changes will not fire and that workload managers will not know that they
      * need to recalculate the document and project states.
      * 

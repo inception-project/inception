@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.config;
+package de.tudarmstadt.ukp.inception.documents.api;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({ RepositoryProperties.class, AnnotationSchemaPropertiesImpl.class })
+@EnableConfigurationProperties({ RepositoryProperties.class })
 public class RepositoryAutoConfiguration
 {
     // No Beans

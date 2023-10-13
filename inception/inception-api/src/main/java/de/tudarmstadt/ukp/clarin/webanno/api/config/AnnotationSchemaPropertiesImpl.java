@@ -23,7 +23,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link RepositoryAutoConfiguration}.
+ * This class is exposed as a Spring Component via {@link AnnotationSchemaAutoConfiguration}.
  * </p>
  */
 @ConfigurationProperties("ui")
