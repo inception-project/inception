@@ -43,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
@@ -51,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 
 @Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl

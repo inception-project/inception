@@ -49,16 +49,16 @@ import org.springframework.beans.PropertyAccessorFactory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -81,14 +81,14 @@ public class UserPreferencesServiceImpl
     private final AnnotationSchemaService annotationService;
     private final RepositoryProperties repositoryProperties;
     private final ColoringService coloringService;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
     private final PreferencesService preferencesService;
 
     public UserPreferencesServiceImpl(
             AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
+            AnnotationSchemaProperties aAnnotationEditorProperties,
             PreferencesService aPreferencesService)
     {
         defaultPreferences = aDefaultPreferences;
