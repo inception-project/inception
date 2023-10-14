@@ -58,7 +58,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -67,6 +66,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 
 public class FileSystemCasStorageDriver
     implements CasStorageDriver

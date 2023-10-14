@@ -117,10 +117,7 @@
     </dependency>
     
     <!-- JAXB is no longer included with Java 9+ by default -->
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-    </dependency>
+    <!-- Old javax JAXB -->
     <dependency>
       <groupId>org.glassfish.jaxb</groupId>
       <artifactId>jaxb-runtime</artifactId>
@@ -136,13 +133,18 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <groupId>javax.activation</groupId>
       <artifactId>javax.activation-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- New jakarta JAXB -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     
@@ -164,6 +166,7 @@
     <module>inception-support</module>
     <module>inception-support-standalone</module>
     <module>inception-model</module>
+    <module>inception-model-vdoc</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
     <module>inception-project-initializers</module>
@@ -182,13 +185,16 @@
     <module>inception-api</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
+    <module>inception-annotation-storage-api</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
+    <module>inception-documents-api</module>
     <module>inception-documents</module>
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
     <module>inception-api-schema</module>
     <module>inception-export</module>
+    <module>inception-export-api</module>
     <module>inception-diag</module>
     <module>inception-tutorial</module>
     <module>inception-testing</module>
@@ -244,7 +250,9 @@
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
     <module>inception-brat-editor</module>
+    <module>inception-diam-api</module>
     <module>inception-diam</module>
+    <module>inception-diam-compactv2</module>
     <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
     <module>inception-html-editor</module>

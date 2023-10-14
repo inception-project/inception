@@ -61,7 +61,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;

@@ -60,7 +60,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 public class SourceDocumentTable
     extends Panel

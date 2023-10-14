@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 public interface LayerSelectionState
 {
@@ -75,7 +75,7 @@ public interface LayerSelectionState
      */
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 
-    void refreshSelectableLayers(AnnotationEditorProperties aProperties);
+    void refreshSelectableLayers(AnnotationSchemaProperties aProperties);
 
     List<AnnotationLayer> getSelectableLayers();
 }

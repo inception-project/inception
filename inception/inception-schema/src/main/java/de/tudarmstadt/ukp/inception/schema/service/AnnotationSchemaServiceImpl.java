@@ -77,9 +77,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
@@ -104,7 +105,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.adapter.IllegalFeatureValueException;
@@ -134,7 +134,7 @@ public class AnnotationSchemaServiceImpl
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
     private final TypeSystemDescription builtInTypes;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
 
     public AnnotationSchemaServiceImpl()
     {
@@ -145,7 +145,7 @@ public class AnnotationSchemaServiceImpl
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationEditorProperties aAnnotationEditorProperties, EntityManager aEntityManager)
+            AnnotationSchemaProperties aAnnotationEditorProperties, EntityManager aEntityManager)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;

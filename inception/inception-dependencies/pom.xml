@@ -1010,7 +1010,16 @@
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
       </dependency>
-
+      <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>4.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>4.0.3</version>
+      </dependency>
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
@@ -1148,7 +1157,7 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-<!--    <version>${opensearch.version}.0</version>-->
+        <!--    <version>${opensearch.version}.0</version>-->
         <version>${opensearch.version}.0</version>
       </dependency>
       <dependency>

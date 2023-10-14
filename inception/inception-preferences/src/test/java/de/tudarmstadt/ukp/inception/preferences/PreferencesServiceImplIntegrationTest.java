@@ -38,14 +38,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+@DataJpaTest( //
+        showSql = false, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + PreferencesServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })

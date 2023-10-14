@@ -26,7 +26,7 @@
   </parent>
 
   <artifactId>inception-app-webapp</artifactId>
-  <name>INCEpTION - Web-Application</name>
+  <name>INCEpTION - App - Web-Application</name>
   <packaging>war</packaging>
   <dependencies>
     <dependency>
@@ -154,7 +154,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api</artifactId>
+      <artifactId>inception-documents-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

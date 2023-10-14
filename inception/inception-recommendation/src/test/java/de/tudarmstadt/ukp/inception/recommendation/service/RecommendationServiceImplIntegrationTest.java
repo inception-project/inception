@@ -90,7 +90,11 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = SpringConfig.class)
 @Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class RecommendationServiceImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
