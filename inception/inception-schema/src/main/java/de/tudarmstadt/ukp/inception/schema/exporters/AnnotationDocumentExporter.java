@@ -57,6 +57,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
@@ -68,9 +69,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -85,6 +85,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
@@ -134,7 +136,7 @@ public class AnnotationDocumentExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws UIMAException, ClassNotFoundException, IOException, InterruptedException
+        throws IOException, InterruptedException, ProjectExportException
     {
         exportAnnotationDocuments(aMonitor, aRequest.getProject(), aExProject);
         exportAnnotationDocumentContents(aRequest, aMonitor, aExProject, aStage);
@@ -165,7 +167,7 @@ public class AnnotationDocumentExporter
 
     private void exportAnnotationDocumentContents(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
-        throws UIMAException, ClassNotFoundException, IOException, InterruptedException
+        throws IOException, InterruptedException, ProjectExportException
     {
         Project project = aRequest.getProject();
 
@@ -292,7 +294,7 @@ public class AnnotationDocumentExporter
     private void exportAdditionalFormat(File aStage,
             Map<Pair<Project, String>, Object> bulkOperationContext, SourceDocument srcDoc,
             FormatSupport format, String aUsername)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException, ProjectExportException
     {
         File annDocDir = new File(
                 aStage.getAbsolutePath() + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
@@ -311,6 +313,11 @@ public class AnnotationDocumentExporter
             else {
                 copyFileToDirectory(annFile, annDocDir);
             }
+        }
+        catch (UIMAException e) {
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+                    + " for user [" + aUsername + "] as [" + format.getName() + "]: "
+                    + ExceptionUtils.getRootCauseMessage(e), e);
         }
         finally {
             if (annFile != null) {

@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TA
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
-import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.YIELD;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -201,8 +200,7 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .isEmpty();
+            assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
         }
 
         {
@@ -210,8 +208,7 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .isEmpty();
+            assertThat(vdoc.comments()).filteredOn(c -> ERROR.equals(c.getCommentType())).isEmpty();
 
         }
 
@@ -221,7 +218,7 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
@@ -233,7 +230,7 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
@@ -251,7 +248,7 @@ public class RelationRendererTest
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
             assertThat(vdoc.comments()) //
-                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .filteredOn(c -> ERROR.equals(c.getCommentType()))
                     .usingRecursiveFieldByFieldElementComparator().contains( //
                             new VComment(dep1, ERROR, "Overlap is not permitted."),
                             new VComment(dep3, ERROR, "Overlap is not permitted."));

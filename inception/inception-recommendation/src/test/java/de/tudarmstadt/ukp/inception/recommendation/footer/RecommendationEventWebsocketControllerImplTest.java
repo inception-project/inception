@@ -54,7 +54,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -64,8 +63,6 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -79,6 +76,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
@@ -190,7 +189,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         try {
             session.disconnect();
@@ -217,7 +216,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         try {
             session.disconnect();
@@ -246,7 +245,7 @@ class RecommendationEventWebsocketControllerImplTest
                 }) //
                 .build();
 
-        StompSession session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
+        var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
         session.disconnect();
 

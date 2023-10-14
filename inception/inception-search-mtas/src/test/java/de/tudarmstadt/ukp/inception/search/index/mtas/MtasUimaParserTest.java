@@ -234,7 +234,7 @@ public class MtasUimaParserTest
                 featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = toList(tc);
 
@@ -273,7 +273,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
 
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
@@ -300,7 +300,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = toList(result);
 
@@ -331,7 +331,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = toList(result);
 
@@ -360,7 +360,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(result);
+        // MtasUtils.print(result);
 
         List<MtasToken> tokens = new ArrayList<>();
         result.iterator().forEachRemaining(tokens::add);
@@ -408,7 +408,7 @@ public class MtasUimaParserTest
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(tc);
+        // MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);

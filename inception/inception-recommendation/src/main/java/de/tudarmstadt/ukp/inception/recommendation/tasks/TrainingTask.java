@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static java.lang.System.currentTimeMillis;
@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -103,6 +103,12 @@ public class TrainingTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Training recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
@@ -132,7 +138,11 @@ public class TrainingTask
         boolean seenSuccessfulTraining = false;
         boolean seenNonTrainingRecommender = false;
 
-        for (var layer : annoService.listAnnotationLayer(getProject())) {
+        var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+        getMonitor().setMaxProgress(listAnnotationLayers.size());
+        for (var layer : listAnnotationLayers) {
+            getMonitor().incrementProgress();
+
             if (!layer.isEnabled()) {
                 continue;
             }
@@ -412,6 +422,7 @@ public class TrainingTask
             Recommender recommender, List<CAS> cassesForTraining)
         throws ConcurrentException
     {
+        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
         log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                 casses.get().size());

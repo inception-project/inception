@@ -67,6 +67,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -80,6 +81,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
@@ -100,7 +102,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -125,7 +126,7 @@ public abstract class AnnotationDetailEditorPanel
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;
@@ -149,33 +150,38 @@ public abstract class AnnotationDetailEditorPanel
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
+        queue(new WebMarkupContainer("header")
+                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet())));
+        queue(new Label("layerType", getModel().map(m -> m.getSelectedAnnotationLayer())
+                .map(l -> l.getType()).map(t -> getString(t))).setOutputMarkupId(true));
+
         confirmationDialog = new BootstrapModalDialog("deleteAnnotationDialog");
         confirmationDialog.trapFocus();
-        add(confirmationDialog);
+        queue(confirmationDialog);
 
-        add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
-        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
+        queue(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel()));
+        queue(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));
-        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
+        queue(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
                 getModel(), this));
-        add(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
+        queue(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
                 this, aModel));
         relationListPanel.setOutputMarkupPlaceholderTag(true);
 
         buttonContainer = new WebMarkupContainer("buttonContainer");
         buttonContainer.setOutputMarkupPlaceholderTag(true);
-        buttonContainer.add(createDeleteButton());
-        buttonContainer.add(createReverseButton());
-        buttonContainer.add(createClearButton());
-        add(buttonContainer);
+        queue(createDeleteButton());
+        queue(createReverseButton());
+        queue(createClearButton());
+        queue(buttonContainer);
 
         navContainer = new WebMarkupContainer("navContainer");
         navContainer
                 .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         navContainer.setOutputMarkupPlaceholderTag(true);
-        navContainer.add(createNextAnnotationButton());
-        navContainer.add(createPreviousAnnotationButton());
-        add(navContainer);
+        queue(createNextAnnotationButton());
+        queue(createPreviousAnnotationButton());
+        queue(navContainer);
     }
 
     @Override
@@ -189,15 +195,14 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createNextAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
+        var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
         return link;
     }
 
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("previousAnnotation",
-                this::actionPreviousAnnotation);
+        var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
         return link;
     }
@@ -296,7 +301,7 @@ public abstract class AnnotationDetailEditorPanel
         // Creating a relation
         AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
                 originFs, targetFs, aCas);
-        selection.selectArc(new VID(arc), originFs, targetFs);
+        selection.selectArc(VID.of(arc), originFs, targetFs);
     }
 
     private void createNewSpanAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter, CAS aCas)
@@ -987,7 +992,7 @@ public abstract class AnnotationDetailEditorPanel
         // If no features, still create arc #256
         AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
                 state.getUser().getUsername(), targetFs, originFs, cas);
-        state.getSelection().setAnnotation(new VID(ICasUtil.getAddr(arc)));
+        state.getSelection().selectArc(arc);
 
         for (FeatureState featureState : featureStates) {
             adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
@@ -1036,13 +1041,13 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("loadFeatureEditorModels()");
 
-        CAS aCas = getEditorCas();
+        var aCas = getEditorCas();
 
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
+        var state = getModelObject();
+        var selection = state.getSelection();
 
-        List<FeatureState> featureStates = state.getFeatureStates();
-        for (FeatureState featureState : featureStates) {
+        var featureStates = state.getFeatureStates();
+        for (var featureState : featureStates) {
             if (StringUtils.isNotBlank(featureState.feature.getLinkTypeName())) {
                 featureState.value = new ArrayList<>();
             }
@@ -1204,10 +1209,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private boolean isAnnotationEventRelevant(AnnotationEvent aEvent)
+    private boolean annotationEventAffectsSelectedAnnotation(AnnotationEvent aEvent)
     {
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
+        var state = getModelObject();
+        var selection = state.getSelection();
         if (selection.getAnnotation().isNotSet()) {
             return false;
         }
@@ -1220,36 +1225,34 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     @OnEvent
-    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    public void onBulkAnnotationEvent(BulkAnnotationEvent aEvent)
     {
-        if (!isAnnotationEventRelevant(aEvent)) {
+        if (!annotationEventAffectsSelectedAnnotation(aEvent)) {
             return;
         }
 
         try {
-            Selection selection = getModelObject().getSelection();
+            var selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
-            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
-                    .at(selection.getBegin(), selection.getEnd()) //
+            // https://github.com/apache/uima-uimaj/issues/345
+            // boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+            // .at(selection.getBegin(), selection.getEnd()) //
+            // .anyMatch(ann -> ann._id() == id);
+            var cas = getEditorCas();
+            boolean annotationStillExists = CasUtil
+                    .selectAt(cas, CasUtil.getType(cas, Annotation.class), selection.getBegin(),
+                            selection.getEnd())
+                    .stream() //
                     .anyMatch(ann -> ann._id() == id);
+
             if (!annotationStillExists) {
                 selection.clear();
                 refresh(aEvent.getRequestTarget());
-
             }
         }
         catch (Exception e) {
             handleException(this, aEvent.getRequestTarget(), e);
         }
-    }
-
-    /**
-     * @deprecated to be removed without replacement
-     */
-    @Deprecated
-    protected void onAutoForward(AjaxRequestTarget aTarget)
-    {
-        // Overridden in CurationPanel
     }
 
     @SuppressWarnings("unchecked")

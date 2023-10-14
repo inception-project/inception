@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api'
+import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
 import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 
 declare const Wicket: any
@@ -229,15 +229,73 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  loadLazyDetails (id: VID, type: string, database: string, key: string): Promise<any> {
+  loadLazyDetails (idOrAnnotation: VID | Annotation, optionaLayerId?: number): Promise<LazyDetailGroup[]> {
     const token = DiamAjaxImpl.newToken()
+
+    let id : VID
+    if (Object.prototype.hasOwnProperty.call(idOrAnnotation, 'vid')) {
+      id = (idOrAnnotation as Annotation).vid
+    } else {
+      id = idOrAnnotation as VID
+    }
+
+    let layerId : number
+    if (optionaLayerId) {
+      layerId = optionaLayerId
+    } else {
+      layerId = (idOrAnnotation as Annotation).layer.id
+    }
 
     const params: Record<string, any> = {
       action: 'normData',
       token,
       id,
-      type,
-      database,
+      layerId
+    }
+
+    return new Promise((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          const result = DiamAjaxImpl.clearResult(token)
+          if (result === undefined) {
+            reject(new Error('Server did not place result into transport buffer'))
+            return
+          }
+
+          const detailGroups : LazyDetailGroup[] = []
+          for (const detailGroup of result) {
+            const group : LazyDetailGroup = {
+              title: detailGroup.title,
+              details: []
+            }
+
+            for (const detail of detailGroup.details as []) {
+              group.details.push({ label: detail[0], value: detail[1] })
+            }
+
+            detailGroups.push(group)
+          }
+
+          resolve(detailGroups)
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to load lazy details'))
+        }]
+      })
+    })
+  }
+
+  loadPreferences (key: string): Promise<any> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'loadPreferences',
+      token,
       key
     }
 
@@ -258,7 +316,35 @@ export class DiamAjaxImpl implements DiamAjax {
         eh: [() => {
           DiamAjaxImpl.clearResult(token)
 
-          reject(new Error('Unable to load annotation'))
+          reject(new Error('Unable to load preferences'))
+        }]
+      })
+    })
+  }
+
+  savePreferences (key: string, data: Record<string, any>): Promise<void> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'savePreferences',
+      token,
+      key,
+      data: JSON.stringify(data)
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          DiamAjaxImpl.clearResult(token)
+          resolve()
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to save preferences'))
         }]
       })
     })

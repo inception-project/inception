@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -28,7 +29,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
@@ -72,6 +72,9 @@ public class OpenNlpDoccatRecommender
     private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
     private static final Class<Sentence> DATAPOINT_UNIT = Sentence.class;
 
+    private static final int MIN_TRAINING_SET_SIZE = 2;
+    private static final int MIN_TEST_SET_SIZE = 2;
+
     private final OpenNlpDoccatRecommenderTraits traits;
 
     public OpenNlpDoccatRecommender(Recommender aRecommender,
@@ -91,7 +94,7 @@ public class OpenNlpDoccatRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        List<DocumentSample> docSamples = extractSamples(aCasses);
+        var docSamples = extractSamples(aCasses);
 
         if (docSamples.size() < 2) {
             aContext.warn("Not enough training data: [%d] items", docSamples.size());
@@ -109,10 +112,10 @@ public class OpenNlpDoccatRecommender
         // OpenNLP
         int beamSize = Math.max(maxRecommendations, NameFinderME.DEFAULT_BEAM_SIZE);
 
-        TrainingParameters params = traits.getParameters();
+        var params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
 
-        DoccatModel model = train(docSamples, params);
+        var model = train(docSamples, params);
 
         aContext.put(KEY_MODEL, model);
     }
@@ -127,43 +130,42 @@ public class OpenNlpDoccatRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(
+        var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
-        DocumentCategorizerME finder = new DocumentCategorizerME(model);
+        var finder = new DocumentCategorizerME(model);
 
-        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
-        Type predictedType = getPredictedType(aCas);
-        Type tokenType = getType(aCas, Token.class);
-        Feature scoreFeature = getScoreFeature(aCas);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
+        var sampleUnitType = getType(aCas, SAMPLE_UNIT);
+        var predictedType = getPredictedType(aCas);
+        var tokenType = getType(aCas, Token.class);
+        var scoreFeature = getScoreFeature(aCas);
+        var predictedFeature = getPredictedFeature(aCas);
+        var isPredictionFeature = getIsPredictionFeature(aCas);
 
         var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
-        int predictionCount = 0;
-        for (AnnotationFS sampleUnit : units) {
+        var predictionCount = 0;
+        for (var unit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
-            String[] tokens = tokenAnnotations.stream() //
+            var tokenAnnotations = selectCovered(tokenType, unit);
+            var tokens = tokenAnnotations.stream() //
                     .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
-            double[] outcome = finder.categorize(tokens);
-            String label = finder.getBestCategory(outcome);
+            var outcome = finder.categorize(tokens);
+            var label = finder.getBestCategory(outcome);
 
-            AnnotationFS annotation = aCas.createAnnotation(predictedType, sampleUnit.getBegin(),
-                    sampleUnit.getEnd());
+            var annotation = aCas.createAnnotation(predictedType, unit.getBegin(), unit.getEnd());
             annotation.setStringValue(predictedFeature, label);
             annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
 
-        return new Range(units);
+        return rangeCoveringAnnotations(units);
     }
 
     @Override
@@ -176,9 +178,9 @@ public class OpenNlpDoccatRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        List<DocumentSample> data = extractSamples(aCasses);
-        List<DocumentSample> trainingSet = new ArrayList<>();
-        List<DocumentSample> testSet = new ArrayList<>();
+        var data = extractSamples(aCasses);
+        var trainingSet = new ArrayList<DocumentSample>();
+        var testSet = new ArrayList<DocumentSample>();
 
         for (DocumentSample nameSample : data) {
             switch (aDataSplitter.getTargetSet(nameSample)) {
@@ -194,39 +196,33 @@ public class OpenNlpDoccatRecommender
             }
         }
 
-        int testSetSize = testSet.size();
-        int trainingSetSize = trainingSet.size();
-        double overallTrainingSize = data.size() - testSetSize;
-        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+        var testSetSize = testSet.size();
+        var trainingSetSize = trainingSet.size();
+        var overallTrainingSize = data.size() - testSetSize;
+        var trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        final int minTrainingSetSize = 2;
-        final int minTestSetSize = 2;
-        if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
-            if ((getRecommender().getThreshold() <= 0.0d)) {
-                return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
-                        SAMPLE_UNIT.getSimpleName());
-            }
+        if (trainingSetSize < MIN_TRAINING_SET_SIZE || testSetSize < MIN_TEST_SET_SIZE) {
+            String msg = String.format(
+                    "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
+                    trainingSetSize, MIN_TRAINING_SET_SIZE, testSetSize, MIN_TEST_SET_SIZE,
+                    data.size(), (MIN_TRAINING_SET_SIZE + MIN_TEST_SET_SIZE));
+            LOG.info(msg);
 
-            String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
-                    trainingSetSize, testSetSize, data.size());
-            LOG.info(info);
-
-            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+            var result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
                     SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
-            result.setErrorMsg(info);
+            result.setErrorMsg(msg);
             return result;
         }
 
         if (trainingSet.stream().map(DocumentSample::getCategory).distinct().count() <= 1) {
-            String info = String.format("Training data requires at least two different labels");
-            LOG.info(info);
+            var msg = String.format("Training data requires at least two different labels");
+            LOG.info(msg);
 
-            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+            var result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
                     SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
-            result.setErrorMsg(info);
+            result.setErrorMsg(msg);
             return result;
         }
 
@@ -234,11 +230,11 @@ public class OpenNlpDoccatRecommender
                 trainingSet.size(), testSet.size());
 
         // Train model
-        DoccatModel model = train(trainingSet, traits.getParameters());
-        DocumentCategorizerME doccat = new DocumentCategorizerME(model);
+        var model = train(trainingSet, traits.getParameters());
+        var doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        EvaluationResult result = testSet.stream()
+        var result = testSet.stream()
                 .map(sample -> new LabelPair(sample.getCategory(),
                         doccat.getBestCategory(doccat.categorize(sample.getText()))))
                 .collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
@@ -250,13 +246,12 @@ public class OpenNlpDoccatRecommender
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)
     {
-        List<DocumentSample> samples = new ArrayList<>();
+        var samples = new ArrayList<DocumentSample>();
         casses: for (CAS cas : aCasses) {
             Type sampleUnitType = getType(cas, SAMPLE_UNIT);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sampleUnits = indexCovered(cas, sampleUnitType,
-                    tokenType);
+            var sampleUnits = indexCovered(cas, sampleUnitType, tokenType);
             for (Entry<AnnotationFS, List<AnnotationFS>> e : sampleUnits.entrySet()) {
                 AnnotationFS sampleUnit = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();

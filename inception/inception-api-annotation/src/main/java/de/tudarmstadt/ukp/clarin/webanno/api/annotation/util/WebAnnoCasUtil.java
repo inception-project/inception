@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static java.io.ObjectInputFilter.Config.createFilter;
+import static java.lang.String.join;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_END;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
@@ -28,6 +30,12 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.CasUtil.selectSingle;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +53,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.CASMgrSerializer;
+import org.apache.uima.cas.impl.CASSerializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
@@ -68,6 +78,13 @@ public class WebAnnoCasUtil
 
     private static final boolean ENFORCE_CAS_THREAD_LOCK = System
             .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "true").equals("true");
+
+    private final static ObjectInputFilter SERIALIZED_CAS_INPUT_FILTER = createFilter(join(";", //
+            CASCompleteSerializer.class.getName(), //
+            CASSerializer.class.getName(), //
+            CASMgrSerializer.class.getName(), //
+            String.class.getName(), //
+            "!*"));
 
     public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
     {
@@ -720,5 +737,50 @@ public class WebAnnoCasUtil
         Set<FeatureStructure> allFSes = new LinkedHashSet<>();
         ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
         return allFSes;
+    }
+
+    public static byte[] casToByteArray(CASCompleteSerializer aSer) throws IOException
+    {
+        try (var bos = new ByteArrayOutputStream()) {
+            try (var oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(aSer);
+            }
+            return bos.toByteArray();
+        }
+    }
+
+    public static byte[] casToByteArray(CAS aCas) throws IOException
+    {
+        // Index annotation document
+        var realCas = (CASImpl) getRealCas(aCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (realCas.getBaseCAS()) {
+            return casToByteArray(serializeCASComplete(realCas));
+        }
+    }
+
+    public static CAS byteArrayToCas(byte[] aByteArray) throws IOException
+    {
+        CAS cas;
+        try {
+            cas = createCas();
+        }
+        catch (ResourceInitializationException e) {
+            throw new IOException(e);
+        }
+
+        var realCas = (CASImpl) getRealCas(cas);
+        synchronized (realCas.getBaseCAS()) {
+            try (var ois = new ObjectInputStream(new ByteArrayInputStream(aByteArray))) {
+                ois.setObjectInputFilter(SERIALIZED_CAS_INPUT_FILTER);
+                var casCompleteSerializer = (CASCompleteSerializer) ois.readObject();
+                realCas.reinit(casCompleteSerializer);
+            }
+            catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+        }
+
+        return cas;
     }
 }

@@ -48,6 +48,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -514,8 +515,11 @@ public class SPARQLQueryBuilderTest
             queryPair.getValue().forEach(v -> expectedKBHandle.addMatchTerm(v, null));
 
             assertThat(results) //
-                    .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
-                            "matchTerms") //
+                    .usingRecursiveFieldByFieldElementComparator(
+                            RecursiveComparisonConfiguration.builder() //
+                                    .withComparedFields("identifier", "name", "matchTerms") //
+                                    .withIgnoredCollectionOrderInFields("matchTerms") //
+                                    .build())
                     .containsExactlyInAnyOrder(expectedKBHandle);
         }
     }
@@ -1492,6 +1496,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Tag("slow")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {

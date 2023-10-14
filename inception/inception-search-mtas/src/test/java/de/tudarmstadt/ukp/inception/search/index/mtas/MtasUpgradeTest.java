@@ -40,9 +40,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -52,8 +52,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
@@ -66,6 +70,7 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
+                "spring.main.banner-mode=off", //
                 "debug.cas-doctor.force-release-behavior=true", //
                 "document-import.run-cas-doctor-on-import=OFF" })
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -185,6 +190,18 @@ public class MtasUpgradeTest
             var props = new RepositoryProperties();
             props.setPath(new File(WORK_DIR));
             return props;
+        }
+
+        @Bean
+        AnnotationSchemaProperties annotationSchemaProperties()
+        {
+            return new AnnotationSchemaPropertiesImpl();
+        }
+
+        @Bean
+        public XmiFormatSupport xmiFormatSupport()
+        {
+            return new XmiFormatSupport(new XmiFormatProperties());
         }
     }
 }

@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.wicket.request.IRequestParameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -29,8 +30,9 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public interface LazyDetailsLookupService
 {
-    LazyDetailsResponse lookupLazyDetails(IRequestParameters request, VID paramId, CasProvider aCas,
-            SourceDocument aSourceDocument, User aUser, int windowBeginOffset, int windowEndOffset)
+    List<LazyDetailGroup> lookupLazyDetails(IRequestParameters request, VID paramId,
+            CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
+            int windowEndOffset)
         throws AnnotationException, IOException;
 
 }

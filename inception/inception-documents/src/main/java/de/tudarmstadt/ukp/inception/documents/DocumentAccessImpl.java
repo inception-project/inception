@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 
 /**
@@ -72,15 +73,16 @@ public class DocumentAccessImpl
     }
 
     @Override
-    public boolean canViewAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
-            String aAnnotator)
+    public boolean canViewAnnotationDocument(String aSessionOwner, String aProjectId,
+            long aDocumentId, String aAnnotator)
     {
         log.trace(
-                "Permission check: canViewAnnotationDocument [user: {}] [project: {}] [document: {}] [annotator: {}]",
-                aUser, aProjectId, aDocumentId, aAnnotator);
+                "Permission check: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
+                        + "[document: {}] [annotator: {}]",
+                aSessionOwner, aProjectId, aDocumentId, aAnnotator);
 
         try {
-            User user = getUser(aUser);
+            User user = getUser(aSessionOwner);
             Project project = getProject(aProjectId);
 
             List<PermissionLevel> permissionLevels = projectService.listRoles(project, user);
@@ -96,7 +98,7 @@ public class DocumentAccessImpl
             }
 
             // Annotators can only see their own documents
-            if (!aUser.equals(aAnnotator)) {
+            if (!aSessionOwner.equals(aAnnotator)) {
                 return false;
             }
 
@@ -118,24 +120,25 @@ public class DocumentAccessImpl
     }
 
     @Override
-    public boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
-            String aAnnotator)
+    public boolean canEditAnnotationDocument(String aSessionOwner, String aProjectId,
+            long aDocumentId, String aAnnotator)
     {
         log.trace(
-                "Permission check: canEditAnnotationDocument [user: {}] [project: {}] [document: {}] [annotator: {}]",
-                aUser, aProjectId, aDocumentId, aAnnotator);
+                "Permission check: canEditAnnotationDocument [aSessionOwner: {}] [project: {}] "
+                        + "[document: {}] [annotator: {}]",
+                aSessionOwner, aProjectId, aDocumentId, aAnnotator);
 
         try {
-            User user = getUser(aUser);
+            User user = getUser(aSessionOwner);
             Project project = getProject(aProjectId);
 
             // Does the user have the permission to access the project at all?
-            if (!projectService.hasRole(user, project, PermissionLevel.ANNOTATOR)) {
+            if (!projectService.hasRole(user, project, ANNOTATOR)) {
                 return false;
             }
 
             // Users can edit their own annotations
-            if (!aUser.equals(aAnnotator)) {
+            if (!aSessionOwner.equals(aAnnotator)) {
                 return false;
             }
 
@@ -154,6 +157,20 @@ public class DocumentAccessImpl
             // If any object does not exist, the user cannot edit
             return false;
         }
+    }
+
+    @Override
+    public boolean canExportAnnotationDocument(User aSessionOwner, Project aProject)
+    {
+        if (aProject == null) {
+            return false;
+        }
+
+        if (projectService.hasRole(aSessionOwner, aProject, MANAGER)) {
+            return true;
+        }
+
+        return !aProject.isDisableExport();
     }
 
     private Project getProject(String aProjectId)

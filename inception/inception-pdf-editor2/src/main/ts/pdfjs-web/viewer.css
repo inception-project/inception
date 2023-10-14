@@ -674,6 +674,7 @@
 
 .pdfViewer {
   padding-bottom: var(--pdfViewer-padding-bottom);
+  background-color: var(--bs-secondary-bg);
 }
 
 .pdfViewer .canvasWrapper {
@@ -689,9 +690,12 @@
   overflow: visible;
   border: var(--page-border);
   background-clip: content-box;
-  -o-border-image: url(images/shadow.png) 9 9 repeat;
-     border-image: url(images/shadow.png) 9 9 repeat;
+/*  -o-border-image: url(images/shadow.png) 9 9 repeat;
+     border-image: url(images/shadow.png) 9 9 repeat; */
   background-color: rgba(255, 255, 255, 1);
+  border-color: var(--bs-secondary-bg);
+  overflow-x: clip;
+  overflow-y: clip;
 }
 
 .pdfViewer .dummyPage {

@@ -125,8 +125,10 @@ public class StringFeatureTraitsEditor
         tagset.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
         // If we change the tagset, the input component for the key bindings may change, so we need
         // to re-generate the key bindings
-        tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                _target -> refreshKeyBindings(_target, aFeature)));
+        tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+            _target.add(form);
+            refreshKeyBindings(_target, aFeature);
+        }));
         form.add(tagset);
 
         CheckBox multipleRows = new CheckBox("multipleRows");

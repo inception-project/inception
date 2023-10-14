@@ -27,8 +27,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
@@ -59,9 +59,10 @@ public class PdfAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override
@@ -90,6 +91,7 @@ public class PdfAnnotationEditor
                 referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,
                 PdfAnnotationEditorJavascriptResourceReference.get())));
+        props.setLoadingIndicatorDisabled(true);
         return props;
     }
 }

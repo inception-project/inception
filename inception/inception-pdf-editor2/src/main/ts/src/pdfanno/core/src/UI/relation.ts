@@ -1,5 +1,5 @@
-import RelationAnnotation from '../annotation/relation.js'
-import SpanAnnotation from '../annotation/span.js'
+import RelationAnnotation from '../model/RelationAnnotation.js'
+import SpanAnnotation from '../model/SpanAnnotation.js'
 import { getClientXY, scaleDown } from './utils'
 
 let relationAnnotation: RelationAnnotation | null = null
@@ -35,18 +35,19 @@ function handleHoverIn (ev: Event) {
 }
 
 function handleMouseDown (ev: MouseEvent): void {
-  if (!(ev.target as HTMLElement).closest('.anno-knob')) {
-    return
-  }
+  if (!(ev.target as HTMLElement).closest('.anno-knob')) return
 
   mousedownFired = true
-  if (hoveredAnnotation) {
-    onAnnotation = true
-    relationAnnotation = new RelationAnnotation()
-    relationAnnotation.rel1Annotation = hoveredAnnotation
-    relationAnnotation.readOnly = false
-    dragStartedAt = ev
-  }
+
+  if (!hoveredAnnotation) return
+
+  if (`${hoveredAnnotation.vid}`.includes(':')) return
+
+  onAnnotation = true
+  relationAnnotation = new RelationAnnotation()
+  relationAnnotation.rel1Annotation = hoveredAnnotation
+  relationAnnotation.readOnly = false
+  dragStartedAt = ev
 }
 
 function handleMouseUp (ev: MouseEvent): void {

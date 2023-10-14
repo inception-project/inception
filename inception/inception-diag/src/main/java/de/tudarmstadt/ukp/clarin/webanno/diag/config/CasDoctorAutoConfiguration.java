@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentence
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
@@ -228,5 +229,11 @@ public class CasDoctorAutoConfiguration
     public TokensAndSententencedDoNotOverlapCheck tokensAndSententencedDoNotOverlapCheck()
     {
         return new TokensAndSententencedDoNotOverlapCheck();
+    }
+
+    @Bean
+    public UnreachableAnnotationsCheck unreachableAnnotationsCheck()
+    {
+        return new UnreachableAnnotationsCheck();
     }
 }

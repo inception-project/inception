@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Ctrl;
+import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 
@@ -37,12 +40,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
@@ -50,8 +53,10 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import wicket.contrib.input.events.key.KeyType;
 
 public class CuratorWorkflowActionBarItemGroup
     extends Panel
@@ -85,6 +90,7 @@ public class CuratorWorkflowActionBarItemGroup
         toggleCurationStateLink.setOutputMarkupId(true);
         toggleCurationStateLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+        toggleCurationStateLink.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         curationWorkflowModel = Model.of(
                 curationService.readOrCreateCurationWorkflow(page.getModelObject().getProject()));

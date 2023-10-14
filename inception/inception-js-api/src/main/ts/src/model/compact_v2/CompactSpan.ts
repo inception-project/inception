@@ -28,6 +28,7 @@ export type CompactSpan = [
 
 export function unpackCompactSpan (doc: AnnotatedText, raw: CompactSpan): Span {
   const cooked = new Span()
+  cooked.document = doc
   cooked.layer = doc.__getOrCreateLayer(raw[0])
   cooked.vid = raw[1]
   cooked.offsets = raw[2]

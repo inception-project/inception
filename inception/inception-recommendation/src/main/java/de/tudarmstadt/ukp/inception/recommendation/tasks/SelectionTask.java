@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static java.lang.System.currentTimeMillis;
 import static java.text.MessageFormat.format;
 
@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -45,13 +44,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
@@ -60,8 +58,11 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
- * project. If a classifier exceeds its specific activation f-score limit during the evaluation it
- * is selected for active prediction.
+ * project. If a classifier exceeds its specific activation score limit during the evaluation it is
+ * selected for active prediction.
+ * 
+ * If the threshold is 0 (or less), the evaluation should be considered optional. That is, if the
+ * evaluation fails (e.g. because of too little data), then the training should still be scheduled.
  */
 public class SelectionTask
     extends RecommendationTask_ImplBase
@@ -107,14 +108,19 @@ public class SelectionTask
     }
 
     @Override
+    public String getTitle()
+    {
+        return "Activating trainable recommenders...";
+    }
+
+    @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            Project project = getProject();
-            User sessionOwner = getUser().orElseThrow();
-            String sessionOwnerName = sessionOwner.getUsername();
-
-            logEvaluationStarted(sessionOwner);
+            var sessionOwner = getUser().orElseThrow();
+            var sessionOwnerName = sessionOwner.getUsername();
+            var startTime = System.currentTimeMillis();
+            var project = getProject();
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -128,8 +134,13 @@ public class SelectionTask
                 }
             };
 
+            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+            getMonitor().setMaxProgress(listAnnotationLayers.size());
             boolean seenRecommender = false;
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
+            var layers = annoService.listAnnotationLayer(getProject());
+            for (AnnotationLayer layer : layers) {
+                getMonitor().incrementProgress();
+
                 if (!layer.isEnabled()) {
                     continue;
                 }
@@ -140,22 +151,26 @@ public class SelectionTask
                     continue;
                 }
 
-                seenRecommender = true;
-
                 var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
-                    Optional<Recommender> optRecommender = freshenRecommender(sessionOwner, r);
+                    var optRecommender = freshenRecommender(sessionOwner, r);
                     if (optRecommender.isEmpty()) {
                         logRecommenderGone(sessionOwner, r);
                         continue;
+                    }
+
+                    if (!seenRecommender) {
+                        logSelectionStarted(sessionOwner);
+                        seenRecommender = true;
                     }
 
                     Recommender recommender = optRecommender.get();
                     try {
                         long start = System.currentTimeMillis();
 
+                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
                         evaluate(sessionOwner, recommender, casLoader)
                                 .ifPresent(evaluatedRecommender -> {
                                     var result = evaluatedRecommender.getEvaluationResult();
@@ -192,8 +207,17 @@ public class SelectionTask
                 return;
             }
 
+            logSelectionComplete(startTime, sessionOwnerName);
+
             scheduleTrainingTask(sessionOwner);
         }
+    }
+
+    private void logSelectionComplete(long startTime, String username)
+    {
+        var duration = currentTimeMillis() - startTime;
+        log.debug("[{}][{}]: Selection complete ({} ms)", getId(), username, duration);
+        info("Selection complete (%d ms).", duration);
     }
 
     private void logRecommenderGone(User user, Recommender aRecommender)
@@ -202,9 +226,11 @@ public class SelectionTask
                 user.getUsername(), aRecommender.getName());
     }
 
-    private void logEvaluationStarted(User sessionOwner)
+    private void logSelectionStarted(User sessionOwner)
     {
-        log.info("[{}]: Evaluation started", sessionOwner.getUsername());
+        log.info("[{}]: Starting selection triggered by [{}]", sessionOwner.getUsername(),
+                getTrigger());
+        info("Starting selection triggered by [%s]", getTrigger());
     }
 
     private void scheduleTrainingTask(User sessionOwner)
@@ -276,17 +302,23 @@ public class SelectionTask
         }
 
         log.info("[{}][{}]: Evaluating...", userName, recommender.getName());
-        DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-        RecommendationEngine recommendationEngine = factory.build(recommender);
+        var splitter = new PercentageBasedSplitter(0.8, 10);
+        var recommendationEngine = factory.build(recommender);
 
-        EvaluationResult result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        var result = recommendationEngine.evaluate(aCasses.get(), splitter);
+        double threshold = recommender.getThreshold();
 
         if (result.isEvaluationSkipped()) {
+            var evaluationIsOptional = recommender.getThreshold() <= 0.0d;
+            if (evaluationIsOptional) {
+                return Optional.of(
+                        activateRecommenderAboveThreshold(user, recommender, result, 0, threshold));
+            }
+
             return Optional.of(skipRecommenderDueToFailedEvaluation(user, recommender, result));
         }
 
         double score = result.computeF1Score();
-        double threshold = recommender.getThreshold();
         if (score >= threshold) {
             return Optional.of(
                     activateRecommenderAboveThreshold(user, recommender, result, score, threshold));

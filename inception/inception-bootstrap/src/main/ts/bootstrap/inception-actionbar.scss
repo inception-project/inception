@@ -19,14 +19,14 @@
 .action-bar {
   @extend .border-bottom;
   padding: 5px;
-  background-color: $card-cap-bg;
+  background-color: var(--bs-card-cap-bg);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   
   @include media-breakpoint-down(xl) {
-    font-size: 1vw !important;
+    font-size: 1.3vw !important;
   }
 
   @include media-breakpoint-down(xl) {
@@ -36,50 +36,33 @@
       font-size: inherit !important;
     }
   }
-
-  @include media-breakpoint-down(lg) {
-    .btn {
-      padding-left: calc($input-btn-padding-x / 2);
-      padding-right: calc($input-btn-padding-x / 2);
-    }
+  
+  .btn-group, .input-group {
+    @extend .bg-body;
+    @extend .px-0;
+    @extend .mx-1;
+    border-radius: var(--bs-border-radius);
   }
-
-  > * {
-    padding-left: calc($grid-gutter-width / 4);
-    padding-right: calc($grid-gutter-width / 4);
-  }
-
-  @include media-breakpoint-down(xl) {
-    > * {
-      padding-left: calc($grid-gutter-width / 8);
-      padding-right: calc($grid-gutter-width / 8);
+  
+  .btn-action-bar {
+    @extend .btn-outline-secondary;
+    
+    @include media-breakpoint-down(xl) {
+      --bs-btn-padding-x: 1vw !important;
+      --bs-btn-padding-y: 0.55vw !important;
     }
   }
     
   .action-bar-group {
-    padding: 2px;
-    background-color: lightgrey;
-    border-radius: 5px;
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    background-color: var(--bs-light-border-subtle);
+    border-radius: var(--bs-border-radius);
     display: flex;
     flex-direction: row;
     align-items: center;
     flex: 0;
-
-    > * {
-      padding-left: calc($grid-gutter-width / 8);
-      padding-right: calc($grid-gutter-width / 8);
-    }
-
-    @include media-breakpoint-down(xl) {
-      > * {
-        padding-left: calc($grid-gutter-width / 16);
-        padding-right: calc($grid-gutter-width / 16);
-      }
-    }
-  }
-  
-  .action-bar-group-title {
-    padding-left: calc($grid-gutter-width / 2);
-    padding-right: calc($grid-gutter-width / 2);
   }
 }

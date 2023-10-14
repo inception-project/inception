@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -40,17 +41,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
@@ -61,6 +63,7 @@ public class LoggedEventExporterTest
 
     private @Mock DocumentService documentService;
     private @Mock EventRepository eventRepository;
+    private @Captor ArgumentCaptor<LoggedEvent[]> loggedEventCaptor;
 
     private Project project;
     private File workFolder;
@@ -96,16 +99,17 @@ public class LoggedEventExporterTest
                 .thenAnswer(_invocation -> new FileInputStream(new File(workFolder, "event.log")));
 
         // Export the project and import it again
-        var captor = runExportImportAndFetchEvents(zipFile);
+        runExportImportAndFetchEvents(zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         var expectedEvents = events().stream()
                 // document with the ID 2 does supposedly not exist, so it is skipped during export
                 .filter(e -> e.getDocument() != 2l) //
                 .collect(toList());
-        assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-                .containsExactlyInAnyOrderElementsOf(expectedEvents);
+        assertThat(
+                loggedEventCaptor.getAllValues().stream().flatMap(Arrays::stream).collect(toList())) //
+                        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
+                        .containsExactlyInAnyOrderElementsOf(expectedEvents);
     }
 
     @Test
@@ -114,10 +118,10 @@ public class LoggedEventExporterTest
         ZipFile zipFile = mock(ZipFile.class);
 
         // Export the project and import it again
-        var captor = runExportImportAndFetchEvents(zipFile);
+        runExportImportAndFetchEvents(zipFile);
 
         // Check that import was successful but not events have been imported
-        assertThat(captor.getAllValues()).isEmpty();
+        assertThat(loggedEventCaptor.getAllValues()).isEmpty();
     }
 
     private List<SourceDocument> documents()
@@ -172,8 +176,7 @@ public class LoggedEventExporterTest
         return asList(event1, event2, event3, event4);
     }
 
-    private ArgumentCaptor<LoggedEvent> runExportImportAndFetchEvents(ZipFile aZipFile)
-        throws Exception
+    private void runExportImportAndFetchEvents(ZipFile aZipFile) throws Exception
     {
         // Export the project
         FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
@@ -183,12 +186,9 @@ public class LoggedEventExporterTest
         sut.exportData(exportRequest, monitor, exportedProject, workFolder);
 
         // Import the project again
-        ArgumentCaptor<LoggedEvent> captor = ArgumentCaptor.forClass(LoggedEvent.class);
-        lenient().doNothing().when(eventRepository).create(captor.capture());
+        lenient().doNothing().when(eventRepository).create(loggedEventCaptor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exportedProject, aZipFile);
-
-        return captor;
     }
 }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
@@ -32,10 +31,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import wicket.contrib.input.events.key.KeyType;
 
 public class DocumentNavigator
@@ -44,6 +44,8 @@ public class DocumentNavigator
     private static final long serialVersionUID = 7061696472939390003L;
 
     private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userService;
+    private @SpringBean DocumentAccess documentAccess;
 
     private AnnotationPageBase page;
 
@@ -64,12 +66,14 @@ public class DocumentNavigator
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
         add(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
-        add(new LambdaAjaxLink("showExportDialog", exportDialog::show).add(visibleWhen(() -> {
-            AnnotatorState state = page.getModelObject();
-            return state.getProject() != null
-                    && (projectService.hasRole(state.getUser(), state.getProject(), MANAGER)
-                            || !state.getProject().isDisableExport());
-        })));
+        add(new LambdaAjaxLink("showExportDialog", exportDialog::show)
+                .add(visibleWhen(this::isExportable)));
+    }
+
+    private boolean isExportable()
+    {
+        return documentAccess.canExportAnnotationDocument(userService.getCurrentUser(),
+                page.getModelObject().getProject());
     }
 
     /**

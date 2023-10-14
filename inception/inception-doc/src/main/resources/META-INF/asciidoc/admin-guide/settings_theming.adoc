@@ -31,6 +31,19 @@ them, and use SCSS to compile them from the root `bootstrap.scss` file into a cu
 `bootstrap.css` file. 
 
 NOTE: New versions of {product-name} may come with changes to the CSS styles being used without
-      any special announcement. If you use theming, be sure to thorougly review if your custom styles still
+      any special announcement. If you use theming, be sure to thoroughly review if your custom styles still
       work with new versions. Best keep any changes minimal.
 
+.Theming settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `ui.dark-mode.enabled`
+| Whether to enable the ability switch between light and dark mode (experimental).
+| `false`
+| `true`
+|===

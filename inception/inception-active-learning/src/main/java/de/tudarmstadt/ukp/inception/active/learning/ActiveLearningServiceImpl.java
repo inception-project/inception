@@ -27,8 +27,8 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -46,13 +45,11 @@ import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoCon
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -68,7 +65,7 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final DocumentService documentService;
@@ -97,37 +94,18 @@ public class ActiveLearningServiceImpl
     @Override
     public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
+        var predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
         if (predictions == null) {
             return emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
-                .getPredictionsForWholeProject(SpanSuggestion.class, aLayer, documentService);
+        var recommendationsMap = predictions.getPredictionsForWholeProject(SpanSuggestion.class,
+                aLayer, documentService);
 
         return recommendationsMap.values().stream() //
                 .flatMap(docMap -> docMap.stream()) //
                 .collect(toList());
-    }
-
-    @Override
-    public boolean isSuggestionVisible(LearningRecord aRecord)
-    {
-        var aSessionOwner = userService.get(aRecord.getUser());
-        var suggestionGroups = getSuggestions(aSessionOwner, aRecord.getLayer());
-        for (var suggestionGroup : suggestionGroups) {
-            if (suggestionGroup.stream().anyMatch(suggestion -> suggestion.getDocumentName()
-                    .equals(aRecord.getSourceDocument().getName())
-                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
-                    && suggestion.labelEquals(aRecord.getAnnotation())
-                    && suggestion.getBegin() == aRecord.getOffsetBegin()
-                    && suggestion.getEnd() == aRecord.getOffsetEnd() //
-                    && suggestion.isVisible())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -174,27 +152,31 @@ public class ActiveLearningServiceImpl
         long startTimer = System.currentTimeMillis();
         var suggestionGroups = alState.getSuggestions();
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-        log.trace("Getting recommendations from recommender system took {} ms.",
+        LOG.trace("Getting recommendations from recommender system took {} ms.",
                 (getRecommendationsFromRecommendationService - startTimer));
-
-        // remove duplicate recommendations
-        suggestionGroups = suggestionGroups.stream() //
-                .map(it -> removeDuplicateRecommendations(it)) //
-                .collect(toList());
-        long removeDuplicateRecommendation = System.currentTimeMillis();
-        log.trace("Removing duplicate recommendations took {} ms.",
-                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
 
         // hide rejected recommendations
         hideRejectedOrSkippedAnnotations(aSessionOwner, aDataOwner, alState.getLayer(), true,
                 suggestionGroups);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-        log.trace("Removing rejected or skipped ones took {} ms.",
-                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
+        LOG.trace("Hiding rejected or skipped ones took {} ms.",
+                (removeRejectedSkippedRecommendation
+                        - getRecommendationsFromRecommendationService));
+
+        // remove duplicate recommendations
+        suggestionGroups = suggestionGroups.stream() //
+                .map(it -> removeDuplicatesAndHiddenSuggestions(it)) //
+                .filter(it -> !it.isEmpty()) //
+                .collect(toList());
+        long removeDuplicateRecommendation = System.currentTimeMillis();
+        LOG.trace("Removing duplicate recommendations took {} ms.",
+                (removeDuplicateRecommendation - removeRejectedSkippedRecommendation));
 
         var pref = recommendationService.getPreferences(aDataOwner,
                 alState.getLayer().getProject());
-        return alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
+        var nextSuggestion = alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
+        assert nextSuggestion.get().getFirst().isVisible() : "Generated suggestion must be visible";
+        return nextSuggestion;
     }
 
     @Override
@@ -296,35 +278,40 @@ public class ActiveLearningServiceImpl
                 alternativeSuggestions));
     }
 
-    private static SuggestionGroup<SpanSuggestion> removeDuplicateRecommendations(
-            SuggestionGroup<SpanSuggestion> unmodifiedRecommendationList)
+    private static SuggestionGroup<SpanSuggestion> removeDuplicatesAndHiddenSuggestions(
+            SuggestionGroup<SpanSuggestion> aSuggestionGroup)
     {
-        SuggestionGroup<SpanSuggestion> cleanRecommendationList = new SuggestionGroup<>();
+        var cleanSuggestionGroup = new SuggestionGroup<SpanSuggestion>();
 
-        unmodifiedRecommendationList.forEach(recommendationItem -> {
-            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
-                cleanRecommendationList.add(recommendationItem);
+        aSuggestionGroup.forEach(suggestion -> {
+            if (!suggestion.isVisible()) {
+                return;
+            }
+
+            if (!isAlreadyInCleanList(cleanSuggestionGroup, suggestion)) {
+                cleanSuggestionGroup.add(suggestion);
             }
         });
 
-        return cleanRecommendationList;
+        return cleanSuggestionGroup;
     }
 
     private static boolean isAlreadyInCleanList(
             SuggestionGroup<SpanSuggestion> cleanRecommendationList,
             AnnotationSuggestion recommendationItem)
     {
-        String source = recommendationItem.getRecommenderName();
-        String annotation = recommendationItem.getLabel();
-        String documentName = recommendationItem.getDocumentName();
+        var source = recommendationItem.getRecommenderName();
+        var annotation = recommendationItem.getLabel();
+        var documentName = recommendationItem.getDocumentName();
 
-        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
-            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
+        for (var existingRecommendation : cleanRecommendationList) {
+            var areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
                     && existingRecommendation.getDocumentName().equals(documentName)) {
                 return true;
             }
         }
+
         return false;
     }
 

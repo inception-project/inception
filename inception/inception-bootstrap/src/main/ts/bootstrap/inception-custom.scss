@@ -56,10 +56,10 @@ html, body {
   background-color: $card-bg;
   border-color: $card-border-color;
   border-top: 1px solid;
-  z-index: 2000; // Display above modal dialogs (1000)
+  z-index: 10000; // Display above modal dialogs (1000) and above sidebar (9999)
 
   a, a:hover, a:focus {
-    color: black;
+    color: var(--bs-body-color);
   }
 }
 

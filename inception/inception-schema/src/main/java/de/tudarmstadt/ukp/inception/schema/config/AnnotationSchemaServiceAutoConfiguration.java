@@ -30,8 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
@@ -54,7 +53,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehav
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 import de.tudarmstadt.ukp.inception.schema.exporters.LayerExporter;
@@ -70,8 +70,7 @@ import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 @Configuration
 @EnableConfigurationProperties({ //
         StringFeatureSupportPropertiesImpl.class, //
-        LinkFeatureSupportPropertiesImpl.class, //
-        AnnotationEditorPropertiesImpl.class })
+        LinkFeatureSupportPropertiesImpl.class })
 public class AnnotationSchemaServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -80,7 +79,7 @@ public class AnnotationSchemaServiceAutoConfiguration
     public AnnotationSchemaService annotationSchemaService(
             LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            AnnotationEditorProperties aAnnotationEditorProperties,
+            AnnotationSchemaProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new AnnotationSchemaServiceImpl(aLayerSupportRegistry, aFeatureSupportRegistry,

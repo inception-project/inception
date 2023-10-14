@@ -3,6 +3,7 @@
   "version": "${semver}",
   "author": "hshindo, yoheiMune, INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
+  "homepage": "https://github.com/inception-project/inception#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/inception-project/inception.git"
@@ -22,6 +23,7 @@
   "devDependencies": {
     "chai": "${chai.version}",
     "esbuild": "${esbuild.version}",
+    "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-runner-plugins": "${esbuild-runner-plugins.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
@@ -34,6 +36,8 @@
     "fs-extra": "${fs-extra.version}",
     "mocha": "${mocha.version}",
     "sass": "${sass.version}",
+    "svelte": "${svelte.version}",
+    "svelte-preprocess": "${svelte-preprocess.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",

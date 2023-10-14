@@ -39,6 +39,6 @@
  */import { VID } from '../protocol/Protocol'
 
 export class Role {
-  type: string
+  type: number
   targetId: VID
 }

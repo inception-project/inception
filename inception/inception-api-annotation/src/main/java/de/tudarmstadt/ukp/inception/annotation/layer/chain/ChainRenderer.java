@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.chain;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil.getUiLabelText;
+import static de.tudarmstadt.ukp.inception.schema.feature.TypeUtil.getUiLabelText;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -170,8 +170,6 @@ public class ChainRenderer
                             label);
                     annoToSpanIdx.put(linkFs, span);
                     aResponse.add(span);
-
-                    renderLazyDetails(linkFs, span, aFeatures);
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current

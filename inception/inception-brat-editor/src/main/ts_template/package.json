@@ -17,6 +17,7 @@
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
+    "bootstrap": "${bootstrap.version}",
     "fast-json-patch": "${fast-json-patch.version}",
     "@svgdotjs/svg.js": "${svgdotjs-svg-js.version}",
     "@svgdotjs/svg.filter.js": "${svgdotjs-svg-filter-js.version}"
@@ -32,7 +33,7 @@
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "eslint-config-standard": "${eslint-config-standard.version}",
-    "eslint-plugin-svelte3": "${eslint-plugin-svelte3.version}",
+    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
     "eslint-plugin-chai-friendly": "${eslint-plugin-chai-friendly.version}",
     "fs-extra": "${fs-extra.version}",
     "mocha": "${mocha.version}",

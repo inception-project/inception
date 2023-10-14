@@ -52,37 +52,56 @@ public class SvelteBehavior
 
     private ResourceReference jsRef;
     private ResourceReference cssRef;
+    private Component markupHost;
     private Component host;
 
     public SvelteBehavior()
     {
-        this(null);
+        this(null, null);
     }
 
-    public SvelteBehavior(ResourceReference aRef)
+    public SvelteBehavior(Component aHost)
     {
-        jsRef = aRef;
+        host = aHost;
+        host.setOutputMarkupId(true);
+        var componentClass = host.getClass();
+        jsRef = new PackageResourceReference(componentClass,
+                componentClass.getSimpleName() + ".min.js");
+        cssRef = new PackageResourceReference(componentClass,
+                componentClass.getSimpleName() + ".min.css");
+    }
+
+    public SvelteBehavior(ResourceReference aJsRef, ResourceReference aCssRef)
+    {
+        jsRef = aJsRef;
+        cssRef = aCssRef;
     }
 
     @Override
     public void bind(Component aComponent)
     {
-        if (host != null && host != aComponent) {
+        if (markupHost != null && markupHost != aComponent) {
             throw new IllegalStateException("Behavior already bound to another component");
         }
 
+        markupHost = aComponent;
+
+        if (host != null) {
+            return;
+        }
+
         host = aComponent;
+        host.setOutputMarkupId(true);
 
-        aComponent.setOutputMarkupId(true);
-
-        var componentClass = aComponent.getClass();
+        var componentClass = host.getClass();
 
         if (jsRef == null) {
             jsRef = new PackageResourceReference(componentClass,
                     componentClass.getSimpleName() + ".min.js");
         }
 
-        if (componentClass.getResource(componentClass.getSimpleName() + ".min.css") != null) {
+        if (cssRef == null
+                & componentClass.getResource(componentClass.getSimpleName() + ".min.css") != null) {
             cssRef = new PackageResourceReference(componentClass,
                     componentClass.getSimpleName() + ".min.css");
         }
@@ -115,7 +134,7 @@ public class SvelteBehavior
         IRequestHandler handler = new ResourceReferenceRequestHandler(jsRef);
         String url = RequestCycle.get().urlFor(handler).toString();
 
-        Object model = aComponent.getDefaultModelObject();
+        Object model = host.getDefaultModelObject();
         String propsJson;
         try {
             propsJson = model != null ? toInterpretableJsonString(model) : "{}";

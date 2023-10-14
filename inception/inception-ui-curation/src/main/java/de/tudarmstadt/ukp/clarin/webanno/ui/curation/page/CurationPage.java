@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
@@ -75,7 +75,6 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
 import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -110,6 +109,7 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
@@ -323,16 +323,6 @@ public class CurationPage
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
-            /**
-             * @deprecated to be removed without replacement
-             */
-            @Deprecated
-            @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget)
-            {
-                annotationEditor.requestRender(aTarget);
-            }
-
             @Override
             public CAS getEditorCas() throws IOException
             {
@@ -513,20 +503,19 @@ public class CurationPage
     }
 
     /**
-     * Open a document or to a different document. This method should be used only the first time
-     * that a document is accessed. It reset the annotator state and upgrades the CAS.
+     * Open a document. This method should be used only the first time that a document is accessed.
+     * It resets the editor state and upgrades the CAS.
      */
     private void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
-        AnnotatorState state = getModelObject();
-
-        state.setUser(userRepository.getCurationUser());
-
         try {
-            // Update source document state to CURRATION_INPROGRESS, if it was not
-            // CURATION_FINISHED
+            AnnotatorState state = getModelObject();
+            state.setUser(userRepository.getCurationUser());
+            state.reset();
+
+            // Update source document state to CURRATION_INPROGRESS, if it was not CURATION_FINISHED
             if (!CURATION_FINISHED.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
@@ -546,9 +535,6 @@ public class CurationPage
 
             CAS mergeCas = readOrCreateCurationCas(
                     curationService.getDefaultMergeStrategy(getProject()), false);
-
-            // (Re)initialize brat model after potential creating / upgrading CAS
-            state.reset();
 
             // Initialize timestamp in state
             curationDocumentService.getCurationCasTimestamp(state.getDocument())

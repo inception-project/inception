@@ -27,6 +27,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.FloatArray;
 import org.apache.uima.jcas.cas.IntegerArray;
@@ -117,7 +118,11 @@ public class VisualPdfReader
         List<VPage> vPages = new ArrayList<>();
         for (PdfPage pdfPage : pdfPages) {
             List<VChunk> vChunks = new ArrayList<>();
-            for (var pdfChunk : cas.select(PdfChunk.class).coveredBy(pdfPage)) {
+            // https://github.com/apache/uima-uimaj/issues/345
+            // SelectFSs<PdfChunk> coveredBy = cas.select(PdfChunk.class).coveredBy(pdfPage);
+            List<PdfChunk> coveredBy = (List) CasUtil
+                    .selectCovered(CasUtil.getType(cas, PdfChunk.class), pdfPage);
+            for (var pdfChunk : coveredBy) {
                 float d = pdfChunk.getD();
                 List<VGlyph> vGlyphs = new ArrayList<>();
                 IntegerArray charWidths = pdfChunk.getC();

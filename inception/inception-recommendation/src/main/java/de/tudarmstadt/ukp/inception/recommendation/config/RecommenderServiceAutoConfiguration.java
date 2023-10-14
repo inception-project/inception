@@ -32,16 +32,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
@@ -83,15 +83,6 @@ public class RecommenderServiceAutoConfiguration
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
                 aProjectService, entityManager, aApplicationEventPublisher);
-    }
-
-    @ConditionalOnWebApplication
-    @ConditionalOnProperty(prefix = "recommender.evaluation-page", //
-            name = "enabled", havingValue = "true", matchIfMissing = true)
-    @Bean
-    public EvaluationSimulationPageMenuItem evaluationSimulationPageMenuItem()
-    {
-        return new EvaluationSimulationPageMenuItem();
     }
 
     @Bean
@@ -160,10 +151,11 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationEditorExtension recommendationEditorExtension(
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
-            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aApplicationEventPublisher, aUserService);
+                aApplicationEventPublisher, aUserService, aFeatureSupportRegistry);
     }
 
     @Bean
@@ -218,5 +210,12 @@ public class RecommenderServiceAutoConfiguration
     {
         return new RecommendationRelationRenderer(aRecommendationService, aAnnotationService,
                 aFsRegistry);
+    }
+
+    @Bean
+    public RecommenderActionBarExtension recommenderActionBarExtension(
+            RecommendationService aRecommendationService)
+    {
+        return new RecommenderActionBarExtension(aRecommendationService);
     }
 }

@@ -23,6 +23,7 @@ import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,11 +67,17 @@ public class HybridApplicationUIEventRouter
             try {
                 page.send(page, Broadcast.BREADTH, aEvent);
             }
+            catch (ReplaceHandlerException e) {
+                throw e;
+            }
             catch (Throwable e) {
                 log.error("Exception while processing UI-routed event", e);
                 page.error("Exception while processing UI-routed event: " + e.getMessage());
                 handler.get().addChildren(page, IFeedback.class);
             }
+        }
+        catch (ReplaceHandlerException e) {
+            throw e;
         }
         catch (Throwable e) {
             log.error("Unable to route event to UI", e);

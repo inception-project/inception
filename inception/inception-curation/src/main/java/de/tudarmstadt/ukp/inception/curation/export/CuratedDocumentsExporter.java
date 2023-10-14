@@ -43,6 +43,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -50,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 
 /**
@@ -102,11 +103,13 @@ public class CuratedDocumentsExporter
      * 
      * @param aStage
      *            The folder where curated documents are copied to be exported as Zip File
+     * @throws IOException
+     * @throws ProjectExportException
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException, ProjectExportException
     {
         Project project = aRequest.getProject();
 
@@ -166,7 +169,7 @@ public class CuratedDocumentsExporter
 
     private void exportAdditionalFormat(Map<Pair<Project, String>, Object> bulkOperationContext,
             SourceDocument srcDoc, File curationDir, FormatSupport format)
-        throws ProjectExportException, IOException, ClassNotFoundException, UIMAException
+        throws ProjectExportException, IOException
     {
         File curationFile = null;
         try {
@@ -174,6 +177,11 @@ public class CuratedDocumentsExporter
                     format, CURATION_USER, CURATION, true, bulkOperationContext);
             var filename = CURATION_USER + "." + getExtension(curationFile.getName());
             FileUtils.copyFile(curationFile, new File(curationDir, filename));
+        }
+        catch (UIMAException | IOException e) {
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+                    + " for user [" + CURATION_USER + "] as [" + format.getName() + "]: "
+                    + ExceptionUtils.getRootCauseMessage(e), e);
         }
         finally {
             if (curationFile != null) {

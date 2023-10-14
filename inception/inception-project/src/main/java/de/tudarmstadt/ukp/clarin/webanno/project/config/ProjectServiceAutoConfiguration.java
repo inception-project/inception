@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccessImpl;
@@ -37,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 
 @Configuration
 public class ProjectServiceAutoConfiguration

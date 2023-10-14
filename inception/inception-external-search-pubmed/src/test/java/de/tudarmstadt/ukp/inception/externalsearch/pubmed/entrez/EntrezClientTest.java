@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -38,9 +40,9 @@ class EntrezClientTest
     {
         var results = sut.esearch("pmc", "asthma", 0, 10);
 
-        System.out.println(results);
+        // System.out.println(results);
 
-        // assertThat(results).isNotEmpty();
+        assertThat(results.getIdList()).isNotEmpty();
     }
 
     @Test
@@ -48,8 +50,8 @@ class EntrezClientTest
     {
         var results = sut.esummary("pmc", 6678417, 9507199);
 
-        System.out.println(results);
+        // System.out.println(results);
 
-        // assertThat(results).isNotEmpty();
+        assertThat(results.getDocSumaries()).isNotEmpty();
     }
 }

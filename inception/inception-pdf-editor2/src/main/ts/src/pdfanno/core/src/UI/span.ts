@@ -1,5 +1,5 @@
 import { scaleDown } from './utils'
-import SpanAnnotation from '../annotation/span'
+import SpanAnnotation from '../model/SpanAnnotation'
 import { getGlyphsInRange, findGlyphAtPointWithinPage } from '../../../page/textLayer'
 import { mergeRects } from '../render/renderSpan'
 
@@ -22,7 +22,8 @@ export function installSpanSelection () {
 
   window.addEventListener('annotationHoverIn', () => { otherAnnotationTreating = true })
   window.addEventListener('annotationHoverOut', () => { otherAnnotationTreating = false })
-  window.addEventListener('annotationDeleted', () => { otherAnnotationTreating = false })
+  // See https://github.com/inception-project/inception/issues/4008
+  window.addEventListener('doubleClickAnnotation', () => { otherAnnotationTreating = false })
 }
 
 function startSelection () {

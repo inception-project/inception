@@ -26,6 +26,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Ctrl;
+import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 
@@ -45,7 +48,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
@@ -59,12 +61,15 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import wicket.contrib.input.events.key.KeyType;
 
 public class MatrixWorkflowActionBarItemGroup
     extends Panel
@@ -128,6 +133,7 @@ public class MatrixWorkflowActionBarItemGroup
         }
         link.setOutputMarkupId(true);
         link.add(enabledWhen(() -> page.isEditable() || isReopenableByUser()));
+        link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
         var stateLabel = new Label("state");
         stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
         stateLabel.add(AttributeModifier.replace("title", LoadableDetachableModel.of(() -> {

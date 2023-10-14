@@ -21,10 +21,11 @@ const sveltePreprocess = require('svelte-preprocess')
 module.exports = {
   type: 'bundle', // bundle or transform (see description above)
   esbuild: {
-    target: 'es6',
+    loader: { '.ts': 'ts' },
+    target: 'es2018',
     plugins: [
       esbuildSvelte({
-        compilerOptions: { css: true },
+        compilerOptions: { css: 'injected' },
         preprocess: sveltePreprocess({ sourceMap: true })
       })
     ]

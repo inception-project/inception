@@ -27,11 +27,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
@@ -60,10 +61,12 @@ public class CurationSidebarAutoConfiguration
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
-            CurationSidebarService aCurationSidebarService)
+            CurationSidebarService aCurationSidebarService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
-                aApplicationEventPublisher, aUserRepository, aCurationSidebarService);
+                aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
+                aFeatureSupportRegistry);
     }
 
     @Bean("curationSidebar")

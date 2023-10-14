@@ -28,13 +28,13 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -47,12 +47,12 @@ public class CurationRendererImpl
     private final PreRenderer preRenderer;
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
     private final UserDao userService;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties, UserDao aUserService)
+            AnnotationSchemaProperties aAnnotationEditorProperties, UserDao aUserService)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;

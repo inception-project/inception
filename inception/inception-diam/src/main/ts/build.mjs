@@ -25,31 +25,28 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/diam/editor'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['src/index.ts'],
+  outfile: `${outbase}/Diam.min.js`,
+  globalName: 'Diam',
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild.build(Object.assign({
-  entryPoints: ['src/index.ts'],
-  outfile: `${outbase}/Diam.min.js`,
-  globalName: 'Diam'
-}, defaults))
+if (argv.live) {
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
+}

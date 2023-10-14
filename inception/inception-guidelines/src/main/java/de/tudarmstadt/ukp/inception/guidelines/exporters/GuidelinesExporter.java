@@ -64,11 +64,13 @@ public class GuidelinesExporter
 
     /**
      * Copy Project guidelines from the file system of this project to the export folder
+     * 
+     * @throws IOException
      */
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException
     {
         File guidelineDir = new File(aStage + GUIDELINES_FOLDER);
         FileUtils.forceMkdir(guidelineDir);

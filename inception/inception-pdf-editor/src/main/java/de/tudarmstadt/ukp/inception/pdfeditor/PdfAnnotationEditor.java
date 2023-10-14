@@ -47,8 +47,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
@@ -94,9 +94,10 @@ public class PdfAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
 
         try {
             documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
@@ -134,6 +135,7 @@ public class PdfAnnotationEditor
                 referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext,
                 PdfAnnotationEditorJavascriptResourceReference.get())));
+        props.setLoadingIndicatorDisabled(true);
         return props;
     }
 

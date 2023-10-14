@@ -35,7 +35,6 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
-import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -64,8 +63,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import com.giffing.wicket.spring.boot.context.scan.WicketSignInPage;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
@@ -82,7 +79,7 @@ import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 public class LoginPage
     extends ApplicationPageBase
 {
-    private static final String PARAM_SKIP_AUTP_LOGIN = "skipAutoLogin";
+    public static final String PARAM_SKIP_AUTO_LOGIN = "skipAutoLogin";
     private static final String PARAM_ERROR = "error";
 
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
@@ -124,7 +121,7 @@ public class LoginPage
         saml2LoginPanel.add(visibleWhen(this::isLoginAllowed));
         queue(saml2LoginPanel);
 
-        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTP_LOGIN).toBoolean(false)
+        var skipAutoLogin = aParameters.get(PARAM_SKIP_AUTO_LOGIN).toBoolean(false)
                 || tooManyUsers.getObject();
 
         // Failed OAuth2/SAML call this page with the parameter `?error` so we display a message
@@ -236,11 +233,6 @@ public class LoginPage
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
-
-        aResponse.render(CssHeaderItem.forReference(LoginPageCssResourceReference.get()));
 
         // Capture the URL fragment into a hidden form field so we can use it later when
         // forwarding to the target page after login

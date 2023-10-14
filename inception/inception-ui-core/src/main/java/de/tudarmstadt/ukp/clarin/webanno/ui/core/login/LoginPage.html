@@ -17,48 +17,85 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:extend>
-    <div class="scrolling flex-content flex-h-container flex-centered">
-      <div class="flex-content flex-v-container flex-centered">
-        <div class="card hvr-shadow-radial login-form w-min-440px">
-          <div class="card-body container-sm">
-            <h5 class="card-title mb-3 text-center">
-              Welcome!
-            </h5>
-            <div wicket:id="oauth2LoginPanel" class="mb-4"/>
-            <div wicket:id="saml2LoginPanel" class="mb-4"/>
-            
-            <form wicket:id="loginForm">
-              <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
-              <h6 class="card-title mb-3 text-center">
-                Log in using credentials
-              </h6>
-              <div class="row mb-3 form-floating">
-                <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus autocomplete="username"/>
-                <label wicket:for="username">User ID</label>
-              </div>
-              <div class="row mb-3 form-floating">
-                <input wicket:id="password" type="password" class="form-control" placeholder="Password" autocomplete="current-password"/>
-                <label wicket:for="password">Password</label>
-              </div>
-              <div class="row justify-content-md-center">
-                <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100" wicket:message="value:signIn"/>
-              </div>
-              <div class="row mt-3" wicket:enclosure="loginMessage">
-                <span wicket:id="loginMessage"></span>
-              </div>
-            </form>
-            
-            <wicket:enclosure>
-              <div class="row mt-3 text-danger fw-bold text-center" wicket:id="usersLabel">
-                <wicket:message key="tooManyUsers"/>
-              </div>
-            </wicket:enclosure>
-          </div>
+<wicket:head>
+  <style>
+    :root {
+      --input-padding-x: 0.75rem;
+      --input-padding-y: 0.75rem;
+    }
+
+    .login-form {
+      min-width: 440px;
+      max-width: 30%;
+      transition: box-shadow 10s;
+    }
+
+    .login-form:hover, .login-form:focus-within {
+      box-shadow: 0 0 40rem var(--bs-tertiary-color);
+    }
+
+    .login-form input[type=text],
+    input[type=password] {
+      padding: var(--input-padding-y) var(--input-padding-x);
+      border-radius: 2rem;
+    }
+
+    .login-form .btn-login {
+      font-size: 0.9rem !important;
+      letter-spacing: 0.05rem !important;
+      padding: 0.75rem 1rem !important;
+      border-radius: 2rem !important;
+    }
+
+    .form-floating>.form-control:not(:placeholder-shown)~label::after {
+      background-color: unset !important;
+    }
+  </style>
+</wicket:head>
+<wicket:extend>
+  <div class="scrolling flex-content flex-h-container flex-centered">
+    <div class="flex-content flex-v-container flex-centered">
+      <div class="card bg-body p-5 login-form w-min-440px">
+        <div class="card-body container-sm">
+          <h5 class="card-title mb-3 text-center">
+            Welcome!
+          </h5>
+          <div wicket:id="oauth2LoginPanel" class="mb-4" />
+          <div wicket:id="saml2LoginPanel" class="mb-4" />
+
+          <form wicket:id="loginForm">
+            <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
+            <h6 class="card-title mb-3 text-center">
+              Log in using credentials
+            </h6>
+            <div class="row mb-3 form-floating">
+              <input wicket:id="username" type="text" class="form-control" placeholder="User ID" autofocus
+                autocomplete="username" />
+              <label wicket:for="username">User ID</label>
+            </div>
+            <div class="row mb-3 form-floating">
+              <input wicket:id="password" type="password" class="form-control" placeholder="Password"
+                autocomplete="current-password" />
+              <label wicket:for="password">Password</label>
+            </div>
+            <div class="row justify-content-md-center">
+              <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100"
+                wicket:message="value:signIn" />
+            </div>
+            <div class="row mt-3" wicket:enclosure="loginMessage">
+              <span wicket:id="loginMessage"></span>
+            </div>
+          </form>
+
+          <wicket:enclosure>
+            <div class="row mt-3 text-danger fw-bold text-center" wicket:id="usersLabel">
+              <wicket:message key="tooManyUsers" />
+            </div>
+          </wicket:enclosure>
         </div>
       </div>
     </div>
-  </wicket:extend>
-</body>
+  </div>
+</wicket:extend>
+
 </html>

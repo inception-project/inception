@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.casToByteArray;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -54,7 +54,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -69,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -681,13 +681,13 @@ public class SearchServiceImpl
             try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
                     prefs)) {
                 // Index all the source documents
-                for (SourceDocument doc : sourceDocuments) {
+                for (var doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(documentService
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(documentService
                                 .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
                         indexDocument(pooledIndex, doc, casAsByteArray);
                     }
@@ -696,13 +696,13 @@ public class SearchServiceImpl
                 }
 
                 // Index all the annotation documents
-                for (AnnotationDocument doc : annotationDocuments) {
+                for (var doc : annotationDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        byte[] casAsByteArray = casToByteArray(
+                    try (var session = CasStorageSession.openNested()) {
+                        var casAsByteArray = casToByteArray(
                                 documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
                                         casUpgradeMode, accessModeAnnotationCas));
                         indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
@@ -836,11 +836,16 @@ public class SearchServiceImpl
         enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
+    private void enqueueReindexTask(Project aProject, String aTrigger)
+    {
+        enqueue(new ReindexTask(aProject, null, aTrigger));
+    }
+
     @Override
     @Transactional
-    public void enqueueReindexTask(Project aProject, String aTrigger)
+    public void enqueueReindexTask(Project aProject, String aUser, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, aTrigger));
+        enqueue(new ReindexTask(aProject, aUser, aTrigger));
     }
 
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)

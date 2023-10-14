@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.TokenWrappingPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
@@ -46,7 +46,7 @@ public class BratTokenWrappingAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
     }
 
     @Override

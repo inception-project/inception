@@ -29,7 +29,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -273,13 +273,13 @@ public interface AnnotationSchemaService
     /**
      * Get an {@link AnnotationFeature} using its name
      * 
-     * @param name
+     * @param aFeature
      *            the feature name.
-     * @param type
+     * @param aLayer
      *            the feature type.
      * @return the feature.
      */
-    AnnotationFeature getFeature(String name, AnnotationLayer type);
+    AnnotationFeature getFeature(String aFeature, AnnotationLayer aLayer);
 
     /**
      * Check if an {@link AnnotationLayer} already exists.

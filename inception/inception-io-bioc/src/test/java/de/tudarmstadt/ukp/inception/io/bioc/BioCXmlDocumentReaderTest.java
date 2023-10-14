@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.io.bioc;
 
-import static org.apache.uima.cas.SerialFormat.XMI_PRETTY;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.iteratePipeline;
@@ -26,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.util.CasIOUtils;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -45,8 +43,6 @@ public class BioCXmlDocumentReaderTest
 
         var cas = CasFactory.createCas();
         reader.getNext(cas);
-
-        CasIOUtils.save(cas, System.out, XMI_PRETTY);
 
         assertThat(cas.getDocumentText()) //
                 .contains("Sentence 1.") //

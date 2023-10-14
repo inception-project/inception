@@ -382,8 +382,9 @@ export class AnnotatorUI {
     let sp: Point
     let startsAt: SVGTextContentElement
     if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
-      $(sel.anchorNode).attr('data-chunk-id') &&
-      $(sel.focusNode).attr('data-chunk-id')) {
+      (sel.anchorNode instanceof Element) && (sel.focusNode instanceof Element) &&
+      sel.anchorNode.getAttribute('data-chunk-id') &&
+      sel.focusNode.getAttribute('data-chunk-id')) {
       // Lets take the actual selection range and work with that
       // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
       const range = sel.getRangeAt(0)
@@ -422,7 +423,7 @@ export class AnnotatorUI {
         focusOffset = t
         flip = false
       }
-      chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id')
+      chunkIndexTo = endsAt && endsAt.getAttribute('data-chunk-id')
 
       // Now take the start and end character rectangles
       const startRec = startsAt.getExtentOfChar(anchorOffset)

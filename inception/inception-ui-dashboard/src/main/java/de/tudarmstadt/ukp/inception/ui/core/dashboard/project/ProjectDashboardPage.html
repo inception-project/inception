@@ -53,9 +53,9 @@
       </div>
     </div>
     <div class="flex-sidebar border-start flex-v-container" style="min-width: 20rem;" wicket:enclosure="rightSidebarDashlets">
-      <div class="flex-content flex-v-container" wicket:id="rightSidebarDashlets">
-        <div class="flex-content flex-v-container" wicket:id="dashlet"/>
-      </div>
+      <wicket:container wicket:id="rightSidebarDashlets">
+        <wicket:container wicket:id="dashlet"/>
+      </wicket:container>
     </div>
   </wicket:extend>
 </body>
