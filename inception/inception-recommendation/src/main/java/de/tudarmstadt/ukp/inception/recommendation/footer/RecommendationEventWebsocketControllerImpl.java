@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.footer;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.lang.invoke.MethodHandles;
 
@@ -35,7 +37,9 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarPanel;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 @ConditionalOnWebApplication
 @ConditionalOnExpression("${websocket.enabled:true} and ${websocket.recommender-events.enabled:true}")
@@ -57,8 +61,18 @@ public class RecommendationEventWebsocketControllerImpl
     public void onRecommenderTaskEvent(RecommenderTaskNotificationEvent aEvent)
     {
         Project project = aEvent.getProject();
-        RRecommenderLogMessage eventMsg = new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
-                aEvent.getMessage().getMessage());
+        RRecommenderLogMessage eventMsg;
+        if (aEvent.getSource() instanceof PredictionTask) {
+            eventMsg = new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
+                    aEvent.getMessage().getMessage(),
+                    asList(RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE), emptyList());
+
+        }
+        else {
+            eventMsg = new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
+                    aEvent.getMessage().getMessage());
+        }
+
         String channel = getChannel(project, aEvent.getUser());
 
         LOG.debug("Sending event to [{}]: {}", channel, eventMsg);

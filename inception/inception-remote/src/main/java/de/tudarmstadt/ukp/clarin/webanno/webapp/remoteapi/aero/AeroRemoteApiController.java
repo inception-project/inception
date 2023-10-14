@@ -24,7 +24,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static java.io.File.createTempFile;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
@@ -87,7 +90,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -108,6 +110,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IncompatibleDocumentException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectExistsException;
@@ -121,6 +124,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -335,11 +339,20 @@ public class AeroRemoteApiController
                     "A project with URL slug [" + aSlug + "] already exists");
         }
 
+        String projectName = aName.orElse(aSlug);
+        if (!Project.isValidProjectName(projectName)) {
+            throw new IllegalNameException("Illegal project name [%s]", projectName);
+        }
+
+        if (!Project.isValidProjectSlug(aSlug)) {
+            throw new IllegalNameException("Illegal project slug [%s]", aSlug);
+        }
+
         // Create the project and initialize tags
         LOG.info("Creating project [{}]", aSlug);
         Project project = new Project();
         project.setSlug(aSlug);
-        project.setName(aName.orElse(aSlug));
+        project.setName(projectName);
         project.setScriptDirection(ScriptDirection.LTR);
         project.setState(ProjectState.NEW);
         projectService.createProject(project);
@@ -516,6 +529,10 @@ public class AeroRemoteApiController
                             .sorted().collect(Collectors.toList()));
         }
 
+        if (!documentService.isValidDocumentName(aName)) {
+            throw new IllegalNameException("Illegal document name [%s]", aName);
+        }
+
         // Meta data entry to the database
         SourceDocument document = new SourceDocument();
         document.setProject(project);
@@ -570,9 +587,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
 
         boolean originalFile;
         String formatId;
@@ -622,8 +639,6 @@ public class AeroRemoteApiController
             // Load the converted file into memory
             exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
             byte[] resource = FileUtils.readFileToByteArray(exportedFile);
-
-            var fileExtension = FilenameUtils.getExtension(exportedFile.getName());
 
             // Send it back to the client
             HttpHeaders httpHeaders = new HttpHeaders();
@@ -816,10 +831,10 @@ public class AeroRemoteApiController
             @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
         throws Exception
     {
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
 
-        CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        var annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
@@ -885,9 +900,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
 
         // If we delete the curation, it cannot be any longer in-progress or finished. The best
@@ -911,9 +926,9 @@ public class AeroRemoteApiController
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
 
         // Check format
         String formatId;
@@ -950,31 +965,31 @@ public class AeroRemoteApiController
             exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
                     format, Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
+
+            var filename = FilenameUtils.removeExtension(doc.getName());
+            filename += "-" + aAnnotatorId;
+            // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
+            filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
+
+            var httpHeaders = new HttpHeaders();
+            httpHeaders.setContentLength(resource.length);
+            httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            return new ResponseEntity<>(resource, httpHeaders, OK);
         }
         finally {
             if (exportedAnnoFile != null) {
                 FileUtils.forceDelete(exportedAnnoFile);
             }
         }
-
-        String filename = FilenameUtils.removeExtension(doc.getName());
-        filename += "-" + aAnnotatorId;
-        // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
-        filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentLength(resource.length);
-        httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-
-        return new ResponseEntity<>(resource, httpHeaders, OK);
     }
 
     private CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
 
         // Check if the format is supported
         String format = aFormatId.orElse(FORMAT_DEFAULT);
@@ -982,14 +997,21 @@ public class AeroRemoteApiController
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
                     importExportService.getReadableFormats().stream().map(FormatSupport::getId)
-                            .sorted().collect(Collectors.toList()));
+                            .sorted().collect(toList()));
+        }
+
+        String originalFilename = isNotBlank(aFile.getOriginalFilename())
+                ? aFile.getOriginalFilename()
+                : document.getName();
+        if (!documentService.isValidDocumentName(originalFilename)) {
+            throw new IllegalNameException("Illegal document name [%s]", originalFilename);
         }
 
         // Convert the uploaded annotation document into a CAS
         File tmpFile = null;
         CAS annotationCas;
         try {
-            tmpFile = File.createTempFile("upload", ".bin");
+            tmpFile = createTempFile("upload", "." + getExtension(originalFilename));
             aFile.transferTo(tmpFile);
             annotationCas = importExportService.importCasFromFile(tmpFile, document, format, null);
         }
@@ -1011,17 +1033,7 @@ public class AeroRemoteApiController
         initialText = StringUtils.chomp(initialText);
         annotationText = StringUtils.chomp(annotationText);
 
-        if (ObjectUtils.notEqual(initialText, annotationText)) {
-            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
-            String expected = initialText.substring(diffIndex,
-                    Math.min(initialText.length(), diffIndex + 20));
-            String actual = annotationText.substring(diffIndex,
-                    Math.min(annotationText.length(), diffIndex + 20));
-            throw new IncompatibleDocumentException(
-                    "Text of annotation document does not match text of source document at offset "
-                            + "[%d]. Expected [%s] but found [%s].",
-                    diffIndex, expected, actual);
-        }
+        assertSameText(initialText, annotationText);
 
         // Just in case we really had to chomp off a trailing line break from the annotation CAS,
         // make sure we copy over the proper text from the initial CAS
@@ -1042,12 +1054,28 @@ public class AeroRemoteApiController
         Collection<AnnotationFS> initialTokens = selectTokens(initialCas);
         if (annotationTokens.size() != initialTokens.size()) {
             throw new IncompatibleDocumentException(
-                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
-                    initialSentences.size(), annotationSentences.size());
+                    "Expected [%d] tokens, but annotation document contains [%d] tokens.",
+                    initialTokens.size(), annotationTokens.size());
         }
         assertCompatibleOffsets(initialTokens, annotationTokens);
 
         return annotationCas;
+    }
+
+    private static void assertSameText(String initialText, String annotationText)
+        throws IncompatibleDocumentException
+    {
+        if (ObjectUtils.notEqual(initialText, annotationText)) {
+            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
+            String expected = initialText.substring(diffIndex,
+                    Math.min(initialText.length(), diffIndex + 20));
+            String actual = annotationText.substring(diffIndex,
+                    Math.min(annotationText.length(), diffIndex + 20));
+            throw new IncompatibleDocumentException(
+                    "Text of annotation document does not match text of source document at offset "
+                            + "[%d]. Expected [%s] but found [%s].",
+                    diffIndex, expected, actual);
+        }
     }
 
     private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,

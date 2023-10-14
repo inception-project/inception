@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 

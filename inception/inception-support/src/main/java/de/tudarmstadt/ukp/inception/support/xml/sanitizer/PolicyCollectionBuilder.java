@@ -114,6 +114,24 @@ public class PolicyCollectionBuilder
         return this;
     }
 
+    public PolicyCollectionBuilder skipElements(String... aElementNames)
+    {
+        for (var elementName : aElementNames) {
+            elementPolicy(new QName(elementName), ElementAction.SKIP);
+        }
+
+        return this;
+    }
+
+    public PolicyCollectionBuilder skipElements(QName... aElementNames)
+    {
+        for (var elementName : aElementNames) {
+            elementPolicy(elementName, ElementAction.SKIP);
+        }
+
+        return this;
+    }
+
     PolicyCollectionBuilder elementPolicy(QName aElement, ElementAction aAction)
     {
         elementPolicyBuilders.put(aElement,
@@ -210,5 +228,5 @@ public class PolicyCollectionBuilder
     // XmlPolicyBuilder allowTextIn(String... aElementNames);
     // XmlPolicyBuilder disallowTextIn(String... aElementNames);
     // XmlPolicyBuilder allowAttributesGlobally(String... aAttributeNames);
-    // XmlPolicyBuilder allwoAttributesOnElements(String... aElementNames);
+    // XmlPolicyBuilder allowAttributesOnElements(String... aElementNames);
 }

@@ -74,10 +74,10 @@ public class PubMedProviderTest
         when(annotationService.getFullProjectTypeSystem(any()))
             .thenReturn(createTypeSystemDescription());
         
-        String results = sut.getDocumentText(repo, traits, "PMC", "PMC8222896");
+        String results = sut.getDocumentText(repo, traits, "PMC", "PMC7096989");
 
         // System.out.println(results);
 
-        assertThat(results).contains("Longitudinal symptoms in asthmatic COVID‐19 patients.");
+        assertThat(results).contains("Asthma is the most common inflammatory disease of the lungs.");
     }
 }

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
@@ -40,9 +40,12 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDo
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -62,6 +65,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,7 +115,6 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -131,6 +134,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
@@ -144,6 +148,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -181,6 +186,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
@@ -891,17 +897,21 @@ public class RecommendationServiceImpl
     @Override
     public List<LogMessageGroup> getLog(String aUser, Project aProject)
     {
-        Predictions activePredictions = getState(aUser, aProject).getActivePredictions();
-        Predictions incomingPredictions = getState(aUser, aProject).getIncomingPredictions();
+        var activePredictions = getState(aUser, aProject).getActivePredictions();
+        var incomingPredictions = getState(aUser, aProject).getIncomingPredictions();
 
-        List<LogMessageGroup> messageSets = new ArrayList<>();
+        var messageSets = new ArrayList<LogMessageGroup>();
 
         if (activePredictions != null) {
-            messageSets.add(new LogMessageGroup("Active", activePredictions.getLog()));
+            messageSets.add(
+                    new LogMessageGroup("Active (gen. " + activePredictions.getGeneration() + ")",
+                            activePredictions.getLog()));
         }
 
         if (incomingPredictions != null) {
-            messageSets.add(new LogMessageGroup("Incoming", incomingPredictions.getLog()));
+            messageSets.add(new LogMessageGroup(
+                    "Incoming (gen. " + incomingPredictions.getGeneration() + ")",
+                    incomingPredictions.getLog()));
         }
 
         return messageSets;
@@ -1081,9 +1091,12 @@ public class RecommendationServiceImpl
         var aEnd = aSuggestion.getEnd();
         var aValue = aSuggestion.getLabel();
 
-        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
-                .at(aBegin, aEnd) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
+        // .at(aBegin, aEnd) //
+        // .asList();
+        var candidates = CasUtil.selectAt(aCas,
+                CasUtil.getType(aCas, aAdapter.getAnnotationTypeName()), aBegin, aEnd);
 
         var candidateWithEmptyLabel = candidates.stream() //
                 .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
@@ -1538,14 +1551,14 @@ public class RecommendationServiceImpl
     }
 
     private void computePredictions(LazyCas aOriginalCas,
-            EvaluatedRecommender aEvaluatedRecommender, Predictions aPredictions, CAS predictionCas,
-            SourceDocument aDocument, User aSessionOwner, int aPredictionBegin, int aPredictionEnd)
+            EvaluatedRecommender aEvaluatedRecommender, Predictions activePredictions,
+            Predictions aPredictions, CAS predictionCas, SourceDocument aDocument,
+            User aSessionOwner, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
-        Project project = aDocument.getProject();
-        Predictions activePredictions = getPredictions(aSessionOwner, project);
-        int predictionBegin = aPredictionBegin;
-        int predictionEnd = aPredictionEnd;
+        var project = aDocument.getProject();
+        var predictionBegin = aPredictionBegin;
+        var predictionEnd = aPredictionEnd;
 
         // Make sure we have the latest recommender config from the DB - the one
         // from the active recommenders list may be outdated
@@ -1685,8 +1698,9 @@ public class RecommendationServiceImpl
      * @param aDataOwner
      *            the annotation data owner
      */
-    private void computePredictions(Predictions aPredictions, CAS aPredictionCas,
-            SourceDocument aDocument, String aDataOwner, int aPredictionBegin, int aPredictionEnd)
+    private void computePredictions(Predictions aActivePredictions, Predictions aPredictions,
+            CAS aPredictionCas, SourceDocument aDocument, String aDataOwner, int aPredictionBegin,
+            int aPredictionEnd)
     {
         var aSessionOwner = aPredictions.getSessionOwner();
 
@@ -1699,14 +1713,14 @@ public class RecommendationServiceImpl
             }
 
             LazyCas originalCas = new LazyCas(aDocument, aDataOwner);
-            for (EvaluatedRecommender r : recommenders) {
-                var layer = schemaService.getLayer(r.getRecommender().getLayer().getId());
+            for (var recommender : recommenders) {
+                var layer = schemaService.getLayer(recommender.getRecommender().getLayer().getId());
                 if (!layer.isEnabled()) {
                     continue;
                 }
 
-                computePredictions(originalCas, r, aPredictions, aPredictionCas, aDocument,
-                        aSessionOwner, aPredictionBegin, aPredictionEnd);
+                computePredictions(originalCas, recommender, aActivePredictions, aPredictions,
+                        aPredictionCas, aDocument, aSessionOwner, aPredictionBegin, aPredictionEnd);
             }
         }
         catch (IOException e) {
@@ -1727,20 +1741,23 @@ public class RecommendationServiceImpl
     public Predictions computePredictions(User aSessionOwner, Project aProject,
             List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor)
     {
+        var activePredictions = getPredictions(aSessionOwner, aProject);
+        var predictions = activePredictions != null ? new Predictions(activePredictions)
+                : new Predictions(aSessionOwner, aDataOwner, aProject);
+
         try (var casHolder = new PredictionCasHolder()) {
-            Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             // Generate new predictions or inherit at the recommender level
             aMonitor.setMaxProgress(aDocuments.size());
             for (SourceDocument document : aDocuments) {
                 aMonitor.addMessage(LogMessage.info(this, "%s", document.getName()));
                 aMonitor.incrementProgress();
-                computePredictions(predictions, casHolder.cas, document, aDataOwner, -1, -1);
+                computePredictions(activePredictions, predictions, casHolder.cas, document,
+                        aDataOwner, -1, -1);
             }
 
             return predictions;
         }
         catch (ResourceInitializationException e) {
-            Predictions predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
             predictions.log(
                     LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
             LOG.error("Cannot create prediction CAS, stopping predictions!");
@@ -1755,13 +1772,14 @@ public class RecommendationServiceImpl
     {
         aMonitor.setMaxProgress(1);
 
-        var predictions = new Predictions(aSessionOwner, aDataOwner, aProject);
         var activePredictions = getPredictions(aSessionOwner, aProject);
+        var predictions = activePredictions != null ? new Predictions(activePredictions)
+                : new Predictions(aSessionOwner, aDataOwner, aProject);
 
         // Inherit at the document level. If inheritance at a recommender level is possible,
         // this is done below.
         if (activePredictions != null) {
-            for (SourceDocument document : aInherit) {
+            for (var document : aInherit) {
                 inheritSuggestionsAtDocumentLevel(aProject, document, aSessionOwner,
                         activePredictions, predictions);
             }
@@ -1771,8 +1789,8 @@ public class RecommendationServiceImpl
             final CAS predictionCas = casHolder.cas;
 
             // Generate new predictions or inherit at the recommender level
-            computePredictions(predictions, predictionCas, aCurrentDocument, aDataOwner,
-                    aPredictionBegin, aPredictionEnd);
+            computePredictions(activePredictions, predictions, predictionCas, aCurrentDocument,
+                    aDataOwner, aPredictionBegin, aPredictionEnd);
         }
         catch (ResourceInitializationException e) {
             predictions.log(
@@ -1793,8 +1811,8 @@ public class RecommendationServiceImpl
             Recommender aRecommender, Predictions activePredictions, SourceDocument document,
             User aUser)
     {
-        List<AnnotationSuggestion> suggestions = activePredictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, document.getName());
+        var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
+                document.getName());
 
         if (suggestions.isEmpty()) {
             LOG.debug("{} for user {} on document {} in project {} there " //
@@ -1826,13 +1844,11 @@ public class RecommendationServiceImpl
             return;
         }
 
-        List<AnnotationSuggestion> suggestions1 = aOldPredictions
-                .getPredictionsByDocument(aDocument.getName());
+        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getName());
 
         LOG.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions",
-                "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions1.size());
+                "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions.size());
 
-        List<AnnotationSuggestion> suggestions = suggestions1;
         aNewPredictions.putPredictions(suggestions);
         aNewPredictions.markDocumentAsPredictionCompleted(aDocument);
     }
@@ -1840,45 +1856,55 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(Predictions aPredictions, RecommenderContext aCtx,
+    void generateSuggestions(Predictions aIncomingPredictions, RecommenderContext aCtx,
             RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
             CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
     {
-        var sessionOwner = aPredictions.getSessionOwner();
+        var sessionOwner = aIncomingPredictions.getSessionOwner();
         var recommender = aEngine.getRecommender();
 
-        aPredictions.log(LogMessage.info(recommender.getName(),
+        // Perform the actual prediction
+        aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
         LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
                 recommender.getName(), recommender.getLayer().getUiName());
-
-        // Perform the actual prediction
         var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
                 aPredictionEnd);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
-        var suggestions = extractSuggestions(aOriginalCas, aPredictionCas, aDocument, recommender);
+        var generatedSuggestions = extractSuggestions(aIncomingPredictions.getGeneration(),
+                aOriginalCas, aPredictionCas, aDocument, recommender);
 
+        // Reconcile new suggestions with suggestions from previous run
+        var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,
+                predictedRange, generatedSuggestions);
         LOG.debug(
-                "{} for user {} on document {} in project {} generated {} predictions within range {}",
-                recommender, sessionOwner, aDocument, recommender.getProject(), suggestions.size(),
-                predictedRange);
-        aPredictions.log(LogMessage.info(recommender.getName(), //
-                "Generated [%d] predictions within range %s", suggestions.size(), predictedRange));
+                "{} for user {} on document {} in project {} generated {} predictions within range {} (+{}/-{}/={})",
+                recommender, sessionOwner, aDocument, recommender.getProject(),
+                generatedSuggestions.size(), predictedRange, reconciliationResult.added,
+                reconciliationResult.removed, reconciliationResult.aged);
+        aIncomingPredictions.log(LogMessage.info(recommender.getName(), //
+                "Generated [%d] predictions within range %s (+%d/-%d/=%d)",
+                generatedSuggestions.size(), predictedRange, reconciliationResult.added,
+                reconciliationResult.removed, reconciliationResult.aged));
+        var suggestions = reconciliationResult.suggestions;
 
-        if (aActivePredictions != null) {
-            // Inherit annotations that are outside the range which was predicted. Note that the
-            // engine might actually predict a different range from what was requested.
-            List<AnnotationSuggestion> inheritableSuggestions = aActivePredictions
+        // Inherit suggestions that are outside the range which was predicted. Note that the engine
+        // might actually predict a different range from what was requested. If the prediction
+        // covers the entire document, we can skip this.
+        if (aActivePredictions != null
+                && !predictedRange.equals(rangeCoveringDocument(aOriginalCas))) {
+            var inheritableSuggestions = aActivePredictions
                     .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName())
-                    .stream().filter(s -> !s.coveredBy(predictedRange)) //
+                    .stream() //
+                    .filter(s -> !s.coveredBy(predictedRange)) //
                     .collect(toList());
 
             LOG.debug("{} for user {} on document {} in project {} inherited {} " //
                     + "predictions", recommender, sessionOwner, aDocument, recommender.getProject(),
                     inheritableSuggestions.size());
-            aPredictions.log(LogMessage.info(recommender.getName(),
+            aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                     "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
 
             suggestions.addAll(inheritableSuggestions);
@@ -1888,14 +1914,70 @@ public class RecommendationServiceImpl
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
         calculateSpanSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
-                aPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
+                aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
                 groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
+        // FIXME calculateRelationSuggestionVisibility?
 
-        aPredictions.putPredictions(suggestions);
+        aIncomingPredictions.putPredictions(suggestions);
     }
 
-    static List<AnnotationSuggestion> extractSuggestions(CAS aOriginalCas, CAS aPredictionCas,
-            SourceDocument aDocument, Recommender aRecommender)
+    static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
+            Recommender recommender, Range predictedRange,
+            List<AnnotationSuggestion> aNewProtoSuggesitons)
+    {
+        if (aActivePredictions == null) {
+            return new ReconciliationResult(aNewProtoSuggesitons.size(), 0, 0,
+                    aNewProtoSuggesitons);
+        }
+
+        var reconciledSuggestions = new LinkedHashSet<AnnotationSuggestion>();
+        var addedSuggestions = new ArrayList<AnnotationSuggestion>();
+        int agedSuggestionsCount = 0;
+
+        var predictionsByRecommenderAndDocument = aActivePredictions
+                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
+
+        var existingSuggestionsByPosition = predictionsByRecommenderAndDocument.stream() //
+                .filter(s -> s.coveredBy(predictedRange)) //
+                .collect(groupingBy(AnnotationSuggestion::getPosition));
+
+        for (var newSuggestion : aNewProtoSuggesitons) {
+            var existingSuggestions = existingSuggestionsByPosition
+                    .getOrDefault(newSuggestion.getPosition(), emptyList()).stream() //
+                    .filter(s -> Objects.equals(s.getLabel(), newSuggestion.getLabel()) && //
+                            s.getScore() == newSuggestion.getScore() && //
+                            Objects.equals(s.getScoreExplanation(),
+                                    newSuggestion.getScoreExplanation()))
+                    .collect(toList());
+
+            if (existingSuggestions.isEmpty()) {
+                addedSuggestions.add(newSuggestion);
+                reconciledSuggestions.add(newSuggestion);
+                continue;
+            }
+
+            if (existingSuggestions.size() > 1) {
+                LOG.debug("Recommender produced more than one suggestion with the same "
+                        + "label, score and score explanation - reconciling with first one");
+            }
+
+            var existingSuggestion = existingSuggestions.get(0);
+            existingSuggestion.incrementAge();
+            agedSuggestionsCount++;
+            reconciledSuggestions.add(existingSuggestion);
+        }
+
+        var removedSuggestions = predictionsByRecommenderAndDocument.stream() //
+                .filter(s -> s.coveredBy(predictedRange)) //
+                .filter(s -> !reconciledSuggestions.contains(s)) //
+                .collect(toList());
+
+        return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
+                agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
+    }
+
+    static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
+            CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
     {
         var layer = aRecommender.getLayer();
         var featureName = aRecommender.getFeature().getName();
@@ -1915,7 +1997,6 @@ public class RecommendationServiceImpl
         var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
 
         var result = new ArrayList<AnnotationSuggestion>();
-        int id = 0;
 
         var documentText = aOriginalCas.getDocumentText();
         for (var predictedFS : aPredictionCas.select(predictedType)) {
@@ -1943,7 +2024,8 @@ public class RecommendationServiceImpl
 
                 for (var label : labels) {
                     var suggestion = SpanSuggestion.builder() //
-                            .withId(id) //
+                            .withId(RelationSuggestion.NEW_ID) //
+                            .withGeneration(aGeneration) //
                             .withRecommender(aRecommender) //
                             .withDocumentName(aDocument.getName()) //
                             .withPosition(offsets) //
@@ -1955,7 +2037,6 @@ public class RecommendationServiceImpl
                             .withAutoAcceptMode(autoAcceptMode) //
                             .build();
                     result.add(suggestion);
-                    id++;
                 }
                 break;
             }
@@ -1973,7 +2054,8 @@ public class RecommendationServiceImpl
 
                 for (var label : labels) {
                     var suggestion = RelationSuggestion.builder() //
-                            .withId(id) //
+                            .withId(RelationSuggestion.NEW_ID) //
+                            .withGeneration(aGeneration) //
                             .withRecommender(aRecommender) //
                             .withDocumentName(aDocument.getName()) //
                             .withPosition(position).withLabel(label) //
@@ -1983,7 +2065,6 @@ public class RecommendationServiceImpl
                             .withAutoAcceptMode(autoAcceptMode) //
                             .build();
                     result.add(suggestion);
-                    id++;
                 }
                 break;
             }
@@ -2011,14 +2092,11 @@ public class RecommendationServiceImpl
     private static String[] getPredictedLabels(FeatureStructure predictedFS,
             Feature predictedFeature, boolean isStringMultiValue)
     {
-        String[] labels;
         if (isStringMultiValue) {
-            labels = FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
+            return FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
         }
-        else {
-            labels = new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
-        }
-        return labels;
+
+        return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
     }
 
     /**
@@ -2084,9 +2162,15 @@ public class RecommendationServiceImpl
             Annotation aPredictedAnnotation)
     {
         Type tokenType = getType(aOriginalCas, Token.class);
-        var tokens = aOriginalCas.<Annotation> select(tokenType) //
-                .coveredBy(aPredictedAnnotation) //
-                .limit(2).asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var tokens = aOriginalCas.<Annotation> select(tokenType) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .limit(2).asList();
+        var tokens = CasUtil
+                .selectCovered(aOriginalCas, tokenType, aPredictedAnnotation.getBegin(),
+                        aPredictedAnnotation.getEnd())
+                .stream() //
+                .limit(2).collect(toList());
 
         if (tokens.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2113,9 +2197,13 @@ public class RecommendationServiceImpl
     private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        var sentences = aOriginalCas.select(Sentence.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var sentences = aOriginalCas.select(Sentence.class) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .asList();
+        var sentences = CasUtil.selectCovered(aOriginalCas,
+                CasUtil.getType(aOriginalCas, Sentence.class), aPredictedAnnotation.getBegin(),
+                aPredictedAnnotation.getEnd());
 
         if (sentences.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2134,9 +2222,12 @@ public class RecommendationServiceImpl
     static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        var tokens = aOriginalCas.select(Token.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
+        // https://github.com/apache/uima-uimaj/issues/345
+        // var tokens = aOriginalCas.select(Token.class) //
+        // .coveredBy(aPredictedAnnotation) //
+        // .asList();
+        var tokens = CasUtil.selectCovered(aOriginalCas, CasUtil.getType(aOriginalCas, Token.class),
+                aPredictedAnnotation.getBegin(), aPredictedAnnotation.getEnd());
 
         if (tokens.isEmpty()) {
             if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
@@ -2186,7 +2277,11 @@ public class RecommendationServiceImpl
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        Type type = getAnnotationType(aCas, aLayer);
+        LOG.trace(
+                "calculateSpanSuggestionVisibility() for layer {} on document {} in range [{}, {}]",
+                aLayer, aDocument, aWindowBegin, aWindowEnd);
+
+        var type = getAnnotationType(aCas, aLayer);
         if (type == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
             // been upgraded to the latest version of the type system yet. If this is the case,
@@ -2222,7 +2317,7 @@ public class RecommendationServiceImpl
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position
-            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions = new TreeMap<>(
+            var suggestions = new TreeMap<Offset, SuggestionGroup<SpanSuggestion>>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
                     .filter(group -> group.getFeature().equals(feature.getName())) //
@@ -2232,8 +2327,8 @@ public class RecommendationServiceImpl
                     }) //
                     .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
 
-            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, suggestionsInWindow,
-                    feature, feat, suggestions);
+            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, feature, feat,
+                    suggestions);
 
             // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream() //
@@ -2245,9 +2340,8 @@ public class RecommendationServiceImpl
     }
 
     private void hideSpanSuggestionsThatOverlapWithAnnotations(
-            List<AnnotationFS> annotationsInWindow,
-            List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow, AnnotationFeature feature,
-            Feature feat, Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
+            List<AnnotationFS> annotationsInWindow, AnnotationFeature feature, Feature feat,
+            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
     {
         // If there are no suggestions or annotations, there is nothing to do here
         if (annotationsInWindow.isEmpty() || suggestions.isEmpty()) {
@@ -2257,12 +2351,12 @@ public class RecommendationServiceImpl
         // Reduce the annotations to the ones which have a non-null feature value. We need to
         // use a multi-valued map here because there may be multiple annotations at a
         // given position.
-        MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
+        var annotations = new ArrayListValuedHashMap<Offset, AnnotationFS>();
         annotationsInWindow
                 .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
 
         // We need to constructed a sorted list of the keys for the OverlapIterator below
-        List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
+        var sortedAnnotationKeys = new ArrayList<Offset>(annotations.keySet());
         sortedAnnotationKeys.sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
 
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
@@ -2272,6 +2366,7 @@ public class RecommendationServiceImpl
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
+        var hiddenForOverlap = new ArrayList<AnnotationSuggestion>();
         while (oi.hasNext()) {
             if (oi.getA().overlaps(oi.getB())) {
                 // Fetch the current suggestion and annotation
@@ -2290,6 +2385,7 @@ public class RecommendationServiceImpl
                             // or not.
                             if (colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
 
@@ -2297,6 +2393,7 @@ public class RecommendationServiceImpl
                             // annotation with no label, but only if the offsets differ
                             if (feature.getLayer().isAllowStacking() && !colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
                         }
@@ -2315,6 +2412,7 @@ public class RecommendationServiceImpl
                             // at the same position then we hide
                             if (label != null && label.equals(suggestion.getLabel()) && colocated) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
 
@@ -2322,6 +2420,7 @@ public class RecommendationServiceImpl
                             // stacking is not enabled - then we need to hide
                             if (!feature.getLayer().isAllowStacking()) {
                                 suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
                                 continue;
                             }
                         }
@@ -2334,6 +2433,13 @@ public class RecommendationServiceImpl
             }
 
             oi.step();
+        }
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Hidden due to overlapping: {}", hiddenForOverlap.size());
+            for (var s : hiddenForOverlap) {
+                LOG.trace("- {}", s);
+            }
         }
     }
 
@@ -2486,8 +2592,12 @@ public class RecommendationServiceImpl
             for (var feature : features) {
                 var td = tsd.getType(feature.getLayer().getName());
                 if (td == null) {
-                    LOG.trace("Could not monkey patch feature {} because type for layer {} was not "
-                            + "found in the type system", feature, feature.getLayer());
+                    if (!WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                        LOG.trace(
+                                "Could not monkey patch feature {} because type for layer {} was not "
+                                        + "found in the type system",
+                                feature, feature.getLayer());
+                    }
                     continue;
                 }
 
@@ -2917,8 +3027,9 @@ public class RecommendationServiceImpl
     {
         var state = getState(aSessionOwner, aLayer.getProject());
         synchronized (state) {
-            state.learningRecords.getOrDefault(aLayer, Collections.emptyList()).removeIf(
-                    r -> Objects.equals(r.getUser(), aDataOwner) && r.getUserAction() == SKIPPED);
+            state.learningRecords.getOrDefault(aLayer, Collections.emptyList())
+                    .removeIf(r -> Objects.equals(r.getUser(), aDataOwner.getUsername())
+                            && r.getUserAction() == SKIPPED);
         }
 
         String sql = String.join("\n", //
@@ -2960,7 +3071,6 @@ public class RecommendationServiceImpl
     private static class PredictionCasHolder
         implements AutoCloseable
     {
-
         private final CAS cas;
 
         public PredictionCasHolder() throws ResourceInitializationException
@@ -2974,5 +3084,10 @@ public class RecommendationServiceImpl
         {
             CasStorageSession.get().remove(cas);
         }
+    }
+
+    final record ReconciliationResult(int added, int removed, int aged,
+            List<AnnotationSuggestion> suggestions)
+    {
     }
 }

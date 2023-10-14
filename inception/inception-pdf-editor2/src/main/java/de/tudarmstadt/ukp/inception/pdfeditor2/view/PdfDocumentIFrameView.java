@@ -44,9 +44,9 @@ import org.dkpro.core.api.pdf.type.PdfPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;

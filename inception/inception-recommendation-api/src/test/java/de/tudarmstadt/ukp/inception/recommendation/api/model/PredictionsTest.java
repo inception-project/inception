@@ -109,6 +109,35 @@ class PredictionsTest
         }
     }
 
+    @Test
+    void thatIdsAreAssigned() throws Exception
+    {
+        var doc = "doc";
+        sut = new Predictions(user, user.getUsername(), project);
+        sut.putPredictions(asList( //
+                SpanSuggestion.builder() //
+                        .withId(AnnotationSuggestion.NEW_ID) //
+                        .withDocumentName(doc) //
+                        .build()));
+
+        assertThat(sut.getPredictionsByDocument(doc)) //
+                .extracting(AnnotationSuggestion::getId) //
+                .containsExactly(0);
+
+        var inheritedPredictions = sut.getPredictionsByDocument(doc);
+        sut = new Predictions(sut);
+        sut.putPredictions(asList( //
+                SpanSuggestion.builder() //
+                        .withId(AnnotationSuggestion.NEW_ID) //
+                        .withDocumentName(doc) //
+                        .build()));
+        sut.putPredictions(inheritedPredictions);
+
+        assertThat(sut.getPredictionsByDocument(doc)) //
+                .extracting(AnnotationSuggestion::getId) //
+                .containsExactlyInAnyOrder(0, 1);
+    }
+
     private List<AnnotationSuggestion> generatePredictions(int aDocs, int aRecommenders,
             int aSuggestions)
         throws Exception

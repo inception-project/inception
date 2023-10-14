@@ -98,20 +98,18 @@ public class PreRendererImpl
         CAS cas = aRequest.getCas();
         Validate.notNull(cas, "CAS cannot be null");
 
+        String documentText = cas.getDocumentText();
+        int renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
+        int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
+        aResponse.setText(documentText.substring(renderBegin, renderEnd));
+        aResponse.setWindowBegin(renderBegin);
+        aResponse.setWindowEnd(renderEnd);
+
         if (aRequest.getVisibleLayers().isEmpty()) {
             return;
         }
 
         long start = System.currentTimeMillis();
-
-        String documentText = cas.getDocumentText();
-        int renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
-        int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
-        aResponse.setText(documentText.substring(renderBegin, renderEnd));
-
-        aResponse.setWindowBegin(renderBegin);
-        aResponse.setWindowEnd(renderEnd);
-
         Project project = aRequest.getProject();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for

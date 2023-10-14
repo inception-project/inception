@@ -105,6 +105,7 @@ public class SanitizingContentHandler
             var attributes = sanitizeAttributes(element, aAtts);
             startElement(element, attributes, policy, action, localNamespace);
             break;
+        case SKIP: // fall-through
         case DROP:
             startElement(element, null, policy, action, localNamespace);
             break;
@@ -119,7 +120,8 @@ public class SanitizingContentHandler
     {
         QName element = aElement;
 
-        if (aAction == ElementAction.DROP && policies.isDebug()) {
+        if ((aAction == ElementAction.DROP || aAction == ElementAction.SKIP)
+                && policies.isDebug()) {
             element = maskElement(element);
         }
 
@@ -186,6 +188,7 @@ public class SanitizingContentHandler
             Arrays.fill(placeholder, filteredCharacter);
             super.characters(placeholder, 0, aLength);
             break;
+        case SKIP: // pass-through
         case PASS:
             super.characters(aCh, aStart, aLength);
             break;
@@ -204,6 +207,7 @@ public class SanitizingContentHandler
             Arrays.fill(placeholder, filteredCharacter);
             super.ignorableWhitespace(placeholder, 0, aLength);
             break;
+        case SKIP: // pass-through
         case PASS:
             super.ignorableWhitespace(aCh, aStart, aLength);
             break;
@@ -263,7 +267,7 @@ public class SanitizingContentHandler
     private static final class Frame
     {
         final QName element;
-        final Optional<ElementPolicy> policy;
+        final @SuppressWarnings("unused") Optional<ElementPolicy> policy;
         final ElementAction action;
         final Map<String, String> namespaces;
 

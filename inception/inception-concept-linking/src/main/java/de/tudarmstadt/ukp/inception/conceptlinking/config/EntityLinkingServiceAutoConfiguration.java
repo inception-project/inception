@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.CasingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FrequencyFeatureGenerator;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.feature.WikidataIdRankFeature
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerFactory;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;

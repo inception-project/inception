@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -64,7 +65,7 @@ public class BasicDocumentLabelingProjectInitializer
     @Override
     public String getName()
     {
-        return "Basic document labeling";
+        return "Document classification";
     }
 
     @Override
@@ -113,5 +114,11 @@ public class BasicDocumentLabelingProjectInitializer
         traits.setReopenableByAnnotator(true);
         matrixWorkloadExtension.writeTraits(traits, aProject);
         workloadManagementService.saveConfiguration(manager);
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Create document-classification annotations.");
     }
 }

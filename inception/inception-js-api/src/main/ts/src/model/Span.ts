@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, Offsets, VID, Comment } from '.'
+import { Annotation, Offsets, VID, Comment, AnnotatedText } from '.'
 import { Layer } from './Layer'
 
 export type ClippingStatus = undefined | 's' | 'e' | 'se'
 
 export class Span implements Annotation {
+  document: AnnotatedText
   layer: Layer
   vid: VID
   offsets: Array<Offsets>
@@ -36,6 +37,7 @@ export class Span implements Annotation {
 
   constructor (other?: Span) {
     if (other) {
+      this.document = other.document
       this.layer = other.layer
       this.vid = other.vid
       this.offsets = other.offsets

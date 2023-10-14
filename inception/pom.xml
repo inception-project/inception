@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>29.0-SNAPSHOT</version>
+    <version>30.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -28,7 +28,7 @@
 
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.release>11</maven.compiler.release>
+    <maven.compiler.release>17</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -42,14 +42,14 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bom</artifactId>
-        <version>29.0-SNAPSHOT</version>
+        <version>30.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>29.0-SNAPSHOT</version>
+        <version>30.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -154,12 +154,14 @@
     <module>inception-support</module>
     <module>inception-support-standalone</module>
     <module>inception-model</module>
+    <module>inception-model-vdoc</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
     <module>inception-project-initializers</module>
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>
     <module>inception-project-initializers-sentencelabeling</module>
+    <module>inception-project-initializers-ud</module>
     <module>inception-project-initializers-wikidatalinking</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
@@ -171,13 +173,16 @@
     <module>inception-api</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
+    <module>inception-annotation-storage-api</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
+    <module>inception-documents-api</module>
     <module>inception-documents</module>
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
     <module>inception-api-schema</module>
     <module>inception-export</module>
+    <module>inception-export-api</module>
     <module>inception-diag</module>
     <module>inception-tutorial</module>
     <module>inception-testing</module>
@@ -233,10 +238,13 @@
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
     <module>inception-brat-editor</module>
+    <module>inception-diam-api</module>
     <module>inception-diam</module>
+    <module>inception-diam-compactv2</module>
     <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
     <module>inception-html-editor</module>
+    <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-pdf-editor2</module>
@@ -486,6 +494,15 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+          <configuration>
+            <encoding>${project.build.sourceEncoding}</encoding>
+            <propertiesEncoding>${project.build.sourceEncoding}</propertiesEncoding>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>com.helger.maven</groupId>
           <artifactId>ph-javacc-maven-plugin</artifactId>
@@ -813,7 +830,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.12.1</version>
+                  <version>10.12.3</version>
                 </dependency>
               </dependencies>
               <configuration>

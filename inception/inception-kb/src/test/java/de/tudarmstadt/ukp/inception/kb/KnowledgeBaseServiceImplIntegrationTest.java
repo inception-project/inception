@@ -62,8 +62,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -77,7 +77,11 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //
@@ -406,8 +410,16 @@ public class KnowledgeBaseServiceImplIntegrationTest
         String[] expectedProps = { kb.getSubclassIri(), kb.getLabelIri(), kb.getDescriptionIri(),
                 kb.getTypeIri() };
 
-        assertEquals(listProperties.size(), 5);
-        assertThat(listIdentifier).as("Check that base properties are created")
+        assertThat(listProperties) //
+                .extracting(KBProperty::getIdentifier) //
+                .containsExactly( //
+                        "http://www.w3.org/2000/01/rdf-schema#comment",
+                        "http://www.w3.org/2000/01/rdf-schema#label",
+                        "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+                        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+                        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        assertThat(listIdentifier) //
+                .as("Check that base properties are created") //
                 .contains(expectedProps);
     }
 

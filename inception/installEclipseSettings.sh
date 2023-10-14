@@ -51,6 +51,7 @@ installPrefs inception-external-search-pubannotation
 installPrefs inception-external-search-pubmed
 installPrefs inception-external-search-solr
 installPrefs inception-guidelines
+installPrefs inception-html-apache-annotator-editor
 installPrefs inception-html-editor
 installPrefs inception-html-recogito-editor
 installPrefs inception-image

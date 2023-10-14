@@ -16,6 +16,10 @@
 
 = Install Java
 
+NOTE: If you aim for a Docker-based deployment, it is useful for you to read the following sections to better understand
+      how the overall setup works. However, you will not have to install Java. If you use Docker Compose, you may also not have
+      to install a database. Refer to the <<sect_docker>> section instead.
+
 You can install a Java 11 JDK using the following commands.
 
 [source,bash]

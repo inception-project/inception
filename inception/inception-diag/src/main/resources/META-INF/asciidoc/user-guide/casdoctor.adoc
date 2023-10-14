@@ -173,8 +173,9 @@ dependent.
 ID:: `CASMetadataTypeIsPresentCheck`
 Related repairs:: <<repair_UpgradeCasRepair>>
 
-Checks if the ìnternal type `CASMetadata is defined in the type system of this CAS. If this is
+Checks if the internal type `CASMetadata` is defined in the type system of this CAS. If this is
 not the case, then the application may not be able to detect concurrent modifications.
+
 
 [[check_DanglingRelationsCheck]]
 === Dangling relations
@@ -209,6 +210,16 @@ such as the default sentence-oriented brat editor. Also, sentence-oriented forma
 TSV or CoNLL formats will not include any text and annotations of parts of the documents that is
 not covered by sentences or may produce errors during export.
 
+
+[[check_UnreachableAnnotationsCheck]]
+=== Unreachable annotations check
+[horizontal]
+ID:: `UnreachableAnnotationsCheck`
+Related repairs:: <<repair_UpgradeCasRepair>>
+
+Checks if there are any unreachable feature structures. Such feature structures take up memory, but
+they are not regularly accessible. Such feature structures may be created as a result of bugs.
+Removing them is harmless and reduces memory and disk space usage.
 
 
 [[sect_repairs]]
@@ -331,6 +342,9 @@ ID:: `UpgradeCasRepair`
 
 Ensures that the CAS is up-to-date with the project type system. It performs the same operation
 which is regularly performed when a user opens a document for annotation/curation.
+
+This repair also removes any unreachable feature structures. Such feature structures may be created as a result of bugs.
+Removing them is harmless and reduces memory and disk space usage.
 
 This is considered to be safe repair action as it only garbage-collects data from the CAS that is
 no longer reachable anyway.

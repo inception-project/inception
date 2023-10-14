@@ -33,8 +33,8 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
@@ -114,6 +114,8 @@ public class ExternalAnnotationEditor
         props.setScriptSources(pluginDesc.getScripts().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
+        getFactory().getUserPreferencesKey()
+                .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         props.setEditorFactoryId(getFactory().getBeanName());
 
         return props;

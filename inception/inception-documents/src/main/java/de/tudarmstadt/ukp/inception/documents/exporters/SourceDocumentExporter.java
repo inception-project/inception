@@ -45,8 +45,6 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -57,6 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 
 /**
@@ -132,10 +132,9 @@ public class SourceDocumentExporter
                 FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
                         sourceDocumentDir);
                 aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
+                log.info("Exported content for source document {}/{}: {} in {}", i,
+                        documents.size(), sourceDocument, project);
                 i++;
-                log.info("Exported content for source document [" + sourceDocument.getId()
-                        + "] in project [" + project.getName() + "] with id [" + project.getId()
-                        + "]");
             }
             catch (FileNotFoundException e) {
                 log.error("Source file [{}] related to project couldn't be located in repository",
@@ -159,8 +158,8 @@ public class SourceDocumentExporter
         importSourceDocuments(aExProject, aProject);
         importSourceDocumentContents(aZip, aProject);
 
-        log.info("Imported [{}] source documents for project [{}] ({})",
-                aExProject.getSourceDocuments().size(), aExProject.getName(),
+        log.info("Imported [{}] source documents into aProject ({})",
+                aExProject.getSourceDocuments().size(), aProject,
                 DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
 
@@ -240,9 +239,8 @@ public class SourceDocumentExporter
                 copy(zip.getInputStream(entry), sourceFilePath);
 
                 n++;
-                log.info("Imported content for source document {}/{}: [{}]({}) in project [{}]({})",
-                        n, docs.size(), sourceDocument.getName(), sourceDocument.getId(),
-                        aProject.getName(), aProject.getId());
+                log.info("Imported content for source document {}/{}: {} in {}", n, docs.size(),
+                        sourceDocument, aProject);
             }
         }
     }

@@ -1,6 +1,6 @@
 import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
-import SpanAnnotation from '../annotation/span'
+import SpanAnnotation from '../model/SpanAnnotation'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { scale } from '../../../page/textLayer'
 import { VGlyph } from '../../../../vmodel/VGlyph'

@@ -51,9 +51,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
@@ -145,7 +145,8 @@ public class XHtmlXmlDocumentViewControllerImpl
             // not inject format-specific CSS then!
             if (casContainsHtml) {
                 XmlDocument xml = maybeXmlDocument.get();
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
+                var sh = applySanitizers(aEditor, doc, ch);
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
                 ch.startDocument();
                 ch.startPrefixMapping("", XHTML_NS_URI);
                 serializer.process(xml.getRoot());

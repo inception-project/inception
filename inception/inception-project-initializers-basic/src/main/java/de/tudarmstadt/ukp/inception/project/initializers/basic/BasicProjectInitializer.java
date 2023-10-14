@@ -18,9 +18,13 @@
 package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
@@ -37,6 +41,9 @@ import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionB
 public class BasicProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+
     private final ApplicationContext context;
 
     public BasicProjectInitializer(ApplicationContext aContext)
@@ -48,6 +55,18 @@ public class BasicProjectInitializer
     public String getName()
     {
         return "Basic annotation (span/relation)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Create annotations on words and connect them using relations.");
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

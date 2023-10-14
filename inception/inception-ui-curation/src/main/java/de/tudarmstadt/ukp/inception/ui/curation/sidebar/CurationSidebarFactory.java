@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
@@ -73,7 +73,13 @@ public class CurationSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        var sidebar = new CurationSidebar(aId, aModel, aActionHandler, aCasProvider,
+                aAnnotationPage);
+        if (aAnnotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
+            aAnnotationPage.add(new CurationSidebarBehavior());
+        }
+
+        return sidebar;
     }
 
     @Override

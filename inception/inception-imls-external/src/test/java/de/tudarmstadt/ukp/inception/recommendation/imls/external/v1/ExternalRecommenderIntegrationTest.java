@@ -38,7 +38,6 @@ import java.util.Objects;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderPropertiesImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import okhttp3.mockwebserver.MockResponse;
@@ -85,7 +83,7 @@ public class ExternalRecommenderIntegrationTest
     private RecommenderContext context;
     private ExternalRecommender sut;
     private ExternalRecommenderTraits traits;
-    private RemoteStringMatchingNerRecommender remoteRecommender;
+    private MockRemoteStringMatchingNerRecommender remoteRecommender;
     private MockWebServer server;
     private List<String> requestBodies;
     private CasStorageSession casStorageSession;
@@ -100,7 +98,7 @@ public class ExternalRecommenderIntegrationTest
         traits = new ExternalRecommenderTraits();
         sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
 
-        remoteRecommender = new RemoteStringMatchingNerRecommender(recommender);
+        remoteRecommender = new MockRemoteStringMatchingNerRecommender(recommender);
 
         server = new MockWebServer();
         server.setDispatcher(buildDispatcher());
@@ -122,7 +120,7 @@ public class ExternalRecommenderIntegrationTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        List<CAS> data = loadDevelopmentData();
+        var data = loadDevelopmentData();
 
         assertThatCode(() -> sut.train(context, data)).doesNotThrowAnyException();
     }
@@ -130,14 +128,14 @@ public class ExternalRecommenderIntegrationTest
     @Test
     public void thatPredictingWorks() throws Exception
     {
-        List<CAS> casses = loadDevelopmentData();
+        var casses = loadDevelopmentData();
         sut.train(context, casses);
 
-        CAS cas = casses.get(0);
+        var cas = casses.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions are not empty").isNotEmpty();
 
@@ -151,22 +149,25 @@ public class ExternalRecommenderIntegrationTest
     @Test
     public void thatTrainingSendsCorrectRequest() throws Exception
     {
-        List<CAS> casses = loadDevelopmentData();
+        var casses = loadDevelopmentData();
         sut.train(context, casses);
 
-        TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
+        var request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //
                 .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
                 .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
                 .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("range.begin", 0)
+                .hasFieldOrPropertyWithValue("range.end", 263034)
                 .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
                 .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
 
         for (int i = 0; i < request.getDocuments().size(); i++) {
-            Document doc = request.getDocuments().get(i);
-            assertThat(doc).hasFieldOrPropertyWithValue("documentId", (long) i)
+            var doc = request.getDocuments().get(i);
+            assertThat(doc) //
+                    .hasFieldOrPropertyWithValue("documentId", (long) i) //
                     .hasFieldOrPropertyWithValue("userId", USER_NAME);
         }
     }
@@ -174,33 +175,38 @@ public class ExternalRecommenderIntegrationTest
     @Test
     public void thatPredictingSendsCorrectRequest() throws Exception
     {
-        List<CAS> casses = loadDevelopmentData();
+        var casses = loadDevelopmentData();
         sut.train(context, casses);
-        CAS cas = casses.get(0);
+
+        var cas = casses.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
 
-        PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
+        var request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //
                 .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
                 .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
                 .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("range.begin", 0)
+                .hasFieldOrPropertyWithValue("range.end", 263034)
                 .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
                 .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
-        assertThat(request.getDocument()).hasFieldOrPropertyWithValue("userId", USER_NAME)
+
+        assertThat(request.getDocument()) //
+                .hasFieldOrPropertyWithValue("userId", USER_NAME) //
                 .hasFieldOrPropertyWithValue("documentId", 0L);
     }
 
     private List<CAS> loadDevelopmentData() throws Exception
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
-            List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+            var ds = loader.load("germeval2014-de", CONTINUE);
+            var data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
 
             for (int i = 0; i < data.size(); i++) {
-                CAS cas = data.get(i);
+                var cas = data.get(i);
                 addCasMetadata(cas.getJCas(), i);
                 casStorageSession.add("testDataCas" + i, EXCLUSIVE_WRITE_ACCESS, cas);
             }
@@ -215,7 +221,7 @@ public class ExternalRecommenderIntegrationTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader( //
+        var reader = createReader( //
                 Conll2002Reader.class, //
                 Conll2002Reader.PARAM_PATTERNS, files, //
                 Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
@@ -239,15 +245,15 @@ public class ExternalRecommenderIntegrationTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setName(TYPE);
         layer.setCrossSentence(CROSS_SENTENCE);
         layer.setAnchoringMode(ANCHORING_MODE);
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
@@ -263,7 +269,7 @@ public class ExternalRecommenderIntegrationTest
             public MockResponse dispatch(RecordedRequest request)
             {
                 try {
-                    String body = request.getBody().readUtf8();
+                    var body = request.getBody().readUtf8();
                     requestBodies.add(body);
 
                     if (Objects.equals(request.getPath(), "/train")) {
@@ -271,7 +277,7 @@ public class ExternalRecommenderIntegrationTest
                         return new MockResponse().setResponseCode(204);
                     }
                     else if (request.getPath().equals("/predict")) {
-                        String response = remoteRecommender.predict(body);
+                        var response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }
                 }
@@ -287,7 +293,7 @@ public class ExternalRecommenderIntegrationTest
 
     private void addCasMetadata(JCas aJCas, long aDocumentId)
     {
-        CASMetadata cmd = new CASMetadata(aJCas);
+        var cmd = new CASMetadata(aJCas);
         cmd.setUsername(USER_NAME);
         cmd.setProjectId(PROJECT_ID);
         cmd.setSourceDocumentId(aDocumentId);

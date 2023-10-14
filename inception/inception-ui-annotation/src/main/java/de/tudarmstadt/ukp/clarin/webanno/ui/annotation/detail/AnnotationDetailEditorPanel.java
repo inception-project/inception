@@ -81,6 +81,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
@@ -101,7 +102,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -126,7 +126,7 @@ public abstract class AnnotationDetailEditorPanel
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;
@@ -195,15 +195,14 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createNextAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
+        var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
         return link;
     }
 
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("previousAnnotation",
-                this::actionPreviousAnnotation);
+        var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
         link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
         return link;
     }
@@ -1042,13 +1041,13 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("loadFeatureEditorModels()");
 
-        CAS aCas = getEditorCas();
+        var aCas = getEditorCas();
 
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
+        var state = getModelObject();
+        var selection = state.getSelection();
 
-        List<FeatureState> featureStates = state.getFeatureStates();
-        for (FeatureState featureState : featureStates) {
+        var featureStates = state.getFeatureStates();
+        for (var featureState : featureStates) {
             if (StringUtils.isNotBlank(featureState.feature.getLinkTypeName())) {
                 featureState.value = new ArrayList<>();
             }
@@ -1235,13 +1234,20 @@ public abstract class AnnotationDetailEditorPanel
         try {
             var selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
-            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
-                    .at(selection.getBegin(), selection.getEnd()) //
+            // https://github.com/apache/uima-uimaj/issues/345
+            // boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+            // .at(selection.getBegin(), selection.getEnd()) //
+            // .anyMatch(ann -> ann._id() == id);
+            var cas = getEditorCas();
+            boolean annotationStillExists = CasUtil
+                    .selectAt(cas, CasUtil.getType(cas, Annotation.class), selection.getBegin(),
+                            selection.getEnd())
+                    .stream() //
                     .anyMatch(ann -> ann._id() == id);
+
             if (!annotationStillExists) {
                 selection.clear();
                 refresh(aEvent.getRequestTarget());
-
             }
         }
         catch (Exception e) {

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
@@ -33,9 +32,7 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAll;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +49,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -61,6 +57,7 @@ import org.xml.sax.SAXException;
 import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -231,13 +228,7 @@ public class MtasUimaParser
 
     private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
     {
-        CAS cas = createCas();
-
-        try (InputStream in = new ByteArrayInputStream(charsToBytes(toCharArray(aReader)))) {
-            CasIOUtils.load(in, getRealCas(cas));
-        }
-
-        return getRealCas(cas);
+        return getRealCas(WebAnnoCasUtil.byteArrayToCas(charsToBytes(toCharArray(aReader))));
     }
 
     public MtasTokenCollection createTokenCollection(CAS aJCas)

@@ -66,7 +66,7 @@ public class LogDialog
             model = new ListModel<>(asList(group));
         }
 
-        LogDialogContent content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
+        var content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
         open(content, aTarget);
         aTarget.focusComponent(content.getFocusComponent());
     }
