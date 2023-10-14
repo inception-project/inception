@@ -59,6 +59,7 @@ public class InceptionRemoteApiJwtIntegrationTest
 
     static final String SUB = UUID.randomUUID().toString();
 
+    static String oldServerPort;
     static @TempDir Path appHome;
     static MockOAuth2Server oauth2Server;
     static ConfigurableApplicationContext context;
@@ -68,6 +69,8 @@ public class InceptionRemoteApiJwtIntegrationTest
     @BeforeAll
     static void setup()
     {
+        oldServerPort = System.setProperty("server.port", "0");
+
         oauth2Server = new MockOAuth2Server();
         oauth2Server.start();
 
@@ -98,6 +101,13 @@ public class InceptionRemoteApiJwtIntegrationTest
     @AfterAll
     static void teardown()
     {
+        if (oldServerPort == null) {
+            System.getProperties().remove("server.port");
+
+        }
+        else {
+            System.setProperty("server.port", oldServerPort);
+        }
         context.close();
         oauth2Server.shutdown();
     }
@@ -139,9 +149,11 @@ public class InceptionRemoteApiJwtIntegrationTest
 
     private HttpRequest listProjects(SignedJWT token)
     {
+        var port = context.getEnvironment().getProperty("local.server.port");
+
         var request = HttpRequest.newBuilder() //
                 .GET() //
-                .uri(URI.create("http://localhost:8080/api/aero/v1/projects")) //
+                .uri(URI.create("http://localhost:" + port + "/api/aero/v1/projects")) //
                 .setHeader("Authorization", "Bearer " + token.serialize()) //
                 .build();
         return request;
