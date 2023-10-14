@@ -46,7 +46,6 @@
 
   onMount(() => {
     scrollContainer = handle.parentElement
-    console.debug("scrollContainer", scrollContainer)
   })
 
   $: {
@@ -100,11 +99,9 @@
       return
     }
 
-    console.log(`clientX: ${event.clientX}, clientY: ${event.clientY}`)
     const range = caretRangeFromPoint(event.clientX, event.clientY)
 
     const chunk = findClosestChunkElement(range.startContainer)
-    console.log(chunk)
     if (!range || !chunk) {
       markerVisibility = 'hidden'
       return
