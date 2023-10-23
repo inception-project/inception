@@ -42,13 +42,13 @@ public class MarkdownUtil
             // The align attribute on <p> elements can have any value below.
             .allowAttributes("align") //
             .matching(true, "center", "left", "right", "justify", "char") //
-            .onElements("p") //
+            .onElements("caption", "col", "colgroup", "hr", "img", "table", "tbody", "td", "tfoot",
+                    "th", "thead", "tr") //
             // These elements are allowed.
-            .allowElements("a", "p", "div", "i", "b", "em", "blockquote", "tt", "strong", "br",
-                    "ul", "ol", "li")
-            // Custom slashdot tags.
-            // These could be rewritten in the sanitizer using an ElementPolicy.
-            .allowElements("quote", "ecode") //
+            .allowCommonBlockElements() //
+            .allowCommonInlineFormattingElements() //
+            .allowElements("table", "th", "td", "tr", "tbody", "thead", "col", "colgroup",
+                    "caption")
             .toFactory() //
             .and(Sanitizers.IMAGES);
 
