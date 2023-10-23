@@ -27,7 +27,7 @@
         DiamAjax,
         LazyDetailGroup,
     } from "../..";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     export let ajax: DiamAjax;
     export let root: Element;
@@ -44,80 +44,105 @@
     let popover: HTMLElement;
     let detailGroups: LazyDetailGroup[];
     let popoverTimeoutId: number | undefined;
+    let loading = false;
 
     onMount(() => {
-        // React to mouse hovering over annotation
-        root.addEventListener(
-            AnnotationOverEvent.eventType,
-            (e: AnnotationOverEvent) => {
-                const originalEvent = e.originalEvent;
-                if (!(originalEvent instanceof MouseEvent))
-                    return;
-
-                if (popoverTimeoutId) window.clearTimeout(popoverTimeoutId);
-                popoverTimeoutId = undefined;
-
-                // console.log("Popover triggered");
-                if (annotation && annotation.vid !== e.annotation.vid) {
-                    annotation = e.annotation;
-                } else if (!annotation || annotation.vid !== e.annotation.vid) {
-                    popoverTimeoutId = window.setTimeout(() => {
-                        popoverTimeoutId = undefined;
-                        annotation = e.annotation;
-                        popoverTimeoutId = window.setTimeout(() => {
-                            movePopover(originalEvent);
-                            popoverTimeoutId = undefined;
-                        }, renderDelay);
-                    }, showDelay);
-                }
-            }
-        );
-
-        // Hide popover when leaving the annotation
-        root.addEventListener(
-            AnnotationOutEvent.eventType,
-            (e: AnnotationOutEvent) => {
-                if (!(e.originalEvent instanceof MouseEvent))
-                    return;
-                // console.log("Popover out", e.target)
-                if (popoverTimeoutId) {
-                    window.clearTimeout(popoverTimeoutId);
-                    popoverTimeoutId = undefined;
-                }
-                popoverTimeoutId = window.setTimeout(() => {
-                    if (annotation) {
-                        // console.log("Popover hiding")
-                        annotation = undefined;
-                    }
-                }, hideDelay);
-            }
-        );
-
-        // Follow the mouse around
-        root.addEventListener("mousemove", (e: MouseEvent) => {
-            if (!annotation) return;
-
-            movePopover(e);
-        });
-
-        root.addEventListener("mousedown", (e: MouseEvent) => {
-            if (popoverTimeoutId) {
-                window.clearTimeout(popoverTimeoutId);
-                popoverTimeoutId = undefined;
-            }
-            annotation = undefined;
-        });
+        root.addEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
+        root.addEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
+        root.addEventListener("mousemove", onMouseMove);
+        root.addEventListener("mousedown", onMouseDown);
     });
+
+    onDestroy(() => {
+        root.removeEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
+        root.removeEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
+        root.removeEventListener("mousemove", onMouseMove);
+        root.removeEventListener("mousedown", onMouseDown);
+    })
 
     $: {
         if (annotation) {
+            loading = true
             ajax.loadLazyDetails(annotation)
-                .then((response) => detailGroups = response)
-                .catch(() => detailGroups = [{
-                    title: "Error", 
-                    details: [{label: "", value: "Unable to load details."
-                }]}])
+                .then((response) => { 
+                    loading = false
+                    detailGroups = response
+                })
+                .catch(() => {
+                    loading = false
+                    detailGroups = [{
+                        title: "Error", 
+                        details: [{label: "", value: "Unable to load details."
+                    }]}]
+            })
         }
+    }
+
+    function onMouseMove(e: MouseEvent) {
+        if (!annotation) return;
+
+        // if (!popoverTimeoutId && annotation) {
+        //     annotation = undefined
+        //     return
+        // }
+
+        movePopover(e);
+    }
+
+    function onMouseDown(e: MouseEvent) {
+        if (popoverTimeoutId) {
+            window.clearTimeout(popoverTimeoutId);
+            popoverTimeoutId = undefined;
+        }
+        annotation = undefined;
+    }
+
+    function onAnnotationOver(e: AnnotationOverEvent) {
+        const originalEvent = e.originalEvent;
+        if (!(originalEvent instanceof MouseEvent))
+            return;
+
+        if (popoverTimeoutId) window.clearTimeout(popoverTimeoutId);
+        popoverTimeoutId = undefined;
+
+        if (annotation && annotation.vid !== e.annotation.vid) {
+            annotation = e.annotation;
+            detailGroups = undefined
+        } else if (!annotation || annotation.vid !== e.annotation.vid) {
+            showPopoverWithDelay(e.annotation, originalEvent)
+        }
+    }
+
+    function onAnnotationOut(e: AnnotationOutEvent) {
+        if (!(e.originalEvent instanceof MouseEvent))
+            return;
+
+        hidePopoverWithDelay();
+    }
+
+    function showPopoverWithDelay(ann: Annotation, originalEvent: MouseEvent) {
+        popoverTimeoutId = window.setTimeout(() => {
+                popoverTimeoutId = undefined;
+                annotation = ann;
+                popoverTimeoutId = window.setTimeout(() => {
+                    movePopover(originalEvent);
+                    popoverTimeoutId = undefined;
+                }, renderDelay);
+            }, showDelay);
+    }
+
+    function hidePopoverWithDelay() {
+        if (popoverTimeoutId) {
+            window.clearTimeout(popoverTimeoutId);
+            popoverTimeoutId = undefined;
+        }
+
+        popoverTimeoutId = window.setTimeout(() => {
+            if (annotation) {
+                annotation = undefined;
+            }
+            popoverTimeoutId = undefined
+        }, hideDelay);
     }
 
     function movePopover(e: MouseEvent) {
@@ -130,7 +155,7 @@
         if (y + rect.height + yOffset > window.innerHeight) {
             top = y - rect.height - yOffset;
         } else {
-            top = y + yOffset;
+            top = y + yOffset;  
         }
 
         // Shift left if the popover is about to be clipped on the right
@@ -168,7 +193,15 @@
                     <div class="i7n-marker-{comment.type}">{comment.comment}</div>
                 {/each}
             {/if}
-            {#if detailGroups}
+            {#if loading}
+                <div class="d-flex flex-column justify-content-center">
+                    <div class="d-flex flex-row justify-content-center">
+                        <div class="spinner-border spinner-border-sm text-muted" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            {:else if detailGroups}
                 {#each detailGroups as detailGroup}
                     {#if detailGroup.title}
                         <div class="fw-bold">{detailGroup.title}</div>

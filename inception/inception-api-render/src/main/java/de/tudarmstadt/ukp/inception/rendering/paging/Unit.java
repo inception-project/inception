@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+
 public class Unit
     implements Serializable
 {
@@ -32,6 +34,7 @@ public class Unit
     private final int index;
     private final int begin;
     private final int end;
+    private final VID vid;
     private final String id;
 
     /**
@@ -44,7 +47,7 @@ public class Unit
      */
     public Unit(int aIndex, int aBegin, int aEnd)
     {
-        this(null, aIndex, aBegin, aEnd);
+        this(null, null, aIndex, aBegin, aEnd);
     }
 
     /**
@@ -58,8 +61,9 @@ public class Unit
      * @param aEnd
      *            end character offset
      */
-    public Unit(@Nullable String aId, int aIndex, int aBegin, int aEnd)
+    public Unit(@Nullable VID aVid, @Nullable String aId, int aIndex, int aBegin, int aEnd)
     {
+        vid = aVid;
         id = aId;
         index = aIndex;
         begin = aBegin;
@@ -85,6 +89,11 @@ public class Unit
     public String getId()
     {
         return id;
+    }
+
+    public VID getVid()
+    {
+        return vid;
     }
 
     @Override
