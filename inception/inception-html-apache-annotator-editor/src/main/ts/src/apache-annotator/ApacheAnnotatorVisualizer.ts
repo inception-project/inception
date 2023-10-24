@@ -75,15 +75,17 @@ export class ApacheAnnotatorVisualizer {
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
+    let initialized = false
     showLabels.subscribe(enabled => {
       this.showInlineLabels = enabled
-      this.loadAnnotations()
+      if (initialized) this.loadAnnotations()
     })
 
     showEmptyHighlights.subscribe(enabled => {
       this.showEmptyHighlights = enabled
-      this.loadAnnotations()
+      if (initialized) this.loadAnnotations()
     })
+    initialized = true
   }
 
   private showResizer (event: Event): void {
