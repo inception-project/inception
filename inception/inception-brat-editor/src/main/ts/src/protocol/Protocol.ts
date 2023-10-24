@@ -47,7 +47,7 @@ export type AnnotationCommentDto = [
 ]
 
 export type SentenceCommentDto = [
-  anchor: ['sent', number],
+  anchor: ['sent', number, VID],
   commentType: CommentType,
   comment: string
 ]
