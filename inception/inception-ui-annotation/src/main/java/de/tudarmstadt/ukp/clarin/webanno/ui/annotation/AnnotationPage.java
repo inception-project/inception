@@ -143,7 +143,7 @@ public class AnnotationPage
 
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
-        StringValue user = aPageParameters.get(PAGE_PARAM_USER);
+        StringValue user = aPageParameters.get(PAGE_PARAM_DATA_OWNER);
 
         handleParameters(document, focus, user);
 
