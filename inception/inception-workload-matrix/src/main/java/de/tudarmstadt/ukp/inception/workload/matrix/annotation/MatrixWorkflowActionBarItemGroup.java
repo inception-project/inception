@@ -33,6 +33,7 @@ import static wicket.contrib.input.events.key.KeyType.End;
 import java.io.IOException;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
@@ -42,7 +43,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -53,13 +53,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishD
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -67,6 +65,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.ResetAnnotationDocumentConfirmationDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import wicket.contrib.input.events.key.KeyType;
@@ -84,9 +83,7 @@ public class MatrixWorkflowActionBarItemGroup
     private @SpringBean PreferencesService preferencesService;
 
     private final AnnotationPageBase page;
-    protected ModalDialog finishDocumentDialog;
-    private final ChallengeResponseDialog resetDocumentDialog;
-    private final LambdaAjaxLink resetDocumentLink;
+    private final ModalDialog dialog;
     private final IModel<MatrixWorkloadTraits> traits;
 
     public MatrixWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
@@ -99,27 +96,21 @@ public class MatrixWorkflowActionBarItemGroup
                 .readTraits(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
                         page.getModelObject().getProject())));
 
-        finishDocumentDialog = new BootstrapModalDialog("finishDocumentDialog");
-        finishDocumentDialog.setContent(new FinishDocumentDialogContent(ModalDialog.CONTENT_ID,
-                Model.of(new FinishDocumentDialogModel()),
-                this::actionFinishDocumentDialogSubmitted));
-        add(finishDocumentDialog);
+        dialog = new BootstrapModalDialog("dialog");
+        add(dialog);
 
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
-        IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
-        resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog");
-        resetDocumentDialog.setTitleModel(new ResourceModel("ResetDocumentDialog.title"));
-        resetDocumentDialog.setMessageModel(new ResourceModel("ResetDocumentDialog.text"));
-        resetDocumentDialog.setExpectedResponseModel(documentNameModel);
-        resetDocumentDialog.setConfirmAction(this::actionResetDocument);
-        add(resetDocumentDialog);
+        add(createResetDocumentLink("showResetDocumentDialog"));
+    }
 
-        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                resetDocumentDialog::show));
-        resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
-        resetDocumentLink.add(visibleWhen(
+    private Component createResetDocumentLink(String aString)
+    {
+        var link = new LambdaAjaxLink(aString, this::actionRequestResetDocumentConfirmation);
+        link.add(enabledWhen(() -> page.isEditable()));
+        link.add(visibleWhen(
                 traits.map(MatrixWorkloadTraits::isDocumentResetAllowed).orElse(false)));
+        return link;
     }
 
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
@@ -210,6 +201,24 @@ public class MatrixWorkflowActionBarItemGroup
         }
     }
 
+    protected void actionRequestResetDocumentConfirmation(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        var content = new ResetAnnotationDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID);
+
+        content.setExpectedResponseModel(
+                page.getModel().map(AnnotatorState::getDocument).map(SourceDocument::getName));
+        content.setConfirmAction(_target -> {
+            var state = page.getModelObject();
+            documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
+                    EXPLICIT_ANNOTATOR_USER_ACTION);
+            page.actionLoadDocument(_target);
+        });
+
+        dialog.open(content, aTarget);
+    }
+
     protected void actionRequestFinishDocumentConfirmation(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
@@ -222,18 +231,22 @@ public class MatrixWorkflowActionBarItemGroup
             return;
         }
 
-        finishDocumentDialog.open(aTarget);
+        var dialogContent = new FinishDocumentDialogContent(ModalDialog.CONTENT_ID,
+                Model.of(new FinishDocumentDialogModel()),
+                this::actionFinishDocumentDialogSubmitted);
+
+        dialog.open(dialogContent, aTarget);
     }
 
     private void actionFinishDocumentDialogSubmitted(AjaxRequestTarget aTarget,
             Form<FinishDocumentDialogModel> aForm)
     {
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
 
         var newState = aForm.getModelObject().getState();
 
-        AnnotationDocument annotationDocument = documentService
-                .getAnnotationDocument(state.getDocument(), state.getUser());
+        var annotationDocument = documentService.getAnnotationDocument(state.getDocument(),
+                state.getUser());
         annotationDocument.setAnnotatorComment(aForm.getModelObject().getComment());
         documentService.setAnnotationDocumentState(annotationDocument, newState,
                 EXPLICIT_ANNOTATOR_USER_ACTION);
@@ -295,13 +308,5 @@ public class MatrixWorkflowActionBarItemGroup
             aTarget.addChildren(getPage(), IFeedback.class);
             break;
         }
-    }
-
-    protected void actionResetDocument(AjaxRequestTarget aTarget) throws Exception
-    {
-        AnnotatorState state = page.getModelObject();
-        documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
-                EXPLICIT_ANNOTATOR_USER_ACTION);
-        page.actionLoadDocument(aTarget);
     }
 }
