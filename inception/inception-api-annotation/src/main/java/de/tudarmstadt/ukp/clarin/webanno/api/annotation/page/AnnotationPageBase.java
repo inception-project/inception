@@ -111,25 +111,24 @@ public abstract class AnnotationPageBase
         // a document ID potentially sending us back to a specific document.
         if (!documentParameter.isEmpty()) {
             var requestCycle = getRequestCycle();
-            var clientUrl = requestCycle.getRequest().getClientUrl();
-            clientUrl.resolveRelative(Url.parse("./"));
+
             var fragmentParams = new ArrayList<String>();
             fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
             params.remove(PAGE_PARAM_DOCUMENT);
+
             if (!userParameter.isEmpty()) {
                 fragmentParams
                         .add(format("%s=%s", PAGE_PARAM_DATA_OWNER, userParameter.toString()));
                 params.remove(PAGE_PARAM_DATA_OWNER);
             }
-            for (var namedParam : params.getAllNamed()) {
-                clientUrl.setQueryParameter(namedParam.getKey(), namedParam.getValue());
-            }
-            clientUrl.setFragment("!" + fragmentParams.stream().collect(joining("&")));
-            var url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
+
+            var url = Url.parse(requestCycle.urlFor(this.getClass(), params));
+            url.setFragment("!" + fragmentParams.stream().collect(joining("&")));
+            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url);
             LOG.trace(
                     "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
-                    documentParameter, userParameter, url);
-            throw new RedirectToUrlException(url.toString());
+                    documentParameter, userParameter, finalUrl);
+            throw new RedirectToUrlException(finalUrl.toString());
         }
     }
 
