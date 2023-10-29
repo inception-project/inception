@@ -65,9 +65,9 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.management.ResetAnnotationDocumentConfirmationDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 import wicket.contrib.input.events.key.KeyType;
 
 public class MatrixWorkflowActionBarItemGroup
