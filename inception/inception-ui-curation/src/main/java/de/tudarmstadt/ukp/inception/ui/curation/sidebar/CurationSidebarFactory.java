@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
@@ -41,6 +44,8 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
 public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final ProjectService projectService;
     private final UserDao userService;
 
@@ -73,13 +78,7 @@ public class CurationSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        var sidebar = new CurationSidebar(aId, aModel, aActionHandler, aCasProvider,
-                aAnnotationPage);
-        if (aAnnotationPage.getBehaviors(CurationSidebarBehavior.class).isEmpty()) {
-            aAnnotationPage.add(new CurationSidebarBehavior());
-        }
-
-        return sidebar;
+        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
     }
 
     @Override

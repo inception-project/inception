@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
@@ -123,7 +124,7 @@ public class AnnotationPage
     private @SpringBean PreferencesService preferencesService;
     private @SpringBean DocumentAccess documentAccess;
 
-    private long currentprojectId;
+    private long currentProjectId;
 
     private WebMarkupContainer centerArea;
     private WebMarkupContainer actionBar;
@@ -135,15 +136,22 @@ public class AnnotationPage
     {
         super(aPageParameters);
 
-        LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
-
-        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        var state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setUser(userRepository.getCurrentUser());
         setModel(Model.of(state));
 
-        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
-        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
-        StringValue user = aPageParameters.get(PAGE_PARAM_DATA_OWNER);
+        // AnnotationPageBase will push the document and user parameters into the URL fragment so
+        // we can afterwards navigate between documents freely. When AnnotationPageBase
+        // does that, it restarts the request. So basically when we get here, PAGE_PARAM_DOCUMENT
+        // will always be `null`... PAGE_PARAM_DATA_OWNER may be non-null if it is set without a
+        // document being specified - but in that case it is pretty useless
+        //
+        // The actual loading of the documents will be handled by onParameterArrival in the
+        // UrlFragmentBehavior which will call handleParameters again, this time with the right
+        // information.
+        var document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
+        var focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+        var user = aPageParameters.get(PAGE_PARAM_DATA_OWNER);
 
         handleParameters(document, focus, user);
 
@@ -420,32 +428,44 @@ public class AnnotationPage
 
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
-
         try {
-            AnnotatorState state = getModelObject();
+            var sessionOwner = userRepository.getCurrentUser().getUsername();
+
+            var state = getModelObject();
             if (state.getUser() == null) {
                 state.setUser(userRepository.getCurrentUser());
             }
+
+            LOG.trace("Preparing to open document {}@{} {}", state.getUser(), state.getDocument(),
+                    aFocus);
             state.reset();
+            applicationEventPublisherHolder.get().publishEvent(
+                    new PreparingToOpenDocumentEvent(this, getModelObject().getDocument(),
+                            getModelObject().getUser().getUsername(), sessionOwner));
+
+            // INFO BOUNDARY ---------------------------------------------------------------
+            // PreparingToOpenDocumentEvent has the option to change the annotator state.
+            // No information from the annotator state read before this point may be
+            // used afterwards. Information has to be re-read from the annotator state to get
+            // the latest values.
 
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
-            AnnotationDocument annotationDocument = documentService
+            LOG.trace("Opening document {}@{} {}", state.getUser(), state.getDocument(), aFocus);
+            var annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
             var stateBeforeOpening = annotationDocument.getState();
 
             // Read the CAS
             // Update the annotation document CAS
-            CAS editorCas = documentService.readAnnotationCas(annotationDocument,
+            var editorCas = documentService.readAnnotationCas(annotationDocument,
                     FORCE_CAS_UPGRADE);
 
-            boolean editable = isEditable();
+            var editable = isEditable();
             applicationEventPublisherHolder.get()
                     .publishEvent(new BeforeDocumentOpenedEvent(this, editorCas,
                             getModelObject().getDocument(),
-                            getModelObject().getUser().getUsername(),
-                            userRepository.getCurrentUser().getUsername(), editable));
+                            getModelObject().getUser().getUsername(), sessionOwner, editable));
 
             if (editable) {
                 // After creating an new CAS or upgrading the CAS, we need to save it. If the
@@ -467,9 +487,9 @@ public class AnnotationPage
             loadPreferences();
 
             // if project is changed, reset some project specific settings
-            if (currentprojectId != state.getProject().getId()) {
+            if (currentProjectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
-                currentprojectId = state.getProject().getId();
+                currentProjectId = state.getProject().getId();
             }
 
             // Set the actual editor component. This has to happen *before* any AJAX refreshes are
@@ -518,16 +538,16 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
 
-            applicationEventPublisherHolder.get().publishEvent(
-                    new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
-                            stateBeforeOpening, getModelObject().getUser().getUsername(),
-                            userRepository.getCurrentUser().getUsername()));
+            LOG.trace("Document opened {}@{} {}", state.getUser(), state.getDocument(), aFocus);
+
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new DocumentOpenedEvent(this, editorCas,
+                            getModelObject().getDocument(), stateBeforeOpening,
+                            getModelObject().getUser().getUsername(), sessionOwner));
         }
         catch (Exception e) {
             handleException(aTarget, e);
         }
-
-        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
     @Override
@@ -555,21 +575,24 @@ public class AnnotationPage
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
             StringValue aUserParameter)
     {
-        User user = userRepository.getCurrentUser();
-        requireAnyProjectRole(user);
+        var sessionOwner = userRepository.getCurrentUser();
+        requireAnyProjectRole(sessionOwner);
 
-        AnnotatorState state = getModelObject();
-        Project project = getProject();
-        SourceDocument doc = getDocumentFromParameters(project, aDocumentParameter);
+        var state = getModelObject();
+        var project = getProject();
+        var doc = getDocumentFromParameters(project, aDocumentParameter);
 
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
+        String dataOwner = state.getUser().getUsername();
         if (doc != null && //
                 doc.equals(state.getDocument()) && //
                 aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //
-                state.getUser().getUsername().equals(aUserParameter.toString()) //
+                dataOwner.equals(aUserParameter.toString()) //
         ) {
+            LOG.trace("Page parameters match page state ({}@{} {}) - nothing to do", dataOwner,
+                    state.getDocument(), state.getFocusUnitIndex());
             return;
         }
 
@@ -584,46 +607,47 @@ public class AnnotationPage
             // state.setUser(new User(CURATION_USER));
             // }
             // else {
-            User requestedUser = userRepository.get(aUserParameter.toString());
+            var requestedUser = userRepository.get(aUserParameter.toString());
             if (requestedUser == null) {
                 failWithDocumentNotFound("User not found [" + aUserParameter + "]");
             }
             else {
+                LOG.trace("Changing data owner: {}", requestedUser);
                 state.setUser(requestedUser);
             }
             // }
         }
 
-        if (doc != null && !documentAccess.canViewAnnotationDocument(user.getUsername(),
+        if (doc != null && !documentAccess.canViewAnnotationDocument(sessionOwner.getUsername(),
                 String.valueOf(project.getId()), doc.getId(), state.getUser().getUsername())) {
             failWithDocumentNotFound("Access to document [" + aDocumentParameter + "] in project ["
-                    + project.getName() + "] as denied");
+                    + project.getName() + "] is denied");
         }
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
         if (doc != null && !doc.equals(state.getDocument())) {
+            LOG.trace("Changing document: {} (prev: {})", doc, state.getDocument());
             state.setDocument(doc, getListOfDocs());
         }
     }
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            User aPreviousUser, StringValue aFocusParameter)
+            User aPreviousDataOwner, StringValue aFocusParameter)
     {
-        // url is from external link, not just paging through documents,
+        // URL is from external link, not just paging through documents,
         // tabs may have changed depending on user rights
         if (aTarget != null && aPreviousDocument == null) {
+            LOG.trace(
+                    "Refreshing left sidebar as this is the first document loaded on this page instance");
             leftSidebar.refreshTabs(aTarget);
         }
 
-        SourceDocument currentDocument = getModelObject().getDocument();
-        if (currentDocument == null) {
-            return;
-        }
-
-        User currentUser = getModelObject().getUser();
-        if (currentUser == null) {
+        var currentDocument = getModelObject().getDocument();
+        var dataOwner = getModelObject().getUser();
+        if (currentDocument == null || dataOwner == null) {
+            LOG.trace("No document open");
             return;
         }
 
@@ -640,15 +664,20 @@ public class AnnotationPage
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
         if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument) && //
-                aPreviousUser != null && aPreviousUser.equals(currentUser) && //
+                aPreviousDataOwner != null && aPreviousDataOwner.equals(dataOwner) && //
                 focus == getModelObject().getFocusUnitIndex() //
         ) {
+            LOG.trace("Document and data owner have not changed: {}@{}", dataOwner,
+                    currentDocument);
             return;
         }
 
         // never had set a document or is a new one
         if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)
-                || aPreviousUser == null || !aPreviousUser.equals(currentUser)) {
+                || aPreviousDataOwner == null || !aPreviousDataOwner.equals(dataOwner)) {
+            LOG.trace(
+                    "Document or data owner have changed (old: {}@{}, new: {}@{}) - loading document",
+                    aPreviousDataOwner, aPreviousDocument, dataOwner, currentDocument);
             actionLoadDocument(aTarget, focus);
             return;
         }

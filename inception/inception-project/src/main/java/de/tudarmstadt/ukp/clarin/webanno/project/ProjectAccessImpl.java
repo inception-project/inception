@@ -62,12 +62,25 @@ public class ProjectAccessImpl
         log.trace("Permission check: canAccessProject [user: {}] [project: {}]", aUser, aProjectId);
 
         try {
-            User user = getUser(aUser);
-            Project project = getProject(aProjectId);
+            var user = getUser(aUser);
+            var project = getProject(aProjectId);
 
-            return userService.isAdministrator(user) || projectService.hasAnyRole(user, project);
+            if (userService.isAdministrator(user)) {
+                log.trace("Access granted: User {} can access project {} as administrator", user,
+                        project);
+                return true;
+            }
+
+            if (projectService.hasAnyRole(user, project)) {
+                log.trace("Access granted: User {} can access project {} as project member", user,
+                        project);
+                return true;
+            }
+
+            return false;
         }
         catch (NoResultException | AccessDeniedException e) {
+            log.trace("Access denied: prerequisites not met", e);
             // If any object does not exist, the user cannot view
             return false;
         }
@@ -84,13 +97,25 @@ public class ProjectAccessImpl
         log.trace("Permission check: canManageProject [user: {}] [project: {}]", aUser, aProjectId);
 
         try {
-            User user = getUser(aUser);
-            Project project = getProject(aProjectId);
+            var user = getUser(aUser);
+            var project = getProject(aProjectId);
 
-            return userService.isAdministrator(user)
-                    || projectService.hasRole(user, project, PermissionLevel.MANAGER);
+            if (userService.isAdministrator(user)) {
+                log.trace("Access granted: User {} can manage project {} as administrator", user,
+                        project);
+                return true;
+            }
+
+            if (projectService.hasRole(user, project, PermissionLevel.MANAGER)) {
+                log.trace("Access granted: User {} can manage project {} as manager", user,
+                        project);
+                return true;
+            }
+
+            return false;
         }
         catch (NoResultException | AccessDeniedException e) {
+            log.trace("Access denied: prerequisites not met", e);
             // If any object does not exist, the user cannot view
             return false;
         }

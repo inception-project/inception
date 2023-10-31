@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
-import java.util.List;
-
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +32,6 @@ import org.springframework.security.access.AccessDeniedException;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -82,38 +79,51 @@ public class DocumentAccessImpl
                 aSessionOwner, aProjectId, aDocumentId, aAnnotator);
 
         try {
-            User user = getUser(aSessionOwner);
-            Project project = getProject(aProjectId);
+            var user = getUser(aSessionOwner);
+            var project = getProject(aProjectId);
 
-            List<PermissionLevel> permissionLevels = projectService.listRoles(project, user);
+            var permissionLevels = projectService.listRoles(project, user);
 
             // Does the user have the permission to access the project at all?
             if (permissionLevels.isEmpty()) {
+                log.trace("Access denied: User {} has no acccess to project {}", user, project);
                 return false;
             }
 
             // Managers and curators can see anything
             if (containsAny(permissionLevels, MANAGER, CURATOR)) {
+                log.trace("Access granted: User {} can view annotations [{}] as MANGER or CURATOR",
+                        user, aDocumentId);
                 return true;
             }
 
             // Annotators can only see their own documents
             if (!aSessionOwner.equals(aAnnotator)) {
+                log.trace(
+                        "Access denied: User {} tries to see annotations from [{}] but can only see own annotations",
+                        user, aAnnotator);
                 return false;
             }
 
             // Annotators cannot view blocked documents
-            SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
+            var doc = documentService.getSourceDocument(project.getId(), aDocumentId);
             if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
-                AnnotationDocument aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
+                var aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
                 if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
+                    log.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
+                            aAnnotator);
                     return false;
                 }
             }
 
+            log.trace(
+                    "Access granted: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
+                            + "[document: {}] [annotator: {}]",
+                    aSessionOwner, aProjectId, aDocumentId, aAnnotator);
             return true;
         }
         catch (NoResultException | AccessDeniedException e) {
+            log.trace("Access denied: prerequisites not met", e);
             // If any object does not exist, the user cannot view
             return false;
         }

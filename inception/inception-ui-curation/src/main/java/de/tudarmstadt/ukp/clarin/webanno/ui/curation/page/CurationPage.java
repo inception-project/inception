@@ -660,7 +660,7 @@ public class CurationPage
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
             User aPreviousUser, StringValue aFocusParameter)
     {
-        SourceDocument currentDocument = getModelObject().getDocument();
+        var currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {
             return;
         }
