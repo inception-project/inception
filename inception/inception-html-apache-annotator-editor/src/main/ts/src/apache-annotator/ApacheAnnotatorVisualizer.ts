@@ -334,8 +334,10 @@ export class ApacheAnnotatorVisualizer {
 
       const coreBegin = Math.max(begin, viewportBegin)
       const coreEnd = Math.min(end, viewportEnd)
-      this.renderHighlight(span, coreBegin, coreEnd, attributes)
-      fragmentCount++
+      if (coreBegin <= coreEnd) {
+        this.renderHighlight(span, coreBegin, coreEnd, attributes)
+        fragmentCount++
+      }
 
       attributes.class += ' iaa-zero-width' // Prevent prefix/suffix fragmens from being cleaned up
       if (!(viewportBegin <= begin && begin <= viewportEnd)) {
