@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 
 @ConfigurationProperties("event-logging")
 public class EventLoggingPropertiesImpl
@@ -37,6 +38,7 @@ public class EventLoggingPropertiesImpl
             AvailabilityChangeEvent.class.getSimpleName(), //
             "RecommenderTaskNotificationEvent", //
             BeforeDocumentOpenedEvent.class.getSimpleName(), //
+            PreparingToOpenDocumentEvent.class.getSimpleName(), //
             "BrokerAvailabilityEvent", //
             "ShutdownDialogAvailableEvent");
 
