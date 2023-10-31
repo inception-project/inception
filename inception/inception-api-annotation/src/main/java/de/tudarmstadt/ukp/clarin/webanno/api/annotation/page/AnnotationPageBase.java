@@ -84,7 +84,7 @@ public abstract class AnnotationPageBase
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
-    public static final String PAGE_PARAM_USER = "u";
+    public static final String PAGE_PARAM_DATA_OWNER = "u";
     public static final String PAGE_PARAM_FOCUS = "f";
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -102,7 +102,7 @@ public abstract class AnnotationPageBase
 
         var params = getPageParameters();
         StringValue documentParameter = params.get(PAGE_PARAM_DOCUMENT);
-        StringValue userParameter = params.get(PAGE_PARAM_USER);
+        StringValue userParameter = params.get(PAGE_PARAM_DATA_OWNER);
 
         // If the page was accessed using an URL form ending in a document ID, let's move
         // the document ID into the fragment and redirect to the form without the document ID.
@@ -117,8 +117,8 @@ public abstract class AnnotationPageBase
             fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
             params.remove(PAGE_PARAM_DOCUMENT);
             if (!userParameter.isEmpty()) {
-                fragmentParams.add(format("%s=%s", PAGE_PARAM_USER, userParameter.toString()));
-                params.remove(PAGE_PARAM_USER);
+                fragmentParams.add(format("%s=%s", PAGE_PARAM_DATA_OWNER, userParameter.toString()));
+                params.remove(PAGE_PARAM_DATA_OWNER);
             }
             for (var namedParam : params.getAllNamed()) {
                 clientUrl.setQueryParameter(namedParam.getKey(), namedParam.getValue());
@@ -199,7 +199,7 @@ public abstract class AnnotationPageBase
             {
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
-                StringValue user = aRequestParameters.getParameterValue(PAGE_PARAM_USER);
+                StringValue user = aRequestParameters.getParameterValue(PAGE_PARAM_DATA_OWNER);
 
                 // nothing changed, do not check for project, because inception always opens
                 // on a project
@@ -548,10 +548,10 @@ public abstract class AnnotationPageBase
             // the CURATION_USER here.
             if (Set.of(userRepository.getCurrentUsername(), CURATION_USER)
                     .contains(state.getUser().getUsername())) {
-                fragment.removeParameter(PAGE_PARAM_USER);
+                fragment.removeParameter(PAGE_PARAM_DATA_OWNER);
             }
             else {
-                fragment.putParameter(PAGE_PARAM_USER, state.getUser().getUsername());
+                fragment.putParameter(PAGE_PARAM_DATA_OWNER, state.getUser().getUsername());
             }
 
             // If we do not manually set editedFragment to false, then changing the URL
