@@ -105,7 +105,7 @@ public class SpanRenderer
         FSIterator<AnnotationFS> it = aCas.getAnnotationIndex(type).iterator();
 
         // Skip annotations whose start is before the start parameter.
-        while (it.isValid() && (it.get()).getBegin() < aWindowBegin) {
+        while (it.isValid() && (it.get()).getBegin() < 0) {
             it.moveToNext();
         }
 
