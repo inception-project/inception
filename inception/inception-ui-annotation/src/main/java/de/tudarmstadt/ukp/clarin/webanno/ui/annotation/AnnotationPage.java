@@ -610,6 +610,7 @@ public class AnnotationPage
             var requestedUser = userRepository.get(aUserParameter.toString());
             if (requestedUser == null) {
                 failWithDocumentNotFound("User not found [" + aUserParameter + "]");
+                return;
             }
             else {
                 LOG.trace("Changing data owner: {}", requestedUser);
@@ -622,6 +623,7 @@ public class AnnotationPage
                 String.valueOf(project.getId()), doc.getId(), state.getUser().getUsername())) {
             failWithDocumentNotFound("Access to document [" + aDocumentParameter + "] in project ["
                     + project.getName() + "] is denied");
+            return;
         }
 
         // If we arrive here and the document is not null, then we have a change of document

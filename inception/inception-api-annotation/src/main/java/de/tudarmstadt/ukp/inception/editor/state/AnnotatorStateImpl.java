@@ -237,6 +237,13 @@ public class AnnotatorStateImpl
     }
 
     @Override
+    public void clearProject()
+    {
+        project = null;
+        clearDocument();
+    }
+
+    @Override
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
@@ -275,6 +282,12 @@ public class AnnotatorStateImpl
     public int getNumberOfDocuments()
     {
         return numberOfDocuments;
+    }
+
+    @Override
+    public void clearDocument()
+    {
+        setDocument(null, null);
     }
 
     @Override

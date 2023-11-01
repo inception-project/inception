@@ -107,6 +107,8 @@ public interface AnnotatorState
     @Override
     Project getProject();
 
+    void clearProject();
+
     void setProject(Project aProject);
 
     // ---------------------------------------------------------------------------------------------
