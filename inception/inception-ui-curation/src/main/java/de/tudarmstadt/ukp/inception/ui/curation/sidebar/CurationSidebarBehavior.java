@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.setProjectPageParameter;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -31,6 +32,7 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -54,6 +56,7 @@ public class CurationSidebarBehavior
 
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
+    private @SpringBean ProjectService projectService;
 
     @Override
     public void onEvent(Component aComponent, IEvent<?> aEvent)
@@ -87,6 +90,13 @@ public class CurationSidebarBehavior
         var doc = event.getDocument();
         var project = doc.getProject();
         var dataOwner = event.getDocumentOwner();
+
+        if (!projectService.hasRole(sessionOwner, project, CURATOR)) {
+            LOG.trace(
+                    "Session owner [{}] is not a curator and can therefore not manage curation mode using URL parameters",
+                    sessionOwner);
+            return;
+        }
 
         LOG.trace("Curation sidebar reacting to [{}]@{} being opened by [{}]", dataOwner, doc,
                 sessionOwner);
@@ -129,6 +139,7 @@ public class CurationSidebarBehavior
             SourceDocument aDoc, String aSessionOwner)
     {
         var project = aDoc.getProject();
+
         var curationSessionParameterValue = aParams.get(PARAM_CURATION_SESSION);
         if (curationSessionParameterValue.isEmpty()) {
             return;
