@@ -341,9 +341,7 @@ public class CurationPage
     @OnEvent
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
-        if (aEvent.getRequestTarget() != null) {
-            actionRefreshDocument(aEvent.getRequestTarget());
-        }
+        actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     /**

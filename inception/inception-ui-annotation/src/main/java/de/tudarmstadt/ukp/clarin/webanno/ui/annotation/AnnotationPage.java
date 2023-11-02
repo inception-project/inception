@@ -244,7 +244,7 @@ public class AnnotationPage
             return;
         }
 
-        actionRefreshDocument(aEvent.getRequestTarget());
+        aEvent.getRequestTarget().ifPresent(this::actionRefreshDocument);
     }
 
     /**
@@ -267,7 +267,7 @@ public class AnnotationPage
             return;
         }
 
-        actionRefreshDocument(aEvent.getRequestTarget());
+        actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     /**
