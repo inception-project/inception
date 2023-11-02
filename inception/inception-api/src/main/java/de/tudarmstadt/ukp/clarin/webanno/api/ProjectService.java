@@ -508,7 +508,7 @@ public interface ProjectService
      *            additional roles.
      * @param aMoreRoles
      *            more roles.
-     * @return whether the user has any role in the project.
+     * @return whether the user has any of the roles in the project.
      */
     boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles);
@@ -527,10 +527,42 @@ public interface ProjectService
      *            additional roles.
      * @param aMoreRoles
      *            more roles.
-     * @return whether the user has any role in the project.
+     * @return whether the user has any of the roles in the project.
      */
     boolean hasRole(String aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles);
+
+    /**
+     * Check whether the given user has one or more roles in any project. Note that the split into
+     * two arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            a user.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return whether the user has any of the roles in any project.
+     */
+    boolean hasRoleInAnyProject(User aUser, PermissionLevel aRole, PermissionLevel... aMoreRoles);
+
+    /**
+     * Check whether the given user has one or more roles in any project. Note that the split into
+     * two arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            a user.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return whether the user has any of the roles in any project.
+     */
+    boolean hasRoleInAnyProject(String aUser, PermissionLevel aRole, PermissionLevel... aMoreRoles);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
