@@ -103,12 +103,12 @@ public class ActiveLearningSidebarIcon
     @OnEvent
     public void sessionStarted(ActiveLearningSessionStartedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @OnEvent
     public void sessionStarted(ActiveLearningSessionCompletedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 }

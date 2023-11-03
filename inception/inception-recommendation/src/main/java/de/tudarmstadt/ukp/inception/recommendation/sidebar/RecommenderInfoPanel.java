@@ -242,7 +242,7 @@ public class RecommenderInfoPanel
     @OnEvent
     public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)

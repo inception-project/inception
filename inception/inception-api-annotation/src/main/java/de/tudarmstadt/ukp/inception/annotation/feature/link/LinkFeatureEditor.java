@@ -681,7 +681,7 @@ public class LinkFeatureEditor
     public void onAnnotationDeleted(AnnotationDeletedEvent aEvent)
     {
         // It could be that a slot filler was deleted - so just in case, we re-render ourself.
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @OnEvent

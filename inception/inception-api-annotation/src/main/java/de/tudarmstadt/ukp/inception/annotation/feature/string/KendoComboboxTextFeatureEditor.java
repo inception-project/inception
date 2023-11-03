@@ -110,10 +110,7 @@ public class KendoComboboxTextFeatureEditor
 
         // If the tag was created in the tagset used by this editor, then we re-render the editor
         // to ensure it picks up the new tag
-        AjaxRequestTarget target = aEvent.getRequestTarget();
-        if (target != null) {
-            target.add(this);
-        }
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @SuppressWarnings("rawtypes")

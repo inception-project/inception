@@ -115,6 +115,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDoc
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MatrixWorkloadManagementPage
@@ -302,7 +303,7 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkResetDocument(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments().stream()
+        var selectedDocuments = selectedAnnotationDocuments().stream()
                 .filter(annDoc -> annDoc.getState() == IN_PROGRESS || annDoc.getState() == FINISHED)
                 .collect(Collectors.toList());
 

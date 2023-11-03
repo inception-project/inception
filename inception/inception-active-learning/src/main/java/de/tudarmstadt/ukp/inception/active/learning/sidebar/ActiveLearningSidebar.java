@@ -1103,8 +1103,8 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
-                aEvent.getDocument());
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().orElse(null),
+                aEvent.getLayer(), aEvent.getDocument());
     }
 
     @OnEvent
@@ -1122,7 +1122,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(), aEvent.getLayer(),
                 aEvent.getDocument());
     }
 
@@ -1153,7 +1153,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(),
                 aEvent.getFeature().getLayer(), aEvent.getDocument());
     }
 
@@ -1180,7 +1180,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(), aEvent.getLayer(),
                 aEvent.getDocument());
     }
 
@@ -1381,7 +1381,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestTarget().add(alMainContainer);
+            aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;
         }
 
@@ -1390,11 +1390,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestTarget());
+            moveToNextSuggestion(aEvent.getRequestTarget().get());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget().get());
     }
 
     @OnEvent
@@ -1405,7 +1405,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestTarget().add(alMainContainer);
+            aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;
         }
 
@@ -1414,11 +1414,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestTarget());
+            moveToNextSuggestion(aEvent.getRequestTarget().get());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget().get());
     }
 
     private void refreshCurrentSuggestionOrMoveToNextSuggestion(AjaxRequestTarget aTarget)

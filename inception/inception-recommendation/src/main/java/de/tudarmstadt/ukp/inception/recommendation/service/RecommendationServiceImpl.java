@@ -566,7 +566,7 @@ public class RecommendationServiceImpl
         // suggestions that need to be processed (in particular ones that may have been generated
         // by the non-trainable recommenders triggered above or from already existing predictions
         if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
-            autoAccept(aEvent.getRequestTarget(), sessionOwner, doc, ON_FIRST_ACCESS);
+            autoAccept(aEvent.getRequestTarget().orElse(null), sessionOwner, doc, ON_FIRST_ACCESS);
         }
 
         // Trigger a training and prediction run if there is no prediction state yet
