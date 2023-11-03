@@ -121,8 +121,11 @@ public class MenuBar
 
     private boolean isMenubarVisibleToCurrentUser()
     {
-        // E.g. on the invite page, we do not have a user object, but we would still like to see
-        // the empty menu bar saying "INCEpTION".
+        // When we have no project, we would like to show the menubar, e.g. on the
+        // - project overview page
+        // When we have no user, we would also like to show the the empty menu bar saying
+        // "INCEpTION", e.g. on the:
+        // - invite page
         if (!user.isPresent().getObject() || !project.isPresent().getObject()) {
             return true;
         }
@@ -132,14 +135,21 @@ public class MenuBar
             return true;
         }
 
-        // The project might be null if it is in the process of being created. Normally, this can
-        // only be done by admisn and project creators that are handled above - so returning false
-        // here is really just a sanity fallback that should never kick in.
-        if (project.getObject().getId() == null) {
-            return false;
-        }
+        var eligibleRoles = dashboardProperties.getAccessibleByRoles()
+                .toArray(PermissionLevel[]::new);
 
-        var roles = dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new);
-        return projectService.hasRole(user.getObject(), project.getObject(), MANAGER, roles);
+        // If we do not know the current project, we make the menu accessible if the user has an
+        // eligible role in any project - they could then use the menubar to switch to a project
+        // where they have more permissions.
+        // The project might be null if it is in the process of being created. Normally, this can
+        // only be done by admin and project creators that are handled above - so returning false
+        // here is really just a sanity fallback that should never kick in.
+        // if (!project.isPresent().getObject() || project.getObject().getId() == null) {
+        // return projectService.hasRoleInAnyProject(user.getObject(), MANAGER, eligibleRoles);
+        // }
+
+        // If we know the project, we show the menubar if the user has an eligible role
+        return projectService.hasRole(user.getObject(), project.getObject(), MANAGER,
+                eligibleRoles);
     }
 }

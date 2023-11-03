@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
+@Order(10000)
 @Component
 public class ActivitiesDashletExtension
     implements ProjectDashboardDashletExtension

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
@@ -39,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.ui.core.AccessDeniedPage;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import jakarta.persistence.NoResultException;
 
@@ -74,6 +76,7 @@ public abstract class ProjectPageBase
         if (aUser == null || !projectService.hasAnyRole(aUser, project)) {
             getSession().error(format("To access the [%s] you need to be a member of the project",
                     getClass().getSimpleName()));
+
             backToProjectPage();
         }
     }
@@ -96,22 +99,18 @@ public abstract class ProjectPageBase
 
     public void backToProjectPage()
     {
-        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
-                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
-
-        // If the current user cannot access the dashboard, at least update the feedback panel on
-        // the current page so that the user can see the error message that has most likely been
-        // queued
-        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(),
-                PermissionLevel.MANAGER,
+        // If the current user cannot access the dashboard, send them to an access denied page
+        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(), MANAGER,
                 dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new))) {
             getRequestCycle().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
-            return;
+            throw new RestartResponseException(AccessDeniedPage.class);
         }
 
-        PageParameters pageParameters = new PageParameters();
+        var pageParameters = new PageParameters();
         setProjectPageParameter(pageParameters, getProject());
+        Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
+                "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
         throw new RestartResponseException(projectDashboard, pageParameters);
     }
 

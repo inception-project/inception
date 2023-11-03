@@ -389,6 +389,37 @@ public class ProjectServiceImpl
                 .getSingleResult() > 0;
     }
 
+    @Override
+    @Transactional
+    public boolean hasRoleInAnyProject(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        return hasRoleInAnyProject(aUser.getUsername(), aRole, aMoreRoles);
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRoleInAnyProject(String aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        Validate.notNull(aRole, "hasRoleInAnyProject() requires at least one role to check");
+
+        var roles = new LinkedHashSet<>();
+        roles.add(aRole);
+        if (aMoreRoles != null) {
+            roles.addAll(asList(aMoreRoles));
+        }
+
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM ProjectPermission ", //
+                "WHERE user = :user AND level IN (:roles)");
+
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("user", aUser) //
+                .setParameter("roles", roles) //
+                .getSingleResult() > 0;
+    }
+
     @Deprecated
     @Override
     @Transactional

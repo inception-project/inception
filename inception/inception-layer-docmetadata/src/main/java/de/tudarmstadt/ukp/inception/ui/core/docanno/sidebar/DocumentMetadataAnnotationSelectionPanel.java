@@ -392,8 +392,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     @OnEvent
     public void onDocumentMetadataEvent(DocumentMetadataEvent aEvent)
     {
-        aEvent.getRequestTarget().add(annotationsContainer);
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+        aEvent.getRequestTarget().ifPresent(target -> target.add(annotationsContainer));
+        findParent(AnnotationPageBase.class)
+                .actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     @OnEvent
@@ -403,7 +404,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         annotationsContainer.visitChildren(DocumentMetadataAnnotationDetailPanel.class, (c, v) -> {
             var detailPanel = (DocumentMetadataAnnotationDetailPanel) c;
             if (detailPanel.getModelObject().getId() == vid.getId()) {
-                aEvent.getRequestTarget().add(detailPanel.findParent(ListItem.class));
+                aEvent.getRequestTarget()
+                        .ifPresent(target -> target.add(detailPanel.findParent(ListItem.class)));
             }
         });
 
@@ -416,7 +418,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         // aEvent.getRequestTarget().add(selectedDetailPanel);
         // }
 
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+        findParent(AnnotationPageBase.class)
+                .actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,

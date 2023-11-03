@@ -26,6 +26,8 @@ public interface AnnotatorDocumentNavigation
     // ---------------------------------------------------------------------------------------------
     // Document
     // ---------------------------------------------------------------------------------------------
+    void clearDocument();
+
     SourceDocument getDocument();
 
     void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);

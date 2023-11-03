@@ -341,9 +341,7 @@ public class CurationPage
     @OnEvent
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
-        if (aEvent.getRequestTarget() != null) {
-            actionRefreshDocument(aEvent.getRequestTarget());
-        }
+        actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     /**
@@ -660,7 +658,7 @@ public class CurationPage
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
             User aPreviousUser, StringValue aFocusParameter)
     {
-        SourceDocument currentDocument = getModelObject().getDocument();
+        var currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {
             return;
         }

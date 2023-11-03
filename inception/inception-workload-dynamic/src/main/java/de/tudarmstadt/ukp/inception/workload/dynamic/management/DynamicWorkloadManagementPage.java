@@ -45,10 +45,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
@@ -81,7 +78,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
@@ -126,6 +122,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 
 /**
  * The workload page. It shall give project admins a fast overview on how each annotators progress
@@ -170,7 +167,7 @@ public class DynamicWorkloadManagementPage
     private DataTable<AnnotationQueueItem, AnnotationQueueSortKeys> table;
 
     // Modal dialog
-    private ModalDialog modalDialog;
+    private ModalDialog dialog;
     private ChallengeResponseDialog resetDocumentDialog;
     private ContextMenu contextMenu;
 
@@ -243,8 +240,8 @@ public class DynamicWorkloadManagementPage
         add(createSettingsForm());
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
-        modalDialog = new BootstrapModalDialog("modalDialog");
-        add(modalDialog);
+        dialog = new BootstrapModalDialog("modalDialog");
+        add(dialog);
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
@@ -356,14 +353,15 @@ public class DynamicWorkloadManagementPage
      */
     public Form<DynamicWorkloadTraits> createSettingsForm()
     {
-        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
+        var traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
 
-        Form<DynamicWorkloadTraits> settingsForm = new Form<>("settingsForm",
-                new CompoundPropertyModel<>(traits));
+        var settingsForm = new Form<>("settingsForm", new CompoundPropertyModel<>(traits));
         settingsForm.setOutputMarkupId(true);
 
         settingsForm.add(new DocLink("workflowHelpLink", "sect_dynamic_workload"));
+
+        settingsForm.add(new CheckBox("documentResetAllowed"));
 
         settingsForm.add(new CheckBox("confirmFinishingDocuments"));
 
@@ -372,7 +370,7 @@ public class DynamicWorkloadManagementPage
                 .setConvertEmptyInputStringToNull(false) //
                 .setRequired(true));
 
-        CheckBox abandonationToggle = new CheckBox("abandonationToggle");
+        var abandonationToggle = new CheckBox("abandonationToggle");
         abandonationToggle.setModel(new LambdaModelAdapter<Boolean>(() -> {
             Duration d = settingsForm.getModelObject().getAbandonationTimeout();
             return !(d.isNegative() || d.isZero());
@@ -388,7 +386,7 @@ public class DynamicWorkloadManagementPage
                 _target -> _target.add(settingsForm)));
         settingsForm.add(abandonationToggle);
 
-        Component abandonationTimeout = new NumberTextField<>("abandonationTimeout", Long.class) //
+        var abandonationTimeout = new NumberTextField<>("abandonationTimeout", Long.class) //
                 .setMinimum(0l) //
                 .setConvertEmptyInputStringToNull(false) //
                 .setRequired(true)
@@ -409,8 +407,7 @@ public class DynamicWorkloadManagementPage
             _target.add(settingsForm);
         }).add(visibleWhen(abandonationToggle.getModel())));
 
-        DropDownChoice<AnnotationDocumentState> abandonationState = new DropDownChoice<>(
-                "abandonationState");
+        var abandonationState = new DropDownChoice<AnnotationDocumentState>("abandonationState");
         abandonationState.setRequired(true);
         abandonationState.setNullValid(false);
         abandonationState.setChoiceRenderer(new EnumChoiceRenderer<>(abandonationState));
@@ -419,7 +416,7 @@ public class DynamicWorkloadManagementPage
         abandonationState.add(visibleWhen(abandonationToggle.getModel()));
         settingsForm.add(abandonationState);
 
-        DropDownChoice<String> workflowChoices = new DropDownChoice<>("workflowType");
+        var workflowChoices = new DropDownChoice<String>("workflowType");
         workflowChoices.setChoiceRenderer(
                 new LambdaChoiceRenderer<>(id -> workflowExtensionPoint.getExtension(id)
                         .map(WorkflowExtension::getLabel).orElse("<" + id + " not available>")));
@@ -641,11 +638,11 @@ public class DynamicWorkloadManagementPage
 
     private List<AnnotationQueueItem> getQueue()
     {
-        Project project = currentProject.getObject();
+        var project = currentProject.getObject();
 
         dynamicWorkloadExtension.freshenStatus(project);
 
-        Map<SourceDocument, List<AnnotationDocument>> documentMap = new HashMap<>();
+        var documentMap = new HashMap<SourceDocument, List<AnnotationDocument>>();
 
         documentService.listSourceDocuments(project)
                 .forEach(d -> documentMap.put(d, new ArrayList<>()));
@@ -653,11 +650,11 @@ public class DynamicWorkloadManagementPage
         documentService.listAnnotationDocuments(project).forEach(ad -> documentMap
                 .computeIfAbsent(ad.getDocument(), d -> new ArrayList<>()).add(ad));
 
-        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
+        var traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
 
-        List<AnnotationQueueItem> queue = new ArrayList<>();
-        for (Entry<SourceDocument, List<AnnotationDocument>> e : documentMap.entrySet()) {
+        var queue = new ArrayList<AnnotationQueueItem>();
+        for (var e : documentMap.entrySet()) {
             queue.add(new AnnotationQueueItem(e.getKey(), e.getValue(),
                     traits.getDefaultNumberOfAnnotations(), traits.getAbandonationTimeout()));
         }
@@ -667,10 +664,10 @@ public class DynamicWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        AnnotationDocument annotationDocument = documentService
+        var annotationDocument = documentService
                 .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
 
-        AnnotationDocumentState targetState = oneClickTransition(annotationDocument);
+        var targetState = oneClickTransition(annotationDocument);
 
         documentService.setAnnotationDocumentState(annotationDocument, targetState);
 
@@ -682,9 +679,9 @@ public class DynamicWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellShowAnnotatorCommentEvent aEvent)
     {
-        AnnotationDocument annDoc = documentService
-                .getAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
-        modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
+        var annDoc = documentService.getAnnotationDocument(aEvent.getSourceDocument(),
+                aEvent.getUser());
+        dialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
                 aEvent.getTarget());
     }
 
@@ -697,7 +694,7 @@ public class DynamicWorkloadManagementPage
             return;
         }
 
-        List<IMenuItem> items = contextMenu.getItemList();
+        var items = contextMenu.getItemList();
         items.clear();
 
         // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
@@ -715,11 +712,12 @@ public class DynamicWorkloadManagementPage
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        resetDocumentDialog.setTitleModel(new ResourceModel("ResetDocumentDialog.title"));
-        resetDocumentDialog.setMessageModel(new ResourceModel("ResetDocumentDialog.text"));
-        resetDocumentDialog.setExpectedResponseModel(
+        var dialogContent = new ResetAnnotationDocumentConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID);
+
+        dialogContent.setExpectedResponseModel(
                 Model.of(aUser.getUiName() + " / " + aDocument.getName()));
-        resetDocumentDialog.setConfirmAction(_target -> {
+        dialogContent.setConfirmAction(_target -> {
             documentService.resetAnnotationCas(aDocument, aUser);
 
             success(format("The annotations of document [%s] for user [%s] have been set reset.",
@@ -728,13 +726,14 @@ public class DynamicWorkloadManagementPage
 
             updateTable(_target);
         });
-        resetDocumentDialog.show(aTarget);
+
+        dialog.open(dialogContent, aTarget);
     }
 
     private void actionTouchAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             User aUser)
     {
-        AnnotationDocument ann = documentService.getAnnotationDocument(aDocument, aUser);
+        var ann = documentService.getAnnotationDocument(aDocument, aUser);
         ann.setTimestamp(new Date());
         documentService.createAnnotationDocument(ann);
 

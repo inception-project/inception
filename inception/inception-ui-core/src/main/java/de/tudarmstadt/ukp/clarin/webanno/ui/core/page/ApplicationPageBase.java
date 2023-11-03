@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public abstract class ApplicationPageBase
     extends WebPage
 {
-    private final static Logger LOG = LoggerFactory.getLogger(ApplicationPageBase.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = -1690130604031181803L;
 
@@ -84,9 +85,13 @@ public abstract class ApplicationPageBase
         commonInit();
     }
 
-    protected ApplicationPageBase(final PageParameters parameters)
+    protected ApplicationPageBase(final PageParameters aPageParameters)
     {
-        super(parameters);
+        super(aPageParameters);
+
+        LOG.debug("Setting up page [{}] with parameters: {}", this.getClass().getName(),
+                aPageParameters);
+
         commonInit();
     }
 

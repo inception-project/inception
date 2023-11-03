@@ -35,6 +35,7 @@ public class InceptionSecurityWebUIShared
                 .requestMatchers("/images/**").permitAll() //
                 .requestMatchers("/resources/**").permitAll() //
                 .requestMatchers("/whoops").permitAll() //
+                .requestMatchers("/nowhere").permitAll() //
                 .requestMatchers("/about/**").permitAll() //
                 .requestMatchers("/wicket/resource/**").permitAll();
     }

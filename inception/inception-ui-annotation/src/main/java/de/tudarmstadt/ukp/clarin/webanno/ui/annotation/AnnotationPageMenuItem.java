@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DATA_OWNER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
@@ -65,10 +66,17 @@ public class AnnotationPageMenuItem
 
     public String getUrl(Project aProject, long aDocumentId)
     {
-        String p = aProject.getSlug() != null ? aProject.getSlug()
-                : String.valueOf(aProject.getId());
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
 
         return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
+    }
+
+    public String getUrl(Project aProject, long aDocumentId, String aDataOwner)
+    {
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
+
+        return format("%s/p/%s%s/%d?%s=%s", servletContext.getContextPath(), p, getPath(),
+                aDocumentId, PAGE_PARAM_DATA_OWNER, aDataOwner);
     }
 
     @Override

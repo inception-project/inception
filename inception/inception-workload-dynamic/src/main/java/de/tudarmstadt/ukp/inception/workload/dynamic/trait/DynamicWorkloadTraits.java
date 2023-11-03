@@ -39,6 +39,7 @@ public class DynamicWorkloadTraits
     private String workflowType;
     private int defaultNumberOfAnnotations;
     private boolean confirmFinishingDocuments = true;
+    private boolean documentResetAllowed = true;
 
     private Duration abandonationTimeout;
     private AnnotationDocumentState abandonationState = IGNORE;
@@ -111,5 +112,15 @@ public class DynamicWorkloadTraits
     public void setConfirmFinishingDocuments(boolean aConfirmFinishingDocuments)
     {
         confirmFinishingDocuments = aConfirmFinishingDocuments;
+    }
+
+    public boolean isDocumentResetAllowed()
+    {
+        return documentResetAllowed;
+    }
+
+    public void setDocumentResetAllowed(boolean aDocumentResetAllowed)
+    {
+        documentResetAllowed = aDocumentResetAllowed;
     }
 }

@@ -1246,11 +1246,11 @@ public abstract class AnnotationDetailEditorPanel
 
             if (!annotationStillExists) {
                 selection.clear();
-                refresh(aEvent.getRequestTarget());
+                aEvent.getRequestTarget().ifPresent(this::refresh);
             }
         }
         catch (Exception e) {
-            handleException(this, aEvent.getRequestTarget(), e);
+            handleException(this, aEvent.getRequestTarget().orElse(null), e);
         }
     }
 

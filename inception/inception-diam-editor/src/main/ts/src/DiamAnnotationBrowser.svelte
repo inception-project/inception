@@ -53,6 +53,7 @@
         "by-position": "Group by position",
         "by-label": "Group by label",
     };
+    let tooManyAnnotations = false;
 
     let data: AnnotatedText;
 
@@ -102,7 +103,17 @@
             return;
         }
 
-        data = unpackCompactAnnotatedTextV2(d);
+        let preData = unpackCompactAnnotatedTextV2(d);
+        if (preData.spans.size + preData.relations.size > 25000) {
+            console.error(`Too many annotations: ${preData.spans.size} spans ${preData.relations.size} relations`)
+            data = undefined
+            tooManyAnnotations = true
+        }
+        else {
+            console.info(`Loaded annotations: ${preData.spans.size} spans ${preData.relations.size} relations`)
+            tooManyAnnotations = false
+            data = preData;
+        }
     }
 
     export function connect(): void {
@@ -136,7 +147,12 @@
                 >{modes[value]}</option
             >{/each}
     </select>
-    {#if $groupingMode == "by-position"}
+    {#if tooManyAnnotations}
+        <div class="m-auto text-center text-muted">
+            <div class="fs-1"><i class="far fa-dizzy"></i></div>
+            <div>Too many annotations</div>
+        </div>
+    {:else if $groupingMode == "by-position"}
         <AnnotationsByPositionList {ajaxClient} {data} />
     {:else}
         <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />
