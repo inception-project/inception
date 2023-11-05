@@ -18,7 +18,7 @@
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
 import Connections from '@recogito/recogito-connections/src'
-import { AnnotatedText, AnnotationEditor, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
+import { AnnotatedText, AnnotationEditor, AnnotationOutEvent, AnnotationOverEvent, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
 import './RecogitoEditor.scss'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
@@ -28,6 +28,9 @@ import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/mo
 import { showLabels } from './RecogitoEditorState'
 import { Writable } from 'svelte/store'
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+
+export const NO_LABEL = '◌'
 
 interface WebAnnotationBodyItem {
   type: string;
@@ -55,6 +58,7 @@ interface WebAnnotation {
 }
 
 export class RecogitoEditor implements AnnotationEditor {
+  private alpha = '55'
   private ajax: DiamAjax
   private recogito: Recogito
   private connections: any
@@ -64,6 +68,7 @@ export class RecogitoEditor implements AnnotationEditor {
   private data? : AnnotatedText
   private showInlineLabels: boolean
   private toolbar: RecogitoEditorToolbar
+  private popover: AnnotationDetailPopOver
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
@@ -132,7 +137,37 @@ export class RecogitoEditor implements AnnotationEditor {
 
       this.installRelationRenderingPatch(this.recogito)
 
+      // Event handlers for custom events
+      this.root.ownerDocument.body.addEventListener('mouseover', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOverEvent(annotation, event))
+      })
+      this.root.ownerDocument.body.addEventListener('mouseout', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOutEvent(annotation, event))
+      })
+
+      // Add event handlers for highlighting extent of the annotation the mouse is currently over
+      this.root.ownerDocument.body.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
+      this.root.ownerDocument.body.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
+
       this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+
+      this.popover = new AnnotationDetailPopOver({
+        target: this.root.ownerDocument.body,
+        props: {
+          root: this.root,
+          ajax: this.ajax
+        }
+      })
 
       let initialized = false
       showLabels.subscribe(enabled => {
@@ -141,6 +176,26 @@ export class RecogitoEditor implements AnnotationEditor {
       })
       initialized = true;
     })
+  }
+
+  private addAnnotationHighlight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    const vid = event.target.getAttribute('data-id')?.substring(1)
+    if (!vid) return
+
+    this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
+  }
+
+  // eslint-disable-next-line no-undef
+  getHighlightsForAnnotation (vid: VID): NodeListOf<Element> {
+    return this.root.querySelectorAll(`[data-id="#${vid}"]`)
+  }
+
+  private removeAnnotationHighight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
   }
 
   private createToolbar () {
@@ -173,9 +228,13 @@ export class RecogitoEditor implements AnnotationEditor {
 
             // Span annotation
             if (element instanceof HTMLElement) {
-              element.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.2)`
-              element.style.borderColor = annotation.body.color
+              const styleList = [
+                `--iaa-background-color: ${annotation.body.color || '#000000'}${this.alpha}`,
+                `--iaa-border-color: ${annotation.body.color || '#000000'}`
+              ]
+
               element.setAttribute("data-iaa-label", annotation.body.value)
+              element.setAttribute("style", styleList.join('; '))
               annotation.body.classes.forEach(c => element.classList.add(c))
             }
           }
@@ -329,7 +388,7 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: span.color || '#000000',
-          value: span.label || '',
+          value: span.label || `[${span.layer.name}]` || NO_LABEL,
           classes: classList
         },
         target: {
@@ -391,7 +450,7 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: relation.color || '#000000',
-          value: relation.label || '',
+          value: relation.label || `[${relation.layer.name}]` || NO_LABEL,
           classes: classList
         },
         motivation: 'linking',
