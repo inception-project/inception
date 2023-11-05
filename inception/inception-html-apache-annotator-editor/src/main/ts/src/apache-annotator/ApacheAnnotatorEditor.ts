@@ -155,15 +155,15 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   loadAnnotations (): void {
-    this.vis.loadAnnotations()
+    this.vis?.loadAnnotations()
   }
 
   scrollTo (args: { offset: number; position: string; }): void {
-    this.vis.scrollTo(args)
+    this.vis?.scrollTo(args)
   }
 
   destroy (): void {
-    this.vis.destroy()
-    this.selector.destroy()
+    this.vis?.destroy()
+    this.selector?.destroy()
   }
 }

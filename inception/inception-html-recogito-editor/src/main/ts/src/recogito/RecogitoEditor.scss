@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- @import 'InceptionEditorColors.scss';
+ @import 'ApacheAnnotatorEditor.scss';
 
  body {
    line-height: 200%;
@@ -30,6 +30,8 @@
  }
  
  svg.r6o-connections-canvas {
+  z-index: 1;
+
    .r6o-connections-edge.i7n-marker-focus {
      .r6o-connections-edge-path {
        .r6o-connections-edge-path-outer {
