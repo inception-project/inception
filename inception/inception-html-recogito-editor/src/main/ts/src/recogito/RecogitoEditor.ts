@@ -18,7 +18,7 @@
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src'
 import Connections from '@recogito/recogito-connections/src'
-import { AnnotatedText, AnnotationEditor, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
+import { AnnotatedText, AnnotationEditor, AnnotationOutEvent, AnnotationOverEvent, DiamAjax, VID, unpackCompactAnnotatedTextV2 } from '@inception-project/inception-js-api'
 import './RecogitoEditor.scss'
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
 import { ViewportTracker } from '@inception-project/inception-js-api/src/util/ViewportTracker'
@@ -28,6 +28,7 @@ import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/mo
 import { showLabels } from './RecogitoEditorState'
 import { Writable } from 'svelte/store'
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 interface WebAnnotationBodyItem {
   type: string;
@@ -64,6 +65,7 @@ export class RecogitoEditor implements AnnotationEditor {
   private data? : AnnotatedText
   private showInlineLabels: boolean
   private toolbar: RecogitoEditorToolbar
+  private popover: AnnotationDetailPopOver
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string) {
     this.ajax = ajax
@@ -132,7 +134,34 @@ export class RecogitoEditor implements AnnotationEditor {
 
       this.installRelationRenderingPatch(this.recogito)
 
+      // Event handlers for custom events
+      this.root.ownerDocument.body.addEventListener('mouseover', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOverEvent(annotation, event))
+      })
+      this.root.ownerDocument.body.addEventListener('mouseout', event => {
+        if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return
+        const vid = event.target.closest("[data-id]")?.getAttribute('data-id')?.substring(1)
+        if (!vid) return
+        const annotation = this.data?.getAnnotation(vid)
+        if (!annotation) return
+        this.root.dispatchEvent(new AnnotationOutEvent(annotation, event))
+      })
+
+
       this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+
+      this.popover = new AnnotationDetailPopOver({
+        target: this.root.ownerDocument.body,
+        props: {
+          root: this.root,
+          ajax: this.ajax
+        }
+      })
 
       let initialized = false
       showLabels.subscribe(enabled => {

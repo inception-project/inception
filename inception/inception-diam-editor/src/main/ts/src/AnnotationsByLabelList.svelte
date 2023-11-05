@@ -106,7 +106,7 @@
     <div class="m-auto d-flex flex-column justify-content-center">
         <div class="d-flex flex-row justify-content-center">
             <div class="spinner-border text-muted" role="status">
-                <span class="sr-only">Loading...</span>
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     </div>
