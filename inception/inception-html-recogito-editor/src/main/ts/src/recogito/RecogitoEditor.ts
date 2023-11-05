@@ -58,6 +58,7 @@ interface WebAnnotation {
 }
 
 export class RecogitoEditor implements AnnotationEditor {
+  private alpha = '55'
   private ajax: DiamAjax
   private recogito: Recogito
   private connections: any
@@ -154,6 +155,9 @@ export class RecogitoEditor implements AnnotationEditor {
         this.root.dispatchEvent(new AnnotationOutEvent(annotation, event))
       })
 
+      // Add event handlers for highlighting extent of the annotation the mouse is currently over
+      this.root.ownerDocument.body.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
+      this.root.ownerDocument.body.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
       this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
 
@@ -172,6 +176,26 @@ export class RecogitoEditor implements AnnotationEditor {
       })
       initialized = true;
     })
+  }
+
+  private addAnnotationHighlight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    const vid = event.target.getAttribute('data-id')?.substring(1)
+    if (!vid) return
+
+    this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
+  }
+
+  // eslint-disable-next-line no-undef
+  getHighlightsForAnnotation (vid: VID): NodeListOf<Element> {
+    return this.root.querySelectorAll(`[data-id="#${vid}"]`)
+  }
+
+  private removeAnnotationHighight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
   }
 
   private createToolbar () {
@@ -204,9 +228,13 @@ export class RecogitoEditor implements AnnotationEditor {
 
             // Span annotation
             if (element instanceof HTMLElement) {
-              element.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.2)`
-              element.style.borderColor = annotation.body.color
+              const styleList = [
+                `--iaa-background-color: ${annotation.body.color || '#000000'}${this.alpha}`,
+                `--iaa-border-color: ${annotation.body.color || '#000000'}`
+              ]
+
               element.setAttribute("data-iaa-label", annotation.body.value)
+              element.setAttribute("style", styleList.join('; '))
               annotation.body.classes.forEach(c => element.classList.add(c))
             }
           }
