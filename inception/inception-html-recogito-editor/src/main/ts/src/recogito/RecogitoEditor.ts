@@ -30,6 +30,8 @@ import { Writable } from 'svelte/store'
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
+export const NO_LABEL = '◌'
+
 interface WebAnnotationBodyItem {
   type: string;
   value: string;
@@ -358,7 +360,7 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: span.color || '#000000',
-          value: span.label || '',
+          value: span.label || `[${span.layer.name}]` || NO_LABEL,
           classes: classList
         },
         target: {
@@ -420,7 +422,7 @@ export class RecogitoEditor implements AnnotationEditor {
           type: 'TextualBody',
           purpose: 'tagging',
           color: relation.color || '#000000',
-          value: relation.label || '',
+          value: relation.label || `[${relation.layer.name}]` || NO_LABEL,
           classes: classList
         },
         motivation: 'linking',
