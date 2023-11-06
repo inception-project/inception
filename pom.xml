@@ -67,8 +67,8 @@
   </distributionManagement>
 
   <properties>
-    <junit-jupiter.version>5.10.0</junit-jupiter.version>
-    <junit-platform.version>1.10.0</junit-platform.version>
+    <junit-jupiter.version>5.10.1</junit-jupiter.version>
+    <junit-platform.version>1.10.1</junit-platform.version>
     <mockito.version>5.5.0</mockito.version>
     <assertj.version>3.24.2</assertj.version>
     <xmlunit.version>2.9.1</xmlunit.version>
@@ -76,7 +76,7 @@
     <awaitility.version>4.2.0</awaitility.version>
 
     <dkpro.version>2.4.0</dkpro.version>
-    <uima.version>3.4.1</uima.version>
+    <uima.version>3.5.0</uima.version>
     <uimafit.version>3.4.0</uimafit.version>
     <uima-json.version>0.5.0</uima-json.version>
 
