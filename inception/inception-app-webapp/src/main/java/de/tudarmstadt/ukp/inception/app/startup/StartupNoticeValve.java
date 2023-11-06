@@ -18,14 +18,13 @@
 package de.tudarmstadt.ukp.inception.app.startup;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.servlet.ServletException;
 
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.http.MediaType;
 
 public class StartupNoticeValve
     extends ValveBase
@@ -33,8 +32,9 @@ public class StartupNoticeValve
     @Override
     public void invoke(Request request, Response response) throws IOException, ServletException
     {
-        try (InputStream loadingHtml = getClass().getResourceAsStream("startup.html")) {
-            IOUtils.copy(loadingHtml, response.getOutputStream());
+        try (var loadingHtml = getClass().getResourceAsStream("startup.html")) {
+            response.setContentType(MediaType.TEXT_HTML_VALUE);
+            loadingHtml.transferTo(response.getOutputStream());
         }
     }
 }
