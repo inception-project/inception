@@ -32,10 +32,28 @@
     <dependencies>
       <dependency>
         <groupId>org.apache.uima</groupId>
-        <artifactId>uimaj-bom</artifactId>
+        <artifactId>uimaj-core</artifactId>
         <version>${uima.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-cpe</artifactId>
+        <version>${uima.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-tools</artifactId>
+        <version>${uima.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-json</artifactId>
+        <version>${uima.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-document-annotation</artifactId>
+        <version>${uima.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
