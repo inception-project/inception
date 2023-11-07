@@ -131,6 +131,11 @@
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
@@ -179,4 +184,21 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!-- Servlet API needed but dependency plugin does not get it -->
+              <ignoredDependency>javax.servlet:javax.servlet-api</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
