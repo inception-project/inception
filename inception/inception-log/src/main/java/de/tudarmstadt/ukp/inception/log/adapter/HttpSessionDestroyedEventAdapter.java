@@ -69,8 +69,10 @@ public class HttpSessionDestroyedEventAdapter
         var age = (System.currentTimeMillis() - aEvent.getSession().getLastAccessedTime()) / 1000;
 
         var details = new SessionDetails(aEvent.getId());
+        details.setDuration(
+                aEvent.getSession().getLastAccessedTime() - aEvent.getSession().getCreationTime());
         if (age > aEvent.getSession().getMaxInactiveInterval()) {
-            details.setExpiredAfterInactivity(age);
+            details.setExpiredAfterInactivity(age * 1000);
         }
 
         return JSONUtil.toJsonString(details);

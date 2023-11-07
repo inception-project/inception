@@ -28,6 +28,9 @@ public class SessionDetails
     @JsonInclude(Include.NON_DEFAULT)
     private long expiredAfterInactivity;
 
+    @JsonInclude(Include.NON_DEFAULT)
+    private long duration;
+
     public SessionDetails()
     {
         // Nothing to do
@@ -48,6 +51,9 @@ public class SessionDetails
         sessionId = aSessionId;
     }
 
+    /**
+     * @return expired after milliseconds of inactivity
+     */
     public long getExpiredAfterInactivity()
     {
         return expiredAfterInactivity;
@@ -56,5 +62,18 @@ public class SessionDetails
     public void setExpiredAfterInactivity(long aExpiredAfterInactivity)
     {
         expiredAfterInactivity = aExpiredAfterInactivity;
+    }
+
+    /**
+     * @return duration of the session in milliseconds.
+     */
+    public long getDuration()
+    {
+        return duration;
+    }
+
+    public void setDuration(long aDuration)
+    {
+        duration = aDuration;
     }
 }
