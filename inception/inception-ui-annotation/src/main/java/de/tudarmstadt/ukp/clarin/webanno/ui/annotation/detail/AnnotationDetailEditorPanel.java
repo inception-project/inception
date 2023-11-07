@@ -1235,8 +1235,15 @@ public abstract class AnnotationDetailEditorPanel
         try {
             var selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
-            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
-                    .at(selection.getBegin(), selection.getEnd()) //
+            // https://github.com/apache/uima-uimaj/issues/345
+            // boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+            // .at(selection.getBegin(), selection.getEnd()) //
+            // .anyMatch(ann -> ann._id() == id);
+            var cas = getEditorCas();
+            boolean annotationStillExists = CasUtil
+                    .selectAt(cas, CasUtil.getType(cas, Annotation.class), selection.getBegin(),
+                            selection.getEnd())
+                    .stream() //
                     .anyMatch(ann -> ann._id() == id);
 
             if (!annotationStillExists) {

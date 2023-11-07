@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.core.api.xml.type.XmlElement;
@@ -81,8 +82,12 @@ public class CasToBioC
                 bioCPassage.addInfon(I_TYPE, div.getDivType());
             }
 
-            var sentences = aJCas.select(Sentence.class).coveredBy(div).asList();
-            var annotations = aJCas.select(Annotation.class).coveredBy(div);
+            // https://github.com/apache/uima-uimaj/issues/345
+            // var sentences = aJCas.select(Sentence.class).coveredBy(div).asList();
+            var sentences = JCasUtil.selectCovered(Sentence.class, div);
+            // https://github.com/apache/uima-uimaj/issues/345
+            // var annotations = aJCas.select(Annotation.class).coveredBy(div);
+            var annotations = JCasUtil.selectCovered(Annotation.class, div);
             if (sentences.isEmpty()) {
                 bioCPassage.setText(div.getCoveredText());
                 processAnnotations(bioCPassage, bioCPassage.getOffset(), annotations);
@@ -91,7 +96,10 @@ public class CasToBioC
                 var bioCSentences = processSentences(div.getBegin(), sentences);
                 bioCPassage.setSentences(bioCSentences);
                 processAnnotations(bioCPassage, bioCPassage.getOffset(),
-                        annotations.filter(a -> aJCas.select(Sentence.class).covering(a).isEmpty())
+                        annotations.stream().filter(a ->
+                        // https://github.com/apache/uima-uimaj/issues/345
+                        // aJCas.select(Sentence.class).covering(a).isEmpty()
+                        JCasUtil.selectCovering(Sentence.class, a).isEmpty())
                                 .collect(Collectors.toList()));
             }
         }
@@ -128,7 +136,9 @@ public class CasToBioC
             bioCSentence.setText(sentence.getCoveredText());
 
             processAnnotations(bioCSentence, sentence.getBegin(),
-                    sentence.getCAS().select(Annotation.class).coveredBy(sentence));
+                    // https://github.com/apache/uima-uimaj/issues/345
+                    // sentence.getCAS().select(Annotation.class).coveredBy(sentence)
+                    JCasUtil.selectCovered(Annotation.class, sentence));
 
             bioCSentences.add(bioCSentence);
         }
