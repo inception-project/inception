@@ -30,7 +30,6 @@ export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
   readonly root: Element
   private toCleanUp = new Set<Function>()
-  private observer: IntersectionObserver
   private resizer: ResizeManager
   private tracker: ViewportTracker
   private showInlineLabels = false
@@ -428,10 +427,6 @@ export class ApacheAnnotatorVisualizer {
   }
 
   destroy (): void {
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-
     this.clearHighlights()
   }
 }
