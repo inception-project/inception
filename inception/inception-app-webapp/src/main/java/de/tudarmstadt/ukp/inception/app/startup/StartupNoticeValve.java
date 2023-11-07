@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.startup;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import javax.servlet.ServletException;
 
@@ -34,6 +35,7 @@ public class StartupNoticeValve
     {
         try (var loadingHtml = getClass().getResourceAsStream("startup.html")) {
             response.setContentType(MediaType.TEXT_HTML_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             loadingHtml.transferTo(response.getOutputStream());
         }
     }
