@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
@@ -100,40 +99,9 @@ public class SpanRenderer
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        // https://github.com/apache/uima-uimaj/issues/345
-        // return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
-        // .map(fs -> (AnnotationFS) fs)
-        // .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-        // .collect(toList());
-
-        List<AnnotationFS> list = new ArrayList<AnnotationFS>();
-
-        // withSnapshotIterators() not needed here since we copy the FSes to a list anyway
-        FSIterator<AnnotationFS> it = aCas.getAnnotationIndex(type).iterator();
-
-        // Skip annotations whose start is before the start parameter.
-        while (it.isValid() && (it.get()).getBegin() < 0) {
-            it.moveToNext();
-        }
-
-        boolean strict = false;
-        while (it.isValid()) {
-            AnnotationFS a = it.get();
-            // If the start of the current annotation is past the end parameter, we're done.
-            if (a.getBegin() > aWindowEnd) {
-                break;
-            }
-            it.moveToNext();
-            if (strict && a.getEnd() > aWindowEnd) {
-                continue;
-            }
-
-            list.add(a);
-        }
-
-        return list.stream() //
-                .map(fs -> (AnnotationFS) fs) //
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
+        return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
+                .map(fs -> (AnnotationFS) fs)
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
                 .collect(toList());
     }
 

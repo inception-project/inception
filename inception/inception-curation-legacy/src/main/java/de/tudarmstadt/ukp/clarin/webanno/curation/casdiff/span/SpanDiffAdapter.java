@@ -20,17 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -74,41 +71,9 @@ public class SpanDiffAdapter
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        // https://github.com/apache/uima-uimaj/issues/345
-        // return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
-        // .map(fs -> (AnnotationFS) fs)
-        // .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-        // .collect(toList());
-
-        List<AnnotationFS> list = new ArrayList<AnnotationFS>();
-
-        // withSnapshotIterators() not needed here since we copy the FSes to a list anyway
-        FSIterator<AnnotationFS> it = aCas.getAnnotationIndex(CasUtil.getType(aCas, getType()))
-                .iterator();
-
-        // Skip annotations whose start is before the start parameter.
-        while (it.isValid() && (it.get()).getBegin() < aWindowBegin) {
-            it.moveToNext();
-        }
-
-        boolean strict = false;
-        while (it.isValid()) {
-            AnnotationFS a = it.get();
-            // If the start of the current annotation is past the end parameter, we're done.
-            if (a.getBegin() > aWindowEnd) {
-                break;
-            }
-            it.moveToNext();
-            if (strict && a.getEnd() > aWindowEnd) {
-                continue;
-            }
-
-            list.add(a);
-        }
-
-        return list.stream() //
-                .map(fs -> (AnnotationFS) fs) //
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
+        return aCas.select(getType()).coveredBy(0, aWindowEnd)
+                .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
                 .collect(toList());
     }
 
