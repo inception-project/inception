@@ -21,8 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTab
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -46,6 +50,9 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 public class BasicDocumentLabelingProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+
     private final PreferencesService prefService;
     private final DocumentMetadataSidebarFactory docMetaSidebar;
     private final WorkloadManagementService workloadManagementService;
@@ -66,6 +73,12 @@ public class BasicDocumentLabelingProjectInitializer
     public String getName()
     {
         return "Document classification";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
