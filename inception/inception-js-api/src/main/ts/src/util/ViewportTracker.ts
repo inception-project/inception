@@ -98,7 +98,7 @@ export class ViewportTracker {
     console.debug(`Found ${leafTrackingCandidates.size} leaf tracking elements`)
 
     const options = {
-      root: element.ownerDocument,
+      root: element.ownerDocument.body,
       rootMargin: '0px',
       threshold: 0.0
     }
