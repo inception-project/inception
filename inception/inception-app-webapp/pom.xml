@@ -235,6 +235,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-hf</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-ollama</artifactId>
+    </dependency>
     <!--  
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

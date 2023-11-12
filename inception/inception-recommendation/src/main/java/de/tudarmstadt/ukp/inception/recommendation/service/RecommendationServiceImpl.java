@@ -2013,6 +2013,8 @@ public class RecommendationServiceImpl
                         predictedAnnotation);
 
                 if (targetOffsets.isEmpty()) {
+                    LOG.trace("Prediction cannot be anchored to [{}]: {}", layer.getAnchoringMode(),
+                            predictedAnnotation);
                     continue;
                 }
 
