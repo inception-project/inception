@@ -449,7 +449,7 @@ public class MatomoTelemetrySupportImpl
 
         public SslIgnoringMatomoTracker(String aHostUrl, Duration aTimeout)
         {
-            super(TrackerConfiguration.builder().apiEndpoint(URI.create(aHostUrl)).connectTimeout(aTimeout).socketTimeout(aTimeout).disableSslCertValidation(true).disableSslHostVerification(true).build());
+            super(TrackerConfiguration.builder().apiEndpoint(URI.create(aHostUrl)).connectTimeout(aTimeout).socketTimeout(aTimeout).disableSslCertValidation(true).build());
         }
 
     }
