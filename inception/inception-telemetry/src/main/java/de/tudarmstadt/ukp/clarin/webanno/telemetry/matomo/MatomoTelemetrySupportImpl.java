@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +26,7 @@ import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -40,17 +41,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.piwik.java.tracking.CustomVariable;
-import org.piwik.java.tracking.PiwikRequest;
-import org.piwik.java.tracking.PiwikTracker;
+import org.matomo.java.tracking.MatomoTracker;
+import org.matomo.java.tracking.TrackerConfiguration;
+import org.matomo.java.tracking.parameters.CustomVariables;
+import org.matomo.java.tracking.parameters.VisitorId;
+import org.matomo.java.tracking.CustomVariable;
+import org.matomo.java.tracking.MatomoRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -105,7 +103,7 @@ public class MatomoTelemetrySupportImpl
 
     private ScheduledExecutorService scheduler;
     private boolean trackerInitialized = false;
-    private PiwikTracker tracker;
+    private MatomoTracker tracker;
     // private PiwikConfig config;
 
     @Autowired
@@ -122,7 +120,7 @@ public class MatomoTelemetrySupportImpl
         properties = aMatomoProperties;
     }
 
-    private PiwikTracker getTracker()
+    private MatomoTracker getTracker()
     {
         if (trackerInitialized) {
             return tracker;
@@ -135,7 +133,7 @@ public class MatomoTelemetrySupportImpl
         try {
             String url = properties.getServerScheme() + "://" + properties.getServerHost()
                     + prependIfMissing(properties.getServerPath(), "/");
-            tracker = new SslIgnoringPiwikTracker(url, Duration.of(30, SECONDS));
+            tracker = new SslIgnoringMatomoTracker(url, Duration.of(30, SECONDS));
         }
         catch (Exception e) {
             log.info("Unable to set up telemetry client: {}", e.getMessage());
@@ -332,27 +330,22 @@ public class MatomoTelemetrySupportImpl
 
             UUID uuid = UUID.fromString(id.getId());
 
-            PiwikRequest request = new PiwikRequest(properties.getSiteId(),
-                    new URL(properties.getContext()));
+            MatomoRequest request = MatomoRequest.request().siteId(properties.getSiteId()).actionUrl(properties.getContext()).build();
             request.setHeaderUserAgent(System.getProperty("os.name"));
             request.setActionName(aAction);
-            request.setVisitorId(format("%016x", uuid.getMostSignificantBits()));
+            request.setVisitorId(VisitorId.fromHash(uuid.getMostSignificantBits()));
             request.setUserId(id.getId());
-            request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
-            request.setVisitCustomVariable(
-                    new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)),
-                    2);
-            request.setVisitCustomVariable(new CustomVariable("activeUsers",
-                    String.valueOf(sessionRegistry.getAllPrincipals().size())), 3);
-            request.setVisitCustomVariable(new CustomVariable("enabledUsers",
-                    String.valueOf(userService.listEnabledUsers().size())), 4);
-            request.setVisitCustomVariable(new CustomVariable("deploymentMode",
-                    telemetryService.getDeploymentMode().toString()), 5);
-
+            request.setVisitCustomVariables(new CustomVariables()
+                .add(new CustomVariable("app", applicationName), 1)
+                .add(new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)), 2)
+                .add(new CustomVariable("activeUsers", String.valueOf(sessionRegistry.getAllPrincipals().size())), 3)
+                .add(new CustomVariable("enabledUsers", String.valueOf(userService.listEnabledUsers().size())), 4)
+                .add(new CustomVariable("deploymentMode", telemetryService.getDeploymentMode().toString()), 5)
+            );
             getTracker().sendRequestAsync(request);
             log.debug("Telemetry sent ({})", aAction);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             log.debug("Unable to send telemetry server", e);
         }
     }
@@ -450,41 +443,14 @@ public class MatomoTelemetrySupportImpl
         aTraits.setEnabled(false);
     }
 
-    private class SslIgnoringPiwikTracker
-        extends PiwikTracker
+    private class SslIgnoringMatomoTracker
+        extends MatomoTracker
     {
-        private final Duration timeout;
-        private CloseableHttpAsyncClient asyncClient = null;
 
-        public SslIgnoringPiwikTracker(String aHostUrl, Duration aTimeout)
+        public SslIgnoringMatomoTracker(String aHostUrl, Duration aTimeout)
         {
-            super(aHostUrl, (int) aTimeout.toMillis());
-            timeout = aTimeout;
+            super(TrackerConfiguration.builder().apiEndpoint(URI.create(aHostUrl)).connectTimeout(aTimeout).socketTimeout(aTimeout).disableSslCertValidation(true).disableSslHostVerification(true).build());
         }
 
-        @Override
-        protected CloseableHttpAsyncClient getHttpAsyncClient()
-        {
-            if (asyncClient != null) {
-                return asyncClient;
-            }
-
-            try {
-                HttpAsyncClientBuilder builder = HttpAsyncClientBuilder.create();
-                builder.setDefaultRequestConfig(RequestConfig.custom() //
-                        .setConnectTimeout((int) timeout.toMillis()) //
-                        .setConnectionRequestTimeout((int) timeout.toMillis()) //
-                        .setSocketTimeout((int) timeout.toMillis()).build());
-                builder.setSSLContext(new SSLContextBuilder()
-                        .loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build());
-                builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-                asyncClient = builder.build();
-            }
-            catch (KeyStoreException | KeyManagementException | NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
-            }
-
-            return asyncClient;
-        }
     }
 }
