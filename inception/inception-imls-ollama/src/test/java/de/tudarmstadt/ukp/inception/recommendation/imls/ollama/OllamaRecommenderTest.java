@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtil
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
 
 @Disabled("Requires locally running ollama")
 class OllamaRecommenderTest
@@ -99,7 +99,7 @@ class OllamaRecommenderTest
         traits.setModel("mistral");
         traits.setPrompt(
                 "Identify all even numbers in the following list and return them as JSON.\n\n{{ text }}");
-        traits.setFormat(OllamaResponseFormat.JSON);
+        traits.setFormat(OllamaGenerateResponseFormat.JSON);
         traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 
@@ -123,7 +123,7 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("Identify all named entities in the following text.\n\n{{ text }}");
-        traits.setFormat(OllamaResponseFormat.JSON);
+        traits.setFormat(OllamaGenerateResponseFormat.JSON);
         traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 
@@ -148,7 +148,7 @@ class OllamaRecommenderTest
         traits.setModel("mistral");
         traits.setPrompt(
                 "Identify all politicians in the following text and return them as JSON.\n\n{{ text }}");
-        traits.setFormat(OllamaResponseFormat.JSON);
+        traits.setFormat(OllamaGenerateResponseFormat.JSON);
         traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 

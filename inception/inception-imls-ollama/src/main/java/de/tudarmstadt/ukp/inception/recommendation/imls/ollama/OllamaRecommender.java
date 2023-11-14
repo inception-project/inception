@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaAskRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class OllamaRecommender
@@ -326,7 +326,7 @@ public class OllamaRecommender
     private String generate(String prompt) throws IOException
     {
         LOG.trace("Asking ollama [{}]: [{}]", traits.getModel(), prompt);
-        var request = OllamaAskRequest.builder() //
+        var request = OllamaGenerateRequest.builder() //
                 .withModel(traits.getModel()) //
                 .withPrompt(prompt) //
                 .withFormat(traits.getFormat()) //

@@ -119,7 +119,7 @@ public class OllamaClientImpl
     }
 
     @Override
-    public String generate(String aUrl, OllamaAskRequest aRequest) throws IOException
+    public String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
@@ -140,9 +140,9 @@ public class OllamaClientImpl
 
         var result = new StringBuilder();
         try (var is = response.body()) {
-            var iter = objectMapper.readerFor(OllamaAskResponse.class).readValues(is);
+            var iter = objectMapper.readerFor(OllamaGenerateResponse.class).readValues(is);
             while (iter.hasNext()) {
-                var chunk = (OllamaAskResponse) iter.nextValue();
+                var chunk = (OllamaGenerateResponse) iter.nextValue();
                 result.append(chunk.getResponse());
             }
         }

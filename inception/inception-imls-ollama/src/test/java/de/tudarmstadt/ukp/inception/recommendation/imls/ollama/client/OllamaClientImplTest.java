@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
 
 import java.lang.invoke.MethodHandles;
 
@@ -37,7 +37,7 @@ class OllamaClientImplTest
     @Test
     void testStream() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaAskRequest.builder() //
+        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
@@ -48,7 +48,7 @@ class OllamaClientImplTest
     @Test
     void testNonStream() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaAskRequest.builder() //
+        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Tell me a joke.") //
                 .withStream(false) //
@@ -59,7 +59,7 @@ class OllamaClientImplTest
     @Test
     void testJson() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaAskRequest.builder() //
+        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //

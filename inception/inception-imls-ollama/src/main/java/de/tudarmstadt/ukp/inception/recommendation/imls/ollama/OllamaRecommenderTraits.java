@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaRecommenderTraits
@@ -37,7 +37,7 @@ public class OllamaRecommenderTraits
 
     private boolean raw;
 
-    private OllamaResponseFormat format;
+    private OllamaGenerateResponseFormat format;
 
     private ProcessingMode processingMode = ProcessingMode.PER_ANNOTATION;
 
@@ -93,12 +93,12 @@ public class OllamaRecommenderTraits
         raw = aRaw;
     }
 
-    public OllamaResponseFormat getFormat()
+    public OllamaGenerateResponseFormat getFormat()
     {
         return format;
     }
 
-    public void setFormat(OllamaResponseFormat aFormat)
+    public void setFormat(OllamaGenerateResponseFormat aFormat)
     {
         format = aFormat;
     }

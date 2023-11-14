@@ -23,10 +23,10 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
 
 public class OllamaResponseFormatSelect
-    extends DropDownChoice<OllamaResponseFormat>
+    extends DropDownChoice<OllamaGenerateResponseFormat>
 {
     private static final long serialVersionUID = 3115872987735239823L;
 
@@ -35,7 +35,7 @@ public class OllamaResponseFormatSelect
         super(aId);
     }
 
-    public OllamaResponseFormatSelect(String aId, IModel<OllamaResponseFormat> aModel)
+    public OllamaResponseFormatSelect(String aId, IModel<OllamaGenerateResponseFormat> aModel)
     {
         super(aId);
         setModel(aModel);
@@ -47,7 +47,7 @@ public class OllamaResponseFormatSelect
         super.onInitialize();
 
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(OllamaResponseFormat.values()));
+        setChoices(asList(OllamaGenerateResponseFormat.values()));
         setNullValid(true);
     }
 }

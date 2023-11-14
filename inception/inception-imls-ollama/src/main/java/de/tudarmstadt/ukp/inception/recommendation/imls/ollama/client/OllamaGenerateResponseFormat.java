@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
-import java.io.IOException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface OllamaClient
+public enum OllamaGenerateResponseFormat
 {
-    String generate(String aUrl, OllamaGenerateRequest aRequest) throws IOException;
+    @JsonProperty("json")
+    JSON
 }

@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OllamaAskResponse
+public class OllamaGenerateResponse
 {
     private @JsonProperty("model") String model;
     private @JsonProperty("created_at") String createdAt;
