@@ -54,6 +54,8 @@ public class OllamaRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
     private static final String VAR_TEXT = "text";
+    private static final String VAR_SENTENCE = "sentence";
+    private static final String VAR_DOCUMENT = "document";
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -300,7 +302,11 @@ public class OllamaRecommender
         var predictedType = getPredictedType(aCas);
 
         for (var candidate : selectOverlapping(aCas, predictedType, aBegin, aEnd)) {
-            var bindings = Map.of(VAR_TEXT, candidate.getCoveredText());
+            String sentence = aCas.select(Sentence.class).covering(candidate)
+                    .map(Sentence::getCoveredText).findFirst().orElse("");
+            var bindings = Map.of( //
+                    VAR_TEXT, candidate.getCoveredText(), //
+                    VAR_SENTENCE, sentence);
             var prompt = jinjava.render(traits.getPrompt(), bindings);
 
             try {

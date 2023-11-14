@@ -27,3 +27,13 @@
     ```
     {{ text }}
     ```
+
+- name: Disambiguate in sentence
+  processingMode: per-annotation
+  extractionMode: response-as-label
+  prompt: |-
+    Very briefly describe the meaning of `{{ text }}` in the following sentence.
+
+    ```
+    {{ sentence }}
+    ```
