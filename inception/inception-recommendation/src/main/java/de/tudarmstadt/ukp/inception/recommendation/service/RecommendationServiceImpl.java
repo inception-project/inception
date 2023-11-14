@@ -49,9 +49,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
-import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
-import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -134,7 +131,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
@@ -153,6 +149,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -2575,42 +2572,7 @@ public class RecommendationServiceImpl
             var tsd = schemaService.getFullProjectTypeSystem(aProject);
             var features = schemaService.listAnnotationFeature(aProject);
 
-            for (var feature : features) {
-                var td = tsd.getType(feature.getLayer().getName());
-                if (td == null) {
-                    if (!WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                        LOG.trace(
-                                "Could not monkey patch feature {} because type for layer {} was not "
-                                        + "found in the type system",
-                                feature, feature.getLayer());
-                    }
-                    continue;
-                }
-
-                var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-                td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
-
-                var scoreExplanationFeatureName = feature.getName()
-                        + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-                td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
-                        TYPE_NAME_STRING);
-
-                var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-                td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
-            }
-
-            var layers = features.stream().map(AnnotationFeature::getLayer).distinct()
-                    .collect(toList());
-            for (var layer : layers) {
-                var td = tsd.getType(layer.getName());
-                if (td == null) {
-                    LOG.trace("Could not monkey patch layer {} because its type was not found in "
-                            + "the type system", layer);
-                    continue;
-                }
-
-                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
-            }
+            RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, features);
 
             schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }

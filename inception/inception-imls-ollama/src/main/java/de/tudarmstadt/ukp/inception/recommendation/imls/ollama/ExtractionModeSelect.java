@@ -17,9 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-public enum ProcessingMode
+import static java.util.Arrays.asList;
+
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
+import org.apache.wicket.model.IModel;
+
+public class ExtractionModeSelect
+    extends DropDownChoice<ExtractionMode>
 {
-    PER_ANNOTATION, //
-    PER_SENTENCE, //
-    PER_DOCUMENT
+    private static final long serialVersionUID = 1789605828488016006L;
+
+    public ExtractionModeSelect(String aId)
+    {
+        super(aId);
+    }
+
+    public ExtractionModeSelect(String aId, IModel<ExtractionMode> aModel)
+    {
+        super(aId);
+        setModel(aModel);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        setChoices(asList(ExtractionMode.values()));
+    }
 }

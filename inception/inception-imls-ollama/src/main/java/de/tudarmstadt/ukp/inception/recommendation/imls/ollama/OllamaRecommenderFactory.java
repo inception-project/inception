@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 
 public class OllamaRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OllamaRecommenderTraits>
@@ -34,6 +35,13 @@ public class OllamaRecommenderFactory
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderFactory";
+
+    private final OllamaClient client;
+
+    public OllamaRecommenderFactory(OllamaClient aClient)
+    {
+        client = aClient;
+    }
 
     @Override
     public String getId()
@@ -51,7 +59,7 @@ public class OllamaRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         OllamaRecommenderTraits traits = readTraits(aRecommender);
-        return new OllamaRecommender(aRecommender, traits);
+        return new OllamaRecommender(aRecommender, traits, client);
     }
 
     @Override

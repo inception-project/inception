@@ -15,20 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-
-public interface RecommenderFactoryRegistry
+public enum ExtractionMode
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
-
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
-
-    RecommendationEngineFactory<?> getFactory(String aId);
+    RESPONSE_AS_LABEL, //
+    MENTIONS_FROM_JSON
 }

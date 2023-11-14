@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaResponseFormat;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaRecommenderTraits
     implements Serializable
@@ -33,7 +35,13 @@ public class OllamaRecommenderTraits
 
     private String prompt;
 
+    private boolean raw;
+
+    private OllamaResponseFormat format;
+
     private ProcessingMode processingMode = ProcessingMode.PER_ANNOTATION;
+
+    private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
 
     public String getUrl()
     {
@@ -73,5 +81,35 @@ public class OllamaRecommenderTraits
     public void setProcessingMode(ProcessingMode aProcessingMode)
     {
         processingMode = aProcessingMode;
+    }
+
+    public boolean isRaw()
+    {
+        return raw;
+    }
+
+    public void setRaw(boolean aRaw)
+    {
+        raw = aRaw;
+    }
+
+    public OllamaResponseFormat getFormat()
+    {
+        return format;
+    }
+
+    public void setFormat(OllamaResponseFormat aFormat)
+    {
+        format = aFormat;
+    }
+
+    public ExtractionMode getExtractionMode()
+    {
+        return extractionMode;
+    }
+
+    public void setExtractionMode(ExtractionMode aExtractionMode)
+    {
+        extractionMode = aExtractionMode;
     }
 }

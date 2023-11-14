@@ -28,25 +28,7 @@
   <artifactId>inception-imls-ollama</artifactId>
   <name>INCEpTION - ML - Ollama</name>
 
-  <repositories>
-    <repository>
-      <id>ollama4j-from-ossrh</id>
-      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
-
   <dependencies>
-    <dependency>
-      <groupId>io.github.amithkoujalgi</groupId>
-      <artifactId>ollama4j</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>com.hubspot.jinjava</groupId>
       <artifactId>jinjava</artifactId>
@@ -124,6 +106,13 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+    </dependency>
+    
+    <!-- Test -->
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

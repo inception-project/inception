@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -65,7 +66,10 @@ public class OllamaRecommenderTraitsEditor
         form.add(new TextField<String>("url"));
         form.add(new TextField<String>("model"));
         form.add(new TextArea<String>("prompt"));
+        form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
         form.add(new ProcessingModeSelect("processingMode"));
+        form.add(new ExtractionModeSelect("extractionMode"));
+        form.add(new OllamaResponseFormatSelect("format"));
 
         add(form);
     }
