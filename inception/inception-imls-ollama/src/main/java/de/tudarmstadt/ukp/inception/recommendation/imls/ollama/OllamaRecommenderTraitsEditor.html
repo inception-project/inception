@@ -35,6 +35,11 @@
         <input wicket:id="model" type="text" class="form-control"/>
       </div>
     </div>
+    <div class="row form-row" wicket:enclosure="preset">
+      <div class="offset-sm-3 col-sm-9">
+        <select wicket:id="preset" class="form-select"/>
+      </div>
+    </div>
     <div class="row form-row" wicket:enclosure="processingMode">
       <label wicket:for="processingMode" class="col-sm-3 control-label">
         <wicket:label key="processingMode" />
@@ -73,7 +78,7 @@
       <label class="col-sm-3 col-form-label" wicket:for="prompt">
         <wicket:message key="prompt"/>
         <div class="small text-muted">
-          <i class="fas fa-torii-gate"></i> Jinja supported. 
+          <i class="fas fa-torii-gate"></i> Jinja supported
         </div>
       </label>
       <div class="col-sm-9">

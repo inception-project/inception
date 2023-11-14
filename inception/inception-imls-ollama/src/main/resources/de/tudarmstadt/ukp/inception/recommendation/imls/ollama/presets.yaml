@@ -1,0 +1,29 @@
+- name: Extract named entities from sentenes (mistral)
+  processingMode: per-sentence
+  json: true
+  extractionMode: mentions-from-json
+  raw: true
+  prompt: |-
+    <s>[INST]Identify all named entities in the following text and return them as JSON.[/INST]
+
+    {{ text }}</s>
+
+- name: Summarize each sentence in a word
+  processingMode: per-sentence
+  extractionMode: response-as-label
+  prompt: |-
+    Summarize the following sentence in a single word.
+
+    ```
+    {{ text }}
+    ```
+
+- name: Summarize text
+  processingMode: per-document
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly describe what the following text is about.
+
+    ```
+    {{ text }}
+    ```

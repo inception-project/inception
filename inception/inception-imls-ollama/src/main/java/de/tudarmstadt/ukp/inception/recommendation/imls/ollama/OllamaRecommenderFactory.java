@@ -20,10 +20,23 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.util.ListModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
+import de.tudarmstadt.ukp.clarin.webanno.support.YamlUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -36,11 +49,21 @@ public class OllamaRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderFactory";
 
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final OllamaClient client;
+
+    private WatchedResourceFile<ArrayList<Preset>> presets;
 
     public OllamaRecommenderFactory(OllamaClient aClient)
     {
         client = aClient;
+
+        var presetsResource = getClass().getResource("presets.yaml");
+        presets = new WatchedResourceFile<>(presetsResource, is -> YamlUtil.getObjectMapper()
+                .readValue(is, new TypeReference<ArrayList<Preset>>()
+                {
+                }));
     }
 
     @Override
@@ -72,7 +95,7 @@ public class OllamaRecommenderFactory
     @Override
     public OllamaRecommenderTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
-        return new OllamaRecommenderTraitsEditor(aId, aModel);
+        return new OllamaRecommenderTraitsEditor(aId, aModel, new ListModel<>(getPresets()));
     }
 
     @Override
@@ -91,5 +114,16 @@ public class OllamaRecommenderFactory
     public boolean isMultipleRecommendationProvider()
     {
         return false;
+    }
+
+    private List<Preset> getPresets()
+    {
+        try {
+            return presets.get().get();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load presets", e);
+            return Collections.emptyList();
+        }
     }
 }

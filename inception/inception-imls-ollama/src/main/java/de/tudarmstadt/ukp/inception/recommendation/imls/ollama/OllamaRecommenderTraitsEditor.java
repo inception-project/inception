@@ -17,14 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import java.util.List;
+
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
@@ -42,7 +48,8 @@ public class OllamaRecommenderTraitsEditor
 
     private final IModel<OllamaRecommenderTraits> traits;
 
-    public OllamaRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
+    public OllamaRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
+            IModel<List<Preset>> aPresets)
     {
         super(aId, aRecommender);
 
@@ -62,6 +69,24 @@ public class OllamaRecommenderTraitsEditor
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
+
+        var presetSelect = new DropDownChoice<Preset>("preset");
+        presetSelect.setModel(Model.of());
+        presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        presetSelect.setChoices(aPresets);
+        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+            var preset = presetSelect.getModelObject();
+            if (preset != null) {
+                var settings = traits.getObject();
+                settings.setPrompt(preset.getPrompt());
+                settings.setExtractionMode(preset.getExtractionMode());
+                settings.setFormat(preset.getFormat());
+                settings.setProcessingMode(preset.getProcessingMode());
+                settings.setRaw(preset.isRaw());
+            }
+            _target.add(form);
+        }));
+        form.add(presetSelect);
 
         form.add(new TextField<String>("url"));
         form.add(new TextField<String>("model"));

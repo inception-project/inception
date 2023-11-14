@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum ExtractionMode
 {
+    @JsonProperty("response-as-label")
     RESPONSE_AS_LABEL, //
+
+    @JsonProperty("mentions-from-json")
     MENTIONS_FROM_JSON
 }

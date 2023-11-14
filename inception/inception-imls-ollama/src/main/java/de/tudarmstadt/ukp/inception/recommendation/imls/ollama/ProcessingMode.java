@@ -17,9 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum ProcessingMode
 {
+    @JsonProperty("per-annotation")
     PER_ANNOTATION, //
+
+    @JsonProperty("per-sentence")
     PER_SENTENCE, //
+
+    @JsonProperty("per-document")
     PER_DOCUMENT
 }

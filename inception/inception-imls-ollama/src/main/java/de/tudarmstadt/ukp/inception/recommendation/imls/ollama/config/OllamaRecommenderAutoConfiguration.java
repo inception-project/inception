@@ -30,14 +30,14 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClie
 public class OllamaRecommenderAutoConfiguration
 {
     @Bean
-    public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient)
-    {
-        return new OllamaRecommenderFactory(aClient);
-    }
-
-    @Bean
     public OllamaClient ollamaClient()
     {
         return new OllamaClientImpl();
+    }
+
+    @Bean
+    public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient)
+    {
+        return new OllamaRecommenderFactory(aClient);
     }
 }
