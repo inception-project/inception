@@ -29,14 +29,23 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -80,14 +89,15 @@ public class ExternalRecommender
 {
     public static final Key<Boolean> KEY_TRAINING_COMPLETE = new Key<>("training_complete");
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final int HTTP_TOO_MANY_REQUESTS = 429;
     private static final int HTTP_BAD_REQUEST = 400;
 
     private final ExternalRecommenderProperties properties;
     private final ExternalRecommenderTraits traits;
-    private final HttpClient client;
+
+    private HttpClient _client;
 
     public ExternalRecommender(ExternalRecommenderProperties aProperties, Recommender aRecommender,
             ExternalRecommenderTraits aTraits)
@@ -96,7 +106,56 @@ public class ExternalRecommender
 
         properties = aProperties;
         traits = aTraits;
-        client = HttpClient.newBuilder().connectTimeout(properties.getConnectTimeout()).build();
+    }
+
+    private HttpClient getClient() throws RecommendationException
+    {
+        try {
+            if (_client == null) {
+                var clientBuilder = HttpClient.newBuilder() //
+                        .connectTimeout(properties.getConnectTimeout());
+                if (!traits.isVerifyCertificates()) {
+                    var sslContext = makeNonVerifyingSslContext();
+
+                    clientBuilder.sslContext(sslContext);
+
+                }
+                _client = clientBuilder.build();
+            }
+            return _client;
+        }
+        catch (KeyManagementException | NoSuchAlgorithmException e) {
+            throw new RecommendationException("Unable to initialize HTTP client", e);
+        }
+    }
+
+    private SSLContext makeNonVerifyingSslContext()
+        throws NoSuchAlgorithmException, KeyManagementException
+    {
+        var trustManager = new X509TrustManager()
+        {
+            @Override
+            public X509Certificate[] getAcceptedIssuers()
+            {
+                return null;
+            }
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] certs, String authType)
+            {
+                // no check
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] certs, String authType)
+            {
+                // no check
+            }
+        };
+
+        var sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[] { trustManager }, new SecureRandom());
+        return sslContext;
     }
 
     @Override
@@ -113,10 +172,12 @@ public class ExternalRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        TrainingRequest trainingRequest = new TrainingRequest();
+        var client = getClient();
+
+        var trainingRequest = new TrainingRequest();
 
         // We assume that the type system for all CAS are the same
-        String typeSystem = serializeTypeSystem(aCasses.get(0));
+        var typeSystem = serializeTypeSystem(aCasses.get(0));
         trainingRequest.setTypeSystem(typeSystem);
 
         // Fill in metadata. We use the type system of the first CAS in the list
@@ -128,19 +189,19 @@ public class ExternalRecommender
 
         trainingRequest.setMetadata(buildMetadata(aCasses.get(0)));
 
-        List<Document> documents = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        var documents = new ArrayList<Document>();
+        for (var cas : aCasses) {
             documents.add(buildDocument(cas));
         }
         trainingRequest.setDocuments(documents);
 
-        HttpRequest request = HttpRequest.newBuilder() //
+        var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout())
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
 
-        HttpResponse<String> response = sendRequest(request);
+        HttpResponse<String> response = sendRequest(client, request);
         if (response.statusCode() == HTTP_TOO_MANY_REQUESTS) {
             LOG.info("External recommender is already training");
         }
@@ -161,23 +222,25 @@ public class ExternalRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        String typeSystem = serializeTypeSystem(aCas);
+        var client = getClient();
 
-        PredictionRequest predictionRequest = new PredictionRequest();
+        var typeSystem = serializeTypeSystem(aCas);
+
+        var predictionRequest = new PredictionRequest();
         predictionRequest.setTypeSystem(typeSystem);
         predictionRequest.setDocument(buildDocument(aCas));
 
         // Fill in metadata
         predictionRequest.setMetadata(buildMetadata(aCas));
 
-        HttpRequest request = HttpRequest.newBuilder() //
+        var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout()) //
                 .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)) //
                 .build();
 
-        HttpResponse<String> response = sendRequest(request);
+        HttpResponse<String> response = sendRequest(client, request);
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (response.statusCode() >= HTTP_BAD_REQUEST) {
@@ -288,10 +351,11 @@ public class ExternalRecommender
         }
     }
 
-    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws RecommendationException
+    private HttpResponse<String> sendRequest(HttpClient aClient, HttpRequest aRequest)
+        throws RecommendationException
     {
         try {
-            return client.send(aRequest, BodyHandlers.ofString(UTF_8));
+            return aClient.send(aRequest, BodyHandlers.ofString(UTF_8));
         }
         catch (IOException | InterruptedException e) {
             throw new RecommendationException("Error while sending request: " + e.getMessage(), e);
