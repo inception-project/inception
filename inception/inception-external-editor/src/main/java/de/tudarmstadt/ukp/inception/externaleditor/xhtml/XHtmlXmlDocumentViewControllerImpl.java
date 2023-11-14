@@ -22,6 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
@@ -77,6 +78,7 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String HTML = "html";
     private static final String BODY = "body";
     private static final String HEAD = "head";
+    private static final String P = "p";
 
     private final DocumentService documentService;
     private final DocumentImportExportService formatRegistry;
@@ -139,55 +141,99 @@ public class XHtmlXmlDocumentViewControllerImpl
                     .map(qname -> HTML.equals(qname.toLowerCase(Locale.ROOT))) //
                     .orElse(false);
 
-            ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+            var rawHandler = XmlCas2SaxEvents.makeSerializer(out);
+            var sanitizingHandler = applySanitizers(aEditor, doc, rawHandler);
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
                 XmlDocument xml = maybeXmlDocument.get();
-                var sh = applySanitizers(aEditor, doc, ch);
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
-                ch.startDocument();
-                ch.startPrefixMapping("", XHTML_NS_URI);
+                startXHtmlDocument(rawHandler);
+
+                var serializer = new XmlCas2SaxEvents(xml, sanitizingHandler);
                 serializer.process(xml.getRoot());
-                ch.endPrefixMapping("");
-                ch.endDocument();
+
+                endXHtmlDocument(rawHandler);
                 return toResponse(out);
             }
 
-            ch.startDocument();
-            ch.startPrefixMapping("", XHTML_NS_URI);
-            ch.startElement(null, null, HTML, null);
-            ch.startElement(null, null, HEAD, null);
-            for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                    .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
-                    .collect(Collectors.toList())) {
-                renderXmlStylesheet(ch, cssUrl);
-            }
+            startXHtmlDocument(rawHandler);
 
-            ch.endElement(null, null, HEAD);
-            ch.startElement(null, null, BODY, null);
+            rawHandler.startElement(null, null, HTML, null);
 
+            renderHead(doc, rawHandler);
+
+            sanitizingHandler.startElement(null, null, BODY, null);
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
-                String text = cas.getDocumentText();
-                ch.characters(text.toCharArray(), 0, text.length());
+                renderTextContent(cas, sanitizingHandler);
             }
             else {
-                XmlDocument xml = maybeXmlDocument.get();
-                var sh = applySanitizers(aEditor, doc, ch);
-                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, sh);
-                serializer.process(xml.getRoot());
+                renderXmlContent(doc, sanitizingHandler, aEditor, maybeXmlDocument.get());
             }
+            sanitizingHandler.endElement(null, null, BODY);
 
-            ch.endElement(null, null, BODY);
-            ch.endElement(null, null, HTML);
-            ch.endPrefixMapping("");
-            ch.endDocument();
+            rawHandler.endElement(null, null, HTML);
+
+            endXHtmlDocument(rawHandler);
 
             return toResponse(out);
         }
+    }
+
+    private void endXHtmlDocument(ContentHandler ch) throws SAXException
+    {
+        ch.endPrefixMapping("");
+        ch.endDocument();
+    }
+
+    private void startXHtmlDocument(ContentHandler ch) throws SAXException
+    {
+        ch.startDocument();
+        ch.startPrefixMapping("", XHTML_NS_URI);
+    }
+
+    private void renderHead(SourceDocument doc, ContentHandler ch) throws SAXException
+    {
+        ch.startElement(null, null, HEAD, null);
+        for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+                .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
+                .collect(Collectors.toList())) {
+            renderXmlStylesheet(ch, cssUrl);
+        }
+        ch.endElement(null, null, HEAD);
+    }
+
+    private void renderXmlContent(SourceDocument doc, ContentHandler ch, Optional<String> aEditor,
+            XmlDocument aXmlDocument)
+        throws IOException, SAXException
+    {
+        Cas2SaxEvents serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
+        serializer.process(aXmlDocument.getRoot());
+    }
+
+    private void renderTextContent(CAS cas, ContentHandler ch) throws SAXException
+    {
+        var text = cas.getDocumentText().toCharArray();
+        ch.startElement(null, null, P, null);
+        var lineBreakSequenceLength = 0;
+        for (int i = 0; i < text.length; i++) {
+            if (text[i] == '\n') {
+                lineBreakSequenceLength++;
+            }
+            else if (text[i] != '\r') {
+                if (lineBreakSequenceLength > 1) {
+                    ch.endElement(null, null, P);
+                    ch.startElement(null, null, P, null);
+                }
+
+                lineBreakSequenceLength = 0;
+            }
+
+            ch.characters(text, i, 1);
+        }
+        ch.endElement(null, null, P);
     }
 
     @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
