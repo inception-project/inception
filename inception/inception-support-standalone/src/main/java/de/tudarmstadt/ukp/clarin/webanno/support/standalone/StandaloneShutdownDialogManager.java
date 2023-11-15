@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionLocateSettingsProperties;
@@ -100,8 +101,8 @@ public class StandaloneShutdownDialogManager
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent aEvt)
     {
-        log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
-        log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
+        BOOT_LOG.info("Console: " + ((System.console() != null) ? "available" : "not available"));
+        BOOT_LOG.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
 
         boolean forceUi = System.getProperty("forceUi") != null;
 
@@ -117,20 +118,20 @@ public class StandaloneShutdownDialogManager
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             }
             catch (Exception e) {
-                log.info("Unable to set system look and feel", e);
+                log.error("Unable to set system look and feel", e);
             }
 
             invokeLater(() -> showShutdownDialog());
         }
         else {
-            log.info(
+            BOOT_LOG.info(
                     "Running in server environment or from command line: disabling interactive shutdown dialog.");
             if (System.console() != null) {
-                log.info("You can close INCEpTION from the command line by pressing Ctrl+C");
+                BOOT_LOG.info("You can close INCEpTION from the command line by pressing Ctrl+C");
             }
         }
 
-        log.info("You can now access INCEpTION at http://localhost:{}{}", port,
+        BOOT_LOG.info("You can now access INCEpTION at http://localhost:{}{}", port,
                 prependIfMissing(servletContextPath, "/"));
     }
 

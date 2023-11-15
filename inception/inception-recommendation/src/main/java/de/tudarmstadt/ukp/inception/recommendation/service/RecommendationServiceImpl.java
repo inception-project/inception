@@ -39,6 +39,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.lang.Math.max;
@@ -226,7 +227,7 @@ public class RecommendationServiceImpl
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
 
     /*
-     * Marks user/projects to which annotations were added during this request.
+     * Marks users/projects to which annotations were added during this request.
      */
     @SuppressWarnings("serial")
     private static final MetaDataKey<Set<DirtySpot>> DIRTIES = //
@@ -1642,6 +1643,7 @@ public class RecommendationServiceImpl
             // If the recommender is not trainable and not sensitive to annotations,
             // we can actually re-use the predictions.
             if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
+                    && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
                 inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,

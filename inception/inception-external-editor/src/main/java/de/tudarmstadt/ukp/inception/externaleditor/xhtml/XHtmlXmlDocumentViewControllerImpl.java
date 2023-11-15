@@ -163,7 +163,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             renderHead(doc, rawHandler);
 
-            sanitizingHandler.startElement(null, null, BODY, null);
+            rawHandler.startElement(null, null, BODY, null);
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
@@ -172,7 +172,7 @@ public class XHtmlXmlDocumentViewControllerImpl
             else {
                 renderXmlContent(doc, sanitizingHandler, aEditor, maybeXmlDocument.get());
             }
-            sanitizingHandler.endElement(null, null, BODY);
+            rawHandler.endElement(null, null, BODY);
 
             rawHandler.endElement(null, null, HTML);
 
