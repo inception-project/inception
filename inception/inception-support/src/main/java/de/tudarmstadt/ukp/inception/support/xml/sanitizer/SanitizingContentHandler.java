@@ -163,13 +163,13 @@ public class SanitizingContentHandler
 
         if (stack.isEmpty()) {
             if (policies.isDebug() && log.isDebugEnabled()) {
-                log.debug("Masked elements: {}", maskedElements.stream() //
+                log.debug("[{}] Masked elements: {}", policies.getName(), maskedElements.stream() //
                         .map(QName::toString) //
                         .sorted() //
                         .collect(toList()));
                 for (var element : maskedAttributes.keySet().stream()
                         .sorted(comparing(QName::getLocalPart)).collect(toList())) {
-                    log.debug("Masked attributes on {}: {}", element,
+                    log.debug("[{}] Masked attributes on {}: {}", policies.getName(), element,
                             maskedAttributes.get(element).stream().map(QName::toString) //
                                     .sorted() //
                                     .collect(toList()));
