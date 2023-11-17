@@ -21,31 +21,69 @@
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.custom-xml.enabled` to the `settings.properties` file.
 ====
 
-Custom XML document support allows defining own XML annotation formats that can be displayed as formatted documents in HTML-based editors (e.g. the Apache Annotator editor or the RecogitoJS editor). Custom XML formats are based on the <<sect_formats_xml>> format support. They are defined by creating a sub-folder `xml-formats` in the application home direcotry. Within that folder, another folder is created for each custom XML format. The name of the folder is used as part of the format identifier. Within this per-format folder, a file called `plugin.json` need to be created with the following content:
+Custom XML document support allows defining own XML annotation formats that can be displayed as formatted documents in HTML-based editors (e.g. the Apache Annotator editor or the RecogitoJS editor). 
+
+The custom XML document support has the goal to provide means of suitably formatting and rendering XML documents in the browser. It does **not** aim at being able to extract potential annotations from the XML document and making them accessible and editable as annotations within {application-name}. It only offers support for **importing** custom XML documents, but not for exporting them. To **export** the annotated document, another format such as <<sect_formats_uimaxmi>> has to be used. 
+
+Custom XML formats are based on the <<sect_formats_xml>> format support. They are defined by creating a sub-folder `xml-formats` in the application home direcotry. Within that folder, another folder is created for each custom XML format. The name of the folder is used as part of the format identifier. Within this per-format folder, a file called `plugin.json` need to be created with the following content:
 
 .Example `plugin.json` for custom XML format
 [source,json]
 ----
 {
-  "name": "XML dialog format (external)",
+  "name": "TTML format (external)",
   "stylesheets": [ 
-    "my-styles.css"
+    "styles.css"
   ]
 }
 ----
 
 The `plugin.json` file should define one or more CSS stylesheets that define how elements of the custom XML format should be rendered on screen.
 
+.Example `styles.css` for custom XML format
+[source,css]
+----
+@namespace tt url('http://www.w3.org/ns/ttml');
+ 
+tt|p {
+  display: block;
+  border-color: gray;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 0.5em;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+
+  &::before {
+    border-radius: 0.5em 0em 0em 0.5em;
+    display: inline-block;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    margin-right: 0.5em;
+    background-color: lightgray;
+    min-width: 10em;
+    content: attr(agent) '\a0';
+  }
+}
+----
+
 Additionally, a `policy.yaml` file should be present in the format folder. It defines how the elements of the XML should be handled when rendering the documents for display in the browser.
+
 
 .Example `policy.yaml` for custom XML format
 [source,yaml]
 ----
-name: Transcription Content Policies
+name: TTML Content Policies
 version: 1.0
 policies:
-  - { elements: [ "dialog", "turn" ], action: "PASS" }
-  - { attributes: ["id", "speaker"], action: "PASS" }
+  - elements: [ 
+      "{http://www.w3.org/ns/ttml}tt", 
+      "{http://www.w3.org/ns/ttml}body", 
+      "{http://www.w3.org/ns/ttml}div", 
+      "{http://www.w3.org/ns/ttml}p" ]
+    action: "PASS"
+  - attributes: ["{http://www.w3.org/ns/ttml#metadata}agent"]
+    action: "PASS_NO_NS"
 ----
 
 An example XML file that could be imported with such a format would look like this:
@@ -53,10 +91,24 @@ An example XML file that could be imported with such a format would look like th
 .Example `dialog.xml` file
 [source,json]
 ----
-<dialog>
-  <turn id="1" speaker="Mary">Hi, how are you?</turn>
-  <turn id="2" speaker="Joe">I am fine, how are you?</turn>
-</dialog>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xml:lang="en">
+  <head>
+    <metadata>
+      <ttm:agent xml:id="speaker1">Speaker 1</ttm:agent>
+      <ttm:agent xml:id="speaker2">Speaker 2</ttm:agent>
+    </metadata>
+  </head>
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:05.000" ttm:agent="speaker1">
+        Hello, this is the first speaker.
+      </p>
+      <p begin="00:00:06.000" end="00:00:10.000" ttm:agent="speaker2">
+        And this is the second speaker.
+      </p>
+    </div>
+  </body>
+</tt>
 ----
 
 NOTE: When exporting a project that contains documents using a custom XML format and importing 
