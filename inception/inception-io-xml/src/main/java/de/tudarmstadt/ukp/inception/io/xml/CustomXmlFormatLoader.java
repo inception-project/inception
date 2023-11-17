@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.config;
+package de.tudarmstadt.ukp.inception.io.xml;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonStream;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
@@ -23,15 +23,14 @@ import static java.nio.file.Files.isDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
+import org.apache.wicket.protocol.http.WebApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -39,44 +38,39 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.PathResource;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
 
-@ConditionalOnWebApplication
 @Configuration
-public class ExternalEditorLoader
-    implements BeanDefinitionRegistryPostProcessor, WebMvcConfigurer
+public class CustomXmlFormatLoader
+    implements BeanDefinitionRegistryPostProcessor
 {
-    public static final String PLUGINS_EDITOR_BASE_URL = "/plugins/editor/";
+    public static final String PLUGINS_XML_FORMAT_BASE_NAME = "plugins/xml-format/";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private List<ExternalEditorPluginDescripion> descriptions = Collections.emptyList();
+    private List<CustomXmlFormatPluginDescripion> descriptions = Collections.emptyList();
+
+    private ConfigurableListableBeanFactory factory;
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory aFactory)
         throws BeansException
     {
-        // Nothing to do
+        factory = aFactory;
     }
 
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry aRegistry)
         throws BeansException
     {
-        List<Path> pluginJsonFiles = scanEditorPluginFolders();
+        var pluginJsonFiles = scanEditorPluginFolders();
         descriptions = new ArrayList<>();
 
-        for (Path pluginJsonFile : pluginJsonFiles) {
-            try (InputStream is = Files.newInputStream(pluginJsonFile)) {
-                ExternalEditorPluginDescripion desc = fromJsonStream(
-                        ExternalEditorPluginDescripion.class, is);
+        for (var pluginJsonFile : pluginJsonFiles) {
+            try (var is = Files.newInputStream(pluginJsonFile)) {
+                var desc = fromJsonStream(CustomXmlFormatPluginDescripion.class, is);
                 desc.setId(pluginJsonFile.getParent().getFileName().toString());
                 desc.setBasePath(pluginJsonFile.getParent());
 
@@ -84,53 +78,46 @@ public class ExternalEditorLoader
                 descriptions.add(desc);
             }
             catch (IOException e) {
-                log.error("Error loading editor plugin description from [{}]", pluginJsonFile, e);
+                LOG.error("Error loading editor plugin description from [{}]", pluginJsonFile, e);
             }
         }
     }
 
     private void registerEditorPlugin(BeanDefinitionRegistry aRegistry,
-            ExternalEditorPluginDescripion aDesc)
+            CustomXmlFormatPluginDescripion aDesc)
     {
-        BOOT_LOG.info("Loading editor plugin: {}", aDesc.getName());
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
-                ExternalAnnotationEditorFactory.class,
-                () -> new ExternalAnnotationEditorFactory(aDesc));
-        aRegistry.registerBeanDefinition("external-editor-" + aDesc.getId(),
+        BOOT_LOG.info("Loading custom XML format plugin: {}", aDesc.getName());
+        var builder = BeanDefinitionBuilder.genericBeanDefinition(CustomXmlFormatFactory.class,
+                () -> {
+                    var wicketApplication = factory.getBean(WebApplication.class);
+                    return new CustomXmlFormatFactory(aDesc, wicketApplication);
+                });
+        aRegistry.registerBeanDefinition("custom-xml-format-" + aDesc.getId(),
                 builder.getBeanDefinition());
     }
 
     private List<Path> scanEditorPluginFolders()
     {
-        File editorPlugins = new File(SettingsUtil.getApplicationHome(), "editors");
+        File editorPlugins = new File(SettingsUtil.getApplicationHome(), "xml-formats");
         if (!editorPlugins.exists()) {
             return Collections.emptyList();
         }
 
-        List<Path> pluginJsonFiles = new ArrayList<>();
-        try (Stream<Path> fileStream = Files.list(editorPlugins.toPath())) {
-            Iterator<Path> pi = fileStream.filter(p -> isDirectory(p)).iterator();
+        var pluginJsonFiles = new ArrayList<Path>();
+        try (var fileStream = Files.list(editorPlugins.toPath())) {
+            var pi = fileStream.filter(p -> isDirectory(p)).iterator();
             while (pi.hasNext()) {
-                Path subdir = pi.next();
-                Path pluginJsonFile = subdir.resolve("plugin.json");
+                var subdir = pi.next();
+                var pluginJsonFile = subdir.resolve("plugin.json");
                 if (Files.isRegularFile(pluginJsonFile)) {
                     pluginJsonFiles.add(pluginJsonFile);
                 }
             }
         }
         catch (IOException e) {
-            log.error("Error scanning for editor plugins", e);
+            LOG.error("Error scanning for custom XML format plugins", e);
         }
 
         return pluginJsonFiles;
-    }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
-    {
-        for (ExternalEditorPluginDescripion desc : descriptions) {
-            aRegistry.addResourceHandler(PLUGINS_EDITOR_BASE_URL + desc.getId() + "/**")
-                    .addResourceLocations(new PathResource(desc.getBasePath()));
-        }
     }
 }
