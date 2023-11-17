@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.config;
+package de.tudarmstadt.ukp.inception.io.xml;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -24,17 +24,14 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class ExternalEditorPluginDescripion
+public class CustomXmlFormatPluginDescripion
     implements Serializable
 {
-    private static final long serialVersionUID = 4400329006838299692L;
+    private static final long serialVersionUID = 7985647290137191912L;
 
     private String id;
-    private String factory;
     private String name;
-    private String view;
 
-    private List<String> scripts = Collections.emptyList();
     private List<String> stylesheets = Collections.emptyList();
 
     private @JsonIgnore Path basePath;
@@ -67,36 +64,6 @@ public class ExternalEditorPluginDescripion
     public void setName(String aName)
     {
         name = aName;
-    }
-
-    public String getView()
-    {
-        return view;
-    }
-
-    public void setView(String aView)
-    {
-        view = aView;
-    }
-
-    public String getFactory()
-    {
-        return factory;
-    }
-
-    public void setFactory(String aImplementation)
-    {
-        factory = aImplementation;
-    }
-
-    public List<String> getScripts()
-    {
-        return scripts;
-    }
-
-    public void setScripts(List<String> aScripts)
-    {
-        scripts = aScripts;
     }
 
     public List<String> getStylesheets()

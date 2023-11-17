@@ -30,7 +30,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -88,7 +88,7 @@ public interface DocumentImportExportService
 
     FormatSupport getFallbackFormat();
 
-    default List<CssResourceReference> getFormatCssStylesheets(SourceDocument aDoc)
+    default List<ResourceReference> getFormatCssStylesheets(SourceDocument aDoc)
     {
         Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
