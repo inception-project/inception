@@ -38,10 +38,12 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
+@ConditionalOnProperty(prefix = "format.custom-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Configuration
 public class CustomXmlFormatLoader
     implements BeanDefinitionRegistryPostProcessor

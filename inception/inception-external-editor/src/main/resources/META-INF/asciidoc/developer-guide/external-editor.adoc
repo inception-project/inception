@@ -50,6 +50,7 @@ for any type of editor plugin:
   ]
 }
 ----
+
 == Document-rendering editors
 
 A document-rendering editor loads the document and annotation data from the backend and then renders
