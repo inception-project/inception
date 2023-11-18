@@ -76,7 +76,7 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("What do you see in the following text?\n\n{{ text }}");
-        traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
+        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
@@ -100,7 +100,7 @@ class OllamaRecommenderTest
         traits.setPrompt(
                 "Identify all even numbers in the following list and return them as JSON.\n\n{{ text }}");
         traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
+        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
@@ -124,7 +124,7 @@ class OllamaRecommenderTest
         traits.setModel("mistral");
         traits.setPrompt("Identify all named entities in the following text.\n\n{{ text }}");
         traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
+        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
@@ -149,7 +149,7 @@ class OllamaRecommenderTest
         traits.setPrompt(
                 "Identify all politicians in the following text and return them as JSON.\n\n{{ text }}");
         traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setProcessingMode(ProcessingMode.PER_DOCUMENT);
+        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());

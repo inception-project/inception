@@ -81,7 +81,7 @@ public class OllamaRecommenderTraitsEditor
                 settings.setPrompt(preset.getPrompt());
                 settings.setExtractionMode(preset.getExtractionMode());
                 settings.setFormat(preset.getFormat());
-                settings.setProcessingMode(preset.getProcessingMode());
+                settings.setPromptingMode(preset.getPromptingMode());
                 settings.setRaw(preset.isRaw());
             }
             _target.add(form);
@@ -92,7 +92,7 @@ public class OllamaRecommenderTraitsEditor
         form.add(new TextField<String>("model"));
         form.add(new TextArea<String>("prompt"));
         form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
-        form.add(new ProcessingModeSelect("processingMode"));
+        form.add(new PromptingModeSelect("promptingMode"));
         form.add(new ExtractionModeSelect("extractionMode"));
         form.add(new OllamaResponseFormatSelect("format"));
 

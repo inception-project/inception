@@ -1,6 +1,6 @@
 - name: Extract named entities from sentenes (mistral)
-  processingMode: per-sentence
-  json: true
+  promptingMode: per-sentence
+  format: json
   extractionMode: mentions-from-json
   raw: true
   prompt: |-
@@ -9,7 +9,7 @@
     {{ text }}</s>
 
 - name: Summarize each sentence in a word
-  processingMode: per-sentence
+  promptingMode: per-sentence
   extractionMode: response-as-label
   prompt: |-
     Summarize the following sentence in a single word.
@@ -19,7 +19,7 @@
     ```
 
 - name: Summarize text
-  processingMode: per-document
+  promptingMode: per-document
   extractionMode: response-as-label
   prompt: |-
     Briefly describe what the following text is about.
@@ -29,7 +29,7 @@
     ```
 
 - name: Disambiguate in sentence
-  processingMode: per-annotation
+  promptingMode: per-annotation
   extractionMode: response-as-label
   prompt: |-
     Very briefly describe the meaning of `{{ text }}` in the following sentence.

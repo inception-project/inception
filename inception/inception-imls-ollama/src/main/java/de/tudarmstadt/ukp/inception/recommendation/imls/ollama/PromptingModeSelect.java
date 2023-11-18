@@ -23,17 +23,17 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 
-public class ProcessingModeSelect
-    extends DropDownChoice<ProcessingMode>
+public class PromptingModeSelect
+    extends DropDownChoice<PromptingMode>
 {
     private static final long serialVersionUID = -5955756044313687862L;
 
-    public ProcessingModeSelect(String aId)
+    public PromptingModeSelect(String aId)
     {
         super(aId);
     }
 
-    public ProcessingModeSelect(String aId, IModel<ProcessingMode> aModel)
+    public PromptingModeSelect(String aId, IModel<PromptingMode> aModel)
     {
         super(aId);
         setModel(aModel);
@@ -45,6 +45,6 @@ public class ProcessingModeSelect
         super.onInitialize();
 
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(ProcessingMode.values()));
+        setChoices(asList(PromptingMode.values()));
     }
 }

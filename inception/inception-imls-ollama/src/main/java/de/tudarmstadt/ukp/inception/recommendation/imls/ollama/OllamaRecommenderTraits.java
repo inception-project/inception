@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
 
@@ -39,9 +44,11 @@ public class OllamaRecommenderTraits
 
     private OllamaGenerateResponseFormat format;
 
-    private ProcessingMode processingMode = ProcessingMode.PER_ANNOTATION;
+    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
 
     private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
+
+    private @JsonInclude(NON_EMPTY) Map<String, Object> options = new HashMap<String, Object>();
 
     public String getUrl()
     {
@@ -73,14 +80,14 @@ public class OllamaRecommenderTraits
         prompt = aPrompt;
     }
 
-    public ProcessingMode getProcessingMode()
+    public PromptingMode getPromptingMode()
     {
-        return processingMode;
+        return promptingMode;
     }
 
-    public void setProcessingMode(ProcessingMode aProcessingMode)
+    public void setPromptingMode(PromptingMode aPromptingMode)
     {
-        processingMode = aProcessingMode;
+        promptingMode = aPromptingMode;
     }
 
     public boolean isRaw()

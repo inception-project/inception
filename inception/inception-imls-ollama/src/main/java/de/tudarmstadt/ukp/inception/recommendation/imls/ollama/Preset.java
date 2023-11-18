@@ -39,7 +39,7 @@ public class Preset
 
     private OllamaGenerateResponseFormat format;
 
-    private ProcessingMode processingMode = ProcessingMode.PER_ANNOTATION;
+    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
 
     private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
 
@@ -73,14 +73,14 @@ public class Preset
         prompt = aPrompt;
     }
 
-    public ProcessingMode getProcessingMode()
+    public PromptingMode getPromptingMode()
     {
-        return processingMode;
+        return promptingMode;
     }
 
-    public void setProcessingMode(ProcessingMode aProcessingMode)
+    public void setPromptingMode(PromptingMode aPromptingMode)
     {
-        processingMode = aProcessingMode;
+        promptingMode = aPromptingMode;
     }
 
     public boolean isRaw()

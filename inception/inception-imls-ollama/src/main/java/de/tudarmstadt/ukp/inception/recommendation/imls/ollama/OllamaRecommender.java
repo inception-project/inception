@@ -91,7 +91,7 @@ public class OllamaRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        switch (traits.getProcessingMode()) {
+        switch (traits.getPromptingMode()) {
         case PER_ANNOTATION:
             return predictPerAnnotation(aContext, aCas, aBegin, aEnd);
         case PER_SENTENCE:
@@ -100,7 +100,7 @@ public class OllamaRecommender
             return predictPerDocument(aContext, aCas, aBegin, aEnd);
         default:
             throw new RecommendationException(
-                    "Unsupported mode [" + traits.getProcessingMode() + "]");
+                    "Unsupported mode [" + traits.getPromptingMode() + "]");
         }
     }
 
