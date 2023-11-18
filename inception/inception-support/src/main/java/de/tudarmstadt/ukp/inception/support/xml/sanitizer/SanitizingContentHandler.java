@@ -252,6 +252,10 @@ public class SanitizingContentHandler
         case PASS:
             aSanitizedAttributes.addAttribute(uri, localName, qName, type, value);
             break;
+        case PASS_NO_NS:
+            aSanitizedAttributes.addAttribute("", attribute.getLocalPart(),
+                    attribute.getLocalPart(), type, value);
+            break;
         case DROP:
             if (policies.isDebug()) {
                 attribute = maskAttribute(aElement, attribute);
