@@ -23,10 +23,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @ConditionalOnWebApplication
 @Configuration

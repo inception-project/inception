@@ -15,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.project;
+package de.tudarmstadt.ukp.inception.project.api.event;
 
-import java.io.IOException;
-import java.util.List;
+import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public interface ProjectInitializer
+public class BeforeProjectRemovedEvent
+    extends ApplicationEvent
 {
-    default boolean applyByDefault()
+    private static final long serialVersionUID = -1167656656803093660L;
+
+    private final Project project;
+
+    public BeforeProjectRemovedEvent(Object aSource, Project aProject)
     {
-        return true;
+        super(aSource);
+        project = aProject;
     }
 
-    String getName();
-
-    boolean alreadyApplied(Project aProject);
-
-    List<Class<? extends ProjectInitializer>> getDependencies();
-
-    void configure(Project aProject) throws IOException;
+    public Project getProject()
+    {
+        return project;
+    }
 }

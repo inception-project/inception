@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_USERNAMES;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static java.lang.Math.ceil;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
