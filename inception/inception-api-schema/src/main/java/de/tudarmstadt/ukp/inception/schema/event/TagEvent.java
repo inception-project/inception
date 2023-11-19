@@ -15,17 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.schema.event;
+
+import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class TagDeletedEvent
-    extends TagEvent
+public class TagEvent
+    extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
-    private static final long serialVersionUID = -403388869161637755L;
+    private static final long serialVersionUID = 8243752811013952530L;
 
-    public TagDeletedEvent(Object aSource, Tag aTag)
+    private final Tag tag;
+
+    public TagEvent(Object aSource, Tag aTag)
     {
-        super(aSource, aTag);
+        super(aSource);
+        tag = aTag;
+    }
+
+    public Tag getTag()
+    {
+        return tag;
     }
 }

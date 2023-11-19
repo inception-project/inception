@@ -15,17 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.schema.event;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import org.springframework.context.ApplicationEvent;
 
-public class TagUpdatedEvent
-    extends TagEvent
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public class LayerConfigurationChangedEvent
+    extends ApplicationEvent
 {
-    private static final long serialVersionUID = -8502361470266981927L;
+    private static final long serialVersionUID = -6859433860519240811L;
 
-    public TagUpdatedEvent(Object aSource, Tag aTag)
+    private final Project project;
+
+    public LayerConfigurationChangedEvent(Object aSource, Project aProject)
     {
-        super(aSource, aTag);
+        super(aSource);
+        project = aProject;
+    }
+
+    public Project getProject()
+    {
+        return project;
     }
 }

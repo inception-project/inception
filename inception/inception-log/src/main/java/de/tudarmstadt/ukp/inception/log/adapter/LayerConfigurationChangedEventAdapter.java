@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.event.LayerConfigurationChangedEvent;
 
 @Component
 public class LayerConfigurationChangedEventAdapter

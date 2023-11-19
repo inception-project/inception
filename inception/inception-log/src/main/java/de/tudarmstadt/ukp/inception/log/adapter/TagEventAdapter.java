@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.TagDetails;
+import de.tudarmstadt.ukp.inception.schema.event.TagEvent;
 
 @Component
 public class TagEventAdapter
