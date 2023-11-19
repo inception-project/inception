@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml;
 
+import static de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader.CUSTOM_XML_FORMAT_PREFIX;
+import static de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader.PLUGINS_XML_FORMAT_BASE_NAME;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.IOException;
@@ -76,8 +78,7 @@ public class CustomXmlFormatFactory
                 continue;
             }
             var ref = new FileSystemResourceReference(
-                    CustomXmlFormatLoader.PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/"
-                            + stylesheet,
+                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + stylesheet,
                     stylesheetPath);
             wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
             stylesheetReferences.add(ref);
@@ -87,7 +88,7 @@ public class CustomXmlFormatFactory
     @Override
     public String getId()
     {
-        return description.getId();
+        return CUSTOM_XML_FORMAT_PREFIX + description.getId();
     }
 
     @Override

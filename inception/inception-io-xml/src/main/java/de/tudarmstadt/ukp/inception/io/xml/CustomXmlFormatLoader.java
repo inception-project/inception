@@ -48,6 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 public class CustomXmlFormatLoader
     implements BeanDefinitionRegistryPostProcessor
 {
+    public static final String CUSTOM_XML_FORMAT_PREFIX = "custom-xml-format-";
+
     public static final String PLUGINS_XML_FORMAT_BASE_NAME = "plugins/xml-format/";
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -94,7 +96,7 @@ public class CustomXmlFormatLoader
                     var wicketApplication = factory.getBean(WebApplication.class);
                     return new CustomXmlFormatFactory(aDesc, wicketApplication);
                 });
-        aRegistry.registerBeanDefinition("custom-xml-format-" + aDesc.getId(),
+        aRegistry.registerBeanDefinition(CUSTOM_XML_FORMAT_PREFIX + aDesc.getId(),
                 builder.getBeanDefinition());
     }
 
