@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.guidelines;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.nio.file.Files.newDirectoryStream;
 import static org.apache.commons.io.IOUtils.copyLarge;
 

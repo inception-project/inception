@@ -15,42 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.project.api;
 
-import org.springframework.context.ApplicationEvent;
+import java.io.IOException;
+import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
-public class ProjectStateChangedEvent
-    extends ApplicationEvent
+public interface ProjectInitializer
 {
-    private static final long serialVersionUID = -8212153885477218226L;
-
-    private Project project;
-    private ProjectState previousState;
-    private ProjectState newState;
-
-    public ProjectStateChangedEvent(Object aSource, Project aProject, ProjectState aPreviousState)
+    default boolean applyByDefault()
     {
-        super(aSource);
-        project = aProject;
-        previousState = aPreviousState;
-        newState = aProject.getState();
+        return true;
     }
 
-    public Project getProject()
-    {
-        return project;
-    }
+    String getName();
 
-    public ProjectState getPreviousState()
-    {
-        return previousState;
-    }
+    boolean alreadyApplied(Project aProject);
 
-    public ProjectState getNewState()
-    {
-        return newState;
-    }
+    List<Class<? extends ProjectInitializer>> getDependencies();
+
+    void configure(Project aProject) throws IOException;
 }

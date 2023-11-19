@@ -15,27 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.project.api.event;
 
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
-public class BeforeProjectRemovedEvent
+public class ProjectStateChangedEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = -1167656656803093660L;
+    private static final long serialVersionUID = -8212153885477218226L;
 
-    private final Project project;
+    private Project project;
+    private ProjectState previousState;
+    private ProjectState newState;
 
-    public BeforeProjectRemovedEvent(Object aSource, Project aProject)
+    public ProjectStateChangedEvent(Object aSource, Project aProject, ProjectState aPreviousState)
     {
         super(aSource);
         project = aProject;
+        previousState = aPreviousState;
+        newState = aProject.getState();
     }
 
     public Project getProject()
     {
         return project;
+    }
+
+    public ProjectState getPreviousState()
+    {
+        return previousState;
+    }
+
+    public ProjectState getNewState()
+    {
+        return newState;
     }
 }

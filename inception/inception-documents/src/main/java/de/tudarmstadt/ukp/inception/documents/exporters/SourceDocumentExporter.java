@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.documents.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.createDirectory;
 import static java.util.function.Function.identity;

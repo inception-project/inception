@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.schema.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
@@ -25,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.INCOMING;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.OUTGOING;

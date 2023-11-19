@@ -15,46 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
-
-import java.util.zip.ZipFile;
+package de.tudarmstadt.ukp.inception.project.api.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-@Deprecated
-public class ProjectImportEvent
+public abstract class ProjectPermissionsEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 5604222911753768415L;
+    private static final long serialVersionUID = 7855947621810920967L;
 
-    private final ZipFile zip;
-    private final ExportedProject exportedProject;
     private final Project project;
 
-    public ProjectImportEvent(Object aSource, ZipFile aZip, ExportedProject aExportedProject,
-            Project aProject)
+    public ProjectPermissionsEvent(Object aSource, Project aProject)
     {
         super(aSource);
-        zip = aZip;
-        exportedProject = aExportedProject;
         project = aProject;
     }
 
     public Project getProject()
     {
         return project;
-    }
-
-    public ZipFile getZip()
-    {
-        return zip;
-    }
-
-    public de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject getExportedProject()
-    {
-        return exportedProject;
     }
 }
