@@ -15,43 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.documents.event;
 
+import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 
-public class DocumentStateChangedEvent
+public class AfterCasWrittenEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = -8212153885477218226L;
+    private static final long serialVersionUID = 686641613168415460L;
 
-    private SourceDocument document;
-    private SourceDocumentState previousState;
-    private SourceDocumentState newState;
+    private final AnnotationDocument document;
+    private final CAS cas;
 
-    public DocumentStateChangedEvent(Object aSource, SourceDocument aDocument,
-            SourceDocumentState aPreviousState)
+    public AfterCasWrittenEvent(Object aSource, AnnotationDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
-        previousState = aPreviousState;
-        newState = aDocument.getState();
+        cas = aCas;
     }
 
-    public SourceDocument getDocument()
+    public AnnotationDocument getDocument()
     {
         return document;
     }
 
-    public SourceDocumentState getPreviousState()
+    public CAS getCas()
     {
-        return previousState;
-    }
-
-    public SourceDocumentState getNewState()
-    {
-        return newState;
+        return cas;
     }
 }

@@ -15,35 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.documents.event;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class AfterDocumentCreatedEvent
+public class BeforeDocumentRemovedEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 2367163371168212003L;
+    private static final long serialVersionUID = 2978609733854059009L;
 
     private final SourceDocument document;
-    private final CAS cas;
 
-    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, CAS aCas)
+    public BeforeDocumentRemovedEvent(Object aSource, SourceDocument aDocument)
     {
         super(aSource);
         document = aDocument;
-        cas = aCas;
     }
 
     public SourceDocument getDocument()
     {
         return document;
-    }
-
-    public CAS getCas()
-    {
-        return cas;
     }
 }

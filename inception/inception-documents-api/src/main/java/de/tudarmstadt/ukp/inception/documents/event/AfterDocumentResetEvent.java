@@ -15,27 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.documents.event;
 
+import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class BeforeDocumentRemovedEvent
+public class AfterDocumentResetEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
-    private static final long serialVersionUID = 2978609733854059009L;
+    private static final long serialVersionUID = 686641613168415460L;
 
-    private final SourceDocument document;
+    private final AnnotationDocument document;
+    private final CAS cas;
 
-    public BeforeDocumentRemovedEvent(Object aSource, SourceDocument aDocument)
+    public AfterDocumentResetEvent(Object aSource, AnnotationDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
+        cas = aCas;
     }
 
-    public SourceDocument getDocument()
+    public AnnotationDocument getDocument()
     {
         return document;
+    }
+
+    public CAS getCas()
+    {
+        return cas;
     }
 }

@@ -57,7 +57,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;

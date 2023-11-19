@@ -15,29 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.documents.event;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class AfterCasWrittenEvent
+public class AfterDocumentCreatedEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 686641613168415460L;
+    private static final long serialVersionUID = 2367163371168212003L;
 
-    private final AnnotationDocument document;
+    private final SourceDocument document;
     private final CAS cas;
 
-    public AfterCasWrittenEvent(Object aSource, AnnotationDocument aDocument, CAS aCas)
+    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
         cas = aCas;
     }
 
-    public AnnotationDocument getDocument()
+    public SourceDocument getDocument()
     {
         return document;
     }
