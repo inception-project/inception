@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectImportEvent;
 
 @Deprecated
 @Component

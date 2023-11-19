@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.inception.project.api.event;
 
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public abstract class ProjectPermissionsEvent
+public class AfterProjectCreatedEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 7855947621810920967L;
+    private static final long serialVersionUID = -5773307457064819019L;
 
     private final Project project;
 
-    public ProjectPermissionsEvent(Object aSource, Project aProject)
+    public AfterProjectCreatedEvent(Object aSource, Project aProject)
     {
         super(aSource);
         project = aProject;

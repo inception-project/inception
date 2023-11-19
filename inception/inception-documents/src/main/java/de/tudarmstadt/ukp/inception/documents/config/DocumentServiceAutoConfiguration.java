@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
@@ -34,6 +33,7 @@ import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @Configuration
 public class DocumentServiceAutoConfiguration

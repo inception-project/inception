@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**

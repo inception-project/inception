@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.event;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;

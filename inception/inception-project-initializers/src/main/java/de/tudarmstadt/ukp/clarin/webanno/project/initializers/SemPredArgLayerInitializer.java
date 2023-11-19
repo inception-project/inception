@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**

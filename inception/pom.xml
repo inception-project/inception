@@ -157,6 +157,7 @@
     <module>inception-model-vdoc</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
+    <module>inception-project-api</module>
     <module>inception-project-initializers</module>
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>

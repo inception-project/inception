@@ -34,7 +34,6 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 
 public class MenuBar

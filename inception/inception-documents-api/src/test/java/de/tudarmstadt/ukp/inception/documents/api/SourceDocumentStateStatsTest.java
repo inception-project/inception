@@ -29,8 +29,6 @@ import java.util.Random;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
-
 public class SourceDocumentStateStatsTest
 {
     Random rnd = new Random();
