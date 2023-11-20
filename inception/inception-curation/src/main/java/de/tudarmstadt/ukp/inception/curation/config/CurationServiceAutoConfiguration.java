@@ -28,8 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
 import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
