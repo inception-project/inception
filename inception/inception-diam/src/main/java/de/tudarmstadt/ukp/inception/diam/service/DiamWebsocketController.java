@@ -57,7 +57,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -74,6 +73,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
@@ -190,13 +190,13 @@ public class DiamWebsocketController
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         sendUpdate(aEvent.getDocument());
     }
 
     @EventListener
-    public void onRecommendationRejected(TransientAnnotationStateChangedEvent aEvent)
+    public void onTransientAnnotationStateChanged(TransientAnnotationStateChangedEvent aEvent)
     {
         var doc = aEvent.getDocument();
         sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);
