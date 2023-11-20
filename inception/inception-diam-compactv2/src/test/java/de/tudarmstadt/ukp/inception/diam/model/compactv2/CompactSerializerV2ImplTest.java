@@ -23,8 +23,10 @@ import static org.assertj.core.api.Assertions.contentOf;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
@@ -39,9 +41,13 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
+@ExtendWith(MockitoExtension.class)
 public class CompactSerializerV2ImplTest
 {
+    private @Mock AnnotationSchemaProperties annotationSchemaProperties;
+    
     @Test
     void thatSerializationWorks() throws Exception
     {
@@ -83,7 +89,7 @@ public class CompactSerializerV2ImplTest
         var req = RenderRequest.builder() //
                 .withWindow(0, Integer.MAX_VALUE) //
                 .build();
-        var sut = new CompactSerializerV2Impl(new AnnotationSchemaPropertiesImpl());
+        var sut = new CompactSerializerV2Impl(annotationSchemaProperties);
         var cdoc = sut.render(vdoc, req);
         var actual = JSONUtil.toPrettyJsonString(cdoc);
 

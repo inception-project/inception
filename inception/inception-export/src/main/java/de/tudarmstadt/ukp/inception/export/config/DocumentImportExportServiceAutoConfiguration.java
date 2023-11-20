@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectSettingsExporter;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 // @EnableConfigurationProperties({ DocumentImportExportServicePropertiesImpl.class })

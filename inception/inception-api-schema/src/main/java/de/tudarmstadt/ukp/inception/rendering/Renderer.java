@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils.isRequiredFeatureMissing;
+import static de.tudarmstadt.ukp.inception.schema.api.validation.ValidationUtils.isRequiredFeatureMissing;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.ArrayList;
@@ -40,8 +40,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * Type renderer for span, arc, and chain annotations

@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior.Mode
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 
 public class RadioGroupStringFeatureEditor
     extends TextFeatureEditorBase

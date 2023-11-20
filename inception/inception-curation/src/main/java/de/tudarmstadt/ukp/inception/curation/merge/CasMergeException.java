@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 /**
  * Thrown if there is a problem during CAS merge operation.

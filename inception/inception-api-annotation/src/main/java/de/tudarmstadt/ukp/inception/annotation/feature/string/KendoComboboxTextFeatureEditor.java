@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.event.TagEvent;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
 
 /**
  * String feature editor using a Kendo ComboBox field.

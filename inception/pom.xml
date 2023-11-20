@@ -171,7 +171,6 @@
     <module>inception-ui-core</module>
     <module>inception-log</module>
     <module>inception-scheduling</module>
-    <module>inception-api</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
     <module>inception-annotation-storage-api</module>

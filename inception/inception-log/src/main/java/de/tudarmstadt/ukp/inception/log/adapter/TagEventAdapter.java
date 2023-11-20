@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.TagDetails;
-import de.tudarmstadt.ukp.inception.schema.event.TagEvent;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
 
 @Component
 public class TagEventAdapter
