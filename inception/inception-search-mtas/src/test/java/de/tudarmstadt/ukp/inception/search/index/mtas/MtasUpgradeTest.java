@@ -58,9 +58,7 @@ import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiF
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
@@ -190,12 +188,6 @@ public class MtasUpgradeTest
             var props = new RepositoryProperties();
             props.setPath(new File(WORK_DIR));
             return props;
-        }
-
-        @Bean
-        AnnotationSchemaProperties annotationSchemaProperties()
-        {
-            return new AnnotationSchemaPropertiesImpl();
         }
 
         @Bean

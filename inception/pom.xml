@@ -180,7 +180,7 @@
     <module>inception-documents</module>
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
-    <module>inception-api-schema</module>
+    <module>inception-schema-api</module>
     <module>inception-export</module>
     <module>inception-export-api</module>
     <module>inception-diag</module>
