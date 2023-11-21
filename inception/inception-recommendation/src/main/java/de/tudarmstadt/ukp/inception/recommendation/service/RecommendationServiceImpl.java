@@ -39,6 +39,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.lang.Math.max;
@@ -115,15 +116,8 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -149,7 +143,14 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -190,10 +191,10 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * The implementation of the RecommendationService.
@@ -229,7 +230,7 @@ public class RecommendationServiceImpl
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
 
     /*
-     * Marks user/projects to which annotations were added during this request.
+     * Marks users/projects to which annotations were added during this request.
      */
     @SuppressWarnings("serial")
     private static final MetaDataKey<Set<DirtySpot>> DIRTIES = //
@@ -1645,6 +1646,7 @@ public class RecommendationServiceImpl
             // If the recommender is not trainable and not sensitive to annotations,
             // we can actually re-use the predictions.
             if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
+                    && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
                 inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,

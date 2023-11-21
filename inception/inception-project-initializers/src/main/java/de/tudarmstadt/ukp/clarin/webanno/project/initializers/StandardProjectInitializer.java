@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 /**
  * <p>
@@ -50,7 +50,7 @@ public class StandardProjectInitializer
     @Override
     public String getName()
     {
-        return "Everything but the kitchen sink";
+        return "Classic linguistic project";
     }
 
     @Override
@@ -78,6 +78,7 @@ public class StandardProjectInitializer
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of("Comes pre-configured for many linguistic annotation tasks.");
+        return Optional.of("Comes pre-configured for many linguistic annotation tasks. "
+                + "This is closest to the classic WebAnno project setup.");
     }
 }

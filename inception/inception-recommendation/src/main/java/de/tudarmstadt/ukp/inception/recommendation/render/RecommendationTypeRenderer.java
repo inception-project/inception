@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations

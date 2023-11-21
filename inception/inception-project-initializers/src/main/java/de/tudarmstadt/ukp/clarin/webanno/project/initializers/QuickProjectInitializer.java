@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import org.apache.wicket.request.resource.ResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 
 public interface QuickProjectInitializer
     extends ProjectInitializer

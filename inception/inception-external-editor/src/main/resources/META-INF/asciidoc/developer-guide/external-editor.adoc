@@ -35,6 +35,22 @@ for any type of editor plugin:
 * `name`: the human-readable name for the editor
 * `factory`: the JavaScript expression to access the annotation editor factory provided by the plugin
 
+.Example `plugin.json` for external editor
+[source,json]
+----
+{
+  "name": "My Editor (external)",
+  "factory": "MyEditor.factory()",
+  "view": "iframe:cas+xhtml+xml",
+  "scripts": [
+    "dist/MyEditor.min.js" 
+  ],
+  "stylesheets": [
+    "dist/MyEditor.min.css"
+  ]
+}
+----
+
 == Document-rendering editors
 
 A document-rendering editor loads the document and annotation data from the backend and then renders
@@ -48,6 +64,16 @@ For document-rendering editors, the `plugin.json` file offers the following sett
   followed by a path to the HTML file within the plugin. E.g. if a template file `editor.html` is next
   to the `plugin.json` file in the same folder, use `plugin:editor.html`.
 
+.Example `plugin.json` for document-rendering editor
+[source,json]
+----
+{
+  "name": "My Editor (external)",
+  "factory": "MyEditor.factory()"
+  "view": "plugin:editor.html"
+}
+----
+
 The external editor mechanism loads the template file within an IFrame that is embedded in the
 annotation page. Any CSS or JavaScript files needed by the plugin must be referenced by the template
 file using a relative location. For example let's assume a file `editor.html` which needs to load
@@ -60,16 +86,6 @@ a `editor.css` style sheet and an `editor.js` JavaScript file:
 <script src="./editor.js"></script>
 <link rel="stylesheet" href="./editor.css">
 <div id="editor"/>
-----
-
-.Example `plugin.json` for document-rendering editors
-[source,json]
-----
-{
-  "name": "My editor",
-  "factory": "MyEditor.default.factory()"
-  "view": "plugin:editor.html"
-}
 ----
 
 == Editors using server-side document views

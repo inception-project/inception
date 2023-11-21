@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 
 @Component
 public class BeforeDocumentRemovedEventAdapter

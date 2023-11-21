@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 

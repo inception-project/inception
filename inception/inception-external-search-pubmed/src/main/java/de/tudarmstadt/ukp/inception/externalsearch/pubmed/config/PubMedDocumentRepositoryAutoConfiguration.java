@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter({ ExternalSearchAutoConfiguration.class, BioCAutoConfiguration.class,

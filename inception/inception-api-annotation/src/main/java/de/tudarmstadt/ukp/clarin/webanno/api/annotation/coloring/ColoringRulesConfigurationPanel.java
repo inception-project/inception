@@ -47,8 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.Coloring;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRule;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 /**
  * Can be added to a feature support traits editor to configure coloring rules.

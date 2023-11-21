@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.model.BioCToCas;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class PubMedCentralProvider
     implements ExternalSearchProvider<PubMedProviderTraits>
