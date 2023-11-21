@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -63,7 +63,7 @@ public class StringLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType(XMLSchema.STRING.stringValue(), "String", valueTypeSupportId));
+        return asList(new ValueType(XSD.STRING.stringValue(), "String", valueTypeSupportId));
     }
 
     @Override
@@ -75,7 +75,7 @@ public class StringLiteralValueSupport
         }
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
         // Conditions for different datatype URI apart from String
-        boolean accept = XMLSchema.STRING.equals(iri);
+        boolean accept = XSD.STRING.equals(iri);
 
         return iri != null && accept;
     }
@@ -86,7 +86,7 @@ public class StringLiteralValueSupport
         if (rangeKbObject != null && rangeKbObject.isPresent()) {
             return true;
         }
-        else if (range != null && range.equals(XMLSchema.STRING.stringValue())) {
+        else if (range != null && range.equals(XSD.STRING.stringValue())) {
             return true;
         }
 

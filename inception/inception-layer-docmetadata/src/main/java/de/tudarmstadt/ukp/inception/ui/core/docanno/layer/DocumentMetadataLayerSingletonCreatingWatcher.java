@@ -25,13 +25,13 @@ import org.apache.uima.cas.CAS;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BeforeDocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 
 /**
@@ -80,7 +80,7 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
             DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
                     .getAdapter(layer);
             if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
-                adapter.add(aEvent.getDocument(), aEvent.getUser(), cas);
+                adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
             }
         }
     }

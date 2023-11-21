@@ -156,7 +156,8 @@ public class WikiDataReificationTest
 
         assertThat(result).extracting(stmt -> stmt.getInstance().getIdentifier())
                 .allMatch(id -> id.equals(MONA_LISA));
-        assertThat(result).usingElementComparatorIgnoringFields("originalTriples", "qualifiers")
+        assertThat(result) //
+                .usingElementComparatorIgnoringFields("originalTriples", "qualifiers")
                 .containsExactlyInAnyOrder(stmt1, stmt2, stmt3, stmt4);
     }
 

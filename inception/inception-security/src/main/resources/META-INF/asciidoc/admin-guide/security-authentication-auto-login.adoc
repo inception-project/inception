@@ -1,0 +1,45 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_security_auto_authentication_login]]
+= Auto-login
+
+When configuring the application for SAML/OAuth2, the user will still be required to choose an identity
+provider via the login page (and is also given the opportunity to log in via form-based login there).
+
+If you would like to automatically login through a particular SAML identity provider, you
+can configure this by setting the `security.auto-login` property to the registration ID of the
+respective provider that you configured using the `spring.security.saml2.relyingparty.registration....` or `spring.security.oauth2.client...` properties.
+
+This setting is useful for single-sign-on scenarios where only a single identity provider is used.
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+      
+| `security.login.auto-login`
+| Auto-login using given identity provider
+| _<none>_
+| `inception-client` (cf. example above)
+
+|===
+
+NOTE: In case it may be necessary to bypass the auto-login, e.g. to allow signing in via credentials,
+      navigate to `.../login.html?skipAutoLogin=true`. Make sure to do this in a fresh browser session that is
+      not yet logged into the application.

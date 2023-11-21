@@ -34,13 +34,15 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
@@ -65,6 +67,7 @@ public class ProjectDashboardPage
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean WorkloadManagementService workloadService;
     private @SpringBean ProjectDashboardDashletExtensionPoint dashletRegistry;
+    private @SpringBean DashboardProperties dashboardProperties;
 
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
@@ -76,7 +79,8 @@ public class ProjectDashboardPage
         User currentUser = userRepository.getCurrentUser();
 
         if (!userRepository.isAdministrator(currentUser)) {
-            requireProjectRole(currentUser);
+            requireProjectRole(currentUser, PermissionLevel.MANAGER,
+                    dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new));
         }
 
         add(new DashboardMenu(MID_MENU, LoadableDetachableModel.of(this::getMenuItems)));

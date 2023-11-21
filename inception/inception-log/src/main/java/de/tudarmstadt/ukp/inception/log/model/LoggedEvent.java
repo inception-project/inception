@@ -81,6 +81,7 @@ public class LoggedEvent
     /**
      * For testing only.
      */
+    @SuppressWarnings("javadoc")
     public LoggedEvent(long aId)
     {
         id = aId;
@@ -159,6 +160,7 @@ public class LoggedEvent
     /**
      * For testing only.
      */
+    @SuppressWarnings("javadoc")
     public void setId(Long aId)
     {
         id = aId;

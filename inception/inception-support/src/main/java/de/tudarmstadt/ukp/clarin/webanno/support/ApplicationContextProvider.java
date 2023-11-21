@@ -22,6 +22,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+
 /**
  * Permits access to the Spring context anywhere in the application. If any other means of accessing
  * the Spring context exist, these should be used. This class is mainly meant to be used by the
@@ -38,6 +40,7 @@ public class ApplicationContextProvider
         return context;
     }
 
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public void setApplicationContext(ApplicationContext aContext) throws BeansException
     {

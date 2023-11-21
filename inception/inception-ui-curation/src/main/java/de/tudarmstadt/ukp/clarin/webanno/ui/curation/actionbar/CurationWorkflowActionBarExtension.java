@@ -25,8 +25,8 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
 @Order(1000)
 @Component
@@ -36,7 +36,7 @@ public class CurationWorkflowActionBarExtension
     @Override
     public String getRole()
     {
-        return DefaultWorkflowActionBarExtension.class.getName();
+        return WorkloadManagerExtension.WORKLOAD_ACTION_BAR_ROLE;
     }
 
     @Override

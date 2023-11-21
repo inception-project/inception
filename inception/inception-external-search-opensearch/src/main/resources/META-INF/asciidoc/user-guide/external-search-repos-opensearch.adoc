@@ -1,0 +1,121 @@
+[[sect_external-search-repos-opensearch]]
+= OpenSearch
+
+Selecting the **OpenSearch** repository type allows connecting to remote OpenSearch instances.
+
+In order to set up a connection to an OpenSearch repository, the following information needs to
+be provided:
+
+* *Remote URL*: the URL where the OpenSearch instance is running (e.g. `http://localhost:9200/`) 
+* *Index Name*: the name of the index within the instance (e.g. `mycorpus`)
+* *Search path*: the suffix used to access the searching endpoint (usually `_search`)
+* *Object type*: the endpoint used to download the full document text (usually `texts`)
+* *Field*: the field of the documents in the OpenSearch repository that is used for matching
+the search query (default `doc.text`)
+
+From this information, two URLs are constructed:
+
+* the search URL: `<URL>/<index name>/<search path>`
+* the document retrieval URL as: `<URL>/<index name>/<object type>/<document id>`
+
+NOTE: From the *remote URL* field, only the protocol, hostname and port information is used. Any 
+      path information appearing after the port number is discarded and replaced by the index name and 
+      search path as outlined above.
+
+The individual documents should contain following two fields as their source:
+
+* *doc*: should contain the subfield _text_ which is the full text of the document
+* *metadata*: should contain subfields like _language_, _source_, _timestamp_ and _uri_
+to provide further information about the document
+
+The *Random Ordering* setting allows to switch the ranking of results from the default ranking used by
+the OpenSearch server to a random order. The documents returned will still match the query, but
+the order does not correspond to the matching quality anymore. When random ordering is enabled, no
+score is associated with the search results. If desired, the *random seed* used for the ordering
+can be customized.
+
+The *Result Size* setting allows to specify the number of document results that should be retrieved
+when querying the document repository. The possible result sizes lie between 1 and 10000 documents.
+
+If the default **Field** setting `doc.text` is used, then the JSON structure for indexed documents 
+should look as follows:
+
+[source,json]
+----
+{
+  "metadata": {
+    "language": "en",
+    "source": "My favourite document collection",
+    "timestamp": "2011/11/11 11:11",
+    "uri": "http://the.internet.com/my/document/collection/document1.txt",
+    "title": "Cool Document Title"
+  },
+  "doc": {
+    "text": "This is a test document"
+  }
+}
+----
+
+== Setting up a simple OpenSearch document repository
+
+In this example, we use link:https://www.docker.com[Docker] to get OpenSearch and link:https://elasticvue.com[ElasticVue] up and running very quickly. Note, that the docker containers we start
+here will not save any data permanently. It is just for you to get an idea of how the setup works.
+In a productive environment, you need to use a proper installation of OpenSearch.
+
+1. Open a terminal and run OpenSearch as a Docker service
++
+[source,sh]
+----
+$ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.cors.enabled=true" -e "http.cors.allow-origin=http://localhost:9090" -e "http.cors.allow-headers=*"  opensearchproject/opensearch:1
+----
+2. Open a second terminal and run ElasticVue as a Docker service
++
+[source,sh]
+----
+$ docker run -p 9090:8080 cars10/elasticvue
+----
+3. Open a browser and access ElasticVue at `http://localhost:9090` - tell ElasticVue to connect to 
+   `https://localhost:9200` using the username `admin` and password `admin`
+4. Switch to the Indices tab in ElasticVue
+5. Create an index named `test`
+6. Switch to the REST tab in ElasticVue
+7. Set the HTTP Method to "POST" and enter `test/_doc/1` as the Path (means "create a new document with ID 1 in collection test)
+8. Put the following JSON into the request body field
++
+[source,json]
+----
+{
+  "metadata": {
+    "language": "en",
+    "source": "My favourite document collection",
+    "timestamp": "2011/11/11 11:11",
+    "uri": "http://the.internet.com/my/document/collection/document1.txt",
+    "title": "Cool Document Title"
+  },
+  "doc": {
+    "text": "This is a test document"
+  }
+}
+----
+9. Click *Send request*
+10. Start up INCEpTION
+11. Create a new project
+12. Add a document repository with the following settings (and click save):
+* Name: `My OpenSearch Document Repository`
+* Type: `OpenSearch`
+* Remote URL: `https://localhost:9200`
+* SSL verification: disabled
+* Authentication type: basic
+* Username / password: `admin` / `admin`
+* Index name: `test`
+* Search path: `_search`
+* Object type: `_doc`
+* Field: `doc.text`
+* Result Size: `1000`
+* Random ordering: `false`
+13. Switch to the *Dashboard* and from there to the *Search* page
+14. Select the repository `My OpenSearch Document Repository`
+15. Enter `document` into the search field and press the *Search* button
+16. You should get result for the document you posted to the OpenSearch index in step 8
+17. Click on *Import*
+18. The import button should change to *Open* now - click on it to open the document in the annotation editor

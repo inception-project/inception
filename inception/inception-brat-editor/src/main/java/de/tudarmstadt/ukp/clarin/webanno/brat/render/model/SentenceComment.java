@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
@@ -39,11 +40,21 @@ public class SentenceComment
         // Nothing to do
     }
 
-    public SentenceComment(int aSentenceIndex, String aCommentType, String aComment)
+    public SentenceComment(VID aVid, int aSentenceIndex, String aCommentType, String aComment)
     {
-        anchor = new Object[] { "sent", aSentenceIndex };
+        anchor = new Object[] { "sent", aSentenceIndex, aVid };
         commentType = aCommentType;
         comment = aComment;
+    }
+
+    public int getVid()
+    {
+        return (int) anchor[0];
+    }
+
+    public void getVid(VID aVid)
+    {
+        anchor[2] = aVid;
     }
 
     public int getSentenceIndex()

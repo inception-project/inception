@@ -19,15 +19,9 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_COLLECTION_ID;
-import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_DOCUMENT_ID;
-import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_REPOSITORY_ID;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,14 +34,10 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataT
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.link.BookmarkablePageLink;
-import org.apache.wicket.markup.html.link.Link;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -58,18 +48,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
@@ -83,11 +68,9 @@ public class SearchPage
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
-    private @SpringBean DocumentService documentService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
-    private @SpringBean DocumentImporter documentImporter;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -116,7 +99,8 @@ public class SearchPage
                 @SuppressWarnings("rawtypes")
                 Item rowItem = cellItem.findParent(Item.class);
                 int rowIndex = rowItem.getIndex();
-                ResultRowView rowView = new ResultRowView(componentId, rowIndex + 1, model);
+                ResultRowView rowView = new ResultRowView(componentId, rowIndex + 1,
+                        getProjectModel(), model);
                 cellItem.add(rowView);
             }
         });
@@ -130,19 +114,10 @@ public class SearchPage
         dataTableContainer.add(new DefaultDataTable<>("resultsTable", columns, dataProvider, 10));
     }
 
-    private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
+    @OnEvent
+    public void onExternalDocumentImportedEvent(ExternalDocumentImportedEvent aEvent)
     {
-        try {
-            documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
-                    getProject(), aResult.getCollectionId(), aResult.getDocumentId(),
-                    aResult.getRepository());
-            aTarget.add(dataTableContainer);
-        }
-        catch (IOException e) {
-            LOG.error(e.getMessage(), e);
-            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
+        aEvent.getTarget().add(dataTableContainer);
     }
 
     private class SearchFormModel
@@ -178,13 +153,12 @@ public class SearchPage
 
             add(new TextField<>("query", String.class));
 
-            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
-                    this::actionSearch);
+            var searchLink = new LambdaAjaxSubmitLink<Void>("submitSearch", this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
 
-        private void actionSearch(AjaxRequestTarget aTarget, Form<?> aForm)
+        private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
         {
             SearchFormModel model = getModelObject();
 
@@ -202,67 +176,6 @@ public class SearchPage
                             userRepository.getCurrentUsername(), model.query));
 
             aTarget.add(dataTableContainer);
-        }
-    }
-
-    public class ResultRowView
-        extends Panel
-    {
-        private static final long serialVersionUID = -6708211343231617251L;
-
-        public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
-        {
-            super(id, model);
-
-            ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
-
-            // FIXME: Should display all highlights
-            String highlight = "NO MATCH PREVIEW AVAILABLE";
-            if (!result.getHighlights().isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("<ul>");
-                for (ExternalSearchHighlight h : result.getHighlights()) {
-                    sb.append("<li>").append(Utilities.cleanHighlight(h.getHighlight()))
-                            .append("</li>");
-                }
-                sb.append("</ul>");
-                highlight = sb.toString();
-            }
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
-
-            PageParameters titleLinkPageParameters = new PageParameters();
-            ProjectPageBase.setProjectPageParameter(titleLinkPageParameters, getProject());
-            titleLinkPageParameters.set(PAGE_PARAM_REPOSITORY_ID, result.getRepository().getId());
-            titleLinkPageParameters.set(PAGE_PARAM_COLLECTION_ID, result.getCollectionId());
-            titleLinkPageParameters.set(PAGE_PARAM_DOCUMENT_ID, result.getDocumentId());
-            Link<Void> link = new BookmarkablePageLink<>("titleLink", DocumentDetailsPage.class,
-                    titleLinkPageParameters);
-            link.add(new Label("title",
-                    defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(result.getDocumentId(),
-                            defaultIfBlank(result.getOriginalUri(), "<no title>")))));
-            add(link);
-
-            boolean existsSourceDocument = documentService.existsSourceDocument(getProject(),
-                    result.getDocumentId());
-
-            add(new Label("score", result.getScore()));
-            add(new Label("importStatus",
-                    () -> existsSourceDocument ? "imported" : "not imported"));
-            add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
-                    .add(visibleWhen(() -> !existsSourceDocument)));
-
-            PageParameters openLinkPageParameters = new PageParameters();
-            ProjectPageBase.setProjectPageParameter(openLinkPageParameters, getProject());
-            openLinkPageParameters.set(AnnotationPage.PAGE_PARAM_DOCUMENT, result.getDocumentId());
-            Link<Void> openLink = new BookmarkablePageLink<>("openLink", AnnotationPage.class,
-                    openLinkPageParameters);
-            openLink.add(visibleWhen(() -> existsSourceDocument));
-            add(openLink);
-
-            // add(LinkProvider
-            // .createDocumentPageLink(documentService, getProject(), result.getDocumentId(),
-            // "openLink", AnnotationPage.class)
-            // .add(visibleWhen(() -> existsSourceDocument)));
         }
     }
 }

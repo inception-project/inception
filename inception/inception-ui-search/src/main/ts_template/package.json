@@ -1,0 +1,16 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "license": "Apache-2.0",
+  "author": "INCEpTION Team",
+  "description": "INCEpTION Annotation Sidebar",
+  "keywords": [],
+  "scripts": {
+    "build": "sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.css",
+    "build:minified": "sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.min.css --style compressed"
+  },
+  "external": {},
+  "devDependencies": {
+    "sass": "${sass.version}"
+  }
+}

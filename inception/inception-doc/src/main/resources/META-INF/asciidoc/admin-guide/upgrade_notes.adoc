@@ -1,0 +1,192 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Upgrade notes
+
+This section summarizes important upgrade notes from the release history of INCEpTION. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
+
+NOTE: It is a good idea to back up your installation and data before an upgrade. Also make sure that
+      you can actually re-create a working installation by restoring your backup. A backup which cannot be
+      successfully restored is worthless.
+
+== INCEpTION 25.0
+
+=== Manual intervention for external pre-authentication users
+
+If you use the external pre-authentication feature of {product-name} (i.e. if you run it behind an
+authenticating reverse proxy), you need to perform a manual maintenance step. As of this version,
+all users that are created via external pre-authentication are added to the realm `preauth`. Any
+existing users that were created via pre-authentication need to be moved to this realm manually,
+otherwise they will not be able to log in anymore.
+
+This migration can be performed by invoking {product-name} from the command line as:
+
+[source,shell,indent=0,subs="+attributes"]
+----
+java -jar inception-app-webapp-{revnumber}-standalone.jar users migrate-preauthenticated-users --dry-run
+----
+
+This command only works if {product-name} is configured for external pre-authentication. If you keep
+the `settings.properties` file in a non-standard location, you need to specify the the respective 
+path using `-Dinception.home=/PATH/TO/FOLDER_CONTAINING_SETTINGS_PROPERTIES` **before** the `-jar` in the
+command.
+
+The command will migrate all users that have no password (i.e. the `password` in the database is
+`null` or an empty encrypted password was stored) and which do also not have `ROLE_REMOTE`. A user
+with no password cannot log in via the login form. The remote API does not support external 
+pre-authentication and always uses the database for authentication. So if the user either has a
+password or `ROLE_REMOTE`, it will not be migrated.
+
+The command as shown above will operate in **dry-run** mode and will only print the results of the
+migration without actually performing it. You should look at the results to see if you are ok with
+them. Then, remove the `--dry-run` argument and run the command again to actually perform the
+migration.
+
+The alternative to using this command is to directly update the respective user records in the
+`users` table in the database by setting the `realm` of all externally pre-authenticated users to
+`preauth`. 
+
+=== Configuration property names changed
+
+The following configuration property names from the `settings.properties` file have changed. When you
+start {product-name}, warnings will be logged if the old names are used until you rename the
+respective properties in your `settings.properties` file. In a future version, the old names will
+not be supported anymore and the warnings will be removed.
+
+
+|===
+| Old name | New name | Description
+
+| `login.message`
+| `security.login.message`
+| Custom message to appear on the login page.
+
+| `login.max-concurrent-sessions`
+| `security.login.max-concurrent-sessions`
+| Maximum number of concurrently logged-in users.
+|===
+
+== INCEpTION 24.0
+
+=== PDF editor
+
+This version includes a new PDF editor and a new PDF format. The old PDF editor and PDF format 
+still exist, but have been renamed to *PDF (legacy)*. When starting new projects, these old formats
+should no longer be used as they have known and unfixable bugs. The new PDF format that is simply
+called *PDF* is much more robust.
+
+=== Compression
+
+This version has the ability to compress CAS files on disk. This feature is turned on by default.
+If you experience problems and have the feeling that they might be caused by the compression feature,
+you can turn it off by adding `cas-storage.compressed-cas-serialization=false` to the `settings.properties`.
+The compression typically reduces the size of the CAS file down to around 60% of its actual size.
+
+The compression algorithm being used is link:https://github.com/xerial/snappy-java[Snappy].
+On many platforms, a native implementation is used automatically. If no native implementation is
+available, a pure-java implementation is used. Due to the reduced size, saving a CAS will take
+consume less I/O bandwidth which typically the overall time required to persist a CAS to storage
+despite the additional overhead of compression.
+
+The compression setting takes effect whenever a CAS is written to disk. Changing it does not 
+immediately (de)compress existing CAS files. Instead, they will be slowly converted to being
+(de)compressed over time as they are updated by the system as part of normal operations.
+
+Decompressing CAS files is supported starting with INCEpTION 23.9. If you have compressed
+CAS files, you cannot downgrade to an older version than 23.9. Also, you cannot import projects
+containing compressed CAS files into versions older than 23.9.
+
+=== Full-text indices 
+
+This version includes a new version of Apache Lucene which is used for maintaining the full text
+indices used for searching in knowledge bases and also used by the annotation search sidebar.
+
+The indices of the knowledge bases should continue to work normally after the upgrade. If you 
+encounter problems, you can manually trigger an index rebuild by selecting the knowledge base
+in the project settings and using the **Rebuild index** button. Note that rebuilding full text
+indices only works for local knowledge bases.
+
+The indices used by the annotation search sidebar will not function until they are rebuilt. The
+system will automatically trigger the rebuild process when the annotation page is used. However,
+in particular for large projects, rebuilding the indices can take very long.
+
+For installations with many or large projects, it is recommended to perform an **offline index rebuild**. 
+First ensure that {product-name} is not running. Then run INCEpTION from the command line as follows:
+
+----
+$ java -jar inception-app-webapp-24.0-standalone.jar search reindex
+----
+
+This command will rebuild the annotation search indices of **all projects** which depending on the 
+number of projects and their size can add up to **several hours** (although for most people, it 
+should be pretty fast). When the process is complete, you can restart INCEpTION as usual. Do not try
+to start INCEpTION while the process is still running.
+
+== INCEpTION 22.0
+
+This version brings a new project export page which uses WebSocket. If INCEpTION is deployed behind a reverse proxy, this technical changes requires updating the reverse proxy configuration. The admin guide includes an updated section on deploying behind nginx and Apache HTTPD reverse proxies. Additionally, the CSRF settings in the INCEpTION `settings.properties` file need to be updated. The required settings are also described in the admin guide in the section for deploying behind a reverse proxy.
+
+If you have trouble reconfiguring your reverse proxy for WebSocket, it is still possible to switch back to the old export page by adding the following line to the `settings.properties` file:
+
+----
+dashboard.legacy-export=true
+----
+
+NOTE: The setting to switch back to the old export page will be removed in later versions. Also, INCEpTION will make more use of the WebSocket protocol in the future. If you have trouble updating your reverse proxy configuration to support WebSocket, please let us know.
+
+== INCEpTION 21.0.1 
+
+If you are using MySQL or MariaDB, please ensure that default row format is set to `dynamic`, otherwise, you may get an error like this during upgrade:
+
+----
+Error creating bean with name 'liquibase' defined in class path resource 
+[org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: 
+Invocation of init method failed; nested exception is liquibase.exception.LiquibaseException: 
+liquibase.exception.MigrationFailedException: 
+Migration failed for change set de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml::20210925-1::INCEpTION Team:
+Reason: liquibase.exception.DatabaseException: (conn=242839) Index column size too large. The maximum column size is 767 bytes. 
+[Failed SQL: (1709) ALTER TABLE `inception-testing`.default_project_preference ADD CONSTRAINT UK_default_project_preference_name_project UNIQUE (project, name)]
+----
+
+To set the default row format, you can add these settings to your MySQL/MariaDB config file and then restart the database:
+
+----
+innodb_strict_mode=1
+innodb_default_row_format='dynamic'
+----
+
+
+If you upgrade from a version older than 20.0, please check the update notes for INCEpTION 20.0.
+
+== INCEpTION 20.0
+
+* 🎉 **New versioning.** INCEpTION has come a long way and the time has come to reflect that in the version. So as of this release, we are dropping the the zero from the version!
+* ⚠️ **Database driver changed.** The MySQL driver is no longer bundled, only the MariaDB driver is shipped. If you have manually configured a DB driver and dialect in the `settings.properties`, comment them out. In the JDBC connection string replace `mysql` with `mariadb`. The MariaDB driver should also work with a MySQL database. If you use Docker Compose, make sure to remove the `INCEPTION_DB_DIALECT` and `INCEPTION_DB_DRIVER` and update the `INCEPTION_DB_URL` to start with `jdbc:mariadb:` instead of `jdbc:mysql:`. For additional details, please check the section on MariaDB configuration in the admin guide.
+* ⚠️ **Increased disk usage.** Internal backup for CAS (annotation) files enabled to keep 2 backups with min 24h in between - this change increases disk usage! If you operate with low disk space, consider disabling the internal backup.
+
+== INCEpTION 0.16.0
+
+For deployments using AJP and Apache Webserver 2.5 or higher: to use the advanced AJP secret, see the updated section on running INCEpTION behind a reverse proxy in the admin guide..
+For deployments using AJP and Apache Webserver 2.4 or lower: you need to disable the AJP secret by setting `server.ajp.port` (replaces `tomcat.ajp.port`) and `server.ajp.address` properties as described in the admin guide and also set `server.ajp.secret-required=false`.
+
+== INCEpTION 0.15.2
+
+For deployments via WAR-file on Apache Tomcat, Apache Tomcat 9.0. is now necessary. Note that we do not recommend a WAR deployment and do not distribute a pre-built WAR file.
+
+== INCEpTION 0.12.0
+
+If you are running INCEpTION behind a reverse proxy and have so far had a line like `server.contextPath=/XXX` in your `settings.properties` file, please replace it with `server.servlet.context-path=/XXX`.
+

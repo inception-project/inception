@@ -25,8 +25,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.conll.Conll2002Reader;
-import org.dkpro.core.io.conll.Conll2002Writer;
+import org.dkpro.core.io.conll.Conll2000Reader;
+import org.dkpro.core.io.conll.Conll2000Writer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
@@ -69,10 +69,11 @@ public class Conll2000FormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(Conll2002Reader.class, aTSD);
+        return createReaderDescription(Conll2000Reader.class, aTSD);
     }
 
     @Override
@@ -80,6 +81,6 @@ public class Conll2000FormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(Conll2002Writer.class, aTSD);
+        return createEngineDescription(Conll2000Writer.class, aTSD);
     }
 }

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>XML</name>
+  <description />
+  <version>${version}</version>
+  <vendor>Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt</vendor>
+  <types>
+    <typeDescription>
+      <name>org.dkpro.core.api.xml.type.XmlElement</name>
+      <description>XML element</description>
+      <supertypeName>org.dkpro.core.api.xml.type.XmlNode</supertypeName>
+      <features>
+        <featureDescription>
+          <name>uri</name>
+          <description>Namespace URI of the element.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>localName</name>
+          <description>Local name of the XML element.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>attributes</name>
+          <description>Array of attributes of the XML element.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>org.dkpro.core.api.xml.type.XmlAttribute</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>children</name>
+          <description>Children of this XML element.</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>org.dkpro.core.api.xml.type.XmlNode</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>qName</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>org.dkpro.core.api.xml.type.XmlAttribute</name>
+      <description />
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>uri</name>
+          <description>Namespace URI of the attribute.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>localName</name>
+          <description>Local name of the attribute.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>value</name>
+          <description>Value of the XML attribute.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>qName</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>valueType</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>org.dkpro.core.api.xml.type.XmlNode</name>
+      <description>Supertype for XmlElements and XmlTextNodes.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>parent</name>
+          <description />
+          <rangeTypeName>org.dkpro.core.api.xml.type.XmlElement</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>org.dkpro.core.api.xml.type.XmlDocument</name>
+      <description>XML document</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>root</name>
+          <description>Root element of the XML document.</description>
+          <rangeTypeName>org.dkpro.core.api.xml.type.XmlElement</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>captureRoots</name>
+          <description />
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>org.dkpro.core.api.xml.type.XmlNode</elementType>
+          <multipleReferencesAllowed>true</multipleReferencesAllowed>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>org.dkpro.core.api.xml.type.XmlTextNode</name>
+      <description>XML text node.</description>
+      <supertypeName>org.dkpro.core.api.xml.type.XmlNode</supertypeName>
+      <features>
+        <featureDescription>
+          <name>text</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>captured</name>
+          <description>Whether the text node has been added to the document text.</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>

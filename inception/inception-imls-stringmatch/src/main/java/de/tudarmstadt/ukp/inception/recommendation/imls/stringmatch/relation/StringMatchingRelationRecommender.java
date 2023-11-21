@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -30,8 +34,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -52,6 +54,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class StringMatchingRelationRecommender
     extends RecommendationEngine
@@ -92,7 +95,8 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -108,7 +112,11 @@ public class StringMatchingRelationRecommender
         Feature attachFeature = getAttachFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
-        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+        // Relations are predicted only within the sample units - thus instead of looking at the
+        // whole document for potential relations, we only need to look at those units that overlap
+        // with the current prediction request area
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
+        for (AnnotationFS sampleUnit : units) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
             for (AnnotationFS governor : baseAnnotations) {
                 for (AnnotationFS dependent : baseAnnotations) {
@@ -123,8 +131,7 @@ public class StringMatchingRelationRecommender
                     Pair<String, String> key = Pair.of(governorLabel, dependentLabel);
                     Collection<String> occurrences = model.get(key);
                     Map<String, Long> numberOfOccurrencesPerLabel = occurrences.stream() //
-                            .collect(Collectors.groupingBy(Function.identity(),
-                                    Collectors.counting()));
+                            .collect(groupingBy(identity(), counting()));
 
                     double totalNumberOfOccurrences = occurrences.size();
 
@@ -143,6 +150,8 @@ public class StringMatchingRelationRecommender
                 }
             }
         }
+
+        return new Range(units);
     }
 
     @Override

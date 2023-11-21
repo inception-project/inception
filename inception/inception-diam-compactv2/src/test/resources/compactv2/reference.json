@@ -1,0 +1,31 @@
+{
+  "action" : "getAnnotatedDocument",
+  "layers" : [ {
+    "id" : 1,
+    "name" : "Span"
+  }, {
+    "id" : 2,
+    "name" : "Relation"
+  } ],
+  "text" : "This is a test.",
+  "window" : [ 0, 15 ],
+  "relations" : [ [ 2, "4", [ [ "1", "Arg1" ], [ "2", "Arg2" ] ], {
+    "l" : "rel",
+    "c" : "000000"
+  } ] ],
+  "spans" : [ [ 1, "1", [ [ 0, 4 ] ], {
+    "l" : "span1",
+    "cm" : [ [ "comment" ] ]
+  } ], [ 1, "2", [ [ 5, 7 ] ], {
+    "l" : "span2",
+    "c" : "000000",
+    "cm" : [ [ "error", "E" ] ],
+    "s" : 10.31
+  } ], [ 1, "3", [ [ 0, 15 ] ], {
+    "l" : "span3",
+    "c" : "000000",
+    "cl" : "e"
+  } ] ],
+  "annotationMarkers" : [ [ "focus", [ "1" ] ] ],
+  "textMarkers" : [ [ "match", [ [ 8, 9 ] ] ] ]
+}

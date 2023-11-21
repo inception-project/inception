@@ -17,17 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -72,25 +73,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -99,7 +90,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 /**
@@ -120,7 +118,7 @@ public class ProjectLayersPanel
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
 
     private LayerSelectionPane layerSelectionPane;
     private FeatureSelectionForm featureSelectionForm;
@@ -135,7 +133,6 @@ public class ProjectLayersPanel
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-        setOutputMarkupId(true);
 
         selectedLayer = Model.of();
         selectedFeature = Model.of();
@@ -293,6 +290,10 @@ public class ProjectLayersPanel
             return repository.listProjectInitializers().stream()
                     .filter(initializer -> initializer instanceof LayerInitializer)
                     .filter(initializer -> !initializer.alreadyApplied(getModelObject()))
+                    .filter(initializer -> !(initializer instanceof TokenLayerInitializer)
+                            || annotationEditorProperties.isTokenLayerEditable())
+                    .filter(initializer -> !(initializer instanceof SentenceLayerInitializer)
+                            || annotationEditorProperties.isSentenceLayerEditable())
                     .sorted(comparing(ProjectInitializer::getName)) //
                     .collect(toList());
         }
@@ -398,7 +399,10 @@ public class ProjectLayersPanel
                         importUimaTypeSystemFile(bis);
                     }
                     else {
-                        importLayerFile(bis);
+                        User user = userRepository.getCurrentUser();
+                        var layer = LayerImportExportUtils.importLayerFile(annotationService, user,
+                                project, bis);
+                        layerDetailForm.setModelObject(layer);
                     }
                 }
                 catch (Exception e) {
@@ -420,92 +424,6 @@ public class ProjectLayersPanel
 
             annotationService.importUimaTypeSystem(project, tsd);
         }
-
-        private void importLayerFile(InputStream aIS) throws IOException
-        {
-            User user = userRepository.getCurrentUser();
-            Project project = ProjectLayersPanel.this.getModelObject();
-
-            String text = IOUtils.toString(aIS, "UTF-8");
-
-            ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
-                    ExportedAnnotationLayer[].class);
-
-            // First import the layers but without setting the attach-layers/features
-            Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
-            Map<String, AnnotationLayer> layersMap = new HashMap<>();
-            for (ExportedAnnotationLayer exLayer : exLayers) {
-                AnnotationLayer layer = createLayer(exLayer, user);
-                layersMap.put(layer.getName(), layer);
-                exLayersMap.put(layer.getName(), exLayer);
-            }
-
-            // Second fill in the attach-layer and attach-feature information
-            for (AnnotationLayer layer : layersMap.values()) {
-                ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
-                if (exLayer.getAttachType() != null) {
-                    layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
-                }
-                if (exLayer.getAttachFeature() != null) {
-                    AnnotationLayer attachLayer = annotationService.findLayer(project,
-                            exLayer.getAttachType().getName());
-                    AnnotationFeature attachFeature = annotationService
-                            .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
-                    layer.setAttachFeature(attachFeature);
-                }
-                annotationService.createOrUpdateLayer(layer);
-            }
-
-            layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));
-        }
-
-        private AnnotationLayer createLayer(ExportedAnnotationLayer aExLayer, User aUser)
-            throws IOException
-        {
-            Project project = ProjectLayersPanel.this.getModelObject();
-            AnnotationLayer layer;
-
-            if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
-                layer = annotationService.findLayer(project, aExLayer.getName());
-                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-            }
-            else {
-                layer = new AnnotationLayer();
-                ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-            }
-
-            for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
-                ExportedTagSet exTagset = exfeature.getTagSet();
-                TagSet tagSet = null;
-                if (exTagset != null
-                        && annotationService.existsTagSet(exTagset.getName(), project)) {
-                    tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
-                }
-                else if (exTagset != null) {
-                    tagSet = new TagSet();
-                    ImportUtil.createTagSet(tagSet, exTagset, project, aUser, annotationService);
-                }
-                if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                    AnnotationFeature feature = annotationService.getFeature(exfeature.getName(),
-                            layer);
-                    feature.setTagset(tagSet);
-                    ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
-                    continue;
-                }
-                AnnotationFeature feature = new AnnotationFeature();
-                feature.setLayer(layer);
-                feature.setTagset(tagSet);
-                ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
-            }
-
-            return layer;
-        }
-    }
-
-    static enum LayerExportMode
-    {
-        JSON, UIMA
     }
 
     public class FeatureSelectionForm
@@ -515,6 +433,10 @@ public class ProjectLayersPanel
 
         private static final long serialVersionUID = -1L;
 
+        private LambdaAjaxLink btnMoveUp;
+        private LambdaAjaxLink btnMoveDown;
+        private ListChoice<AnnotationFeature> overviewList;
+
         public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
         {
             super(id, aModel);
@@ -523,7 +445,7 @@ public class ProjectLayersPanel
 
             add(new DocLink("featuresHelpLink", "sect_projects_layers_features"));
 
-            add(new ListChoice<AnnotationFeature>("feature")
+            overviewList = new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
                 {
@@ -541,13 +463,16 @@ public class ProjectLayersPanel
                         }
                     });
                     setNullValid(false);
-                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-                        // list and detail panel share the same model, but they are not
-                        // automatically notified of updates to the model unless the
-                        // updates go through their respective setModelObject() calls
-                        featureDetailForm.modelChanged();
-                        _target.add(featureDetailForm);
-                    }));
+                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
+                }
+
+                private void onChange(AjaxRequestTarget _target)
+                {
+                    // list and detail panel share the same model, but they are not
+                    // automatically notified of updates to the model unless the
+                    // updates go through their respective setModelObject() calls
+                    featureDetailForm.modelChanged();
+                    _target.add(featureDetailForm, btnMoveDown, btnMoveUp);
                 }
 
                 @Override
@@ -555,7 +480,18 @@ public class ProjectLayersPanel
                 {
                     return "";
                 }
-            });
+            };
+            add(overviewList);
+
+            btnMoveUp = new LambdaAjaxLink("moveUp", this::moveTagUp);
+            btnMoveUp.setOutputMarkupPlaceholderTag(true);
+            btnMoveUp.add(visibleWhenModelIsNotNull(overviewList));
+            add(btnMoveUp);
+
+            btnMoveDown = new LambdaAjaxLink("moveDown", this::moveTagDown);
+            btnMoveDown.setOutputMarkupPlaceholderTag(true);
+            btnMoveDown.add(visibleWhenModelIsNotNull(overviewList));
+            add(btnMoveDown);
 
             LambdaAjaxLink createButton = new LambdaAjaxLink(CID_CREATE_FEATURE,
                     this::actionCreateFeature);
@@ -565,6 +501,53 @@ public class ProjectLayersPanel
 
             ));
             add(createButton);
+        }
+
+        private void moveTagUp(AjaxRequestTarget aTarget)
+        {
+            @SuppressWarnings("unchecked")
+            var tags = (List<AnnotationFeature>) overviewList.getChoices();
+            int i = tags.indexOf(overviewList.getModelObject());
+
+            if (i < 1) {
+                return;
+            }
+
+            var tag = tags.remove(i);
+            tags.add(i - 1, tag);
+
+            updateFeatureRanks(aTarget, tags);
+        }
+
+        private void moveTagDown(AjaxRequestTarget aTarget)
+        {
+            @SuppressWarnings("unchecked")
+            var tags = (List<AnnotationFeature>) overviewList.getChoices();
+            int i = tags.indexOf(overviewList.getModelObject());
+
+            if (i >= tags.size() - 1) {
+                return;
+            }
+
+            var tag = tags.remove(i);
+            tags.add(i + 1, tag);
+
+            updateFeatureRanks(aTarget, tags);
+        }
+
+        private void updateFeatureRanks(AjaxRequestTarget aTarget,
+                List<AnnotationFeature> aFeatures)
+        {
+            annotationService.updateFeatureRanks(selectedLayer.getObject(), aFeatures);
+
+            var selected = overviewList.getModelObject();
+            for (var t : aFeatures) {
+                if (t.equals(selected)) {
+                    selected.setRank(t.getRank());
+                }
+            }
+
+            aTarget.add(overviewList, btnMoveUp, btnMoveDown);
         }
 
         private void actionCreateFeature(AjaxRequestTarget aTarget)

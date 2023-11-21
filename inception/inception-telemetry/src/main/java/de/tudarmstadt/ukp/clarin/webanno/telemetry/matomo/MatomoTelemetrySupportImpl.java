@@ -30,7 +30,6 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -66,7 +62,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.session.HttpSessionCreatedEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -75,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.MatomoTelemetryServiceProperties;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 
 /**
@@ -87,6 +83,7 @@ public class MatomoTelemetrySupportImpl
     implements MatomoTelemetrySupport, DisposableBean
 {
     public static final String MATOMO_TELEMETRY_SUPPORT_ID = "MatomoTelemetry";
+    public static final int CURRENT_SETTINGS_VERSION = 3;
 
     public static final String ACTION_BOOT = "boot";
     public static final String ACTION_HELLO = "hello";
@@ -163,7 +160,7 @@ public class MatomoTelemetrySupportImpl
     @Override
     public int getVersion()
     {
-        return 2;
+        return CURRENT_SETTINGS_VERSION;
     }
 
     @Override
@@ -175,7 +172,7 @@ public class MatomoTelemetrySupportImpl
             return false;
         }
 
-        boolean outdated = settings.get().getVersion() < getVersion();
+        boolean outdated = settings.get().getVersion() != getVersion();
         if (outdated) {
             return false;
         }
@@ -373,7 +370,7 @@ public class MatomoTelemetrySupportImpl
                         + "number of installations and report it e.g. when applying for funding."),
                 new TelemetryDetail("Visitor ID", Long.toHexString(uuid.getMostSignificantBits()),
                         "This is a short version of the instance ID required for technical "
-                                + "resons by the Matomo telemetry server we are using."),
+                                + "reasons by the Matomo telemetry server we are using."),
                 new TelemetryDetail("Application", applicationName,
                         "The name of the application. There are different applications using this "
                                 + "telemetry service. By this value, we can identify the popularity of "
@@ -405,27 +402,6 @@ public class MatomoTelemetrySupportImpl
                                 + "restarted regularly while server-based deployments are expected to be "
                                 + "running for a long time."));
     }
-
-    private static final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager()
-    {
-        @Override
-        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
-            throws CertificateException
-        {
-        }
-
-        @Override
-        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
-            throws CertificateException
-        {
-        }
-
-        @Override
-        public java.security.cert.X509Certificate[] getAcceptedIssuers()
-        {
-            return new java.security.cert.X509Certificate[] {};
-        }
-    } };
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<TelemetrySettings> aSettings)

@@ -21,7 +21,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
@@ -33,7 +33,7 @@ public class ProjectUsersPanel
     private static final long serialVersionUID = 875749625429630464L;
 
     private IModel<Project> project;
-    private IModel<User> selectedUser;
+    private IModel<ProjectUserPermissions> selectedUser;
 
     public ProjectUsersPanel(String id, IModel<Project> aProject)
     {
@@ -47,7 +47,10 @@ public class ProjectUsersPanel
         add(permissions);
 
         UserSelectionPanel users = new UserSelectionPanel("users", project, selectedUser);
-        users.setChangeAction(t -> t.add(permissions));
+        users.setChangeAction(t -> {
+            permissions.modelChanged();
+            t.add(permissions);
+        });
         add(users);
     }
 

@@ -81,6 +81,42 @@ that this memory is available to the JVM.
 
 and others.
 
+== Sentry
+In order to use Sentry as an error tracker, you will need to provide the Sentry SDK your Sentry project's Data Source Name (DSN) and other settings in {product-name}'s `settings.properties` file. The Sentry SDK will be deactivated unless a DSN is provided.
+
+|===
+| Setting | Description | Default | Example(s)
+
+| `sentry.dsn`
+| The DSN tells the Sentry SDK where to send events.
+| `null`
+| https://examplePublicKey@o0.ingest.sentry.io/0 https://examplePublicKey@sentry.your-org.com/N
+
+| `sentry.environment`
+| Set the application environment that will be sent with each event.
+| production
+| prod
+
+| `sentry.enable-tracing`
+| Enable transaction tracing used for performance monitoring.
+| false
+| true
+
+| `sentry.traces-sample-rate`
+| Adjust the procentage of transaction sent to Sentry.
+| 1.0
+| 0.2
+
+| `sentry.send-default-pii`
+| By default, the Sentry SDK do not purposefully send Personally Identifiable Information (PII) to your Sentry server.
+| off
+| on
+|===
+
+By default, only unhandled exceptions are sent to Sentry. This behavior can be tuned through configuring the `sentry.exception-resolver-order` property. For example, setting it to `-2147483647` (the value of `org.springframework.core.Ordered#HIGHEST_PRECEDENCE`) ensures exceptions that have been handled by exception resolvers with higher order are sent to Sentry - including ones handled by `@ExceptionHandler` annotated methods.
+
+More option that can be overwritten are listed in https://docs.sentry.io/platforms/java/guides/spring-boot/configuration/[the official Sentry SDK ducumentation].
+
 == Scheduling
 The default schedule for pulling of Prometheus is 10s, however it is necessary to make this a longer 
 interval to avoid overwhelming your {product-name} instance with requests for metrics. 

@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,16 +44,18 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class ImportDocumentsPanel
     extends Panel
@@ -146,18 +150,22 @@ public class ImportDocumentsPanel
                 .map(SourceDocument::getName) //
                 .collect(toCollection(HashSet::new));
 
+        List<SourceDocument> importedDocuments = new ArrayList<>();
         for (FileUpload documentToUpload : uploadedFiles) {
             String fileName = documentToUpload.getClientFileName();
 
-            if (existingDocuments.contains(fileName)) {
-                error("Document [" + fileName + "] already uploaded ! Delete "
-                        + "the document if you want to upload again");
+            var nameValidationResult = documentService.validateDocumentName(fileName);
+            if (!nameValidationResult.isEmpty()) {
+                nameValidationResult
+                        .forEach(msg -> error("[" + fileName + "]:" + msg.getMessage()));
                 continue;
             }
 
-            // Add the imported document to the set of existing documents just in case the user
-            // somehow manages to upload two files with the same name...
-            existingDocuments.add(fileName);
+            if (existingDocuments.contains(fileName)) {
+                error("[" + fileName + "]: already uploaded! Delete "
+                        + "the document if you want to upload again");
+                continue;
+            }
 
             try {
                 SourceDocument document = new SourceDocument();
@@ -169,14 +177,31 @@ public class ImportDocumentsPanel
                 try (InputStream is = documentToUpload.getInputStream()) {
                     documentService.uploadSourceDocument(is, document, fullProjectTypeSystem);
                 }
+
+                importedDocuments.add(document);
                 info("Document [" + fileName + "] has been imported successfully!");
+
+                // Add the imported document to the set of existing documents just in case the user
+                // somehow manages to upload two files with the same name...
+                existingDocuments.add(fileName);
             }
             catch (Throwable e) {
-                error("Error while uploading document " + fileName + ": " + getRootCauseMessage(e));
-                LOG.error(fileName + ": " + e.getMessage(), e);
+                if (e.getCause() instanceof CasDoctorException) {
+                    var ex = (CasDoctorException) e.getCause();
+                    error("Document [" + fileName + "] contains inconsistent data.");
+                    ex.getDetails().stream().filter(msg -> msg.level == LogLevel.ERROR)
+                            .forEachOrdered(msg -> error(msg.message));
+                }
+                else {
+                    error("Error while uploading document [" + fileName + "]: "
+                            + getRootCauseMessage(e));
+                    LOG.error(fileName + ": " + e.getMessage(), e);
+                }
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
+
+        send(this, BUBBLE, new SourceDocumentImportedEvent(aTarget, importedDocuments));
 
         aTarget.add(findParent(ProjectSettingsPanelBase.class));
     }

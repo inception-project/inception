@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
 
 @Component
@@ -50,7 +50,7 @@ public class FeatureValueUpdatedEventAdapter
     @Override
     public String getAnnotator(FeatureValueUpdatedEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

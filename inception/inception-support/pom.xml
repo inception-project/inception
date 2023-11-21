@@ -20,11 +20,16 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>30.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-support</artifactId>
   <name>INCEpTION - Support library</name>
   <dependencies>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -46,9 +51,14 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.github.rjeschke</groupId>
       <artifactId>txtmark</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+      <artifactId>owasp-java-html-sanitizer</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -63,6 +73,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -97,10 +111,6 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui</artifactId>
     </dependency>
@@ -114,19 +124,15 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-urlfragment</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-input-events</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.github.openjson</groupId>
-      <artifactId>openjson</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
@@ -135,17 +141,6 @@
     <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>vue</artifactId>
-      <version>3.0.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>dayjs</artifactId>
-      <version>1.9.6</version>
     </dependency>
 
     <!-- Database dependencies -->
@@ -179,6 +174,15 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.networknt</groupId>
+      <artifactId>json-schema-validator</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -199,7 +203,7 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
@@ -210,20 +214,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies>
-              <!--
-                - Maven doesn't detect the the webjar dependencies because there is
-                - no actual code dependency
-              -->
-              <usedDependency>org.webjars.npm:vue</usedDependency>
-              <usedDependency>org.webjars.npm:dayjs</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <executions>
@@ -233,19 +223,19 @@
                 <excludes combine.children="append">
                   <!-- Trivial template file which a license header would bloat too much-->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicket/input/remove-input-behavior.js</exclude>
-                  <!-- These upstream files do not contain license headers -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/support/vue/vue3-sfc-loader.min.js.map</exclude>
-                  <!-- Apache License without header -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/sass/*.java</exclude>
-                  <!-- MIT License -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/css/*</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/js/*</exclude>
                 </excludes>
               </configuration>
             </execution>
           </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <usedDependency>jakarta.annotation:jakarta.annotation-api</usedDependency>
+            </usedDependencies>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

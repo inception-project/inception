@@ -36,8 +36,13 @@ You can enable websocket support for your instance which allows to push messages
 | false
 | true
 
-| websocket.loggedevent.enabled
+| websocket.logged-events.enabled
 | enable/disable push messages for logged events
 | false
 | true
+
+| websocket.recommender-events.enabled
+| enable/disable push messages for recommender events
+| true
+| false
 |===

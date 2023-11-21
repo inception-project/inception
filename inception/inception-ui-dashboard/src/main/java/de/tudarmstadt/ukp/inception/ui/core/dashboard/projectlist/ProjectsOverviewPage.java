@@ -17,82 +17,94 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
-import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import com.github.rjeschke.txtmark.Processor;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
+    public static final Key<ProjectListSortState> KEY_PROJECT_LIST_SORT_MODE = new Key<>(
+            ProjectListSortState.class, "project-overview/project-list-sort-mode");
+
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
     private static final String MID_DESCRIPTION = "description";
@@ -106,53 +118,153 @@ public class ProjectsOverviewPage
     private static final String MID_IMPORT_PROJECT_PANEL = "importProjectPanel";
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
-    private static final String MID_CONFIRM_LEAVE = "confirmLeave";
+    private static final String MID_DIALOG = "dialog";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
     private static final String MID_START_TUTORIAL = "startTutorial";
     private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
+    private static final String MID_PAGING_NAVIGATOR = "pagingNavigator";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
+    private @SpringBean DashboardProperties dashboardProperties;
+    private @SpringBean PreferencesService userPrefService;
+
+    private IModel<List<ProjectEntry>> allAccessibleProjects;
+    private IModel<User> currentUser;
+    private IModel<ProjectListSortStrategy> sortStrategy;
 
     private WebMarkupContainer projectListContainer;
-    private WebMarkupContainer roleFilters;
-    private IModel<Set<PermissionLevel>> activeRoleFilters;
-    private IModel<List<ProjectEntry>> allAccessibleProjects;
-    private IModel<List<ProjectEntry>> filteredProjects;
-    private IModel<User> currentUser;
-    private ConfirmationDialog confirmLeaveDialog;
-    private Label emptyListLabel;
+    private DataView<ProjectEntry> projectList;
+    private PagingNavigator navigator;
+    private BootstrapModalDialog dialog;
+    private Label noProjectsNotice;
+    private TextField<String> nameFilter;
 
     private Set<Long> highlightedProjects = new HashSet<>();
+    private ProjectListDataProvider dataProvider;
 
     public ProjectsOverviewPage()
     {
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
         allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
-        filteredProjects = allAccessibleProjects.map(_projects -> filterByRoles(_projects));
-        activeRoleFilters = Model.ofSet(new HashSet<>());
+
+        User user = userRepository.getCurrentUser();
+        sortStrategy = new LambdaModelAdapter.Builder<ProjectListSortStrategy>() //
+                .getting(() -> userPrefService.loadTraitsForUser(KEY_PROJECT_LIST_SORT_MODE,
+                        user).strategy)
+                .setting(v -> userPrefService.saveTraitsForUser(KEY_PROJECT_LIST_SORT_MODE, user,
+                        new ProjectListSortState(v)))
+                .build();
+
+        dataProvider = new ProjectListDataProvider(allAccessibleProjects);
+        dataProvider.setSort(sortStrategy.getObject().key, sortStrategy.getObject().order);
 
         fastTrackAnnotatorsToProject();
 
-        add(projectListContainer = createProjectList());
-        emptyListLabel = new Label(MID_EMPTY_LIST_LABEL,
+        projectListContainer = new WebMarkupContainer(MID_PROJECTS);
+        projectListContainer.add(visibleWhen(() -> dataProvider.size() > 0));
+        projectListContainer.setOutputMarkupPlaceholderTag(true);
+        queue(projectListContainer);
+
+        queue(projectList = createProjectList(MID_PROJECT, dataProvider));
+
+        queue(navigator = createPagingNavigator(MID_PAGING_NAVIGATOR, projectList));
+
+        noProjectsNotice = new Label(MID_EMPTY_LIST_LABEL,
                 LoadableDetachableModel.of(this::getNoProjectsMessage));
-        emptyListLabel.add(visibleWhen(() -> filteredProjects.getObject().isEmpty()));
-        projectListContainer.add(emptyListLabel);
+        noProjectsNotice.add(visibleWhen(() -> dataProvider.size() == 0));
+        noProjectsNotice.setOutputMarkupPlaceholderTag(true);
+        queue(noProjectsNotice);
 
-        add(createStartTutorialLink());
-        add(createProjectCreationGroup());
-        add(createProjectImportGroup());
-        add(roleFilters = createRoleFilters(allAccessibleProjects));
+        add(createStartTutorialLink()); // Must be add instead of queue otherwise there is an error
+        queue(createProjectCreationGroup());
+        queue(createProjectImportGroup());
+        queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
+                () -> dataProvider.getFilterState().getRoles()));
 
-        add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                new StringResourceModel("leaveDialog.title", this),
-                new StringResourceModel("leaveDialog.text", this)));
+        DropDownChoice<ProjectListSortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
+        sortOrder.setModel(sortStrategy);
+        sortOrder.setChoiceRenderer(new EnumChoiceRenderer<>(sortOrder));
+        sortOrder.setChoices(asList(ProjectListSortStrategy.values()));
+        sortOrder.setNullValid(false);
+        sortOrder.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            var s = sortOrder.getModelObject();
+            dataProvider.setSort(s.key, s.order);
+            _target.add(projectListContainer);
+        }));
+        queue(sortOrder);
+
+        nameFilter = new TextField<>("nameFilter",
+                PropertyModel.of(dataProvider.getFilterState(), "projectName"), String.class);
+        nameFilter.setOutputMarkupPlaceholderTag(true);
+        nameFilter.add(
+                new LambdaAjaxFormComponentUpdatingBehavior(INPUT_EVENT, this::actionApplyFilter)
+                        .withDebounce(ofMillis(200)));
+        nameFilter.add(new LambdaAjaxFormComponentUpdatingBehavior(KEYDOWN_EVENT, this::actionOpen)
+                .withKeyCode(ENTER));
+        nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
+        queue(nameFilter);
+
+        dialog = new BootstrapModalDialog(MID_DIALOG);
+        dialog.trapFocus();
+        queue(dialog);
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
+    }
+
+    @OnEvent
+    public void onProjectRoleFilterStateChanged(ProjectRoleFilterStateChanged aEvent)
+    {
+        actionApplyFilter(aEvent.getTarget());
+    }
+
+    private void actionApplyFilter(AjaxRequestTarget aTarget)
+    {
+        // Force navigator to clear internal item count cache
+        navigator.detach();
+        aTarget.add(projectListContainer, navigator, noProjectsNotice);
+    }
+
+    private void actionOpen(AjaxRequestTarget aTarget)
+    {
+        if (dataProvider.size() == 1) {
+            var project = dataProvider.iterator(0, 1).next().getProject();
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
+            setResponsePage(ProjectDashboardPage.class, pageParameters);
+        }
+    }
+
+    private BootstrapAjaxPagingNavigator createPagingNavigator(String aId,
+            DataView<ProjectEntry> aProjectList)
+    {
+        var pagingNavigator = new BootstrapAjaxPagingNavigator(aId, aProjectList)
+        {
+            private static final long serialVersionUID = 853561772299520056L;
+
+            @Override
+            protected void onAjaxEvent(AjaxRequestTarget aTarget)
+            {
+                super.onAjaxEvent(aTarget);
+                // aTarget.add(numberOfResults);
+            }
+        };
+        pagingNavigator.setOutputMarkupPlaceholderTag(true);
+        pagingNavigator.add(LambdaBehavior
+                .onConfigure(() -> pagingNavigator.getPagingNavigation().setViewSize(10)));
+        pagingNavigator.add(visibleWhen(() -> aProjectList.getItemCount() > 0));
+        return pagingNavigator;
     }
 
     private WebMarkupContainer createProjectCreationGroup()
@@ -161,7 +273,6 @@ public class ProjectsOverviewPage
         authorize(projectCreationGroup, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         projectCreationGroup.add(createNewProjectLink());
-        projectCreationGroup.add(createQuickProjectCreationDropdown());
         return projectCreationGroup;
     }
 
@@ -184,8 +295,7 @@ public class ProjectsOverviewPage
 
     private String getNoProjectsMessage()
     {
-        if (!allAccessibleProjects.getObject().isEmpty()
-                && filteredProjects.getObject().isEmpty()) {
+        if (!allAccessibleProjects.getObject().isEmpty() && dataProvider.size() == 0) {
             return getString("noProjects.noFilterMatch");
         }
 
@@ -215,37 +325,6 @@ public class ProjectsOverviewPage
         }
     }
 
-    private WebMarkupContainer createQuickProjectCreationDropdown()
-    {
-        ListView<ProjectInitializer> initializers = new ListView<ProjectInitializer>("templates",
-                LambdaModel.of(this::listInitializers))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void populateItem(ListItem<ProjectInitializer> aItem)
-            {
-                LambdaAjaxLink link = new LambdaAjaxLink("createProjectUsingTemplate",
-                        _target -> actionCreateProject(_target, aItem.getModelObject()));
-                link.add(new Label("name", Model.of(aItem.getModelObject().getName())));
-                aItem.add(link);
-            }
-        };
-
-        WebMarkupContainer initializersContainer = new WebMarkupContainer("templatesContainer");
-        initializersContainer.setOutputMarkupId(true);
-        initializersContainer.add(initializers);
-        return initializersContainer;
-    }
-
-    private List<ProjectInitializer> listInitializers()
-    {
-        return projectService.listProjectInitializers().stream()
-                .filter(initializer -> initializer instanceof QuickProjectInitializer)
-                .sorted(comparing(ProjectInitializer::getName)) //
-                .collect(toList());
-    }
-
     private LambdaAjaxLink createNewProjectLink()
     {
         LambdaAjaxLink newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT,
@@ -263,6 +342,7 @@ public class ProjectsOverviewPage
     {
         LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
+        startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
         startTutorialLink.add(visibleWhen(() -> {
             return userRepository.isAdministrator(currentUser.getObject())
                     || userRepository.isProjectCreator(currentUser.getObject());
@@ -273,19 +353,31 @@ public class ProjectsOverviewPage
         return startTutorialLink;
     }
 
+    private boolean isTutorialAvailable()
+    {
+        try {
+            Class.forName("de.tudarmstadt.ukp.inception.tutorial.TutorialFooterItem");
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
     private void startTutorial(AjaxRequestTarget aTarget)
     {
         aTarget.appendJavaScript(" startTutorial(); ");
     }
 
-    private WebMarkupContainer createProjectList()
+    private DataView<ProjectEntry> createProjectList(String aId,
+            ProjectListDataProvider aDataProvider)
     {
-        ListView<ProjectEntry> listview = new ListView<ProjectEntry>(MID_PROJECT, filteredProjects)
+        return new DataView<ProjectEntry>(aId, aDataProvider, 25)
         {
             private static final long serialVersionUID = -755155675319764642L;
 
             @Override
-            protected void populateItem(ListItem<ProjectEntry> aItem)
+            protected void populateItem(Item<ProjectEntry> aItem)
             {
                 Project project = aItem.getModelObject().getProject();
 
@@ -294,15 +386,19 @@ public class ProjectsOverviewPage
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                aItem.add(new Label(MID_DESCRIPTION, aItem.getModelObject().getShortDescription())
-                        .setEscapeModelStrings(false));
-                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
-                        () -> project.getCreated(), "yyyy-MM-dd");
+                aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
+                        aItem.getModelObject().getShortDescription()));
+
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
-                createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
-                aItem.add(createdLabel);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
+
+                Label createdLabel = new Label(MID_CREATED,
+                        () -> project.getCreated() != null ? formatDate(project.getCreated())
+                                : null);
+                createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
+                aItem.add(createdLabel);
+
                 Label projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
@@ -315,22 +411,16 @@ public class ProjectsOverviewPage
                     protected Set<String> update(Set<String> aClasses)
                     {
                         if (highlightedProjects.contains(project.getId())) {
-                            aClasses.add("border border-primary");
+                            aClasses.add("border border-primary bg-light");
                         }
                         else {
-                            aClasses.remove("border border-primary");
+                            aClasses.remove("border border-primary bg-light");
                         }
                         return aClasses;
                     }
                 });
             }
         };
-
-        WebMarkupContainer projectList = new WebMarkupContainer(MID_PROJECTS);
-        projectList.setOutputMarkupPlaceholderTag(true);
-        projectList.add(listview);
-
-        return projectList;
     }
 
     private void addActionsDropdown(ListItem<ProjectEntry> aItem)
@@ -359,50 +449,25 @@ public class ProjectsOverviewPage
 
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
-        confirmLeaveDialog.setConfirmAction((_target) -> {
-            projectService.leaveProject(currentUser.getObject(), aProject);
-            _target.add(projectListContainer);
+        var dialogContent = new LeaveProjectConfirmationDialogPanel(BootstrapModalDialog.CONTENT_ID,
+                Model.of(aProject));
+
+        dialogContent.setConfirmAction((_target) -> {
+            projectService.revokeAllRoles(aProject, currentUser.getObject());
+            allAccessibleProjects.detach();
+            dataProvider.refresh();
+            actionApplyFilter(_target);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");
         });
-        confirmLeaveDialog.show(aTarget);
-    }
 
-    private WebMarkupContainer createRoleFilters(IModel<List<ProjectEntry>> aAccessibleProjects)
-    {
-        ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
-                asList(PermissionLevel.values()))
-        {
-            private static final long serialVersionUID = -4762585878276156468L;
-
-            @Override
-            protected void populateItem(ListItem<PermissionLevel> aItem)
-            {
-                PermissionLevel level = aItem.getModelObject();
-                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink",
-                        _target -> actionApplyRoleFilter(_target, aItem.getModelObject()));
-                link.add(new Label(MID_LABEL, getString(
-                        Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
-                link.add(new AttributeAppender("class",
-                        () -> activeRoleFilters.getObject().contains(aItem.getModelObject())
-                                ? "active"
-                                : "",
-                        " "));
-                aItem.add(link);
-            }
-        };
-
-        WebMarkupContainer container = new WebMarkupContainer("roleFilters");
-        container.setOutputMarkupPlaceholderTag(true);
-        container.add(listview);
-        container.add(visibleWhen(() -> !aAccessibleProjects.getObject().isEmpty()));
-
-        return container;
+        dialog.open(dialogContent, aTarget);
     }
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
-        return new ListView<PermissionLevel>(MID_ROLE, aProjectEntry.getLevels())
+        var levels = aProjectEntry.getLevels();
+        return new ListView<PermissionLevel>(MID_ROLE, levels)
         {
             private static final long serialVersionUID = -96472758076828409L;
 
@@ -416,68 +481,11 @@ public class ProjectsOverviewPage
         };
     }
 
-    private void actionApplyRoleFilter(AjaxRequestTarget aTarget, PermissionLevel aPermission)
-    {
-        Set<PermissionLevel> activeRoles = activeRoleFilters.getObject();
-        if (activeRoles.contains(aPermission)) {
-            activeRoles.remove(aPermission);
-        }
-        else {
-            activeRoles.add(aPermission);
-        }
-
-        aTarget.add(projectListContainer, roleFilters);
-        aTarget.addChildren(getPage(), IFeedback.class);
-    }
-
-    private List<ProjectEntry> filterByRoles(List<ProjectEntry> aAccessibleProjects)
-    {
-        // If no filters are selected, all projects are listed
-        if (activeRoleFilters.getObject().isEmpty()) {
-            return aAccessibleProjects;
-        }
-
-        // ... otherwise only those projects are listed that match the filter
-        return aAccessibleProjects.stream()
-                .filter(p -> p.hasAllLevels(activeRoleFilters.getObject())).collect(toList());
-    }
-
     private void actionCreateProject(AjaxRequestTarget aTarget)
     {
-        PageParameters params = new PageParameters();
-        params.set(PAGE_PARAM_PROJECT, NEW_PROJECT_ID);
-        setResponsePage(ProjectSettingsPage.class, params);
-    }
-
-    private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
-    {
-        String username = currentUser.getObject().getUsername();
-        aTarget.addChildren(getPage(), IFeedback.class);
-        String projectSlug = projectService.deriveSlugFromName(username);
-        projectSlug = projectService.deriveUniqueSlug(projectSlug);
-
-        try {
-            Project project = new Project(projectSlug);
-            project.setName(username + " - New project");
-            projectService.createProject(project);
-
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, MANAGER));
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, CURATOR));
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, ANNOTATOR));
-
-            projectService.initializeProject(project, asList(aInitializer));
-
-            PageParameters pageParameters = new PageParameters();
-            ProjectPageBase.setProjectPageParameter(pageParameters, project);
-            setResponsePage(ProjectDashboardPage.class, pageParameters);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to create project [{}]", projectSlug, e);
-            error("Unable to create project [" + projectSlug + "]");
-        }
+        var dialogContent = new ProjectTemplateSelectionDialogPanel(
+                BootstrapModalDialog.CONTENT_ID);
+        dialog.open(dialogContent, aTarget);
     }
 
     @OnEvent
@@ -486,6 +494,8 @@ public class ProjectsOverviewPage
         List<Project> projects = aEvent.getProjects();
 
         if (projects.size() > 1) {
+            allAccessibleProjects.detach(); // Ensure that the subsequent refresh gets fresh data
+            dataProvider.refresh();
             aEvent.getTarget().add(projectListContainer);
             highlightedProjects.clear();
             projects.stream().forEach(p -> highlightedProjects.add(p.getId()));
@@ -504,98 +514,20 @@ public class ProjectsOverviewPage
         }
     }
 
-    private List<ProjectEntry> loadProjects()
+    private static String formatDate(Date aTime)
     {
-        return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
-                .entrySet().stream() //
-                .map(e -> new ProjectEntry(e.getKey(), e.getValue()))
-                .sorted(comparing(ProjectEntry::getName)) //
-                .collect(toList());
+        return new SimpleDateFormat("yyyy-MM-dd").format(aTime);
     }
 
-    private static class ProjectEntry
-        implements Serializable
+    private List<ProjectEntry> loadProjects()
     {
-        private static final long serialVersionUID = -5715212313329449759L;
-
-        private final Project project;
-        private final List<PermissionLevel> levels;
-
-        public ProjectEntry(Project aProject, Collection<PermissionLevel> aLevels)
-        {
-            project = aProject;
-            levels = aLevels.stream().sorted(comparing(PermissionLevel::getName)).collect(toList());
-        }
-
-        public String getName()
-        {
-            return project.getName();
-        }
-
-        public String getSlug()
-        {
-            return project.getSlug();
-        }
-
-        public String getShortDescription()
-        {
-            if (StringUtils.isBlank(project.getDescription())) {
-                return null;
-            }
-
-            var shortDescription = substringBefore(project.getDescription(), "\n");
-            var shortDescriptionHtml = Processor.process(shortDescription, true);
-            shortDescriptionHtml = StringUtils.removeStart(shortDescriptionHtml, "<p>");
-            shortDescriptionHtml = StringUtils.removeEnd(shortDescriptionHtml, "</p>");
-            return shortDescriptionHtml;
-        }
-
-        public Project getProject()
-        {
-            return project;
-        }
-
-        public List<PermissionLevel> getLevels()
-        {
-            return levels;
-        }
-
-        public boolean hasAnyLevel(Set<PermissionLevel> aLevels)
-        {
-            for (PermissionLevel l : levels) {
-                if (aLevels.contains(l)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public boolean hasAllLevels(Set<PermissionLevel> aLevels)
-        {
-            return levels.containsAll(aLevels);
-        }
-
-        @Override
-        public String toString()
-        {
-            return "[" + project.getName() + "]";
-        }
-
-        @Override
-        public boolean equals(final Object other)
-        {
-            if (!(other instanceof ProjectEntry)) {
-                return false;
-            }
-            ProjectEntry castOther = (ProjectEntry) other;
-            return new EqualsBuilder().append(project, castOther.project).isEquals();
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return new HashCodeBuilder().append(project).toHashCode();
-        }
+        var isAdmin = userRepository.isAdministrator(currentUser.getObject());
+        return projectService.listAccessibleProjectsWithPermissions(currentUser.getObject())
+                .entrySet().stream() //
+                .map(e -> new ProjectEntry(e.getKey(), e.getValue())) //
+                .filter(e -> isAdmin || e.getLevels().contains(MANAGER)
+                        || containsAny(e.getLevels(), dashboardProperties.getAccessibleByRoles()))
+                .sorted(comparing(ProjectEntry::getName)) //
+                .collect(toList());
     }
 }

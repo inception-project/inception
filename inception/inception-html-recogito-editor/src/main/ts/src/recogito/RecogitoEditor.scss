@@ -1,0 +1,67 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ @import 'ApacheAnnotatorEditor.scss';
+
+ body {
+   line-height: 200%;
+ }
+ 
+ .r6o-content-wrapper {
+   .i7n-marker-focus {
+     box-shadow: 0px 2px 0px 0px var(--i7n-focus-color) !important;
+     box-decoration-break: clone;
+     -webkit-box-decoration-break: clone;
+    }
+ }
+ 
+ svg.r6o-connections-canvas {
+  z-index: 1;
+
+   .r6o-connections-edge.i7n-marker-focus {
+     .r6o-connections-edge-path {
+       .r6o-connections-edge-path-outer {
+         stroke: var(--i7n-focus-color) !important;
+       }
+     }
+   }
+ 
+   .r6o-connections-edge {
+     .r6o-connections-edge-label tspan {
+       pointer-events: none !important;
+     }
+ 
+     // .r6o-connections-edge-path {
+     //   pointer-events: bounding-box;
+     // }
+   
+     .r6o-connections-edge-path:hover {
+       .r6o-connections-edge-path-inner {
+         stroke-width: 3px;
+       }
+ 
+       .r6o-connections-edge-base,
+       .r6o-connections-edge-head {
+         stroke-width: 3px;
+       }
+ 
+       .r6o-connections-edge-path-buffer {
+         stroke: rgba($i7n-focus-color, 0.7) !important;
+       }
+     }
+   }
+ }

@@ -28,15 +28,14 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * Finds annotations that are reachable through an attach-feature but that are not actually indexed
@@ -46,7 +45,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class ReindexFeatureAttachedSpanAnnotationsRepair
     implements Repair
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public ReindexFeatureAttachedSpanAnnotationsRepair(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)

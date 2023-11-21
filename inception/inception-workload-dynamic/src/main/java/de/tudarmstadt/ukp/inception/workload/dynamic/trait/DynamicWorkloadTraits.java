@@ -22,12 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import java.io.Serializable;
 import java.time.Duration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 
 /**
  * Trait class for dynamic workload
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicWorkloadTraits
     implements Serializable
 {
@@ -36,6 +39,7 @@ public class DynamicWorkloadTraits
     private String workflowType;
     private int defaultNumberOfAnnotations;
     private boolean confirmFinishingDocuments = true;
+    private boolean documentResetAllowed = true;
 
     private Duration abandonationTimeout;
     private AnnotationDocumentState abandonationState = IGNORE;
@@ -108,5 +112,15 @@ public class DynamicWorkloadTraits
     public void setConfirmFinishingDocuments(boolean aConfirmFinishingDocuments)
     {
         confirmFinishingDocuments = aConfirmFinishingDocuments;
+    }
+
+    public boolean isDocumentResetAllowed()
+    {
+        return documentResetAllowed;
+    }
+
+    public void setDocumentResetAllowed(boolean aDocumentResetAllowed)
+    {
+        documentResetAllowed = aDocumentResetAllowed;
     }
 }

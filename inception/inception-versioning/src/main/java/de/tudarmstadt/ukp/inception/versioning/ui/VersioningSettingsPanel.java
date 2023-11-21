@@ -158,6 +158,7 @@ public class VersioningSettingsPanel
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
+    @SuppressWarnings("unused")
     private static class RepositoryConfig
         implements Serializable
     {
@@ -175,5 +176,4 @@ public class VersioningSettingsPanel
         private String username;
         private String password;
     }
-
 }

@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -25,39 +26,37 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.SetUtils.unmodifiableSet;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLinkDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
+@ConditionalOnWebApplication
 @RestController
 @RequestMapping(ActivitiesDashletController.BASE_URL)
 public class ActivitiesDashletControllerImpl
@@ -114,29 +113,30 @@ public class ActivitiesDashletControllerImpl
     @GetMapping(LIST_PATH)
     public List<Activity> listActivities(@PathVariable("projectId") long aProjectId)
     {
-        User user = userRepository.getCurrentUser();
-        Project project = projectRepository.getProject(aProjectId);
+        var user = userRepository.getCurrentUser();
+        var project = projectRepository.getProject(aProjectId);
 
-        if (!projectRepository.existsProjectPermission(user, project)) {
+        if (!projectRepository.hasAnyRole(user, project)) {
             return emptyList();
         }
 
-        Map<Long, SourceDocument> annotatableSourceDocuments = documentService
-                .listAnnotatableDocuments(project, user).keySet().stream()
+        var annotatableSourceDocuments = documentService.listAnnotatableDocuments(project, user)
+                .keySet().stream() //
                 .collect(toMap(SourceDocument::getId, identity()));
 
-        Map<Long, SourceDocument> curatableSourceDocuments = curationService
-                .listCuratableSourceDocuments(project).stream()
+        var curatableSourceDocuments = curationService.listCuratableSourceDocuments(project)
+                .stream() //
                 .collect(toMap(SourceDocument::getId, identity()));
 
-        boolean isCurator = projectRepository.isCurator(project, user);
+        var isCurator = projectRepository.hasRole(user, project, CURATOR);
 
         // get last annotation events
         // return filtered by user rights and document state
-        List<LoggedEvent> recentEvents = eventRepository.listRecentActivity(project,
-                user.getUsername(), annotationEvents, 10);
+        var recentEvents = eventRepository.listRecentActivity(project, user.getUsername(),
+                annotationEvents, 10);
         return recentEvents.stream() //
                 .filter(Objects::nonNull) //
+                .filter(event -> event.getDocument() != -1l) //
                 // Filter out documents which are not annotatable or curatable
                 .filter(event -> {
                     if (CURATION_USER.equals(event.getAnnotator())) {
@@ -154,13 +154,14 @@ public class ActivitiesDashletControllerImpl
                 .map(event -> {
                     if (CURATION_USER.equals(event.getAnnotator())) {
                         return new Activity(event,
-                                annotatableSourceDocuments.get(event.getDocument()),
+                                curatableSourceDocuments.get(event.getDocument()),
                                 curationPageMenuItem.getUrl(project, event.getDocument()));
                     }
                     else {
                         return new Activity(event,
                                 annotatableSourceDocuments.get(event.getDocument()),
-                                annotationPageMenuItem.getUrl(project, event.getDocument()));
+                                annotationPageMenuItem.getUrl(project, event.getDocument(),
+                                        event.getAnnotator()));
                     }
                 })//
                 .collect(toList());

@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.bytesToChars;
+import static java.util.stream.Collectors.toList;
+import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
+import static org.apache.uima.fit.factory.JCasFactory.createJCas;
+
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -50,16 +54,19 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
-import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.xml.sax.SAXException;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -91,106 +98,97 @@ public class MtasUimaParserLuceneTest
     private static final String MTAS_PARSER = MtasUimaParser.class.getName();
 
     @Test
-    public void testUimaParser() throws Exception
+    public void testUimaParser(@TempDir Path aTemp) throws Exception
     {
-        Directory directory = new RAMDirectory();
+        Directory directory = FSDirectory.open(aTemp.resolve("index"));
 
-        // analyzer
-        Map<String, String> paramsTokenizer = new HashMap<String, String>();
-        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER, MTAS_PARSER);
+        PerFieldAnalyzerWrapper analyzer = createAnalyzer();
 
-        String args = "{\"projectId\": -1, \"layers\":[{\"layerName\":\"Token\",\"features\":[\"value\",\"lemma\",\"pos\"]}]}";
-        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS, args);
-
-        Analyzer mtasAnalyzer = CustomAnalyzer.builder().withTokenizer("mtas", paramsTokenizer)
-                .build();
-        Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
-        analyzerPerField.put(FIELD_CONTENT, mtasAnalyzer);
-        PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(new StandardAnalyzer(),
-                analyzerPerField);
-
-        // indexwriter
-        IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        config.setUseCompoundFile(false);
-        config.setCodec(Codec.forName(MtasCodec.MTAS_CODEC_NAME));
-        // config.setCodec(Codec.forName("MtasSimpleTextCodec"));
-        IndexWriter w = new IndexWriter(directory, config);
-        // delete
-        w.deleteAll();
-
-        // Add first uima document
-        JCas jcas = JCasFactory.createJCas();
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
-        tb.buildTokens(jcas, "This is a test . This is sentence two .");
-
-        DocumentMetaData dmd = DocumentMetaData.create(jcas);
-        dmd.setDocumentTitle("Test");
-        dmd.setDocumentId("1");
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        XmiCasSerializer.serialize(jcas.getCas(), null, bos, true, null);
-        bos.close();
-
-        Document doc = new Document();
-        doc.add(new StringField(FIELD_ID, "11", Field.Store.YES));
-        doc.add(new StringField(FIELD_TITLE, dmd.getDocumentTitle(), Field.Store.YES));
-        doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                Field.Store.YES));
-        w.addDocument(doc);
-        w.commit();
-
-        // Add second uima document
-        jcas = JCasFactory.createJCas();
-        tb = new TokenBuilder<>(Token.class, Sentence.class);
-        tb.buildTokens(jcas, "This is second document .");
-
-        dmd = DocumentMetaData.create(jcas);
-        dmd.setDocumentTitle("Test");
-        dmd.setDocumentId("1");
-
-        bos = new ByteArrayOutputStream();
-        XmiCasSerializer.serialize(jcas.getCas(), null, bos, true, null);
-        bos.close();
-
-        doc = new Document();
-        doc.add(new StringField(FIELD_ID, "12", Field.Store.YES));
-        doc.add(new StringField(FIELD_TITLE, dmd.getDocumentTitle(), Field.Store.YES));
-        doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                Field.Store.YES));
-        w.addDocument(doc);
-
-        // commit
-        w.commit();
-
-        // close
-        w.close();
-
-        // Gets all annotation types from the cas
-        HashSet<String> annotationTypes = new HashSet<String>();
-        for (Annotation annotation : JCasUtil.select(jcas, Annotation.class)) {
-            annotationTypes.add(annotation.getType().getShortName());
+        try (IndexWriter w = createIndexWriter(directory, analyzer)) {
+            indexDocument(w, 1, "Test", "11", "This is a test . This is sentence two .");
+            indexDocument(w, 1, "Test", "12", "This is second document .");
         }
 
-        // Build the query prefixes list from the annotation types
-        List<String> prefixes = new ArrayList<String>(annotationTypes);
-
-        String cql = "([][Token=\"test\" | Token=\"Test\"]) within <Sentence/>";
-        cql = "([Token=\"this\" | Token=\"This\"])";
+        // String cql = "([][Token=\"test\" | Token=\"Test\"]) within <Sentence/>";
+        var cql = "([Token=\"this\" | Token=\"This\"])";
         // cql = "([])";
         IndexReader indexReader = DirectoryReader.open(directory);
 
         MtasSpanQuery q = createQuery(FIELD_CONTENT, cql);
+
+        // Build the query prefixes list from the annotation types
+        List<String> prefixes = createJCas().select(Annotation.class) //
+                .map(a -> a.getType().getShortName()) //
+                .distinct() //
+                .collect(toList());
+
         doQuery(indexReader, FIELD_CONTENT, q, prefixes);
     }
 
-    private static void doQuery(IndexReader indexReader, String field, MtasSpanQuery q,
+    static byte[] createBinaryCasDocument(int aDocId, String aTitle, String aText)
+        throws ResourceInitializationException, CASException, IOException
+    {
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
+        tb.buildTokens(jcas, aText);
+
+        DocumentMetaData dmd = DocumentMetaData.create(jcas);
+        dmd.setDocumentTitle(aTitle);
+        dmd.setDocumentId(Integer.toString(aDocId));
+
+        return WebAnnoCasUtil.casToByteArray(jcas.getCas());
+    }
+
+    static void indexDocument(IndexWriter aWriter, int aDocId, String aTitle, String aField,
+            String aText)
+        throws ResourceInitializationException, CASException, SAXException, IOException,
+        UnsupportedEncodingException
+    {
+        var binaryCas = createBinaryCasDocument(aDocId, aTitle, aText);
+        String encodedCAS = new String(bytesToChars(binaryCas));
+
+        Document doc = new Document();
+        doc.add(new StringField(FIELD_ID, aField, Field.Store.YES));
+        doc.add(new StringField(FIELD_TITLE, aTitle, Field.Store.YES));
+        doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.YES));
+        aWriter.addDocument(doc);
+        aWriter.commit();
+    }
+
+    static IndexWriter createIndexWriter(Directory directory, PerFieldAnalyzerWrapper analyzer)
+        throws IOException
+    {
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setUseCompoundFile(false);
+        config.setCodec(Codec.forName(MtasCodec.MTAS_CODEC_NAME));
+        IndexWriter w = new IndexWriter(directory, config);
+        w.deleteAll();
+        return w;
+    }
+
+    static PerFieldAnalyzerWrapper createAnalyzer() throws IOException
+    {
+        Map<String, String> paramsTokenizer = new HashMap<String, String>();
+        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER, MTAS_PARSER);
+        paramsTokenizer.put(MtasTokenizerFactory.ARGUMENT_PARSER_ARGS, "{\"projectId\": 1}");
+
+        Analyzer mtasAnalyzer = CustomAnalyzer.builder() //
+                .withTokenizer("mtas", paramsTokenizer) //
+                .build();
+        Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
+        analyzerPerField.put(FIELD_CONTENT, mtasAnalyzer);
+        return new PerFieldAnalyzerWrapper(new StandardAnalyzer(), analyzerPerField);
+    }
+
+    static void doQuery(IndexReader indexReader, String field, MtasSpanQuery q,
             List<String> prefixes)
         throws IOException
     {
         ListIterator<LeafReaderContext> iterator = indexReader.leaves().listIterator();
         IndexSearcher searcher = new IndexSearcher(indexReader);
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher, false, boost);
+        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher, COMPLETE_NO_SCORES,
+                boost);
 
         while (iterator.hasNext()) {
             System.out.println("#### new iteration ####");

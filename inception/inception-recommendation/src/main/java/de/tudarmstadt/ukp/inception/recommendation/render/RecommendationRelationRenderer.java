@@ -18,55 +18,50 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getSourceDocumentName;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
- * Render spans.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationRelationRenderer}.
+ * </p>
  */
 public class RecommendationRelationRenderer
-    implements RecommendationTypeRenderer
+    implements RecommendationTypeRenderer<RelationAdapter>
 {
-    private final RelationAdapter typeAdapter;
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService annotationService;
     private final FeatureSupportRegistry fsRegistry;
 
-    public RecommendationRelationRenderer(RelationAdapter aTypeAdapter,
-            RecommendationService aRecommendationService,
+    public RecommendationRelationRenderer(RecommendationService aRecommendationService,
             AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
-        typeAdapter = aTypeAdapter;
         recommendationService = aRecommendationService;
         annotationService = aAnnotationService;
         fsRegistry = aFsRegistry;
@@ -76,56 +71,42 @@ public class RecommendationRelationRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the VDocument
      * {@link VDocument}
      *
-     * @param aCas
-     *            The CAS object containing annotations
-     * @param vdoc
+     * @param aVDoc
      *            A VDocument containing annotations for the given layer
+     * @param aPredictions
+     *            the predictions to render
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument aVDoc, RenderRequest aRequest, Predictions aPredictions,
+            RelationAdapter aTypeAdapter)
     {
-        if (aCas == null || recommendationService == null) {
-            return;
-        }
-
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-
-        // No recommendations available at all
-        if (predictions == null) {
-            return;
-        }
-
-        AnnotationLayer layer = typeAdapter.getLayer();
+        var cas = aRequest.getCas();
+        var layer = aTypeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
-                .orElseGet(() -> getDocumentTitle(aCas));
-        SuggestionDocumentGroup<RelationSuggestion> groupedPredictions = predictions
-                .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, layer,
-                        aWindowBeginOffset, aWindowEndOffset);
+        var sourceDocumentName = getSourceDocumentName(cas).orElseGet(() -> getDocumentTitle(cas));
+        var groupedPredictions = aPredictions.getGroupedPredictions(RelationSuggestion.class,
+                sourceDocumentName, layer, aRequest.getWindowBeginOffset(),
+                aRequest.getWindowEndOffset());
 
         // No recommendations to render for this layer
         if (groupedPredictions.isEmpty()) {
             return;
         }
 
-        recommendationService.calculateRelationSuggestionVisibility(aCas,
-                aState.getUser().getUsername(), layer, groupedPredictions, aWindowBeginOffset,
-                aWindowEndOffset);
+        recommendationService.calculateRelationSuggestionVisibility(
+                aRequest.getSessionOwner().getUsername(), cas,
+                aRequest.getAnnotationUser().getUsername(), layer, groupedPredictions,
+                aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+        Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
-        String bratTypeName = typeAdapter.getEncodedTypeName();
-
-        Type attachType = CasUtil.getType(aCas, layer.getAttachType().getName());
+        Type attachType = CasUtil.getType(cas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
-                .stream()
-                .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
+        var features = annotationService.listSupportedFeatures(layer).stream()
+                .collect(toMap(AnnotationFeature::getName, identity()));
 
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
             for (RelationSuggestion suggestion : group.bestSuggestions(pref)) {
@@ -144,10 +125,10 @@ public class RecommendationRelationRenderer
                 // FIXME: We get the first match for the (begin, end) span. With stacking, there can
                 // be more than one and we need to get the right one then which does not need to be
                 // the first. We wait for #2135 for a maybe fix.
-                AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd) //
+                AnnotationFS source = selectAt(cas, attachType, sourceBegin, sourceEnd) //
                         .stream().findFirst().orElse(null);
 
-                AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd) //
+                AnnotationFS target = selectAt(cas, attachType, targetBegin, targetEnd) //
                         .stream().findFirst().orElse(null);
 
                 // Retrieve the UI display label for the given feature value
@@ -157,24 +138,15 @@ public class RecommendationRelationRenderer
                 String annotation = featureSupport.renderFeatureValue(feature,
                         suggestion.getLabel());
 
-                Map<String, String> featureAnnotation = new HashMap<>();
-                featureAnnotation.put(suggestion.getFeature(), annotation);
+                Map<String, String> featureAnnotation = annotation != null
+                        ? Map.of(suggestion.getFeature(), annotation)
+                        : Map.of();
 
-                VArc arc = new VArc(layer, suggestion.getVID(), bratTypeName, new VID(source),
-                        new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
-                        featureAnnotation, COLOR);
+                VArc arc = new VArc(layer, suggestion.getVID(), VID.of(source), VID.of(target),
+                        "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
+                arc.setScore(suggestion.getScore());
 
-                List<VLazyDetailQuery> lazyDetails = featureSupport.getLazyDetails(feature,
-                        suggestion.getLabel());
-                if (!lazyDetails.isEmpty()) {
-                    arc.addLazyDetails(lazyDetails);
-                }
-                else {
-                    arc.addLazyDetail(
-                            new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
-                }
-
-                vdoc.add(arc);
+                aVDoc.add(arc);
             }
         }
     }

@@ -40,13 +40,16 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class InviteServiceImplTest
 {
     private InviteService sut;
@@ -55,10 +58,11 @@ public class InviteServiceImplTest
 
     private ProjectService projectService;
     private WorkloadManagementService workloadManagementService;
-    private WorkloadManagerExtension workloadManagerExtension;
+    private WorkloadManagerExtension<?> workloadManagerExtension;
 
     private Project testProject;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @BeforeEach
     public void setUp() throws Exception
     {
@@ -77,7 +81,7 @@ public class InviteServiceImplTest
 
         workloadManagementService = mock(WorkloadManagementService.class);
         when(workloadManagementService.getWorkloadManagerExtension(any()))
-                .thenReturn(workloadManagerExtension);
+                .thenReturn((WorkloadManagerExtension) workloadManagerExtension);
 
         sut = new InviteServiceImpl(null, projectService, null, workloadManagementService,
                 testEntityManager.getEntityManager());
@@ -179,7 +183,8 @@ public class InviteServiceImplTest
     public void generateInviteWithExpirationDate_ShouldReturnSpecificDate() throws ParseException
     {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date expectedDate = dateFormat.parse("2022-01-15");
+        // Note: test fails once this date has passed - it must be a future date!
+        Date expectedDate = dateFormat.parse("2066-01-15");
         sut.generateInviteWithExpirationDate(testProject, expectedDate);
 
         Date generatedDate = sut.getExpirationDate(testProject);

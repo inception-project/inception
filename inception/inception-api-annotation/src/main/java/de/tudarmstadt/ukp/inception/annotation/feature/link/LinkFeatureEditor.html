@@ -1,0 +1,68 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <div class="row form-row">
+    <div class="feature-editor-label">
+      <span wicket:id="feature"></span>
+      <span class="float-end">
+        <span wicket:id="linkIndicator"></span>
+      </span>
+    </div>
+    <div class="card g-0">
+      <div wicket:id="content">
+        <div class="card-body" wicket:enclosure="slots">
+          <div wicket:id="slots">
+            <div class="row form-row">
+              <label class="feature-editor-label col-form-label">
+                <span wicket:id="role"></span>	
+                <a wicket:id="jumpToAnnotation" class="float-end"><i class="fas fa-crosshairs"></i></a>
+              </label>
+              <div class="feature-editor-value">
+                <span wicket:id="label" class="scrolling form-control" style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer small flex-h-container">
+          <div class="flex-content">
+            <input wicket:id="newRole" style="width: 100%;" placeholder="Enter role name..."></input>
+          </div>
+          <div class="text-nowrap">
+            <button wicket:id="add" class="btn btn-sm btn-primary ms-3">
+              <i class="fas fa-plus"></i>&nbsp;
+              Add
+            </button>
+            <div class="btn-group ms-3" role="group" wicket:enclosure="del">
+              <button wicket:id="del" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i>&nbsp;
+                Del
+              </button>
+              <button wicket:id="set" class="btn btn-sm btn-secondary">
+                <i class="fas fa-check"></i>&nbsp;
+                Set
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>

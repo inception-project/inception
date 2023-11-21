@@ -17,44 +17,41 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil.isNameValidUserName;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
-import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.EmailTextField;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.ListMultipleChoice;
-import org.apache.wicket.markup.html.form.PasswordTextField;
-import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator;
-import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.validation.IValidatable;
-import org.apache.wicket.validation.ValidationError;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
+import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 
 /**
  * Manage Application wide Users.
@@ -65,261 +62,167 @@ public class ManageUsersPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
+    public static final String REALM_PROJECT_PREFIX = "project:";
+
     public static final String PARAM_USER = "user";
 
-    private @SpringBean UserDao userRepository;
-    private @SpringBean(required = false) RemoteApiProperties remoteApiProperties;
+    private @SpringBean UserDao userService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean OAuth2Adapter oAuth2Adapter;
+    private @SpringBean Saml2Adapter saml2Adapter;
 
-    private class DetailForm
-        extends Form<User>
-    {
-        private static final long serialVersionUID = -1L;
-
-        private boolean isCreate = false;
-        private PasswordTextField passwordField;
-        private PasswordTextField repeatPasswordField;
-
-        public transient String password;
-
-        @SuppressWarnings("unused")
-        public transient String repeatPassword;
-
-        public DetailForm(String id, IModel<User> aModel)
-        {
-            super(id, new CompoundPropertyModel<>(aModel));
-
-            setOutputMarkupId(true);
-            setOutputMarkupPlaceholderTag(true);
-
-            TextField<String> username = new TextField<String>("username");
-            username.setRequired(true);
-            username.add(this::validateUsername);
-            username.add(enabledWhen(() -> isCreate));
-            add(username);
-            add(new TextField<String>("uiName") //
-                    .add(this::validateUiName)
-                    .add(AttributeModifier.replace("placeholder", username.getModel())));
-            add(new Label("lastLogin"));
-            add(new EmailTextField("email"));
-
-            passwordField = new PasswordTextField("password");
-            passwordField.setModel(PropertyModel.of(DetailForm.this, "password"));
-            passwordField.setRequired(false);
-            passwordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
-            add(passwordField);
-
-            repeatPasswordField = new PasswordTextField("repeatPassword");
-            repeatPasswordField.setModel(PropertyModel.of(DetailForm.this, "repeatPassword"));
-            repeatPasswordField.setRequired(false);
-            repeatPasswordField.add(visibleWhen(aModel.map(_u -> _u.getRealm() == null)));
-            add(repeatPasswordField);
-
-            add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
-
-            add(new ListMultipleChoice<>("roles", getRoles()) //
-                    .add(this::validateRoles) //
-                    .add(visibleWhen(ManageUsersPage.this::isAdmin)));
-
-            add(new CheckBox("enabled") //
-                    .add(this::validateEnabled) //
-                    .add(visibleWhen(ManageUsersPage.this::isAdmin)) //
-                    .setOutputMarkupPlaceholderTag(true));
-
-            add(new LambdaAjaxButton<>("save", ManageUsersPage.this::actionSave));
-
-            add(new LambdaAjaxLink("cancel", ManageUsersPage.this::actionCancel));
-        }
-
-        private void validateUsername(IValidatable<String> aValidatable)
-        {
-            if (userRepository.exists(aValidatable.getValue()) && isCreate) {
-                aValidatable.error(new ValidationError().addKey("username.alreadyExistsError")
-                        .setVariable("name", aValidatable.getValue()));
-            }
-            else if (aValidatable.getValue().contains(" ")) {
-                aValidatable.error(new ValidationError().addKey("username.containsSpaceError"));
-            }
-            else if (!isNameValidUserName(aValidatable.getValue())) {
-                aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
-            }
-        }
-
-        private void validateUiName(IValidatable<String> aValidatable)
-        {
-            User other = userRepository.getUserByRealmAndUiName(getModelObject().getRealm(),
-                    aValidatable.getValue());
-            if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
-                aValidatable.error(new ValidationError().addKey("uiName.alreadyExistsError")
-                        .setVariable("name", aValidatable.getValue()));
-            }
-        }
-
-        private void validateEnabled(IValidatable<Boolean> aValidatable)
-        {
-            if (!aValidatable.getValue()
-                    && userRepository.getCurrentUser().equals(getModelObject())) {
-                aValidatable.error(
-                        new ValidationError().setMessage("You cannot disable your own account."));
-            }
-        }
-
-        private void validateRoles(IValidatable<Collection<Role>> aValidatable)
-        {
-            Collection<Role> newRoles = aValidatable.getValue();
-            if (newRoles.isEmpty()) {
-                aValidatable.error(
-                        new ValidationError().setMessage("A user has to have at least one role."));
-            }
-            // enforce users to have at least the ROLE_USER role
-            if (!newRoles.contains(Role.ROLE_USER)) {
-                aValidatable.error(
-                        new ValidationError().setMessage("Every user must have 'ROLE_USER'."));
-            }
-            // don't let an admin user strip himself of admin rights
-            if (userRepository.getCurrentUser().equals(getModelObject())
-                    && !newRoles.contains(Role.ROLE_ADMIN)) {
-                aValidatable.error(new ValidationError()
-                        .setMessage("You cannot remove your own admin status."));
-            }
-        }
-
-        @Override
-        protected void onConfigure()
-        {
-            super.onConfigure();
-
-            setVisible(getModelObject() != null);
-        }
-    }
-
-    private DetailForm detailForm;
-    private UserSelectionPanel users;
+    private DropDownChoice<Realm> realm;
+    private LambdaAjaxLink createButton;
+    private UserTable table;
+    private UserDetailPanel details;
 
     private IModel<User> selectedUser;
-
-    public ManageUsersPage()
-    {
-        super();
-
-        commonInit();
-
-        // If the user is not an admin, then pre-load the current user to allow self-service
-        // editing of the profile
-        if (!isAdmin() && isProfileSelfServiceAllowed()) {
-            selectedUser.setObject(userRepository.getCurrentUser());
-        }
-    }
 
     public ManageUsersPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        commonInit();
+        selectedUser = Model.of();
 
+        checkAccess(aPageParameters);
+
+        commonInit();
+    }
+
+    private void checkAccess(final PageParameters aPageParameters)
+    {
         String username = aPageParameters.get(PARAM_USER).toOptionalString();
-        User user = null;
-        if (username != null) {
-            user = userRepository.get(username);
+
+        User currentUser = userService.getCurrentUser();
+        User userToOpen = isBlank(username) ? currentUser : userService.get(username);
+
+        // Admins can manage any user
+        if (userService.isCurrentUserAdmin()) {
+            selectedUser.setObject(userToOpen);
         }
-        if (user != null) {
-            if (isAdmin()) {
-                selectedUser.setObject(user);
-            }
-            else if (isProfileSelfServiceAllowed()
-                    && userRepository.getCurrentUsername().equals(user.getUsername())) {
-                selectedUser.setObject(userRepository.getCurrentUser());
-            }
-            else {
-                // Make sure a user doesn't try to access the profile of another user via the
-                // parameter if self-service is turned on.
-                setResponsePage(getApplication().getHomePage());
-            }
+        // Non-admins can only manage themselves if profile self-service is allowed
+        else if (userToOpen.equals(currentUser)
+                && userService.isProfileSelfServiceAllowed(currentUser)) {
+            selectedUser.setObject(currentUser);
         }
+        // Other cases are denied
+        else {
+            // Make sure a user doesn't try to access the profile of another user via the
+            // parameter if self-service is turned on.
+            denyAccess();
+        }
+    }
+
+    private void denyAccess()
+    {
+        getSession().error(format("Access to [%s] denied.", getClass().getSimpleName()));
+        throw new RestartResponseException(getApplication().getHomePage());
     }
 
     private void commonInit()
     {
-        // If the user is not an admin and self-service is not allowed, go back to the main page
-        if (!isAdmin() && !isProfileSelfServiceAllowed()) {
-            setResponsePage(getApplication().getHomePage());
-        }
+        var selectPanel = new WebMarkupContainer("selectPanel");
+        selectPanel.add(LambdaBehavior.visibleWhen(userService::isCurrentUserAdmin));
+        queue(selectPanel);
 
-        selectedUser = Model.of();
+        realm = new DropDownChoice<>("realm");
+        realm.setChoices(LoadableDetachableModel.of(this::listRealms));
+        realm.setChoiceRenderer(new ChoiceRenderer<>("name"));
+        realm.setModel(Model.of(realm.getChoicesModel().getObject().get(0)));
+        realm.setOutputMarkupId(true);
+        realm.add(visibleWhen(() -> realm.getChoicesModel().getObject().size() > 1));
+        realm.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change", _target -> {
+            table.getDataProvider().refresh();
+            _target.add(table, createButton);
+        }));
+        queue(realm);
 
-        users = new UserSelectionPanel("users", selectedUser);
-        // Show the selection for different users only to administrators
-        users.add(visibleWhen(this::isAdmin));
-        users.setCreateAction(_target -> {
-            selectedUser.setObject(new User());
-            _target.add(users);
-            _target.add(detailForm);
-            // Need to defer setting this field because otherwise setChangeAction below
-            // sets it back to false.
-            _target.registerRespondListener(__target -> detailForm.isCreate = true);
-        });
-        users.setChangeAction(target -> {
-            detailForm.isCreate = false;
-            // Make sure that any invalid forms are cleared now that we load the new project.
-            // If we do not do this, then e.g. input fields may just continue showing the values
-            // they had when they were marked invalid.
-            detailForm.visitChildren(new ModelChangedVisitor(selectedUser));
-            target.add(detailForm);
-        });
-        add(users);
+        table = new UserTable("users", selectedUser, LoadableDetachableModel.of(this::listUsers));
+        table.setOutputMarkupPlaceholderTag(true);
+        queue(table);
 
-        detailForm = new DetailForm("detailForm", selectedUser);
-        add(detailForm);
+        details = new UserDetailPanel("details", selectedUser);
+        details.setOutputMarkupPlaceholderTag(true);
+        details.add(visibleWhen(selectedUser.map(Objects::nonNull)));
+        queue(details);
+
+        createButton = new LambdaAjaxLink("create", this::actionCreate);
+        createButton.setOutputMarkupPlaceholderTag(true);
+        queue(createButton);
+
+        // Only allow creating accounts in the local realm
+        createButton.add(visibleWhen(() -> realm.getModelObject().getId() == null));
     }
 
-    public void actionSave(AjaxRequestTarget aTarget, Form<User> aForm)
+    private List<Realm> listRealms()
     {
-        User user = detailForm.getModelObject();
+        var realms = new ArrayList<Realm>();
 
-        if (detailForm.password != null) {
-            user.setPassword(detailForm.password);
+        userService.listRealms().stream() //
+                .map(_id -> {
+                    if (startsWith(_id, REALM_PROJECT_PREFIX)) {
+                        return projectService.getRealm(_id);
+                    }
+                    else {
+                        return new Realm(_id);
+                    }
+                }).forEach(realms::add);
+
+        // Add the realms from the external authentication providers. Note that multiple providers
+        // might use the same registration. E.g. the saml IdP might be registered as an OAuth and
+        // simultaneously as a SAML2 provider. It does not make much sense to be honest, but it
+        // is possible.
+        oAuth2Adapter.getOAuthClientRegistrations()
+                .forEach(reg -> realms.add(Realm.forExternalOAuth(reg)));
+        saml2Adapter.getSamlRelyingPartyRegistrations()
+                .forEach(((uri, regId) -> realms.add(Realm.forExternalSaml(uri, regId))));
+
+        // If there is a choice, then the local realm should always be a part of it
+        if (!realms.isEmpty()) {
+            realms.add(Realm.local());
         }
 
-        if (!userRepository.exists(user.getUsername())) {
-            userRepository.create(user);
-        }
-        else {
-            userRepository.update(user);
-        }
+        return realms.stream() //
+                .distinct() //
+                .sorted(Realm::compareRealms) //
+                .collect(toList());
+    }
 
-        if (isAdmin()) {
+    private List<User> listUsers()
+    {
+        return userService.list().stream() //
+                .filter(u -> Objects.equals(u.getRealm(), realm.getModelObject().getId())) //
+                .collect(toList());
+    }
+
+    @OnEvent
+    public void onSelectUser(SelectUserEvent aEvent)
+    {
+        details.setCreatingNewUser(false);
+        selectedUser.setObject(aEvent.getUser());
+        // Get the inner table for refresh to avoid a reset of the scrolling position
+        aEvent.getTarget().add(table.getInnerTable(), details);
+    }
+
+    @OnEvent
+    public void onUserSaved(UserSavedEvent aEvent)
+    {
+        table.getDataProvider().refresh();
+
+        if (userService.isCurrentUserAdmin()) {
             selectedUser.setObject(null);
         }
 
-        info("Details for user [" + user.getUsername() + "] have been saved.");
-
-        aTarget.add(detailForm);
-        aTarget.add(users);
-        aTarget.addChildren(getPage(), IFeedback.class);
+        aEvent.getTarget().add(table.getInnerTable(), details);
     }
 
-    private void actionCancel(AjaxRequestTarget aTarget)
+    private void actionCreate(AjaxRequestTarget aTarget)
     {
-        if (isAdmin()) {
-            selectedUser.setObject(null);
-            aTarget.add(detailForm);
-            aTarget.add(users);
-        }
-        else {
-            setResponsePage(getApplication().getHomePage());
-        }
-    }
-
-    private boolean isAdmin()
-    {
-        return userRepository.isAdministrator(userRepository.getCurrentUser());
-    }
-
-    private List<Role> getRoles()
-    {
-        List<Role> roles = new ArrayList<>(Arrays.asList(Role.values()));
-        if (remoteApiProperties != null && !remoteApiProperties.isEnabled()) {
-            roles.remove(Role.ROLE_REMOTE);
-        }
-        return roles;
+        User user = new User();
+        user.setEnabled(true);
+        user.setRoles(Set.of(ROLE_USER));
+        selectedUser.setObject(user);
+        details.setCreatingNewUser(true);
+        aTarget.add(table.getInnerTable(), details);
     }
 }

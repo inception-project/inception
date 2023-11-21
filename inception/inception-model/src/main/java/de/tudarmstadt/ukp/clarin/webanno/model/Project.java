@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.containsNone;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
@@ -68,6 +69,9 @@ public class Project
     @Column(length = 64000)
     private String description;
 
+    /**
+     * @deprecated WebAnno supported project modes - INCEpTION does not.
+     */
     @Deprecated
     @Column(nullable = false)
     private String mode = "annotation";
@@ -96,6 +100,21 @@ public class Project
     @Column(nullable = false)
     private boolean anonymousCuration;
 
+    private Project(Builder builder)
+    {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.slug = builder.slug;
+        this.description = builder.description;
+        this.version = builder.version;
+        this.disableExport = builder.disableExport;
+        this.scriptDirection = builder.scriptDirection;
+        this.created = builder.created;
+        this.updated = builder.updated;
+        this.state = builder.state;
+        this.anonymousCuration = builder.anonymousCuration;
+    }
+
     public Project()
     {
         // Nothing to do
@@ -104,6 +123,9 @@ public class Project
     /**
      * Constructor used for testing purposes. Set the {@link #name} to the same value as the
      * {@link #slug}.
+     * 
+     * @param aSlug
+     *            the project's URL slug
      */
     public Project(String aSlug)
     {
@@ -136,7 +158,8 @@ public class Project
 
     public void setSlug(String aSlug)
     {
-        Validate.isTrue(isValidProjectSlug(aSlug), format("Invalid project URL slug: [%s]", aSlug));
+        Validate.isTrue(isBlank(aSlug) || isValidProjectSlug(aSlug),
+                format("Invalid project URL slug: [%s]", aSlug));
         slug = aSlug;
     }
 
@@ -191,12 +214,18 @@ public class Project
         this.scriptDirection = scriptDirection;
     }
 
+    /**
+     * @deprecated WebAnno supported project modes - INCEpTION does not.
+     */
     @Deprecated
     public String getMode()
     {
         return mode;
     }
 
+    /**
+     * @deprecated WebAnno supported project modes - INCEpTION does not.
+     */
     @Deprecated
     public void setMode(String aMode)
     {
@@ -300,7 +329,7 @@ public class Project
     }
 
     /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * Check if the name is valid. Special characters are not allowed as a project/user name as it
      * will conflict with file naming system
      * 
      * @param aName
@@ -346,5 +375,100 @@ public class Project
     {
         return ('0' <= aChar && aChar <= '9') || ('a' <= aChar && aChar <= 'z') || aChar == '-'
                 || aChar == '_';
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private String name;
+        private String slug;
+        private String description;
+        private int version = 1;
+        private boolean disableExport = false;
+        private ScriptDirection scriptDirection;
+        private Date created;
+        private Date updated;
+        private ProjectState state;
+        private boolean anonymousCuration;
+
+        private Builder()
+        {
+        }
+
+        public Builder withId(Long aId)
+        {
+            id = aId;
+            return this;
+        }
+
+        public Builder withName(String aName)
+        {
+            name = aName;
+            return this;
+        }
+
+        public Builder withSlug(String aSlug)
+        {
+            slug = aSlug;
+            return this;
+        }
+
+        public Builder withDescription(String aDescription)
+        {
+            description = aDescription;
+            return this;
+        }
+
+        public Builder withVersion(int aVersion)
+        {
+            version = aVersion;
+            return this;
+        }
+
+        public Builder withDisableExport(boolean aDisableExport)
+        {
+            disableExport = aDisableExport;
+            return this;
+        }
+
+        public Builder withScriptDirection(ScriptDirection aScriptDirection)
+        {
+            scriptDirection = aScriptDirection;
+            return this;
+        }
+
+        public Builder withCreated(Date aCreated)
+        {
+            created = aCreated;
+            return this;
+        }
+
+        public Builder withUpdated(Date aUpdated)
+        {
+            updated = aUpdated;
+            return this;
+        }
+
+        public Builder withState(ProjectState aState)
+        {
+            state = aState;
+            return this;
+        }
+
+        public Builder withAnonymousCuration(boolean aAnonymousCuration)
+        {
+            anonymousCuration = aAnonymousCuration;
+            return this;
+        }
+
+        public Project build()
+        {
+            return new Project(this);
+        }
     }
 }

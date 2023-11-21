@@ -19,8 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import java.util.List;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -37,21 +38,21 @@ public class LogDialogContent
 {
     private static final long serialVersionUID = -5003560112554715634L;
 
-    private final ModalWindow modalWindow;
+    private final LambdaAjaxLink cancel;
 
-    public LogDialogContent(String aId, final ModalWindow aModalWindow,
-            IModel<List<LogMessageGroup>> aModel)
+    public LogDialogContent(String aId, IModel<List<LogMessageGroup>> aModel)
     {
         super(aId, aModel);
 
         setOutputMarkupId(true);
 
-        modalWindow = aModalWindow;
+        queue(createMessageSetsView(getModel()));
 
-        add(createMessageSetsView(getModel()));
-        add(new LambdaAjaxLink("close", this::actionCancel));
+        queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
+        queue(cancel = new LambdaAjaxLink("close", this::actionCancel));
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<List<LogMessageGroup>> getModel()
     {
         return (IModel<List<LogMessageGroup>>) getDefaultModel();
@@ -90,8 +91,13 @@ public class LogDialogContent
         };
     }
 
+    public Component getFocusComponent()
+    {
+        return cancel;
+    }
+
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        modalWindow.close(aTarget);
+        findParent(ModalDialog.class).close(aTarget);
     }
 }

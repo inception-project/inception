@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.subtract;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
@@ -60,8 +60,6 @@ import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
@@ -71,6 +69,10 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class CasDiff
 {
@@ -110,6 +112,8 @@ public class CasDiff
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @param aBegin
@@ -135,6 +139,8 @@ public class CasDiff
      * 
      * @param aAdapters
      *            a set of diff adapters how the diff algorithm should handle different features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @return a diff result.
@@ -152,6 +158,8 @@ public class CasDiff
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @param aBegin
@@ -408,7 +416,8 @@ public class CasDiff
 
             // For each slot at the given position in the FS-to-be-added, we need find a
             // corresponding configuration
-            ArrayFS links = (ArrayFS) aFS.getFeatureValue(feat);
+
+            var links = FSUtil.getFeature(aFS, feat, ArrayFS.class);
             for (int i = 0; i < links.size(); i++) {
                 FeatureStructure link = links.get(i);
                 DiffAdapter adapter = getAdapter(aFS.getType().getName());
@@ -430,9 +439,9 @@ public class CasDiff
                     cfgLoop: for (Configuration cfg : aSet.configurations) {
                         FeatureStructure repFS = cfg.getRepresentative(cases);
                         AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                repFS.getType().getFeatureByBaseName(decl.getName())))
-                                        .get(repAID.index);
+                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                                repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
+                                .get(repAID.index);
                         AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(
                                 repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
@@ -458,9 +467,9 @@ public class CasDiff
                     cfgLoop: for (Configuration cfg : aSet.configurations) {
                         FeatureStructure repFS = cfg.getRepresentative(cases);
                         AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                repFS.getType().getFeatureByBaseName(decl.getName())))
-                                        .get(repAID.index);
+                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                                repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
+                                .get(repAID.index);
                         String linkRole = repLink.getStringValue(
                                 repLink.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
@@ -508,8 +517,8 @@ public class CasDiff
         }
 
         /**
-         * Gets the total number of configurations recorded in this set. If a configuration has been
-         * seen in multiple CASes, it will be counted multiple times.
+         * @return the total number of configurations recorded in this set. If a configuration has
+         *         been seen in multiple CASes, it will be counted multiple times.
          */
         public int getRecordedConfigurationCount()
         {
@@ -618,7 +627,7 @@ public class CasDiff
         }
 
         // Trivial case
-        if (aFS1.getCAS() == aFS2.getCAS() && getAddr(aFS1) == getAddr(aFS2)) {
+        if (aFS1.getCAS() == aFS2.getCAS() && ICasUtil.getAddr(aFS1) == ICasUtil.getAddr(aFS2)) {
             return true;
         }
 
@@ -678,6 +687,20 @@ public class CasDiff
             // When we get here, f1 or f2 can still be null
 
             switch (range.getName()) {
+            case CAS.TYPE_NAME_STRING_ARRAY: {
+                var value1 = FSUtil.getFeature(aFS1, f1, Set.class);
+                if (value1 == null) {
+                    value1 = Collections.emptySet();
+                }
+                var value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                if (value2 == null) {
+                    value2 = Collections.emptySet();
+                }
+                if (!value1.equals(value2)) {
+                    return false;
+                }
+                break;
+            }
             case CAS.TYPE_NAME_BOOLEAN: {
                 boolean value1 = f1 != null ? aFS1.getBooleanValue(f1) : false;
                 boolean value2 = f2 != null ? aFS2.getBooleanValue(f2) : false;
@@ -850,6 +873,7 @@ public class CasDiff
         /**
          * Visible for testing only!
          */
+        @SuppressWarnings("javadoc")
         public void add(String aCasGroupId, AID aAID)
         {
             AID old = fsAddresses.put(aCasGroupId, aAID);
@@ -860,12 +884,12 @@ public class CasDiff
 
         private void add(String aCasGroupId, FeatureStructure aFS)
         {
-            add(aCasGroupId, new AID(getAddr(aFS)));
+            add(aCasGroupId, new AID(ICasUtil.getAddr(aFS)));
         }
 
         private void add(String aCasGroupId, FeatureStructure aFS, String aFeature, int aSlot)
         {
-            add(aCasGroupId, new AID(getAddr(aFS), aFeature, aSlot));
+            add(aCasGroupId, new AID(ICasUtil.getAddr(aFS), aFeature, aSlot));
         }
 
         public AID getRepresentativeAID()
@@ -877,7 +901,7 @@ public class CasDiff
         public FeatureStructure getRepresentative(Map<String, List<CAS>> aCasMap)
         {
             Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
+            return ICasUtil.selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
                     e.getValue().addr);
         }
 
@@ -893,7 +917,7 @@ public class CasDiff
 
         public boolean contains(String aCasGroupId, FeatureStructure aFS)
         {
-            return new AID(getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
+            return new AID(ICasUtil.getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
         }
 
         public boolean contains(String aCasGroupId, AID aAID)
@@ -919,7 +943,7 @@ public class CasDiff
                 return null;
             }
 
-            return selectFsByAddr(cas, aid.addr);
+            return ICasUtil.selectFsByAddr(cas, aid.addr);
         }
 
         // FIXME aCasId parameter should not be required as we can get it from the position
@@ -1165,6 +1189,7 @@ public class CasDiff
         }
 
         /**
+         * @return the incomplete configuration sets per position
          * @param aCasGroupIDsToIgnore
          *            the exceptions - these CAS group IDs do not count towards completeness.
          */
@@ -1216,8 +1241,17 @@ public class CasDiff
     }
 
     public static List<DiffAdapter> getDiffAdapters(AnnotationSchemaService schemaService,
-            Iterable<AnnotationLayer> aLayers)
+            Collection<AnnotationLayer> aLayers)
     {
+        if (aLayers.isEmpty()) {
+            return emptyList();
+        }
+
+        Project project = aLayers.iterator().next().getProject();
+
+        var featuresByLayer = schemaService.listSupportedFeatures(project).stream() //
+                .collect(groupingBy(AnnotationFeature::getLayer));
+
         List<DiffAdapter> adapters = new ArrayList<>();
         nextLayer: for (AnnotationLayer layer : aLayers) {
             if (!layer.isEnabled()) {
@@ -1225,7 +1259,7 @@ public class CasDiff
             }
 
             Set<String> labelFeatures = new LinkedHashSet<>();
-            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
+            nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled() || !f.isCuratable()) {
                     continue nextFeature;
                 }
@@ -1257,7 +1291,7 @@ public class CasDiff
 
             adapters.add(adapter);
 
-            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
+            nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled()) {
                     continue nextFeature;
                 }
@@ -1303,7 +1337,7 @@ public class CasDiff
     // /**
     // * Rebuilds the diff with the current offsets and entry types. This can be used to fix the
     // diff
-    // * after reattaching to CASes that have changed. Mind that the diff results can be differnent
+    // * after reattaching to CASes that have changed. Mind that the diff results can be different
     // * due to the changes.
     // */
     // public void rebuild()

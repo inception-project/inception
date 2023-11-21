@@ -25,8 +25,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
@@ -37,8 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class RemoveZeroSizeTokensAndSentencesRepair
     implements Repair
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {

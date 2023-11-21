@@ -1,0 +1,20 @@
+name: Example policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: PASS
+default_element_action: PASS
+debug: true
+policies:
+  - { elements: ["p", "div"], action: "PASS" }
+  - { elements: ["tr", "th"], action: "PASS" }
+  - { elements: ["{http://namespace.org}custom"], action: "PASS" }
+  - {
+      attributes: ["title"],
+      matching: "[a-zA-Z0-9]*",
+      on_elements: ["div"],
+      action: "DROP",
+    }
+  - {
+      attributes: ["style"],
+      action: "PASS",
+    }

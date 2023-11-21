@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 /**
  * A Panel used to add Documents to the selected {@link Project}
@@ -30,11 +33,31 @@ public class ProjectDocumentsPanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
+    private @SpringBean DocumentService documentService;
+
+    private final SourceDocumentTable sourceDocumentTable;
+
     public ProjectDocumentsPanel(String id, IModel<Project> aProject)
     {
         super(id, aProject);
 
-        add(new ImportDocumentsPanel("import", aProject));
-        add(new DocumentListPanel("documents", aProject));
+        queue(new ImportDocumentsPanel("import", aProject));
+        sourceDocumentTable = new SourceDocumentTable("documents",
+                aProject.map(documentService::listSourceDocuments));
+        queue(sourceDocumentTable);
+    }
+
+    @OnEvent
+    public void onSourceDocumentImported(SourceDocumentImportedEvent aEvent)
+    {
+        sourceDocumentTable.getDataProvider().refresh();
+        aEvent.getTarget().add(sourceDocumentTable);
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        sourceDocumentTable.getDataProvider().refresh();
     }
 }

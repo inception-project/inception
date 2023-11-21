@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -27,9 +28,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class CurationUnitOverviewLink
     extends AjaxLink<CurationUnit>
@@ -90,8 +90,7 @@ public class CurationUnitOverviewLink
         if (isEnabledInHierarchy()) {
             RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                 for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                    _target.appendJavaScript(
-                            WicketUtil.wrapInTryCatch(b.getCallbackScript().toString()));
+                    _target.appendJavaScript(wrapInTryCatch(b.getCallbackScript()));
                 }
             });
         }

@@ -17,21 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.exporter;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
+@ExtendWith(MockitoExtension.class)
 public class DocumentRepositoryExporterTest
 {
     private @Mock ExternalSearchService externalSearchService;
@@ -51,8 +53,6 @@ public class DocumentRepositoryExporterTest
     @BeforeEach
     public void setUp()
     {
-        initMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
@@ -66,28 +66,27 @@ public class DocumentRepositoryExporterTest
     @Test
     public void thatExportingWorks()
     {
-
         // Export the project and import it again
-        ArgumentCaptor<DocumentRepository> captor = runExportImportAndFetchDocumentRepositories();
+        var captor = runExportImportAndFetchDocumentRepositories();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(documentRepositories());
     }
 
     private ArgumentCaptor<DocumentRepository> runExportImportAndFetchDocumentRepositories()
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
-        ExportedProject exportedProject = new ExportedProject();
-        File file = mock(File.class);
+        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var exportedProject = new ExportedProject();
+        var file = mock(File.class);
 
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
-        ArgumentCaptor<DocumentRepository> captor = ArgumentCaptor
-                .forClass(DocumentRepository.class);
+        var captor = ArgumentCaptor.forClass(DocumentRepository.class);
         doNothing().when(externalSearchService).createOrUpdateDocumentRepository(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
@@ -99,12 +98,11 @@ public class DocumentRepositoryExporterTest
 
     private List<DocumentRepository> documentRepositories()
     {
-        DocumentRepository dr1 = buildDocumentRepository(1L);
-        DocumentRepository dr2 = buildDocumentRepository(2L);
-        DocumentRepository dr3 = buildDocumentRepository(3L);
-        DocumentRepository dr4 = buildDocumentRepository(4L);
-
-        return Arrays.asList(dr1, dr2, dr3, dr4);
+        return asList( //
+                buildDocumentRepository(1L), //
+                buildDocumentRepository(2L), //
+                buildDocumentRepository(3L), //
+                buildDocumentRepository(4L));
     }
 
     private DocumentRepository buildDocumentRepository(Long id)

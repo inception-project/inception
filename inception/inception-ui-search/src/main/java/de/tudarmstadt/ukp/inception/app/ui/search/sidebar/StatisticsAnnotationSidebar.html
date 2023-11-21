@@ -97,12 +97,13 @@ tr td:nth-child(2), tr th:nth-child(2) {
       </form>
     </div>
     <div class="card-footer text-end flex-h-container flex-gutter flex-only-internal-gutter">
-      <label wicket:id="formatLabel" class="col-form-label text-nowrap"></label>
-      <div class="btn-group flex-content">
-        <select wicket:id="format" class="form-select flex-content input-group-btn"
-          data-container="body" /> <a wicket:id="export" class="btn btn-primary"> <i
-          class="fas fa-download"></i> <span class="d-none d-xl-inline">&nbsp;<wicket:message
-              key="export" /></span>
+      <label wicket:id="formatLabel" class="col-form-label text-nowrap d-none d-xl-inline"></label>
+      <div class="input-group flex-content">
+        <select wicket:id="format" class="form-select flex-content input-group-btn"/>
+        <a wicket:id="export" class="btn btn-primary">
+          <i class="fas fa-download"></i>
+          <span class="d-none d-xl-inline">&nbsp;<wicket:message key="export" />
+        </span>
         </a>
       </div>
     </div>

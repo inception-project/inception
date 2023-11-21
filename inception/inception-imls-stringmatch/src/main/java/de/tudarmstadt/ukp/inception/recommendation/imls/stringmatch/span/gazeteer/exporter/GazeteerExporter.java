@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazete
 import static java.util.Arrays.asList;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class GazeteerExporter
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws Exception
+        throws IOException
     {
         Project project = aRequest.getProject();
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module PUBLIC
         "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
-        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+        "https://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <module name = "Checker">
   <property name="charset" value="UTF-8"/>
@@ -38,6 +38,8 @@
   </module>
 
   <module name="TreeWalker">
+    <module name="SuppressionCommentFilter"/>
+  
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

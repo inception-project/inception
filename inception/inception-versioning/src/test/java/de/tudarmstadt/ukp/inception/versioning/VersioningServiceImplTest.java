@@ -50,14 +50,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -65,17 +58,27 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
 @DataJpaTest( //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        showSql = false, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + VersioningServiceImplTest.TEST_OUTPUT_FOLDER, //
-                "versioning.enabled=true" })
+                "versioning.enabled=true", //
+                "debug.cas-doctor.force-release-behavior=true", //
+                "document-import.run-cas-doctor-on-import=OFF" })
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model",
@@ -87,6 +90,7 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         UimaFormatsAutoConfiguration.class, //
+        CasDoctorAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
@@ -311,15 +315,14 @@ public class VersioningServiceImplTest
     private User createAdmin()
     {
         User admin = addUser("admin");
-        projectService.setProjectPermissionLevels(admin, testProject,
-                List.of(ANNOTATOR, CURATOR, MANAGER));
+        projectService.assignRole(testProject, admin, ANNOTATOR, CURATOR, MANAGER);
         return admin;
     }
 
     private User createAnnotator()
     {
         User annotator = addUser("annotator");
-        projectService.setProjectPermissionLevels(annotator, testProject, List.of(ANNOTATOR));
+        projectService.assignRole(testProject, annotator, ANNOTATOR);
         return annotator;
     }
 
@@ -346,8 +349,7 @@ public class VersioningServiceImplTest
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
-                AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(sourceDocument, aUser);
+                documentService.createOrGetAnnotationDocument(sourceDocument, aUser);
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
             }

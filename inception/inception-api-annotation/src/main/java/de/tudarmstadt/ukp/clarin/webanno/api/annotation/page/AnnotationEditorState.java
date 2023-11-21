@@ -19,12 +19,22 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.preferences.Key;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationEditorState
     implements Serializable
 {
     private static final long serialVersionUID = -1637731874872789592L;
 
+    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
+            AnnotationEditorState.class, "annotation/editor");
+
     private String defaultEditor;
+
+    private boolean preferencesAccessAllowed = true;
 
     public String getDefaultEditor()
     {
@@ -34,5 +44,15 @@ public class AnnotationEditorState
     public void setDefaultEditor(String aEditorId)
     {
         defaultEditor = aEditorId;
+    }
+
+    public boolean isPreferencesAccessAllowed()
+    {
+        return preferencesAccessAllowed;
+    }
+
+    public void setPreferencesAccessAllowed(boolean aPreferencesAccessAllowed)
+    {
+        preferencesAccessAllowed = aPreferencesAccessAllowed;
     }
 }

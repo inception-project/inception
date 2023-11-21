@@ -17,27 +17,32 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
-import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class AnnotationInfoPanel
     extends Panel
 {
     private static final long serialVersionUID = -2911353962253404751L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final WebMarkupContainer noAnnotationWarning;
     private final WebMarkupContainer annotationInfo;
@@ -93,7 +98,6 @@ public class AnnotationInfoPanel
         Label label = new Label("selectedAnnotationLayer",
                 CompoundPropertyModel.of(getDefaultModel()).bind("selectedAnnotationLayer.uiName"));
         label.setOutputMarkupPlaceholderTag(true);
-        label.add(visibleWhen(() -> getModelObject().getPreferences().isRememberLayer()));
         return label;
     }
 
@@ -101,13 +105,13 @@ public class AnnotationInfoPanel
     {
         Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
-                AnnotationDetailEditorPanel editorPanel = findParent(
-                        AnnotationDetailEditorPanel.class);
+                var editorPanel = findParent(AnnotationDetailEditorPanel.class);
                 return String.valueOf(selectFsByAddr(editorPanel.getEditorCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
-            catch (IOException e) {
-                return "";
+            catch (Exception e) {
+                LOG.warn("Unable to render selected annotation type", e);
+                return ExceptionUtils.getRootCauseMessage(e);
             }
         }));
         label.setOutputMarkupPlaceholderTag(true);

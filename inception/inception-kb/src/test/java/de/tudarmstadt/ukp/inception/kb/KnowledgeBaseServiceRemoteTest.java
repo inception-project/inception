@@ -55,8 +55,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -67,7 +67,11 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Tag("slow")
 @Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseServiceRemoteTest
 {
 
@@ -163,7 +167,7 @@ public class KnowledgeBaseServiceRemoteTest
                 .isNotEmpty();
         for (String expectedRoot : aSutConfig.getRootIdentifier()) {
             assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
-                    .as("Check that root concept is retreived").contains(expectedRoot);
+                    .as("Check that root concept is retrieved").contains(expectedRoot);
         }
     }
 
@@ -322,26 +326,27 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
         }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("yago");
-            KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName(profile.getName());
-            kb_yago.setType(profile.getType());
-            kb_yago.setReification(profile.getReification());
-            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_yago.applyMapping(profile.getMapping());
-            kb_yago.applyRootConcepts(profile);
-            kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_yago.setMaxResults(maxResults);
-            rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://schema.org/Thing");
-            parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://schema.org/Thing",
-                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-                    "http://yago-knowledge.org/resource/Elvis_Presley", rootConcepts,
-                    parentChildConcepts));
-        }
+        // YAGO seems to have problem atm 29-04-2023
+        // {
+        // KnowledgeBaseProfile profile = PROFILES.get("yago");
+        // KnowledgeBase kb_yago = new KnowledgeBase();
+        // kb_yago.setName(profile.getName());
+        // kb_yago.setType(profile.getType());
+        // kb_yago.setReification(profile.getReification());
+        // kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        // kb_yago.applyMapping(profile.getMapping());
+        // kb_yago.applyRootConcepts(profile);
+        // kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
+        // kb_yago.setMaxResults(maxResults);
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://schema.org/Thing");
+        // parentChildConcepts = new HashMap<String, String>();
+        // parentChildConcepts.put("http://schema.org/Thing",
+        // "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
+        // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
+        // "http://yago-knowledge.org/resource/Elvis_Presley", rootConcepts,
+        // parentChildConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
@@ -363,7 +368,7 @@ public class KnowledgeBaseServiceRemoteTest
                             "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
 
-        // Commenting this out for the moment becuase we expect that every ontology contains
+        // Commenting this out for the moment because we expect that every ontology contains
         // property definitions. However, this one does not include any property definitions!
         // {
         // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
@@ -441,6 +446,7 @@ public class KnowledgeBaseServiceRemoteTest
             return rootIdentifier;
         }
 
+        @SuppressWarnings("unused")
         public Map<String, String> getParentChildIdentifier()
         {
             return parentChildIdentifier;

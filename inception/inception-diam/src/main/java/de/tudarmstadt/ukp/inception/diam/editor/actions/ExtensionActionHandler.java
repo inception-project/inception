@@ -22,19 +22,18 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#extensionActionHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#extensionActionHandler}.
  * </p>
  */
-@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
+@Order(EditorAjaxRequestHandler.PRIO_EXTENSION_HANDLER)
 public class ExtensionActionHandler
     extends EditorAjaxRequestHandlerBase
 {
@@ -74,7 +73,7 @@ public class ExtensionActionHandler
             return new DefaultAjaxResponse(action);
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to perform action", e);
         }
     }
 }

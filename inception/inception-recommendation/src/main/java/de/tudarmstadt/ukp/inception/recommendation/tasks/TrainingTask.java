@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,25 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.error;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.warn;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
-import static java.lang.String.format;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -49,277 +42,257 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-/**
- * This consumer trains a new classifier model, if a classification tool was selected before.
- */
 public class TrainingTask
-    extends Task
+    extends RecommendationTask_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired DocumentService documentService;
-    private @Autowired RecommendationService recommendationService;
+    private @Autowired RecommendationService recommenderService;
     private @Autowired SchedulingService schedulingService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
-    private final List<LogMessage> logMessages = new ArrayList<>();
+    private final String dataOwner;
 
+    /**
+     * Create a new training task.
+     * 
+     * @param aUser
+     *            the user owning the training session.
+     * @param aProject
+     *            the project to perform the selection on.
+     * @param aTrigger
+     *            the trigger that caused the selection to be scheduled.
+     * @param aCurrentDocument
+     *            the document currently open in the editor.
+     * @param aDataOwner
+     *            the user owning the annotations currently shown in the editor (this can differ
+     *            from the user owning the session e.g. if a manager views another users annotations
+     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
+     */
     public TrainingTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument, String aDataOwner)
     {
         super(aUser, aProject, aTrigger);
+
+        if (getUser().isEmpty()) {
+            throw new IllegalArgumentException("TrainingTask requires a user");
+        }
+
         currentDocument = aCurrentDocument;
+        dataOwner = aDataOwner;
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Training recommenders...";
     }
 
     @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            Project project = getProject();
-            User user = getUser();
-
-            log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
-                    user.getUsername(), project, getTrigger());
-            logMessages.add(info(this, "Starting training triggered by [%s]...", getTrigger()));
-
-            // Read the CASes only when they are accessed the first time. This allows us to skip
-            // reading the CASes in case that no layer / recommender is available or if no
-            // recommender requires evaluation.
-            LazyInitializer<List<TrainingDocument>> casses = new LazyInitializer<List<TrainingDocument>>()
-            {
-                @Override
-                protected List<TrainingDocument> initialize()
-                {
-                    return readCasses(project, user);
-                }
-            };
-
-            boolean seenSuccessfulTraining = false;
-            boolean seenNonTrainingRecommender = false;
-
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
-                if (!layer.isEnabled()) {
-                    continue;
-                }
-
-                List<EvaluatedRecommender> recommenders = recommendationService
-                        .getActiveRecommenders(user, layer);
-
-                if (recommenders.isEmpty()) {
-                    log.trace("[{}][{}][{}]: No active recommenders, skipping training.", getId(),
-                            user.getUsername(), layer.getUiName());
-                    logMessages.add(
-                            info(this, "No active recommenders for layer [%s], skipping training.",
-                                    layer.getUiName()));
-                    continue;
-                }
-
-                for (EvaluatedRecommender r : recommenders) {
-                    // Make sure we have the latest recommender config from the DB - the one from
-                    // the active recommenders list may be outdated
-                    Recommender recommender;
-                    try {
-                        recommender = recommendationService
-                                .getRecommender(r.getRecommender().getId());
-                    }
-                    catch (NoResultException e) {
-                        log.debug("[{}][{}][{}]: Recommender no longer available... skipping",
-                                getId(), user.getUsername(), r.getRecommender().getName());
-                        continue;
-                    }
-
-                    if (!recommender.isEnabled()) {
-                        log.debug("[{}][{}][{}]: Disabled - skipping", user.getUsername(), getId(),
-                                r.getRecommender().getName());
-                        continue;
-                    }
-
-                    long startTime = System.currentTimeMillis();
-
-                    try {
-                        Optional<RecommendationEngineFactory<?>> maybeFactory = recommendationService
-                                .getRecommenderFactory(recommender);
-
-                        if (maybeFactory.isEmpty()) {
-                            log.warn("[{}][{}]: No factory found - skipping recommender",
-                                    user.getUsername(), r.getRecommender().getName());
-                            continue;
-                        }
-
-                        RecommendationEngineFactory<?> factory = maybeFactory.get();
-
-                        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                            log.debug(
-                                    "[{}][{}][{}]: Recommender configured with invalid layer or "
-                                            + "feature - skipping recommender",
-                                    getId(), user.getUsername(), r.getRecommender().getName());
-                            logMessages.add(error(this,
-                                    "Recommender [%s] configured with invalid layer or feature - skipping recommender.",
-                                    r.getRecommender().getName()));
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                    user.getUsername(),
-                                    "Recommender configured with invalid layer or feature - skipping training recommender.",
-                                    recommender));
-                            continue;
-                        }
-
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
-
-                        RecommenderContext ctx = recommendationEngine
-                                .newContext(recommendationService.getContext(user, recommender)
-                                        .orElse(RecommenderContext.EMPTY_CONTEXT));
-                        ctx.setUser(user);
-
-                        RecommendationEngineCapability capability = recommendationEngine
-                                .getTrainingCapability();
-
-                        // If engine does not support training, mark engine ready and skip to
-                        // prediction
-                        if (capability == TRAINING_NOT_SUPPORTED) {
-                            seenNonTrainingRecommender = true;
-                            log.debug("[{}][{}][{}]: Engine does not support training", getId(),
-                                    user.getUsername(), recommender.getName());
-                            ctx.close();
-                            recommendationService.putContext(user, recommender, ctx);
-                            continue;
-                        }
-
-                        List<CAS> cassesForTraining = casses.get().stream() //
-                                .filter(e -> !recommender.getStatesIgnoredForTraining()
-                                        .contains(e.state))
-                                .filter(e -> containsTargetTypeAndFeature(recommender, e.cas))
-                                .map(e -> e.cas).collect(toList());
-
-                        // If no data for training is available, but the engine requires training,
-                        // do not mark as ready
-                        if (cassesForTraining.isEmpty() && capability == TRAINING_REQUIRED) {
-                            log.debug(
-                                    "[{}][{}][{}]: There are no annotations available to train on",
-                                    getId(), user.getUsername(), recommender.getName());
-                            logMessages.add(warn(this,
-                                    "There are no [%s] annotations available to train on.",
-                                    layer.getUiName()));
-                            continue;
-                        }
-
-                        log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...",
-                                getId(), user.getUsername(), recommender.getName(),
-                                cassesForTraining.size(), casses.get().size());
-                        logMessages.add(info(this,
-                                "Training model for [%s] on [%d] out of [%d] documents ...",
-                                layer.getUiName(), cassesForTraining.size(), casses.get().size()));
-
-                        recommendationEngine.train(ctx, cassesForTraining);
-                        logMessages.addAll(ctx.getMessages());
-
-                        long duration = System.currentTimeMillis() - startTime;
-
-                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
-                            int docNum = casses.get().size();
-                            int trainDocNum = cassesForTraining.size();
-                            log.debug(
-                                    "[{}][{}][{}]: Training on [{}] out of [{}] documents not successful ({} ms)",
-                                    getId(), user.getUsername(), recommender.getName(), trainDocNum,
-                                    docNum, duration);
-                            logMessages
-                                    .add(info(this, "Training not successful (%d ms).", duration));
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                    user.getUsername(),
-                                    format("Training on %d out of %d documents not successful (%d ms)",
-                                            trainDocNum, docNum, duration),
-                                    recommender));
-                            continue;
-                        }
-
-                        log.debug(
-                                "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
-                                getId(), user.getUsername(), recommender.getName(),
-                                cassesForTraining.size(), casses.get().size(), duration);
-                        logMessages.add(info(this,
-                                "Training successful on [%d] out of [%d] documents (%d ms)",
-                                cassesForTraining.size(), casses.get().size(), duration));
-                        seenSuccessfulTraining = true;
-
-                        ctx.close();
-                        recommendationService.putContext(user, recommender, ctx);
-                    }
-                    // Catching Throwable is intentional here as we want to continue the execution
-                    // even if a particular recommender fails.
-                    catch (Throwable e) {
-                        long duration = System.currentTimeMillis() - startTime;
-                        log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
-                                user.getUsername(), recommender.getName(),
-                                (System.currentTimeMillis() - startTime), e);
-                        logMessages.add(error(this, "Training failed (%d ms): %s", duration,
-                                getRootCauseMessage(e)));
-                        appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                user.getUsername(), String.format("Training failed (%d ms) with %s",
-                                        duration, e.getMessage()),
-                                recommender));
-                    }
-                }
-            }
-
-            if (!seenSuccessfulTraining && !seenNonTrainingRecommender) {
-                log.debug(
-                        "[{}][{}]: No recommenders trained successfully and no non-training "
-                                + "recommenders, skipping prediction.",
-                        getId(), user.getUsername());
-                return;
-            }
-
-            PredictionTask predictionTask = new PredictionTask(user,
-                    String.format("TrainingTask %s complete", getId()), currentDocument);
-            predictionTask.inheritLog(logMessages);
-            schedulingService.enqueue(predictionTask);
+            executeTraining();
         }
     }
 
-    private List<TrainingDocument> readCasses(Project aProject, User aUser)
+    private void executeTraining()
     {
-        List<TrainingDocument> casses = new ArrayList<>();
-        Map<SourceDocument, AnnotationDocument> allDocuments = documentService
-                .listAllDocuments(aProject, aUser);
-        for (Map.Entry<SourceDocument, AnnotationDocument> entry : allDocuments.entrySet()) {
-            try {
-                SourceDocument sourceDocument = entry.getKey();
-                AnnotationDocument annotationDocument = entry.getValue();
-                AnnotationDocumentState state = annotationDocument != null
-                        ? annotationDocument.getState()
-                        : AnnotationDocumentState.NEW;
+        long overallStartTime = currentTimeMillis();
+        User sessionOwner = getUser().orElseThrow();
 
-                // During training, we should not have to modify the CASes... right? Fingers
-                // crossed.
-                CAS cas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername(),
-                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-                casses.add(new TrainingDocument(cas, state));
+        logTrainingOverallStart(sessionOwner);
+
+        // Read the CASes only when they are accessed the first time. This allows us to skip
+        // reading the CASes in case that no layer / recommender is available or if no
+        // recommender requires evaluation.
+        var casLoader = new LazyInitializer<List<TrainingDocument>>()
+        {
+            @Override
+            protected List<TrainingDocument> initialize()
+            {
+                return readCasses(getProject(), dataOwner);
             }
-            catch (IOException e) {
-                log.error("Cannot read annotation CAS.", e);
+        };
+
+        boolean seenSuccessfulTraining = false;
+        boolean seenNonTrainingRecommender = false;
+
+        var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
+        getMonitor().setMaxProgress(listAnnotationLayers.size());
+        for (var layer : listAnnotationLayers) {
+            getMonitor().incrementProgress();
+
+            if (!layer.isEnabled()) {
+                continue;
             }
+
+            var evaluatedRecommenders = recommenderService.getActiveRecommenders(sessionOwner,
+                    layer);
+
+            if (evaluatedRecommenders.isEmpty()) {
+                logNoActiveRecommenders(sessionOwner, layer);
+                continue;
+            }
+
+            for (var evaluatedRecommender : evaluatedRecommenders) {
+                // Make sure we have the latest recommender config from the DB - the one from
+                // the active recommenders list may be outdated
+                Recommender recommender;
+                try {
+                    recommender = recommenderService
+                            .getRecommender(evaluatedRecommender.getRecommender().getId());
+                }
+                catch (NoResultException e) {
+                    logRecommenderGone(sessionOwner, evaluatedRecommender);
+                    continue;
+                }
+
+                if (!recommender.isEnabled()) {
+                    logRecommenderDisabled(sessionOwner, evaluatedRecommender);
+                    continue;
+                }
+
+                long startTime = currentTimeMillis();
+
+                try {
+                    var maybeFactory = recommenderService.getRecommenderFactory(recommender);
+                    if (maybeFactory.isEmpty()) {
+                        logUnsupportedRecommenderType(sessionOwner, evaluatedRecommender);
+                        continue;
+                    }
+
+                    var factory = maybeFactory.get();
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        logInvalidRecommenderConfiguration(sessionOwner, evaluatedRecommender,
+                                recommender);
+                        continue;
+                    }
+
+                    var engine = factory.build(recommender);
+                    var ctx = engine.newContext(
+                            recommenderService.getContext(sessionOwner.getUsername(), recommender)
+                                    .orElse(RecommenderContext.emptyContext()));
+                    ctx.setUser(sessionOwner);
+
+                    // If engine does not support training, mark engine ready and skip to
+                    // prediction
+                    if (engine.getTrainingCapability() == TRAINING_NOT_SUPPORTED) {
+                        seenNonTrainingRecommender = true;
+                        logTrainingNotSupported(sessionOwner, recommender);
+                        commitContext(sessionOwner, recommender, ctx);
+                        continue;
+                    }
+
+                    var trainingCasses = casLoader.get().stream() //
+                            .filter(e -> !recommender.getStatesIgnoredForTraining()
+                                    .contains(e.state)) //
+                            .map(e -> e.getCas()) //
+                            .filter(Objects::nonNull)
+                            .filter(cas -> containsTargetTypeAndFeature(recommender, cas)) //
+                            .collect(toList());
+
+                    // If no data for training is available, but the engine requires training,
+                    // do not mark as ready
+                    if (trainingCasses.isEmpty()
+                            && engine.getTrainingCapability() == TRAINING_REQUIRED) {
+                        logNoDataAvailableForTraining(sessionOwner, layer, recommender);
+                        // This can happen if there were already predictions based on existing
+                        // annotations, but all annotations have been removed/deleted. To ensure
+                        // that the prediction run removes the stale predictions, we need to
+                        // call it a success here.
+                        seenSuccessfulTraining = true;
+                        continue;
+                    }
+
+                    logTrainingRecommenderStart(sessionOwner, casLoader, layer, recommender,
+                            trainingCasses);
+
+                    engine.train(ctx, trainingCasses);
+                    inheritLog(ctx.getMessages());
+
+                    long duration = currentTimeMillis() - startTime;
+
+                    if (!engine.isReadyForPrediction(ctx)) {
+                        logTrainingFailure(sessionOwner, recommender, duration, casLoader.get(),
+                                trainingCasses);
+                        continue;
+                    }
+
+                    logTrainingSuccessful(sessionOwner, casLoader, recommender, trainingCasses,
+                            duration);
+                    seenSuccessfulTraining = true;
+
+                    commitContext(sessionOwner, recommender, ctx);
+                }
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
+                catch (Throwable e) {
+                    handleError(sessionOwner, recommender, startTime, e);
+                }
+            }
+        }
+
+        if (!seenSuccessfulTraining && !seenNonTrainingRecommender) {
+            logNothingWasTrained(sessionOwner);
+            return;
+        }
+
+        logTrainingOverallEnd(overallStartTime, sessionOwner);
+
+        schedulePredictionTask(sessionOwner);
+    }
+
+    private void schedulePredictionTask(User user)
+    {
+        var predictionTask = new PredictionTask(user,
+                String.format("TrainingTask %s complete", getId()), currentDocument, dataOwner);
+        predictionTask.inheritLog(this);
+        schedulingService.enqueue(predictionTask);
+    }
+
+    private void logTrainingOverallEnd(long overallStartTime, User user)
+    {
+        info("Training complete (%d ms).", currentTimeMillis() - overallStartTime);
+    }
+
+    private void commitContext(User user, Recommender recommender, RecommenderContext ctx)
+    {
+        ctx.close();
+        recommenderService.putContext(user, recommender, ctx);
+    }
+
+    private List<TrainingDocument> readCasses(Project aProject, String aUser)
+    {
+        var casses = new ArrayList<TrainingDocument>();
+        var allDocuments = documentService.listAllDocuments(aProject, aUser);
+        for (var entry : allDocuments.entrySet()) {
+            var sourceDocument = entry.getKey();
+            var annotationDocument = entry.getValue();
+            var state = annotationDocument != null ? annotationDocument.getState()
+                    : AnnotationDocumentState.NEW;
+
+            casses.add(new TrainingDocument(sourceDocument, aUser, state));
         }
         return casses;
     }
@@ -345,20 +318,168 @@ public class TrainingTask
         return CasUtil.iterator(aCas, type).hasNext();
     }
 
-    public void inheritLog(List<LogMessage> aLogMessages)
+    private void logUnsupportedRecommenderType(User user, EvaluatedRecommender evaluatedRecommender)
     {
-        logMessages.addAll(aLogMessages);
+        log.warn("[{}][{}]: No factory found - skipping recommender", user.getUsername(),
+                evaluatedRecommender.getRecommender().getName());
     }
 
-    private static class TrainingDocument
+    private void logTrainingNotSupported(User user, Recommender recommender)
     {
-        private final CAS cas;
+        log.debug("[{}][{}][{}]: Engine does not support training", getId(), user.getUsername(),
+                recommender.getName());
+    }
+
+    private void logRecommenderDisabled(User user, EvaluatedRecommender evaluatedRecommender)
+    {
+        log.debug("[{}][{}][{}]: Disabled - skipping", user.getUsername(), getId(),
+                evaluatedRecommender.getRecommender().getName());
+    }
+
+    private void logRecommenderGone(User user, EvaluatedRecommender evaluatedRecommender)
+    {
+        log.debug("[{}][{}][{}]: Recommender no longer available... skipping", getId(),
+                user.getUsername(), evaluatedRecommender.getRecommender().getName());
+    }
+
+    private void logNothingWasTrained(User user)
+    {
+        log.debug("[{}][{}]: No recommenders trained successfully and no non-training "
+                + "recommenders, skipping prediction.", getId(), user.getUsername());
+    }
+
+    private void logNoActiveRecommenders(User user, AnnotationLayer layer)
+    {
+        log.trace("[{}][{}][{}]: No active recommenders, skipping training.", getId(),
+                user.getUsername(), layer.getUiName());
+        info("No active recommenders for layer [%s], skipping training.", layer.getUiName());
+    }
+
+    private void logInvalidRecommenderConfiguration(User user, EvaluatedRecommender r,
+            Recommender recommender)
+    {
+        log.debug(
+                "[{}][{}][{}]: Recommender configured with invalid layer or "
+                        + "feature - skipping recommender",
+                getId(), user.getUsername(), r.getRecommender().getName());
+        error("Recommender [%s] configured with invalid layer or feature - skipping recommender.",
+                r.getRecommender().getName());
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
+                        .withMessage(LogMessage.error(this,
+                                "Recommender [%s] configured with invalid layer or "
+                                        + "feature - skipping training recommender.",
+                                recommender.getName()))
+                        .build());
+    }
+
+    private void logNoDataAvailableForTraining(User user, AnnotationLayer layer,
+            Recommender recommender)
+    {
+        log.debug("[{}][{}][{}]: There are no annotations available to train on", getId(),
+                user.getUsername(), recommender.getName());
+        warn("There are no [%s] annotations available to train on.", layer.getUiName());
+    }
+
+    private void logTrainingFailure(User user, Recommender recommender, long duration,
+            List<TrainingDocument> aAllCasses, List<CAS> aTrainCasses)
+    {
+        int docNum = aAllCasses.size();
+        int trainDocNum = aTrainCasses.size();
+
+        log.debug("[{}][{}][{}]: Training on [{}] out of [{}] documents not successful ({} ms)",
+                getId(), user.getUsername(), recommender.getName(), trainDocNum, docNum, duration);
+        info("Training not successful (%d ms).", duration);
+        // The recommender may decide for legitimate reasons not to train and
+        // then this event is annoying
+        // appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+        // user.getUsername(),
+        // format("Training on %d out of %d documents not successful (%d ms)",
+        // trainDocNum, docNum, duration),
+        // recommender));
+    }
+
+    private void logTrainingSuccessful(User user, LazyInitializer<List<TrainingDocument>> casses,
+            Recommender recommender, List<CAS> cassesForTraining, long duration)
+        throws ConcurrentException
+    {
+        log.debug("[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
+                getId(), user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                casses.get().size(), duration);
+        info("Training successful on [%d] out of [%d] documents (%d ms)", cassesForTraining.size(),
+                casses.get().size(), duration);
+    }
+
+    private void logTrainingOverallStart(User user)
+    {
+        log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
+                user.getUsername(), getProject(), getTrigger());
+        info("Starting training triggered by [%s]...", getTrigger());
+    }
+
+    private void logTrainingRecommenderStart(User user,
+            LazyInitializer<List<TrainingDocument>> casses, AnnotationLayer layer,
+            Recommender recommender, List<CAS> cassesForTraining)
+        throws ConcurrentException
+    {
+        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
+        log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
+                user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                casses.get().size());
+        info("Training model for [%s] on [%d] out of [%d] documents ...", layer.getUiName(),
+                cassesForTraining.size(), casses.get().size());
+    }
+
+    private void handleError(User user, Recommender recommender, long startTime, Throwable e)
+    {
+        long duration = currentTimeMillis() - startTime;
+        log.error("[{}][{}][{}]: Training failed ({} ms)", getId(), user.getUsername(),
+                recommender.getName(), (currentTimeMillis() - startTime), e);
+
+        error("Training failed (%d ms): %s", duration, getRootCauseMessage(e));
+
+        appEventPublisher.publishEvent(
+                RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
+                        .withMessage(LogMessage.error(this, "Training failed (%d ms) with %s",
+                                duration, e.getMessage()))
+                        .build());
+    }
+
+    private class TrainingDocument
+    {
+        private final SourceDocument document;
+        private final String user;
         private final AnnotationDocumentState state;
 
-        private TrainingDocument(CAS aCas, AnnotationDocumentState aState)
+        private boolean attemptedLoading = false;
+        private CAS _cas;
+
+        private TrainingDocument(SourceDocument aDocument, String aAnnotator,
+                AnnotationDocumentState aState)
         {
-            cas = aCas;
+            document = aDocument;
+            user = aAnnotator;
             state = aState;
+        }
+
+        public CAS getCas()
+        {
+            if (attemptedLoading) {
+                return _cas;
+            }
+
+            attemptedLoading = true;
+            try {
+                // During training, we should not have to modify the CASes... right? Fingers
+                // crossed.
+                _cas = documentService.readAnnotationCas(document, user, AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
+            }
+            catch (IOException e) {
+                log.error("Unable to load CAS to train recommender", e);
+            }
+
+            return _cas;
         }
     }
 }

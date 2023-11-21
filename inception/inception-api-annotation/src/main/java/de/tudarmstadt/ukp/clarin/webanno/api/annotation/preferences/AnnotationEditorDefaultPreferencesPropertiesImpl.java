@@ -18,16 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("annotation.default-preferences")
 public class AnnotationEditorDefaultPreferencesPropertiesImpl
     implements AnnotationEditorDefaultPreferencesProperties
 {
     private int pageSize = 10;
-    private boolean autoScroll = true;
-    private boolean rememberLayer = false;
+    private boolean autoScroll = false;
 
     @Override
     public int getPageSize()
@@ -49,16 +46,5 @@ public class AnnotationEditorDefaultPreferencesPropertiesImpl
     public void setAutoScroll(boolean aAutoScroll)
     {
         autoScroll = aAutoScroll;
-    }
-
-    @Override
-    public boolean isRememberLayer()
-    {
-        return rememberLayer;
-    }
-
-    public void setRememberLayer(boolean aRememberLayer)
-    {
-        rememberLayer = aRememberLayer;
     }
 }

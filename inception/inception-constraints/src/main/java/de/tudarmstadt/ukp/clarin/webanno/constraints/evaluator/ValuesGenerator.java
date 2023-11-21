@@ -206,32 +206,6 @@ public class ValuesGenerator
         return covered;
     }
 
-    // @Override
-    // public boolean areThereRulesFor(FeatureStructure aContext,
-    // ParsedConstraints parsedConstraints)
-    // {
-    // if(imports==null){
-    // imports = parsedConstraints.getImports();
-    // }
-    // shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-    // if (shortTypeName == null) {
-    // //If no relevant rules are there for a particular type, just return empty list
-    // log.error("No import for [" + aContext.getType().getName()
-    // + "] - Imports are: [" + parsedConstraints.getImports() + "]");
-    // return false;
-    // }
-    // //If there's import statement but no scope rules defined for it
-    // else if(parsedConstraints.getScopeByName(shortTypeName)==null
-    // //If there's scope but no rules defined in it.
-    // || parsedConstraints.getScopeByName(shortTypeName).getRules().isEmpty()){
-    // log.debug("No rules found in scope [" + shortTypeName + "]");
-    // return false;
-    // }else{
-    // return true;
-    // }
-    //
-    // }
-
     /**
      * Checks if it is necessary to evaluate rules based on 1. whether there are rules for this
      * FeatureStructure and 2. whether the target is affected by any of the restrictions within
@@ -243,22 +217,5 @@ public class ValuesGenerator
             ParsedConstraints parsedConstraints)
     {
         return parsedConstraints.areThereRules(aContext.getType().getName(), aFeature);
-        // if (!areThereRulesFor(aContext, parsedConstraints)) {
-        // return false;
-        // }
-        // else {
-        // shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-        // scope = parsedConstraints.getScopeByName(shortTypeName);
-        // //Check within every rule if any restriction affects aFeature
-        // for (Rule rule : scope.getRules()) {
-        // for (Restriction res : rule.getRestrictions()) {
-        // if (aFeature.equals(res.getPath())) {
-        // return true;
-        // }
-        // }
-        // }
-        // return false;
-        //
-        // }
     }
 }

@@ -17,26 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
-import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.JSON_FORMAT;
-import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.TAB_FORMAT;
-import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior.onUpdateChoice;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -44,17 +37,14 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -62,25 +52,29 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TagSetEditorPanel
     extends LambdaPanel
 {
     private static final long serialVersionUID = 3084260865116114184L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @SpringBean AnnotationSchemaService annotationSchemaService;
 
-    private ConfirmationDialog confirmationDialog;
+    private BootstrapModalDialog confirmationDialog;
 
     private IModel<Project> selectedProject;
     private IModel<TagSet> selectedTagSet;
     private IModel<Tag> selectedTag;
-    private IModel<String> exportFormat;
 
     public TagSetEditorPanel(String aId, IModel<Project> aProject, IModel<TagSet> aTagSet,
             IModel<Tag> aSelectedTag)
@@ -93,42 +87,27 @@ public class TagSetEditorPanel
         selectedProject = aProject;
         selectedTagSet = aTagSet;
         selectedTag = aSelectedTag;
-        exportFormat = Model.of(supportedFormats().get(0));
 
-        Form<TagSet> form = new Form<>("form", CompoundPropertyModel.of(aTagSet));
-        add(form);
+        queue(new Form<>("form", CompoundPropertyModel.of(aTagSet)));
 
-        form.add(new TextField<String>("name") //
+        queue(new TextField<String>("name") //
                 .add(new TagSetExistsValidator()) //
                 .setRequired(true));
-        form.add(new TextField<String>("language"));
-        form.add(new TextArea<String>("description"));
-        form.add(new CheckBox("createTag").setOutputMarkupId(true));
+        queue(new TextField<String>("language"));
+        queue(new TextArea<String>("description"));
+        queue(new CheckBox("createTag").setOutputMarkupId(true));
 
-        form.add(new LambdaAjaxButton<>("save", this::actionSave));
-        form.add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
-        form.add(new LambdaAjaxLink("cancel", this::actionCancel));
+        queue(new LambdaAjaxButton<>("save", this::actionSave));
+        queue(new LambdaAjaxLink("delete", this::actionDelete)
+                .onConfigure(_this -> _this.setVisible(aTagSet.getObject().getId() != null)));
+        queue(new LambdaAjaxLink("cancel", this::actionClearSelectedTagset));
 
-        BootstrapRadioChoice<String> format = new BootstrapRadioChoice<>("format", exportFormat,
-                LoadableDetachableModel.of(this::supportedFormats));
-        // The AjaxDownloadLink does not submit the form, so the format radio-buttons need to
-        // submit themselves so their value is available when the export button is pressed
-        format.add(onUpdateChoice(_target -> {
-            // NO-OP
-        }));
-        form.add(format);
+        queue(new AjaxDownloadLink("exportTagsetAsJson", this::exportTagsetAsJson));
+        queue(new AjaxDownloadLink("exportTagsetAsTabSeparated", this::exportTagsetAsTabSeparated));
 
-        form.add(new AjaxDownloadLink("export", LoadableDetachableModel.of(this::export)));
-
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
+        confirmationDialog = new BootstrapModalDialog("confirmationDialog");
+        confirmationDialog.trapFocus();
         add(confirmationDialog);
-    }
-
-    private List<String> supportedFormats()
-    {
-        return asList(JSON_FORMAT, TAB_FORMAT);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm)
@@ -145,15 +124,16 @@ public class TagSetEditorPanel
 
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
+
+        success("Settings saved");
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
     {
-        confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
-                .setParameters(selectedTagSet.getObject().getName()));
-        confirmationDialog.show(aTarget);
+        var dialogContent = new TagsetDeletionConfirmationDialogPanel(
+                BootstrapModalDialog.CONTENT_ID, selectedTagSet);
 
-        confirmationDialog.setConfirmAction((_target) -> {
+        dialogContent.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
             for (AnnotationFeature ft : annotationSchemaService
@@ -167,11 +147,13 @@ public class TagSetEditorPanel
             annotationSchemaService.removeTagSet(selectedTagSet.getObject());
 
             _target.add(getPage());
-            actionCancel(_target);
+            actionClearSelectedTagset(_target);
         });
+
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
-    private void actionCancel(AjaxRequestTarget aTarget)
+    private void actionClearSelectedTagset(AjaxRequestTarget aTarget)
     {
         selectedTagSet.setObject(null);
         selectedTag.setObject(null);
@@ -180,87 +162,65 @@ public class TagSetEditorPanel
         aTarget.add(getPage());
     }
 
-    private FileResourceStream export()
+    private IResourceStream exportTagsetAsJson()
     {
-        File exportFile = null;
-        if (exportFormat.getObject().equals(JSON_FORMAT)) {
-            try {
-                exportFile = File.createTempFile("exportedtagsets", ".json");
-            }
-            catch (IOException e1) {
-                error("Unable to create temporary File!!");
-                return null;
+        try {
+            String json = exportTagsetToJson(annotationSchemaService, selectedTagSet.getObject());
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")),
+                    "tagset.json");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(LOG, this, e);
+            return null;
+        }
+    }
 
-            }
-            if (isNull(selectedTagSet.getObject().getId())) {
-                error("Project not yet created. Please save project details first!");
-            }
-            else {
-                TagSet tagSet = selectedTagSet.getObject();
-                ExportedTagSet exTagSet = new ExportedTagSet();
-                exTagSet.setDescription(tagSet.getDescription());
-                exTagSet.setLanguage(tagSet.getLanguage());
-                exTagSet.setName(tagSet.getName());
+    private IResourceStream exportTagsetAsTabSeparated()
+    {
+        try {
+            String json = exportTagsetToTsv(annotationSchemaService, selectedTagSet.getObject());
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes("UTF-8")),
+                    "tagset.tsv");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(LOG, this, e);
+            return null;
+        }
+    }
 
-                List<ExportedTag> exportedTags = new ArrayList<>();
-                for (Tag tag : annotationSchemaService.listTags(tagSet)) {
-                    ExportedTag exportedTag = new ExportedTag();
-                    exportedTag.setDescription(tag.getDescription());
-                    exportedTag.setName(tag.getName());
-                    exportedTags.add(exportedTag);
-                }
-                exTagSet.setTags(exportedTags);
-
-                try {
-                    JSONUtil.generatePrettyJson(exTagSet, exportFile);
-                }
-                catch (IOException e) {
-                    error("File Path not found or No permision to save the file!");
-                }
-
-                info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
+    private String exportTagsetToTsv(AnnotationSchemaService aSchemaService, TagSet tagSet)
+        throws IOException
+    {
+        StringWriter buf = new StringWriter();
+        try (CSVPrinter printer = new CSVPrinter(buf, EXCEL)) {
+            String tagSetDescription = tagSet.getDescription() == null ? ""
+                    : tagSet.getDescription();
+            printer.printRecord(tagSet.getName(), tagSetDescription.replace("\n", "\\n"));
+            for (Tag tag : annotationSchemaService.listTags(tagSet)) {
+                String tagDescription = tag.getDescription() == null ? "" : tag.getDescription();
+                printer.printRecord(tag.getName(), tagDescription.replace("\n", "\\n"));
             }
         }
-        else if (exportFormat.getObject().equals(TAB_FORMAT)) {
-            TagSet tagSet = selectedTagSet.getObject();
-            try {
-                exportFile = File.createTempFile("exportedtagsets", ".txt");
-            }
-            catch (IOException e1) {
-                error("Unable to create temporary File!!");
-            }
-            OutputStream os;
-            OutputStreamWriter osw;
-            BufferedWriter bw;
-            try {
-                String tagSetDescription = tagSet.getDescription() == null ? ""
-                        : tagSet.getDescription();
-                os = new FileOutputStream(exportFile);
-                osw = new OutputStreamWriter(os, "UTF-8");
-                bw = new BufferedWriter(osw);
-                bw.write(tagSet.getName() + "\t" + tagSetDescription.replace("\n", "\\n") + "\n");
-                bw.write(tagSet.getLanguage() + "\t" + " \n");
-                for (Tag tag : annotationSchemaService.listTags(tagSet)) {
-                    String tagDescription = tag.getDescription() == null ? ""
-                            : tag.getDescription();
-                    bw.write(tag.getName() + "\t" + tagDescription.replace("\n", "\\n") + "\n");
-                }
+        return buf.toString();
+    }
 
-                bw.flush();
-                bw.close();
-            }
-            catch (FileNotFoundException e) {
-                error("The file for export not found " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (UnsupportedEncodingException e) {
-                error("Unsupported encoding " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (IOException e) {
-                error(ExceptionUtils.getRootCause(e));
-            }
+    private String exportTagsetToJson(AnnotationSchemaService aSchemaService, TagSet tagSet)
+        throws IOException
+    {
+        ExportedTagSet exTagSet = new ExportedTagSet();
+        exTagSet.setDescription(tagSet.getDescription());
+        exTagSet.setLanguage(tagSet.getLanguage());
+        exTagSet.setName(tagSet.getName());
 
+        List<ExportedTag> exportedTags = new ArrayList<>();
+        for (Tag tag : aSchemaService.listTags(tagSet)) {
+            ExportedTag exportedTag = new ExportedTag();
+            exportedTag.setDescription(tag.getDescription());
+            exportedTag.setName(tag.getName());
+            exportedTags.add(exportedTag);
         }
-        return new FileResourceStream(exportFile);
+        exTagSet.setTags(exportedTags);
+        return JSONUtil.toPrettyJsonString(exTagSet);
     }
 
     private class TagSetExistsValidator

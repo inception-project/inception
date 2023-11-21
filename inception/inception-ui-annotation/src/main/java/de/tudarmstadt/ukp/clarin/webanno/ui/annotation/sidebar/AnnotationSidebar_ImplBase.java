@@ -24,21 +24,21 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public abstract class AnnotationSidebar_ImplBase
     extends Panel
 {
     private static final long serialVersionUID = 8637373389151630602L;
 
-    private AnnotationActionHandler actionHandler;
-    private CasProvider casProvider;
-    private AnnotationPage annotationPage;
+    private final AnnotationActionHandler actionHandler;
+    private final CasProvider casProvider;
+    private final AnnotationPage annotationPage;
     private @SpringBean DocumentService documentService;
 
     public AnnotationSidebar_ImplBase(final String aId, final IModel<AnnotatorState> aModel,
@@ -46,9 +46,9 @@ public abstract class AnnotationSidebar_ImplBase
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel);
+
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
-
         annotationPage = aAnnotationPage;
 
         // Allow AJAX updates.

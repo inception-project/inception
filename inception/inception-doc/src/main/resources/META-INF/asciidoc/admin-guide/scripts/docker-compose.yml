@@ -2,14 +2,14 @@
 # docker-compose up [-d]
 # docker-compose down
 ##
-version: '3.5'
+version: '2.4'
 
 networks:
   inception-net:
 
 services:
   db:
-    image: "mariadb:10.5"
+    image: "mariadb:10.7"
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
@@ -28,7 +28,7 @@ services:
       inception-net:
 
   app:
-    image: "${INCEPTION_IMAGE:-inceptionproject/inception}:${INCEPTION_VERSION:-{revnumber}}"
+    image: "${INCEPTION_IMAGE:-ghcr.io/inception-project/inception}:${INCEPTION_VERSION:-{revnumber}}"
     ports:
       - "${INCEPTION_PORT:-8080}:8080"
     environment:

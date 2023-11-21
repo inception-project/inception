@@ -21,10 +21,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
@@ -35,12 +34,12 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.MtasDocumentIndexFactory;
 public class MtasDocumentIndexAutoConfiguration
 {
     @Bean
-    public MtasDocumentIndexFactory mtasDocumentIndexFactory(AnnotationSchemaService aSchemaService,
-            DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
+    public MtasDocumentIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        return new MtasDocumentIndexFactory(aSchemaService, aDocumentService, aRepositoryProperties,
+        return new MtasDocumentIndexFactory(aDocumentService, aRepositoryProperties,
                 aFeatureIndexingSupportRegistry, aFeatureSupportRegistry);
     }
 }

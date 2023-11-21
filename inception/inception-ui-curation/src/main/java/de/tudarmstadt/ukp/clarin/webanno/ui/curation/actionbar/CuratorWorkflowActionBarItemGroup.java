@@ -18,8 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Ctrl;
+import static wicket.contrib.input.events.key.KeyType.End;
+
+import java.io.IOException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -30,18 +35,17 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
@@ -49,6 +53,10 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import wicket.contrib.input.events.key.KeyType;
 
 public class CuratorWorkflowActionBarItemGroup
     extends Panel
@@ -61,8 +69,8 @@ public class CuratorWorkflowActionBarItemGroup
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
-    protected final ConfirmationDialog finishDocumentDialog;
-    private final LambdaAjaxLink finishDocumentLink;
+    // private final ConfirmationDialog finishDocumentDialog;
+    private final LambdaAjaxLink toggleCurationStateLink;
     private final IModel<CurationWorkflow> curationWorkflowModel;
     private MergeDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
@@ -73,25 +81,24 @@ public class CuratorWorkflowActionBarItemGroup
 
         page = aPage;
 
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        // add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+        // new StringResourceModel("FinishDocumentDialog.title", this, null),
+        // new StringResourceModel("FinishDocumentDialog.text", this, null)));
 
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument));
-        finishDocumentLink.setOutputMarkupId(true);
-        finishDocumentLink.add(enabledWhen(this::isEditable));
-        finishDocumentLink.add(new Label("state")
+        add(toggleCurationStateLink = new LambdaAjaxLink("toggleCurationState",
+                this::actionToggleCurationState));
+        toggleCurationStateLink.setOutputMarkupId(true);
+        toggleCurationStateLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+        toggleCurationStateLink.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         curationWorkflowModel = Model.of(
                 curationService.readOrCreateCurationWorkflow(page.getModelObject().getProject()));
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
-                        .setParameters(documentNameModel),
-                documentNameModel, curationWorkflowModel));
+                new ResourceModel("ResetDocumentDialog.title"),
+                new ResourceModel("ResetDocumentDialog.text"), documentNameModel,
+                curationWorkflowModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
@@ -114,27 +121,46 @@ public class CuratorWorkflowActionBarItemGroup
     protected boolean isEditable()
     {
         AnnotatorState state = page.getModelObject();
-        return state.getProject() != null && state.getDocument() != null && !documentService
-                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName())
-                .getState().equals(CURATION_FINISHED);
+        if (state.getProject() == null || state.getDocument() == null) {
+            return false;
+        }
+
+        SourceDocument sourceDocument = documentService
+                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName());
+        return sourceDocument.getState() != CURATION_FINISHED;
     }
 
-    protected void actionFinishDocument(AjaxRequestTarget aTarget)
+    protected void actionToggleCurationState(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
-        finishDocumentDialog.setConfirmAction((_target) -> {
-            page.actionValidateDocument(_target, page.getEditorCas());
+        try {
+            page.actionValidateDocument(aTarget, page.getEditorCas());
+        }
+        catch (ValidationException e) {
+            page.error("Document cannot be marked as finished: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
 
-            AnnotatorState state = page.getModelObject();
-            SourceDocument sourceDocument = state.getDocument();
+        AnnotatorState state = page.getModelObject();
+        SourceDocument sourceDocument = state.getDocument();
+        var docState = sourceDocument.getState();
 
-            if (!curationDocumentService.isCurationFinished(sourceDocument)) {
-                documentService.transitionSourceDocumentState(sourceDocument,
-                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-            }
-
-            _target.add(page);
-        });
-        finishDocumentDialog.show(aTarget);
+        switch (docState) {
+        case CURATION_IN_PROGRESS:
+            documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
+            aTarget.add(page);
+            break;
+        case CURATION_FINISHED:
+            documentService.setSourceDocumentState(sourceDocument, CURATION_IN_PROGRESS);
+            aTarget.add(page);
+            break;
+        default:
+            error("Can only change document state for documents that are finished or in progress, "
+                    + "but document is in state [" + docState + "]");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            break;
+        }
     }
 
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)

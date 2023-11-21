@@ -17,19 +17,38 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_RESERVED_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.containsAny;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -38,6 +57,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -47,6 +67,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -56,6 +80,34 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class UserDaoImpl
     implements UserDao
 {
+    private static final String MVAR_CHARS = "chars";
+    private static final String MVAR_PATTERN = "pattern";
+    private static final String MVAR_LIMIT = "limit";
+    private static final String MSG_PASSWORD_ERROR_PATTERN_MISMATCH = "password.error.pattern-mismatch";
+    private static final String MSG_PASSWORD_ERROR_TOO_LONG = "password.error.too-long";
+    private static final String MSG_PASSWORD_ERROR_TOO_SHORT = "password.error.too-short";
+    private static final String MSG_PASSWORD_ERROR_BLANK = "password.error.blank";
+    private static final String MSG_PASSWORD_ERROR_CONTROL_CHARACTERS = "password.error.control-characters";
+    private static final String MSG_USERNAME_ERROR_PATTERN_MISMATCH = "username.error.pattern-mismatch";
+    private static final String MSG_USERNAME_ERROR_TOO_LONG = "username.error.too-long";
+    private static final String MSG_USERNAME_ERROR_TOO_SHORT = "username.error.too-short";
+    private static final String MSG_USERNAME_ERROR_RESERVED = "username.error.reserved";
+    private static final String MSG_USERNAME_ERROR_ILLEGAL_CHARACTERS = "username.error.illegal-characters";
+    private static final String MSG_USERNAME_ERROR_CONTROL_CHARACTERS = "username.error.control-characters";
+    private static final String MSG_USERNAME_ILLEGAL_PREFIX = "username.name.error.illegal-prefix";
+    private static final String MSG_USERNAME_ERROR_ILLEGAL_SPACE = "username.error.illegal-space";
+    private static final String MSG_USERNAME_ERROR_BLANK = "username.error.blank";
+    private static final String MSG_UINAME_ERROR_TOO_LONG = "ui-name.error.too-long";
+    private static final String MSG_EMAIL_INVALID = "email.error.invalid";
+    private static final String MSG_EMAIL_ERROR_TOO_LONG = "email.error.too-long";
+
+    private static final String USERNAME_ILLEGAL_PREFIX_CHARACTERS = FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
+    private static final String USERNAME_ILLEGAL_CHARACTERS = sortAndRemoveDuplicateCharacters(
+            "^/\\&*?+$![]", FILESYSTEM_RESERVED_CHARACTERS);
+
+    public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
+            CURATION_USER);
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final EntityManager entityManager;
@@ -75,6 +127,11 @@ public class UserDaoImpl
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
+        installDefaultAdminUser();
+    }
+
+    void installDefaultAdminUser()
+    {
         if (securityProperties == null || securityProperties.getDefaultAdminPassword() == null) {
             return;
         }
@@ -83,10 +140,17 @@ public class UserDaoImpl
             return;
         }
 
+        var defaultAdminUsername = securityProperties.getDefaultAdminUsername();
+        if (defaultAdminUsername != null && !isValidUsername(defaultAdminUsername)) {
+            throw new IllegalStateException(
+                    "Illegal default admin username configured in the settings file: ["
+                            + securityProperties.getDefaultAdminUsername() + "]");
+        }
+
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
                 User admin = new User();
-                admin.setUsername(ADMIN_DEFAULT_USERNAME);
+                admin.setUsername(defaultString(defaultAdminUsername, ADMIN_DEFAULT_PASSWORD));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
@@ -113,6 +177,11 @@ public class UserDaoImpl
     @Transactional
     public User create(User aUser)
     {
+        if (RESERVED_USERNAMES.contains(aUser.getUsername())) {
+            throw new IllegalArgumentException("Username [" + aUser.getUsername()
+                    + "] is reserved. No user with this name can be created.");
+        }
+
         entityManager.persist(aUser);
         entityManager.flush();
         log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
@@ -185,15 +254,33 @@ public class UserDaoImpl
 
             return usersInRealm.size();
         }
-        else {
-            String query = String.join("\n", //
-                    "DELETE FROM " + User.class.getName(), //
-                    "WHERE realm = :realm");
 
-            return entityManager.createQuery(query) //
-                    .setParameter("realm", aRealm) //
-                    .executeUpdate();
+        String query = String.join("\n", //
+                "DELETE FROM " + User.class.getName(), //
+                "WHERE realm = :realm");
+
+        return entityManager.createQuery(query) //
+                .setParameter("realm", aRealm) //
+                .executeUpdate();
+    }
+
+    @Override
+    public User getCurationUser()
+    {
+        return new User(CURATION_USER);
+    }
+
+    @Override
+    @Transactional
+    public User getUserOrCurationUser(String aUsername)
+    {
+        Validate.notBlank(aUsername, "User must be specified");
+
+        if (CURATION_USER.equals(aUsername)) {
+            return getCurationUser();
         }
+
+        return get(aUsername);
     }
 
     @Override
@@ -266,10 +353,11 @@ public class UserDaoImpl
     @Transactional
     public List<String> listRealms()
     {
-        String query = "SELECT DISTINCT realm FROM " + User.class.getName();
-
-        return entityManager.createQuery(query, String.class) //
-                .getResultList();
+        var cr = entityManager.getCriteriaBuilder().createQuery(String.class);
+        cr.select(cr.from(User.class) //
+                .get(User_.realm)) //
+                .distinct(true);
+        return entityManager.createQuery(cr).getResultList();
     }
 
     @Override
@@ -333,9 +421,6 @@ public class UserDaoImpl
                 .anyMatch(auth -> ROLE_ADMIN.toString().equals(auth));
     }
 
-    /**
-     * Check if the user has the permission to create projects.
-     */
     @Override
     @Transactional
     public boolean isProjectCreator(User aUser)
@@ -348,6 +433,194 @@ public class UserDaoImpl
             }
         }
         return roleAdmin;
+    }
+
+    @Override
+    public List<ValidationError> validateEmail(String eMail)
+    {
+
+        var errors = new ArrayList<ValidationError>();
+
+        var len = eMail.length();
+        int maximumUiNameLength = 200;
+        if (len > maximumUiNameLength) {
+            errors.add(new ValidationError("Email address too long. It can at most consist of "
+                    + maximumUiNameLength + " characters.") //
+                            .addKey(MSG_EMAIL_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUiNameLength));
+        }
+
+        if (!EmailValidator.getInstance().isValid(eMail)) {
+            errors.add(new ValidationError("Not a valid email address.") //
+                    .addKey(MSG_EMAIL_INVALID));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public List<ValidationError> validateUiName(String aName)
+    {
+        var errors = new ArrayList<ValidationError>();
+
+        var len = aName.length();
+        int maximumUiNameLength = 200;
+        if (len > maximumUiNameLength) {
+            errors.add(new ValidationError("Display name too long. It can at most consist of "
+                    + maximumUiNameLength + " characters.") //
+                            .addKey(MSG_UINAME_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUiNameLength));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public List<ValidationError> validateUsername(String aName)
+    {
+        var errors = new ArrayList<ValidationError>();
+
+        // Do not allow empty or blank usernames
+        if (isBlank(aName)) {
+            errors.add(new ValidationError("Username cannot be empty or blank") //
+                    .addKey(MSG_USERNAME_ERROR_BLANK));
+            return errors;
+        }
+
+        // Do not allow space
+        if (containsAnyCharacterMatching(aName, Character::isWhitespace)) {
+            errors.add(new ValidationError("Username cannot contain a space character") //
+                    .addKey(MSG_USERNAME_ERROR_ILLEGAL_SPACE));
+            return errors;
+        }
+
+        if (startsWithMatching(aName, c -> contains(USERNAME_ILLEGAL_PREFIX_CHARACTERS, c))) {
+            errors.add(new ValidationError("Username cannot start with any of these characters: "
+                    + USERNAME_ILLEGAL_PREFIX_CHARACTERS) //
+                            .addKey(MSG_USERNAME_ILLEGAL_PREFIX)
+                            .setVariable(MVAR_CHARS, USERNAME_ILLEGAL_PREFIX_CHARACTERS));
+            return errors;
+        }
+
+        // Do not allow problematic characters (note that we use the username in some file names!
+        if (containsAny(aName, USERNAME_ILLEGAL_CHARACTERS)) {
+            errors.add(new ValidationError("Username cannot contain any of these characters: "
+                    + USERNAME_ILLEGAL_CHARACTERS) //
+                            .addKey(MSG_USERNAME_ERROR_ILLEGAL_CHARACTERS)
+                            .setVariable(MVAR_CHARS, USERNAME_ILLEGAL_CHARACTERS));
+            return errors;
+        }
+
+        if (containsAnyCharacterMatching(aName, TextUtils::isControlCharacter)) {
+            errors.add(new ValidationError("Username cannot contain any control characters") //
+                    .addKey(MSG_USERNAME_ERROR_CONTROL_CHARACTERS));
+            return errors;
+        }
+
+        if (RESERVED_USERNAMES.contains(aName)) {
+            errors.add(new ValidationError("Username is reserved") //
+                    .addKey(MSG_USERNAME_ERROR_RESERVED));
+            return errors;
+        }
+
+        // Username is too short or too long
+        var len = aName.length();
+        int minimumUsernameLength = securityProperties.getMinimumUsernameLength();
+        if (len < minimumUsernameLength) {
+            errors.add(new ValidationError("Username too short. It must at least consist of "
+                    + minimumUsernameLength + " characters.") //
+                            .addKey(MSG_USERNAME_ERROR_TOO_SHORT)
+                            .setVariable(MVAR_LIMIT, minimumUsernameLength));
+        }
+
+        int maximumUsernameLength = securityProperties.getMaximumUsernameLength();
+        if (len > maximumUsernameLength) {
+            errors.add(new ValidationError("Username too long. It can at most consist of "
+                    + maximumUsernameLength + " characters.") //
+                            .addKey(MSG_USERNAME_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumUsernameLength));
+        }
+
+        Pattern usernamePattern = securityProperties.getUsernamePattern();
+        if (!usernamePattern.matcher(aName).matches()) {
+            errors.add(new ValidationError("Username invalid. It must match the pattern ["
+                    + usernamePattern.pattern() + "].") //
+                            .addKey(MSG_USERNAME_ERROR_PATTERN_MISMATCH)
+                            .setVariable(MVAR_PATTERN, usernamePattern.pattern()));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public boolean isValidUsername(String aName)
+    {
+        return validateUsername(aName).isEmpty();
+    }
+
+    @Override
+    public boolean isValidEmail(String aEMail)
+    {
+        return validateEmail(aEMail).isEmpty();
+    }
+
+    @Override
+    public boolean isValidUiName(String aName)
+    {
+        return validateUiName(aName).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validatePassword(String aPassword)
+    {
+        var errors = new ArrayList<ValidationError>();
+
+        // Do not allow empty or blank passwords
+        if (isBlank(aPassword)) {
+            errors.add(new ValidationError("Password cannot be empty or blank") //
+                    .addKey(MSG_PASSWORD_ERROR_BLANK));
+            return errors;
+        }
+
+        if (containsAnyCharacterMatching(aPassword, TextUtils::isControlCharacter)) {
+            errors.add(new ValidationError("Password cannot contain any control characters") //
+                    .addKey(MSG_PASSWORD_ERROR_CONTROL_CHARACTERS));
+            return errors;
+        }
+
+        // Password is too short or too long
+        var len = aPassword.length();
+        int minimumPasswordLength = securityProperties.getMinimumPasswordLength();
+        if (len < minimumPasswordLength) {
+            errors.add(new ValidationError("Password too short. It must at least consist of "
+                    + minimumPasswordLength + " characters.") //
+                            .addKey(MSG_PASSWORD_ERROR_TOO_SHORT)
+                            .setVariable(MVAR_LIMIT, minimumPasswordLength));
+        }
+
+        int maximumPasswordLength = securityProperties.getMaximumPasswordLength();
+        if (len > maximumPasswordLength) {
+            errors.add(new ValidationError("Password too long. It can at most consist of "
+                    + maximumPasswordLength + " characters.") //
+                            .addKey(MSG_PASSWORD_ERROR_TOO_LONG)
+                            .setVariable(MVAR_LIMIT, maximumPasswordLength));
+        }
+
+        Pattern passwordPattern = securityProperties.getPasswordPattern();
+        if (!passwordPattern.matcher(aPassword).matches()) {
+            errors.add(new ValidationError("Password invalid. It must match the pattern ["
+                    + passwordPattern.pattern() + "].") //
+                            .addKey(MSG_PASSWORD_ERROR_PATTERN_MISMATCH)
+                            .setVariable(MVAR_PATTERN, passwordPattern.pattern()));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public boolean isValidPassword(String aPassword)
+    {
+        return validatePassword(aPassword).isEmpty();
     }
 
     @Override
@@ -381,7 +654,8 @@ public class UserDaoImpl
                 "FROM " + User.class.getName(), //
                 "WHERE enabled = :enabled");
 
-        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("enabled", true) //
                 .getSingleResult();
     }
 
@@ -391,5 +665,63 @@ public class UserDaoImpl
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication != null ? authentication.getName() : null;
+    }
+
+    // FIXME: Use DI to get password encoder
+    @Override
+    public boolean userHasNoPassword(User aUser)
+    {
+        var applicationContext = ApplicationContextProvider.getApplicationContext();
+        PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+        return aUser.getPassword() == null
+                || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword());
+    }
+
+    // FIXME: Use DI to get password encoder and environment
+    @Override
+    public boolean canChangePassword(User aUser)
+    {
+        var applicationContext = ApplicationContextProvider.getApplicationContext();
+
+        // Just in case the administrator has not run the user account migration of external
+        // accounts after the upgrade... because if an external user could change their password,
+        // they would be able to log in via form-based login...
+        if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
+                PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
+            PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+            if (aUser.getPassword() == null
+                    || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword())) {
+                return false;
+            }
+        }
+
+        if (aUser.getRealm() == null) {
+            return true; // Local users can change their password
+        }
+
+        return false; // External users and project-bound users cannot
+    }
+
+    private static boolean isProfileSelfServiceEnabled()
+    {
+        Properties settings = SettingsUtil.getSettings();
+        return "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+    }
+
+    @Override
+    public boolean isProfileSelfServiceAllowed(User aUser)
+    {
+        if (!isProfileSelfServiceEnabled()) {
+            return false;
+        }
+
+        if (startsWith(aUser.getRealm(), UserDao.REALM_PROJECT_PREFIX)) {
+            // Project-bound users get no access to their profile. They could at most change their
+            // display name and email, but since those are basically their logins, we don't want
+            // them to be able to do that.
+            return false;
+        }
+
+        return true;
     }
 }

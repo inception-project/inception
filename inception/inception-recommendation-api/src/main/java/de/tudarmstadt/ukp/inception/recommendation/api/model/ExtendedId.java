@@ -18,36 +18,28 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-public class ExtendedId
+class ExtendedId
     implements Serializable
 {
     private static final long serialVersionUID = -5214683455382881005L;
 
-    private final String userName;
-    private final long projectId;
-    private final String documentName;
-    private final long layerId;
-    private final Position position;
-    private final int annotationId;
-    private final int sentenceId;
+    private final int suggestionId;
     private final long recommenderId;
+    private final long layerId;
+    private final String documentName;
+    private final Position position;
+    private final int hash;
 
-    public ExtendedId(String userName, long projectId, String documentName, long layerId,
-            Position aPosition, long recommenderId, int annotationId, int sentenceId)
+    public ExtendedId(AnnotationSuggestion aSuggestion)
     {
-        super();
-        this.userName = userName;
-        this.projectId = projectId;
-        this.documentName = documentName;
-        this.layerId = layerId;
-        this.annotationId = annotationId;
-        this.sentenceId = sentenceId;
-        this.recommenderId = recommenderId;
-        this.position = aPosition;
+        documentName = aSuggestion.getDocumentName();
+        layerId = aSuggestion.getLayerId();
+        suggestionId = aSuggestion.getId();
+        recommenderId = aSuggestion.getRecommenderId();
+        position = aSuggestion.getPosition();
+        hash = Objects.hash(suggestionId, documentName, layerId, position, recommenderId);
     }
 
     public String getDocumentName()
@@ -60,29 +52,14 @@ public class ExtendedId
         return layerId;
     }
 
-    public String getUserName()
-    {
-        return userName;
-    }
-
-    public long getProjectId()
-    {
-        return projectId;
-    }
-
     public Position getPosition()
     {
         return position;
     }
 
-    public int getAnnotationId()
+    public int getSuggestionId()
     {
-        return annotationId;
-    }
-
-    public int getSentenceId()
-    {
-        return sentenceId;
+        return suggestionId;
     }
 
     public long getRecommenderId()
@@ -91,25 +68,31 @@ public class ExtendedId
     }
 
     @Override
-    public boolean equals(final Object other)
+    public int hashCode()
     {
-        if (!(other instanceof ExtendedId)) {
-            return false;
-        }
-        ExtendedId castOther = (ExtendedId) other;
-        return new EqualsBuilder().append(userName, castOther.userName)
-                .append(projectId, castOther.projectId).append(documentName, castOther.documentName)
-                .append(layerId, castOther.layerId).append(position, castOther.position)
-                .append(annotationId, castOther.annotationId)
-                .append(sentenceId, castOther.sentenceId)
-                .append(recommenderId, castOther.recommenderId).isEquals();
+        return hash;
     }
 
     @Override
-    public int hashCode()
+    public boolean equals(Object obj)
     {
-        return new HashCodeBuilder().append(userName).append(projectId).append(documentName)
-                .append(layerId).append(position).append(annotationId).append(sentenceId)
-                .append(recommenderId).toHashCode();
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        ExtendedId other = (ExtendedId) obj;
+        return Objects.equals(position, other.position) //
+                && suggestionId == other.suggestionId //
+                && Objects.equals(documentName, other.documentName) //
+                && layerId == other.layerId //
+                && recommenderId == other.recommenderId;
     }
 }

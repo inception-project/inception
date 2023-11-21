@@ -86,6 +86,7 @@ public class DefaultProjectPreferencesExporter
 
         for (ExportedDefaultProjectPreference exportedDefaultPreference : exportedDefaultPreferences) {
             DefaultProjectPreference defaultPreference = new DefaultProjectPreference();
+            defaultPreference.setProject(aProject);
             defaultPreference.setName(exportedDefaultPreference.getName());
             defaultPreference.setTraits(exportedDefaultPreference.getTraits());
 

@@ -29,20 +29,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -53,7 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class RecommenderExporterTest
 {
     private @Mock AnnotationSchemaService annotationService;
@@ -66,8 +67,6 @@ public class RecommenderExporterTest
     @BeforeEach
     public void setUp()
     {
-        openMocks(this);
-
         layer = new AnnotationLayer();
         layer.setName("Layer");
 
@@ -78,12 +77,6 @@ public class RecommenderExporterTest
         when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
         when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("1"));
-        when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("2"));
-        when(annotationService.getFeature(eq("Feature 3"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("3"));
-        when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("4"));
 
         sut = new RecommenderExporter(annotationService, recommendationService);
     }
@@ -91,13 +84,20 @@ public class RecommenderExporterTest
     @Test
     public void thatExportingWorks()
     {
+        when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("2"));
+        when(annotationService.getFeature(eq("Feature 3"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("3"));
+        when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("4"));
         when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
 
         // Export the project and import it again
         ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingFieldByFieldElementComparator()
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrderElementsOf(recommenders());
     }
 
@@ -172,7 +172,7 @@ public class RecommenderExporterTest
         recommender1.setThreshold(.1);
         recommender1.setSkipEvaluation(true);
         recommender1.setMaxRecommendations(3);
-        recommender1.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS, FINISHED));
+        recommender1.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS, FINISHED));
 
         Recommender recommender2 = buildRecommender("2");
         recommender2.setAlwaysSelected(false);
@@ -180,7 +180,7 @@ public class RecommenderExporterTest
         recommender2.setThreshold(.2);
         recommender2.setSkipEvaluation(false);
         recommender2.setMaxRecommendations(4);
-        recommender2.setStatesIgnoredForTraining(asSet(NEW, IN_PROGRESS));
+        recommender2.setStatesIgnoredForTraining(Set.of(NEW, IN_PROGRESS));
 
         Recommender recommender3 = buildRecommender("3");
         recommender3.setAlwaysSelected(true);
@@ -188,7 +188,7 @@ public class RecommenderExporterTest
         recommender3.setThreshold(.3);
         recommender3.setSkipEvaluation(false);
         recommender3.setMaxRecommendations(5);
-        recommender3.setStatesIgnoredForTraining(asSet(AnnotationDocumentState.values()));
+        recommender3.setStatesIgnoredForTraining(Set.of(AnnotationDocumentState.values()));
 
         Recommender recommender4 = buildRecommender("4");
         recommender4.setAlwaysSelected(false);
@@ -196,7 +196,7 @@ public class RecommenderExporterTest
         recommender4.setThreshold(.4);
         recommender4.setSkipEvaluation(true);
         recommender4.setMaxRecommendations(6);
-        recommender4.setStatesIgnoredForTraining(asSet());
+        recommender4.setStatesIgnoredForTraining(Set.of());
 
         return asList(recommender1, recommender2, recommender3, recommender4);
     }
@@ -220,10 +220,5 @@ public class RecommenderExporterTest
         recommender.setLayer(layer);
         recommender.setProject(project);
         return recommender;
-    }
-
-    private static <T> Set<T> asSet(T... a)
-    {
-        return new HashSet<>(asList(a));
     }
 }

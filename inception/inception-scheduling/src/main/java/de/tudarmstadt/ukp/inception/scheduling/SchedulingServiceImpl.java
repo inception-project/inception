@@ -17,28 +17,42 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.core.session.SessionDestroyedEvent;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
@@ -51,24 +65,28 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
 public class SchedulingServiceImpl
     implements SchedulingService, DisposableBean
 {
-    private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
     private final ScheduledExecutorService watchdog;
+    private final SessionRegistry sessionRegistry;
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
+    private final Set<Project> deletionPending;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
-            SchedulingProperties aConfig)
+            SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
     {
+        sessionRegistry = aSessionRegistry;
         applicationContext = aApplicationContext;
         executor = new InspectableThreadPoolExecutor(aConfig.getNumberOfThreads(),
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
+        deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
     }
@@ -76,13 +94,13 @@ public class SchedulingServiceImpl
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
         runningTasks.add((Task) aRunnable);
-        log.debug("Starting task [{}]", aRunnable);
+        LOG.debug("Starting task [{}]", aRunnable);
     }
 
     private void afterExecute(Runnable aRunnable, Throwable aThrowable)
     {
         runningTasks.remove(aRunnable);
-        log.debug("Completed task [{}]", aRunnable);
+        LOG.debug("Completed task [{}]", aRunnable);
         scheduleEligibleTasks();
     }
 
@@ -155,41 +173,51 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void enqueue(Task aTask)
     {
-        // Check if the incoming task should be discarded
-        for (Task enqueuedTask : enqueuedTasks) {
-            if (matchTask(aTask, enqueuedTask) == DISCARD_OR_QUEUE_THIS) {
-                log.debug("Matching task already queued - keeping existing: [{}] and discarding "
-                        + "incoming [{}]", enqueuedTask, aTask);
-                return;
-            }
+        if (aTask.getProject() != null && deletionPending.contains(aTask.getProject())) {
+            LOG.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
+                    aTask.getProject());
+            return;
         }
 
-        // Check if any existing tasks should be replaced with the new incoming task (i.e. the
-        // incoming task supersedes them).
         List<Task> tasksToUnqueue = new ArrayList<>();
         for (Task enqueuedTask : enqueuedTasks) {
-            if (matchTask(aTask, enqueuedTask) == UNQUEUE_EXISTING_AND_QUEUE_THIS) {
-                tasksToUnqueue.add(enqueuedTask);
-                log.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
+            switch (matchTask(aTask, enqueuedTask)) {
+            case DISCARD_OR_QUEUE_THIS:
+                // Check if the incoming task should be discarded
+                LOG.debug("Matching task already queued - keeping existing: [{}] and discarding "
                         + "incoming [{}]", enqueuedTask, aTask);
+                return;
+            case UNQUEUE_EXISTING_AND_QUEUE_THIS:
+                // Check if any existing tasks should be replaced with the new incoming task (i.e.
+                // the incoming task supersedes them).
+                tasksToUnqueue.add(enqueuedTask);
+                break;
+            case NO_MATCH:
+                // Ignore
+                break;
             }
         }
-        enqueuedTasks.removeAll(tasksToUnqueue);
+
+        for (Task taskToUnqueue : tasksToUnqueue) {
+            LOG.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
+                    + "incoming [{}]", taskToUnqueue, aTask);
+            enqueuedTasks.remove(taskToUnqueue);
+        }
 
         if (containsMatchingTask(getScheduledTasks(), aTask)) {
-            log.debug("Matching task already scheduled - adding to queue: [{}]", aTask);
+            LOG.debug("Matching task already scheduled - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
 
         if (containsMatchingTask(getRunningTasks(), aTask)) {
-            log.debug("Matching task already running - adding to queue: [{}]", aTask);
+            LOG.debug("Matching task already running - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
 
         if (!aTask.isReadyToStart()) {
-            log.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
+            LOG.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
@@ -225,12 +253,17 @@ public class SchedulingServiceImpl
      */
     private void schedule(Task aTask)
     {
-        log.debug("Scheduling task [{}]", aTask);
+        LOG.debug("Scheduling task [{}]", aTask);
 
-        // This auto-wires the task fields manually
-        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
-        factory.autowireBean(aTask);
-        factory.initializeBean(aTask, "transientTask");
+        try {
+            // This auto-wires the task fields manually
+            AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+            factory.autowireBean(aTask);
+            factory.initializeBean(aTask, "transientTask");
+        }
+        catch (Exception e) {
+            LOG.error("Error initializing task [{}]", aTask, e);
+        }
 
         executor.execute(aTask);
     }
@@ -259,22 +292,91 @@ public class SchedulingServiceImpl
     @Override
     public void stopAllTasksForUser(String aUserName)
     {
-        stopAllTasksMatching(t -> t.getUser().getUsername().equals(aUserName));
+        Validate.notNull(aUserName, "User name must be specified");
+
+        stopAllTasksMatching(
+                t -> t.getUser().map(_user -> aUserName.equals(_user.getUsername())).orElse(false));
+    }
+
+    /**
+     * Removes all task for the given project from the scheduler's queue.
+     * 
+     * @param aProject
+     *            The project whose tasks will be removed.
+     */
+    @Override
+    public void stopAllTasksForProject(Project aProject)
+    {
+        Validate.notNull(aProject, "Project name must be specified");
+
+        stopAllTasksMatching(t -> t.getProject().equals(aProject));
     }
 
     @Override
     public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
     {
-        enqueuedTasks.removeIf(aPredicate);
-        executor.getQueue().removeIf(runnable -> aPredicate.test((Task) runnable));
+        enqueuedTasks.removeIf(task -> {
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
+
+        executor.getQueue().removeIf(runnable -> {
+            var task = (Task) runnable;
+            if (aPredicate.test(task)) {
+                task.destroy();
+                return true;
+            }
+            return false;
+        });
 
         // TODO: Stop the running tasks as well
+    }
+
+    @EventListener
+    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws IOException
+    {
+        deletionPending.add(aEvent.getProject());
+        stopAllTasksForProject(aEvent.getProject());
+    }
+
+    @EventListener
+    public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
+    {
+        stopAllTasksForProject(aEvent.getProject());
+        deletionPending.remove(aEvent.getProject());
+    }
+
+    @EventListener
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public void onSessionDestroyed(SessionDestroyedEvent event)
+    {
+        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        // Could be an anonymous session without information.
+        if (info == null) {
+            return;
+        }
+
+        String username = null;
+        if (info.getPrincipal() instanceof String) {
+            username = (String) info.getPrincipal();
+        }
+
+        if (info.getPrincipal() instanceof User) {
+            username = ((User) info.getPrincipal()).getUsername();
+        }
+
+        if (username != null) {
+            stopAllTasksForUser(username);
+        }
     }
 
     @Override
     public void destroy()
     {
-        log.info("Shutting down scheduling service!");
+        LOG.info("Shutting down scheduling service!");
         enqueuedTasks.clear();
         executor.getQueue().clear();
         watchdog.shutdownNow();
@@ -283,8 +385,18 @@ public class SchedulingServiceImpl
 
     private void logState()
     {
-        getEnqueuedTasks().forEach(t -> log.debug("Queued   : {}", t));
-        getScheduledTasks().forEach(t -> log.debug("Scheduled: {}", t));
-        getRunningTasks().forEach(t -> log.debug("Running  : {}", t));
+        getEnqueuedTasks().forEach(t -> LOG.debug("Queued   : {}", t));
+        getScheduledTasks().forEach(t -> LOG.debug("Scheduled: {}", t));
+        getRunningTasks().forEach(t -> LOG.debug("Running  : {}", t));
+    }
+
+    @Override
+    public void executeSync(Task aTask)
+    {
+        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+        factory.autowireBean(aTask);
+        factory.initializeBean(aTask, "transientTask");
+        aTask.execute(); // Execute synchronously - blocking
+        aTask.destroy();
     }
 }

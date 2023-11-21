@@ -49,47 +49,55 @@ public interface ValueTypeSupport
     List<ValueType> getSupportedValueTypes();
 
     /**
-     * Check if the {@link ValueTypeSupport} accepts {@link KBStatement} with {@link KBProperty}
+     * @return if the {@link ValueTypeSupport} accepts {@link KBStatement} with {@link KBProperty}
      * 
      * @param aStatement
      *            a {@link KBStatement} value
      * @param aProperty
      *            a {@link KBProperty} value
-     * @return
+     * 
      */
     boolean accepts(KBStatement aStatement, KBProperty aProperty);
 
     /**
-     * Check if the range or rangeKbObject is accepted by the {@link ValueTypeSupport}
+     * @return if the range or rangeKbObject is accepted by the {@link ValueTypeSupport}
      * 
      * @param range
      *            a range value
      * @param rangeKbObject
      *            a range value from KB
-     * @return
+     * 
      */
     boolean accepts(String range, Optional<KBObject> rangeKbObject);
 
     /**
-     * Returns a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
-     * property or the datatype of a statement).
+     * @return a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
+     *         property or the datatype of a statement).
      * 
      * @param aId
      *            Wicket markup id received by the editor instances
-     * 
-     * @return a {@link ValueEditor} instance
+     * @param aModel
+     *            the statement model
+     * @param aDatatype
+     *            the property which the editor should edit
+     * @param aKbModel
+     *            the knowledge base to which the statement belongs
      */
     ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype,
             IModel<KnowledgeBase> aKbModel);
 
     /**
-     * Returns a {@link ValuePresenter} instance given a datatype IRI (most likely the range of a
-     * property or the datatype of a statement).
+     * @return a {@link ValuePresenter} instance given a datatype IRI (most likely the range of a
+     *         property or the datatype of a statement).
      * 
      * @param aId
      *            Wicket markup id received by the presenter instances
-     * 
-     * @return a {@link ValuePresenter} instance
+     * @param aModel
+     *            the statement model
+     * @param aDatatype
+     *            the property which the presenter should display
+     * @param aKbModel
+     *            the knowledge base to which the statement belongs
      */
     ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
             IModel<KBProperty> aDatatype, IModel<KnowledgeBase> aKbModel);

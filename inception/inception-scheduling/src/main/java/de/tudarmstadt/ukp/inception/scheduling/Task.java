@@ -23,26 +23,33 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USER
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 
 public abstract class Task
-    implements Runnable
+    implements Runnable, InitializingBean
 {
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     private @Autowired RepositoryProperties repositoryProperties;
+    private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
 
+    private final TaskHandle handle;
     private final User user;
     private final Project project;
     private final String trigger;
     private final int id;
+
+    private TaskMonitor monitor;
 
     public Task(Project aProject, String aTrigger)
     {
@@ -54,15 +61,37 @@ public abstract class Task
         notNull(aProject, "Project must be specified");
         notNull(aTrigger, "Trigger must be specified");
 
+        id = nextId.getAndIncrement();
+        handle = new TaskHandle(id);
         user = aUser;
         project = aProject;
         trigger = aTrigger;
-        id = nextId.getAndIncrement();
     }
 
-    public User getUser()
+    @Override
+    public void afterPropertiesSet()
     {
-        return user;
+        if (msgTemplate != null && user != null) {
+            monitor = new NotifyingTaskMonitor(handle, user.getUsername(), getTitle(), msgTemplate);
+        }
+        else {
+            monitor = new TaskMonitor(handle, user != null ? user.getUsername() : null, getTitle());
+        }
+    }
+
+    public String getTitle()
+    {
+        return getClass().getSimpleName();
+    }
+
+    public TaskMonitor getMonitor()
+    {
+        return monitor;
+    }
+
+    public Optional<User> getUser()
+    {
+        return Optional.ofNullable(user);
     }
 
     public Project getProject()
@@ -90,8 +119,15 @@ public abstract class Task
         return true;
     }
 
+    void destroy()
+    {
+        if (monitor != null) {
+            monitor.destroy();
+        }
+    }
+
     @Override
-    public void run()
+    public final void run()
     {
         try {
             // We are in a new thread. Set up thread-specific MDC
@@ -99,17 +135,20 @@ public abstract class Task
                 MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             }
 
-            if (getUser() != null) {
-                MDC.put(KEY_USERNAME, getUser().getUsername());
-            }
+            getUser().ifPresent(_user -> MDC.put(KEY_USERNAME, _user.getUsername()));
 
             if (getProject() != null) {
                 MDC.put(KEY_PROJECT_ID, String.valueOf(getProject().getId()));
             }
 
+            monitor.setState(TaskState.RUNNING);
             execute();
+            if (monitor.getState() == TaskState.RUNNING) {
+                monitor.setState(TaskState.COMPLETED);
+            }
         }
         finally {
+            destroy();
             MDC.remove(KEY_REPOSITORY_PATH);
             MDC.remove(KEY_USERNAME);
             MDC.remove(KEY_PROJECT_ID);

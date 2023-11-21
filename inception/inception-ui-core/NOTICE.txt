@@ -1,3 +1,5 @@
+NOTE: See META-INF/DEPENDENCIES-EMBEDDED.spdx.json
+
 == Enjoyhint
 
 File: src/main/java/de/tudarmstadt/ukp/inception/ui/core/footer/resources/enjoyhint.js
@@ -5,12 +7,6 @@ File: src/main/java/de/tudarmstadt/ukp/inception/ui/core/footer/resources/enjoyh
 The file is from xbsoftware and is licensed under the MIT.
 
 Original source: https://github.com/xbsoftware/enjoyhint
-
-== CSS Browser Selector
-
-The following files are under the Creative Commons Attribution 2.5 license (licences/CC_BY_2_5.txt)
-src/main/webapp/js/css_browser_selector.js
-
 
 == wicket-jquery-focus-patch.js
 

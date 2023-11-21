@@ -26,7 +26,7 @@ image::annotation_settings.png[align="center",width="50%"]
 The *Editor* setting can be used to switch between different modes of presentation. It is currently
 only available on the annotation page.
 
-The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
+The *Sidebar size* controls the width of the sidebar containing the annotation detail editor and 
 actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
 configured to take between 10% and 50% of the screen.
 
@@ -35,25 +35,10 @@ The *Font zoom* setting controls the font size in the annotation area. This sett
 The *Page size* controls how many sentences are visible in the annotation area. The more
 sentences are visible, the slower the user interface will react. This setting may not apply to all editors.
 
-The *Remember layer* controls what happens when changing the active layer in the *Layer* box while an
-annotation is selected. If this setting is disabled, changing the active layer causes the
-currently selected annotation to be deleted and replaced with an annotation of the selected layer.
-In this mode, it is necessary to unselect the current annotation by pressing the *Clear* button
-before an annotation on another layer can be created. If *Remember layer* is enabled, changing
-the active layer has no effect on the currently selected annotation.
-
-====
-CAUTION: Configurability of the *remember layer* feature to be removed in future releases. This
-feature is enabled by default. To disable it, you can add `annotation.default-preferences.remember-layer-enabled=true` to the 
-`settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>). If you rely on
-being able to disable this feature, please comment on the link:https://github.com/inception-project/inception/issues/2258[deprecation issue].
-====
-
-
 The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
 last annotation was made. This can be useful to avoid manual navigation. This setting may not apply to all editors.
 
-The *Collaps arcs* setting controls whether long ranging relations can be collapsed to save space
+The *Collapse arcs* setting controls whether long ranging relations can be collapsed to save space
 on screen. This setting may not apply to all editors.
 
 The *Read-only palette* controls the coloring of annotations on read-only layers. This setting

@@ -30,29 +30,31 @@ public class SpanSuggestion
     private final Offset position;
     private final String coveredText;
 
-    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
-            String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
-            String aLabel, String aUiLabel, double aScore, String aScoreExplanation)
+    private SpanSuggestion(Builder builder)
     {
-        super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
-                aUiLabel, aScore, aScoreExplanation);
+        super(builder.id, builder.generation, builder.age, builder.recommenderId,
+                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
+                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
+                builder.autoAcceptMode, builder.hidingFlags);
 
-        position = new Offset(aBegin, aEnd);
-        coveredText = aCoveredText;
+        position = builder.position;
+        coveredText = builder.coveredText;
     }
 
     /**
-     * Copy constructor.
-     *
-     * @param aObject
-     *            The annotationObject to copy
+     * @deprecated Use builder instead.
      */
-    public SpanSuggestion(SpanSuggestion aObject)
+    @Deprecated
+    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
+            String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
+            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode)
     {
-        super(aObject);
+        super(aId, 0, 0, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName,
+                aLabel, aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode, 0);
 
-        position = new Offset(aObject.position.getBegin(), aObject.position.getEnd());
-        coveredText = aObject.coveredText;
+        position = new Offset(aBegin, aEnd);
+        coveredText = aCoveredText;
     }
 
     // Getter and setter
@@ -93,12 +95,190 @@ public class SpanSuggestion
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
-                .append("recommenderName", recommenderName).append("layerId", layerId)
-                .append("feature", feature).append("documentName", documentName)
-                .append("position", position).append("coveredText", coveredText)
-                .append("label", label).append("uiLabel", uiLabel).append("score", score)
-                .append("confindenceExplanation", scoreExplanation).append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+        return new ToStringBuilder(this) //
+                .append("id", id) //
+                .append("generation", generation) //
+                .append("age", getAge()) //
+                .append("recommenderId", recommenderId) //
+                .append("recommenderName", recommenderName) //
+                .append("layerId", layerId) //
+                .append("feature", feature) //
+                .append("documentName", documentName) //
+                .append("position", position) //
+                .append("coveredText", coveredText) //
+                .append("label", label) //
+                .append("uiLabel", uiLabel) //
+                .append("score", score) //
+                .append("confindenceExplanation", scoreExplanation) //
+                .append("visible", isVisible()) //
+                .append("reasonForHiding", getReasonForHiding()) //
+                .append("autoAcceptMode", getAutoAcceptMode()) //
+                .toString();
+    }
+
+    @Override
+    public AnnotationSuggestion assignId(int aId)
+    {
+        return toBuilder().withId(aId).build();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public Builder toBuilder()
+    {
+        return builder() //
+                .withId(id) //
+                .withGeneration(generation) //
+                .withAge(getAge()) //
+                .withRecommenderId(recommenderId) //
+                .withRecommenderName(recommenderName) //
+                .withLayerId(layerId) //
+                .withFeature(feature) //
+                .withDocumentName(documentName) //
+                .withLabel(label) //
+                .withUiLabel(uiLabel) //
+                .withScore(score) //
+                .withScoreExplanation(scoreExplanation) //
+                .withPosition(position) //
+                .withCoveredText(coveredText) //
+                .withAutoAcceptMode(getAutoAcceptMode()) //
+                .withHidingFlags(getHidingFlags());
+    }
+
+    public static final class Builder
+    {
+        private int id;
+        private int generation;
+        private int age;
+        private long recommenderId;
+        private String recommenderName;
+        private long layerId;
+        private String feature;
+        private String documentName;
+        private String label;
+        private String uiLabel;
+        private double score;
+        private String scoreExplanation;
+        private Offset position;
+        private String coveredText;
+        private AutoAcceptMode autoAcceptMode;
+        private int hidingFlags;
+
+        private Builder()
+        {
+        }
+
+        public Builder withId(int aId)
+        {
+            this.id = aId;
+            return this;
+        }
+
+        public Builder withAge(int aAge)
+        {
+            this.age = aAge;
+            return this;
+        }
+
+        public Builder withGeneration(int aGeneration)
+        {
+            this.generation = aGeneration;
+            return this;
+        }
+
+        public Builder withRecommender(Recommender aRecommender)
+        {
+            this.recommenderId = aRecommender.getId();
+            this.recommenderName = aRecommender.getName();
+            this.feature = aRecommender.getFeature().getName();
+            this.layerId = aRecommender.getLayer().getId();
+            return this;
+        }
+
+        public Builder withRecommenderId(long aRecommenderId)
+        {
+            this.recommenderId = aRecommenderId;
+            return this;
+        }
+
+        public Builder withRecommenderName(String aRecommenderName)
+        {
+            this.recommenderName = aRecommenderName;
+            return this;
+        }
+
+        public Builder withLayerId(long aLayerId)
+        {
+            this.layerId = aLayerId;
+            return this;
+        }
+
+        public Builder withFeature(String aFeature)
+        {
+            this.feature = aFeature;
+            return this;
+        }
+
+        public Builder withDocumentName(String aDocumentName)
+        {
+            this.documentName = aDocumentName;
+            return this;
+        }
+
+        public Builder withLabel(String aLabel)
+        {
+            this.label = aLabel;
+            return this;
+        }
+
+        public Builder withUiLabel(String aUiLabel)
+        {
+            this.uiLabel = aUiLabel;
+            return this;
+        }
+
+        public Builder withScore(double aScore)
+        {
+            this.score = aScore;
+            return this;
+        }
+
+        public Builder withScoreExplanation(String aScoreExplanation)
+        {
+            this.scoreExplanation = aScoreExplanation;
+            return this;
+        }
+
+        public Builder withPosition(Offset aPosition)
+        {
+            this.position = aPosition;
+            return this;
+        }
+
+        public Builder withCoveredText(String aCoveredText)
+        {
+            this.coveredText = aCoveredText;
+            return this;
+        }
+
+        public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
+        {
+            this.autoAcceptMode = aAutoAcceptMode;
+            return this;
+        }
+
+        public Builder withHidingFlags(int aFlags)
+        {
+            this.hidingFlags = aFlags;
+            return this;
+        }
+
+        public SpanSuggestion build()
+        {
+            return new SpanSuggestion(this);
+        }
     }
 }

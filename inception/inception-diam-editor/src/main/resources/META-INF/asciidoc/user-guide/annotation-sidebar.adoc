@@ -1,0 +1,40 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_annotation_sidebar]]
+= Annotation Sidebar
+
+The annotation sidebar provides an overview over all annotations in the current document. It is located in the left sidebar panel.
+
+The sidebar supports two modes of displaying annotations:
+
+* **Grouped by label (default)**: Annotations are grouped by label. Every annotation is represented
+  by its text. If the same text is annotated multiple times, there will be multiple items with the
+  same text. To help disambiguating between the same text occurring in different contexts, each item
+  also shows a bit of trailing context in a lighter font. Additionally, there is a small badge in
+  every annotation item which allows selecting the annotation or deleting it. Clicking on the text
+  itself will scroll to the annotation in the editor window, but it will not select the annotation.
+  If an item represents an annotation suggestion from a recommender, the badge instead has buttons
+  for accepting or rejecting the suggestion. Again, clicking on the text will scroll the editor
+  window to the suggestion without accepting or rejecting it. Within each group, annotations are
+  sorted alphabetically by their text. If the option **sort by score** is enabled, then 
+  suggestions are sorted by score.
+* **Grouped by position**: In this mode, the items are ordered by their position in the text.
+  Relation annotations are grouped under their respective source span annotation. If there are 
+  multiple annotations at the same position, then there are multiple badges in the respective item.
+  Each of these badges shows the label of an annotation present at this position and allows 
+  selecting or deleting it. Clicking on the text will will scroll to the respective position in the 
+  editor window.

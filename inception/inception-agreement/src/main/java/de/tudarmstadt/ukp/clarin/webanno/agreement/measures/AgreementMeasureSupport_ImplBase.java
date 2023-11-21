@@ -45,6 +45,7 @@ public abstract class AgreementMeasureSupport_ImplBase<//
         return id;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
             IModel<T> aModel)
@@ -53,6 +54,7 @@ public abstract class AgreementMeasureSupport_ImplBase<//
                 (IModel) aModel);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T createTraits()
     {

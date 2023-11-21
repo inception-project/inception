@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -24,22 +26,26 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 
 import java.util.Map;
 
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraitsEditor;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -60,13 +66,16 @@ public class MatrixWorkloadExtensionImpl
     private final WorkloadManagementService workloadManagementService;
     private final DocumentService documentService;
     private final ProjectService projectService;
+    private final UserDao userRepository;
 
     public MatrixWorkloadExtensionImpl(WorkloadManagementService aWorkloadManagementService,
-            DocumentService aDocumentService, ProjectService aProjectService)
+            DocumentService aDocumentService, ProjectService aProjectService,
+            UserDao aUserRepository)
     {
         workloadManagementService = aWorkloadManagementService;
         documentService = aDocumentService;
         projectService = aProjectService;
+        userRepository = aUserRepository;
     }
 
     @Override
@@ -84,7 +93,13 @@ public class MatrixWorkloadExtensionImpl
     @Override
     public boolean isDocumentRandomAccessAllowed(Project aProject)
     {
-        return true;
+        if (projectService.hasRole(userRepository.getCurrentUser(), aProject, CURATOR, MANAGER)) {
+            return true;
+        }
+
+        WorkloadManager manager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(aProject);
+        return readTraits(manager).isRandomDocumentAccessAllowed();
     }
 
     @Override
@@ -110,12 +125,30 @@ public class MatrixWorkloadExtensionImpl
 
     @Override
     @Transactional
-    public void writeTraits(MatrixWorkloadTraits aTrait, Project aProject)
+    public void writeTraits(WorkloadManager aWorkloadManager, MatrixWorkloadTraits aTraits)
+    {
+        try {
+            aWorkloadManager.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (Exception e) {
+            this.log.error("Unable to write traits", e);
+        }
+    }
+
+    @Override
+    public Panel createTraitsEditor(String aId, IModel<WorkloadManager> aWorkloadManager)
+    {
+        return new MatrixWorkloadTraitsEditor(aId, aWorkloadManager);
+    }
+
+    @Override
+    @Transactional
+    public void writeTraits(MatrixWorkloadTraits aTraits, Project aProject)
     {
         try {
             WorkloadManager manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
-            manager.setTraits(JSONUtil.toJsonString(aTrait));
+            this.writeTraits(manager, aTraits);
             workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {
@@ -127,10 +160,18 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState recalculate(Project aProject)
     {
-        int annotatorCount = projectService.listProjectUsersWithPermissions(aProject).size();
+        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
+        int annotatorCount = projectUsers.size();
+        var annDocs = documentService.listAnnotationDocuments(aProject);
 
         for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
-            updateDocumentState(doc, annotatorCount);
+            if (isInCuration(doc)) {
+                continue;
+            }
+
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+
+            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
         }
 
         // Refresh the project stats and recalculate them
@@ -145,12 +186,20 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
-        int annotatorCount = projectService.listProjectUsersWithPermissions(aProject).size();
+        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
+        int annotatorCount = projectUsers.size();
+        var annDocs = documentService.listAnnotationDocuments(aProject);
 
         // Update the annotation document and source document states for the abandoned documents
-        for (SourceDocument doc : documentService.listSourceDocumentsInState(aProject,
+        for (var doc : documentService.listSourceDocumentsInState(aProject,
                 ANNOTATION_IN_PROGRESS)) {
-            updateDocumentState(doc, annotatorCount);
+            if (isInCuration(doc)) {
+                continue;
+            }
+
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+
+            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
         }
 
         // Refresh the project stats and recalculate them
@@ -165,14 +214,27 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public void updateDocumentState(SourceDocument aDocument, int aAnnotatorCount)
     {
-        // If the SOURCE document is already in curation, we do not touch the state anymore
-        if (aDocument.getState() == CURATION_FINISHED
-                || aDocument.getState() == CURATION_IN_PROGRESS) {
+        if (isInCuration(aDocument)) {
             return;
         }
 
-        Map<AnnotationDocumentState, Long> stats = documentService
-                .getAnnotationDocumentStats(aDocument);
+        var stats = documentService.getAnnotationDocumentStats(aDocument);
+
+        setSourceDocumentStateBasedOnStats(aDocument, aAnnotatorCount, stats);
+    }
+
+    /**
+     * If the SOURCE document is already in curation, we do not touch the state anymore
+     */
+    private boolean isInCuration(SourceDocument aDocument)
+    {
+        return aDocument.getState() == CURATION_FINISHED
+                || aDocument.getState() == CURATION_IN_PROGRESS;
+    }
+
+    private void setSourceDocumentStateBasedOnStats(SourceDocument aDocument, int aAnnotatorCount,
+            Map<AnnotationDocumentState, Long> stats)
+    {
         long ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
         long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
         long newCount = stats.get(AnnotationDocumentState.NEW);

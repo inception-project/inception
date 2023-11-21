@@ -29,8 +29,9 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
@@ -38,22 +39,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 
+@ExtendWith(MockitoExtension.class)
 public class SchedulingServiceTest
 {
     private @Mock ApplicationContext mockContext;
-
-    private List<Task> executedTasks;
 
     private SchedulingServiceImpl sut;
 
     @BeforeEach
     public void setUp()
     {
-        MockitoAnnotations.openMocks(this);
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties());
+        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), null);
     }
 
     @AfterEach
@@ -100,7 +99,8 @@ public class SchedulingServiceTest
                 buildDummyTask("testUser", "project2"), //
                 buildDummyTask("testUser", "project2"));
         Task[] tasksToRemove = tasks.stream()
-                .filter(t -> t.getUser().getUsername().equals("testUser")).toArray(Task[]::new);
+                .filter(t -> t.getUser().get().getUsername().equals("testUser"))
+                .toArray(Task[]::new);
 
         for (Task task : tasks) {
             sut.enqueue(task);
@@ -127,7 +127,9 @@ public class SchedulingServiceTest
 
     private Task buildDummyTask(String aUsername, String aProjectName)
     {
-        return new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+        var task = new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+        task.afterPropertiesSet();
+        return task;
     }
 
     /**

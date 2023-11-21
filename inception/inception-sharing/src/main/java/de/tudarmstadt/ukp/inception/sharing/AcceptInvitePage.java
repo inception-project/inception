@@ -28,16 +28,15 @@ import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOW
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
@@ -48,8 +47,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -57,19 +54,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.session.SessionRegistry;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import com.github.rjeschke.txtmark.Processor;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.sharing.config.InviteServiceProperties;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/join-project/${"
@@ -77,8 +72,6 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class AcceptInvitePage
     extends ProjectPageBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private static final long serialVersionUID = 5160703195387357692L;
 
     public static final String PAGE_PARAM_INVITE_ID = "i";
@@ -106,8 +99,15 @@ public class AcceptInvitePage
 
         // If the current user has already accepted the invitation, directly forward to the project
         if (user != null && invitationIsValid.getObject()) {
-            if (projectService.existsProjectPermissionLevel(user, getProject(), ANNOTATOR)) {
+            if (projectService.hasRole(user, getProject(), ANNOTATOR)) {
                 backToProjectPage();
+            }
+            else if (user.getRealm() != null) {
+                // It the current user is a project-bound user and does not already exist in the
+                // project, then the user belongs to a different project. In this case, the user
+                // must not join another project to which they are not bound
+                ApplicationSession.get().signOut();
+                throw new RestartResponseException(getClass(), aPageParameters);
             }
         }
 
@@ -141,8 +141,8 @@ public class AcceptInvitePage
                         && inviteServiceProperties.isGuestsEnabled() && user == null))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                         _target -> _target.add(form))));
-        form.add(new Label("invitationText", LoadableDetachableModel.of(this::getInvitationText))
-                .setEscapeModelStrings(false));
+        form.add(new MarkdownLabel("invitationText",
+                LoadableDetachableModel.of(this::getInvitationText)));
 
         tooManyUsersNotice = new WebMarkupContainer("tooManyUsersNotice");
         tooManyUsersNotice.add(visibleWhen(this::isTooManyUsers));
@@ -184,7 +184,7 @@ public class AcceptInvitePage
             invitationText = invite.getObject().getInvitationText();
         }
 
-        return Processor.process(invitationText, true);
+        return invitationText;
     }
 
     private String getInviteId()
@@ -206,7 +206,7 @@ public class AcceptInvitePage
         }
 
         User user;
-        if (aForm.getModelObject().registeredLogin) {
+        if (aForm.getModelObject().registeredLogin || userRepository.getCurrentUser() != null) {
             user = signInAsRegisteredUserIfNecessary();
         }
         else {
@@ -237,6 +237,12 @@ public class AcceptInvitePage
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
                 aFormData.username);
+
+        if (existingUser.isPresent() && !existingUser.get().isEnabled()) {
+            error("User deactivated");
+            return null;
+        }
+
         if (invite.getObject().getAskForEMail() != NOT_ALLOWED) {
             String storedEMail = existingUser.map(User::getEmail).orElse(null);
             if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
@@ -279,9 +285,8 @@ public class AcceptInvitePage
 
     private void createProjectPermissionsIfNecessary(User aUser)
     {
-        if (!projectService.existsProjectPermissionLevel(aUser, getProject(), ANNOTATOR)) {
-            projectService.createProjectPermission(
-                    new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
+        if (!projectService.hasRole(aUser, getProject(), ANNOTATOR)) {
+            projectService.assignRole(getProject(), aUser, ANNOTATOR);
             getSession().success("You have successfully joined the project.");
         }
         else {

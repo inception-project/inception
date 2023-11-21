@@ -39,6 +39,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**
@@ -84,7 +85,7 @@ public class FeatureIndexingSupportRegistryImpl
             }
         }
 
-        log.info("Found [{}] feature indexing supports", fsp.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] feature indexing supports", fsp.size());
 
         indexingSupports = unmodifiableList(fsp);
     }

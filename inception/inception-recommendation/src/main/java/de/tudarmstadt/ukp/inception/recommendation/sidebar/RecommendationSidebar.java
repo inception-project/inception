@@ -32,7 +32,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -41,11 +40,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -56,10 +51,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class RecommendationSidebar
@@ -99,7 +98,7 @@ public class RecommendationSidebar
 
         Label noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
-        List<Recommender> recommenders = recommendationService
+        var recommenders = recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject());
         noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
         add(noRecommendersLabel);
@@ -140,7 +139,7 @@ public class RecommendationSidebar
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         add(recommenderInfos);
 
-        logDialog = new LogDialog("logDialog", Model.of("Recommender Log"));
+        logDialog = new LogDialog("logDialog");
         add(logDialog);
 
     }
@@ -171,15 +170,15 @@ public class RecommendationSidebar
     }
 
     @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    public void onRenderRequested(RenderRequestedEvent aEvent)
     {
         aEvent.getRequestHandler().add(warning);
     }
 
     private void actionShowLog(AjaxRequestTarget aTarget)
     {
-        List<LogMessageGroup> messages = recommendationService
-                .getLog(getModelObject().getUser().getUsername(), getModelObject().getProject());
+        var messages = recommendationService.getLog(userRepository.getCurrentUsername(),
+                getModelObject().getProject());
         logDialog.setModel(new ListModel<LogMessageGroup>(messages));
         logDialog.show(aTarget);
     }
@@ -187,10 +186,13 @@ public class RecommendationSidebar
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-        recommendationService.clearState(state.getUser().getUsername());
-        recommendationService.triggerSelectionTrainingAndClassification(
-                state.getUser().getUsername(), state.getProject(), "User request via sidebar",
-                state.getDocument());
+        var sessionOwner = userRepository.getCurrentUsername();
+        var dataOwner = state.getUser().getUsername();
+
+        recommendationService.clearState(sessionOwner);
+        recommendationService.triggerSelectionTrainingAndPrediction(sessionOwner,
+                state.getProject(), "User request via sidebar", state.getDocument(), dataOwner);
+
         info("Annotation state cleared - re-training from scratch...");
         getAnnotationPage().actionRefreshDocument(aTarget);
         aTarget.add(recommenderInfos);

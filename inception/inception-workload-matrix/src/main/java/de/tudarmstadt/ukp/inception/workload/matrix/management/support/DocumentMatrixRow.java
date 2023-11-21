@@ -90,7 +90,7 @@ public class DocumentMatrixRow
             }
         }
 
-        long[] counts = new long[2];
+        long[] counts = new long[3];
         annotationDocuments.values().stream() //
                 .filter(annDoc -> annotators.contains(annDoc.getUser())) //
                 .forEach(annDoc -> {
@@ -98,14 +98,21 @@ public class DocumentMatrixRow
                     case IGNORE:
                         counts[0]++;
                         break;
-                    case FINISHED:
+                    case IN_PROGRESS:
                         counts[1]++;
+                        break;
+                    case FINISHED:
+                        counts[2]++;
+                        break;
+                    case NEW:
+                        // already handled above
                         break;
                     }
                 });
 
         long ignoredCount = counts[0];
-        long finishedCount = counts[1];
+        long inProgressCount = counts[1];
+        long finishedCount = counts[2];
         long requiredCount = annotators.size() - ignoredCount;
 
         SourceDocumentState state = sourceDocument.getState();
@@ -116,6 +123,9 @@ public class DocumentMatrixRow
         }
         else if (newCount == requiredCount) {
             state = SourceDocumentState.NEW;
+        }
+        else if (inProgressCount > 0 || finishedCount > 0) {
+            state = SourceDocumentState.ANNOTATION_IN_PROGRESS;
         }
 
         return state;

@@ -21,10 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import wicket.contrib.input.events.key.KeyType;
 
 public abstract class ProjectSettingsMenuItemBase
     implements ProjectMenuItem
@@ -37,5 +38,11 @@ public abstract class ProjectSettingsMenuItemBase
     {
         return userRepo.isCurrentUserAdmin()
                 || projectService.hasRole(userRepo.getCurrentUser(), aProject, MANAGER);
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return null;
     }
 }

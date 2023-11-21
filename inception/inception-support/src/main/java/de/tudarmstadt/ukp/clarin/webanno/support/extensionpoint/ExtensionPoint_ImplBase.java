@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +67,7 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
             }
         }
 
-        log.debug("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
+        BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
         extensionsList = unmodifiableList(extensions);
     }
@@ -73,20 +75,31 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public List<E> getExtensions()
     {
+        if (extensionsList == null) {
+            log.error(
+                    "List of extensions was accessed on this extension point before the extension "
+                            + "point was initialized!",
+                    new IllegalStateException());
+            return Collections.emptyList();
+        }
+
         return extensionsList;
     }
 
     @Override
     public List<E> getExtensions(C aContext)
     {
-        return getExtensions().stream().filter(e -> e.accepts(aContext)).collect(toList());
+        return getExtensions().stream() //
+                .filter(e -> e.accepts(aContext)) //
+                .collect(toList());
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <X extends E> Optional<X> getExtension(String aId)
     {
-        return (Optional<X>) getExtensions().stream().filter(fs -> fs.getId().equals(aId))
+        return (Optional<X>) getExtensions().stream() //
+                .filter(fs -> fs.getId().equals(aId)) //
                 .findFirst();
     }
 }

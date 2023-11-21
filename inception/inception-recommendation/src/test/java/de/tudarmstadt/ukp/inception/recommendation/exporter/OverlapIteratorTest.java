@@ -310,7 +310,7 @@ public class OverlapIteratorTest
 
             if (overlaps) {
                 result.add(it.getA());
-                it.ignoraA();
+                it.ignoreA();
             }
             it.step();
         }

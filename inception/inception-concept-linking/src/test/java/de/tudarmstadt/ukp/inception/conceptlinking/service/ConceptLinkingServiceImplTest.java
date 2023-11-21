@@ -40,10 +40,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -102,7 +102,8 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-                .as("Check whether \"Socke\" has been retrieved.").contains("Socke");
+                .as("Check whether \"Socke\" has been retrieved.") //
+                .contains("Socke");
 
         kbService.removeKnowledgeBase(kb);
     }
@@ -119,7 +120,8 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-                .as("Check whether \"manatee\" has been retrieved.").contains("manatee");
+                .as("Check whether \"manatee\" has been retrieved.") //
+                .contains("manatee");
 
         kbService.removeKnowledgeBase(kb);
     }

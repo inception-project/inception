@@ -29,7 +29,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.Arrays;
@@ -43,12 +42,12 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -57,10 +56,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class KnowledgeBaseExporterTest
 {
     private static final String TestURLEndpoint = "https://collection.britishmuseum.org/sparql";
@@ -78,8 +80,6 @@ public class KnowledgeBaseExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");
@@ -129,7 +129,9 @@ public class KnowledgeBaseExporterTest
         // Verify that importData is called as many times as there are localKBs
         verify(kbService, times(numOfLocalKBs)).importData(any(), any(), any());
 
-        assertThat(exportedKbs).usingElementComparatorIgnoringFields("repositoryId", "project")
+        assertThat(exportedKbs) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("repositoryId",
+                        "project")
                 .containsExactlyInAnyOrderElementsOf(knowledgeBases());
     }
 
@@ -209,7 +211,13 @@ public class KnowledgeBaseExporterTest
         traits1.setRepositoryId("id-kb1");
         feat1.setTraits(JSONUtil.toJsonString(traits1));
 
-        return asList(feat1);
+        AnnotationFeature feat2 = new AnnotationFeature(1, layer1, "conceptFeature",
+                "kb-multi:conceptA");
+        ConceptFeatureTraits traits2 = new ConceptFeatureTraits();
+        traits2.setRepositoryId("id-kb1");
+        feat2.setTraits(JSONUtil.toJsonString(traits1));
+
+        return asList(feat1, feat2);
     }
 
     private KnowledgeBase buildKnowledgeBase(String name) throws Exception

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.settings;
 
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -26,12 +27,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 public class CurationProjectSettingsPanel
     extends ProjectSettingsPanelBase
@@ -47,21 +48,33 @@ public class CurationProjectSettingsPanel
 
     private IModel<CurationWorkflow> curationWorkflowModel;
 
+    private MarkupContainer mergeStrategyPanel;
+
     public CurationProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<Project> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
+        var form = new Form<Project>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
         add(form);
 
         curationWorkflowModel = LoadableDetachableModel.of(this::loadCurationWorkflow);
 
-        form.add(new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel));
+        mergeStrategyPanel = new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel);
+        form.add(mergeStrategyPanel);
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+
+        // Needs to be explicitly notified due to the lambda model
+        mergeStrategyPanel.modelChanged();
     }
 
     private CurationWorkflow loadCurationWorkflow()

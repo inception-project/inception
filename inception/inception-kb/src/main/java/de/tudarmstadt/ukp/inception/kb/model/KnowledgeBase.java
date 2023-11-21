@@ -36,6 +36,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -158,6 +159,9 @@ public class KnowledgeBase
     @Column(nullable = false)
     private boolean readOnly;
 
+    @Column(nullable = false)
+    private boolean useFuzzy;
+
     /**
      * Whether the kb is available in the UI (outside of the project settings).
      */
@@ -204,6 +208,10 @@ public class KnowledgeBase
      */
     @Column(nullable = false)
     private boolean skipSslValidation = false;
+
+    @Lob
+    @Column(length = 64000)
+    private String traits;
 
     public String getRepositoryId()
     {
@@ -491,6 +499,26 @@ public class KnowledgeBase
     public Set<String> getAdditionalMatchingProperties()
     {
         return additionalMatchingProperties;
+    }
+
+    public boolean isUseFuzzy()
+    {
+        return useFuzzy;
+    }
+
+    public void setUseFuzzy(boolean aUseFuzzy)
+    {
+        useFuzzy = aUseFuzzy;
+    }
+
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
     }
 
     @Override

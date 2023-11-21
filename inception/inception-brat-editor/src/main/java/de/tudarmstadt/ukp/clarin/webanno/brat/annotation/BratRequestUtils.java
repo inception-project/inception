@@ -28,8 +28,8 @@ import org.apache.wicket.request.IRequestParameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class BratRequestUtils
 {
@@ -39,7 +39,9 @@ public class BratRequestUtils
     }
 
     /**
-     * Parse annotation ID if present in request
+     * @param request
+     *            the request
+     * @return annotation ID if present in request
      */
     public static VID getVidFromRequest(IRequestParameters request)
     {

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class ProjectSettingsPanelRegistryImpl
             }
         }
 
-        log.info("Found [{}] project setting panels", exts.size());
+        BOOT_LOG.info("Found [{}] project setting panels", exts.size());
 
         extensions = unmodifiableList(exts);
     }

@@ -1,0 +1,279 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ @import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
+ @import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+
+:root {
+  --hover-brightness: 1.2;
+  --anim-slow: 0.7s;
+  --anim-fast: 0.4s;
+  --border-width: 2px;
+  --vertical-tray-width: 16px;
+}
+
+html > body {
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  margin: 0px;
+}
+
+.i7n-wrapper {
+  position: relative;
+  line-height: 1.8;
+  overflow: auto;
+  padding-left: var(--vertical-tray-width);
+  padding-right: var(--vertical-tray-width);
+}
+
+/**
+ * Annotation highlight.
+ */
+.iaa-highlighted {
+  transition: filter var(--anim-fast);
+  cursor: pointer;
+  background-color: var(--iaa-background-color);
+  box-sizing: border-box;
+  border: none var(--iaa-border-color);
+  border-top-width: var(--border-width);
+  border-bottom-width: var(--border-width);
+  border-left-width: 0px;
+  border-right-width: 0px;
+
+  &.iaa-first-highlight {
+    padding-left: 5px;
+    margin-left: var(--border-width)
+  }
+  
+  &.iaa-last-highlight {
+    padding-right: 5px;
+    margin-right: var(--border-width)
+  }
+
+  &.iaa-zero-width {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+
+  &:not(.iaa-inline-label) {
+    border-bottom-style: solid;
+  }
+
+  &.iaa-inline-label {
+    border-style: solid;
+  
+    &.iaa-first-highlight {
+      border-top-left-radius: 0.5em;
+      border-bottom-left-radius: 0.5em;
+      border-left-width: var(--border-width);
+      padding-left: 0px;
+
+      &:before {
+        content: attr(data-iaa-label);
+        // ------------------------------
+        // These properties fine-tune the position of the label
+        font-size: 70%;
+        line-height: 1.7;
+        padding-top: 0.30em;
+        padding-bottom: 0.30em;
+        vertical-align: text-top;
+        // ------------------------------
+        white-space: nowrap; // Important to keep label on one line with following word
+        font-weight: 100;
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-right: 5px;
+        border-top-left-radius: 0.5em;
+        border-bottom-left-radius: 0.5em;
+        background-color: var(--iaa-border-color);
+      }
+
+      &.iaa-zero-width:before {
+        margin-right: 0px;
+      }
+    }
+  
+    &.iaa-last-highlight {
+      border-top-right-radius: 0.5em;
+      border-bottom-right-radius: 0.5em;
+      border-right-width: var(--border-width);
+    }
+  }
+}
+
+@keyframes iaa-ping-fade-animation {
+	0% {
+		background: rgba(255, 165, 0, 0);
+	}
+
+  50% {
+		background: rgba(255, 165, 0, 1);
+	}
+
+	100% {
+		background: rgba(255, 165, 0, 0);
+	}
+}
+.iaa-ping-marker {
+  background: rgba(255, 165, 0, 0);
+  animation: iaa-ping-fade-animation 0.3s ease-in-out .2s 3 normal forwards;
+}
+
+/**
+ * Highlighting of the currently selected annotation.
+ */
+ .iaa-marker-focus {
+  border-color: var(--i7n-focus-color) !important;
+  border-top-width: calc(2 * var(--border-width)) !important;
+  border-bottom-width: calc(2 * var(--border-width)) !important;
+
+  &.iaa-inline-label {
+    &.iaa-first-highlight {
+      border-left-width: calc(2 * var(--border-width));
+      margin-left: 0px;
+
+      &:before {
+        background-color: var(--i7n-focus-color) !important;
+        border-top-left-radius: 0.3em;
+        border-bottom-left-radius: 0.3em;
+      }
+    }
+
+    &.iaa-last-highlight {
+      border-right-width: calc(2 * var(--border-width));
+      margin-right: 0px;
+    }
+  }
+}
+
+.iaa-vertical-marker-focus {
+  position: absolute;
+  width: calc(2 * var(--border-width));
+  background-color: var(--i7n-focus-color);
+  left: calc(var(--vertical-tray-width) / 2 - var(--border-width));
+
+  .terminator-start {
+    cursor: s-resize;
+    position: absolute;
+    top: calc(0px - 2 * var(--border-width));
+    left: calc(0px - var(--border-width));
+    border-radius: 50%;
+    width: calc(4 * var(--border-width));
+    height: calc(4 * var(--border-width));
+  }  
+
+  .terminator-end {
+    cursor: n-resize;
+    position: absolute;
+    bottom: calc(0px - 2 * var(--border-width));
+    left: calc(0px - var(--border-width));
+    border-radius: 50%;
+    width: calc(4 * var(--border-width));
+    height: calc(4 * var(--border-width));
+  }  
+}
+
+.iaa-hover {
+  &.iaa-first-highlight {
+    border-left-style: solid;
+    border-left-color: var(--i7n-focus-bounds-color) !important;
+    border-left-width: calc(2 * var(--border-width)) !important;
+  }
+
+  &.iaa-last-highlight {
+    border-right-style: solid;
+    border-right-color: var(--i7n-focus-bounds-color) !important;
+    border-right-width: calc(2 * var(--border-width)) !important;
+  }
+
+  &:not(.iaa-inline-label) {
+    filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
+
+    &.iaa-first-highlight {
+      margin-left: calc(0px - var(--border-width)) !important;
+    }
+
+    &.iaa-last-highlight {
+      margin-right: calc(0px - var(--border-width)) !important;
+    }
+  }
+
+  &.iaa-inline-label {
+    border-color: var(--i7n-focus-color);
+    filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
+
+    &.iaa-first-highlight {
+
+      &:not(.iaa-marker-focus) {
+       margin-left: 0px;
+      }
+
+      &:before {
+        background-color: var(--i7n-focus-color)t;
+      }
+    }
+
+    &.iaa-last-highlight {
+      &:not(.iaa-marker-focus) {
+        margin-right: 0px;
+      }
+    }
+  }
+}
+
+/**
+ * Highlighting of enpoints of the currently selected relation (since we can currently not draw
+ * the relation itself).
+ */
+.iaa-related {
+  box-shadow: 0px calc(0px - var(--border-width)) 0px 0px var(--i7n-focus-color) !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.iaa-marker-matchfocus {
+  box-shadow: 0px var(--border-width) 0px 0px var(--i7n-match-focus-color) !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.iaa-menu {
+  z-index: 100;
+  background-color: white;
+  color: black;
+  border: solid gray 1px;
+  border-radius: 5px;
+  font-family: sans-serif;
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+}
+
+.iaa-menu .iaa-menu-item {
+  display: flex;
+  padding: 5px 15px;
+}
+
+.iaa-menu .iaa-menu-item:hover {
+  background-color: whitesmoke;
+}
+
+.iaa-menu-item .iaa-label {
+  width: 100%;
+}
+
+.iaa-menu-item .iaa-btn {
+  font-size: 80%;
+  padding-left: 15px;
+}

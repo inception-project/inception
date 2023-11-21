@@ -17,31 +17,47 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DATA_OWNER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import wicket.contrib.input.events.key.KeyType;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationUIAutoConfiguration#annotationPageMenuItem}.
+ * </p>
+ */
 @Order(100)
 public class AnnotationPageMenuItem
     implements ProjectMenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired ServletContext servletContext;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final ServletContext servletContext;
+
+    public AnnotationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            ServletContext aServletContext)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        servletContext = aServletContext;
+    }
 
     @Override
     public String getPath()
@@ -51,10 +67,17 @@ public class AnnotationPageMenuItem
 
     public String getUrl(Project aProject, long aDocumentId)
     {
-        String p = aProject.getSlug() != null ? aProject.getSlug()
-                : String.valueOf(aProject.getId());
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
 
         return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
+    }
+
+    public String getUrl(Project aProject, long aDocumentId, String aDataOwner)
+    {
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
+
+        return format("%s/p/%s%s/%d?%s=%s", servletContext.getContextPath(), p, getPath(),
+                aDocumentId, PAGE_PARAM_DATA_OWNER, aDataOwner);
     }
 
     @Override
@@ -70,7 +93,7 @@ public class AnnotationPageMenuItem
     }
 
     /**
-     * Only project admins and annotators can see this page
+     * Only project admins, annotators and curators can see this page
      */
     @Override
     public boolean applies(Project aProject)
@@ -81,12 +104,18 @@ public class AnnotationPageMenuItem
 
         // Visible if the current user is an annotator
         User user = userRepo.getCurrentUser();
-        return projectService.isAnnotator(aProject, user);
+        return projectService.hasRole(user, aProject, ANNOTATOR, CURATOR);
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
         return AnnotationPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.a };
     }
 }

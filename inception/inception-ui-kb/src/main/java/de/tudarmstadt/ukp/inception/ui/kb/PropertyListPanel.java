@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -41,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -76,13 +77,13 @@ public class PropertyListPanel
         OverviewListChoice<KBProperty> overviewList = new OverviewListChoice<>("properties");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(selectedProperty);
-        overviewList.setChoices(LambdaModel.of(this::getProperties));
+        overviewList.setChoices(LoadableDetachableModel.of(this::getProperties));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 this::actionSelectionChanged));
 
         add(overviewList);
 
-        add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
+        add(new Label("count", overviewList.getChoicesModel().map(Collection::size)));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
                 target -> send(getPage(), Broadcast.BREADTH, new AjaxNewPropertyEvent(target)));
@@ -122,8 +123,6 @@ public class PropertyListPanel
     /**
      * If the user disabled "show all" but a property from an implicit namespace was selected, the
      * property selection is cancelled. In any other case this component is merely updated via AJAX.
-     * 
-     * @param aTarget
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget)
     {

@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 
+import com.googlecode.wicket.jquery.core.renderer.IChoiceRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
@@ -44,6 +45,12 @@ public class StyledComboBox<T>
     public StyledComboBox(String aId, IModel<String> aModel, IModel<List<T>> aChoices)
     {
         super(aId, aModel, aChoices);
+    }
+
+    public StyledComboBox(String aId, IModel<String> aModel, IModel<List<T>> aChoices,
+            IChoiceRenderer<? super T> aRenderer)
+    {
+        super(aId, aModel, aChoices, aRenderer);
     }
 
     public StyledComboBox(String string, List<T> choices)
@@ -79,10 +86,11 @@ public class StyledComboBox<T>
                 // Some docs on how the templates work in Kendo, in case we need
                 // more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                return "# if (data.reordered == 'true') { #"
-                        + "<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n"
-                        + "# } else { #"
-                        + "<div title=\"#: data.description #\">#: data.name #</div>\n" + "# } #";
+                return "# if (data.reordered == 'true') { #" //
+                        + "<span title=\"#: data.description #\"><b>#: data.name #</b></span>\n" //
+                        + "# } else { #" //
+                        + "<span title=\"#: data.description #\">#: data.name #</span>\n" //
+                        + "# } #";
             }
 
             @Override

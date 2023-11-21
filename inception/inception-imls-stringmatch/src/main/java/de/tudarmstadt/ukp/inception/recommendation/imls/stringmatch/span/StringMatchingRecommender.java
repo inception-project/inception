@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -46,6 +47,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +67,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class StringMatchingRecommender
     extends RecommendationEngine
@@ -134,6 +137,7 @@ public class StringMatchingRecommender
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
+            aContext.info("Loaded [%d] entries from gazeteer", aData.size());
         }
 
         aContext.put(KEY_MODEL, dict);
@@ -154,7 +158,9 @@ public class StringMatchingRecommender
                     pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
-                    log.info(
+                    aContext.error("Unable to load gazeteer [%s]: %s", gaz.getName(),
+                            e.getMessage());
+                    log.error(
                             "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
                             gaz.getName(), gaz.getRecommender().getName(),
                             gaz.getRecommender().getId(),
@@ -169,9 +175,19 @@ public class StringMatchingRecommender
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
             Feature predictedFeature = getPredictedFeature(cas);
+            boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
+                    .equals(predictedFeature.getRange().getName());
 
             for (AnnotationFS ann : select(cas, predictedType)) {
-                learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(predictedFeature));
+                if (isStringMultiValue) {
+                    for (String label : FSUtil.getFeature(ann, predictedFeature, String[].class)) {
+                        learn(dict, ann.getCoveredText(), label);
+                    }
+                }
+                else {
+                    learn(dict, ann.getCoveredText(),
+                            ann.getFeatureValueAsString(predictedFeature));
+                }
             }
         }
 
@@ -182,7 +198,8 @@ public class StringMatchingRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -191,29 +208,36 @@ public class StringMatchingRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
 
-        List<Sample> data = predict(0, aCas, dict);
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
+
+        List<Sample> data = predict(aCas, units, dict);
 
         for (Sample sample : data) {
             for (Span span : sample.getSpans()) {
                 AnnotationFS annotation = aCas.createAnnotation(predictedType, span.getBegin(),
                         span.getEnd());
-                annotation.setStringValue(predictedFeature, span.getLabel());
+                // Not using setStringValue because we want to handle the case that the predicted
+                // feature is a multi-valued feature. Unfortunately, uimaFIT doesn't have a
+                // setFeature(..., Feature, ...) call yet...
+                FSUtil.setFeature(annotation, predictedFeature.getShortName(), span.getLabel());
                 annotation.setDoubleValue(scoreFeature, span.getScore());
                 annotation.setBooleanValue(isPredictionFeature, true);
                 aCas.addFsToIndexes(annotation);
             }
         }
+
+        return new Range(units);
     }
 
-    private List<Sample> predict(int aDocNo, CAS aCas, Trie<DictEntry> aDict)
+    private List<Sample> predict(CAS aCas, List<AnnotationFS> units, Trie<DictEntry> aDict)
     {
         boolean requireEndAtTokenBoundary = !CHARACTERS
                 .equals(getRecommender().getLayer().getAnchoringMode());
 
         boolean requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
 
-        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type tokenType = getType(aCas, Token.class);
 
         List<Sample> data = new ArrayList<>();
@@ -222,9 +246,10 @@ public class StringMatchingRecommender
             text = text.toLowerCase(Locale.ROOT);
         }
 
-        for (Annotation sampleUnit : aCas.<Annotation> select(sampleUnitType)) {
+        for (AnnotationFS sampleUnit : units) {
             List<Span> spans = new ArrayList<>();
-            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit)
+            List<Annotation> tokens = aCas.<Annotation> select(tokenType) //
+                    .coveredBy(sampleUnit) //
                     .asList();
             for (Annotation token : tokens) {
                 Trie<DictEntry>.MatchedNode match = aDict.getNode(text, token.getBegin());
@@ -255,7 +280,7 @@ public class StringMatchingRecommender
                 }
             }
 
-            data.add(new Sample(aDocNo, aCas.getDocumentText(), tokens, spans));
+            data.add(new Sample(0, aCas.getDocumentText(), tokens, spans));
         }
 
         return data;
@@ -369,6 +394,10 @@ public class StringMatchingRecommender
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
     {
+        if (isBlank(aText)) {
+            return;
+        }
+
         String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
 
         String text = aText;
@@ -383,7 +412,6 @@ public class StringMatchingRecommender
         }
 
         entry.put(label);
-
     }
 
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)
@@ -398,16 +426,32 @@ public class StringMatchingRecommender
             Type tokenType = getType(cas, Token.class);
             Type annotationType = getType(cas, aLayerName);
             Feature predictedFeature = annotationType.getFeatureByBaseName(aFeatureName);
+            boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
+                    .equals(predictedFeature.getRange().getName());
 
             for (AnnotationFS sentence : select(cas, sentenceType)) {
                 List<Span> spans = new ArrayList<>();
 
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
-                    String label = annotation.getFeatureValueAsString(predictedFeature);
-                    if (isNotEmpty(label)) {
-                        spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
-                                annotation.getCoveredText(),
-                                annotation.getFeatureValueAsString(predictedFeature), -1.0));
+                    if (isBlank(annotation.getCoveredText())) {
+                        continue;
+                    }
+
+                    if (isStringMultiValue) {
+                        for (String label : FSUtil.getFeature(annotation, predictedFeature,
+                                String[].class)) {
+                            if (isEmpty(label)) {
+                                continue;
+                            }
+                            spans.add(new Span(annotation, label, -1.0));
+                        }
+                    }
+                    else {
+                        String label = annotation.getFeatureValueAsString(predictedFeature);
+                        if (isEmpty(label)) {
+                            continue;
+                        }
+                        spans.add(new Span(annotation, label, -1.0));
                     }
                 }
 
@@ -451,6 +495,7 @@ public class StringMatchingRecommender
                     .findFirst();
         }
 
+        @SuppressWarnings("unused")
         public int getDocNo()
         {
             return docNo;
@@ -515,7 +560,7 @@ public class StringMatchingRecommender
         }
 
         /**
-         * The label (e.g. NN, PER, OTH, etc.)
+         * @return the label (e.g. NN, PER, OTH, etc.)
          */
         public String getLabel()
         {
@@ -523,7 +568,7 @@ public class StringMatchingRecommender
         }
 
         /**
-         * How often the label was observed.
+         * @return how often the label was observed.
          */
         public int getCount()
         {
@@ -531,8 +576,8 @@ public class StringMatchingRecommender
         }
 
         /**
-         * How often the label was observed in relation to the total number of observations of the
-         * mention.
+         * @return how often the label was observed in relation to the total number of observations
+         *         of the mention.
          */
         public double getRelFreq()
         {
@@ -547,6 +592,11 @@ public class StringMatchingRecommender
         private final String text;
         private final String label;
         private final double score;
+
+        public Span(AnnotationFS aAnn, String aLabel, double aScore)
+        {
+            this(aAnn.getBegin(), aAnn.getEnd(), aAnn.getCoveredText(), aLabel, aScore);
+        }
 
         public Span(int aBegin, int aEnd, String aText, String aLabel, double aScore)
         {

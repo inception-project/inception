@@ -31,7 +31,7 @@ import java.util.Map;
 import org.apache.commons.lang3.ClassUtils;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +40,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
@@ -87,7 +88,7 @@ public class ValueTypeSupportRegistryImpl
             }
         }
 
-        log.info("Found [{}] value type supports", fsp.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] value type supports", fsp.size());
 
         valueSupports = unmodifiableList(fsp);
     }
@@ -121,7 +122,7 @@ public class ValueTypeSupportRegistryImpl
             // Mapping fails for NaiveIRI class, so check manually
             // if the value is an instance of IRI
             if (type == null && aStatement.getValue() instanceof IRI) {
-                type = XMLSchema.ANYURI;
+                type = XSD.ANYURI;
             }
             datatype = type != null ? type.stringValue() : null;
         }
@@ -131,7 +132,7 @@ public class ValueTypeSupportRegistryImpl
         }
 
         if (datatype == null) {
-            datatype = XMLSchema.STRING.stringValue();
+            datatype = XSD.STRING.stringValue();
         }
 
         return datatype;

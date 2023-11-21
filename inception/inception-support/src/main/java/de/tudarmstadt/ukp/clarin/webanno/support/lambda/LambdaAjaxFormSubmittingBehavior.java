@@ -22,6 +22,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxFormSubmittingBehavior
@@ -37,6 +38,8 @@ public class LambdaAjaxFormSubmittingBehavior
      *            form that will be submitted
      * @param aEvent
      *            javascript event this behavior is attached to, like onclick
+     * @param aAction
+     *            the action to perform when the form is submitted
      */
     public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction)
     {
@@ -48,6 +51,10 @@ public class LambdaAjaxFormSubmittingBehavior
      *            form that will be submitted
      * @param aEvent
      *            javascript event this behavior is attached to, like onclick
+     * @param aAction
+     *            the action to perform when the form is submitted
+     * @param aExceptionHandler
+     *            an exception handler to call if there was a problem submitting the form
      */
     public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction,
             AjaxExceptionHandler aExceptionHandler)
@@ -82,6 +89,10 @@ public class LambdaAjaxFormSubmittingBehavior
             if (action != null) {
                 action.accept(aTarget);
             }
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

@@ -23,12 +23,17 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class ImageOperator
+    implements Operator
 {
-    float x;
-    float y;
-    float w;
-    float h;
+    final float x;
+    final float y;
+    final float w;
+    final float h;
 
     public ImageOperator(float x, float y, float w, float h)
     {

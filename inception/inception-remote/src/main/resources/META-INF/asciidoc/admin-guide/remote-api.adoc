@@ -18,7 +18,7 @@
 = Remote API
 
 ====
-INFO: To use this functionality, you need to enable it first by adding `remote-api.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+NOTE: To use this functionality, you need to enable it first by adding `remote-api.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
 In order to programmatically manage annotation project, a REST-like remote API is offered. This API
@@ -33,10 +33,30 @@ is disabled by default. In order to enable it, add the setting `remote-api.enabl
 | Default
 | Example
 
-| remote-api.enabled
+| `remote-api.enabled`
 | Enable remote API
-| false
-| true
+| `false`
+| `true`
+
+| `remote-api.http-basic.enabled`
+| Enable HTTP basic authentication
+| `true`
+| `false`
+
+| `remote-api.oauth2.enabled`
+| Enable HTTP basic authentication
+| `false`
+| `true`
+
+| `remote-api.oauth2.realm`
+| Client ID used by the OAuth2 IdP (mandatory if OAuth2 is enabled)
+| none
+| `inception-client`
+
+| `remote-api.oauth2.user-name-attribute`
+| Claim containing the username
+| `sub`
+| `preferred_username`
 |===
 
 Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user. Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`. Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
@@ -48,3 +68,43 @@ The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/o
 
 The third-party Python library link:https://pycaprio.readthedocs.io/en/latest/[pycaprio] can be used
 to facilitate accessing the remote API.
+
+== OAuth2 authentication
+
+The remote API can be used using OAuth2 authentication. A client is expected to obtain a JWT token
+from an OAuth2 endpoint. {product-name} will verify that token using the public key of the OAuth2
+endpoint and if the token is valid, access is granted. It is required that the user associated with 
+then token has been created before in {product-name}. Contrary to OAuth2 logins to the web interface,
+logins to the remote API do **not** automatically create users.
+
+Let's consider you are using Keycloak as the OAuth2 provider. First, you would set up a realm in 
+Keycloak as described in <<sect_security_authentication_oauth2>>. Assuming you followed the example,
+you would now open the `inception-client` client in the **clients** panel of the **inception-demo**
+realm. There, you have to enable the **Service Accounts** toggle and save.
+
+In the `settings.properties` file, you need to add the following settings to enable OAuth2 login to 
+the remote API:
+
+```
+remote-api.oauth2.enabled=true
+remote-api.oauth2.realm=inception-demo
+remote-api.oauth2.user-name-attribute=preferred_username
+spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8180/realms/inception-demo
+```
+
+Note that you must also have configured OAuth2 authentication for logins to the web interface,
+otherwise the next step of creating a user will not be possible.
+
+Enabling the **Service Accounts** option in Keycloak will allow obtaining a JWT token using a 
+client ID and client credentials. You can find these credentials in the **Credentials** tab of the 
+`inception-client` client in Keycloak. The preferred username of this service user is automatically
+set to `inception-client-service-user` by Keycloak.
+
+Finally, to allow the `inception-client-service-user` to use the remote API, you need to create that
+user in {product-name}. Go to the user management section in {product-name} and create a user named
+`inception-client-service-user`. Assign at least the roles `ROLE_REMOTE` and `ROLE_USER` to the new user
+and set the realm to `external:inception-client`.
+
+NOTE: link:https://pycaprio.readthedocs.io/en/latest/[Pycaprio] does currently not support OAuth2
+      authentication - only HTTP basic authentication.
+

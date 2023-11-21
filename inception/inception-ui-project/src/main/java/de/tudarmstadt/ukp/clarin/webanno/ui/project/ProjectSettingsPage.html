@@ -19,7 +19,6 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div wicket:id="deleteProjectDialog"></div>
     <div class="flex-content flex-h-container flex-gutter">
       <div wicket:id="sidebar" class="flex-sidebar flex-v-container flex-gutter">
         <wicket:container wicket:id="projects" />
@@ -28,10 +27,6 @@
         <div class="card">
           <div class="card-header border-bottom-0">
             <h1 class="float-end">
-              <button wicket:id="delete" class="btn btn-danger">
-                <i class="fas fa-trash"></i>
-                <span class="d-none d-lg-inline"><wicket:message key="delete"/></span>
-              </button>
               <button wicket:id="cancel" class="btn btn-secondary">
                 <i class="fas fa-times"></i>
                 <span class="d-none d-lg-inline"><wicket:message key="close"/></span>

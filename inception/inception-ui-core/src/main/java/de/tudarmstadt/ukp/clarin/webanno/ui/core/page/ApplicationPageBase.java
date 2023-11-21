@@ -17,18 +17,23 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.MetaDataHeaderItem;
+import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -39,23 +44,24 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.csrf.CsrfToken;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
+import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 
 public abstract class ApplicationPageBase
     extends WebPage
 {
-    private final static Logger LOG = LoggerFactory.getLogger(ApplicationPageBase.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = -1690130604031181803L;
 
@@ -65,11 +71,13 @@ public abstract class ApplicationPageBase
                 private static final long serialVersionUID = 1L;
             };
 
+    private WebMarkupContainer body;
     private FeedbackPanel feedbackPanel;
     private WebMarkupContainer footer;
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
+    private @SpringBean UserDao userService;
 
     private IModel<List<Component>> footerItems;
 
@@ -78,73 +86,59 @@ public abstract class ApplicationPageBase
         commonInit();
     }
 
-    protected ApplicationPageBase(final PageParameters parameters)
+    protected ApplicationPageBase(final PageParameters aPageParameters)
     {
-        super(parameters);
+        super(aPageParameters);
+
+        LOG.debug("Setting up page [{}] with parameters: {}", this.getClass().getName(),
+                aPageParameters);
+
         commonInit();
     }
 
     private void commonInit()
     {
-        for (GlobalInterceptor interceptor : interceptorsRegistry.getInterceptors()) {
+        setLocale();
+
+        for (var interceptor : interceptorsRegistry.getInterceptors()) {
             interceptor.intercept(this);
         }
 
+        add(body = new DarkModeWrapper("body"));
+
         footerItems = new ListModel<>(new ArrayList<>());
-
-        footerItemRegistry.getFooterItems().stream().map(c -> c.create("item"))
+        footerItemRegistry.getFooterItems().stream() //
+                .map(c -> c.create("item")) //
                 .forEach(c -> footerItems.getObject().add(c));
+        body.add(footer = createFooter("footer", footerItems));
 
-        footer = new WebMarkupContainer("footer");
-        footer.setOutputMarkupId(true);
-        add(footer);
+        body.add(createMenuBar("menubar"));
 
-        footer.add(new ListView<Component>("footerItems", footerItems)
-        {
-            private static final long serialVersionUID = 5912513189482015963L;
+        body.add(feedbackPanel = createFeedbackPanel());
+    }
 
-            {
-                setReuseItems(true);
-            }
-
-            @Override
-            protected void populateItem(ListItem<Component> aItem)
-            {
-                aItem.setOutputMarkupPlaceholderTag(true);
-                aItem.add(aItem.getModelObject());
-            }
-        });
-
-        Properties settings = SettingsUtil.getSettings();
-
-        // Override locale to be used by application
-        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
-        switch (locale) {
-        case "auto":
-            // Do nothing - locale is picked up from browser
-            break;
-        default:
-            // Override the locale in the session
-            getSession().setLocale(Locale.forLanguageTag(locale));
-            break;
-        }
-
-        // Add menubar
+    private Component createMenuBar(String aId)
+    {
+        Component menubar;
         try {
             Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
             if (menubarClass == null) {
                 menubarClass = EmptyPanel.class;
             }
-            add(ConstructorUtils.invokeConstructor(menubarClass, "menubar"));
+            menubar = ConstructorUtils.invokeConstructor(menubarClass, aId);
         }
         catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
                 | InstantiationException e1) {
             throw new RuntimeException(e1);
         }
+        return menubar;
+    }
 
-        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
-        feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
+    private BootstrapFeedbackPanel createFeedbackPanel()
+    {
+        var panel = new BootstrapFeedbackPanel("feedbackPanel");
+        panel.setOutputMarkupId(true);
+        panel.setFilter((IFeedbackMessageFilter) aMessage -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth != null ? auth.getName() : "SYSTEM";
             if (aMessage.isFatal()) {
@@ -164,20 +158,64 @@ public abstract class ApplicationPageBase
             }
             return true;
         });
-        add(feedbackPanel);
+        return panel;
+    }
+
+    private void setLocale()
+    {
+        Properties settings = SettingsUtil.getSettings();
+
+        // Override locale to be used by application
+        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
+        switch (locale) {
+        case "auto":
+            // Do nothing - locale is picked up from browser
+            break;
+        default:
+            // Override the locale in the session
+            getSession().setLocale(Locale.forLanguageTag(locale));
+            break;
+        }
+    }
+
+    private WebMarkupContainer createFooter(String aId, IModel<List<Component>> aFooterItems)
+    {
+        var panel = new WebMarkupContainer(aId);
+        panel.setOutputMarkupId(true);
+        panel.add(new ListView<Component>("footerItems", aFooterItems)
+        {
+            private static final long serialVersionUID = 5912513189482015963L;
+
+            {
+                setReuseItems(true);
+            }
+
+            @Override
+            protected void populateItem(ListItem<Component> aItem)
+            {
+                aItem.setOutputMarkupPlaceholderTag(true);
+                aItem.add(aItem.getModelObject());
+            }
+        });
+
+        return panel;
     }
 
     @Override
-    protected void onConfigure()
+    public void renderHead(IHeaderResponse aResponse)
     {
-        super.onConfigure();
+        super.renderHead(aResponse);
 
-        // Do not cache pages in development mode - allows us to make changes to the HMTL without
-        // having to reload the application
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-            getApplication().getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
-            getApplication().getResourceSettings()
-                    .setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
+        // Actually, this is pretty pointless because we disable Spring Security CSRF for the
+        // Wicket URLs...
+        var containerRequest = RequestCycle.get().getRequest().getContainerRequest();
+        if (containerRequest instanceof HttpServletRequest) {
+            var httpRequest = (HttpServletRequest) containerRequest;
+            var csrfToken = (CsrfToken) httpRequest.getAttribute(CsrfToken.class.getName());
+            if (csrfToken != null) {
+                aResponse.render(new PriorityHeaderItem(
+                        MetaDataHeaderItem.forMetaTag("csrftoken", csrfToken.getToken())));
+            }
         }
     }
 

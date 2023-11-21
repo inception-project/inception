@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,23 +30,20 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.XMLInputSource;
 import org.apache.uima.util.XmlCasDeserializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
@@ -154,9 +151,6 @@ public class StringMatchingRelationRecommenderTest
     private CAS loadSimpleCas() throws Exception
     {
         Path root = Paths.get("src", "test", "resources", "relation", "simple");
-
-        TypeSystemDescription ts = UIMAFramework.getXMLParser().parseTypeSystemDescription(
-                new XMLInputSource(root.resolve("TypeSystem.xml").toFile()));
 
         CAS cas = CasFactory.createCasFromPath(root.resolve("TypeSystem.xml").toString());
 

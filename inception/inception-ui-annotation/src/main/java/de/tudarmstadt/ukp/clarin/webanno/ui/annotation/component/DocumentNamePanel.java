@@ -17,15 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
-import org.apache.wicket.RuntimeConfigurationType;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
@@ -36,51 +46,26 @@ public class DocumentNamePanel
 {
     private static final long serialVersionUID = 3584950105138069924L;
 
+    private @SpringBean UserDao userService;
+
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
         setOutputMarkupId(true);
-        add(new Label("doumentName", LambdaModel.of(this::getLabel)).setOutputMarkupId(true));
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
-    private String getLabel()
-    {
-        StringBuilder sb = new StringBuilder();
-
-        AnnotatorState state = getModelObject();
-
-        if (state.getUser() != null) {
-            sb.append(state.getUser().getUiName());
-            sb.append(": ");
-        }
-
-        if (state.getProject() != null) {
-            sb.append(state.getProject().getName());
-        }
-
-        sb.append("/");
-
-        if (state.getDocument() != null) {
-            sb.append(state.getDocument().getName());
-        }
-
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-            sb.append(" (");
-            if (state.getProject() != null) {
-                sb.append(state.getProject().getId());
-            }
-            sb.append("/");
-            if (state.getDocument() != null) {
-                sb.append(state.getDocument().getId());
-            }
-            sb.append(")");
-        }
-
-        return sb.toString();
+        queue(new WebMarkupContainer("read-only").add(LambdaBehavior.visibleWhen(() -> {
+            var page = findParent(AnnotationPageBase.class);
+            return page != null ? !page.isEditable() : false;
+        })));
+        queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))
+                .add(visibleWhenNot(aModel.map(AnnotatorState::getUser)
+                        .map(u -> u.getUsername().equals(userService.getCurrentUsername())))));
+        queue(new Label("project", aModel.map(AnnotatorState::getProject).map(Project::getName)));
+        queue(new Label("projectId", aModel.map(AnnotatorState::getProject).map(Project::getId))
+                .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
+        queue(new Label("document",
+                aModel.map(AnnotatorState::getDocument).map(SourceDocument::getName)));
+        queue(new Label("documentId",
+                aModel.map(AnnotatorState::getDocument).map(SourceDocument::getId)).add(
+                        visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
     }
 }

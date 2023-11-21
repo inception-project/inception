@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionLocateSettingsProperties;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowAbout;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowLog;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.bringToFront;
 import static java.awt.BorderLayout.CENTER;
 import static java.awt.Component.CENTER_ALIGNMENT;
@@ -28,6 +33,7 @@ import static java.awt.EventQueue.invokeLater;
 import static java.lang.ProcessBuilder.Redirect.INHERIT;
 import static javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE;
 import static javax.swing.WindowConstants.HIDE_ON_CLOSE;
+import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
@@ -53,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationContext;
@@ -64,6 +71,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
+@ConditionalOnWebApplication
 @Component("standaloneShutdownDialogManager")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class StandaloneShutdownDialogManager
@@ -75,6 +83,9 @@ public class StandaloneShutdownDialogManager
 
     @Autowired
     private ApplicationContext context;
+
+    @Value("${server.servlet.context-path:}")
+    private String servletContextPath;
 
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
@@ -90,8 +101,8 @@ public class StandaloneShutdownDialogManager
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent aEvt)
     {
-        log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
-        log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
+        BOOT_LOG.info("Console: " + ((System.console() != null) ? "available" : "not available"));
+        BOOT_LOG.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
 
         boolean forceUi = System.getProperty("forceUi") != null;
 
@@ -107,18 +118,21 @@ public class StandaloneShutdownDialogManager
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             }
             catch (Exception e) {
-                log.info("Unable to set system look and feel", e);
+                log.error("Unable to set system look and feel", e);
             }
 
             invokeLater(() -> showShutdownDialog());
         }
         else {
-            log.info(
+            BOOT_LOG.info(
                     "Running in server environment or from command line: disabling interactive shutdown dialog.");
             if (System.console() != null) {
-                log.info("You can close INCEpTION from the command line by pressing Ctrl+C");
+                BOOT_LOG.info("You can close INCEpTION from the command line by pressing Ctrl+C");
             }
         }
+
+        BOOT_LOG.info("You can now access INCEpTION at http://localhost:{}{}", port,
+                prependIfMissing(servletContextPath, "/"));
     }
 
     @EventListener
@@ -215,11 +229,17 @@ public class StandaloneShutdownDialogManager
         popupMenu.add(browseItem);
 
         MenuItem logItem = new MenuItem("Log...");
-        logItem.addActionListener(e -> StandaloneUserInterface.actionShowLog(applicationName));
+        logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
 
+        if (getSettingsFileLocation() != null) {
+            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
+            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
+            popupMenu.add(settingsPropertiesItem);
+        }
+
         MenuItem aboutItem = new MenuItem("About...");
-        aboutItem.addActionListener(e -> StandaloneUserInterface.actionShowAbout(applicationName));
+        aboutItem.addActionListener(e -> actionShowAbout(applicationName));
         popupMenu.add(aboutItem);
 
         MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);
@@ -241,8 +261,10 @@ public class StandaloneShutdownDialogManager
     private void actionBrowse()
     {
         try {
+
             if (!StringUtils.isBlank(openBrowserCommand)) {
-                String cmd = openBrowserCommand.replace("%u", "http://localhost:" + port);
+                String cmd = openBrowserCommand.replace("%u",
+                        "http://localhost:" + port + prependIfMissing(servletContextPath, "/"));
 
                 String[] cmdTokens = cmd.split("\\s(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
 

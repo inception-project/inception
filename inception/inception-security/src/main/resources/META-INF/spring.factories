@@ -1,2 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration
+de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration,\
+de.tudarmstadt.ukp.inception.security.config.InceptionSecurityActuatorAutoConfiguration,\
+de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration,\
+de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration

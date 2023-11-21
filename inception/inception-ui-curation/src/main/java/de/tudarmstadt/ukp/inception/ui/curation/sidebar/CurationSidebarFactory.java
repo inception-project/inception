@@ -17,19 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import org.apache.wicket.model.IModel;
-import org.springframework.beans.factory.annotation.Autowired;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import org.apache.wicket.Component;
+import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
 /**
@@ -41,10 +44,11 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
 public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final ProjectService projectService;
     private final UserDao userService;
 
-    @Autowired
     public CurationSidebarFactory(ProjectService aProjectService, UserDao aUserService)
     {
         projectService = aProjectService;
@@ -64,9 +68,9 @@ public class CurationSidebarFactory
     }
 
     @Override
-    public IconType getIcon()
+    public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return FontAwesome5IconType.clipboard_s;
+        return new CurationSidebarIcon(aId, aState);
     }
 
     @Override
@@ -81,7 +85,7 @@ public class CurationSidebarFactory
     public boolean applies(AnnotatorState aState)
     {
         String currentUser = userService.getCurrentUsername();
-        boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser());
+        boolean isCurator = projectService.hasRole(aState.getUser(), aState.getProject(), CURATOR);
         return isCurator && aState.getUser().getUsername().equals(currentUser);
     }
 }

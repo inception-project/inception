@@ -21,6 +21,8 @@
 <wicket:head>
   <style type="text/css">
     .page-content { overflow: auto; }
+    .document-matrix thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .document-matrix thead td, .document-table thead th{ border-bottom-width: 0 !important; }
     .document-matrix tr td, .document-matrix tr th { text-align: center; }
     .document-matrix tr th { white-space: nowrap; }
     .document-matrix tr td:nth-child(3), .document-matrix tr th:nth-child(3) { text-align: left; width: 100%;}
@@ -37,6 +39,7 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
+          <div wicket:id="modalDialog"/>
           <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
           
@@ -56,6 +59,39 @@
                   <div wicket:id="filterPanel"/>
                 </div>
               </span> 
+              <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
+                  type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-cog"></i>
+                  <span class="d-none d-lg-inline">
+                    &nbsp;<wicket:message key="settings" />
+                  </span>
+                </button>
+                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
+                  <form wicket:id="settingsForm" class="card border-0">
+                    <div class="card-header">
+                      <wicket:message key="settings" />
+                    </div>
+                    <div class="card-body">
+                      <div class="row form-row">
+                        <label class="col-form-label col-sm-7">
+                          <wicket:message key="reopenableByAnnotator" />
+                        </label>
+                        <div class="col-sm-5">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" wicket:id="reopenableByAnnotator">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-footer text-end">
+                      <button class="btn btn-primary" wicket:id="save">
+                        <wicket:message key="save" />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </span>
               <button wicket:id="refresh" class="btn btn-action btn-secondary">
                 <i class="fas fa-redo"></i>
                 <span class="d-none d-lg-inline">
@@ -85,6 +121,7 @@
                     <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
                     <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
                     <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                    <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> Problem</li>
                     <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
                   </ul>
                 </span>
@@ -121,6 +158,12 @@
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
+                      <a wicket:id="bulkStartProgress" class="dropdown-item">
+                        Start progress (dev-only) 
+                        <span class="float-end text-muted">
+                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                        </span>
+                      </a>
                       <a wicket:id="bulkLock" class="dropdown-item">
                         Lock selected 
                         <span class="float-end text-muted">

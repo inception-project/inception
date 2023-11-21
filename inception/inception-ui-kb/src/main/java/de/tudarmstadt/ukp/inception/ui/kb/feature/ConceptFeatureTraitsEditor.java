@@ -32,23 +32,23 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * Component for editing the traits of knowledge-base-related features in the feature detail editor
@@ -57,6 +57,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class ConceptFeatureTraitsEditor
     extends Panel
 {
+    private static final String MID_KEY_BINDINGS = "keyBindings";
+
     private static final String MID_FORM = "form";
 
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
@@ -103,18 +105,20 @@ public class ConceptFeatureTraitsEditor
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
-        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
+        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE,
+                LoadableDetachableModel.of(this::listKnowledgeBases),
                 new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(
-                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
+        form.add(new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE,
+                LoadableDetachableModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
-        form.add(new DisabledKBWarning("disabledKBWarning", feature));
+        form.add(new DisabledKBWarning("disabledKBWarning", feature,
+                traits.bind("knowledgeBase.repositoryId")));
         add(form);
 
-        add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,
-                traits.bind("keyBindings")));
+        add(new KeyBindingsConfigurationPanel(MID_KEY_BINDINGS, aFeatureModel,
+                traits.bind(MID_KEY_BINDINGS)).setOutputMarkupId(true));
     }
 
     private void refresh(AjaxRequestTarget aTarget)
@@ -122,7 +126,7 @@ public class ConceptFeatureTraitsEditor
         Traits t = traits.getObject();
         t.setScope(loadConcept(t.getKnowledgeBase(),
                 t.getScope() != null ? t.getScope().getIdentifier() : null));
-        aTarget.add(get(MID_FORM).get(MID_SCOPE));
+        aTarget.add(get(MID_FORM).get(MID_SCOPE), get(MID_KEY_BINDINGS));
 
     }
 

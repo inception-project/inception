@@ -362,7 +362,7 @@
     </addColumn>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180924-1">
+  <changeSet author="INCEpTION Team" id="20180924-1a">
     <preConditions onFail="MARK_RAN">
       <not>
         <columnExists tableName="knowledgebase" columnName="fullTextSearchIri"/>
@@ -374,9 +374,18 @@
               type="VARCHAR(255)">
       </column>
     </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180924-1b" dbms="!postgresql">
     <update tableName="knowledgebase">
       <column name="fullTextSearchIri" type="VARCHAR(255)" value="bif:contains"/>
-      <where>supportConceptLinking = true</where>
+      <where>supportConceptLinking = 1</where>
+    </update>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20180924-1b-pg" dbms="postgresql">
+    <update tableName="knowledgebase">
+      <column name="fullTextSearchIri" type="VARCHAR(255)" value="bif:contains"/>
+      <where>"supportConceptLinking" = TRUE</where>
     </update>
   </changeSet>
   
@@ -384,12 +393,19 @@
    - We had a bug that this setting was not properly initialized when importing projects that
    - where this setting did not exist yet. For such cases, we set the value to the default here. 
    -->
-  <changeSet author="INCEpTION Team" id="20181120-1">
+  <changeSet author="INCEpTION Team" id="20181120-1a" dbms="!postgresql">
     <update tableName="knowledgebase">
       <column name="maxResults" type="INT" valueNumeric="1000"/>
       <where>maxResults = 0</where>
     </update>
   </changeSet>
+  <changeSet author="INCEpTION Team" id="20181120-1a-pg" dbms="postgresql">
+    <update tableName="knowledgebase">
+      <column name="maxResults" type="INT" valueNumeric="1000"/>
+      <where>"maxResults" = 0</where>
+    </update>
+  </changeSet>
+
   
   <changeSet author="INCEpTION Team" id="20190306-1">
     <preConditions onFail="MARK_RAN">
@@ -431,5 +447,31 @@
       <column name="name" type="VARCHAR(255)">
       </column>
     </createTable>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220527-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="useFuzzy"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="useFuzzy" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220818-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
   </changeSet>
 </databaseChangeLog>

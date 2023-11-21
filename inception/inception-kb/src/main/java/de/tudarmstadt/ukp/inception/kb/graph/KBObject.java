@@ -70,12 +70,15 @@ public interface KBObject
     void setDescription(String label);
 
     /**
-     * Returns the language (e.g. of label and description) of this element.
+     * @return the language (e.g. of label and description) of this element.
      */
     String getLanguage();
 
     /**
      * Sets the language (e.g. of label and description) of this element.
+     * 
+     * @param language
+     *            the language.
      */
     void setLanguage(String language);
 

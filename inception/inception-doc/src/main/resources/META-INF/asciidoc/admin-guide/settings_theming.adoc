@@ -1,0 +1,49 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Theming
+
+There are two options of theming {product-name}.
+
+The recommended approach is placing a file named `theme.css` into the application home folder. If
+this file is present, it is automatically loaded on all pages of the application. You can place 
+custom styles into the file and make them override the default styles.
+
+There is also the option to place a file called `bootstrap.css` into the application folder. If that
+file is present, the built-in customized Bootstrap styles of {product-name} are not loaded and this
+file is loaded instead. For the application to work, the custom `bootstrap.css` must be fully 
+compatible with the built-in styles. To create such a file, obtain the `scss` files from the
+link:https://github.com/inception-project/inception/tree/main/inception/inception-bootstrap/src/main/ts/bootstrap[inception-bootstrap] module for the {product-name} version that you are using, adjust
+them, and use SCSS to compile them from the root `bootstrap.scss` file into a customized
+`bootstrap.css` file. 
+
+NOTE: New versions of {product-name} may come with changes to the CSS styles being used without
+      any special announcement. If you use theming, be sure to thoroughly review if your custom styles still
+      work with new versions. Best keep any changes minimal.
+
+.Theming settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `ui.dark-mode.enabled`
+| Whether to enable the ability switch between light and dark mode (experimental).
+| `false`
+| `true`
+|===

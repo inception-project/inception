@@ -17,29 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.util.lang.WicketObjects;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -47,15 +44,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -64,16 +57,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines.ProjectGuidelinesPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 /**
- * This is the main page for Project Settings. The Page has Four Panels. The
- * {@link ProjectGuidelinesPanel} is used to update documents to a project. The
- * {@code ProjectDetailsPanel} used for updating Project details such as descriptions of a project
- * and name of the Project The {@code ProjectTagSetsPanel} is used to add {@link TagSet} and
- * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
- * to update {@link User} to a Project
+ * This is the main page for Project Settings.
  */
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings", alt = "/admin/projects")
 public class ProjectSettingsPage
@@ -98,7 +85,6 @@ public class ProjectSettingsPage
     private ProjectSelectionPanel projects;
 
     private IModel<Project> selectedProject;
-    private ChallengeResponseDialog deleteProjectDialog;
 
     private boolean preSelectedModelMode = false;
 
@@ -134,7 +120,7 @@ public class ProjectSettingsPage
 
                 // Check access to project
                 if (!userRepository.isAdministrator(user)
-                        && !projectService.isManager(project, user)) {
+                        && !projectService.hasRole(user, project, MANAGER)) {
                     error("You have no permission to access project [" + project.getId() + "]");
                     setResponsePage(getApplication().getHomePage());
                 }
@@ -165,10 +151,6 @@ public class ProjectSettingsPage
 
         tabContainer.add(new LambdaAjaxLink("cancel", this::actionCancel));
 
-        tabContainer.add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure((_this) -> _this.setEnabled(selectedProject.getObject() != null
-                        && selectedProject.getObject().getId() != null)));
-
         tabPanel = new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs())
         {
             private static final long serialVersionUID = -7356420977522213071L;
@@ -198,30 +180,6 @@ public class ProjectSettingsPage
             tabPanel.visitChildren(new ModelChangedVisitor(selectedProject));
         });
         sidebar.add(projects);
-
-        IModel<String> projectNameModel = PropertyModel.of(selectedProject, "name");
-        add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-                new StringResourceModel("DeleteProjectDialog.title", this),
-                new StringResourceModel("DeleteProjectDialog.text", this).setModel(selectedProject)
-                        .setParameters(projectNameModel),
-                projectNameModel));
-        deleteProjectDialog.setConfirmAction((target) -> {
-            try {
-                projectService.removeProject(selectedProject.getObject());
-                if (preSelectedModelMode) {
-                    setResponsePage(getApplication().getHomePage());
-                }
-                else {
-                    selectedProject.setObject(null);
-                    target.add(getPage());
-                }
-            }
-            catch (IOException e) {
-                LOG.error("Unable to remove project :" + ExceptionUtils.getRootCauseMessage(e));
-                error("Unable to remove project " + ":" + ExceptionUtils.getRootCauseMessage(e));
-                target.addChildren(getPage(), IFeedback.class);
-            }
-        });
     }
 
     @Override
@@ -310,10 +268,5 @@ public class ProjectSettingsPage
         PageParameters pageParameters = new PageParameters();
         ProjectPageBase.setProjectPageParameter(pageParameters, getProject());
         setResponsePage(projectDashboard, pageParameters);
-    }
-
-    private void actionDelete(AjaxRequestTarget aTarget)
-    {
-        deleteProjectDialog.show(aTarget);
     }
 }

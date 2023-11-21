@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanEvent;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 
 @Component
@@ -50,7 +50,7 @@ public class ChainSpanEventAdapter
     @Override
     public String getAnnotator(ChainSpanEvent aEvent)
     {
-        return aEvent.getUser();
+        return aEvent.getDocumentOwner();
     }
 
     @Override

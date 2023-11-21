@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -42,10 +43,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 // tag::classDefinition[]
 public class DataMajorityNerRecommender
@@ -65,7 +67,7 @@ public class DataMajorityNerRecommender
 
     // tag::train[]
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
         return TRAINING_REQUIRED;
     }
@@ -131,14 +133,15 @@ public class DataMajorityNerRecommender
 
     // tag::predict1[]
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
         Type tokenType = CasUtil.getAnnotationType(aCas, DATAPOINT_UNIT);
-        Collection<AnnotationFS> candidates = CasUtil.select(aCas, tokenType);
+        Collection<AnnotationFS> candidates = selectOverlapping(aCas, tokenType, aBegin, aEnd);
         List<Annotation> predictions = predict(candidates, model);
 
         // Add predictions to the CAS
@@ -156,6 +159,8 @@ public class DataMajorityNerRecommender
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
+
+        return new Range(candidates);
     }
     // end::predict1[]
 

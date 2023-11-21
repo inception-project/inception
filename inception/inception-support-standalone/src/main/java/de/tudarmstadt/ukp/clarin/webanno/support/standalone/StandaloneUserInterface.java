@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFile;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFolder;
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
 import static java.awt.Desktop.getDesktop;
 import static java.awt.Font.BOLD;
 import static java.awt.Font.SANS_SERIF;
@@ -47,6 +48,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.time.Year;
@@ -54,14 +56,17 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
@@ -70,7 +75,6 @@ import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
 
 public class StandaloneUserInterface
@@ -83,6 +87,54 @@ public class StandaloneUserInterface
     private static void actionShutdown()
     {
         System.exit(0);
+    }
+
+    public static void actionLocateSettingsProperties()
+    {
+        if (!Desktop.isDesktopSupported()) {
+            return;
+        }
+
+        try {
+            File file = getSettingsFileLocation();
+            file.getParentFile().mkdirs();
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            if (getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
+                getDesktop().browseFileDirectory(file);
+            }
+            else {
+                JLabel label = new JLabel("Path to the settings properties file:");
+
+                JTextField textField = new JTextField(file.getAbsolutePath());
+                textField.setEditable(false);
+
+                JButton copyButton = new JButton("Copy");
+                copyButton.addActionListener(le -> {
+                    StringSelection stringSelection = new StringSelection(textField.getText());
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(stringSelection, null);
+                });
+
+                JPanel panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                panel.add(label);
+                panel.add(Box.createVerticalGlue());
+                JPanel row = new JPanel();
+                row.add(textField);
+                row.add(copyButton);
+                panel.add(row);
+
+                String title = "Settings Properties";
+                JOptionPane.showMessageDialog(null, panel, title, JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+        catch (Exception e) {
+            LOG.error("Unable to open settings file", e);
+            showMessageDialog(null, "Unable to open settings file: " + getRootCauseMessage(e));
+        }
     }
 
     public static void actionShowLog(String applicationName)
@@ -99,6 +151,7 @@ public class StandaloneUserInterface
         contentPanel.add(info);
 
         JTextArea logArea = new JTextArea(20, 80);
+        logArea.setTabSize(2);
         logArea.setEditable(false);
         // Set text before setting the caret policy so we start in follow mode
         logArea.setText(getLog());
@@ -170,7 +223,8 @@ public class StandaloneUserInterface
     private static String getLog()
     {
         return RingBufferAppender.events().stream() //
-                .map(LogMessage::getMessage) //
+                .map(msg -> "[" + msg.level + "]: "
+                        + msg.getMessage().replace("↩", "").replace("\n", "↩\n\t")) //
                 .collect(Collectors.joining("\n"));
     }
 
@@ -266,6 +320,12 @@ public class StandaloneUserInterface
         MenuItem logItem = new MenuItem("Log...");
         logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
+
+        if (getSettingsFileLocation() != null) {
+            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
+            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
+            popupMenu.add(settingsPropertiesItem);
+        }
 
         MenuItem aboutItem = new MenuItem("About...");
         aboutItem.addActionListener(e -> actionShowAbout(applicationName));

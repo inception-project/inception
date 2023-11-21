@@ -92,7 +92,7 @@ public class QualifierEditor
         private Component initialFocusComponent;
 
         /**
-         * Creates a new fragement for editing a qualifier.<br>
+         * Creates a new fragment for editing a qualifier.<br>
          * The editor has two slightly different behaviors, depending on the value of
          * {@code isNewQualifier}:
          * <ul>

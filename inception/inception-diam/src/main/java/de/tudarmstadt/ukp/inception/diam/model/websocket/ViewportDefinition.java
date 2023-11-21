@@ -27,7 +27,7 @@ import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.diam.service.DiamController;
+import de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants;
 
 public class ViewportDefinition
@@ -37,32 +37,38 @@ public class ViewportDefinition
     private final String user;
     private final int begin;
     private final int end;
+    private final String format;
 
-    public ViewportDefinition(AnnotationDocument aDoc, int aBegin, int aEnd)
+    public ViewportDefinition(AnnotationDocument aDoc, int aBegin, int aEnd, String aFormat)
     {
         projectId = aDoc.getProject().getId();
         documentId = aDoc.getDocument().getId();
         user = aDoc.getUser();
         begin = aBegin;
         end = aEnd;
+        format = aFormat;
     }
 
-    public ViewportDefinition(SourceDocument aDoc, String aUser, int aBegin, int aEnd)
+    public ViewportDefinition(SourceDocument aDoc, String aUser, int aBegin, int aEnd,
+            String aFormat)
     {
         projectId = aDoc.getProject().getId();
         documentId = aDoc.getId();
         user = aUser;
         begin = aBegin;
         end = aEnd;
+        format = aFormat;
     }
 
-    public ViewportDefinition(long aProjectId, long aDocumentId, String aUser, int aBegin, int aEnd)
+    public ViewportDefinition(long aProjectId, long aDocumentId, String aUser, int aBegin, int aEnd,
+            String aFormat)
     {
         projectId = aProjectId;
         documentId = aDocumentId;
         user = aUser;
         begin = aBegin;
         end = aEnd;
+        format = aFormat;
     }
 
     public boolean matches(long aDocumentId, String aUser, int aBegin, int aEnd)
@@ -99,16 +105,22 @@ public class ViewportDefinition
         return end;
     }
 
+    public String getFormat()
+    {
+        return format;
+    }
+
     public String getTopic()
     {
         Properties properties = new Properties();
         properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
         properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
         properties.setProperty(WebSocketConstants.PARAM_USER, user);
-        properties.setProperty(DiamController.PARAM_FROM, String.valueOf(begin));
-        properties.setProperty(DiamController.PARAM_TO, String.valueOf(end));
-        return DiamController.PLACEHOLDER_RESOLVER
-                .replacePlaceholders(DiamController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
+        properties.setProperty(DiamWebsocketController.PARAM_FROM, String.valueOf(begin));
+        properties.setProperty(DiamWebsocketController.PARAM_TO, String.valueOf(end));
+        properties.setProperty(DiamWebsocketController.PARAM_FORMAT, String.valueOf(format));
+        return DiamWebsocketController.PLACEHOLDER_RESOLVER.replacePlaceholders(
+                DiamWebsocketController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
     }
 
     @Override
@@ -120,14 +132,14 @@ public class ViewportDefinition
         ViewportDefinition castOther = (ViewportDefinition) other;
         return new EqualsBuilder().append(documentId, castOther.documentId)
                 .append(user, castOther.user).append(begin, castOther.begin)
-                .append(end, castOther.end).isEquals();
+                .append(end, castOther.end).append(format, castOther.format).isEquals();
     }
 
     @Override
     public int hashCode()
     {
         return new HashCodeBuilder().append(documentId).append(user).append(begin).append(end)
-                .toHashCode();
+                .append(format).toHashCode();
     }
 
     @Override
@@ -135,6 +147,6 @@ public class ViewportDefinition
     {
         return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE)
                 .append("documentId", documentId).append("user", user).append("begin", begin)
-                .append("end", end).toString();
+                .append("end", end).append("format", format).toString();
     }
 }

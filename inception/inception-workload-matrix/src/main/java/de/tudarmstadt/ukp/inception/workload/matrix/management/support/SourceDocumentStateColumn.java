@@ -22,12 +22,12 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.Do
 
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
 
 public class SourceDocumentStateColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
@@ -43,28 +43,8 @@ public class SourceDocumentStateColumn
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
     {
-        IModel<SourceDocumentState> documentState = (IModel<SourceDocumentState>) getDataModel(
-                aRowModel);
-        Label state = new Label(aComponentId, stateSymbol(documentState.orElse(NEW).getObject()));
-        state.setEscapeModelStrings(false);
-        aItem.add(state);
-    }
-
-    private String stateSymbol(SourceDocumentState aDocState)
-    {
-        switch (aDocState) {
-        case NEW:
-            return "<i class=\"far fa-circle\"></i>";
-        case ANNOTATION_IN_PROGRESS:
-            return "<i class=\"far fa-play-circle\"></i>";
-        case ANNOTATION_FINISHED:
-            return "<i class=\"far fa-check-circle\"></i>";
-        case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-clipboard\"></i>";
-        case CURATION_FINISHED:
-            return "<i class=\"fas fa-clipboard-check\"></i>";
-        }
-
-        return "";
+        @SuppressWarnings("unchecked")
+        var documentState = (IModel<SourceDocumentState>) getDataModel(aRowModel);
+        aItem.add(new SymbolLabel(aComponentId, documentState.orElse(NEW)));
     }
 }

@@ -24,14 +24,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.project.export.controller.ExportServiceController.BASE_URL;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.nio.channels.ClosedByInterruptException;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -39,18 +41,19 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 
 public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>
     implements ProjectExportTask<R>, InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     // The task needs to hold on to the handle because it is used in a WeakHashMap in
     // ProjectExportService to allow access to tasks.
@@ -61,8 +64,8 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     private final R request;
 
     private @Autowired ServletContext servletContext;
-    private @Autowired DocumentService documentService;
-    private @Autowired SimpMessagingTemplate msgTemplate;
+    private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     public ProjectExportTask_ImplBase(Project aProject, R aRequest, String aUsername)
     {
@@ -76,8 +79,13 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
-                msgTemplate);
+        if (msgTemplate != null) {
+            monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
+                    msgTemplate);
+        }
+        else {
+            monitor = new ProjectExportTaskMonitor(project, handle, request.getTitle());
+        }
         monitor.setCreateTime(System.currentTimeMillis());
     }
 
@@ -88,10 +96,10 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(KEY_USERNAME, username);
             MDC.put(KEY_PROJECT_ID, String.valueOf(project.getId()));
-            MDC.put(KEY_REPOSITORY_PATH, documentService.getDir().toString());
+            MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             monitor.setState(RUNNING);
-            monitor.setUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
+            monitor.setUrl(format("%s%s/%s", servletContext.getContextPath(), BASE_URL,
                     monitor.getHandle().getRunId()));
 
             File exportedFile = export(request, monitor);
@@ -102,15 +110,26 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
         catch (ClosedByInterruptException | InterruptedException e) {
             monitor.setStateAndProgress(CANCELLED, 100);
         }
+        catch (ProjectExportException e) {
+            // This marks the progression as complete and causes ProgressBar#onFinished
+            // to be called where we display the messages
+            // Message needs to be added before setting the state, otherwise the notification for
+            // the
+            // message may be throttled and it may never be displayed
+            monitor.addMessage(LogMessage.error(this, "Project export failed: %s", e.getMessage()));
+            monitor.setStateAndProgress(FAILED, 100);
+            LOG.error("Error during project export", e);
+        }
         catch (Throwable e) {
             // This marks the progression as complete and causes ProgressBar#onFinished
             // to be called where we display the messages
-            // Message needs to be aded before setting the state, otherwise the notification for the
+            // Message needs to be added before setting the state, otherwise the notification for
+            // the
             // message may be throttled and it may never be displayed
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
-                    ExceptionUtils.getRootCauseMessage(e)));
+                    getRootCauseMessage(e)));
             monitor.setStateAndProgress(FAILED, 100);
-            log.error("Unexpected error during project export", e);
+            LOG.error("Unexpected error during project export", e);
         }
     }
 

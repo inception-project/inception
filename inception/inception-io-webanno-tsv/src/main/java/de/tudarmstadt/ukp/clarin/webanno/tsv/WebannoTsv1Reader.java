@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -221,7 +219,7 @@ public class WebannoTsv1Reader
      * The Second column is the token <br>
      * The third column is the lemma annotation <br>
      * The fourth column is the POS annotation <br>
-     * The fifth column is used for Named Entity annotations (Multiple annotations separeted by |
+     * The fifth column is used for Named Entity annotations (Multiple annotations separated by |
      * character) <br>
      * The sixth column is the origin token number of dependency parsing <br>
      * The seventh column is the function/type of the dependency parsing <br>
@@ -314,15 +312,9 @@ public class WebannoTsv1Reader
     {
         Resource res = nextFile();
         initCas(aJCas, res);
-        InputStream is = null;
-        try {
-            is = res.getInputStream();
+        try (InputStream is = res.getInputStream()) {
             convertToCas(aJCas, is, encoding);
         }
-        finally {
-            closeQuietly(is);
-        }
-
     }
 
     /**

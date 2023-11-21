@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
@@ -29,30 +27,22 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -67,8 +57,19 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
+@ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
 {
     protected @Mock AnnotationSchemaService schemaService;
@@ -110,8 +111,6 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        initMocks(this);
-
         SpanDiffAdapter slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
         slotHostDiffAdapter.addLinkFeature("links", "role", "target");
 
@@ -295,69 +294,71 @@ public class CasMergeTestBase
         multiValRelRel2.setVisible(true);
         multiValRelRel2.setCuratable(true);
 
-        when(schemaService.findLayer(any(Project.class), any(String.class))).thenAnswer(call -> {
-            String type = call.getArgument(1, String.class);
-            if (type.equals(Sentence.class.getName())) {
-                return sentenceLayer;
-            }
-            if (type.equals(Token.class.getName())) {
-                return tokenLayer;
-            }
-            if (type.equals(Dependency.class.getName())) {
-                return depLayer;
-            }
-            if (type.equals(POS.class.getName())) {
-                return posLayer;
-            }
-            if (type.equals(NamedEntity.class.getName())) {
-                return neLayer;
-            }
-            if (type.equals(CurationTestUtils.HOST_TYPE)) {
-                return slotLayer;
-            }
-            if (type.equals("webanno.custom.Multivalrel")) {
-                return multiValRel;
-            }
-            if (type.equals("webanno.custom.Multivalspan")) {
-                return multiValSpan;
-            }
-            throw new IllegalStateException("Unknown layer type: " + type);
-        });
+        lenient().when(schemaService.findLayer(any(Project.class), any(String.class)))
+                .thenAnswer(call -> {
+                    String type = call.getArgument(1, String.class);
+                    if (type.equals(Sentence.class.getName())) {
+                        return sentenceLayer;
+                    }
+                    if (type.equals(Token.class.getName())) {
+                        return tokenLayer;
+                    }
+                    if (type.equals(Dependency.class.getName())) {
+                        return depLayer;
+                    }
+                    if (type.equals(POS.class.getName())) {
+                        return posLayer;
+                    }
+                    if (type.equals(NamedEntity.class.getName())) {
+                        return neLayer;
+                    }
+                    if (type.equals(CurationTestUtils.HOST_TYPE)) {
+                        return slotLayer;
+                    }
+                    if (type.equals("webanno.custom.Multivalrel")) {
+                        return multiValRel;
+                    }
+                    if (type.equals("webanno.custom.Multivalspan")) {
+                        return multiValSpan;
+                    }
+                    throw new IllegalStateException("Unknown layer type: " + type);
+                });
 
-        when(schemaService.listSupportedFeatures((any(AnnotationLayer.class))))
+        lenient().when(schemaService.listSupportedFeatures((any(AnnotationLayer.class))))
                 .thenAnswer(call -> schemaService
                         .listAnnotationFeature(call.getArgument(0, AnnotationLayer.class)));
 
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> {
-            AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
-            if (type.getName().equals(Sentence.class.getName())) {
-                return asList();
-            }
-            if (type.getName().equals(Token.class.getName())) {
-                return asList();
-            }
-            if (type.getName().equals(Dependency.class.getName())) {
-                return asList(depFeature, depFlavorFeature);
-            }
-            if (type.getName().equals(POS.class.getName())) {
-                return asList(posFeature, posCoarseFeature);
-            }
-            if (type.getName().equals(NamedEntity.class.getName())) {
-                return asList(neFeature, neIdentifierFeature);
-            }
-            if (type.getName().equals(HOST_TYPE)) {
-                return asList(slotFeature, stringFeature);
-            }
-            if (type.getName().equals("webanno.custom.Multivalrel")) {
-                return asList(multiValRelRel1, multiValRelRel2);
-            }
-            if (type.getName().equals("webanno.custom.Multivalspan")) {
-                return asList(multiValSpanF1, multiValSpanF2);
-            }
-            throw new IllegalStateException("Unknown layer type: " + type.getName());
-        });
+        lenient().when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
+                .thenAnswer(call -> {
+                    AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
+                    if (type.getName().equals(Sentence.class.getName())) {
+                        return asList();
+                    }
+                    if (type.getName().equals(Token.class.getName())) {
+                        return asList();
+                    }
+                    if (type.getName().equals(Dependency.class.getName())) {
+                        return asList(depFeature, depFlavorFeature);
+                    }
+                    if (type.getName().equals(POS.class.getName())) {
+                        return asList(posFeature, posCoarseFeature);
+                    }
+                    if (type.getName().equals(NamedEntity.class.getName())) {
+                        return asList(neFeature, neIdentifierFeature);
+                    }
+                    if (type.getName().equals(HOST_TYPE)) {
+                        return asList(slotFeature, stringFeature);
+                    }
+                    if (type.getName().equals("webanno.custom.Multivalrel")) {
+                        return asList(multiValRelRel1, multiValRelRel2);
+                    }
+                    if (type.getName().equals("webanno.custom.Multivalspan")) {
+                        return asList(multiValSpanF1, multiValSpanF2);
+                    }
+                    throw new IllegalStateException("Unknown layer type: " + type.getName());
+                });
 
-        when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> {
+        lenient().when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> {
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
             return layerSupportRegistry.getLayerSupport(type).createAdapter(type,
                     () -> schemaService.listAnnotationFeature(type));
@@ -365,7 +366,7 @@ public class CasMergeTestBase
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
+                        new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
@@ -377,6 +378,6 @@ public class CasMergeTestBase
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
 
-        sut = new CasMerge(schemaService);
+        sut = new CasMerge(schemaService, null);
     }
 }

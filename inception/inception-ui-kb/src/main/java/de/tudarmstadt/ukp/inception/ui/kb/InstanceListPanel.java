@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -92,7 +92,7 @@ public class InstanceListPanel
                         new AjaxInstanceSelectionEvent(target, aInstance.getObject()))));
         add(overviewList);
 
-        add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
+        add(new Label("count", overviewList.getChoicesModel().map(Collection::size)));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
                 target -> send(getPage(), Broadcast.BREADTH, new AjaxNewInstanceEvent(target)));

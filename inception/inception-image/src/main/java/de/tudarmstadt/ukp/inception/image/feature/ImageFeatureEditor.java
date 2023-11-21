@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 
 public class ImageFeatureEditor
     extends FeatureEditor
@@ -87,7 +87,7 @@ public class ImageFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<?> getFocusComponent()
     {
         return field;
     }

@@ -43,10 +43,13 @@ public interface PhysicalIndex
      * is closed before.
      * 
      * @throws IOException
+     *             if there was an I/O-level problem
      */
     void delete() throws IOException;
 
     boolean isOpen();
+
+    void open() throws IOException;
 
     void close();
 
@@ -69,6 +72,7 @@ public interface PhysicalIndex
 
     void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
+    @Deprecated
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
 
     void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
@@ -85,6 +89,7 @@ public interface PhysicalIndex
      * @return The first found document timestamp field value. Empty string if document is not
      *         found.
      * @throws IOException
+     *             if there was an I/O-level problem
      */
     public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException;
 

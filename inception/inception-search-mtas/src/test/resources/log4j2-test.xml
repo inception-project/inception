@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%thread] %level{length=5} %logger{1} - %msg%n" />
+    </Console>
+  </Appenders>
+
+  <Loggers>
+<!--     <Logger name="mtas" level="INFO"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.search" level="TRACE"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl" level="INFO"/> -->
+<!-- 		<logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl" level="INFO"/> -->
+<!-- 		<Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession" level="INFO"/> -->
+<!-- 		<Logger name="de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl" level="TRACE"/> -->
+<!-- 		<Logger name="org.springframework.transaction.support.TransactionSynchronizationUtils" level="DEBUG"/> -->
+
+    <Root level="WARN">
+      <AppenderRef ref="ConsoleAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

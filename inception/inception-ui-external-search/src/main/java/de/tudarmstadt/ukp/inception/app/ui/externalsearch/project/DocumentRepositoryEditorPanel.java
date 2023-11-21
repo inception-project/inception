@@ -37,7 +37,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistry;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class DocumentRepositoryEditorPanel
     extends Panel
@@ -102,7 +102,7 @@ public class DocumentRepositoryEditorPanel
             {
                 Component newProperties;
                 if (form.getModelObject() != null && getModelObject() != null) {
-                    ExternalSearchProviderFactory espf = repositoryRegistry
+                    ExternalSearchProviderFactory<?> espf = repositoryRegistry
                             .getExternalSearchProviderFactory(getModelObject().getKey());
                     newProperties = espf.createTraitsEditor(MID_PROPERTIES, form.getModel());
                 }

@@ -28,12 +28,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @Configuration
 public class ProjectServiceAutoConfiguration
@@ -56,4 +59,18 @@ public class ProjectServiceAutoConfiguration
     {
         return new ProjectPermissionExtension(aUserService, aProjectService);
     }
+
+    @Bean
+    public ProjectPermissionsExporter projectPermissionsExporter(ProjectService aProjectService,
+            UserDao aUserService)
+    {
+        return new ProjectPermissionsExporter(aProjectService, aUserService);
+    }
+
+    @Bean
+    public ProjectAccess projectAccess(UserDao aUserService, ProjectService aProjectService)
+    {
+        return new ProjectAccessImpl(aUserService, aProjectService);
+    }
+
 }

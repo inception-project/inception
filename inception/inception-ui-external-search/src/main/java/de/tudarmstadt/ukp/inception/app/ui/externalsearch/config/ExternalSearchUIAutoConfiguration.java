@@ -19,22 +19,24 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.SearchPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.project.DocumentRepositoryProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.project.ProjectDocumentRepositoriesMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchAnnotationSidebarFactory;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporterImpl;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 
 /**
  * Provides all UI-level Spring beans for the external search functionality.
  */
+@ConditionalOnWebApplication
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
 @ConditionalOnBean(ExternalSearchService.class)

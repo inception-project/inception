@@ -122,8 +122,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         s1.addToIndexes();
         t1.setStem(s1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList(MorphologicalFeatures.class, POS.class, Lemma.class, Stem.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -156,8 +155,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         dep1.setEnd(dep1.getDependent().getEnd());
         dep1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(POS.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList(Dependency.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -172,7 +170,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         new Span(jcas, jcas.getDocumentText().length(), jcas.getDocumentText().length())
                 .addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -190,7 +188,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne2.setValue("ORG");
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -211,8 +209,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 jcas.getDocumentText().length());
         cas.addFsToIndexes(fs2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -231,8 +228,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         AnnotationFS fs1a = cas.createAnnotation(simpleSpanType, 4, 4);
         cas.addFsToIndexes(fs1a);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -258,8 +254,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 jcas.getDocumentText().length());
         cas.addFsToIndexes(fs4);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -275,7 +270,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -293,7 +288,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne2.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -306,7 +301,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -320,7 +315,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -334,7 +329,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -348,7 +343,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -358,7 +353,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jCas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jCas);
     }
 
     @Test
@@ -374,7 +369,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -390,7 +385,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -404,7 +399,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -415,7 +410,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -426,7 +421,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne1 = new Span(jcas, 0, 6);
         ne1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -437,7 +432,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne1 = new Span(jcas, 1, 6);
         ne1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -445,12 +440,10 @@ public abstract class WebAnnoTsv3WriterTestBase
     {
         JCas jcas = makeJCasOneSentence();
 
-        Span ne1 = new Span(jcas, 1, 6);
-        ne1.addToIndexes();
-        Span ne2 = new Span(jcas, 6, 12);
-        ne2.addToIndexes();
+        new Span(jcas, 1, 6).addToIndexes();
+        new Span(jcas, 6, 12).addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -459,22 +452,24 @@ public abstract class WebAnnoTsv3WriterTestBase
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
         assertEquals(asList("aaaaaa", "bbbbbb", "cccccc"), toText(select(jcas, Token.class)));
 
-        // 1111111111
-        // 01234567890123456789
-        // --------------------
-        // aaaaaa bbbbbb cccccc
-        // 1 ------ - single token
-        // 2 ------+------ - multi-token
-        // 3 -- - inside token
-        // 4 ---- - token prefix
-        // 5 ---- - token suffix
-        // 6 ---+------ - multi-token prefix
-        // 7 ------+--- - multi-token suffix
-        // 8 ---+--- - multi-token prefix + suffix
-        // 9 ---+------+--- - multi-token prefix + full + suffix
-        // 10 | - zero-span inside token
-        // 11 | - zero-span beginning of token
-        // 12 | - zero-span end of token
+        // @formatter:off
+        //               1111111111 
+        //     01234567890123456789
+        //     --------------------
+        //     aaaaaa bbbbbb cccccc
+        //  1  ------               - single token
+        //  2  ------+------        - multi-token
+        //  3           --          - inside token
+        //  4         ----          - token prefix
+        //  5           ----        - token suffix
+        //  6     ---+------        - multi-token prefix 
+        //  7  ------+---           - multi-token suffix
+        //  8     ---+---           - multi-token prefix + suffix
+        //  9     ---+------+---    - multi-token prefix + full + suffix
+        // 10            |          - zero-span inside token
+        // 11         |             - zero-span beginning of token
+        // 12               |       - zero-span end of token
+        // @formatter:on
 
         List<Span> annotations = new ArrayList<>();
         annotations.add(new Span(jcas, 0, 6)); // 1
@@ -495,7 +490,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         });
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -554,7 +549,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         });
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -568,7 +563,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne2 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -580,7 +575,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne.setValue("PERSON");
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -596,7 +591,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne2.setValue("LOCATION");
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -607,7 +602,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -619,7 +614,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne.setValue("PERSON");
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -646,8 +641,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -679,8 +673,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -715,8 +708,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -750,8 +742,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -785,8 +776,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -821,8 +811,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -854,8 +843,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.SimpleRelation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -889,8 +877,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -927,8 +914,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -977,8 +963,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs2, "integerValue", 43);
         cas.addFsToIndexes(fs2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Disabled("Relations between different layers not supported in WebAnno TSV 3 atm")
@@ -1009,8 +994,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
-                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1038,8 +1022,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "value", "nsubj");
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1069,8 +1052,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.ComplexRelation"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1096,11 +1078,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1124,11 +1102,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeLinkHostFS(jcas, "webanno.custom.FlexLinkHost", t1.getBegin(), t1.getEnd(),
                 (FeatureStructure[]) null);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.FlexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1154,11 +1128,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1191,11 +1161,7 @@ public abstract class WebAnnoTsv3WriterTestBase
             makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1221,11 +1187,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1252,11 +1214,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeLinkHostFS(jcas, "webanno.custom.ComplexLinkHost", t1.getBegin(), t1.getEnd(), link1,
                 link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1291,11 +1249,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                     link1, link2);
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1324,11 +1278,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 t1.getEnd());
         setFeature(host2, "value", "val2");
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1354,11 +1304,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1386,11 +1332,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1416,11 +1358,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1446,11 +1384,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getBegin(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1476,11 +1410,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
-                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
-                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1503,8 +1433,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                         link, cas, t2.getBegin(), t2.getEnd(), null, null,
                         makeChainLink(link, cas, t3.getBegin(), t3.getEnd(), null, null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1526,8 +1455,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeChainHead(head, makeChainLink(link, cas, t1.getBegin(), t2.getEnd(), null, null,
                 makeChainLink(link, cas, t3.getBegin(), t4.getEnd(), null, null, null)));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1555,8 +1483,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                         link, cas, t2.getBegin(), t2.getEnd(), null, null,
                         makeChainLink(link, cas, t1.getBegin(), t1.getEnd(), null, null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1580,8 +1507,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                                 makeChainLink(link, cas, t4.getBegin() + 1, t4.getEnd() - 1, null,
                                         null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1592,7 +1518,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1603,7 +1529,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1614,7 +1540,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 10, 12);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas);
     }
 
     @Test
@@ -1838,7 +1764,23 @@ public abstract class WebAnnoTsv3WriterTestBase
         Relation r = new Relation(jcas, s2.getBegin(), s2.getEnd());
         r.setGovernor(s1);
         r.setDependent(s2);
-        asList(s1, s2).forEach(Annotation::addToIndexes);
+        asList(s1, s2, r).forEach(Annotation::addToIndexes);
+
+        writeAndAssertEquals(jcas);
+    }
+
+    @Test
+    public void testSubTokenRelation2() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence("Test again");
+        Span s1 = new Span(jcas, 0, 1);
+        s1.setValue("OTH");
+        Span s2 = new Span(jcas, 5, 10);
+        s2.setValue("OTH");
+        Relation r = new Relation(jcas, s2.getBegin(), s2.getEnd());
+        r.setGovernor(s1);
+        r.setDependent(s2);
+        asList(s1, s2, r).forEach(Annotation::addToIndexes);
 
         writeAndAssertEquals(jcas);
     }
@@ -1868,9 +1810,9 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         List<Object> params = new ArrayList<>();
         params.addAll(asList(aParams));
-        params.add(WebannoTsv3Writer.PARAM_TARGET_LOCATION);
+        params.add(WebannoTsv3XWriter.PARAM_TARGET_LOCATION);
         params.add(targetFolder);
-        params.add(WebannoTsv3Writer.PARAM_OVERWRITE);
+        params.add(WebannoTsv3XWriter.PARAM_OVERWRITE);
         params.add(true);
 
         AnalysisEngineDescription tsv = makeWriter();

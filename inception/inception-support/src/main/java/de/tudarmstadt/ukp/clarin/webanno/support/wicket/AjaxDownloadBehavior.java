@@ -91,6 +91,9 @@ public class AjaxDownloadBehavior
             else if (is instanceof FileSystemResourceStream) {
                 name = ((FileSystemResourceStream) is).getPath().getFileName().toString();
             }
+            else if (is instanceof InputStreamResourceStream) {
+                name = ((InputStreamResourceStream) is).getName();
+            }
         }
 
         ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(is, name);

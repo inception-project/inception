@@ -25,23 +25,12 @@
           <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="btn-group" role="group">
               <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
-              <button class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
-              <div class="dropdown-menu shadow-lg pt-0 pb-0 w-min-220px" role="menu">
-                <div class="dropdown-header">Instantly create a project using one of these templates.</div>
-                <div wicket:id="templatesContainer">
-                  <div wicket:id="templates" class="flex-content flex-v-container">
-                    <button wicket:id="createProjectUsingTemplate" class="dropdown-item">
-                      <wicket:container wicket:id="name"/>
-                    </button>
-                  </div>
-                </div>
-              </div>
             </span>
           </span>
           <span wicket:id="projectImportGroup" class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
             <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
             </button>
-            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
+            <div class="border-0 dropdown-menu shadow-lg pt-0 pb-0" role="menu">
               <wicket:container wicket:id="importProjectPanel" />
             </div>
           </span>
@@ -50,25 +39,31 @@
             Start Tutorial
           </button>
         </div>
-        <div class="flex-content"></div>
-      <div class="flex-h-container flex-gutter justify-content-end flex-only-internal-gutter">
+        <div class="flex-content"/>
         <div>
-          <div wicket:id="roleFilters" class="input-group">
+          <div class="input-group">
             <div class="input-group-text">
-              <i class="fas fa-filter"></i>
+              <i class="fas fa-sort"/>
             </div>
-            <wicket:container wicket:id="roleFilter">
-              <button type="button" class="btn btn-outline-secondary" wicket:id="roleFilterLink">
-                <wicket:container wicket:id="label"/>
-              </button>
-            </wicket:container>
+            <select wicket:id="sortOrder" class="form-select"/>
           </div>
         </div>
+        <div wicket:id="roleFilter"/>
       </div>
+      <div class="flex-h-container">
+        <div class="flex-content mx-3" wicket:enclosure="nameFilter">
+          <div class="input-group mb-3">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+          </div>
+        </div>
+        <ul wicket:id="pagingNavigator" class="me-3"/>
       </div>
-      <div class="scrolling flex-content flex-h-container">
-        <div wicket:id="projects" class="flex-content list-group">
-          <div wicket:id="emptyListLabel" class="no-data-notice flex-content"></div>
+      <div class="scrolling flex-content flex-h-container mx-3 mb-3 card">
+        <div wicket:id="emptyListLabel" class="no-data-notice flex-content"></div>
+        <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
           <div wicket:id="project" class="list-group-item">
             <div class="d-flex">
               <div class="flex-grow-1 d-flex flex-column">
@@ -82,7 +77,7 @@
                 </div>
               </div>
               <div class="d-flex flex-column text-end">
-                <div class="d-flex flex-nowrap">
+                <div class="d-flex flex-nowrap flex-row-reverse">
                   <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
                 </div>
                 <div class="text-nowrap mt-auto">
@@ -98,7 +93,7 @@
                   <ul class="dropdown-menu float-end" role="menu">
                     <li>
                       <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
-                        <wicket:message key="leaveDialog.title"/>
+                        <wicket:message key="leaveProject"/>
                       </button>
                     </li>
                   </ul>
@@ -107,7 +102,7 @@
   	        </div>
           </div>
         </div>
-        <div wicket:id="confirmLeave"></div>
+        <div wicket:id="dialog"></div>
       </div>
     </div>
   </wicket:extend>

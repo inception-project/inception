@@ -25,12 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#editorAjaxRequestHandlerExtensionPoint}.
+ * {@link DiamAutoConfig#editorAjaxRequestHandlerExtensionPoint}.
  * </p>
  */
 public class EditorAjaxRequestHandlerExtensionPointImpl
@@ -49,5 +49,17 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
         return getExtensions().stream() //
                 .filter(handler -> handler.accepts(aRequest)) //
                 .findFirst();
+    }
+
+    @Override
+    public List<EditorAjaxRequestHandler> getExtensions(Request aContext)
+    {
+        // EditorAjaxRequestHandler::accept may have side-effects! In particular the
+        // ImplicitUnarmSlotHandler. You do not want this side effect to unarm a slot while
+        // filtering the list of potentially matching extensions.
+        // log.warn("EditorAjaxRequestHandler::accept may have side-effects! Do not use this
+        // method.");
+        // return super.getExtensions(aContext);
+        throw new UnsupportedOperationException("Use getExtensions() instead!");
     }
 }

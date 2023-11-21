@@ -1,0 +1,58 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Editable segmentation
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.sentence-layer-editable=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_segmentation, Admin Guide>>).
+====
+
+Often, after importing a text into {product-name}, one discovers that a segment boundary (e.g. a 
+sentence boundary) was not properly recognized or there was a segmentation mistake in the original
+data. Normally, such mistakes cannot be corrected. Enabling the experimental 
+**editable sentence layer** feature can help in such cases. 
+
+Please note this feature is new and has not been tested a lot in practice yet. There may be
+unexpected side effects when manually editing sentences. For example, normally it is expected that:
+
+* the entire text is covered by token and sentence annotations;
+* no tokens exist outside sentence boundaries;
+* sentences start at a token start boundary and end at a token end boundary.
+
+However, when you enable this feature, you will eventually be able to delete sentences (which leaves
+tokens lying around outside sentence boundaries) or create other odd situations which exporters, 
+curation, recommenders, editors and other functionalities may not yet be able to deal with. So be
+careful, ready to face unexpected situations and make regular backups of course.
+
+Once the feature has been enabled, new projects get a **Sentence** layer. It is also possible to
+add a sentence layer to existing project from the dropdown menu of the **create layer** button where
+other built-in layers can also be added to a project that does not yet contain them. By default, the
+layer is **not enabled** and **read-only** which means that you can neither see the sentence 
+annotations in the annotation editor nor create or delete sentence annotations. To make the sentences 
+visible and editable for the annotators, check the **enabled** checkbox and un-check the 
+**read-only** checkbox and save the layer settings.
+
+While the sentence layer is editable (i.e. enabled and not read-only), the annotation page and the curation page default to a line-oriented editor instead of the usual sentence-oriented editor. In
+the line-oriented editor, the sentences can be safely shown and edited because the editor does not
+rely on sentence boundaries to control the rendering process. It is then possible to curate the
+sentence boundaries.
+
+NOTE: If you start curating a document while the sentence layer is editable but then switch it back
+      not being editable, then it could happen that different annotators have different segmentations and/or that the curation
+      document does not contain all sentence boundaries. This means that some sentences may be invisible because the 
+      the sentence-oriented visualization does not display them!
+
+

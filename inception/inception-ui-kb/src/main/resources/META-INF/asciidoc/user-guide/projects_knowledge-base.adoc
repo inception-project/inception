@@ -23,25 +23,47 @@ There are various settings for knowledge bases.
 [.thumb]
 image::kb3.png[align="center"]
 
+=== Local KBs
+
+* **Read only:** Whether the KB can be modified. This setting is disabled by default. Enabling it
+  prevents making changes to the KB and allows for more effective query caching.
+
 === Remote KBs
 
 The remote knowledge bases, there are the following settings:
 
 * **SPARQL endpoint URL:** The SPARQL URL used to access the knowledge base
+* **Skip SSL certificate checks:** Enable to skip the verification of SSL certificates. This can
+  help if the remote server is using a self-signed certificate. It should be avoided to use this
+  option in production. Instead, better install the remote certificate into your Java environment
+  so it can be validated. 
 * **Default dataset:** A SPARQL endpoint may server multiple datasets. This setting can be used to
   restrict queries to a specific one. Consult with the operator of the SPARQL server to see which
   datasets are available.
+
+NOTE: **Changing the URL of a remote KB currently only takes affect after {product-name} is restarted!**
+      The updated URL will be shown in the settings, but queries will still be sent to the old URL until you restart {product-name}.
+      This also means that if you add, remove or change HTTP "Basic" authentication that are part of the URL, they will not
+      take effect until you restart. It is usually easier to delete the remote KB configuration and create it from scratch
+      with the new URL.
+
+
+=== Query settings
+
+* **Use fuzzy matching:** enables fuzzy matching when searching the knowledge base. The effect is
+  slightly different depending on the backend being used and it can **significantly slow down** the
+  retrieval process. It is normally a good idea to leave this feature off. If you would like to 
+  retrieve items from the knowledge base which only approximately match a query (e.g. you would 
+  like that an entry `John` is matched if you enter `Johan` or vice versa), then you could try
+  this out. 
 * **Result limit for SPARQL queries:** this is used to limit the amount of data retrieved from the
   remote server, e.g when populating dropdown boxes for concept search.
-* **Full text search mode:** a SPARQL endpoint capable of full-text searching makes the knowledge
-  based considerably more responsive. Use `bif:contains` for Virtuoso servers and `lucenesail` for
-  RDF4J-based servers. Note that full-text search must be enabled on the server by the server 
-  operator.
 
 
 === Schema mapping
 
-Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide a custom mapping.
+Different types of knowledge base schemata are supported via a configurable mapping mechanism. The
+user can choose one of the pre-configured mapping or provide a custom mapping.
 
 
 [cols="1,1,3a"]
@@ -223,15 +245,67 @@ NOTE: Not all remote SPARQL knowledge bases may support additional matching prop
 
 Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 
+* `http://www.openrdf.org/contrib/lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
 * `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
-* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints. Note that on the side of the Fuseki server, the full text index must be configured with the options `text:storeValues` and `text:multilingualSupport` both set to `true` (cf. link:https://jena.apache.org/documentation/query/text-query.html[Text Dataset Assembler documentation]).
-* `\https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
-* `lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
+* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
+* `tag:stardog:api:search:textMatch`: use with link:https://www.stardog.com[Stardog].
+* `https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
 * `FTS:NONE`: use if there is no full text search support in the triple store - this will be very slow in particular for large KBs.
+
+==== Apache Jena Fuseki
+
+To enable the full text index on the Fuseki server side, set the options options `text:storeValues` and
+`text:multilingualSupport` both to `true` (cf. link:https://jena.apache.org/documentation/query/text-query.html[Text Dataset Assembler documentation]).
+
+Fuseki databases are usually accessible via SPARQL at `http://localhost:3030/DATABASE-NAME/sparql` or
+`http://localhost:3030/DATABASE-NAME/query`.
+
+==== Stardog
+
+To enable full text search in a Stardog database, create the database with the option 
+`search.enabled=true`.
+
+.Example creation of FTS-enabled Stardog database
+----
+stardog-admin db create -n DATABASE-NAME -o search.enabled=true -- knowledgebase.ttl
+----
+
+Stardog databases are usually accessible via SPARQL at `http://localhost:5820/DATABASE-NAME/query`.
+You may have to specify credentials as part of the URL to gain access.
+
+==== SPARQL Endpoint Authentication
+
+{product-name} supports endpoints require authentication. The following authentication mechanisms
+are supported.
+
+* HTTP basic authentication
+* OAuth (client credentials)
+
+To enable authentication, select one of the options from the **Authentication** dropdown menu.
+
+NOTE: To protect you credentials while sending them to the remote side, it is strongly recommended
+      to use a HTTPS connection to the SPARQL endpoint and keep SSL certificate checking enabled.
+
+.HTTP "basic" authentication
+This is a simple mechanism that sends a username and password on every request. 
+
+.OAuth (client credentials) authentication
+This mechanism uses the client ID and client secret to obtain an authentication token which is then
+used for subsequent requests. Once the token expires, a new token is requested.
+
+====
+CAUTION: Legacy feature. It is also possible to use HTTP basic authentication by prefixing the 
+      SPARQL URL with the username and password (`http://USERNAME:PASSWORD@localhost:5820/mock/query`). 
+      However, this is not recommended. For example, the password will be visible to anybody being able to 
+      access the knowledge base settings. This option is only supported for backwards compatibility and will
+      be removed in future versions.
+====
 
 === Importing RDF
 
-KBs can be populated by importing RDF files. Several formats are supported. The type of the file is determined by the file extension. So make sure the files have the correct extension when you import them, otherwise nothing might be imported from them despite a potentially long waiting time. The application suppports GZIP compressed files (ending in `.gz`, so e.g. `.ttl.gz`), so we recommend compressing the files before uploading them as this can significantly improve the import time due to a reduced transfer time across the network.
+NOTE: You can only import data into local KBs. Remote KBs are always read-only.
+
+KBs can be populated by importing RDF files. Several formats are supported. The type of the file is determined by the file extension. So make sure the files have the correct extension when you import them, otherwise nothing might be imported from them despite a potentially long waiting time. The application supports GZIP compressed files (ending in `.gz`, so e.g. `.ttl.gz`), so we recommend compressing the files before uploading them as this can significantly improve the import time due to a reduced transfer time across the network.
 
 |====
 | Format | Extension

@@ -44,3 +44,97 @@ webhooks.globalHooks[0].topics[1]=ANNOTATION_STATE
 webhooks.globalHooks[0].topics[2]=PROJECT_STATE
 webhooks.globalHooks[0].verify-certificates=false
 ----
+
+TIP: You can test receiving WebHooks e.g. using link:https://pypi.org/project/pyserv/[pyserv] or link:https://en.wikipedia.org/wiki/Netcat[netcat].
+
+== Authentication headers
+
+If the recipient of the webhook requires an authentication header, you can configure the header and
+its value.
+
+```
+webhooks.globalHooks[0].auth-header=Bearer
+webhooks.globalHooks[0].auth-header-value=MY-SECRET-TOKEN
+```
+
+== Retries
+
+In some cases, the recipient of a webhook notification may be temporarily unavailable. It is possible to retry the delivery of a notification several times before giving up. By default,
+only one delivery attempt is made (`webhooks.retry-count=0`). However, you can configure up to three additional attempts with a delay of up to 5000ms between them.
+
+```
+webhooks.retry-count=3
+webhooks.retry-delay=5000
+```
+
+NOTE: Events being triggered while {product-name} is being shut down may not trigger any webhook deliveries.
+
+== Bulk changes
+
+When performing bulk changes of annotation states (i.e. via the workload management page), no 
+individual `ANNOTATION_STATE` events are  generated. The document and project states are re-calculated
+after the bulk change and depending on whether the bulk action had any effect on them,
+`DOCUMENT_STATE` and/or `PROJECT_STATE` events are generated.
+
+== Message examples
+
+When a webhook is triggered, it sends a HTTP `POST` request to the configured URL. The `X-AERO-Notification` header indicates the topic and the body of the request is a JSON structure providing
+details about the state change. The JSON in the examples below have been pretty-printed for your
+convenient - the actual messages are not pretty-printed.
+
+.Example `PROJECT_STATE`
+----
+{
+  "timestamp": 1234567890,
+  "projectId": 123,
+  "projectName": "Example project",
+  "projectPreviousState": "CURATION-IN-PROGRESS",
+  "projectState": "ANNOTATION-IN-PROGRESS"
+}
+----
+
+.Example `DOCUMENT_STATE`
+----
+{
+  "timestamp": 1234567890,
+  "projectId": 123,
+  "projectName": "Example project",
+  "documentId": 565,
+  "documentName": "document.txt",
+  "documentPreviousState": "CURATION-IN-PROGRESS",
+  "documentState": "ANNOTATION-IN-PROGRESS"
+}
+----
+
+.Example `ANNOTATION_STATE`
+----
+{
+  "timestamp": 1234567890,
+  "projectId": 123,
+  "projectName": "Example project",
+  "documentId": 565,
+  "documentName": "document.txt",
+  "user": "annotator1",
+  "annotationUser": "annotator1",
+  "annotationPreviousState": "COMPLETE",
+  "annotationState": "COMPLETE",
+  "annotatorAnnotationState": "IN_PROGRESS",
+  "annotatorComment":"Test comment"
+}
+----
+
+In the `ANNOTATION_STATE` message, we have two fields containing a user name: `user` and `annotationUser`.
+Usually, these two fields will be the same. They differ if a user changes the state of a document
+of another user. An example is when a curator marks the curation of a document as finished. In this
+case, the curator's username is in the field `user` while the `annotationUser` field has the value
+`CURATION_USER`.
+
+The effective annotation state can be found in the `annotationState` field. However, it can be the
+case that a manager has overridden the state, e.g. because an annotator forgot to mark a document
+as finished. The `annotatorAnnotationState` field contains the state that was  (implicitly) set by the
+annotator.
+
+The `annotatorComment` field contains the comment that annotators can set when closing a document
+and is typically used to report a problem with the document. Thus, it can typically be found only
+when the `annotatorState` is `COMPLETE` (document closed as successful) or `LOCKED` (document closed
+as not successful).

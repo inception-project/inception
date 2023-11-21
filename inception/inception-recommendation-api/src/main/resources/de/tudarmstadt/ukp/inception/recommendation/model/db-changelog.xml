@@ -60,15 +60,6 @@
             newDataType="DOUBLE"/>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20180112-01-undo.1">
-    <preConditions onFail="MARK_RAN">
-      <changeSetExecuted id="20180112-01" author="INCEpTION Team" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml" />
-    </preConditions>
-    <modifyDataType tableName="recommender" columnName="id" newDataType="BIGINT" />
-    <addAutoIncrement tableName="recommender" columnName="id" columnDataType="BIGINT" />
-    <addNotNullConstraint tableName="recommender" columnName="id" columnDataType="BIGINT" />
-  </changeSet>
-
   <changeSet author="INCEpTION Team" id="20180114-al-00">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -238,8 +229,15 @@
     </addColumn>
   </changeSet>
 
-  <changeSet author="INCEpTION Team" id="20180301-recommendation-01">
-    <sql>update recommender set alwaysSelected = true where alwaysSelected is null</sql>
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01b" dbms="!postgresql">
+    <sql>update recommender set alwaysSelected = b'1' where alwaysSelected is null</sql>
+    <addNotNullConstraint tableName="recommender"
+      columnName="alwaysSelected" columnDataType="BOOLEAN"
+     />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20180301-recommendation-01b-pg" dbms="postgresql">
+    <sql>update recommender set "alwaysSelected" = b'1' where "alwaysSelected" is null</sql>
     <addNotNullConstraint tableName="recommender"
       columnName="alwaysSelected" columnDataType="BOOLEAN"
      />
@@ -373,10 +371,16 @@
    - We had a bug that this setting was not properly initialized when importing projects that
    - where this setting did not exist yet. For such cases, we set the value to the default here. 
    -->
-  <changeSet author="INCEpTION Team" id="20181116-1">
+  <changeSet author="INCEpTION Team" id="20181116-1b" dbms="!postgresql">
     <update tableName="recommender">
       <column name="maxRecommendations" type="INT" valueNumeric="3"/>
       <where>maxRecommendations = 0</where>
+    </update>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20181116-1b-pg" dbms="postgresql">
+    <update tableName="recommender">
+      <column name="maxRecommendations" type="INT" valueNumeric="3"/>
+      <where>"maxRecommendations" = 0</where>
     </update>
   </changeSet>
 
@@ -396,19 +400,40 @@
     </createTable>
   </changeSet>
   
-  <changeSet author="INCEpTION Team" id="20190104-1">
+  <!-- 
+     Changeset "20190104-1" was orignally doing all what a,b,c and doing now. If it was executed,
+     the feature column has already been migrated and does not need to be migrated again. On a
+     new DB, we should execute everything
+    -->
+  <changeSet author="INCEpTION Team" id="20190104-1a">
+    <preConditions onFail="MARK_RAN">
+      <not><changeSetExecuted author="INCEpTION Team" id="20190104-1" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/></not>
+    </preConditions>
     <delete tableName="recommender">
       <where>feature IS NULL</where>
     </delete>
     <addColumn tableName="recommender">
       <column name="featuremigration" type="BIGINT"/>
     </addColumn>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20190104-1b">
+    <preConditions onFail="MARK_RAN">
+      <not><changeSetExecuted author="INCEpTION Team" id="20190104-1" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/></not>
+    </preConditions>
     <sql>
-      UPDATE recommender rec
-      SET rec.featuremigration = (SELECT feat.id
+      UPDATE recommender AS rec
+      SET featuremigration = (SELECT feat.id
         FROM annotation_feature feat
         WHERE rec.feature = feat.name AND rec.layer = feat.annotation_type)
     </sql>
+  </changeSet>
+    
+  <changeSet author="INCEpTION Team" id="20190104-1c">
+    <preConditions onFail="MARK_RAN">
+      <not><changeSetExecuted author="INCEpTION Team" id="20190104-1" changeLogFile="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/></not>
+      <columnExists tableName="recommender" columnName="featuremigration"/>
+    </preConditions>
     <renameColumn tableName="recommender"
         newColumnName="deprecatedfeaturename"
         oldColumnName="feature"

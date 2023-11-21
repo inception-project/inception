@@ -19,33 +19,50 @@ package de.tudarmstadt.ukp.inception.workload.matrix.trait;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
- * Trait class for default matrix workload
+ * Trait class for matrix workload
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MatrixWorkloadTraits
     implements Serializable
 {
     private static final long serialVersionUID = 6984531953353384507L;
-    private static final String MATRIX_WORKLOAD_TRAIT = "matrix";
 
-    private int defaultNumberOfAnnotations;
+    private boolean reopenableByAnnotator = false;
 
-    public MatrixWorkloadTraits()
+    private boolean randomDocumentAccessAllowed = true;
+
+    private boolean documentResetAllowed = true;
+
+    public boolean isReopenableByAnnotator()
     {
+        return reopenableByAnnotator;
     }
 
-    public String getType()
+    public void setReopenableByAnnotator(boolean aReopenableByAnnotator)
     {
-        return MATRIX_WORKLOAD_TRAIT;
+        reopenableByAnnotator = aReopenableByAnnotator;
     }
 
-    public int getDefaultNumberOfAnnotations()
+    public boolean isRandomDocumentAccessAllowed()
     {
-        return defaultNumberOfAnnotations;
+        return randomDocumentAccessAllowed;
     }
 
-    public void setDefaultNumberOfAnnotations(int defaultNumberOfAnnotations)
+    public void setRandomDocumentAccessAllowed(boolean aRandomDocumentAccessAllowed)
     {
-        this.defaultNumberOfAnnotations = defaultNumberOfAnnotations;
+        randomDocumentAccessAllowed = aRandomDocumentAccessAllowed;
+    }
+
+    public boolean isDocumentResetAllowed()
+    {
+        return documentResetAllowed;
+    }
+
+    public void setDocumentResetAllowed(boolean aDocumentResetAllowed)
+    {
+        documentResetAllowed = aDocumentResetAllowed;
     }
 }

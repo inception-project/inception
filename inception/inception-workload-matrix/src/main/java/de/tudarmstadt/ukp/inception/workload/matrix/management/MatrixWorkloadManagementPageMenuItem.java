@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
@@ -26,12 +28,13 @@ import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import wicket.contrib.input.events.key.KeyType;
 
 @Component
 @Order(300)
@@ -78,8 +81,7 @@ public class MatrixWorkloadManagementPageMenuItem
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(aProject, user)
-                || projectService.isManager(aProject, user))
+        return projectService.hasRole(user, aProject, CURATOR, MANAGER)
                 && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                         .loadOrCreateWorkloadManagerConfiguration(aProject).getType());
     }
@@ -88,5 +90,11 @@ public class MatrixWorkloadManagementPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return MatrixWorkloadManagementPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.w };
     }
 }

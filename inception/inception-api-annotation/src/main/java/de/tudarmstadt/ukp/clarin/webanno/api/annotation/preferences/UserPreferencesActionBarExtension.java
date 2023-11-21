@@ -17,18 +17,41 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 @Order(10000)
 @Component
 public class UserPreferencesActionBarExtension
     implements ActionBarExtension
 {
+    private final PreferencesService preferencesService;
+
+    public UserPreferencesActionBarExtension(PreferencesService aPreferencesService)
+    {
+        super();
+        preferencesService = aPreferencesService;
+    }
+
+    @Override
+    public boolean accepts(AnnotationPageBase aPage)
+    {
+        AnnotationEditorState editorState = preferencesService
+                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, aPage.getProject());
+
+        return editorState.isPreferencesAccessAllowed()
+                || aPage.getModelObject().getMode() == CURATION;
+    }
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {

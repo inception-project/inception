@@ -32,13 +32,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/search/${" + PAGE_PARAM_REPOSITORY_ID
         + "}/${" + PAGE_PARAM_COLLECTION_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}")
@@ -64,7 +64,7 @@ public class DocumentDetailsPage
         super(aParameters);
 
         User user = userRepository.getCurrentUser();
-        requireProjectRole(user);
+        requireAnyProjectRole(user);
 
         StringValue repositoryIdStringValue = aParameters.get(PAGE_PARAM_REPOSITORY_ID);
         StringValue collectionIdStringValue = aParameters.get(PAGE_PARAM_COLLECTION_ID);

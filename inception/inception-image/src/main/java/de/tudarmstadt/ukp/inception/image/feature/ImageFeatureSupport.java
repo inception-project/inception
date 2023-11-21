@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.image.feature;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,9 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -36,24 +36,27 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * Extension providing image-related features for annotations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ImageSupportAutoConfiguration#imageSidebarFactory}.
+ * </p>
  */
-@Component
 public class ImageFeatureSupport
     implements FeatureSupport<ImageFeatureTraits>
 {
@@ -181,6 +184,7 @@ public class ImageFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
@@ -194,20 +198,18 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        String label = renderFeatureValue(aFeature, aFs);
+        if (aValue instanceof String) {
+            var url = (String) aValue;
 
-        if (StringUtils.isEmpty(label)) {
-            return Collections.emptyList();
+            if (isBlank(url)) {
+                return emptyList();
+            }
+
+            return asList(new VLazyDetailGroup(new VLazyDetail("<img>", url)));
         }
 
-        return asList(new VLazyDetailQuery(aFeature.getName(), label));
-    }
-
-    @Override
-    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
-    {
-        return asList(new VLazyDetailResult("<img>", aQuery));
+        return Collections.emptyList();
     }
 }

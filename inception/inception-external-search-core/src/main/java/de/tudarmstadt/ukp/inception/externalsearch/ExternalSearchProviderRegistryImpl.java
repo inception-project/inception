@@ -31,6 +31,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 
 /**
@@ -45,12 +46,12 @@ public class ExternalSearchProviderRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<ExternalSearchProviderFactory> providersProxy;
+    private final List<ExternalSearchProviderFactory<?>> providersProxy;
 
-    private List<ExternalSearchProviderFactory> providers;
+    private List<ExternalSearchProviderFactory<?>> providers;
 
     public ExternalSearchProviderRegistryImpl(
-            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory> aProviders)
+            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory<?>> aProviders)
     {
         providersProxy = aProviders;
     }
@@ -63,43 +64,45 @@ public class ExternalSearchProviderRegistryImpl
 
     /* package private */ void init()
     {
-        List<ExternalSearchProviderFactory> exts = new ArrayList<>();
+        List<ExternalSearchProviderFactory<?>> exts = new ArrayList<>();
 
         if (providersProxy != null) {
             exts.addAll(providersProxy);
             AnnotationAwareOrderComparator.sort(exts);
 
-            for (ExternalSearchProviderFactory fs : exts) {
+            for (ExternalSearchProviderFactory<?> fs : exts) {
                 log.debug("Found external search provider: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        log.info("Found [{}] external search providers", exts.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] external search providers", exts.size());
 
         providers = Collections.unmodifiableList(exts);
     }
 
     @Override
-    public List<ExternalSearchProviderFactory> getExternalSearchProviderFactories()
+    public List<ExternalSearchProviderFactory<?>> getExternalSearchProviderFactories()
     {
         return providers;
     }
 
     @Override
-    public ExternalSearchProviderFactory getExternalSearchProviderFactory(String aId)
+    public ExternalSearchProviderFactory<?> getExternalSearchProviderFactory(String aId)
     {
         if (aId == null) {
             return null;
         }
         else {
-            return providers.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+            return providers.stream() //
+                    .filter(f -> aId.equals(f.getBeanName())) //
+                    .findFirst() //
                     .orElse(null);
         }
     }
 
     @Override
-    public ExternalSearchProviderFactory getDefaultExternalSearchProviderFactory()
+    public ExternalSearchProviderFactory<?> getDefaultExternalSearchProviderFactory()
     {
         return getExternalSearchProviderFactories().get(0);
     }

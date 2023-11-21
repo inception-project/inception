@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,26 +35,23 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class SpanAnnotationPanel
     extends Panel
 {
     private static final long serialVersionUID = 7375798934091777439L;
-
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -67,7 +61,6 @@ public class SpanAnnotationPanel
     private static final String CID_TEXT_FEATURES = "textFeatures";
     private static final String CID_FEATURES = "features";
     private static final String CID_SELECT = "select";
-    private static final String CID_SELECTED = "selected";
     private static final String CID_LABEL = "label";
     private static final String CID_VALUE = "value";
     private static final String CID_PRE_CONTEXT = "preContext";
@@ -83,9 +76,9 @@ public class SpanAnnotationPanel
 
         VID vid = aModel.getObject();
 
-        FeatureStructure fs = selectFsByAddr(aCas, vid.getId());
+        FeatureStructure fs = ICasUtil.selectFsByAddr(aCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        AnnotationFS aFS = selectAnnotationByAddr(aCas, vid.getId());
+        AnnotationFS aFS = ICasUtil.selectAnnotationByAddr(aCas, vid.getId());
         int begin = aFS.getBegin();
         int end = aFS.getEnd();
 

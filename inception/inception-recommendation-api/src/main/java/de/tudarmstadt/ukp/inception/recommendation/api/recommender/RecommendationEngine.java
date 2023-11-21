@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -33,6 +34,7 @@ import org.apache.uima.cas.Type;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public abstract class RecommendationEngine
 {
@@ -64,21 +66,52 @@ public abstract class RecommendationEngine
      *            The context of the recommender
      * @param aCasses
      *            The training data
+     * @throws RecommendationException
+     *             if there was a problem during training
      */
     public abstract void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException;
 
     /**
-     * Given text in {@code aCas}, predict target annotations. These should be written into
-     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext} can
-     * be used.
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
      * 
      * @param aContext
      *            The context of the recommender
      * @param aCas
      *            The training data
+     * @throws RecommendationException
+     *             if there was a problem during prediction
      */
-    public abstract void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    {
+        predict(aContext, aCas, 0, aCas.getDocumentText().length());
+    }
+
+    /**
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
+     * <p>
+     * Depending on the recommender, it may be necessary to internally extend the range in which
+     * recommendations are generated so that recommendations that partially overlap the prediction
+     * range may also be generated.
+     * 
+     * @param aContext
+     *            The context of the recommender
+     * @param aCas
+     *            The training data
+     * @param aBegin
+     *            Begin of the range in which predictions should be generated.
+     * @param aEnd
+     *            End of the range in which predictions should be generated.
+     * @return Range in which the recommender generated predictions. No suggestions in this range
+     *         should be inherited.
+     * @throws RecommendationException
+     *             if there was a problem during prediction
+     */
+    public abstract Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**
@@ -93,6 +126,8 @@ public abstract class RecommendationEngine
      *            The splitter which determines which annotations belong to which set
      * @return Scores available through an EvaluationResult object measuring the performance of
      *         predicting on the test set
+     * @throws RecommendationException
+     *             if there was a problem during evaluation
      */
     public abstract EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException;
@@ -104,6 +139,9 @@ public abstract class RecommendationEngine
      * {@code false}, calling {@link #predict} might result in an exception being thrown or in
      * predictions being invalid/unusable.
      * 
+     * @param aContext
+     *            a recommender context
+     * 
      * @return if the recommender can use the given context to make predictions. This is usually the
      *         case if the recommender has previously initialized the context with a trained model.
      *         However, some recommenders might be able to provide recommendations without a trained
@@ -112,29 +150,44 @@ public abstract class RecommendationEngine
     public abstract boolean isReadyForPrediction(RecommenderContext aContext);
 
     /**
-     * Returns which training capabilities this engine has. If training is not supported, the call
-     * to {@link #train} should be skipped and {@link #predict} should be called immediately. Note
-     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
-     * training is skipped or fails - this is meant only for engines that use pre-trained models.
+     * @return which training capabilities this engine has. If training is not supported, the call
+     *         to {@link #train} should be skipped and {@link #predict} should be called
+     *         immediately. Note that the engine cannot expect a model to be present in the
+     *         {@link RecommenderContext} if training is skipped or fails - this is meant only for
+     *         engines that use pre-trained models.
      */
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+        return TrainingCapability.TRAINING_SUPPORTED;
     }
 
     /**
-     * Create a new context given the previous context. This allows incrementally training
-     * recommenders to salvage information from the current context for a new iteration. By default,
-     * no information is copy and simply new context is created.
+     * @return which prediction capabilities this engine has. If a recommender uses annotations and
+     *         not only the text, then this method should be overwritten to return
+     *         {@link PredictionCapability#PREDICTION_USES_ANNOTATIONS}
      */
-    public RecommenderContext newContext(RecommenderContext aCurrentContext)
+    public PredictionCapability getPredictionCapability()
+    {
+        return PredictionCapability.PREDICTION_USES_TEXT_ONLY;
+    }
+
+    /**
+     * @param aContext
+     *            previous context
+     * @return a new context given the previous context. This allows incrementally training
+     *         recommenders to salvage information from the current context for a new iteration. By
+     *         default, no information is copy and simply new context is created.
+     */
+    public RecommenderContext newContext(RecommenderContext aContext)
     {
         return new RecommenderContext();
     }
 
     /**
-     * Estimates the number of data points in the data set. If the returned number is negative, no
-     * estimation could be made.
+     * @param aCasses
+     *            a list of CASes that should be examined for data points
+     * @return an estimated number of data points in the data set. If the returned number is
+     *         negative, no estimation could be made.
      */
     public abstract int estimateSampleCount(List<CAS> aCasses);
 
@@ -157,6 +210,12 @@ public abstract class RecommendationEngine
     protected Feature getScoreExplanationFeature(CAS aCas)
     {
         String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+    }
+
+    protected Feature getModeFeature(CAS aCas)
+    {
+        String scoreExplanationFeature = featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 

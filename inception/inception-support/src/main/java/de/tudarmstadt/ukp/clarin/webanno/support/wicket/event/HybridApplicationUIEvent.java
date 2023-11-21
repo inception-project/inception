@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket.event;
 
+import java.util.Optional;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.cycle.RequestCycle;
 
@@ -26,11 +28,11 @@ import org.apache.wicket.request.cycle.RequestCycle;
 public interface HybridApplicationUIEvent
 {
     /**
-     * Returns the request target which can be used to update the UI (if the event was triggered in
-     * the context of a UI action).
+     * @return the request target which can be used to update the UI (if the event was triggered in
+     *         the context of a UI action).
      */
-    default AjaxRequestTarget getRequestTarget()
+    default Optional<AjaxRequestTarget> getRequestTarget()
     {
-        return RequestCycle.get().find(AjaxRequestTarget.class).get();
+        return RequestCycle.get().find(AjaxRequestTarget.class);
     }
 }

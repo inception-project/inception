@@ -28,74 +28,93 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
 {
     /**
-     * List users that were selected to be shown for curation by the given user
+     * @return list of users that were selected to be shown for curation by the given user
      */
-    Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
+    @SuppressWarnings("javadoc")
+    List<User> getSelectedUsers(String aCurrentUser, long aProjectId);
 
     /**
-     * Retrieves CAS associated with curation doc for the given user
+     * @return CAS associated with curation doc for the given user
      */
+    @SuppressWarnings("javadoc")
     Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
         throws IOException;
 
     /**
      * Write to CAS associated with curation doc for the given user and update timestamp
      */
-    void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId);
+    @SuppressWarnings("javadoc")
+    void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
+        throws IOException;
 
     /**
-     * Store the users that were selected to be shown for curation by the given user
+     * Store the users that were selected to be shown for curation by the given user.
      */
-    void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
-            Collection<User> aUsers);
+    @SuppressWarnings("javadoc")
+    void setSelectedUsers(String aCurrentUser, long aProjectId, Collection<User> aUsers);
 
     /**
      * Store which name the curated document should be associated with
      */
-    void updateCurationName(String aCurrentUser, long aProjectId, String aCurationName);
+    @SuppressWarnings("javadoc")
+    void setCurationTarget(String aCurrentUser, Project aProject, boolean aOwnDocument);
 
     /**
-     * Remove stored curation information on given user
+     * Start a new curation session.
      */
-    void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
+    @SuppressWarnings("javadoc")
+    boolean existsSession(String aSessionOwner, long aProjectId);
 
     /**
-     * Remove information on users that were selected to be shown for curation by the given user
+     * Start a new curation session.
      */
-    void clearUsersSelectedForCuration(String aUsername, Long aId);
+    @SuppressWarnings("javadoc")
+    void startSession(String aSessionOwner, Project aProjectId, boolean aOwnDocument);
 
     /**
-     * Returns the name of the user corresponding to the CAS used as curation (target) CAS
+     * Stop a running curation session.
      */
-    String retrieveCurationTarget(String aUser, long aProjectId);
+    @SuppressWarnings("javadoc")
+    void closeSession(String aCurrentUser, long aProjectId);
 
     /**
-     * Returns the user corresponding to the CAS used as curation (target) CAS
+     * @return the name of the user corresponding to the CAS used as curation (target) CAS
      */
-    User retrieveCurationUser(String aUser, long aProjectId);
+    @SuppressWarnings("javadoc")
+    String getCurationTarget(String aUser, long aProjectId);
 
     /**
-     * List users that were selected to be shown for curation by the given user and have finished
-     * the given document.
+     * @return the user corresponding to the CAS used as curation (target) CAS
      */
+    @SuppressWarnings("javadoc")
+    User getCurationTargetUser(String aUser, long aProjectId);
+
+    /**
+     * @return list of users that were selected to be shown for curation by the given user and have
+     *         finished the given document.
+     */
+    @SuppressWarnings("javadoc")
     List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
     /**
-     * List users that have finished the given document
+     * @return list of users that have finished the given document
      */
-    List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
+    @SuppressWarnings("javadoc")
+    List<User> listCuratableUsers(SourceDocument aSourceDocument);
+
+    List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
 
     /**
-     * Check if user in given annotator state is curating and has finished it
+     * @return if user in given annotator state is curating and has finished it
      * 
      * @param state
      *            the annotator state
@@ -107,4 +126,6 @@ public interface CurationSidebarService
     void setShowAll(String aUsername, Long aProjectId, boolean aValue);
 
     boolean isShowAll(String aUsername, Long aProjectId);
+
+    void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
 }

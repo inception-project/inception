@@ -47,6 +47,8 @@ public interface CurationMergeService
      * @param aLayers
      *            the layers to be merged
      * @return any messages generated during the merge process.
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
      */
     Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
@@ -67,6 +69,8 @@ public interface CurationMergeService
      * @param aMergeStrategy
      *            the merge strategy
      * @return any messages generated during the merge process.
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
      */
     Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)

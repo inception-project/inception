@@ -36,7 +36,6 @@ public class ProjectRecommendersPanel
     private static final long serialVersionUID = 3042218455285633439L;
 
     private static final String MID_RECOMMENDERS = "recommenders";
-    private static final String MID_CREATE_BUTTON = "create";
     private static final String MID_RECOMMENDER_EDITOR = "recommenderEditor";
 
     private IModel<Project> projectModel;
@@ -61,6 +60,7 @@ public class ProjectRecommendersPanel
                 projectModel, selectedRecommenderModel, true);
         recommenderListPanel.setCreateAction(_target -> {
             Recommender recommender = new Recommender();
+            recommender.setProject(aProject.getObject());
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
             selectedRecommenderModel.setObject(recommender);
             recommenderEditorPanel.modelChanged();

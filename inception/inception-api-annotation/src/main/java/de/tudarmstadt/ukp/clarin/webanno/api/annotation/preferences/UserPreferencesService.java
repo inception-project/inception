@@ -19,12 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import java.io.IOException;
 
-import org.springframework.beans.BeansException;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface UserPreferencesService
 {
@@ -36,14 +34,10 @@ public interface UserPreferencesService
      *            The {@link AnnotatorState} that will be populated with preferences from the file
      * @param aUsername
      *            The user for whom we need to read the preference (preferences are stored per user)
-     *
-     * @throws BeansException
-     *             hum?
      * @throws IOException
      *             hum?
      */
-    void loadPreferences(AnnotatorState aState, String aUsername)
-        throws BeansException, IOException;
+    void loadPreferences(AnnotatorState aState, String aUsername) throws IOException;
 
     AnnotationPreference loadPreferences(Project aProject, String aUsername, Mode aMode)
         throws IOException;

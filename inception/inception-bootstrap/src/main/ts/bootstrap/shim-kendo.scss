@@ -1,0 +1,148 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.k-input {
+  color: var(--bs-body-color) !important;
+  background-color: var(--bs-body-bg) !important;
+  border-color: var(--bs-border-color) !important;
+}
+
+.k-tooltip.k-widget {
+    color: var(--bs-light) !important;
+    background-color: var(--bs-dark) !important;
+}
+
+.k-block, .k-widget {
+    background-color: var(--bs-body-bg) !important;
+}
+
+.k-splitbar {
+    background-color: var(--bs-secondary-border-subtle) !important;
+}
+
+.k-splitbar .k-resize-handle {
+    background-color: var(--bs-body-bg) !important;
+}
+
+ // Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line
+// with the other Bootstrap inputs
+.k-dropdown-wrap {
+	.k-input {
+		padding: .18em 0 !important;
+		box-shadow: none !important;
+	}
+	
+	.k-select {
+		line-height: 2em !important;
+	}
+}
+
+// Make sure that the Kendo dropdowns (i.e. the combo box) fits nicely into Bootstrap input groups
+.input-group {
+	.k-dropdown-wrap {
+		border: 0px;
+	}
+}
+
+// Make sure Kendo icons show in input groups where the input groups are rendered with a 
+// z-index of 2
+.input-group {
+	.k-icon {
+		z-index: 3;
+	}
+}
+
+// Make Kendo components render with full width inside form groups
+/*
+.form-group .k-widget,
+.form-group .k-textbox {
+  width: 100%;
+}
+*/
+
+.k-combobox {
+	.k-input {
+		// This is required to fit the input field nicely into the control box. Without it, the input
+		// slightly overlaps the control box on the bottom which does not look very nice.
+		margin-bottom: 1px !important;
+	}
+}
+
+// Avoid comboboxes getting two borders
+//.k-combobox.form-control {
+//	border: none;
+//	width: 100% !important;
+//}
+
+// Avoid Kendo split panel assumptions messing with Bootstrap layout assumptions
+.k-splitter .k-pane {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box !important;
+  }
+}
+
+// Expand the items in Kendo auto-complete fields and combo boxes such that the description tooltip
+// appears when hovering anywhere over the item and not only when hovering over the label text
+.k-list-item-text {
+  width: 100%;
+  > span {
+    display: inline-block;
+    width: 100%;
+  }
+}
+
+.k-list-footer {
+  padding: 0px 5px 0px 5px;
+  border-top: 1px solid var(--bs-border-color);
+  background-color: var(--bs-light);
+}
+
+.k-input {
+  &:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+    padding: 6px 12px;
+  }
+
+  &.form-control {
+    // Bootstrap form-control overrides the Kendo style, so we need to restore it
+    display: inline-flex !important;
+  }
+}
+
+
+.k-input-inner {
+  &.k-input:focus {
+    // Remove double focus shadow in composite components like combo boxes
+    box-shadow: none;  
+  }
+  
+  &.form-control {
+    // Bootstrap form-control overrides the Kendo style, so we need to restore it
+    display: inline-flex !important;
+    padding: 0px;
+  }
+}
+
+.k-list-container > .k-footer {
+  background-color: #eeeeee;
+  border-top: 1px solid #bbb;
+  padding: 3px 10px;
+}

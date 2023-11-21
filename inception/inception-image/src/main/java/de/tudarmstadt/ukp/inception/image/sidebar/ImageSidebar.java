@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.image.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -37,9 +37,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.ExternalImage;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -52,25 +49,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class ImageSidebar
     extends AnnotationSidebar_ImplBase
@@ -112,93 +108,6 @@ public class ImageSidebar
         images.setModel(LoadableDetachableModel.of(this::listImageUrls));
 
         mainContainer.add(images);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse.render(JavaScriptHeaderItem.forReference(
-                new WebjarsJavaScriptResourceReference("color-thief/current/js/color-thief.js")));
-        aResponse.render(OnDomReadyHeaderItem.forScript(colorScript()));
-    }
-
-    private String colorScript()
-    {
-        // @formatter:off
-        return String.join("\n",
-                "function getColorCache() {",
-                "  var cacheHolder = window;",
-                "  if (!cacheHolder.hasOwnProperty('colorCache')) {",
-                "    console.debug('Initializing color cache');",
-                "    cacheHolder.colorCache = {};",
-                "  }",
-                "  return cacheHolder.colorCache;",
-                "}",
-                "",
-                "function updateImageBackground(img) {",
-                "  if (!$(img).attr('crossorigin')) return;",
-                "  if (typeof img.naturalWidth != 'undefined' && img.naturalWidth == 0) return;",
-                "  try {",
-                "    var color = getColorCache()[img.src];",
-                "    if (color === undefined) {",
-                "      var dominantColor = colorThief.getColor(img);",
-                "      var r = dominantColor[0];",
-                "      var b = dominantColor[1];",
-                "      var g = dominantColor[2];",
-                "      // http://alienryderflex.com/hsp.html",
-                "      var hsp = Math.sqrt(0.299*r*r + 0.587*g*g + 0.114*b*b);",
-                "      color = hsp > 127 ? 'black' : 'white';",
-                "      getColorCache()[img.src] = color;",
-                "    }",
-                "    $(img).css('background-color', color);",
-                "  }",
-                "  catch (err) {",
-                "    console.error('Cannot determine image background color for ' + img.src, err)",
-                "    $('canvas').remove();",
-                "  }",
-                "}",
-                "",
-                "function fallbackToNonCors(img) {",
-                "  $(img).removeAttr('crossorigin');",
-                "  var x = img.src;",
-                "  img.src = '';",
-                "  img.src = x;",
-                "  var warning = `",
-                "    <div style='position: absolute; top: 5px; left: 5px;' class='showOnHover'>",
-                "      <span class='btn btn-xs btn-default'>",
-                "        <i class='fa fa-exclamation-triangle' style='color: orange;' aria-hidden='true'",
-                "          title='Remote server may not permit cross-domain resource access which prevents automatic setting of image border color.'>",
-                "        </i>", 
-                "      </span>", 
-                "    </div>",
-                "  `",
-                "  $(warning).insertAfter(img);",
-                "}",
-                "var startTime = new Date().getTime();",
-                "var colorThief = new ColorThief();",
-                "$('#" + getMarkupId() + " .img-thumbnail').each((index, img) => {",
-                // Make sure image data is actually available before trying to fetch it to calculate
-                // the background color
-                "  if (img.complete) {",
-                // Check if the image has been properly loaded and if not try without CORS
-                "    if (typeof img.naturalWidth != 'undefined' && img.naturalWidth == 0) {",
-                "      fallbackToNonCors(img);",
-                "    }",
-                "    else {",
-                "      updateImageBackground(img);",
-                "    }",
-                "  }",
-                "  else {",
-                "    img.addEventListener('load', () => updateImageBackground(img));",
-                // If the image cannot be loaded it may be due to CORS - so try without
-                "    img.addEventListener('error', () => fallbackToNonCors(img));",
-                "  }",
-                "});",
-                "console.debug('Calculating image border color took ' + ",
-                "  (new Date().getTime() - startTime) + 'ms');");
-        // @formatter:on
     }
 
     private List<ImageHandle> listImageUrls()
@@ -257,10 +166,9 @@ public class ImageSidebar
     }
 
     @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    public void onRenderRequested(RenderRequestedEvent aEvent)
     {
         aEvent.getRequestHandler().add(mainContainer);
-        aEvent.getRequestHandler().appendJavaScript(colorScript());
     }
 
     public void actionJumpTo(AjaxRequestTarget aTarget, ImageHandle aHandle)
@@ -271,7 +179,7 @@ public class ImageSidebar
             // Get the CAS
             CAS cas = getCasProvider().get();
 
-            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
+            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
             AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
             if (SPAN_TYPE.equals(layer.getType())) {

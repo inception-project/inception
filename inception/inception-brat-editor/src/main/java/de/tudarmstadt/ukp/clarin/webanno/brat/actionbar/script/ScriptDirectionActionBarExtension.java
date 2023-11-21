@@ -23,15 +23,20 @@ import static java.util.Locale.ROOT;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link BratAnnotationEditorAutoConfiguration#scriptDirectionActionBarExtension}.
+ * </p>
+ */
 @Order(900)
-@Component
 public class ScriptDirectionActionBarExtension
     implements ActionBarExtension
 {

@@ -17,21 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
-import org.apache.commons.lang3.StringUtils;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.AjaxEditableLabel;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import com.github.rjeschke.txtmark.Processor;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
@@ -41,33 +41,44 @@ public class CurrentProjectDashlet
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
 
+    private IModel<String> nameModel;
+
     public CurrentProjectDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId, aCurrentProject);
 
-        AjaxEditableLabel<String> name = new AjaxEditableLabel<String>("name",
-                PropertyModel.of(aCurrentProject, "name"))
+        nameModel = Model.of(aCurrentProject.map(Project::getName).getObject());
+
+        AjaxEditableLabel<String> name = new AjaxEditableLabel<String>("name", nameModel)
         {
             private static final long serialVersionUID = -2867104998844713915L;
 
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                projectService.updateProject(aCurrentProject.getObject());
-                success("Project name was updated");
                 aTarget.addChildren(getPage(), IFeedback.class);
-                // Put the component back into label mode
-                onCancel(aTarget);
+
+                if (!Project.isValidProjectName(nameModel.getObject())) {
+                    // nameModel.setObject(aCurrentProject.map(Project::getName).getObject());
+                    error("Invalid project name");
+                }
+                else {
+                    aCurrentProject.getObject().setName(nameModel.getObject());
+                    projectService.updateProject(aCurrentProject.getObject());
+                    success("Project name was updated");
+                    // Put the component back into label mode
+                    onCancel(aTarget);
+                }
             }
         };
 
-        boolean isManager = projectService.isManager(getModelObject(),
-                userRepository.getCurrentUser());
+        boolean isManager = projectService.hasRole(userRepository.getCurrentUser(),
+                getModelObject(), MANAGER);
         name.setEnabled(isManager);
         add(name);
 
-        add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
-                .setEscapeModelStrings(false));
+        add(new MarkdownLabel("description",
+                LoadableDetachableModel.of(this::getProjectDescription)));
     }
 
     public Project getModelObject()
@@ -75,6 +86,7 @@ public class CurrentProjectDashlet
         return getModel().orElse(null).getObject();
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<Project> getModel()
     {
         return (IModel<Project>) getDefaultModel();
@@ -83,16 +95,15 @@ public class CurrentProjectDashlet
     private String getProjectDescription()
     {
         Project project = getModelObject();
-        if (project != null) {
-            if (StringUtils.isBlank(project.getDescription())) {
-                return "Project has no description.";
-            }
-            else {
-                return Processor.process(project.getDescription(), true);
-            }
-        }
-        else {
+
+        if (project == null) {
             return "Please select a project from the drop-down list above.";
         }
+
+        if (isBlank(project.getDescription())) {
+            return "Project has no description.";
+        }
+
+        return project.getDescription();
     }
 }

@@ -20,6 +20,8 @@
 <wicket:head>
 <style type="text/css">
   .page-content { overflow: auto; }
+  .document-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+  .document-table thead td, .document-table thead th{ border-bottom-width: 0 !important; }
   tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5) { text-align: left; }
   tr th:nth-child(2) { width: 80%; }
   tr th:nth-child(5) { width: 20%; }
@@ -63,7 +65,7 @@
               </button> 
               <div class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
                 style="min-width: 600px;">
-                <form wicket:id="searchForm">
+                <form wicket:id="searchForm" class="card border-0">
                   <div class="card-header">
                     <wicket:message key="filterHeader" />
                   </div>
@@ -77,26 +79,25 @@
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="documentFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="documentFilterText" />
                       </label>
                       <div class="col-sm-9">
                         <input wicket:id="documentFilter" type="text" class="form-control" />
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="dateFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="dateFilterText" />
                       </label>
-                      <div class="col-sm-9">
+                      <div class="col-sm-9 align-self-center">
                         <span wicket:id="date"></span>
                       </div>
                     </div>
                     <div class="row form-row">
-                      <div class="offset-sm-3 col-sm-9">
-                        <input class="bootstrap-datetimepicker-widget" wicket:id="from"
-                          type="date" /> <input class="bootstrap-datetimepicker-widget"
-                          wicket:id="to" type="date" />
+                      <div class="offset-sm-3 col-sm-9 d-flex">
+                        <input wicket:id="from" class="form-control me-2" type="date" /> 
+                        <input wicket:id="to" class="form-control" type="date" />
                       </div>
                     </div>
                     <div class="row form-row">
@@ -132,16 +133,16 @@
               </button>
               <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0 ddUserForm" role="menu"
                 style="width: 800px; height: 385px;">
-                <div class="flex-v-container h-100">
+                <div class="flex-v-container h-100 card border-0">
                   <form wicket:id="userSelectionForm">
                     <div class="card-header">
                       <wicket:message key="userSelection" />
                     </div>
                     <div class="card-body flex-h-container">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="userSelect" />
-                      </label> <select wicket:id="userSelection" class="w-100" 
-                        data-container="body"></select>
+                      <label class="col-form-label col-sm-3">
+                        <wicket:message key="userSelect" />
+                      </label>
+                      <select wicket:id="userSelection" class="form-select"/>
                     </div>
                   </form>
                   <div class="flex-content flex-h-container">
@@ -153,32 +154,12 @@
                         <div class="card-body flex-content" style="height: 200px">
                           <div class="">
                             <select wicket:id="documentsToAdd" class="form-control"
-                              data-container="body" style="display: inline-block"></select>
+                              style="display: inline-block"></select>
                           </div>
                         </div>
                         <div class="card-footer">
                           <button class="btn btn-primary" wicket:id="confirm" type="button">
                             <wicket:message key="confirm" />
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                    <div class="flex-content flex-v-container">
-                      <form wicket:id="userResetDocumentForm" class="form flex-content flex-v-container">
-                        <div class="card-header">
-                          <wicket:message key="resetDocument" />
-                        </div>
-                        <div class="card-body flex-content">
-                          <div class="">
-                            <select wicket:id="resetDocument" class="w-100" data-container="body"/>
-                          </div>
-                          <div class="">
-                            <select wicket:id="documentState" class="w-100" data-container="body"/>
-                          </div>
-                        </div>
-                        <div class="card-footer">
-                          <button class="btn btn-primary" wicket:id="set">
-                            <wicket:message key="set" />
                           </button>
                         </div>
                       </form>
@@ -197,7 +178,7 @@
               </button>
               <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu"
                 style="min-width: 600px;">
-                <form wicket:id="settingsForm">
+                <form wicket:id="settingsForm" class="card border-0">
                   <div class="card-header">
                     <wicket:message key="settings" />
                   </div>
@@ -213,6 +194,15 @@
                     </div>
                     <div class="row form-row">
                       <label class="col-form-label col-sm-7">
+                        <wicket:message key="workflow" />
+                        <a wicket:id="workflowHelpLink"/>
+                      </label>
+                      <div class="col-sm-5">
+                        <select wicket:id="workflowType" class="form-select"/>
+                      </div>
+                    </div>
+                    <div class="row form-row">
+                      <label class="col-form-label col-sm-7">
                         <wicket:message key="confirmFinishingDocuments" />
                       </label>
                       <div class="col-sm-5">
@@ -223,11 +213,12 @@
                     </div>
                     <div class="row form-row">
                       <label class="col-form-label col-sm-7">
-                        <wicket:message key="workflow" />
-                        <a wicket:id="workflowHelpLink"/>
+                        <wicket:message key="documentResetAllowed" />
                       </label>
                       <div class="col-sm-5">
-                        <select wicket:id="workflowType" data-container="body" class="w-100"/>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" wicket:id="documentResetAllowed">
+                        </div>
                       </div>
                     </div>
                     <div class="row form-row">
@@ -260,7 +251,7 @@
                         <wicket:message key="abandonationState" />
                       </label>
                       <div class="col-sm-5">
-                        <select wicket:id="abandonationState" data-container="body" class="w-100"/>
+                        <select wicket:id="abandonationState" class="form-select"/>
                       </div>
                     </div>
                   </div>
@@ -280,16 +271,8 @@
             </button>
           </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
-            <div wicket:id="stateFilters" class="input-group justify-content-end">
-              <div class="input-group-text">
-                <i class="fas fa-filter"></i>
-              </div>
-              <wicket:container wicket:id="stateFilter">
-                <button type="button" class="btn btn-outline-secondary"
-                  wicket:id="stateFilterLink">
-                  <wicket:container wicket:id="label" />
-                </button>
-              </wicket:container>
+            <div class="d-flex flex-fill justify-content-end">
+              <div wicket:id="stateFilters" />
             </div>
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="btn-group" role="group">
@@ -312,6 +295,7 @@
                   <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
                   <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
                   <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                  <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> Problem</li>
                   <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
                   <li class="dropdown-header">Other</li>
                   <li class="dropdown-item-text"><i class="fas fa-lock"/> (<i class="far fa-play-circle"/>) 
@@ -326,7 +310,7 @@
         </div>
 
         <div class="card-body p-0 flex-v-container">
-          <div class="flex-content scrolling">
+          <div class="flex-content scrolling border">
             <div class="fit-child-snug">
               <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
                 wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
@@ -336,15 +320,10 @@
         </div>
         
         <div wicket:id="resetDocumentDialog"/>
+        <div wicket:id="modalDialog"/>
         <div wicket:id="contextMenu" style="width: 250px;"></div>
-        <div wicket:id="infoDialog"></div>
       </div>
     </div>
-    <wicket:fragment wicket:id="infoColumn">
-      <button wicket:id="showInfoDialog" class="btn btn-sm btn-link" wicket:message="title:showInfo">
-        <i class="fas fa-info-circle" /> <span class="d-none d-xl-inline" />
-      </button>
-    </wicket:fragment>
   </wicket:extend>
 </body>
 </html>

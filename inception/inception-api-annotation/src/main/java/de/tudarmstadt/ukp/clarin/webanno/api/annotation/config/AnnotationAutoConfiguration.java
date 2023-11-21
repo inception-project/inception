@@ -17,34 +17,82 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesPropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.FocusMarkerRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @Configuration
+@EnableConfigurationProperties(AnnotationEditorDefaultPreferencesPropertiesImpl.class)
 public class AnnotationAutoConfiguration
 {
     @Bean
-    public AnnotationEditorExtensionRegistry annotationEditorExtensionRegistry(
-            @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
+    public ColoringService coloringService(AnnotationSchemaService aSchemaService)
     {
-        return new AnnotationEditorExtensionRegistryImpl(aExtensions);
+        return new ColoringServiceImpl(aSchemaService);
     }
 
     @Bean
-    public AnnotationEditorRegistry annotationEditorRegistry(
-            @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
+    public PreRenderer preRenderer(LayerSupportRegistry aLayerSupportRegistry,
+            AnnotationSchemaService aAnnotationService)
     {
-        return new AnnotationEditorRegistryImpl(aExtensions);
+        return new PreRendererImpl(aLayerSupportRegistry, aAnnotationService);
+    }
+
+    @Bean
+    public LabelRenderer labelRenderer()
+    {
+        return new LabelRenderer();
+    }
+
+    @Bean
+    public ColorRenderer colorRenderer(AnnotationSchemaService aSchemaService,
+            ColoringService aColoringService,
+            @Autowired(required = false) UserPreferencesService aUserPreferencesService)
+    {
+        return new ColorRenderer(aSchemaService, aColoringService, aUserPreferencesService);
+    }
+
+    @Bean
+    public RenderNotificationRenderStep renderNotificationRenderStep()
+    {
+        return new RenderNotificationRenderStep();
+    }
+
+    @Bean
+    public FocusMarkerRenderer focusMarkerRenderer()
+    {
+        return new FocusMarkerRenderer();
+    }
+
+    @Bean
+    public UserPreferencesService userPreferencesService(
+            AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
+            AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
+            ColoringService aColoringService,
+            AnnotationSchemaProperties aAnnotationEditorProperties,
+            PreferencesService aPreferencesService)
+    {
+        return new UserPreferencesServiceImpl(aDefaultPreferences, aAnnotationService,
+                aRepositoryProperties, aColoringService, aAnnotationEditorProperties,
+                aPreferencesService);
     }
 }

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -32,18 +32,19 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
 
 public class CuratedDocumentsProjectExportTask
@@ -130,8 +131,7 @@ public class CuratedDocumentsProjectExportTask
         Project project = aModel.getProject();
 
         // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(project);
+        List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
         // Determine which format to use for export.
         FormatSupport format;
@@ -149,7 +149,7 @@ public class CuratedDocumentsProjectExportTask
 
         int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+        for (SourceDocument sourceDocument : documents) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -163,7 +163,7 @@ public class CuratedDocumentsProjectExportTask
                 File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
                 FileUtils.forceMkdir(curationDir);
 
-                // If depending on aInProgress, include only the the curation documents that are
+                // If depending on a InProgress, include only the the curation documents that are
                 // finished or also the ones that are in progress
                 if ((aIncludeInProgress && SourceDocumentState.CURATION_IN_PROGRESS
                         .equals(sourceDocument.getState()))

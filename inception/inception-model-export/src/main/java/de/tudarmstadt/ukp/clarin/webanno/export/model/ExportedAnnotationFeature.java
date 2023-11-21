@@ -87,6 +87,9 @@ public class ExportedAnnotationFeature
     @JsonProperty("curatable")
     private boolean curatable = true;
 
+    @JsonProperty("rank")
+    private int rank = 0;
+
     public String getName()
     {
         return name;
@@ -275,6 +278,16 @@ public class ExportedAnnotationFeature
     public void setCuratable(boolean aCuratable)
     {
         curatable = aCuratable;
+    }
+
+    public int getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(int aRank)
+    {
+        rank = aRank;
     }
 
     @Override

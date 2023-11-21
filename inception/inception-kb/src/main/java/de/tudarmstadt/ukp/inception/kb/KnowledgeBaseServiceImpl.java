@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
-import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
+import static org.apache.commons.lang3.reflect.FieldUtils.readField;
+import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -52,10 +53,14 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
+import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -76,6 +81,7 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
@@ -83,9 +89,13 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
-import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
+import org.eclipse.rdf4j.sail.lucene.LuceneSailConnection;
+import org.eclipse.rdf4j.sail.lucene.impl.LuceneIndex;
+import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
@@ -99,16 +109,18 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpHeaders;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
@@ -121,12 +133,19 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.model.RemoteRepositoryTraits;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.MemoryOAuthSessionRepository;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthAuthenticationClientImpl;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
 
 /**
  * <p>
@@ -137,6 +156,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
+    private static final int LOCAL_FUZZY_PREFIX_LENGTH = 3;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -145,6 +166,7 @@ public class KnowledgeBaseServiceImpl
     private final KnowledgeBaseProperties properties;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
+    private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
 
     @Autowired
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -152,17 +174,8 @@ public class KnowledgeBaseServiceImpl
     {
         properties = aKBProperties;
 
-        Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
-                .maximumWeight(aKBProperties.getCacheSize())
-                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
-                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
-                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
-
-        if (log.isTraceEnabled()) {
-            cacheBuilder.recordStats();
-        }
-
-        queryCache = cacheBuilder.build(this::runQuery);
+        queryCache = createQueryCache(aKBProperties);
+        oAuthSessionRepository = new MemoryOAuthSessionRepository<>();
 
         kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
 
@@ -195,7 +208,23 @@ public class KnowledgeBaseServiceImpl
         repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
                 .newPerThreadSslCheckingHttpClientBuilder().build());
 
-        log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
+        BaseLoggers.BOOT_LOG.info("Knowledge base repository path: {}", kbRepositoriesRoot);
+    }
+
+    private LoadingCache<QueryKey, List<KBHandle>> createQueryCache(
+            KnowledgeBaseProperties aKBProperties)
+    {
+        Caffeine<QueryKey, List<KBHandle>> queryCacheBuilder = Caffeine.newBuilder()
+                .maximumWeight(aKBProperties.getCacheSize())
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
+                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
+                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
+
+        if (log.isTraceEnabled()) {
+            queryCacheBuilder.recordStats();
+        }
+
+        return queryCacheBuilder.build(this::runQuery);
     }
 
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -278,33 +307,40 @@ public class KnowledgeBaseServiceImpl
 
         // We want to have a separate Lucene index for every local repo, so we need to hack the
         // index dir in here because this is the place where we finally know the repo ID.
-        setIndexDir(aKB, aCfg);
+        syncIndexParameters(aKB, aCfg);
 
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
         entityManager.persist(aKB);
     }
 
     @Override
-    public void defineBaseProperties(KnowledgeBase akb)
+    public void defineBaseProperties(KnowledgeBase aKB)
     {
         // KB will initialize base properties with base IRI schema properties defined by user
-        if (akb.getType() == RepositoryType.LOCAL) {
-            ValueFactory vf = SimpleValueFactory.getInstance();
+        if (aKB.getType() == RepositoryType.LOCAL) {
+            var readOnly = aKB.isReadOnly();
+            aKB.setReadOnly(false);
+            try {
+                ValueFactory vf = SimpleValueFactory.getInstance();
 
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri(),
-                    vf.createIRI(akb.getSubclassIri()).getLocalName()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getLabelIri(),
-                            vf.createIRI(akb.getLabelIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb,
-                    new KBProperty(akb.getDescriptionIri(),
-                            vf.createIRI(akb.getDescriptionIri()).getLocalName(), null,
-                            XSD.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri(),
-                    vf.createIRI(akb.getTypeIri()).getLocalName()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri(),
-                    vf.createIRI(akb.getSubPropertyIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubclassIri(),
+                        vf.createIRI(aKB.getSubclassIri()).getLocalName()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getLabelIri(),
+                                vf.createIRI(aKB.getLabelIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB,
+                        new KBProperty(aKB.getDescriptionIri(),
+                                vf.createIRI(aKB.getDescriptionIri()).getLocalName(), null,
+                                XSD.STRING.stringValue()));
+                createBaseProperty(aKB, new KBProperty(aKB.getTypeIri(),
+                        vf.createIRI(aKB.getTypeIri()).getLocalName()));
+                createBaseProperty(aKB, new KBProperty(aKB.getSubPropertyIri(),
+                        vf.createIRI(aKB.getSubPropertyIri()).getLocalName()));
+            }
+            finally {
+                aKB.setReadOnly(readOnly);
+            }
         }
     }
 
@@ -348,6 +384,9 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryException, RepositoryConfigException
     {
         assertRegistration(kb);
+        // We clear any current OAuth session on the repository because we do not know if maybe
+        // the user has changed the repository URL / credentials as part of the update...
+        oAuthSessionRepository.clear(kb);
         entityManager.merge(kb);
     }
 
@@ -358,7 +397,7 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         repoManager.addRepositoryConfig(new RepositoryConfig(kb.getRepositoryId(), cfg));
-        entityManager.merge(kb);
+        updateKnowledgeBase(kb);
     }
 
     @SuppressWarnings("unchecked")
@@ -399,6 +438,8 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(aKB);
 
+        oAuthSessionRepository.clear(aKB);
+
         repoManager.removeRepository(aKB.getRepositoryId());
 
         entityManager.remove(entityManager.contains(aKB) ? aKB : entityManager.merge(aKB));
@@ -428,7 +469,11 @@ public class KnowledgeBaseServiceImpl
         throws RepositoryConfigException, RepositoryException
     {
         assertRegistration(kb);
-        return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
+        var repositoryConfig = repoManager.getRepositoryConfig(kb.getRepositoryId());
+        if (repositoryConfig == null) {
+            return null;
+        }
+        return repositoryConfig.getRepositoryImplConfig();
     }
 
     @Override
@@ -440,23 +485,21 @@ public class KnowledgeBaseServiceImpl
         if (repo instanceof SPARQLRepository) {
             SPARQLRepositoryConfig sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(
                     kb);
-            URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
-            String userInfo = uri.getUserInfo();
-            if (StringUtils.isNotBlank(userInfo)) {
-                userInfo = userInfo.trim();
-                String username;
-                String password;
-                if (userInfo.contains(":")) {
-                    username = substringBefore(userInfo, ":");
-                    password = substringAfter(userInfo, ":");
-                }
-                else {
-                    username = userInfo;
-                    password = "";
-                }
+            SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
+            applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
+            RemoteRepositoryTraits traits = readTraits(kb);
 
-                SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
-                sparqlRepo.setUsernameAndPassword(username, password);
+            if (traits != null && traits.getAuthentication() != null) {
+                switch (traits.getAuthentication().getType()) {
+                case BASIC: {
+                    applyBasicHttpAuthenticationConfiguration(sparqlRepo, traits);
+                    break;
+                }
+                case OAUTH_CLIENT_CREDENTIALS: {
+                    applyOAuthConfiguration(kb, sparqlRepo, traits);
+                    break;
+                }
+                }
             }
         }
 
@@ -464,6 +507,8 @@ public class KnowledgeBaseServiceImpl
         {
             {
                 skipCertificateChecks(kb.isSkipSslValidation());
+
+                syncIndexParameters(kb, getDelegate());
             }
 
             @Override
@@ -477,6 +522,75 @@ public class KnowledgeBaseServiceImpl
                 }
             };
         };
+    }
+
+    private RemoteRepositoryTraits readTraits(KnowledgeBase kb)
+    {
+        try {
+            return JSONUtil.fromJsonString(RemoteRepositoryTraits.class, kb.getTraits());
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void applyBasicHttpAuthenticationConfiguration(SPARQLRepository sparqlRepo,
+            RemoteRepositoryTraits traits)
+    {
+        var auth = (BasicAuthenticationTraits) traits.getAuthentication();
+        sparqlRepo.setUsernameAndPassword(auth.getUsername(), auth.getPassword());
+    }
+
+    private void applyOAuthConfiguration(KnowledgeBase kb, SPARQLRepository sparqlRepo,
+            RemoteRepositoryTraits traits)
+    {
+        var auth = (OAuthClientCredentialsAuthenticationTraits) traits.getAuthentication();
+        var client = OAuthAuthenticationClientImpl.builder() //
+                .withClientId(auth.getClientId()) //
+                .withClientSecret(auth.getClientSecret()) //
+                .withTokenEndpointUrl(auth.getTokenEndpointUrl()) //
+                .build();
+
+        // Check if there is already a session we can use
+        var session = oAuthSessionRepository.get(kb, _kb -> {
+            log.debug("[{}] Creating new OAuth session as [{}]...", _kb, auth.getClientId());
+            var _session = new OAuthSessionImpl(client.getToken());
+            log.debug("[{}] OAuth session as [{}] will expire in [{}]", _kb, auth.getClientId(),
+                    _session.getAccessTokenExpiresIn());
+            return _session;
+        });
+
+        try {
+            client.refreshSessionIfNecessary(session);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        var headers = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken());
+        sparqlRepo.setAdditionalHttpHeaders(headers);
+    }
+
+    private void applyBasicHttpAuthenticationConfigurationFromUrl(
+            SPARQLRepositoryConfig sparqlRepoConfig, SPARQLRepository sparqlRepo)
+    {
+        URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
+        String userInfo = uri.getUserInfo();
+        if (isNotBlank(userInfo)) {
+            userInfo = userInfo.trim();
+            String username;
+            String password;
+            if (userInfo.contains(":")) {
+                username = substringBefore(userInfo, ":");
+                password = substringAfter(userInfo, ":");
+            }
+            else {
+                username = userInfo;
+                password = "";
+            }
+
+            sparqlRepo.setUsernameAndPassword(username, password);
+        }
     }
 
     @SuppressWarnings("resource")
@@ -504,6 +618,7 @@ public class KnowledgeBaseServiceImpl
 
         // Load files into the repository
         try (RepositoryConnection conn = getConnection(kb)) {
+            conn.setIsolationLevel(IsolationLevels.NONE);
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
@@ -581,7 +696,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBConcept> concept = readConcept(kb, aIdentifier, true);
             if (concept.isPresent()) {
                 return concept;
@@ -758,7 +873,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBInstance> instance = readInstance(kb, aIdentifier);
             if (instance.isPresent()) {
                 return instance;
@@ -1151,7 +1266,7 @@ public class KnowledgeBaseServiceImpl
     {
         Optional<KBHandle> someResult = Optional.empty();
 
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBHandle> concept = readHandle(kb, aIdentifier);
             if (!concept.isPresent()) {
                 continue;
@@ -1194,11 +1309,13 @@ public class KnowledgeBaseServiceImpl
             List<GraphPattern> patterns = new ArrayList<>();
             if (aClassInstance) {
                 Iri pSubProperty = iri(aKB.getSubPropertyIri());
-                patterns.add(property.has(path(zeroOrMore(pSubProperty)), pLabel));
+                patterns.add(property.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                        pLabel));
             }
             if (aProperties) {
                 Iri pPropertyLabel = iri(aKB.getPropertyLabelIri());
-                patterns.add(property.has(path(zeroOrMore(pPropertyLabel)), pLabel));
+                patterns.add(property
+                        .has(PropertyPathBuilder.of(pPropertyLabel).zeroOrMore().build(), pLabel));
             }
 
             query.where(GraphPatterns.union(patterns.stream().toArray(GraphPattern[]::new)));
@@ -1250,7 +1367,7 @@ public class KnowledgeBaseServiceImpl
                 || propertyIdentifier.equals(aKB.getTypeIri());
     }
 
-    private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
+    void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
         // @formatter:off
@@ -1267,24 +1384,55 @@ public class KnowledgeBaseServiceImpl
          */
 
         RepositoryImplConfig config = getNativeConfig();
-        setIndexDir(aKB, config);
+        syncIndexParameters(aKB, config);
         repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
     }
 
-    private void setIndexDir(KnowledgeBase aKB, RepositoryImplConfig aCfg)
+    private void syncIndexParameters(KnowledgeBase aKB, RepositoryImplConfig aCfg)
     {
         assertRegistration(aKB);
 
-        // We want to have a separate Lucene index for every local repo, so we need to hack the
-        // index dir in here because this is the place where we finally know the repo ID.
         if (aCfg instanceof SailRepositoryConfig) {
             SailRepositoryConfig cfg = (SailRepositoryConfig) aCfg;
             if (cfg.getSailImplConfig() instanceof LuceneSailConfig) {
                 LuceneSailConfig luceneSailCfg = (LuceneSailConfig) cfg.getSailImplConfig();
+
+                // We want to have a separate Lucene index for every local repo, so we need to hack
+                // the index dir in here because this is the place where we finally know the repo
+                // ID.
                 luceneSailCfg.setIndexDir(
                         new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId())
                                 .getAbsolutePath());
+
+                // Apply the FTS results limit to the KB
+                luceneSailCfg.setParameter(LuceneSail.MAX_DOCUMENTS_KEY,
+                        Integer.toString(aKB.getMaxResults()));
+
+                // Improve fuzzy search speed
+                luceneSailCfg.setParameter(LuceneSail.FUZZY_PREFIX_LENGTH_KEY,
+                        Integer.toString(LOCAL_FUZZY_PREFIX_LENGTH));
             }
+        }
+    }
+
+    private void syncIndexParameters(KnowledgeBase kb, RepositoryConnection aConn)
+    {
+        try {
+            if (aConn instanceof SailRepositoryConnection) {
+                var sailRepo = (SailRepositoryConnection) aConn;
+                var sailConnection = sailRepo.getSailConnection();
+                if (sailConnection instanceof LuceneSailConnection) {
+                    var luceneSailConnection = (LuceneSailConnection) sailConnection;
+                    var luceneIndex = (LuceneIndex) readField(luceneSailConnection, "luceneIndex",
+                            true);
+                    writeField(luceneIndex, "maxDocs", kb.getMaxResults(), true);
+                    writeField(luceneIndex, "fuzzyPrefixLength", LOCAL_FUZZY_PREFIX_LENGTH, true);
+                }
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to sync query parameters into live index - "
+                    + "maybe the RDF4J Lucene index implementation has changed.", e);
         }
     }
 
@@ -1295,25 +1443,40 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalArgumentException("Reindexing is only supported on local KBs");
         }
 
-        boolean reindexSupported = false;
+        var repo = repoManager.getRepository(aKB.getRepositoryId());
 
-        // Handle re-indexing of local repos that use a Lucene FTS
-        if (repoManager.getRepository(aKB.getRepositoryId()) instanceof SailRepository) {
-            SailRepository sailRepo = (SailRepository) repoManager
-                    .getRepository(aKB.getRepositoryId());
-            if (sailRepo.getSail() instanceof LuceneSail) {
-                reindexSupported = true;
-                LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
+        if (!(repo instanceof SailRepository)) {
+            throw new IllegalArgumentException(
+                    "Reindexing is not supported on [" + repo.getClass() + "] repositories");
+        }
+
+        var sail = ((SailRepository) repo).getSail();
+        if (!(sail instanceof LuceneSail)) {
+            throw new IllegalArgumentException(
+                    "Reindexing is not supported on [" + sail.getClass() + "] repositories");
+        }
+
+        var luceneSail = (LuceneSail) sail;
+        try (RepositoryConnection conn = getConnection(aKB)) {
+            luceneSail.reindex();
+            conn.commit();
+        }
+        catch (SailException e) {
+            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)) {
+                log.warn("Unable to access index: {}", e.getMessage());
+                log.info("Downgrade detected - trying to rebuild index from scratch...");
+
+                String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+                luceneSail.shutDown();
+                FileUtils.deleteQuietly(new File(luceneDir));
+                luceneSail.init();
+
+                // Only try to rebuild once - so no recursion here!
                 try (RepositoryConnection conn = getConnection(aKB)) {
                     luceneSail.reindex();
                     conn.commit();
                 }
             }
-        }
-
-        if (!reindexSupported) {
-            throw new IllegalArgumentException(
-                    aKB + "] does not support rebuilding its full text index.");
         }
     }
 

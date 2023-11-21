@@ -55,7 +55,8 @@ public class WikidataIdRankFeatureGenerator
         KnowledgeBase kb = aCandidate.getHandle().getKB();
 
         // For UKP Wikidata
-        if (kb.getType() == REMOTE && FTS_VIRTUOSO.equals(kb.getFullTextSearchIri())) {
+        if (kb.getType() == REMOTE
+                && FTS_VIRTUOSO.stringValue().equals(kb.getFullTextSearchIri())) {
             RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
             if (UKP_WIKIDATA_SPARQL_ENDPOINT
                     .equals(((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl())) {

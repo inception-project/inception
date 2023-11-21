@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.diam.editor;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -27,6 +29,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 
 public class DiamAjaxBehavior
@@ -38,6 +42,22 @@ public class DiamAjaxBehavior
 
     private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
 
+    private List<EditorAjaxRequestHandler> priorityHandlers = new ArrayList<>();
+
+    private boolean globalHandlersEnabled = true;
+
+    public DiamAjaxBehavior addPriorityHandler(EditorAjaxRequestHandler aHandler)
+    {
+        priorityHandlers.add(aHandler);
+        return this;
+    }
+
+    public DiamAjaxBehavior setGlobalHandlersEnabled(boolean aGlobalHandlersEnabled)
+    {
+        globalHandlersEnabled = aGlobalHandlersEnabled;
+        return this;
+    }
+
     @Override
     protected void onBind()
     {
@@ -47,11 +67,31 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        LOG.trace("AJAX request recieved");
+        LOG.trace("AJAX request received");
 
         Request request = RequestCycle.get().getRequest();
-        handlers.getExtensions(request).stream() //
-                .findFirst() //
-                .ifPresent(handler -> handler.handle(aTarget, request));
+
+        var priorityHandler = priorityHandlers.stream() //
+                .filter(handler -> handler.accepts(request)) //
+                .findFirst();
+
+        if (priorityHandler.isPresent()) {
+            call(aTarget, priorityHandler.get());
+            return;
+        }
+
+        if (globalHandlersEnabled) {
+            handlers.getHandler(request) //
+                    .ifPresent(h -> call(aTarget, h));
+        }
+    }
+
+    private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
+    {
+        Request request = RequestCycle.get().getRequest();
+        try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
+            aHandler.handle(aTarget, request);
+            return;
+        }
     }
 }

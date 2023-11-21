@@ -17,17 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static java.time.Duration.between;
 import static java.time.Instant.now;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.time.Duration;
 import java.util.List;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -37,10 +43,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxEventBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellShowAnnotatorCommentEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
 
 public class AnnotationStateList
@@ -50,12 +59,16 @@ public class AnnotationStateList
 
     private @SpringBean UserDao userRepository;
 
+    private final Duration abandonationTimeout;
+
     public AnnotationStateList(String aId, IModel<List<AnnotationDocument>> aModel,
             Duration aAbandonationTimeout)
     {
         super(aId, aModel);
 
-        ListView<AnnotationDocument> annotationStates = new ListView<>("state", aModel)
+        abandonationTimeout = aAbandonationTimeout;
+
+        ListView<AnnotationDocument> annotationStates = new ListView<>("item", aModel)
         {
             private static final long serialVersionUID = -8178383690721509334L;
 
@@ -65,40 +78,71 @@ public class AnnotationStateList
                 AnnotationDocument row = aItem.getModelObject();
                 User user = userRepository.get(aItem.getModelObject().getUser());
 
+                var state = new WebMarkupContainer("state");
+                aItem.queue(state);
+
                 IModel<String> labelModel = aItem.getModel() //
                         .map(AnnotationDocumentState::symbol) //
                         .orElse(NEW.symbol());
                 Label stateLabel = new Label("stateSymbol");
-                Duration idleTime = row.getTimestamp() != null
-                        ? between(row.getTimestamp().toInstant(), now())
-                        : null;
-                if (idleTime != null && !aAbandonationTimeout.isZero()
-                        && !aAbandonationTimeout.isNegative()
-                        && idleTime.compareTo(aAbandonationTimeout) > 0) {
+
+                if (isAbandoned(row)) {
                     labelModel = labelModel
                             .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);
                     aItem.add(new AttributeAppender("class", "bg-warning", " "));
                 }
                 else {
                     aItem.add(new AttributeAppender("class", "bg-secondary", " "));
-                    aItem.add(AjaxEventBehavior.onEvent("click", _target -> stateLabel.send(
+                    state.add(AjaxEventBehavior.onEvent("click", _target -> stateLabel.send(
                             stateLabel, BUBBLE,
                             new AnnotatorColumnCellClickEvent(_target, row.getDocument(), user))));
-                    aItem.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
+                    state.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
                 }
-                stateLabel.setDefaultModel(labelModel);
-                stateLabel.setEscapeModelStrings(false);
-                aItem.add(stateLabel);
 
-                aItem.add(new Label("annotatorName", user.getUiName()));
-                aItem.add(new LambdaAjaxEventBehavior("contextmenu",
-                        _target -> stateLabel.send(aItem, BUBBLE,
-                                new AnnotatorStateOpenContextMenuEvent(_target, aItem,
-                                        row.getDocument(), user, row.getState())))
-                                                .setPreventDefault(true));
+                stateLabel.setDefaultModel(labelModel);
+                stateLabel.setEscapeModelStrings(false); // SAFE - WE RENDER CONTROLLED SET OF ICONS
+                aItem.queue(stateLabel);
+
+                aItem.queue(new Label("annotatorName", user.getUiName()));
+
+                state.add(new LambdaAjaxEventBehavior("contextmenu",
+                        _t -> actionShowContextMenu(_t, state, row, user)).setPreventDefault(true));
+
+                var showComment = new LambdaAjaxLink("showComment",
+                        _t -> actionShowAnnotatorComment(_t, row.getDocument(), user));
+                showComment.add(visibleWhen(() -> isNotBlank(row.getAnnotatorComment())));
+                aItem.queue(showComment);
             }
         };
 
         add(annotationStates);
+    }
+
+    private void actionShowContextMenu(AjaxRequestTarget aTarget, Component aContext,
+            AnnotationDocument aAnnDoc, User aUser)
+    {
+        send(aContext, BUBBLE, new AnnotatorStateOpenContextMenuEvent(aTarget, aContext,
+                aAnnDoc.getDocument(), aUser, aAnnDoc.getState()));
+        ;
+    }
+
+    private void actionShowAnnotatorComment(AjaxRequestTarget aTarget, SourceDocument aDoc,
+            User aUser)
+    {
+        send(this, BUBBLE, new AnnotatorColumnCellShowAnnotatorCommentEvent(aTarget, aDoc, aUser));
+    }
+
+    private boolean isAbandoned(AnnotationDocument aAnnDoc)
+    {
+        if (aAnnDoc.getAnnotatorState() != IN_PROGRESS) {
+            return false;
+        }
+
+        Duration idleTime = aAnnDoc.getTimestamp() != null
+                ? between(aAnnDoc.getTimestamp().toInstant(), now())
+                : null;
+
+        return idleTime != null && !abandonationTimeout.isZero()
+                && !abandonationTimeout.isNegative() && idleTime.compareTo(abandonationTimeout) > 0;
     }
 }

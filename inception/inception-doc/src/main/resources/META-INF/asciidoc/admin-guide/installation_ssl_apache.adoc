@@ -16,6 +16,12 @@
 
 = Apache HTTPD as reverse proxy
 
+====
+IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions>> for running behind 
+       a reverse proxy and have configured your <<sect_settings,settings file>> accordingly, otherwise you will not be able
+       to properly use {product-name} via the reverse proxy!
+====
+
 This assumes that you already have the following packages installed:
 
 * Apache Web Server
@@ -37,18 +43,6 @@ and check that they are enabled with
 $ apachectl -M
 ----
 
-* Add the following lines to `/srv/inception/settings.properties` (replacing `your.public.domain.name.com` with the public domain name of your reverse proxy):
-+
-[source,text]
-----
-server.port=8080
-server.address=127.0.0.1
-server.servlet.context-path=/inception
-server.use-forward-headers=true
-wicket.core.csrf.accepted-origins[0]=your.public.domain.name.com
-wicket.core.csrf.accepted-origins[1]=https://your.public.domain.name.com
-----
-+
 * Edit `/etc/apache2/conf-available/inception.local.conf` (alternatively, you may want to configure a new virtual host for {product-name})
 +
 [source,xml]

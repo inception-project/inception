@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div wicket:id="exportDialog"></div>
+    <div class="action-bar-group">
+      <div class="btn-group">
+        <button wicket:id="showOpenDocumentDialog" class="btn btn-action-bar" type="button" wicket:message="title:openDocument">
+          <i class="far fa-folder-open"></i>
+        </button>
+      </div>
+      <div class="btn-group">
+        <button wicket:id="showExportDialog" class="btn btn-action-bar" type="button" wicket:message="title:exportDocument">
+          <i class="fas fa-file-download"></i>
+        </button>
+      </div>
+      <div class="btn-group">
+        <button wicket:id="showPreviousDocument" class="btn btn-action-bar" type="button"  wicket:message="title:previousDocument">
+          <i class="far fa-caret-square-left"></i>
+        </button>
+        <button wicket:id="showNextDocument" class="btn btn-action-bar" type="button"  wicket:message="title:nextDocument">
+          <i class="far fa-caret-square-right"></i>
+        </button>
+      </div>
+      </div>
+  </wicket:panel>
+</body>
+</html>

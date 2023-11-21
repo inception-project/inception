@@ -124,6 +124,7 @@ public class ConceptInstancePanel
      * in the respective {@link KBHandle} is updated. Otherwise, no action is taken.
      *
      * @param event
+     *            the event
      */
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
@@ -131,15 +132,18 @@ public class ConceptInstancePanel
         KBStatement statement = event.getStatement();
         KBObject instanceHandle = selectedInstanceHandle.getObject();
 
-        boolean isRelevantToSelectedInstance = instanceHandle != null
-                && instanceHandle.getIdentifier().equals(statement.getInstance().getIdentifier());
-        if (!isRelevantToSelectedInstance) {
+        if (instanceHandle == null) {
+            return;
+        }
+
+        if (!instanceHandle.getIdentifier().equals(statement.getInstance().getIdentifier())) {
             return;
         }
 
         if (!isLabelStatement(event.getStatement())) {
             return;
         }
+
         Optional<KBInstance> kbInstance = kbService.readInstance(kbModel.getObject(),
                 statement.getInstance().getIdentifier());
         if (kbInstance.isPresent()) {

@@ -19,7 +19,7 @@
 
 The active learning module aims to guide the user through recommendations in such a way that the
 the judgements made by the user are most informative to the recommenders. The goal is to reduce
-the required user interactions to a minium. The module consists of the following classes and
+the required user interactions to a minimum. The module consists of the following classes and
 interfaces:
 
 * The `ActiveLearningService` interface and its default implementation `ActiveLearningServiceImpl`

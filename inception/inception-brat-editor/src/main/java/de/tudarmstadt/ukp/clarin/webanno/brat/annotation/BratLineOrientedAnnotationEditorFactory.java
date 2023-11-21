@@ -18,19 +18,26 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
-@Component("lineOrientedBratEditor")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link BratAnnotationEditorAutoConfiguration#lineOrientedBratEditor}.
+ * </p>
+ */
 public class BratLineOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
+    public static final String ID = "lineOrientedBratEditor";
+
     @Override
     public String getDisplayName()
     {
@@ -41,7 +48,7 @@ public class BratLineOrientedAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
     }
 
     @Override

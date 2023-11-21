@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface AnnotationSidebarFactory
 {
@@ -37,23 +37,27 @@ public interface AnnotationSidebarFactory
 
     String getDescription();
 
-    IconType getIcon();
+    Component createIcon(String aId, IModel<AnnotatorState> aState);
 
     AnnotationSidebar_ImplBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage);
 
     /**
-     * Override for cases when sidebar should not be available by default
+     * @return if the sidebar is available for the given project. Override for cases when sidebar
+     *         should not be available by default
      */
+    @SuppressWarnings("javadoc")
     default boolean available(Project aProject)
     {
         return true;
     }
 
     /**
-     * Override for cases when sidebar should not be added by default
+     * @return if the sidebar applies to the given annotator state. Override for cases when sidebar
+     *         should not be added by default
      */
+    @SuppressWarnings("javadoc")
     default boolean applies(AnnotatorState aState)
     {
         return true;

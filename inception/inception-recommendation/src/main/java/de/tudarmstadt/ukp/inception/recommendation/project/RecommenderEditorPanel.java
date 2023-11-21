@@ -17,24 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
@@ -56,7 +54,6 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -69,11 +66,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -187,7 +185,7 @@ public class RecommenderEditorPanel
 
         IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
             String name = recommenderModel.getObject().getTool();
-            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            var factory = recommenderRegistry.getFactory(name);
             return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
         }, (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
 
@@ -198,19 +196,17 @@ public class RecommenderEditorPanel
             @Override
             protected void onModelChanged()
             {
-                checkRecommenderLayerMatch(toolModel);
                 // If the feature type has changed, we need to set up a new traits editor
-                Component newTraits;
-                if (form.getModelObject() != null && getModelObject() != null) {
-                    RecommendationEngineFactory factory = recommenderRegistry
-                            .getFactory(getModelObject().getKey());
-                    newTraits = factory.createTraitsEditor(MID_TRAITS, form.getModel());
-                }
-                else {
-                    newTraits = new EmptyPanel(MID_TRAITS);
+                checkRecommenderLayerMatch(toolModel);
+
+                if (form.getModelObject() == null || getModelObject() == null) {
+                    traitsContainer.addOrReplace(new EmptyPanel(MID_TRAITS));
+                    return;
                 }
 
-                traitsContainer.addOrReplace(newTraits);
+                var factory = recommenderRegistry.getFactory(getModelObject().getKey());
+                traitsContainer.addOrReplace( //
+                        factory.createTraitsEditor(MID_TRAITS, form.getModel()));
             }
         };
 
@@ -274,6 +270,8 @@ public class RecommenderEditorPanel
         // ones to ignore, not the ones to consider
         statesForTraining = new IModel<Set<AnnotationDocumentState>>()
         {
+            private static final long serialVersionUID = -6249453365767581031L;
+
             @Override
             public void setObject(Set<AnnotationDocumentState> states)
             {
@@ -340,8 +338,7 @@ public class RecommenderEditorPanel
 
         Recommender recommender = recommenderModel.getObject();
         // check if recommender and layer still match
-        RecommendationEngineFactory factory = recommenderRegistry
-                .getFactory(aToolModel.getObject().getKey());
+        var factory = recommenderRegistry.getFactory(aToolModel.getObject().getKey());
         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
             error(String.format("Recommender %s configured with invalid layer or feature.",
                     recommender.getName()));
@@ -359,8 +356,7 @@ public class RecommenderEditorPanel
             return null;
         }
 
-        RecommendationEngineFactory factory = recommenderRegistry
-                .getFactory(aRecommender.getTool());
+        var factory = recommenderRegistry.getFactory(aRecommender.getTool());
 
         String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
 
@@ -409,43 +405,46 @@ public class RecommenderEditorPanel
 
     private List<AnnotationLayer> listLayers()
     {
-        List<AnnotationLayer> layers = new ArrayList<>();
-
-        for (AnnotationLayer layer : annotationSchemaService
-                .listAnnotationLayer(projectModel.getObject())) {
-            if ((SPAN_TYPE.equals(layer.getType()) || RELATION_TYPE.equals(layer.getType()))
-                    && !Token.class.getName().equals(layer.getName())) {
-                layers.add(layer);
-            }
-        }
-
-        return layers;
+        return annotationSchemaService.listAnnotationLayer(projectModel.getObject()).stream() //
+                .filter(layer -> (SPAN_TYPE.equals(layer.getType())
+                        || RELATION_TYPE.equals(layer.getType())) && //
+                        !(Token._TypeName.equals(layer.getName())
+                                || Sentence._TypeName.equals(layer.getName())))
+                .collect(toList());
     }
 
     private List<AnnotationFeature> listFeatures()
     {
-        if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
-            return annotationSchemaService
-                    .listSupportedFeatures(recommenderModel.getObject().getLayer()).stream()
-                    .filter(feat -> feat.getType() != null).collect(Collectors.toList());
+        if (recommenderModel == null) {
+            return emptyList();
+        }
 
+        AnnotationLayer layer = recommenderModel.getObject().getLayer();
+        if (layer == null) {
+            return emptyList();
         }
-        else {
-            return Collections.emptyList();
-        }
+
+        return annotationSchemaService.listSupportedFeatures(layer).stream()
+                .filter(feat -> feat.getType() != null) //
+                .collect(toList());
     }
 
     private List<Pair<String, String>> listTools()
     {
-        if (recommenderModel != null && recommenderModel.getObject().getLayer() != null
-                && recommenderModel.getObject().getFeature() != null) {
-            AnnotationLayer layer = recommenderModel.getObject().getLayer();
-            AnnotationFeature feature = recommenderModel.getObject().getFeature();
-            return recommenderRegistry.getFactories(layer, feature).stream()
-                    .filter(f -> !f.isDeprecated()).map(f -> Pair.of(f.getId(), f.getName()))
-                    .collect(Collectors.toList());
+        if (recommenderModel == null) {
+            return emptyList();
         }
-        return Collections.emptyList();
+
+        AnnotationLayer layer = recommenderModel.getObject().getLayer();
+        AnnotationFeature feature = recommenderModel.getObject().getFeature();
+        if (layer == null || feature == null) {
+            return emptyList();
+        }
+
+        return recommenderRegistry.getFactories(layer, feature).stream()
+                .filter(f -> !f.isDeprecated()) //
+                .map(f -> Pair.of(f.getId(), f.getName())) //
+                .collect(toList());
     }
 
     private void actionSave(AjaxRequestTarget aTarget)
@@ -503,18 +502,16 @@ public class RecommenderEditorPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String newName = aValidatable.getValue();
-            Recommender currentRecommender = recommender.getObject();
-            Optional<Recommender> recommenderWithNewName = recommendationService
-                    .getRecommender(project.getObject(), newName);
+            var newName = aValidatable.getValue();
+            var currentRec = recommender.getObject();
+            var renamedRec = recommendationService.getRecommender(project.getObject(), newName);
             // Either there should be no recommender with the new name already existing or it should
             // be the recommender we are currently editing (i.e. the name has not changed)
-            if (recommenderWithNewName.isPresent() && !Objects
-                    .equals(recommenderWithNewName.get().getId(), currentRecommender.getId())) {
+            if (renamedRec.isPresent()
+                    && !Objects.equals(renamedRec.get().getId(), currentRec.getId())) {
                 aValidatable.error(new ValidationError(
                         "Another recommender with the same name exists. Please try a different name"));
             }
         }
     }
-
 }

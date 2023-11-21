@@ -21,14 +21,19 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
 
 public interface TelemetryService
 {
-    List<TelemetrySupport> getTelemetrySupports();
+    List<TelemetrySupport<?>> getTelemetrySupports();
 
     /**
-     * Reads the telemetry settings from the DB. If there are no settings yet, this method returns a
-     * new settings object.
+     * @param aSupport
+     *            a support.
+     * @param <T>
+     *            a support traits type.
+     * @return the telemetry settings from the DB. If there are no settings yet, this method returns
+     *         a new settings object.
      */
     <T> TelemetrySettings readOrCreateSettings(TelemetrySupport<T> aSupport);
 
@@ -38,7 +43,7 @@ public interface TelemetryService
 
     List<TelemetrySettings> listSettings();
 
-    Optional<TelemetrySupport> getTelemetrySuppport(String aSupport);
+    <T> Optional<TelemetrySupport<T>> getTelemetrySuppport(String aSupport);
 
     DeploymentMode getDeploymentMode();
 }

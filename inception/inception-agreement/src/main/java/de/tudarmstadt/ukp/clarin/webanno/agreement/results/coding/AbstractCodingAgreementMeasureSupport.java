@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -38,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupp
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgreementTraits>
     extends
@@ -48,12 +50,12 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     {
         AnnotationLayer layer = aFeature.getLayer();
 
-        if (asList(SPAN_TYPE, RELATION_TYPE).contains(layer.getType())
-                && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())) {
-            return true;
-        }
-
-        return false;
+        return asList(SPAN_TYPE, RELATION_TYPE).contains(layer.getType())
+                && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())
+                // Link features are supported (because the links generate sub-positions in the diff
+                // but multi-value primitives (e.g. multi-value strings) are not supported
+                && (aFeature.getMultiValueMode() == MultiValueMode.NONE
+                        || aFeature.getLinkMode() != NONE);
     }
 
     @Override

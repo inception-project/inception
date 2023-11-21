@@ -20,9 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import java.util.List;
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContextException;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -31,11 +36,34 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 public class OverridableUserDetailsManager
     extends JdbcUserDetailsManager
+    implements InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    public OverridableUserDetailsManager(DataSource aDataSource,
+            AuthenticationConfiguration aAuthenticationConfiguration)
+    {
+        super(aDataSource);
+        authenticationConfiguration = aAuthenticationConfiguration;
+    }
+
     @Override
-    protected List<GrantedAuthority> loadUserAuthorities(String aUsername)
+    protected void initDao()
+    {
+        try {
+            setAuthenticationManager(authenticationConfiguration.getAuthenticationManager());
+        }
+        catch (Exception e) {
+            throw new ApplicationContextException(e.getMessage(), e);
+        }
+
+        super.initDao();
+    }
+
+    @Override
+    public List<GrantedAuthority> loadUserAuthorities(String aUsername)
     {
         List<GrantedAuthority> authorities = super.loadUserAuthorities(aUsername);
 

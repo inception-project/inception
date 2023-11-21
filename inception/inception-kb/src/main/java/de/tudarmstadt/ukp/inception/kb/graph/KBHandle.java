@@ -17,13 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,7 +39,8 @@ public class KBHandle
     private static final long serialVersionUID = -4284462837460396185L;
     private String identifier;
     private String name;
-    private List<Pair<String, String>> matchTerms;
+    private String queryBestMatchTerm;
+    private Set<Pair<String, String>> matchTerms;
     private String description;
     private KnowledgeBase kb;
     private String language;
@@ -157,14 +161,18 @@ public class KBHandle
     public void addMatchTerm(String aLabel, String aLanguage)
     {
         if (matchTerms == null) {
-            matchTerms = new ArrayList<>();
+            matchTerms = new LinkedHashSet<>();
         }
 
         matchTerms.add(Pair.of(aLabel, aLanguage));
     }
 
-    public List<Pair<String, String>> getMatchTerms()
+    public Set<Pair<String, String>> getMatchTerms()
     {
+        if (matchTerms == null) {
+            return emptySet();
+        }
+
         return matchTerms;
     }
 
@@ -202,6 +210,16 @@ public class KBHandle
         return debugInfo;
     }
 
+    public void setQueryBestMatchTerm(String aTerm)
+    {
+        queryBestMatchTerm = aTerm;
+    }
+
+    public String getQueryBestMatchTerm()
+    {
+        return queryBestMatchTerm;
+    }
+
     public int getRank()
     {
         return rank;
@@ -227,6 +245,7 @@ public class KBHandle
         return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends KBObject> T convertTo(Class<T> aClass, KBHandle aHandle)
     {
         if (aClass == KBConcept.class) {

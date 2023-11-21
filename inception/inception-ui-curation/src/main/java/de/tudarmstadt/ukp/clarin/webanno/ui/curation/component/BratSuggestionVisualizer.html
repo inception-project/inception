@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-content card">
+      <div wicket:id="modalDialog"></div>
+      <div wicket:id="stateChangeConfirmationDialog"></div>
+      <div class="card-header">
+        <wicket:container wicket:id="username"/>
+        <span class="ms-2" wicket:enclosure=commentSymbol"">
+          <span wicket:id="commentSymbol"></span>
+        </span>
+        <a wicket:id="stateToggle" class="btn btn-sm p-0 float-end">
+          <i wicket:id="state"></i>
+        </a>
+      </div>
+      <div class="card-body text-center" style="overflow-x: auto">
+        <div wicket:id="vis" class="brat"></div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>

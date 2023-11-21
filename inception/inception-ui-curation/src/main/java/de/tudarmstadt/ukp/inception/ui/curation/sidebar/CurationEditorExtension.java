@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 
 import java.io.IOException;
 
@@ -26,25 +27,31 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
 
 /**
@@ -57,25 +64,28 @@ public class CurationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
 {
-    public static final String EXTENSION_ID = "curationEditorExtension";
-
-    // actions from the ui when selecting span or arc annotation
-    private static final String ACTION_SELECT_ARC = "arcOpenDialog";
-    private static final String ACTION_SELECT_SPAN = "spanOpenDialog";
+    public static final String EXTENSION_ID = "cur";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
-    private final CurationRenderer curationRenderer;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserDao userRepository;
+    private final CurationSidebarService curationSidebarService;
+    private final FeatureSupportRegistry featureSupportRegistry;
 
-    @Autowired
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService, CurationRenderer aCurationRenderer)
+            DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
+            UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
-        curationRenderer = aCurationRenderer;
+        applicationEventPublisher = aApplicationEventPublisher;
+        userRepository = aUserRepository;
+        curationSidebarService = aCurationSidebarService;
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
@@ -94,21 +104,74 @@ public class CurationEditorExtension
             return;
         }
 
-        if (!aAction.equals(ACTION_SELECT_ARC) && !aAction.equals(ACTION_SELECT_SPAN)) {
+        CurationVID curationVid = CurationVID.parse(aParamId.getExtensionPayload());
+        if (curationVid == null) {
             return;
         }
 
-        // Annotation has been selected for gold
-        CurationVID extendedVID = CurationVID.parse(aParamId.getExtensionPayload());
-        if (extendedVID != null) {
-            saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);
+        SourceDocument doc = aState.getDocument();
+        String srcUser = curationVid.getUsername();
+
+        if (!documentService.existsAnnotationDocument(doc, srcUser)) {
+            log.error("Source CAS of [{}] for curation not found", srcUser);
+            return;
         }
+
+        if (SelectAnnotationHandler.COMMAND.equals(aAction)) {
+            if (curationSidebarService.isCurationFinished(aState,
+                    userRepository.getCurrentUsername())) {
+                throw new NotEditableException("Curation is already finished. You can put it back "
+                        + "into progress via the monitoring page.");
+            }
+
+            mergeAnnotation(aAction, aPanel, aState, aTarget, aCas, curationVid);
+        }
+        else if (ScrollToHandler.COMMAND.equals(aAction)) {
+            // get user CAS and annotation (to be merged into curator's)
+            VID vid = VID.parse(curationVid.getExtensionPayload());
+
+            CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
+            AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+
+            var page = (AnnotationPageBase) aTarget.getPage();
+            page.getAnnotationActionHandler().actionJump(aTarget, sourceAnnotation.getBegin(),
+                    sourceAnnotation.getEnd());
+        }
+    }
+
+    @Override
+    public <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
+            AnnotationFeature aFeature)
+        throws IOException
+    {
+        // only process actions relevant to curation
+        if (!aVid.getExtensionId().equals(EXTENSION_ID)) {
+            return null;
+        }
+
+        var curationVid = CurationVID.parse(aVid.getExtensionPayload());
+        if (curationVid == null) {
+            return null;
+        }
+
+        var srcUser = curationVid.getUsername();
+
+        if (!documentService.existsAnnotationDocument(aDocument, srcUser)) {
+            log.error("Source CAS of [{}] for curation not found", srcUser);
+            return null;
+        }
+
+        var vid = VID.parse(curationVid.getExtensionPayload());
+        var cas = documentService.readAnnotationCas(aDocument, srcUser);
+        var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
+        var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+        return ext.getFeatureValue(aFeature, fs);
     }
 
     /**
      * Save annotation identified by aVID from user CAS to given curator's CAS
      */
-    private void saveAnnotation(String aAction, AnnotationActionHandler aPanel,
+    private void mergeAnnotation(String aAction, AnnotationActionHandler aPanel,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas,
             CurationVID aCurationVid)
         throws IOException, AnnotationException
@@ -117,64 +180,73 @@ public class CurationEditorExtension
         SourceDocument doc = aState.getDocument();
         String srcUser = aCurationVid.getUsername();
 
-        if (!documentService.existsAnnotationDocument(doc, srcUser)) {
-            log.error(String.format("Source CAS of %s for curation not found", srcUser));
-            return;
-        }
-
         VID vid = VID.parse(aCurationVid.getExtensionPayload());
 
         CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
-        // merge into curator's CAS depending on annotation type (span or arc)
-        CasMerge casMerge = new CasMerge(annotationService);
-        CasMergeOperationResult mergeResult;
-        if (ACTION_SELECT_SPAN.equals(aAction.toString())) {
-            mergeResult = casMerge.mergeSpanAnnotation(doc, srcUser, layer, aTargetCas,
-                    sourceAnnotation, layer.isAllowStacking());
-
-            // open created/updates FS in annotation detail editorpanel
-            AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                    mergeResult.getResultFSAddress());
-            aState.getSelection().selectSpan(mergedAnno);
+        if (vid.isSlotSet()) {
+            mergeSlot(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
-        else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
-            // this is a slot arc
-            if (vid.isSlotSet()) {
-                TypeAdapter adapter = annotationService.getAdapter(layer);
-                AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                        .skip(vid.getAttribute()).findFirst().get();
-
-                mergeResult = casMerge.mergeSlotFeature(doc, srcUser, layer, aTargetCas,
-                        sourceAnnotation, feature.getName(), vid.getSlot());
-
-                // open created/updates FS in annotation detail editorpanel
-                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getResultFSAddress());
-                aState.getSelection().selectSpan(mergedAnno);
-            }
-            // normal relation annotation arc is clicked
-            else {
-                mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
-                        sourceAnnotation, layer.isAllowStacking());
-
-                // open created/updates FS in annotation detail editorpanel
-                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getResultFSAddress());
-                aState.getSelection().selectArc(mergedAnno);
-            }
+        else if (RELATION_TYPE.equals(layer.getType())) {
+            mergeRelation(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
+        }
+        else if (SPAN_TYPE.equals(layer.getType())) {
+            mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
         aPanel.actionSelect(aTarget);
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
     }
 
-    @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    private void mergeSlot(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
     {
-        curationRenderer.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+
+        TypeAdapter adapter = annotationService.getAdapter(layer);
+        AnnotationFeature feature = adapter.listFeatures().stream().sequential()
+                .skip(aVid.getAttribute()).findFirst().get();
+
+        CasMergeOperationResult mergeResult = casMerge.mergeSlotFeature(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, feature.getName(), aVid.getSlot());
+
+        // open created/updates FS in annotation detail editorpanel
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectSpan(mergedAnno);
+    }
+
+    private void mergeRelation(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
+    {
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        CasMergeOperationResult mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+
+        // open created/updates FS in annotation detail editorpanel
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectArc(mergedAnno);
+    }
+
+    private void mergeSpan(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
+    {
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+
+        // open created/updates FS in annotation detail editor panel
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectSpan(mergedAnno);
     }
 }

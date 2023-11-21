@@ -20,11 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.MenuItem;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.CommonException;
 
 public class LambdaMenuItem
     extends MenuItem
@@ -45,6 +48,16 @@ public class LambdaMenuItem
     {
         try {
             action.accept(aTarget);
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
+        }
+        catch (CommonException e) {
+            Page page = (Page) PageRequestHandlerTracker.getLastHandler(RequestCycle.get())
+                    .getPage();
+            page.error("Error: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
         }
         catch (Exception e) {
             Page page = (Page) PageRequestHandlerTracker.getLastHandler(RequestCycle.get())

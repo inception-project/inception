@@ -17,28 +17,43 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class PredictionsSwitchedEvent
+    extends ApplicationEvent
+    implements TransientAnnotationStateChangedEvent, HybridApplicationUIEvent
 {
-    private final AjaxRequestTarget requestHandler;
+    private static final long serialVersionUID = 3072280760236986642L;
+
     private final AnnotatorState state;
+    private final String sessionOwner;
 
-    public PredictionsSwitchedEvent(AjaxRequestTarget aTarget, AnnotatorState aState)
+    public PredictionsSwitchedEvent(Object aSource, String aSessionOwner, AnnotatorState aState)
     {
-        requestHandler = aTarget;
+        super(aSource);
         state = aState;
-    }
-
-    public AjaxRequestTarget getRequestHandler()
-    {
-        return requestHandler;
+        sessionOwner = aSessionOwner;
     }
 
     public AnnotatorState getState()
     {
         return state;
+    }
+
+    @Override
+    public SourceDocument getDocument()
+    {
+        return state.getDocument();
+    }
+
+    @Override
+    public String getUser()
+    {
+        return sessionOwner;
     }
 }

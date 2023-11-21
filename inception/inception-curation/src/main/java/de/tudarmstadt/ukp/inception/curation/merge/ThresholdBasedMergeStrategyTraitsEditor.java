@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -24,6 +25,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 public class ThresholdBasedMergeStrategyTraitsEditor
@@ -38,6 +41,8 @@ public class ThresholdBasedMergeStrategyTraitsEditor
     public ThresholdBasedMergeStrategyTraitsEditor(String aId, IModel<CurationWorkflow> aModel)
     {
         super(aId, aModel);
+
+        setOutputMarkupId(true);
 
         traits = strategyFactory.readTraits(aModel.getObject());
 
@@ -55,11 +60,36 @@ public class ThresholdBasedMergeStrategyTraitsEditor
             }
         };
 
-        form.add(new NumberTextField<>("userThreshold", Integer.class).setMinimum(0));
+        form.add(new LambdaAjaxLink("presetMajorityVote", this::actionPresetMajorityVote));
 
-        form.add(new NumberTextField<>("confidenceThreshold", Double.class).setMinimum(0.0d)
-                .setMaximum(1.0d).setStep(0.1d));
+        form.add(new LambdaAjaxLink("presetUnanimousVote", this::actionPresetUnanimousVote));
+
+        form.add(new NumberTextField<>("topRanks", Integer.class).setMinimum(1));
+
+        form.add(new NumberTextField<>("userThreshold", Integer.class).setMinimum(1));
+
+        form.add(new NumberTextField<>("confidenceThreshold", Double.class) //
+                .setMinimum(0.0d).setMaximum(100.0d).setStep(0.1d) //
+                .setModel(LambdaModelAdapter.of( //
+                        () -> traits.getConfidenceThreshold() * 100.0d,
+                        (v) -> traits.setConfidenceThreshold(v / 100.0d))));
 
         add(form);
+    }
+
+    private void actionPresetMajorityVote(AjaxRequestTarget aTarget)
+    {
+        traits.setTopRanks(1);
+        traits.setUserThreshold(1);
+        traits.setConfidenceThreshold(0);
+        aTarget.add(this);
+    }
+
+    private void actionPresetUnanimousVote(AjaxRequestTarget aTarget)
+    {
+        traits.setTopRanks(1);
+        traits.setUserThreshold(1);
+        traits.setConfidenceThreshold(1);
+        aTarget.add(this);
     }
 }

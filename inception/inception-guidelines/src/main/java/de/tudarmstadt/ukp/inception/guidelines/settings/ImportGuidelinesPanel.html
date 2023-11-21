@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <form wicket:id="form" class="flex-content">
+      <div class="card-header rounded-0 flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
+        <label class="text-nowrap">
+          <wicket:message key="filesToImport"/>
+        </label>
+        
+        <div class="flex-content">
+          <input wicket:id="guidelines" type="file" multiple></input>
+        </div>
+         
+        <button wicket:id="import" class="btn btn-primary">
+          <i class="fas fa-file-upload"></i>&nbsp;
+          <wicket:message key="import"/>
+        </button>
+      </div>
+    </form>
+  </wicket:panel>
+</body>
+</html>

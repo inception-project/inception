@@ -1,0 +1,327 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_external_editors]]
+= External Editors
+
+This section introduces the mechanism for registering external editors in INCEpTION. An external
+editor is an editor plugin implemented in JavaScript / TypeScript.
+
+In order to use an external editor, create a folder `editors` in the INCEpTION home folder, then
+within that folder create another folder for the editor plugin. The name of the folder will be the
+identifier of the editor plugin (e.g. if you would later rename the folder, the editor ID saved
+in the editor user preference would become invalid).
+
+Within the editor folder, create a plugin descriptor file named `plugin.json`. This file contains all
+important information required by INCEpTION to use the editor.
+
+The way the plugin descriptor needs to be set up depends mainly on whether the editor plugin takes
+care of rendering the full document or only the annotations. However, some settings are generic
+for any type of editor plugin:
+
+* `name`: the human-readable name for the editor
+* `factory`: the JavaScript expression to access the annotation editor factory provided by the plugin
+
+.Example `plugin.json` for external editor
+[source,json]
+----
+{
+  "name": "My Editor (external)",
+  "factory": "MyEditor.factory()",
+  "view": "iframe:cas+xhtml+xml",
+  "scripts": [
+    "dist/MyEditor.min.js" 
+  ],
+  "stylesheets": [
+    "dist/MyEditor.min.css"
+  ]
+}
+----
+
+== Document-rendering editors
+
+A document-rendering editor loads the document and annotation data from the backend and then renders
+the document including the annotations. This is typically the case for editors using SVG to display
+the document. The editor has the ability to define the layout of the document in such a ways that
+the annotations fit nicely. 
+
+For document-rendering editors, the `plugin.json` file offers the following settings:
+
+* `view`: the HTML file used as a template for the editor plugin. The value must start with `plugin:`
+  followed by a path to the HTML file within the plugin. E.g. if a template file `editor.html` is next
+  to the `plugin.json` file in the same folder, use `plugin:editor.html`.
+
+.Example `plugin.json` for document-rendering editor
+[source,json]
+----
+{
+  "name": "My Editor (external)",
+  "factory": "MyEditor.factory()"
+  "view": "plugin:editor.html"
+}
+----
+
+The external editor mechanism loads the template file within an IFrame that is embedded in the
+annotation page. Any CSS or JavaScript files needed by the plugin must be referenced by the template
+file using a relative location. For example let's assume a file `editor.html` which needs to load
+a `editor.css` style sheet and an `editor.js` JavaScript file:
+
+[source,html]
+----
+<meta charset="utf-8">
+<title>DoccanoSequenceEditor demo</title>
+<script src="./editor.js"></script>
+<link rel="stylesheet" href="./editor.css">
+<div id="editor"/>
+----
+
+== Editors using server-side document views
+
+Some annotation editors overlay their annotations on an already existing document view. For example,
+annotations could be overlaid on a HTML or PDF document. In this case, the external editor mechanism
+can be configured to use a particular `DocumentView` plugin on the server to render the document and
+to display it within an IFrame that is embedded in the annotation page. The editor plugin JavaScript
+and CSS stylesheet files required are then injected into this IFrame as well. 
+
+[source,json]
+----
+{
+  "name": "My editor",
+  "factory": "MyEditor.factory()",
+  "view": "iframe:cas+html,
+  "scripts": [ "editor.js" ],
+  "stylesheets": [ "editor.css" ],
+}
+----
+
+== Views
+
+Currently supported views are:
+
+* `iframe:cas+xml`: Renders XML contained in the CAS into a generic XML IFrame in the editor area.
+* `iframe:cas+xhtml+xml`: Renders XML contained in the CAS into an XHTML+XML IFrame in the editor area.
+HTML head and body elements are added automatically. The XML is rendered into the body.
+
+== Policies
+
+Every editor should provide a `policy.yaml` right next to the `plugin.json`. The `policy.yaml` declares
+all elements and attributes that are supported by the editor. This policy file should be written as
+a **safelist**, i.e. it should say exactly what is permitted instead of saying what is not allowed.
+Allowing the wrong elements and attributes may cause security problems, e.g. if they can contain
+executable JavaScript or load data from remote locations.
+
+There are several elements like `script`, `meta`, `applet`, `link`, `iframe` as well as `a` which are
+and JavaScript event attributes always filtered out.
+
+If an editor does not provide a `policy.yaml` file, a default built-in policy is used which allows
+most HTML formatting elements.
+
+.Example `policy.yaml` file
+[source,yaml]
+----
+name: Example policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: DROP
+default_element_action: DROP
+debug: false
+policies:
+  - { elements: ["html"], action: "PASS" }
+  - { elements: ["p", "div"], action: "PASS" }
+  - { elements: ["tr", "th"], action: "PASS" }
+  - { attributes: ["class"], action: "PASS" }
+  - { attributes: ["style"], action: "DROP" }
+  - {
+      attributes: ["title"],
+      matching: "[a-zA-Z0-9]*",
+      on_elements: ["div"],
+      action: "PASS",
+    }
+----
+
+There are two types of policies: **element policies**, and **attribute policies**.
+
+=== Element policies
+An element policy must contain the key `elements` which takes a list of element names and the key
+`action` which can be either `PASS` or `DROP`. If an element is dropped, all child elements are
+also dropped. Text within the child elements is replaced by an equivalent amount of space such that
+offsets are not affected.
+
+Note that the root element of your documents should always be allowed to `PASS`, otherwise the
+document may fail to render.
+
+It is possible to preserve elements within dropped elements by explicitly allowing the nested
+elements to `PASS`.
+
+[source,yaml]
+----
+policies:
+  - { elements: ["root", "child2"], action: "PASS" }
+  - { elements: ["child1"], action: "DROP" }
+----
+
+Using this policy, a document `<root><child1><child2>text</child2></child1/></root>` will be transformed
+to `<root><child2>text</child2></root>`.
+
+=== Attribute policies
+An attribute policy must contain the key `attributes` which takes a list of attribute names, 
+and the key `action` which can be either `PASS` or `DROP`. Optionally it may contain the the key 
+`onElements` which takes a list of element names. If this key is present, the policy only affects
+the attributes on the given elements, otherwise the policy affects all elements globally. Also, the
+key `matching` can be optionally included to affect only attributes whose value matches the regular
+expression provided as the value to `matching`.
+
+When declaring attribute policies, the order matters. E.g. you should declare more specific policies
+(e.g. such having a `onElements` or `matching` key) before less specific or global policies.
+
+=== Debugging
+To debug the rules, you can set the key `debug` to `true` and reload your editor in the browser.
+Restarting the whole application is not required. When inspecting the content of the editor IFrame
+in the browser's developer tools, you will see that elements and attributes matched by a `DROP`
+policy have been prefixed with `MASKED-` instead of being fully dropped. Do not forget to set
+debug back to `false` or to remove the key for actual use.
+
+== Editor implementation
+
+Editors can be implemented in JavaScript or languages that can be compiled to JavaScript such as
+TypeScript. To facilitate the implementation, INCEpTION provides a set of interface definitions for
+TypeScript, in particular `AnnotationEditorFactory` and `AnnotationEditor`.
+
+To make use of these, set up a `package.json` file next to the `plugin.json` file. In the `package.json`
+file, add `@inception-project/inception-js-api` as a dependency. The example below also already includes
+TypeScript and ESBuild as dependencies.
+
+[source,json]
+----
+{
+  "name": "My Editor",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "esbuild src/main.ts --target=es6 --bundle --sourcemap --global-name=MyEditor --outfile=editor.js"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.13.12",
+    "typescript": "^4.4.2"
+  }
+}
+----
+
+NOTE: The `@inception-project/inception-js-api` module should eventually be available from the NPMJS. However, if you 
+    have INCEpTION checked out locally, you may want to build your editor against the latest local version. To do this, 
+    first build INCEpTION once e.g. using `mvn clean install` or within your IDE. Then go to the folder 
+    `inception-application/inception/inception-js-api/src/main/ts` in your checkout and run `npm link`. After that, go to the
+    folder containing your editor plugin and run `npm link "@inception-project/inception-js-api"` there. 
+    
+The minimal editor implementation consists of three JavaScript/TypeScript files:
+
+* `main.ts`: the entry point into your editor module. It is referenced by the `build` script in the
+  `package.json` file and provides access to your editor factory.
+* `MyEditorFactory.ts`: a factory class implementing the `AnnotationEditorFactory` interface which facilitates
+  access to your editor for the external editor mechanism. In particular, it provides means of
+  instantiating and destroying an editor instance.
+* `MyEditor.ts`: the actual editor class implementing the `AnnotationEditor` interface.
+
+.Example `main.ts` file skeleton
+[source,typescript]
+----
+import { MyEditorFactory } from './MyEditorFactory';
+
+const INSTANCE = new MyEditorFactory();
+
+export function factory(): MyEditorFactory {
+  return INSTANCE;
+}
+----
+
+.Example `MyEditorFactory.ts` file skeleton
+[source,typescript]
+----
+import type { AnnotationEditorFactory, AnnotationEditorProperties, DiamClientFactory } from "@inception-project/inception-js-api"
+
+const PROP_EDITOR = "__editor__";
+
+export class MyEditorFactory implements AnnotationEditorFactory {
+  public async getOrInitialize(element: HTMLElement, diam : DiamClientFactory, props: AnnotationEditorProperties): Promise<RecogitoEditor> {
+    if (element[PROP_EDITOR] != null) {
+      return element[PROP_EDITOR];
+    }
+
+    const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl);
+    const bodyElement = document.getElementsByTagName("body")[0];
+    element[PROP_EDITOR] = new MyEditor(bodyElement, ajax);
+    return element[PROP_EDITOR];
+  }
+
+  public destroy(element: HTMLElement) {
+    if (element[PROP_EDITOR] != null) {
+      element[PROP_EDITOR].destroy();
+    }
+  }
+}
+----
+
+.Example `MyEditor.ts` file skeleton
+[source,typescript]
+----
+import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api";
+
+const ANNOTATIONS_SERIALIZER = "Brat"; // The annotation format requested from the server
+
+export class RecogitoEditor implements AnnotationEditor {
+  private ajax: DiamAjax;
+
+  public constructor(element: HTMLElement, ajax: DiamAjax) {
+    this.ajax = ajax;
+
+    // Add editor code here - usually the editor code would be in a set of additional classes which would be 
+    // instantiated and configured here and be bound to the given HTML element. Also, you would typically
+    // register event handlers here that call methods like `createAnnotation` and `selectAnnotation` below, e.g.
+    // when marking some text or clicking on an existing annotation.
+
+    this.loadAnnotations();
+  }
+
+  public loadAnnotations(): void {
+    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER)
+      .then(data => {
+        // Place code here that causes your editor to re-render itself using the data received from the server
+      });
+  }
+
+  public destroy(): void {
+    // Depending on your editor implementation, it may be necessary to clean up stuff, e.g. to prevent memory leaks. 
+    // Do these cleanup actions here.
+  }
+
+  private createAnnotation(annotation): void {
+    // This is an example event handler to be called by your editor. For example, it could pick up start and end offsets 
+    // of the text to be annotated as well as the annotated text itself and send these to the server using the DIAM AJAX API
+    // that was injected by the exsternal editor mechanism. The server will update its state and send a `loadAnnotations()`
+    // call to the browser to trigger a re-rendering.
+    this.ajax.createSpanAnnotation([[annotation.begin, annotation.end]], annotation.text);
+  }
+
+  private selectAnnotation(annotation): void {
+    // This is an example event handler to be called by your editor. For example, it could pick up the annotation ID from
+    // the selected annotation and send it to the server using the DIAM AJAX API that was injected by the external editor
+    // mechanism. The server will update its state and send a `loadAnnotations()` call to the browser to trigger a re-rendering.
+    this.ajax.selectAnnotation(annotation.id);
+  }
+}
+----

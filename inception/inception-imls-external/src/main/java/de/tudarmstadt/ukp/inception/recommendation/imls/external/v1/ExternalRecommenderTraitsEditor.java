@@ -63,12 +63,16 @@ public class ExternalRecommenderTraitsEditor
             }
         };
 
-        TextField<String> remoteUrl = new TextField<>("remoteUrl");
+        var remoteUrl = new TextField<String>("remoteUrl");
         remoteUrl.setRequired(true);
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);
 
-        CheckBox trainable = new CheckBox("trainable");
+        var verifyCertificates = new CheckBox("verifyCertificates");
+        verifyCertificates.setOutputMarkupId(true);
+        form.add(verifyCertificates);
+
+        var trainable = new CheckBox("trainable");
         trainable.setOutputMarkupId(true);
         trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 _target -> _target.add(getTrainingStatesChoice())));

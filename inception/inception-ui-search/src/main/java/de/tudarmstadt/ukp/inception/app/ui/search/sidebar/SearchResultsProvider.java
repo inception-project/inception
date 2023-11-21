@@ -136,6 +136,7 @@ public class SearchResultsProvider
      * {@link #iterator(long, long)} method of the SearchResultsProvider will then execute the
      * query.
      */
+    @SuppressWarnings("javadoc")
     public void initializeQuery(User aUser, Project aProject, String aQuery,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature)

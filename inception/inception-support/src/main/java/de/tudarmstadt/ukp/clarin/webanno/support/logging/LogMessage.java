@@ -42,7 +42,7 @@ public class LogMessage
             source = (String) aSource;
         }
         else if (aSource instanceof Class) {
-            source = ((Class) aSource).getSimpleName();
+            source = ((Class<?>) aSource).getSimpleName();
         }
         else {
             source = aSource != null ? aSource.getClass().getSimpleName() : null;

@@ -17,22 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import wicket.contrib.input.events.key.KeyType;
 
+@ConditionalOnWebApplication
 @Order(300)
 @Component
 public class DynamicWorkloadManagementPageMenuItem
@@ -78,8 +83,7 @@ public class DynamicWorkloadManagementPageMenuItem
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(aProject, user)
-                || projectService.isManager(aProject, user))
+        return projectService.hasRole(user, aProject, CURATOR, MANAGER)
                 && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                         .loadOrCreateWorkloadManagerConfiguration(aProject).getType());
     }
@@ -88,5 +92,11 @@ public class DynamicWorkloadManagementPageMenuItem
     public Class<? extends Page> getPageClass()
     {
         return DynamicWorkloadManagementPage.class;
+    }
+
+    @Override
+    public KeyType[] shortcut()
+    {
+        return new KeyType[] { KeyType.Alt, KeyType.w };
     }
 }

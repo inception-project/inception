@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.INFO;
 
 import java.util.List;
@@ -29,12 +28,12 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * Checks if there are any relations that do not have a source or target. Note that relations
@@ -43,7 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class DanglingRelationsCheck
     implements Check
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public DanglingRelationsCheck(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
@@ -90,7 +94,7 @@ public class DanglingRelationsCheck
                 StringBuilder message = new StringBuilder();
 
                 message.append("Relation [" + relationAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends.");
+                        + ICasUtil.getAddr(fs) + "] has loose ends.");
                 if (relationAdapter.getAttachFeatureName() != null) {
                     message.append("\nRelation [" + relationAdapter.getLayer().getName()
                             + "] attached to feature [" + relationAdapter.getAttachFeatureName()

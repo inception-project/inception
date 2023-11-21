@@ -21,14 +21,23 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 
+import java.io.IOException;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -40,21 +49,35 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
 public class IndexAnnotationDocumentTask
     extends IndexingTask_ImplBase
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private @Autowired SearchService searchService;
+    private @Autowired DocumentService documentService;
 
     private int done = 0;
 
-    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
-            byte[] aBinaryCas)
+    public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
-        super(aAnnotationDocument, aTrigger, aBinaryCas);
+        super(aAnnotationDocument, aTrigger);
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return "Indexing annotations...";
     }
 
     @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
+            var aDoc = getAnnotationDocument();
+            var cas = documentService.readAnnotationCas(aDoc.getDocument(), aDoc.getUser(),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+            searchService.indexDocument(aDoc, WebAnnoCasUtil.casToByteArray(cas));
+        }
+        catch (IOException e) {
+            log.error("Error indexing annotation document {}", getSourceDocument(), e);
         }
 
         done++;
@@ -72,15 +95,15 @@ public class IndexAnnotationDocumentTask
         // If a re-indexing task for the project is scheduled, we do not need to schedule a new
         // annotation indexing task
         if (aTask instanceof ReindexTask) {
-            if (((ReindexTask) aTask).getProject().getId() == getAnnotationDocument().getProject()
-                    .getId()) {
+            if (Objects.equals(((ReindexTask) aTask).getProject().getId(),
+                    getAnnotationDocument().getProject().getId())) {
                 return DISCARD_OR_QUEUE_THIS;
             }
         }
 
         if (aTask instanceof IndexAnnotationDocumentTask) {
-            if (getAnnotationDocument().getId() == ((IndexAnnotationDocumentTask) aTask)
-                    .getAnnotationDocument().getId()) {
+            if (Objects.equals(getAnnotationDocument().getId(),
+                    ((IndexAnnotationDocumentTask) aTask).getAnnotationDocument().getId())) {
                 return UNQUEUE_EXISTING_AND_QUEUE_THIS;
             }
         }

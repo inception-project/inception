@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static java.lang.Double.NaN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
@@ -30,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CohenKappaAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
@@ -51,8 +54,9 @@ public class CohenKappaAgreementMeasureTest
     @Test
     public void multiLinkWithRoleLabelDifference() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = multiLinkWithRoleLabelDifferenceTest(
-                sut);
+        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
+
+        var agreement = multiLinkWithRoleLabelDifferenceTest(sut);
 
         CodingAgreementResult result = agreement.getStudy("user1", "user2");
 

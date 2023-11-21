@@ -23,11 +23,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
@@ -52,6 +53,7 @@ public class DocumentMetadataLayerSupportAutoConfiguration
      * support. Instead we return {@code true} from {@link LayerType#isInternal()} to prevent the
      * use from creating new layers of this type.
      */
+    @SuppressWarnings("javadoc")
     @Bean
     public DocumentMetadataLayerSupport documentMetadataLayerSupport(
             FeatureSupportRegistry aFeatureSupportRegistry,
@@ -69,5 +71,12 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     {
         return new DocumentMetadataLayerSingletonCreatingWatcher(aDocumentService,
                 aAnnotationService, aLayerRegistry);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
+    {
+        return new DocumentMetadataAnnotationActionUndoSupport();
     }
 }

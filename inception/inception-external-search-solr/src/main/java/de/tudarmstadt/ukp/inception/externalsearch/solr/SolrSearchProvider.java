@@ -71,6 +71,7 @@ public class SolrSearchProvider
      * @throws IOException
      *             Connection timeout, wrong URL and query exception
      */
+    @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
             SolrSearchProviderTraits aTraits, String aQuery)
         throws IOException
@@ -81,12 +82,11 @@ public class SolrSearchProvider
         try {
             try {
                 SolrQuery query = new SolrQuery();
-                // query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
-                // solrClient.query(aTraits.getIndexName(), query);
 
-                if (aQuery.isEmpty() | aQuery.equals("*:*"))
+                if (aQuery.isEmpty() || aQuery.equals("*:*")) {
                     aQuery = "*:*";
+                }
                 else {
                     aQuery = aTraits.getDefaultField() + ":" + aQuery;
                 }
@@ -175,7 +175,7 @@ public class SolrSearchProvider
      * Convert data from SolrDocument to ExternalSearchResult
      * 
      * @param result
-     *            result has just the id complete before the methode
+     *            result has just the id complete before the method
      * @param document
      *            contain all the information about the document
      * @param aTraits
@@ -341,7 +341,7 @@ public class SolrSearchProvider
     }
 
     /**
-     * Escape special characters for standard query parser. Usefull when retrieving document with an
+     * Escape special characters for standard query parser. Useful when retrieving document with an
      * id that contain such of those characters
      * 
      * @param query

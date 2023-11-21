@@ -25,12 +25,13 @@ import java.util.stream.Stream;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
 
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.
  */
 public enum AnnotationDocumentState
-    implements PersistentEnum
+    implements PersistentEnum, HasSymbol
 {
     /**
      * Indicates that the annotator has not yet started working on the document. The first time an
@@ -61,7 +62,9 @@ public enum AnnotationDocumentState
 
     /**
      * Indicates that the given document should not be offered to an annotator. If is possible that
-     * the annotator has already started working on the project.
+     * the annotator has already started working on the project. When set explicitly by an
+     * annotator, it indicates that the annotator was unable to successfully complete the annotation
+     * - possibly due to a problem with the document not working in the editor or such.
      */
     @JsonProperty("IGNORE")
     IGNORE("IGNORE", "<i class=\"fas fa-lock\"></i>", "black", false, true);
@@ -172,6 +175,10 @@ public enum AnnotationDocumentState
             return aDoc.getState().symbol + " (" + aDoc.getAnnotatorState().symbol + ")";
         }
 
+        if (aDoc.getAnnotatorState() == AnnotationDocumentState.IGNORE) {
+            return aDoc.getState().symbol + " (<i class=\"fas fa-exclamation-triangle\"></i>)";
+        }
+
         return aDoc.getState().symbol;
     }
 
@@ -180,7 +187,8 @@ public enum AnnotationDocumentState
         if (aDoc.getAnnotatorState() != null) {
             switch (aDoc.getAnnotatorState()) {
             case FINISHED: // fall-through
-            case IN_PROGRESS:
+            case IN_PROGRESS: // fall-through
+            case IGNORE:
                 switch (aDoc.getState()) {
                 case IN_PROGRESS:
                     return FINISHED;
@@ -194,7 +202,6 @@ public enum AnnotationDocumentState
                     // We we reach them, better do nothing.
                     return aDoc.getState();
                 }
-            case IGNORE: // fall-through
             case NEW: // fall-through
             default:
                 // These states should normally not be settable by the annotator. We should not do

@@ -35,6 +35,8 @@ public class BootstrapFeedbackPanel
 {
     private static final long serialVersionUID = 5171764027460264375L;
 
+    private WebMarkupContainer closeAll;
+
     public BootstrapFeedbackPanel(String id)
     {
         this(id, null);
@@ -46,10 +48,12 @@ public class BootstrapFeedbackPanel
 
         WebMarkupContainer messagesContainer = (WebMarkupContainer) get("feedbackul");
 
-        WebMarkupContainer closeAll = new WebMarkupContainer("closeAll");
+        closeAll = new WebMarkupContainer("closeAll");
+        closeAll.setOutputMarkupId(true);
         // Show the bulk-dismiss option if there are at least two sticky messages t
         closeAll.add(visibleWhen(() -> getCurrentMessages().stream()
                 .filter(FeedbackMessage::isWarning).limit(2).count() > 1));
+
         messagesContainer.add(closeAll);
     }
 
@@ -62,6 +66,12 @@ public class BootstrapFeedbackPanel
                 JavaScriptHeaderItem.forReference(BootstrapFeedbackPanelJavascriptReference.get()));
 
         aResponse.render(OnDomReadyHeaderItem.forScript("bootstrapFeedbackPanelFade();"));
+
+        if (closeAll.isVisible()) {
+            aResponse.render(OnDomReadyHeaderItem.forScript("document.getElementById('"
+                    + closeAll.getMarkupId()
+                    + "')?.addEventListener('click', e => bootstrapFeedbackPanelCloseAll())"));
+        }
     }
 
     @Override

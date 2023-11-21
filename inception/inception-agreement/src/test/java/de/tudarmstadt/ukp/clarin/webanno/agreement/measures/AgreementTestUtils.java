@@ -21,8 +21,8 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.dumpAgreementStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -45,6 +45,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -55,8 +56,8 @@ import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.InsufficientDataException;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -64,6 +65,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class AgreementTestUtils
 {
 
+    public static final String MULTI_VALUE_SPAN_TYPE = "MultiValueSpan";
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
@@ -300,6 +302,21 @@ public class AgreementTestUtils
         reader.getNext(jcas);
 
         return jcas;
+    }
+
+    public static TypeSystemDescription createMultiValueStringTestTypeSystem()
+        throws ResourceInitializationException
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+
+        TypeDescription mvSpan = tsd.addType(MULTI_VALUE_SPAN_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
+        mvSpan.addFeature("values", "", CAS.TYPE_NAME_STRING_ARRAY, CAS.TYPE_NAME_STRING, false);
+        typeSystems.add(tsd);
+        typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
+
+        return CasCreationUtils.mergeTypeSystems(typeSystems);
     }
 
     public static TypeSystemDescription createMultiLinkWithRoleTestTypeSystem(String... aFeatures)

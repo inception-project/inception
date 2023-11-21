@@ -39,4 +39,16 @@
       </column>
     </createTable>
   </changeSet>
+  <changeSet id="20230916-log-1" author="INCEpTION Team">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="logged_event" indexName="idx_logged_event_project_user_event"/>
+      </not>
+    </preConditions>  
+    <createIndex tableName="logged_event" indexName="idx_logged_event_project_user_event">
+      <column name="project" />
+      <column name="user" />
+      <column name="event" />
+    </createIndex>
+  </changeSet>
 </databaseChangeLog>

@@ -60,7 +60,7 @@ public class MergeStrategyPanel
         super(aId, aModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<CurationWorkflow> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aModel));
+        var form = new Form<CurationWorkflow>(MID_FORM, CompoundPropertyModel.of(aModel));
         add(form);
 
         IModel<Pair<String, String>> mergeStrategyModel = LambdaModelAdapter.of( //
@@ -72,20 +72,12 @@ public class MergeStrategyPanel
                 (v) -> getModelObject().setMergeStrategy(v != null ? v.getKey() : null));
 
         mergeStrategyChoice = new DropDownChoice<Pair<String, String>>(MID_MERGE_STRATEGY,
-                mergeStrategyModel, this::listMergeStrategies)
-        {
-            private static final long serialVersionUID = -1869081847783375166L;
-
-            @Override
-            protected void onModelChanged()
-            {
-                mergeStrategyTraitsContainer.addOrReplace(makeMergeStrategyTraitsEditor());
-            }
-        };
+                mergeStrategyModel, this::listMergeStrategies);
 
         mergeStrategyChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
         mergeStrategyChoice.setOutputMarkupId(true);
         mergeStrategyChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+            mergeStrategyTraitsContainer.addOrReplace(makeMergeStrategyTraitsEditor());
             t.add(mergeStrategyTraitsContainer);
         }));
         form.add(mergeStrategyChoice);
@@ -94,6 +86,13 @@ public class MergeStrategyPanel
         mergeStrategyTraitsContainer.setOutputMarkupPlaceholderTag(true);
         mergeStrategyTraitsContainer.add(makeMergeStrategyTraitsEditor());
         form.add(mergeStrategyTraitsContainer);
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        mergeStrategyTraitsContainer.addOrReplace(makeMergeStrategyTraitsEditor());
     }
 
     private Component makeMergeStrategyTraitsEditor()

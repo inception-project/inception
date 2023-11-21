@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
@@ -44,8 +42,6 @@ public class GetDocumentResponse
 {
     public static final String COMMAND = "getDocument";
 
-    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
-
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
 
@@ -57,17 +53,9 @@ public class GetDocumentResponse
 
     private String text;
 
-    @JsonProperty("source_files")
-    private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
+    private int windowBegin;
 
-    // private long ctime;
-    // private long mtime;
-
-    // This seems to be no longer used in brat
-    // https://github.com/nlplab/brat/blob/master/server/src/document.py#L794
-    // private int offset;
-
-    private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
+    private int windowEnd;
 
     /**
      * [ 0, 3 ]
@@ -89,26 +77,13 @@ public class GetDocumentResponse
      * Guess: ID (maybe token ID?), Type, begin offset, end offset
      */
     private @JsonInclude(NON_EMPTY) List<Entity> entities = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
 
     private Map<String, List<Marker>> args = new HashMap<>();
 
     public GetDocumentResponse()
     {
         super(COMMAND);
-    }
-
-    public GetCollectionInformationResponse getInfo()
-    {
-        return info;
-    }
-
-    public void setInfo(GetCollectionInformationResponse aInfo)
-    {
-        info = aInfo;
     }
 
     public void addToken(int aBegin, int aEnd)
@@ -119,16 +94,6 @@ public class GetDocumentResponse
     public void addSentence(int aBegin, int aEnd)
     {
         sentenceOffsets.add(new Offsets(aBegin, aEnd));
-    }
-
-    public List<String> getModifications()
-    {
-        return modifications;
-    }
-
-    public void setModifications(List<String> aModifications)
-    {
-        modifications = aModifications;
     }
 
     public String getText()
@@ -155,94 +120,6 @@ public class GetDocumentResponse
     {
         comments.add(aComment);
     }
-
-    public List<Normalization> getNormalizations()
-    {
-        return normalizations;
-    }
-
-    public void setNormalizations(List<Normalization> aNormalizations)
-    {
-        normalizations = aNormalizations;
-    }
-
-    public void addNormalization(Normalization aNormalization)
-    {
-        normalizations.add(aNormalization);
-    }
-
-    /**
-     * Get source files for the annotations.
-     * 
-     * @return the source files.
-     */
-    public List<String> getSourceFiles()
-    {
-        return sourceFiles;
-    }
-
-    /**
-     * Set source files for the annotations.
-     * 
-     * @param aSourceFiles
-     *            the source files.
-     */
-    public void setSourceFiles(List<String> aSourceFiles)
-    {
-        sourceFiles = aSourceFiles;
-    }
-
-    // /**
-    // * Get creation time.
-    // *
-    // * @return the timestamp.
-    // */
-    // public long getCtime()
-    // {
-    // return ctime;
-    // }
-    //
-    // /**
-    // * Set creation time.
-    // *
-    // * @param aCtime
-    // * creation time.
-    // */
-    // public void setCtime(long aCtime)
-    // {
-    // ctime = aCtime;
-    // }
-    //
-    // /**
-    // * Get last modification time.
-    // *
-    // * @return last modification time.
-    // */
-    // public long getMtime()
-    // {
-    // return mtime;
-    // }
-    //
-    // /**
-    // * Set last modification time.
-    // *
-    // * @param aMtime
-    // * last modfication time.
-    // */
-    // public void setMtime(long aMtime)
-    // {
-    // mtime = aMtime;
-    // }
-
-    // public int getOffset()
-    // {
-    // return offset;
-    // }
-    //
-    // public void setOffset(int aOffset)
-    // {
-    // offset = aOffset;
-    // }
 
     public List<Offsets> getTokenOffsets()
     {
@@ -294,26 +171,6 @@ public class GetDocumentResponse
         entities.add(aEntity);
     }
 
-    public List<String> getAttributes()
-    {
-        return attributes;
-    }
-
-    public void setAttributes(List<String> aAttributes)
-    {
-        attributes = aAttributes;
-    }
-
-    public List<String> getEquivs()
-    {
-        return equivs;
-    }
-
-    public void setEquivs(List<String> aEquivs)
-    {
-        equivs = aEquivs;
-    }
-
     public int getSentenceNumberOffset()
     {
         return sentenceNumberOffset;
@@ -362,6 +219,26 @@ public class GetDocumentResponse
     public void setArgs(Map<String, List<Marker>> aArgs)
     {
         args = aArgs;
+    }
+
+    public void setWindowBegin(int aWindowBegin)
+    {
+        windowBegin = aWindowBegin;
+    }
+
+    public int getWindowBegin()
+    {
+        return windowBegin;
+    }
+
+    public void setWindowEnd(int aWindowEnd)
+    {
+        windowEnd = aWindowEnd;
+    }
+
+    public int getWindowEnd()
+    {
+        return windowEnd;
     }
 
     public static boolean is(String aCommand)

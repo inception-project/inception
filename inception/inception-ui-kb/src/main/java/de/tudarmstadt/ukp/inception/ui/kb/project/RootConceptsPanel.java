@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.util.ArrayList;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -97,29 +99,34 @@ public class RootConceptsPanel
     private void actionNewRootConcept(AjaxRequestTarget aTarget)
     {
         String concept = newConceptIRIString.getObject();
-        if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
-            concepts.getObject().add(concept);
-            kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
-            newConceptIRIString.setObject(null);
-        }
-        else {
+        if (!isConceptValid(kbModel.getObject().getKb(), concept, true)) {
             error("Concept [" + newConceptIRIString.getObject()
-                    + "] does not exist or has already been specified");
+                    + "]  is not an (absolute) IRI, does not exist, or has already been specified");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
+
+        concepts.getObject().add(concept);
+        kbModel.getObject().getKb().setRootConcepts(concepts.getObject());
+        newConceptIRIString.setObject(null);
+
         aTarget.add(this);
     }
 
     private void actionRemoveConcept(AjaxRequestTarget aTarget, String iri)
     {
         concepts.getObject().remove(iri);
-        kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
+        kbModel.getObject().getKb().setRootConcepts(concepts.getObject());
         aTarget.add(this);
     }
 
     public boolean isConceptValid(KnowledgeBase kb, String conceptIRI, boolean aAll)
         throws QueryEvaluationException
     {
+        if (isBlank(conceptIRI)) {
+            return false;
+        }
+
         return !concepts.getObject().contains(conceptIRI)
                 && kbService.readConcept(kbModel.getObject().getKb(), conceptIRI, true).isPresent();
     }

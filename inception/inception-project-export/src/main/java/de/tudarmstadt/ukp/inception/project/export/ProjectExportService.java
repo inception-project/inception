@@ -55,7 +55,7 @@ public interface ProjectExportService
     ProjectExportTaskHandle startProjectExportCuratedDocumentsTask(
             FullProjectExportRequest aRequest, String aUsername);
 
-    ProjectExportTaskHandle startTask(ProjectExportTask aTask);
+    ProjectExportTaskHandle startTask(ProjectExportTask<?> aTask);
 
-    List<ProjectExportTask> listRunningExportTasks(Project aProject);
+    List<ProjectExportTask<?>> listRunningExportTasks(Project aProject);
 }

@@ -1,0 +1,103 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Setting up for the development in Eclipse
+
+This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
+procedure should be similar for other operation systems.  
+
+First, you need to follow some steps of the <<admin-guide.adoc#sect_installation,Administrator Installation Guide>>. 
+It is recommended to configure a MySQL-server.
+
+We recommend you start from a *Eclipse IDE for Java Developers* package.
+
+== Use a JDK
+
+On Linux or OS X, having a full JDK installed on your system is generally sufficient. You can skip
+on to the next section.
+
+On Windows, you need to edit the `eclipse.ini` file and directly before the `-vmargs` line, you
+have to add the following two lines. Mind to replace `C:/Program Files/Java/jdk11` with the actual
+location of the JDK/version on your system. Without this, Eclipse will complain that the 
+`jdk.tools:jdk.tools` artifact would be missing.
+
+.Force Eclipse to run on a JDK
+[source,text]
+----
+-vm
+C:/Program Files/Java/jdk11/jre/bin/server/jvm.dll
+----
+
+== Eclipse Plug-ins
+
+* *Maven Integration:* m2e , already comes pre-installed with the Eclipse IDE for Java Developers.
+  If you use another edition of Eclipse which does not have m2e pre-installed, go to *Help->Install
+  New Software*, select "--All available sites--" and choose *Collaboration -> m2e - Maven Integration
+  for Eclipse*
+
+* *Apache UIMA tools:* go to *Help->Install New Software*, select "Add..." and add the update site: `http://www.apache.org/dist/uima/eclipse-update-site/` as a location. Install the *Apache UIMA Eclipse tooling and runtime support*.
+
+* *Eclipse Web Development Tooling:* go to *Help->Install New Software*, select "--All available
+  sites--" and select the following plug-ins for installation from the section *Web, XML, Java EE
+  and OSGi Enterprise Development*:
+** Eclipse Java Web Developer Tools
+** Eclipse Web Developer Tools
+** Eclipse XML Editors and Tools: already comes pre-installed in newer Eclipse versions
+
+== Eclipse Workspace Settings
+
+* You should check that Text file encoding is `UTF-8` in *Preferences -> General -> Workspace*.
+* You need to enable Java annotation preprocessors. Go to *Preferences -> Maven -> Annotation Processing*
+  and set the *Annotation Processing Mode* to *Automatic*.
+
+== Importing {product-name} into the Workspace
+
+Checkout out the {product-name} git repository with your favorite git client. If you use the command-line
+client, use the command
+
+[source,text]
+----
+$ git clone https://github.com/inception-project/inception.git
+----
+
+In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
+you have cloned {product-name}. Eclipse should automatically detect all modules.
+
+== Setting up Checkstyle and Formatting
+
+We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
+The following section describes how to use it with Eclipse.
+
+First, obtain the DKPro code formatting profile from the link:https://dkpro.github.io/contributing/[DKPro website] (Section "Code style"). In Eclipse, go to **Preferences -> Java -> Code Style -> Formatter** to import the file. Apparently, the files can also be used with IntelliJ via the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
+
+NOTE: The parameter prefix `a` needs to be configured manually. In Eclipse go to 
+       *Preferences -> Java -> Code Style* set the *prefix list* column in the *parameters* row to `a`.
+
+Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyle plugin for Eclipse.
+These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
+and highlight formatting problems directly in the source code editor.
+
+* Install *Checkstyle Eclipse plugin*: `https://checkstyle.org/eclipse-cs/#!/install` e.g. via the update site: `https://checkstyle.org/eclipse-cs/update`.
+* Install the *Checkstyle configuration plugin for M2Eclipse*: via the update site `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
+* Select all {product-name} projects, right click and do a *Maven -> Update project*
+
+NOTE: Should the steps mentioned above not have been sufficient, close all the {product-name} projects
+      in Eclipse, then remove them form the workspace (not from the disk), delete any `.checkstyle` files
+      in the {product-name} modules, and then re-import them into Eclipse again using *Import->Existing Maven
+      projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
+      properly set up the `.checkstyle` files and activate checkstyle. +
+      If the Maven project update cannot be completed due to missing .jars, execute a Maven install via right click on the inception project *Run as ->
+      Maven build...*, enter the goal `install` and check *Skip Tests*. Alternatively, use the command `mvn clean install -DskipTests`.

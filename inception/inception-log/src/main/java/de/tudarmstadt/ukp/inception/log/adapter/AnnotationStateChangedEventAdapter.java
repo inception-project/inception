@@ -17,23 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+
 import java.io.IOException;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
 
 @Component
 public class AnnotationStateChangedEventAdapter
     implements EventLoggingAdapter<AnnotationStateChangeEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
@@ -59,11 +59,24 @@ public class AnnotationStateChangedEventAdapter
     }
 
     @Override
+    public String getUser(AnnotationStateChangeEvent aEvent)
+    {
+        return aEvent.getUser();
+    }
+
+    @Override
     public String getDetails(AnnotationStateChangeEvent aEvent) throws IOException
     {
         StateChangeDetails details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
+
+        AnnotationDocumentState annotatorState = aEvent.getAnnotationDocument().getAnnotatorState();
+        details.setAnnotatorState(Objects.toString(annotatorState, null));
+        if (annotatorState == FINISHED || annotatorState == IGNORE) {
+            details.setAnnotatorComment(aEvent.getAnnotationDocument().getAnnotatorComment());
+        }
+
         return JSONUtil.toJsonString(details);
     }
 }

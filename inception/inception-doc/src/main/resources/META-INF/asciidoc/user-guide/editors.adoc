@@ -1,0 +1,66 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_editors]]
+= Editors
+
+This section provides information about the different annotation editors that {product-name}
+provides.
+
+.Editor overview
+|====
+| Editor | Feature flag
+
+| brat (sentence-based)
+| `ui.brat.enabled`
+
+| brat (line-oriented)
+| `ui.brat.enabled`
+
+| brat (wrapping @ 120 chars)
+| `ui.brat.enabled`
+
+| brat (wrapping @ 120 chars)
+| `ui.brat.enabled`
+
+// | DIAM debugger
+// | `ui.diam-debugger.enabled`
+
+| HTML (AnnotatorJS)
+| `ui.html-annotatorjs.enabled`
+
+| HTML (RecogitoJS)
+| `ui.ui.html-recogitojs.enabled`
+
+| PDF
+| `ui.pdf.enabled`
+
+| PDF (legacy)
+| `ui.pdf-legacy.enabled`
+
+// | Review editor
+// | `ui.review.enabled`
+|====
+
+== Editor plugins
+
+====
+CAUTION: Experimental feature. The available plugins as well as their compatibility with a given
+version of {product-name} may change without further notice.
+====
+In addition to these different editors, {product-name} has the ability to load editor plugins.
+Several of these can be found on your link:https://github.com/orgs/inception-project/repositories[website]. You can use these as inspirations to <<developer-guide.adoc#sect_external_editors,write your own>>.
+

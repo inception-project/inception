@@ -21,22 +21,27 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarApplicationInitializer;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
 
+@ConditionalOnWebApplication
 @Configuration
 @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
 public class CurationSidebarAutoConfiguration
@@ -56,9 +61,13 @@ public class CurationSidebarAutoConfiguration
     @Bean(CurationEditorExtension.EXTENSION_ID)
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            CurationRenderer aCurationRenderer)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
+            CurationSidebarService aCurationSidebarService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        return new CurationEditorExtension(aAnnotationService, aDocumentService, aCurationRenderer);
+        return new CurationEditorExtension(aAnnotationService, aDocumentService,
+                aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
+                aFeatureSupportRegistry);
     }
 
     @Bean("curationSidebar")
@@ -70,11 +79,17 @@ public class CurationSidebarAutoConfiguration
     }
 
     @Bean
-    public CurationRenderer curationRenderer(CurationSidebarService aCurationService,
+    public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
     {
-        return new CurationRenderer(aCurationService, aLayerSupportRegistry, aDocumentService,
-                aUserRepository, aAnnotationService);
+        return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
+                aDocumentService, aUserRepository, aAnnotationService);
+    }
+
+    @Bean
+    public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
+    {
+        return new CurationSidebarApplicationInitializer();
     }
 }

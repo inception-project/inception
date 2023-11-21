@@ -17,15 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import com.networknt.schema.JsonSchema;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Support for HTML-oriented editor component.
@@ -36,23 +46,49 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotati
  */
 public class RecogitoHtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
+    implements ClientSideUserPreferencesProvider
 {
+    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+
+    public RecogitoHtmlAnnotationEditorFactory()
+    {
+        var userPreferencesSchemaFile = getClass()
+                .getResource("RecogitoHtmlAnnotationEditorFactoryUserPreferences.schema.json");
+        userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
+                JSONUtil::loadJsonSchema);
+    }
+
     @Override
     public String getDisplayName()
     {
-        return "HTML (Recogito)";
+        return "HTML (RecogitoJS)";
     }
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+                getBeanName());
     }
 
     @Override
     public void initState(AnnotatorState aModelObject)
     {
         aModelObject.setPagingStrategy(new NoPagingStrategy());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
+    {
+        return Optional.of(
+                new ClientSidePreferencesKey<>(Map.class, "annotation/recogito-annotator-editor"));
+    }
+
+    @Override
+    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    {
+        return userPreferencesSchema.get();
     }
 }

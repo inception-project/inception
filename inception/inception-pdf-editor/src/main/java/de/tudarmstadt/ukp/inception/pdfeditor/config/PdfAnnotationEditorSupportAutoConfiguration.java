@@ -23,20 +23,32 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfFormatSupport;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFactory;
 
 /**
  * Provides support for an PDF-oriented annotation editor.
+ * 
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 @Configuration
-@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class PdfAnnotationEditorSupportAutoConfiguration
 {
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
     public PdfAnnotationEditorFactory pdfAnnotationEditorFactory()
     {
         return new PdfAnnotationEditorFactory();
     }
 
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @Bean
+    public PdfDocumentIFrameViewFactory pdfDocumentIFrameViewFactory()
+    {
+        return new PdfDocumentIFrameViewFactory();
+    }
+
+    @ConditionalOnProperty(prefix = "format.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     public PdfFormatSupport pdfFormatSupport()
     {

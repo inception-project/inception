@@ -59,9 +59,11 @@ public abstract class TsvUnit
     }
 
     /**
-     * Get all annotations for the current column. Mind that there can be multiple columns per
-     * annotation. Also mind that in order to the get value for the column, it needs to be still
-     * retrieved from the corresponding feature of the returned annotations.
+     * @param aCol
+     *            the column
+     * @return all annotations for the current column. Mind that there can be multiple columns per
+     *         annotation. Also mind that in order to the get value for the column, it needs to be
+     *         still retrieved from the corresponding feature of the returned annotations.
      */
     public List<AnnotationFS> getAnnotationsForColumn(TsvColumn aCol)
     {
@@ -96,6 +98,8 @@ public abstract class TsvUnit
      * 
      * @param aFS
      *            an UIMA annotation.
+     * @param aAddDisambiguationIfStacked
+     *            whether to add a disambiguation ID when annotations are stacked
      */
     public void addUimaAnnotation(AnnotationFS aFS, boolean aAddDisambiguationIfStacked)
     {
@@ -129,6 +133,7 @@ public abstract class TsvUnit
      * @param aStackingIndex
      *            the stacking index if there are multiple annotations of the same type on the
      *            current unit.
+     * @return the annotation
      */
     public AnnotationFS getUimaAnnotation(Type aUimaType, int aStackingIndex)
     {

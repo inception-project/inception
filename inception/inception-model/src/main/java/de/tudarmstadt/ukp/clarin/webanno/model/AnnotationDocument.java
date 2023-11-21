@@ -27,6 +27,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -40,7 +41,6 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for meta-data of annotation documents. The content of annotation document is
  * stored in a file system.
- *
  */
 @Entity
 @Table(name = "annotation_document", uniqueConstraints = {
@@ -88,6 +88,14 @@ public class AnnotationDocument
     private AnnotationDocumentState annotatorState;
 
     /**
+     * Comment the anntoator can leave when marking a document as finished. Typically used to report
+     * problems to the curator.
+     */
+    @Lob
+    @Column(length = 64000)
+    private String annotatorComment;
+
+    /**
      * Last change made to the annotations or the last state transition triggered by the annotator
      * user. State changes triggered by a third person (e.g. curator/manager) or by the system (e.g.
      * workload manager) should not update the timestamp - except if the change is a reset of the
@@ -114,7 +122,7 @@ public class AnnotationDocument
 
     public AnnotationDocument(String aUser, SourceDocument aDocument)
     {
-        user = aUser;
+        setUser(aUser);
         document = aDocument;
         name = aDocument.getName();
         project = aDocument.getProject();
@@ -190,14 +198,25 @@ public class AnnotationDocument
         annotatorState = aAnnotatorState;
     }
 
+    public String getAnnotatorComment()
+    {
+        return annotatorComment;
+    }
+
+    public void setAnnotatorComment(String aAnnotatorComment)
+    {
+        annotatorComment = aAnnotatorComment;
+    }
+
     public Date getTimestamp()
     {
         return timestamp;
     }
 
     /**
-     * Last change to the actual annotations in the CAS. The change to the annotation document
-     * record is tracked in {@link #getUpdated()}
+     * @param aTimestamp
+     *            last change to the actual annotations in the CAS. The change to the annotation
+     *            document record is tracked in {@link #getUpdated()}
      */
     public void setTimestamp(Date aTimestamp)
     {
@@ -242,7 +261,7 @@ public class AnnotationDocument
     }
 
     /**
-     * Last change to the annotation document record.
+     * @return last change to the annotation document record.
      */
     public Date getUpdated()
     {

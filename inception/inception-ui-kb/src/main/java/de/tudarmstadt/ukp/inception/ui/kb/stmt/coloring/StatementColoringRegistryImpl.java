@@ -31,6 +31,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
@@ -75,7 +76,7 @@ public class StatementColoringRegistryImpl
             }
         }
 
-        log.info("Found [{}] statement coloring strategies", fsp.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] statement coloring strategies", fsp.size());
 
         statementColoringStrategies = unmodifiableList(fsp);
     }

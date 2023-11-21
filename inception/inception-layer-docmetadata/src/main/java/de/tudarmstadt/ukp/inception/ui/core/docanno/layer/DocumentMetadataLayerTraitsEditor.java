@@ -21,8 +21,8 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 
 public class DocumentMetadataLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<DocumentMetadataLayerTraits, DocumentMetadataLayerSupport>

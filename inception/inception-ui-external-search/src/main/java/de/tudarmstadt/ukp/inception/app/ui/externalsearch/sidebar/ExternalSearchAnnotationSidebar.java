@@ -52,17 +52,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -75,13 +66,24 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.HighlightLabel;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 public class ExternalSearchAnnotationSidebar
@@ -215,7 +217,7 @@ public class ExternalSearchAnnotationSidebar
         if (searchState.getSelectedResult() != null
                 && (searchState.getSelectedResult().getDocumentId()
                         .equals(getAnnotationPage().getModelObject().getDocument().getName()))) {
-            highlightKeywords(aEvent.getState(), aEvent.getVDocument());
+            highlightKeywords(aEvent.getRequest(), aEvent.getVDocument());
         }
         else {
             // a document was opened not by selecting from the result list
@@ -223,7 +225,9 @@ public class ExternalSearchAnnotationSidebar
         }
     }
 
-    private void highlightKeywords(AnnotatorState aAnnotatorState, VDocument aVDocument)
+    // TODO: Maybe we should highlight all occurrences of the query term in the texst and
+    // not only the ones returned in the highlights?
+    private void highlightKeywords(RenderRequest aRequest, VDocument aVDocument)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
         try {
@@ -232,22 +236,23 @@ public class ExternalSearchAnnotationSidebar
             for (ExternalSearchHighlight highlight : searchState.getSelectedResult()
                     .getHighlights()) {
 
-                Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                Optional<ExternalSearchHighlight> maybeExHighlight = HighlightUtils
                         .parseHighlight(highlight.getHighlight(), documentText);
-                if (exHighlight.isPresent()) {
-                    // Highlight the keywords in the annotator indicated by the offsets
-                    // if they are within the current window.
-                    for (OffsetSpan offset : exHighlight.get().getOffsets()) {
-                        if (aAnnotatorState.getWindowBeginOffset() <= offset.getBegin()) {
-                            if (offset.getEnd() <= aAnnotatorState.getWindowEndOffset()) {
-                                aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                        offset.getBegin() - aAnnotatorState.getWindowBeginOffset(),
-                                        offset.getEnd() - aAnnotatorState.getWindowBeginOffset()));
-                            }
-                            else {
-                                break;
-                            }
-                        }
+                if (!maybeExHighlight.isPresent()) {
+                    continue;
+                }
+
+                var exHighlight = maybeExHighlight.get();
+
+                // Highlight the keywords in the annotator indicated by the offsets
+                // if they are within the current window.
+                for (OffsetSpan offset : exHighlight.getOffsets()) {
+                    Optional<VRange> range = VRange.clippedRange(aVDocument, offset);
+
+                    range.ifPresent(r -> aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS, r)));
+
+                    if (offset.getBegin() > aRequest.getWindowEndOffset()) {
+                        break;
                     }
                 }
             }
@@ -335,14 +340,14 @@ public class ExternalSearchAnnotationSidebar
         {
             super(id);
             add(new TextField<>("queryInput", searchStateModel.bind("query"), String.class));
-            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
+            var searchLink = new LambdaAjaxSubmitLink<Void>("submitSearch",
                     ExternalSearchAnnotationSidebar.this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
+    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
 
@@ -409,9 +414,9 @@ public class ExternalSearchAnnotationSidebar
             // FIXME: Should display all highlights
             String highlight = "NO MATCH PREVIEW AVAILABLE";
             if (!result.getHighlights().isEmpty()) {
-                highlight = Utilities.cleanHighlight(result.getHighlights().get(0).getHighlight());
+                highlight = result.getHighlights().get(0).getHighlight();
             }
-            link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            link.add(new HighlightLabel("highlight", highlight));
         }
     }
 

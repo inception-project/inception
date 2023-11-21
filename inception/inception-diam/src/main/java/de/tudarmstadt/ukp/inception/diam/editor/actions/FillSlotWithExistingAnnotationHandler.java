@@ -17,19 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#fillSlotWithExistingAnnotationHandler}.
+ * {@link DiamAutoConfig#fillSlotWithExistingAnnotationHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_SLOT_FILLER_HANDLER)
@@ -48,24 +46,24 @@ public class FillSlotWithExistingAnnotationHandler
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = getPage();
-            CAS cas = page.getEditorCas();
-
-            // When filling a slot, the current selection is *NOT* changed. The
-            // Span annotation which owns the slot that is being filled remains
-            // selected!
-            page.getAnnotationActionHandler().actionFillSlot(aTarget, cas, 0, 0, getVid(aRequest));
+            var page = getPage();
+            var cas = page.getEditorCas();
+            var slotFillerId = getVid(aRequest);
+            // When filling a slot, the current selection is *NOT* changed. The Span annotation
+            // which owns the slot that is being filled remains selected!
+            page.getAnnotationActionHandler().actionFillSlot(aTarget, cas, slotFillerId);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to fill slot with existing annotation", e);
         }
     }
 
     @Override
     public boolean accepts(Request aRequest)
     {
-        return super.accepts(aRequest) && getAnnotatorState().isSlotArmed();
+        return super.accepts(aRequest) && getAnnotatorState().isSlotArmed()
+                && getVid(aRequest).isSet();
     }
 }

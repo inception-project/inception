@@ -1,0 +1,90 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_logging]]
+= Logging
+
+{product-name} comes with a default logging configuration that should serve well in a normal 
+production environment, either on a server or running as a desktop application. However, for
+more advanced scenarios, it may be useful to customize the logging configuration.
+
+== Set specific log levels
+
+Maybe you do not want to user a completely custom logging configuration and only wish to get a bit
+more information in a particular part of the application. In this case, you can specify the log
+level for particular packages or classes either by declaring logging properties either as system 
+property (`-D`) argument when starting {product-name} or by adding them to the `settings.properties`
+file. For example, if you wanted to get more information on the authentication process, you could
+use the following properties:
+
+[source,text]
+----
+logging.level.org.springframework.security=TRACE
+logging.level.de.tudarmstadt.ukp.inception.security=TRACE
+----
+
+== Custom logging
+
+A custom logging configuration can be specified when starting up {product-name} using the parameter
+`-Dlogging.config=/path/to/your/log4.xml`. This should be a standard Log4J2 configuration file.
+A good starting point is the default configuration used by {product-name} which can be found in link:https://github.com/inception-project/inception/blob/main/inception/inception-app-webapp/src/main/resources/log4j2-spring.xml[our code repository].
+
+== Logging in JSON format
+
+If you would like to integrate the logging output of {product-name} with something like LogStash and
+Kibana, you may want log output to be in a properly interpretable JSON format, instead of the usual
+plain text format. {product-name} comes with several JSON configurations that are compatible with
+popular tools like LogStash and others. You can activate it by adding the following sections to a custom `log4j2.xml` file in the `Appenders` sections and in the `Root` logger.
+
+[source,text]
+----
+<Configuration ...>
+  <!-- ... -->
+
+  <Appenders>
+    <!-- ... -->
+    
+    <RollingFile name="RollingFileAppender" fileName = "logs/inception.log"
+                 filePattern="app-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz">
+        <JsonTemplateLayout eventTemplateUri="classpath:LogstashJsonEventLayoutV1.json"/>
+      <Policies>
+        <SizeBasedTriggeringPolicy size = "20 MB" />
+      </Policies>
+    </RollingFile>
+    
+    <!-- ... -->
+  </Appenders>
+
+  <Loggers>
+    <!-- ... -->
+    
+    <Root level="warn">
+      <!-- ... -->  
+      
+      <AppenderRef ref="RollingFileAppender" />
+    </Root>
+  </Loggers></Configuration>
+----
+
+The following bundled default configurations that are part of the `log4j-layout-template-json` library
+are available in {product-name}:
+
+* `EcsLayout.json`
+* `GcpLayout.json`
+* `GelfLayout.json`
+* `JsonLayout.json`
+* `LogstashJsonEventLayoutV1.json`
+* `StackTraceElementLayout.json`

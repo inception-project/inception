@@ -26,10 +26,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -48,11 +50,12 @@ public class SearchServiceAutoConfiguration
 {
     @Bean
     public SearchService searchService(DocumentService aDocumentService,
-            ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-            SchedulingService aSchedulingService, SearchServiceProperties aProperties)
+            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
+            PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
+            SearchServiceProperties aProperties, PreferencesService aPreferencesService)
     {
-        return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                aSchedulingService, aProperties);
+        return new SearchServiceImpl(aDocumentService, aSchemaService, aProjectService,
+                aPhysicalIndexRegistry, aSchedulingService, aProperties, aPreferencesService);
     }
 
     @Bean

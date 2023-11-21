@@ -28,17 +28,30 @@ public class InputStreamResourceStream
 {
     private static final long serialVersionUID = 1L;
 
-    private InputStream inputStream;
+    private final InputStream inputStream;
+    private final String name;
 
     public InputStreamResourceStream(InputStream aInputStream)
     {
         inputStream = aInputStream;
+        name = null;
+    }
+
+    public InputStreamResourceStream(InputStream aInputStream, String aName)
+    {
+        inputStream = aInputStream;
+        name = aName;
     }
 
     @Override
     public InputStream getInputStream() throws ResourceStreamNotFoundException
     {
         return inputStream;
+    }
+
+    public String getName()
+    {
+        return name;
     }
 
     @Override

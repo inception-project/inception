@@ -23,12 +23,25 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class DrawOperator
+    implements Operator
 {
-    String type;
-    float[] values;
+    public static final String OP_FILL_STROKE_PATH = "FILL_STROKE_PATH";
+    public static final String OP_FILL_PATH = "FILL_PATH";
+    public static final String OP_STROKE_PATH = "STROKE_PATH";
+    public static final String OP_CURVE_TO = "CURVE_TO";
+    public static final String OP_LINE_TO = "LINE_TO";
+    public static final String OP_RECTANGLE = "RECTANGLE";
+    public static final String OP_MOVE_TO = "MOVE_TO";
 
-    public DrawOperator(String type, float[] values)
+    final String type;
+    final float[] values;
+
+    public DrawOperator(String type, float... values)
     {
         this.type = type;
         this.values = values;

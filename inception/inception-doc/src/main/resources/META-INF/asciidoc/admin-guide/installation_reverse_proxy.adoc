@@ -13,9 +13,62 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+[[sect_reverse_proxy]]
 = Running the behind a reverse proxy (JAR)
 
-These are *optional* instructions if you want to run {product-name} behind an Apache web-server instead of accessing it directly.
+These are *optional* instructions if you want to run {product-name} behind an Apache HTTPD, Nginx or Caddy web-server instead of accessing it directly.
 
 These guides assumes Debian 9.1 (Stretch) as the operating system.
 For the optional SSL configuration, it further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
+
+The setup for INCEpTION itself is the same for Apache, Nginx and Caddy:
+
+* Add the following lines to `/srv/inception/settings.properties` (replacing `your.public.domain.name.com` with the public domain name of your reverse proxy):
++
+[source,text]
+----
+# Port INCEpTION is listening on
+server.port=8080
+
+# If your reverse proxy is running on the same host as {product-name}, 
+# you can use the next line to prevent direct access to INCEpTION from other hosts
+server.address=127.0.0.1
+
+# In our examples, we run {product-name} at `your.public.domain.name.com/inception`
+# If you want to Run {product-name} directly under the host name without an
+# additional path, remove this line
+server.servlet.context-path=/inception
+
+# Tell {product-name} which URL your users will enter into their browsers to access it. 
+# Make sure you have an entry with and an entry without the protocol. 
+# If you also allow unencrypted http (not recommended) then also add a line with
+# the http protocol
+wicket.core.csrf.accepted-origins[0]=your.public.domain.name.com
+wicket.core.csrf.accepted-origins[1]=https://your.public.domain.name.com
+----
++
+
+
+== CSRF protection
+
+Depending on your situation, you may get an error message such as this when trying to use
+{product-name}.
+
+[example]
+====
+Whitelabel Error Page This application has no explicit mapping for /error, so you are seeing this as a fallback.
+
+Fri Nov 29 14:01:15 BRT 2019 There was an unexpected error (type=Bad Request, status=400).
+Origin does not correspond to request
+====
+
+If this is the case, then CSRF protection is kicking in.
+Check that the following lines are in your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>, replace the server name and URL with your own):
+
+----
+wicket.core.csrf.accepted-origins[0]=your.public.domain.name.com
+wicket.core.csrf.accepted-origins[1]=https://your.public.domain.name.com
+----
+
+NOTE: You could disable CSRF completely, but this is obviously not the recommended approach. To disable CSRF, add `wicket.core.csrf.enabled=false` to the `settings.properties` file.
+

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaun
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,8 @@ import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
     extends AgreementMeasure_ImplBase<//
@@ -117,8 +118,17 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                     Feature f = t.getFeatureByBaseName(getFeature().getName());
                     int currentDocOffset = docOffset;
                     cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
-                        study.addUnit(currentDocOffset + fs.getBegin(), fs.getEnd() - fs.getBegin(),
-                                raterIdx, FSUtil.getFeature(fs, f, Object.class));
+                        Object featureValue = FSUtil.getFeature(fs, f, Object.class);
+                        if (featureValue instanceof Collection) {
+                            for (Object value : (Collection<?>) featureValue) {
+                                study.addUnit(currentDocOffset + fs.getBegin(),
+                                        fs.getEnd() - fs.getBegin(), raterIdx, value);
+                            }
+                        }
+                        else {
+                            study.addUnit(currentDocOffset + fs.getBegin(),
+                                    fs.getEnd() - fs.getBegin(), raterIdx, featureValue);
+                        }
                     });
                 }
 

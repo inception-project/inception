@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -28,18 +28,25 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     implements Check
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private static final int LIMIT = 100;
+
+    private final AnnotationSchemaService annotationService;
+
+    public FeatureAttachedSpanAnnotationsTrulyAttachedCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
@@ -84,9 +91,10 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
             }
         }
 
-        if (count >= 100) {
+        if (count >= LIMIT) {
             aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                    "In total [%d] annotations were not properly attached", count));
+                    "In total [%d] annotations were not properly attached (only the first [%d] shown)",
+                    count, LIMIT));
         }
 
         return ok;

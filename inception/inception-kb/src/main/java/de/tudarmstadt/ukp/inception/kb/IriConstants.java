@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static java.util.Arrays.asList;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +30,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -45,13 +43,14 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
+    public static final String PREFIX_VIRTUOSO = "http://www.openlinksw.com/schemas/bif#";
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
+    public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-    public static final Set<String> IMPLICIT_NAMESPACES = Collections
-            .unmodifiableSet(new HashSet<>(asList(RDF.NAMESPACE, RDFS.NAMESPACE,
-                    XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE)));
+    public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
+            XSD.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE);
 
     /**
      * http://www.wikidata.org/entity/Q35120
@@ -87,6 +86,7 @@ public class IriConstants
     public static final IRI FTS_LUCENE;
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_WIKIDATA;
+    public static final IRI FTS_STARDOG;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -114,6 +114,7 @@ public class IriConstants
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
         FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
+        FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -125,7 +126,7 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE);
+        FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE, FTS_STARDOG);
     }
 
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)

@@ -19,8 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static java.io.File.createTempFile;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
@@ -63,6 +70,7 @@ import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -81,10 +89,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -94,16 +99,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IncompatibleDocumentException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectExistsException;
@@ -112,17 +118,28 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteA
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectImportExportUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
+ * </p>
+ */
+@ConditionalOnWebApplication
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {
@@ -135,6 +152,7 @@ public class AeroRemoteApiController
     private static final String IMPORT = "import";
     private static final String EXPORT = "export.zip";
     private static final String STATE = "state";
+    private static final String PERMISSIONS = "permissions";
 
     private static final String PARAM_FILE = "file";
     private static final String PARAM_CONTENT = "content";
@@ -146,6 +164,8 @@ public class AeroRemoteApiController
     private static final String PARAM_PROJECT_ID = "projectId";
     private static final String PARAM_ANNOTATOR_ID = "userId";
     private static final String PARAM_DOCUMENT_ID = "documentId";
+    private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
+    private static final String PARAM_ROLES = "roles";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -170,7 +190,13 @@ public class AeroRemoteApiController
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
         throws IOException
     {
-        LOG.error(aException.getMessage(), aException);
+        if (LOG.isDebugEnabled()) {
+            LOG.error(aException.getMessage(), aException);
+        }
+        else {
+            LOG.error(aException.getMessage());
+        }
+
         return ResponseEntity.status(aException.getStatus()).contentType(APPLICATION_JSON)
                 .body(new RResponse<>(ERROR, aException.getMessage()));
     }
@@ -179,6 +205,7 @@ public class AeroRemoteApiController
     public ResponseEntity<RResponse<Void>> handleException(Exception aException) throws IOException
     {
         LOG.error(aException.getMessage(), aException);
+
         return ResponseEntity.status(INTERNAL_SERVER_ERROR).contentType(APPLICATION_JSON)
                 .body(new RResponse<>(ERROR, "Internal server error: " + aException.getMessage()));
     }
@@ -217,7 +244,8 @@ public class AeroRemoteApiController
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                projectService.isManager(project, user) || userRepository.isAdministrator(user));
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
 
         return project;
     }
@@ -311,11 +339,20 @@ public class AeroRemoteApiController
                     "A project with URL slug [" + aSlug + "] already exists");
         }
 
+        String projectName = aName.orElse(aSlug);
+        if (!Project.isValidProjectName(projectName)) {
+            throw new IllegalNameException("Illegal project name [%s]", projectName);
+        }
+
+        if (!Project.isValidProjectSlug(aSlug)) {
+            throw new IllegalNameException("Illegal project slug [%s]", aSlug);
+        }
+
         // Create the project and initialize tags
         LOG.info("Creating project [{}]", aSlug);
         Project project = new Project();
         project.setSlug(aSlug);
-        project.setName(aName.orElse(aSlug));
+        project.setName(projectName);
         project.setScriptDirection(ScriptDirection.LTR);
         project.setState(ProjectState.NEW);
         projectService.createProject(project);
@@ -323,12 +360,7 @@ public class AeroRemoteApiController
 
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.MANAGER));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.CURATOR));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.ANNOTATOR));
+        projectService.assignRole(project, owner, MANAGER, CURATOR, ANNOTATOR);
 
         RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")
@@ -369,6 +401,7 @@ public class AeroRemoteApiController
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
+            @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") boolean aCreateMissingUsers, //
             @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
@@ -380,7 +413,7 @@ public class AeroRemoteApiController
                 userRepository.isAdministrator(user));
 
         Project importedProject;
-        File tempFile = File.createTempFile("webanno-training", null);
+        File tempFile = File.createTempFile("inception-project-import", null);
         try (InputStream is = new BufferedInputStream(aFile.getInputStream());
                 OutputStream os = new FileOutputStream(tempFile);) {
             if (!ZipUtils.isZipStream(is)) {
@@ -389,12 +422,12 @@ public class AeroRemoteApiController
 
             IOUtils.copyLarge(is, os);
 
-            if (!ImportUtil.isZipValidWebanno(tempFile)) {
-                throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
+            if (!ProjectImportExportUtils.isValidProjectArchive(tempFile)) {
+                throw new UnsupportedFormatException(
+                        "Uploaded file is not an INCEpTION/WebAnno project archive");
             }
 
-            // importedProject = importService.importProject(tempFile, false);
-            ProjectImportRequest request = new ProjectImportRequest(false);
+            ProjectImportRequest request = new ProjectImportRequest(aCreateMissingUsers);
             importedProject = exportService.importProject(request, new ZipFile(tempFile));
         }
         finally {
@@ -496,6 +529,10 @@ public class AeroRemoteApiController
                             .sorted().collect(Collectors.toList()));
         }
 
+        if (!documentService.isValidDocumentName(aName)) {
+            throw new IllegalNameException("Illegal document name [%s]", aName);
+        }
+
         // Meta data entry to the database
         SourceDocument document = new SourceDocument();
         document.setProject(project);
@@ -550,9 +587,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
 
         boolean originalFile;
         String formatId;
@@ -583,40 +620,37 @@ public class AeroRemoteApiController
             return new ResponseEntity<org.springframework.core.io.Resource>(resource, httpHeaders,
                     OK);
         }
-        else {
-            // Export a converted file - here we first export to a local temporary file and then
-            // send that back to the client
 
-            // Check if the format is supported
-            FormatSupport format = importExportService.getWritableFormatById(formatId)
-                    .orElseThrow(() -> new UnsupportedFormatException(
-                            "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
-                            importExportService.getWritableFormats().stream()
-                                    .map(FormatSupport::getId).sorted().collect(Collectors.toList())
-                                    .toString()));
+        // Export a converted file - here we first export to a local temporary file and then
+        // send that back to the client
 
-            // Create a temporary export file from the annotations
-            CAS cas = documentService.createOrReadInitialCas(doc);
+        // Check if the format is supported
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseThrow(() -> new UnsupportedFormatException(
+                        "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
+                        importExportService.getWritableFormats().stream().map(FormatSupport::getId)
+                                .sorted().collect(Collectors.toList()).toString()));
 
-            File exportedFile = null;
-            try {
-                // Load the converted file into memory
-                exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format,
-                        true);
-                byte[] resource = FileUtils.readFileToByteArray(exportedFile);
+        // Create a temporary export file from the annotations
+        CAS cas = documentService.createOrReadInitialCas(doc);
 
-                // Send it back to the client
-                HttpHeaders httpHeaders = new HttpHeaders();
-                httpHeaders.setContentLength(resource.length);
-                httpHeaders.set("Content-Disposition",
-                        "attachment; filename=\"" + exportedFile.getName() + "\"");
+        File exportedFile = null;
+        try {
+            // Load the converted file into memory
+            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
+            byte[] resource = FileUtils.readFileToByteArray(exportedFile);
 
-                return new ResponseEntity<>(resource, httpHeaders, OK);
-            }
-            finally {
-                if (exportedFile != null) {
-                    FileUtils.forceDelete(exportedFile);
-                }
+            // Send it back to the client
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentLength(resource.length);
+            httpHeaders.set("Content-Disposition",
+                    "attachment; filename=\"" + exportedFile.getName() + "\"");
+
+            return new ResponseEntity<>(resource, httpHeaders, OK);
+        }
+        finally {
+            if (exportedFile != null) {
+                FileUtils.forceDelete(exportedFile);
             }
         }
     }
@@ -688,10 +722,13 @@ public class AeroRemoteApiController
                 parseAnnotationDocumentState(aState.get()));
         documentService.createAnnotationDocument(anno);
 
-        return ResponseEntity.ok(new RResponse<>(INFO,
+        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        response.addMessage(INFO,
                 "State of annotations of user [" + aAnnotatorId + "] on document ["
                         + document.getId() + "] set to ["
-                        + annotationDocumentStateToString(anno.getState()) + "]"));
+                        + annotationDocumentStateToString(anno.getState()) + "]");
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Create or update annotations for a document in a project")
@@ -794,10 +831,10 @@ public class AeroRemoteApiController
             @RequestParam(PARAM_STATE) Optional<String> aState, UriComponentsBuilder aUcb)
         throws Exception
     {
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
 
-        CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        var annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
@@ -863,9 +900,9 @@ public class AeroRemoteApiController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
 
         // If we delete the curation, it cannot be any longer in-progress or finished. The best
@@ -889,9 +926,9 @@ public class AeroRemoteApiController
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        Project project = getProject(aProjectId);
+        var project = getProject(aProjectId);
 
-        SourceDocument doc = getDocument(project, aDocumentId);
+        var doc = getDocument(project, aDocumentId);
 
         // Check format
         String formatId;
@@ -926,33 +963,33 @@ public class AeroRemoteApiController
         byte[] resource;
         try {
             exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
-                    format, doc.getName(), Mode.ANNOTATION);
+                    format, Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
+
+            var filename = FilenameUtils.removeExtension(doc.getName());
+            filename += "-" + aAnnotatorId;
+            // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
+            filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
+
+            var httpHeaders = new HttpHeaders();
+            httpHeaders.setContentLength(resource.length);
+            httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+            return new ResponseEntity<>(resource, httpHeaders, OK);
         }
         finally {
             if (exportedAnnoFile != null) {
                 FileUtils.forceDelete(exportedAnnoFile);
             }
         }
-
-        String filename = FilenameUtils.removeExtension(doc.getName());
-        filename += "-" + aAnnotatorId;
-        // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
-        filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentLength(resource.length);
-        httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-
-        return new ResponseEntity<>(resource, httpHeaders, OK);
     }
 
     private CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        Project project = getProject(aProjectId);
-        SourceDocument document = getDocument(project, aDocumentId);
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
 
         // Check if the format is supported
         String format = aFormatId.orElse(FORMAT_DEFAULT);
@@ -960,16 +997,23 @@ public class AeroRemoteApiController
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
                     importExportService.getReadableFormats().stream().map(FormatSupport::getId)
-                            .sorted().collect(Collectors.toList()));
+                            .sorted().collect(toList()));
+        }
+
+        String originalFilename = isNotBlank(aFile.getOriginalFilename())
+                ? aFile.getOriginalFilename()
+                : document.getName();
+        if (!documentService.isValidDocumentName(originalFilename)) {
+            throw new IllegalNameException("Illegal document name [%s]", originalFilename);
         }
 
         // Convert the uploaded annotation document into a CAS
         File tmpFile = null;
         CAS annotationCas;
         try {
-            tmpFile = File.createTempFile("upload", ".bin");
+            tmpFile = createTempFile("upload", "." + getExtension(originalFilename));
             aFile.transferTo(tmpFile);
-            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
+            annotationCas = importExportService.importCasFromFile(tmpFile, document, format, null);
         }
         finally {
             if (tmpFile != null) {
@@ -989,17 +1033,7 @@ public class AeroRemoteApiController
         initialText = StringUtils.chomp(initialText);
         annotationText = StringUtils.chomp(annotationText);
 
-        if (ObjectUtils.notEqual(initialText, annotationText)) {
-            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
-            String expected = initialText.substring(diffIndex,
-                    Math.min(initialText.length(), diffIndex + 20));
-            String actual = annotationText.substring(diffIndex,
-                    Math.min(annotationText.length(), diffIndex + 20));
-            throw new IncompatibleDocumentException(
-                    "Text of annotation document does not match text of source document at offset "
-                            + "[%d]. Expected [%s] but found [%s].",
-                    diffIndex, expected, actual);
-        }
+        assertSameText(initialText, annotationText);
 
         // Just in case we really had to chomp off a trailing line break from the annotation CAS,
         // make sure we copy over the proper text from the initial CAS
@@ -1020,12 +1054,28 @@ public class AeroRemoteApiController
         Collection<AnnotationFS> initialTokens = selectTokens(initialCas);
         if (annotationTokens.size() != initialTokens.size()) {
             throw new IncompatibleDocumentException(
-                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
-                    initialSentences.size(), annotationSentences.size());
+                    "Expected [%d] tokens, but annotation document contains [%d] tokens.",
+                    initialTokens.size(), annotationTokens.size());
         }
         assertCompatibleOffsets(initialTokens, annotationTokens);
 
         return annotationCas;
+    }
+
+    private static void assertSameText(String initialText, String annotationText)
+        throws IncompatibleDocumentException
+    {
+        if (ObjectUtils.notEqual(initialText, annotationText)) {
+            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
+            String expected = initialText.substring(diffIndex,
+                    Math.min(initialText.length(), diffIndex + 20));
+            String actual = annotationText.substring(diffIndex,
+                    Math.min(annotationText.length(), diffIndex + 20));
+            throw new IncompatibleDocumentException(
+                    "Text of annotation document does not match text of source document at offset "
+                            + "[%d]. Expected [%s] but found [%s].",
+                    diffIndex, expected, actual);
+        }
     }
 
     private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,
@@ -1180,5 +1230,131 @@ public class AeroRemoteApiController
             throw new IllegalArgumentException(
                     "Unknown annotation document state [" + aState + "]");
         }
+    }
+
+    @Operation(summary = "List all permissions in the given project (non-AERO)")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS, //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionRead(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to list project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        var permissions = projectService.getProjectPermissions(project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "List permissions for a user in the given project (non-AERO)")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionRead(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to list project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "Assign roles to a user in the given project (non-AERO)")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionCreate(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
+            @RequestParam(PARAM_ROLES) List<String> aRoles)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to manage project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
+
+        projectService.assignRole(project, subjectUser, roles);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "Revoke roles to a user in the given project (non-AERO)")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
+            @RequestParam(PARAM_ROLES) List<String> aRoles)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to manage project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
+
+        projectService.revokeRole(project, subjectUser, roles);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
     }
 }

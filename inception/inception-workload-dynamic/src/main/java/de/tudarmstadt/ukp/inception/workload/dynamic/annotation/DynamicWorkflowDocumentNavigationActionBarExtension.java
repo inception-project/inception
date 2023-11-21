@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.io.Serializable;
@@ -30,15 +32,14 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -82,7 +83,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     @Override
     public String getRole()
     {
-        return DefaultDocumentNavigatorActionBarExtension.class.getName();
+        return ROLE_NAVIGATOR;
     }
 
     @Override
@@ -103,8 +104,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
                 .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
                         aPage.getModelObject().getProject()).getType())
-                && !projectService.isCurator(aPage.getModelObject().getProject(),
-                        aPage.getModelObject().getUser());
+                && !projectService.hasRole(aPage.getModelObject().getUser(),
+                        aPage.getModelObject().getProject(), CURATOR, MANAGER);
     }
 
     @Override

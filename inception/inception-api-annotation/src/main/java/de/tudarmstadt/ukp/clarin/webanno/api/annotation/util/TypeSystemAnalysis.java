@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
+import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
+import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION_BASE;
+import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListValuedMap;
@@ -49,13 +52,13 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public class TypeSystemAnalysis
 {
@@ -244,8 +247,11 @@ public class TypeSystemAnalysis
         feat.setName(aFeat.getShortName());
         feat.setUiName(aFeat.getShortName());
         feat.setDescription(trimToNull(aFD.getDescription()));
-
         feat.setEnabled(true);
+
+        if (CAS.TYPE_NAME_STRING_ARRAY.equals(aFeat.getRange().getName())) {
+            feat.setMode(MultiValueMode.ARRAY);
+        }
 
         if (isSlotFeature(aTS, aFeat)) {
             feat.setType(aFeat.getRange().getComponentType().getFeatureByBaseName("target")
@@ -265,15 +271,19 @@ public class TypeSystemAnalysis
 
     private boolean isSpanLayer(TypeSystem aTS, Type aType)
     {
-        // A UIMA type can be a span layer if...
-        // ... there are only primitive features or slot features
+        // A UIMA type can be a span layer if there are only ...
+        // ... primitive features
+        // ... string arrays
+        // ... slot features
 
-        List<Feature> nonPrimitiveFeatures = aType.getFeatures().stream()
-                .filter(f -> !isBuiltInFeature(f))
-                .filter(f -> !(f.getRange().isPrimitive() || isSlotFeature(aTS, f)))
-                .collect(Collectors.toList());
+        List<Feature> unsupportedFeatures = aType.getFeatures().stream()
+                .filter(f -> !isBuiltInFeature(f)) //
+                .filter(f -> !(f.getRange().isPrimitive() || //
+                        isSlotFeature(aTS, f) || //
+                        isSupportedArrayType(f)))
+                .collect(toList());
 
-        return nonPrimitiveFeatures.isEmpty();
+        return unsupportedFeatures.isEmpty();
     }
 
     private Optional<RelationDetails> analyzeRelationLayer(TypeSystem aTS, Type aType)
@@ -284,7 +294,9 @@ public class TypeSystemAnalysis
         // ... the range is a span layer
 
         List<Feature> nonPrimitiveFeatures = aType.getFeatures().stream()
-                .filter(f -> !isBuiltInFeature(f)).filter(f -> !f.getRange().isPrimitive())
+                .filter(f -> !isBuiltInFeature(f)) //
+                .filter(f -> !(f.getRange().isPrimitive() || //
+                        isSupportedArrayType(f))) //
                 .collect(Collectors.toList());
 
         // ... there are exactly two non-primitive features
@@ -386,9 +398,14 @@ public class TypeSystemAnalysis
 
     private boolean isBuiltInFeature(Feature aFeature)
     {
-        Set<String> builtInTypes = new HashSet<>(
-                asList(CAS.TYPE_NAME_TOP, CAS.TYPE_NAME_ANNOTATION_BASE, CAS.TYPE_NAME_ANNOTATION));
+        var builtInTypes = new HashSet<>(
+                asList(TYPE_NAME_TOP, TYPE_NAME_ANNOTATION_BASE, TYPE_NAME_ANNOTATION));
         return builtInTypes.contains(aFeature.getDomain().getName());
+    }
+
+    private boolean isSupportedArrayType(Feature aFeature)
+    {
+        return CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getRange().getName());
     }
 
     private boolean isSlotFeature(TypeSystem aTS, Feature aFeature)

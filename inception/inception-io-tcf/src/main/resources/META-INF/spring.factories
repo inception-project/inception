@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.tudarmstadt.ukp.clarin.webanno.tcf.config.TcfFormatsAutoConfiguration

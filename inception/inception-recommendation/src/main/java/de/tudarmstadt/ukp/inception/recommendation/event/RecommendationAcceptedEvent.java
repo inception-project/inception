@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 
 public class RecommendationAcceptedEvent
     extends ApplicationEvent
@@ -86,7 +85,7 @@ public class RecommendationAcceptedEvent
             builder.append(", ");
         }
         builder.append("addr=");
-        builder.append(getAddr(fs));
+        builder.append(ICasUtil.getAddr(fs));
         builder.append(", feature=");
         builder.append(feature.getName());
         builder.append(", recommendedValue=");

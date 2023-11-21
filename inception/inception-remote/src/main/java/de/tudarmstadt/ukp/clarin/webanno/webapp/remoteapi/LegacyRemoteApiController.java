@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,23 +59,22 @@ import org.springframework.web.multipart.MultipartFile;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
@@ -119,6 +122,9 @@ public class LegacyRemoteApiController
      *            the type of the files contained in the ZIP.
      * @param aFile
      *            a ZIP file containing the project data.
+     * @param aName
+     *            the desired name of the project (optional)
+     * @return JSON object with information about the project
      * @throws Exception
      *             if there was an error.
      */
@@ -170,18 +176,16 @@ public class LegacyRemoteApiController
         projectRepository.initializeProject(project);
 
         // Create permission for the project creator
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.MANAGER));
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.CURATOR));
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
+        projectRepository.assignRole(project, user, MANAGER, CURATOR, ANNOTATOR);
 
         // Iterate through all the files in the ZIP
 
         // If the current filename does not start with "." and is in the root folder of the ZIP,
         // import it as a source document
-        File zipFile = File.createTempFile(aFile.getOriginalFilename(), ".zip");
+        String filename = aFile.getOriginalFilename();
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File zipFile = File.createTempFile(filename, ".zip");
         aFile.transferTo(zipFile);
         ZipFile zip = new ZipFile(zipFile);
 
@@ -190,8 +194,7 @@ public class LegacyRemoteApiController
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // If it is the zip name, ignore it
-            if ((FilenameUtils.removeExtension(aFile.getOriginalFilename()) + "/")
-                    .equals(entry.toString())) {
+            if ((FilenameUtils.removeExtension(filename) + "/").equals(entry.toString())) {
                 continue;
             }
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it as
@@ -273,10 +276,11 @@ public class LegacyRemoteApiController
      * To test when running in Eclipse, use the Linux "curl" command.
      * 
      * curl -v -X DELETE
-     * 'http://USERNAME:PASSOWRD@localhost:8080/webanno-webapp/api/projects/{aProjectId}'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}'
      * 
      * @param aProjectId
      *            The id of the project.
+     * @return message about the result of the operation
      * @throws Exception
      *             if there was an error.
      */
@@ -303,7 +307,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -325,6 +329,8 @@ public class LegacyRemoteApiController
      * @param aProjectId
      *            the project ID
      * @return JSON with {@link SourceDocument} : id
+     * @throws Exception
+     *             if something went wrong
      */
     @Operation(summary = "Show source documents in a project managed by the given user")
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS)
@@ -350,7 +356,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -383,6 +389,7 @@ public class LegacyRemoteApiController
      *            {@link Project} ID.
      * @param aSourceDocumentId
      *            {@link SourceDocument} ID.
+     * @return message about the result of the operation
      * @throws Exception
      *             if there was an error.
      */
@@ -412,7 +419,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -486,7 +493,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -553,7 +560,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -644,7 +651,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
@@ -701,7 +708,7 @@ public class LegacyRemoteApiController
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDoc, annotatorName,
-                format, annDoc.getName(), Mode.ANNOTATION);
+                format, Mode.ANNOTATION);
 
         try {
             // Set mime type
@@ -722,7 +729,7 @@ public class LegacyRemoteApiController
             FileCopyUtils.copy(inputStream, response.getOutputStream());
         }
         catch (Exception e) {
-            LOG.info("Exception occured" + e.getMessage());
+            LOG.info("Exception occurred" + e.getMessage());
         }
         finally {
             if (downloadableFile.exists()) {
@@ -780,7 +787,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
@@ -823,7 +830,7 @@ public class LegacyRemoteApiController
 
         // Temporary file of annotation document
         File downloadableFile = importExportService.exportAnnotationDocument(srcDocument,
-                WebAnnoConst.CURATION_USER, format, srcDocument.getName(), Mode.CURATION);
+                WebAnnoConst.CURATION_USER, format, Mode.CURATION);
 
         try {
             // Set mime type
@@ -844,7 +851,7 @@ public class LegacyRemoteApiController
             FileCopyUtils.copy(inputStream, response.getOutputStream());
         }
         catch (Exception e) {
-            LOG.info("Exception occured" + e.getMessage());
+            LOG.info("Exception occurred" + e.getMessage());
         }
         finally {
             if (downloadableFile.exists()) {

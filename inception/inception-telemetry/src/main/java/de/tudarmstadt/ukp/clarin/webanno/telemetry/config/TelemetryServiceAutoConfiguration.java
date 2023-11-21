@@ -22,6 +22,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -30,16 +31,17 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupportImpl;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.TelemetryFooterItem;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.TelemetrySettingsInterceptor;
 
+@ConditionalOnWebApplication
 @Configuration
 @EnableConfigurationProperties({ TelemetryServicePropertiesImpl.class,
         MatomoTelemetryServicePropertiesImpl.class })
@@ -48,7 +50,7 @@ public class TelemetryServiceAutoConfiguration
 {
     @Bean
     public TelemetryService telemetryService(
-            @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
+            @Lazy @Autowired(required = false) List<TelemetrySupport<?>> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher, TelemetryServiceProperties aProperties,
             PlatformTransactionManager aTransactionManager)
     {

@@ -17,19 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.util.lang.WicketObjects;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -37,10 +37,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.StringValueConversionException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.ui.core.AccessDeniedPage;
+import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 
 public abstract class ProjectPageBase
     extends ApplicationPageBase
@@ -52,6 +55,8 @@ public abstract class ProjectPageBase
     public static final String PAGE_PARAM_PROJECT = "p";
 
     private @SpringBean ProjectService projectService;
+    private @SpringBean DashboardProperties dashboardProperties;
+    private @SpringBean UserDao userService;
     private IModel<Project> projectModel;
 
     public ProjectPageBase(final PageParameters aParameters)
@@ -65,25 +70,29 @@ public abstract class ProjectPageBase
         }
     }
 
-    protected final void requireProjectRole(User aUser, PermissionLevel... aRoles)
+    protected final void requireAnyProjectRole(User aUser)
     {
         Project project = getProjectModel().getObject();
 
-        Set<PermissionLevel> roles = aRoles != null ? new LinkedHashSet<>(asList(aRoles))
-                : emptySet();
+        if (aUser == null || !projectService.hasAnyRole(aUser, project)) {
+            getSession().error(format("To access the [%s] you need to be a member of the project",
+                    getClass().getSimpleName()));
+
+            backToProjectPage();
+        }
+    }
+
+    protected final void requireProjectRole(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        Project project = getProjectModel().getObject();
 
         // Check access to project
-        if (aUser == null || !projectService.hasRole(aUser, project, aRoles)) {
-            if (roles.isEmpty()) {
-                getSession()
-                        .error(format("To access the [%s] you need to be a member of the project",
-                                getClass().getSimpleName()));
-            }
-            else {
-                getSession().error(format("To access the [%s] you require any of these roles: [%s]",
-                        getClass().getSimpleName(),
-                        roles.stream().map(PermissionLevel::getId).collect(joining(", "))));
-            }
+        if (aUser == null || !projectService.hasRole(aUser, project, aRole, aMoreRoles)) {
+            var roles = Stream.concat(Stream.of(aRole), Stream.of(aMoreRoles)).distinct();
+            getSession().error(format("To access the [%s] you require any of these roles: [%s]",
+                    getClass().getSimpleName(),
+                    roles.map(PermissionLevel::getName).collect(joining(", "))));
 
             backToProjectPage();
         }
@@ -91,11 +100,18 @@ public abstract class ProjectPageBase
 
     public void backToProjectPage()
     {
+        // If the current user cannot access the dashboard, send them to an access denied page
+        if (!projectService.hasRole(userService.getCurrentUsername(), getProject(), MANAGER,
+                dashboardProperties.getAccessibleByRoles().toArray(PermissionLevel[]::new))) {
+            getRequestCycle().find(AjaxRequestTarget.class)
+                    .ifPresent(_target -> _target.addChildren(getPage(), IFeedback.class));
+            throw new RestartResponseException(AccessDeniedPage.class);
+        }
+
+        var pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
-
-        PageParameters pageParameters = new PageParameters();
-        setProjectPageParameter(pageParameters, getProject());
         throw new RestartResponseException(projectDashboard, pageParameters);
     }
 

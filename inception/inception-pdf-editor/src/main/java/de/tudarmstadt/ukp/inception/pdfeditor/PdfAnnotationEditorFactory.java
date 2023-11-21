@@ -23,13 +23,14 @@ package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Support for HTML-oriented editor component.
@@ -37,18 +38,21 @@ import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportA
  * This class is exposed as a Spring Component via
  * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfAnnotationEditorFactory()}.
  * </p>
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     @Override
     public String getDisplayName()
     {
-        return "PDF";
+        return "PDF (legacy)";
     }
 
     @Override
-    public int accepts(String aFormat)
+    public int accepts(Project aProject, String aFormat)
     {
         switch (aFormat) {
         case PdfFormatSupport.ID:
@@ -62,7 +66,7 @@ public class PdfAnnotationEditorFactory
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+        return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
     }
 
     @Override

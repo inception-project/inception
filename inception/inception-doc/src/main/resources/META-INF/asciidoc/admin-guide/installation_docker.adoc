@@ -27,10 +27,10 @@ If you have Docker installed, you can run {product-name} using
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
-The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
+The command downloads {product-name} from GitHub and starts it on port 8080. If this port is not
 available on your machine, you should provide another port to the `-p` parameter. 
 
 The logs will be printed to the console. To stop the container, press `CTRL-C`.
@@ -39,7 +39,7 @@ To run the {product-name} docker in the background use
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -d --name inception -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
 Logs are accessible by typing
@@ -86,7 +86,7 @@ When you run {product-name} via Docker, you then mount this folder into the cont
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 ghcr.io/inception-project/inception:{revnumber}
 ----
 
 == Settings file
@@ -104,6 +104,14 @@ By default, {product-name} uses an embedded SQL database to store its metadata (
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
 recommended to use a dedicated database server (i.e. MariaDB or compatible) instead of the embedded
 SQL database.
+
+== Customizing UID/GID
+
+By default, {product-name} runs with the UID 2000 and the GID 2000. On startup, any files belonging to {product-name} are automatically reassigned to these UID/GID, in the Docker container itself as well as in any volume potentially mounted under `/export` within the container. If you need the application to run as a different UID/GID, you can override these values when starting the container using the `APP_UID` and `APP_GID` environment variables.
+
+----
+$ docker run -it -e APP_UID=1234 -e APP_GID=4321 ghcr.io/inception-project/inception:{revnumber}
+----
 
 == Docker Compose
 
@@ -179,4 +187,15 @@ you mount the data to folders on your host.
 
 NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-stored data. Choose wisely.
 
+=== Java options
+
+You can pass additional options to the Java runtime by extending the `JAVA_OPTS` variable in the
+Docker Compose script. To increase the available memory (RAM) to e.g. 4Gb, append `-Xmx4g`.
+
+[source,shell,subs="+attributes"]
+----
+- JAVA_OPTS=-Dspring.jpa.properties.hibernate.dialect.storage_engine=innodb -Xmx4g
+----
+
 There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
+

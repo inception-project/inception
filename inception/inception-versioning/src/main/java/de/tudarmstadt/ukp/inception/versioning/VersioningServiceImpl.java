@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,13 +46,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -62,8 +57,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -283,16 +283,16 @@ public class VersioningServiceImpl
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
 
-            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null, layer,
-                    annotationService);
+            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null,
+                    null, layer, annotationService);
             exLayers.add(exMainLayer);
 
             // If the layer is attached to another layer, then we also have to export
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
                 AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null, null,
-                        attachLayer, annotationService);
+                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils
+                        .exportLayerDetails(null, null, attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
                 exLayers.add(exAttachLayer);

@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class ThresholdBasedMergeStrategy
     implements MergeStrategy
@@ -56,46 +58,76 @@ public class ThresholdBasedMergeStrategy
      */
     private final double confidenceThreshold;
 
-    public ThresholdBasedMergeStrategy(int aUserThreshold, double aConfidenceThreshold)
+    private final int topRanks;
+
+    public ThresholdBasedMergeStrategy(int aUserThreshold, double aConfidenceThreshold,
+            int aTopRanks)
     {
-        super();
         userThreshold = aUserThreshold;
         confidenceThreshold = aConfidenceThreshold;
+        topRanks = aTopRanks;
     }
 
     @Override
-    public Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
-            ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
+            AnnotationLayer aLayer)
     {
+        int topRanksToConsider = aLayer.isAllowStacking() ? topRanks : 1;
+
         List<Configuration> cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
                 .sorted(comparing((Configuration cfg) -> cfg.getCasGroupIds().size()).reversed()) //
-                .collect(Collectors.toList());
+                .collect(toList());
 
         if (cfgsAboveUserThreshold.isEmpty()) {
             LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}]",
                     userThreshold);
-            return Optional.empty();
+            return emptyList();
         }
 
-        Configuration best = cfgsAboveUserThreshold.get(0);
-        Optional<Configuration> secondBest = Optional.empty();
-        if (cfgsAboveUserThreshold.size() > 1) {
-            secondBest = Optional.of(cfgsAboveUserThreshold.get(1));
+        double totalVotes = cfgsAboveUserThreshold.stream() //
+                .mapToDouble(cfg -> cfg.getCasGroupIds().size()) //
+                .sum();
+
+        double cutOffVotesByConfidence = confidenceThreshold * totalVotes;
+        double cutOffVotesByRank = cfgsAboveUserThreshold.get(
+                (topRanksToConsider - 1) < cfgsAboveUserThreshold.size() ? (topRanksToConsider - 1)
+                        : cfgsAboveUserThreshold.size() - 1)
+                .getCasGroupIds().size();
+
+        var result = cfgsAboveUserThreshold.stream() //
+                .filter(cfg -> cfg.getCasGroupIds().size() >= cutOffVotesByConfidence)
+                .filter(cfg -> cfg.getCasGroupIds().size() >= cutOffVotesByRank) //
+                .collect(toList());
+
+        if (topRanksToConsider == 1 && result.size() > 1) {
+            // If we request only one result but there is more than one, then it is a tie. If only
+            // a single result is requested, then ties are considered a dispute.
+            return Collections.emptyList();
         }
 
-        double bestVoteCount = best.getCasGroupIds().size();
-        double secondBestVoteCount = secondBest.map(cfg -> cfg.getCasGroupIds().size()).orElse(0);
-        double confidence = ((bestVoteCount - secondBestVoteCount) / bestVoteCount);
+        return result;
 
-        if (confidence > 0.0 && confidence >= confidenceThreshold) {
-            return Optional.of(best);
-        }
-
-        // DISPUTED
-        LOG.trace(" `-> Not merging as confidence [{}] is zero or does not meet the threshold [{}]",
-                confidence, confidenceThreshold);
-        return Optional.empty();
+        // Configuration best = cfgsAboveUserThreshold.get(0);
+        // Optional<Configuration> secondBest = Optional.empty();
+        // if (cfgsAboveUserThreshold.size() > 1) {
+        // secondBest = Optional.of(cfgsAboveUserThreshold.get(1));
+        // }
+        //
+        // double bestVoteCount = best.getCasGroupIds().size();
+        // double secondBestVoteCount = secondBest.map(cfg ->
+        // cfg.getCasGroupIds().size()).orElse(0);
+        // double confidence = ((bestVoteCount - secondBestVoteCount) / bestVoteCount);
+        //
+        // if (confidence > 0.0 && confidence >= confidenceThreshold) {
+        // return asList(best);
+        // }
+        //
+        // // DISPUTED
+        // LOG.trace(" `-> Not merging as confidence [{}] is zero or does not meet the threshold
+        // [{}]",
+        // confidence, confidenceThreshold);
+        // return emptyList();
     }
 
     @Override

@@ -17,18 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.DYNAMIC;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.GRAY;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.LEGACY;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.STATIC_PASTELLE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringUtils.isTooLight;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.DISABLED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.LIGHTNESS_FILTER_THRESHOLD;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_PASTEL;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour.NORMAL;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.GRAY;
+import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.LEGACY;
+import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.STATIC_PASTELLE;
+import static de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour.NORMAL;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -40,19 +39,29 @@ import java.util.Queue;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#coloringService}.
+ * </p>
+ */
 public class ColoringServiceImpl
     implements ColoringService
 {
@@ -65,23 +74,25 @@ public class ColoringServiceImpl
     {
         schemaService = aSchemaService;
 
-        hasLinkFeatureCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(this::loadHasLinkFeature);
+        hasLinkFeatureCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(this::loadHasLinkFeature);
     }
 
     @Override
-    public ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
+    public ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringPreferences aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
         ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
         ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
 
         if (aLayer.isReadonly() && rt != NORMAL) {
-            t = rt.t;
+            t = rt.getColoringStrategy();
         }
 
         if (t == null || t == LEGACY) {
-            t = getBestInitialStrategy(aLayer, aPreferences);
+            t = getBestInitialStrategy(aLayer);
         }
 
         return getStrategy(aLayer, t, aColorQueues);
@@ -153,21 +164,13 @@ public class ColoringServiceImpl
     }
 
     @Override
-    public ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer,
-            AnnotationPreference aPreferences)
+    public ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer)
     {
-        // Decide on coloring strategy for the current layer
-        ColoringStrategyType coloringStrategy;
         if (aLayer.isReadonly()) {
-            coloringStrategy = GRAY;
+            return GRAY;
         }
-        else if (aPreferences.isStaticColor()) {
-            coloringStrategy = STATIC_PASTELLE;
-        }
-        else {
-            coloringStrategy = DYNAMIC;
-        }
-        return coloringStrategy;
+
+        return STATIC_PASTELLE;
     }
 
     private boolean hasLinkFeature(AnnotationLayer aLayer)
@@ -185,6 +188,7 @@ public class ColoringServiceImpl
         return false;
     }
 
+    @SuppressFBWarnings("ES_COMPARING_STRINGS_WITH_EQ")
     private String nextPaletteEntry(String[] aPalette, Map<String[], Queue<String>> aPaletteCursors,
             int aThreshold)
     {

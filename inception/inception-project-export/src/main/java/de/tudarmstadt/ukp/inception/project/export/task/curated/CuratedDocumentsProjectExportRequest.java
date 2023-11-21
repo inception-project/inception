@@ -40,6 +40,9 @@ public class CuratedDocumentsProjectExportRequest
     /**
      * Set the ID of the export format.
      * 
+     * @param aFormat
+     *            the format ID
+     * 
      * @see FormatSupport#getId()
      */
     public void setFormat(String aFormat)
@@ -48,7 +51,7 @@ public class CuratedDocumentsProjectExportRequest
     }
 
     /**
-     * Get the ID of the export format.
+     * @return the ID of the export format.
      * 
      * @see FormatSupport#getId()
      */

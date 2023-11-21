@@ -23,12 +23,17 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import org.apache.uima.cas.text.AnnotationPredicates;
+
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public abstract class AnnotationSuggestion
     implements Serializable
 {
     private static final long serialVersionUID = -7137765759688480950L;
+
+    public static final int NEW_ID = -1;
 
     public static final String EXTENSION_ID = "rec";
 
@@ -68,6 +73,7 @@ public abstract class AnnotationSuggestion
     public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
             | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
 
+    protected final int generation;
     protected final int id;
     protected final long recommenderId;
     protected final String recommenderName;
@@ -78,12 +84,18 @@ public abstract class AnnotationSuggestion
     protected final String uiLabel;
     protected final double score;
     protected final String scoreExplanation;
-    private int hidingFlags = 0;
 
-    public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            long aLayerId, String aFeature, String aDocumentName, String aLabel, String aUiLabel,
-            double aScore, String aScoreExplanation)
+    private AutoAcceptMode autoAcceptMode;
+    private int hidingFlags = 0;
+    private int age = 0;
+
+    public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
+            String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
+            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
+            AutoAcceptMode aAutoAcceptMode, int aHidingFlags)
     {
+        generation = aGeneration;
+        age = aAge;
         label = aLabel;
         uiLabel = aUiLabel;
         id = aId;
@@ -94,20 +106,8 @@ public abstract class AnnotationSuggestion
         scoreExplanation = aScoreExplanation;
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
-    }
-
-    public AnnotationSuggestion(AnnotationSuggestion aObject)
-    {
-        label = aObject.label;
-        uiLabel = aObject.uiLabel;
-        id = aObject.id;
-        layerId = aObject.layerId;
-        feature = aObject.feature;
-        recommenderName = aObject.recommenderName;
-        score = aObject.score;
-        scoreExplanation = aObject.scoreExplanation;
-        recommenderId = aObject.recommenderId;
-        documentName = aObject.documentName;
+        autoAcceptMode = aAutoAcceptMode;
+        hidingFlags = aHidingFlags;
     }
 
     public int getId()
@@ -177,6 +177,11 @@ public abstract class AnnotationSuggestion
         hidingFlags &= ~aFlags;
     }
 
+    protected int getHidingFlags()
+    {
+        return hidingFlags;
+    }
+
     public String getReasonForHiding()
     {
         StringBuilder sb = new StringBuilder();
@@ -204,6 +209,16 @@ public abstract class AnnotationSuggestion
     public boolean isVisible()
     {
         return hidingFlags == 0;
+    }
+
+    public AutoAcceptMode getAutoAcceptMode()
+    {
+        return autoAcceptMode;
+    }
+
+    public void clearAutoAccept()
+    {
+        autoAcceptMode = AutoAcceptMode.NEVER;
     }
 
     public VID getVID()
@@ -239,6 +254,8 @@ public abstract class AnnotationSuggestion
     /**
      * Determine if the given label is equal to this object's label or if they are both null
      * 
+     * @param aLabel
+     *            the label
      * @return true if both labels are null or equal
      */
     public boolean labelEquals(String aLabel)
@@ -252,4 +269,50 @@ public abstract class AnnotationSuggestion
 
     public abstract int getWindowEnd();
 
+    public boolean coveredBy(Range aRange)
+    {
+        if (Range.UNDEFINED.equals(aRange)) {
+            return false;
+        }
+
+        return AnnotationPredicates.coveredBy(getWindowBegin(), getWindowEnd(), aRange.getBegin(),
+                aRange.getEnd());
+    }
+
+    public boolean hideSuggestion(LearningRecordType aAction)
+    {
+        switch (aAction) {
+        case REJECTED:
+            hide(FLAG_REJECTED);
+            return true;
+        case SKIPPED:
+            hide(FLAG_SKIPPED);
+            return true;
+        default:
+            // Nothing to do for the other cases.
+            // ACCEPTED annotation are filtered out anyway because the overlap with a created
+            // annotation and the same for CORRECTED
+            return false;
+        }
+    }
+
+    public int incrementAge()
+    {
+        age++;
+        return age;
+    }
+
+    public int getAge()
+    {
+        return age;
+    }
+
+    /**
+     * @return a clone of the current suggestion with the new ID. This is used when adding a
+     *         suggestion to {@link Predictions} if the ID of the suggestion is set to
+     *         {@link #NEW_ID}.
+     * @param aId
+     *            the ID of the suggestion.
+     */
+    abstract public AnnotationSuggestion assignId(int aId);
 }

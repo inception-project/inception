@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -36,11 +35,9 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public class SearchResultsExporterTest
 {
-
     @Test
     public void testSearchResultsExporter(@TempDir Path tempDir) throws Exception
     {
-
         Path csvPath = tempDir.resolve("csv.txt");
 
         SearchResult result1 = new SearchResult();
@@ -75,24 +72,14 @@ public class SearchResultsExporterTest
 
         SearchResultsExporter exporter = new SearchResultsExporter();
 
-        try {
-            InputStream stream = exporter.generateCsv(resultList);
-            OutputStream os = Files.newOutputStream(csvPath);
+        try (InputStream stream = exporter.generateCsv(resultList);
+                OutputStream os = Files.newOutputStream(csvPath);) {
             stream.transferTo(os);
-            os.flush();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
         }
 
         List<ResultsGroup> reimported = new ArrayList<ResultsGroup>();
 
-        try {
-            reimported = SearchResultsExporter.importCSV(csvPath);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+        reimported = SearchResultsExporter.importCSV(csvPath);
 
         assertEquals(reimported.size(), resultList.size());
         for (int i = 0; i < reimported.size(); i++) {
@@ -109,7 +96,6 @@ public class SearchResultsExporterTest
                         resultList.get(i).getResults().get(j).getOffsetStart());
                 assertEquals(reimported.get(i).getResults().get(j).getOffsetEnd(),
                         resultList.get(i).getResults().get(j).getOffsetEnd());
-
             }
         }
     }

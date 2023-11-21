@@ -26,12 +26,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 public abstract class Renderer_ImplBase<T extends TypeAdapter>
     implements Renderer
@@ -89,8 +89,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     }
 
     /**
-     * Decodes the traits for the given feature and returns them if they implement the requested
-     * interface. This method internally caches the decoded traits, so it can be called often.
+     * @param aFeature
+     *            the feature
+     * @param aInterface
+     *            the traits interface
+     * @param <T>
+     *            the traits type
+     * @return the traits for the given feature if they implement the requested interface. This
+     *         method internally caches the decoded traits, so it can be called often.
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> getTraits(AnnotationFeature aFeature, Class<T> aInterface)
@@ -111,8 +117,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     }
 
     /**
-     * Decodes the traits for the given layer and returns them if they implement the requested
-     * interface. This method internally caches the decoded traits, so it can be called often.
+     * @param aLayer
+     *            the layer
+     * @param aInterface
+     *            the traits interface
+     * @param <T>
+     *            the traits type
+     * @return the decoded traits for the given layer if they implement the requested interface.
+     *         This method internally caches the decoded traits, so it can be called often.
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> getTraits(AnnotationLayer aLayer, Class<T> aInterface)
@@ -129,12 +141,6 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         }
 
         return Optional.empty();
-    }
-
-    public void renderLazyDetails(AnnotationFS fs, VObject aVObject,
-            List<AnnotationFeature> aFeatures)
-    {
-        aVObject.addLazyDetails(getLazyDetails(fs, aFeatures));
     }
 
     public abstract List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,

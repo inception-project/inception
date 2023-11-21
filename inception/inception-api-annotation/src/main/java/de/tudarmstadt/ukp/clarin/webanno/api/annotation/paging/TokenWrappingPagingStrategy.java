@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,15 +26,17 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class TokenWrappingPagingStrategy
-    implements PagingStrategy
+    extends PagingStrategy_ImplBase
 {
     private static final long serialVersionUID = -3983123604003839467L;
 
@@ -54,6 +58,12 @@ public class TokenWrappingPagingStrategy
         int currentUnitEnd = 0;
         while (tokenIterator.hasNext()) {
             AnnotationFS currentToken = tokenIterator.next();
+
+            if (currentToken.getBegin() < currentUnitEnd) {
+                throw new IllegalStateException(format(
+                        "Unable to render: Token at [%d-%d] illegally overlaps with previous token ending at [%d].",
+                        currentToken.getBegin(), currentToken.getEnd(), currentUnitEnd));
+            }
 
             String gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
             int gapStart = currentUnitEnd;
@@ -104,8 +114,8 @@ public class TokenWrappingPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        return new DefaultPagingNavigator(aId, aPage);
+        return new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
     }
 }

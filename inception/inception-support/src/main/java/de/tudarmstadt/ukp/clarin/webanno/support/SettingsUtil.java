@@ -40,8 +40,8 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
-    private static String propApplicationHome = "webanno.home";
-    private static String applicationUserHomeSubdir = ".webanno";
+    private static String propApplicationHome = "inception.home";
+    private static String applicationUserHomeSubdir = ".inception";
 
     public static final String PROP_BUILD_NUMBER = "buildNumber";
     public static final String PROP_TIMESTAMP = "timestamp";
@@ -50,18 +50,43 @@ public class SettingsUtil
     private static final String PROP_USER_HOME = "user.home";
 
     private static final String SETTINGS_FILE = "settings.properties";
+    private static final String SETTINGS_YAML_FILE = "settings.yml";
 
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_LOCALE = "locale";
-    public static final String CFG_STYLE_LOGO = "style.logo";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_AUTH_MODE = "auth.mode";
+    @Deprecated
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
+    @Deprecated
     public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
+
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
 
+    /**
+     * @deprecated Should introduce/use a Spring properties bean instead.
+     */
+    @Deprecated
     public static final String CFG_LINK_PREFIX = "style.header.icon.";
-    public static final String CFG_LINK_URL = ".linkUrl";
-    public static final String CFG_LINK_IMAGE_URL = ".imageUrl";
+    public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
+    public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";
 
     private static Properties versionInfo;
     private static Properties settings;
@@ -101,7 +126,7 @@ public class SettingsUtil
         return getGlobalLogFolder().map(dir -> dir.resolve("application.log"));
     }
 
-    public static Properties getVersionProperties()
+    public static synchronized Properties getVersionProperties()
     {
         if (versionInfo == null) {
             try {
@@ -134,14 +159,13 @@ public class SettingsUtil
     public static File getApplicationHome()
     {
         String appHome = System.getProperty(propApplicationHome);
-        String userHome = System.getProperty(PROP_USER_HOME);
 
         if (appHome != null) {
             return new File(appHome);
         }
-        else {
-            return new File(userHome + "/" + applicationUserHomeSubdir);
-        }
+
+        String userHome = System.getProperty(PROP_USER_HOME);
+        return new File(userHome + "/" + applicationUserHomeSubdir);
     }
 
     /**
@@ -149,50 +173,73 @@ public class SettingsUtil
      * 
      * @return the location of the settings file or {@code null} if none could be found.
      */
-    public static File getSettingsFile()
+    public static File getSettingsFileLocation()
     {
-        String appHome = System.getProperty(propApplicationHome);
-        String userHome = System.getProperty(PROP_USER_HOME);
-
         // Locate settings, first in application, then in user home
-        File settings = null;
+        String appHome = System.getProperty(propApplicationHome);
         if (appHome != null) {
-            settings = new File(appHome, SETTINGS_FILE);
-        }
-        else if (userHome != null) {
-            settings = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
+            File yamlFile = new File(appHome, SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return new File(appHome, SETTINGS_FILE);
         }
 
-        if (settings.exists()) {
-            return settings;
+        String userHome = System.getProperty(PROP_USER_HOME);
+        if (userHome != null) {
+            File yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
+                    SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
         }
-        else {
-            return null;
-        }
+
+        return null;
     }
 
     /**
+     * Locate the settings file and return its location if it exists.
      * 
+     * @return the location of the settings file or {@code null} if none could be found.
+     */
+    public static File getSettingsFile()
+    {
+        File settingsFile = getSettingsFileLocation();
+
+        if (settingsFile != null && settingsFile.exists()) {
+            return settingsFile;
+        }
+
+        return null;
+    }
+
+    /**
      * @deprecated To access setting properties, use Spring Boot
      *             {@link org.springframework.boot.context.properties.ConfigurationProperties}
      *             classes implementing a corresponding interface instead (e.g. @see
      *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
-    public static Properties getSettings()
+    public static synchronized Properties getSettings()
     {
         if (settings == null) {
-            settings = new Properties();
+            var props = new Properties(System.getProperties());
             File settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
-                    settings.load(in);
+                    props.load(in);
                 }
                 catch (IOException e) {
                     LoggerFactory.getLogger(SettingsUtil.class)
                             .error("Unable to load settings file [" + settings + "]", e);
                 }
             }
+
+            settings = props;
         }
         return settings;
     }

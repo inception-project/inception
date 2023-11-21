@@ -29,16 +29,18 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public abstract class EditorAjaxRequestHandlerBase
     implements EditorAjaxRequestHandler
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String PARAM_TOKEN = "token";
 
     @Override
     public String getId()
@@ -75,14 +77,22 @@ public abstract class EditorAjaxRequestHandlerBase
         return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
     }
 
+    protected void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)
+    {
+        String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
+        aTarget.prependJavaScript(
+                "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
+    }
+
     protected DefaultAjaxResponse handleError(String aMessage, Exception e)
     {
         AjaxRequestTarget target = getAjaxRequestTarget();
 
         target.addChildren(target.getPage(), IFeedback.class);
 
+        String fullMessage = aMessage + ": " + e.getMessage();
+
         if (e instanceof AnnotationException) {
-            String fullMessage = aMessage + ": " + e.getMessage();
             // These are common exceptions happening as part of the user interaction. We do
             // not really need to log their stack trace to the log.
             target.getPage().error(fullMessage);
@@ -95,7 +105,7 @@ public abstract class EditorAjaxRequestHandlerBase
         }
 
         LOG.error("{}", aMessage, e);
-        target.getPage().error(aMessage);
+        target.getPage().error(fullMessage);
         return new DefaultAjaxResponse(getAction(RequestCycle.get().getRequest()),
                 asList(aMessage));
     }

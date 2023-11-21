@@ -17,28 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 @Component
 public class CurationRendererImpl
@@ -47,39 +47,55 @@ public class CurationRendererImpl
     private final PreRenderer preRenderer;
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final BratAnnotationEditorProperties bratProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
+    private final UserDao userService;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, BratAnnotationEditorProperties aBratProperties)
+            ColoringService aColoringService,
+            AnnotationSchemaProperties aAnnotationEditorProperties, UserDao aUserService)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
-        bratProperties = aBratProperties;
+        annotationEditorProperties = aAnnotationEditorProperties;
+        userService = aUserService;
     }
 
     @Override
-    public String render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
+    public VDocument render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
         throws IOException
     {
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
-            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName());
+        var layersToRender = new ArrayList<AnnotationLayer>();
+        for (var layer : aState.getAnnotationLayers()) {
+            boolean isNonEditableTokenLayer = layer.getName().equals(Token.class.getName())
+                    && !annotationEditorProperties.isTokenLayerEditable();
+            boolean isNonEditableSentenceLayer = layer.getName().equals(Sentence.class.getName())
+                    && !annotationEditorProperties.isSentenceLayerEditable();
             boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
 
-            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+            if (layer.isEnabled() && !isNonEditableTokenLayer && !isNonEditableSentenceLayer
+                    && !isUnsupportedLayer) {
                 layersToRender.add(layer);
             }
         }
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(), aCas,
-                layersToRender);
+        var request = RenderRequest.builder() //
+                .withState(aState) //
+                .withSessionOwner(userService.getCurrentUser()) //
+                .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
+                .withCas(aCas) //
+                .withVisibleLayers(layersToRender) //
+                .withColoringStrategyOverride(aColoringStrategy) //
+                .build();
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
-        renderer.render(response, aState, vdoc, aCas, aColoringStrategy);
-        return JSONUtil.toInterpretableJsonString(response);
+        var vdoc = new VDocument();
+        preRenderer.render(vdoc, request);
+
+        new LabelRenderer().render(vdoc, request);
+
+        ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
+        colorRenderer.render(vdoc, request);
+
+        return vdoc;
     }
 }

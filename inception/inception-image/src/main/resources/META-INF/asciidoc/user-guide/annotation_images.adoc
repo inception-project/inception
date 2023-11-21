@@ -36,3 +36,10 @@ NOTE: The sidebar attempts to add a border of an appropriate color to each image
       server to support CORS. If CORS is not supported by the image server, rendering performance will 
       degrade as there is an attempt to re-load the image without CORS and without trying to determine the
       border color - but the application should still work and the images should still show.
+
+NOTE: If the images are not hosted on the same server as {product-name}, you may have to specify
+      the remote server in the `security.csp.allowed-image-sources` property to enable users to access these
+      images from their browsers within {product-name}. This is a multi-valued property, so you have to 
+      set its values as `security.csp.allowed-image-sources[0]=https://my-first-image.host`,
+      `security.csp.allowed-image-sources[1]=https://my-second-image.host` in the `settings.properties`
+      file.

@@ -117,8 +117,8 @@
               <wicket:message key="history"/>
             </div>
             <div class="scrolling card-body p-0 small">
-              <div class="list-group-flush">
-                <div wicket:id="historyListview" class="list-group-item px-2 py-1">
+              <ul class="list-group list-group-flush">
+                <li wicket:id="historyListview" class="list-group-item px-2 py-1">
                   <div class="clearfix">
                     <a wicket:id="removeRecord" class="float-end" style="white-space:nowrap;">
                       <i class="fas fa-times"/>
@@ -129,8 +129,8 @@
                     <span wicket:id="userAction" class="badge bg-secondary float-end"></span>
                     <span wicket:id="recommendedAnnotation"></span>
                   </div>
-                </div>
-              </div>
+                </li>
+              </ul>
             </div>
           </form>
         </div>

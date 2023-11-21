@@ -17,36 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -54,41 +52,31 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class LayerDetailForm
@@ -116,9 +104,7 @@ public class LayerDetailForm
     private FeatureDetailForm featureDetailForm;
 
     private WebMarkupContainer traitsContainer;
-    private final ChallengeResponseDialog confirmationDialog;
-
-    private LayerExportMode exportMode = LayerExportMode.JSON;
+    private ModalDialog confirmationDialog;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
             FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
@@ -207,28 +193,20 @@ public class LayerDetailForm
         // Behaviors of layers
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
-        BootstrapRadioChoice<LayerExportMode> exportModeChoice = new BootstrapRadioChoice<>(
-                "exportMode", asList(LayerExportMode.values()));
-        exportModeChoice.setModel(new PropertyModel<LayerExportMode>(this, "exportMode"));
-        exportModeChoice.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
-        add(exportModeChoice);
-
-        add(new AjaxDownloadLink("export",
-                new LambdaModel<>(this::getExportLayerFileName).autoDetaching(),
-                this::exportLayer));
+        add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerAsJson));
+        add(new AjaxDownloadLink("exportLayersAsUima", this::exportAllLayersAsUimaXml));
+        add(new AjaxDownloadLink("exportFullTypeSystemAsUima",
+                this::exportFullTypeSystemAsUimaXml));
 
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
-        add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(enabledWhen(
-                () -> !isNull(getModelObject().getId()) && isLayerDeletable(getModelObject()))));
+        add(new LambdaAjaxButton<AnnotationLayer>("save", this::actionSave).triggerAfterSubmit());
+        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete) //
+                .add(enabledWhen(() -> !isNull(getModelObject().getId()))));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
 
-        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog.setTitleModel(new StringResourceModel("DeleteLayerDialog.title", this));
-        add(confirmationDialog);
+        queue(confirmationDialog = new BootstrapModalDialog("confirmationDialog").trapFocus());
     }
 
     private String getEffectiveAttachTypeName()
@@ -320,36 +298,34 @@ public class LayerDetailForm
                 && annotationService.listAttachedLinkFeatures(aLayer).isEmpty();
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog.setChallengeModel(new StringResourceModel("DeleteLayerDialog.text", this)
-                .setParameters(escapeMarkup(getModelObject().getName())));
-        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
-        confirmationDialog.show(aTarget);
+        var dialogContent = new DeleteLayerConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                getModel());
 
-        confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeLayer(getModelObject());
+        dialogContent.setConfirmAction((_target) -> actionDeleteLayerConfirmed(_target));
 
-            Project project = getModelObject().getProject();
-
-            setModelObject(null);
-
-            documentService.upgradeAllAnnotationDocuments(project);
-
-            // Trigger LayerConfigurationChangedEvent
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
-
-            _target.add(getPage());
-        });
+        confirmationDialog.open(dialogContent, aTarget);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void actionDeleteLayerConfirmed(AjaxRequestTarget _target) throws IOException
+    {
+        annotationService.removeLayer(getModelObject());
+        Project project = getModelObject().getProject();
+        setModelObject(null);
+        documentService.upgradeAllAnnotationDocuments(project);
+        // Trigger LayerConfigurationChangedEvent
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, project));
+        _target.add(getPage());
+    }
+
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+        AnnotationLayer layer = aForm.getModelObject();
 
         final Project project = layer.getProject();
 
@@ -418,78 +394,45 @@ public class LayerDetailForm
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private String getExportLayerFileName()
-    {
-        switch (exportMode) {
-        case JSON:
-            return "layer.json";
-        case UIMA:
-            return "typesystem.xml";
-        default:
-            throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
-        }
-    }
-
-    private IResourceStream exportLayer()
-    {
-        switch (exportMode) {
-        case JSON:
-            return exportLayerJson();
-        case UIMA:
-            return exportUimaTypeSystem();
-        default:
-            throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
-        }
-    }
-
-    private IResourceStream exportUimaTypeSystem()
+    private IResourceStream exportFullTypeSystemAsUimaXml()
     {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            TypeSystemDescription tsd = annotationService
-                    .getAllProjectTypes(getModelObject().getProject());
+            var tsd = annotationService.getFullProjectTypeSystem(getModelObject().getProject(),
+                    false);
             tsd.toXML(bos);
-            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()));
+            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
+                    "full-typesystem.xml");
         }
         catch (Exception e) {
-            error("Unable to generate the UIMA type system file: "
-                    + ExceptionUtils.getRootCauseMessage(e));
-            ProjectLayersPanel.LOG.error("Unable to generate the UIMA type system file", e);
-            RequestCycle.get().find(IPartialPageRequestHandler.class)
-                    .ifPresent(handler -> handler.addChildren(getPage(), IFeedback.class));
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
             return null;
         }
     }
 
-    private IResourceStream exportLayerJson()
+    private IResourceStream exportAllLayersAsUimaXml()
     {
-        try {
-            AnnotationLayer layer = getModelObject();
-
-            List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
-
-            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null, layer,
-                    annotationService);
-            exLayers.add(exMainLayer);
-
-            // If the layer is attached to another layer, then we also have to export
-            // that, otherwise we would be missing it during re-import.
-            if (layer.getAttachType() != null) {
-                AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null, null,
-                        attachLayer, annotationService);
-                exMainLayer.setAttachType(
-                        new ExportedAnnotationLayerReference(exAttachLayer.getName()));
-                exLayers.add(exAttachLayer);
-            }
-
-            return new InputStreamResourceStream(new ByteArrayInputStream(
-                    JSONUtil.toPrettyJsonString(exLayers).getBytes("UTF-8")));
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            var tsd = annotationService.getAllProjectTypes(getModelObject().getProject());
+            tsd.toXML(bos);
+            return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()),
+                    "layers-typesystem.xml");
         }
         catch (Exception e) {
-            error("Unable to generate the JSON file: " + ExceptionUtils.getRootCauseMessage(e));
-            ProjectLayersPanel.LOG.error("Unable to generate the JSON file", e);
-            RequestCycle.get().find(IPartialPageRequestHandler.class)
-                    .ifPresent(handler -> handler.addChildren(getPage(), IFeedback.class));
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
+            return null;
+        }
+    }
+
+    private IResourceStream exportLayerAsJson()
+    {
+        try {
+            String json = LayerImportExportUtils.exportLayerToJson(annotationService,
+                    getModelObject());
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
+                    "layer.json");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
             return null;
         }
     }

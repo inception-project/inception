@@ -1,0 +1,86 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_security_authentication_preauth]]
+= External pre-authentication
+
+{product-name} can be used in conjunction with header-based external per-authentication. In this mode,
+the application looks for a special HTTP header (by default `remote_user`) and if that header exists, 
+it is taken for granted that this user has been authenticated. The application will check its internal
+database if a user by the given name exists, otherwise it will create the user.
+
+Pre-authentication can be enabled by setting the property `auth.mode` to `preauth`. When enabling
+pre-authentication mode, the default roles for new users can be controlled using the 
+`auth.preauth.newuser.roles` property. The `ROLE_USER` is always added, even if not specified
+explicitly. Adding also the role `ROLE_PROEJCT_CREATOR` allows all auto-created users also to
+create their own projects. 
+
+Since the default administrator user is not created in pre-authentication, it is useful to also
+declare at least one user as an administrator. This is done through the property 
+`auth.user.<username>.roles` where `<username>` must be replaced with the name of the user.
+The example below shows how the user *Franz* is given administrator permissions.
+
+In order to log out, one can specify an URL to redirect to after the session is cleared on the side
+of {product-name}.
+
+.Example: Authenticate using the `remote_user` header, new users can create projects, user *Franz* is always admin.
+----
+auth.mode                     = preauth
+auth.preauth.header.principal = remote_user
+auth.preauth.newuser.roles    = ROLE_PROJECT_CREATOR
+auth.user.Franz.roles         = ROLE_ADMIN
+----
+
+NOTE: The roles specified through `auth.preauth.newuser.roles` are saved in the database when a
+      user logs in for the first time and can be changed after creation through the user interface.
+      
+NOTE: The roles added through `auth.user.<username>.roles` properties are *not* saved in the
+      database and *cannot* be edited through the user interface.
+
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+      
+| `auth.mode`
+| Authentication mode
+| `database`
+| `preauth`
+
+| `auth.preauth.header.principal`
+| Principal header
+| `remote_user`
+| _some other header_
+
+| `auth.preauth.newuser.roles`
+| Default roles for new users (comma separated)
+| _<none>_
+| `ROLE_PROJECT_CREATOR`
+
+| `auth.preauth.logoutUrl`
+| URL to call after logging out to also sign out of external authentication
+| _<none>_
+| `https://your-idp.com/Shibboleth.sso/Logout`
+
+| `auth.user._<username>_.roles`
+| Extra roles for user (comma separated)
+| _<none>_
+| `ROLE_ADMIN`
+
+|===

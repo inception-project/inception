@@ -22,8 +22,6 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -42,10 +40,6 @@ public class ConstraintsVerifierTest
     public void test() throws Exception
     {
         ParsedConstraints constraints = parse(new File("src/test/resources/rules/6.rules"));
-
-        // Get imports
-        Map<String, String> imports = new LinkedHashMap<>();
-        imports = constraints.getImports();
 
         // Get rules
         // List<Rule> rules = new ArrayList<>();

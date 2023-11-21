@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.scheduling;
 import java.util.List;
 import java.util.function.Predicate;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
 public interface SchedulingService
 {
     /**
@@ -66,4 +68,20 @@ public interface SchedulingService
     void stopAllTasksForUser(String aUserName);
 
     void stopAllTasksMatching(Predicate<Task> aPredicate);
+
+    /**
+     * Removes all task for the given project from the scheduler's queue.
+     * 
+     * @param aProject
+     *            The project whose tasks will be removed.
+     */
+    void stopAllTasksForProject(Project aProject);
+
+    /**
+     * Execute a task immediately and synchronously (blocking) in the current thread.
+     * 
+     * @param aTask
+     *            the task to be executed.
+     */
+    void executeSync(Task aTask);
 }

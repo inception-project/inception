@@ -1,0 +1,4 @@
+<#example>
+    rdfs:prefLabel 'Hand structure (body structure)' ;
+    rdfs:label 'Hand' ;
+    rdfs:label 'Hand structure' .

@@ -34,6 +34,10 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class RegionExtractor
 {
 

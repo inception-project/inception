@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,10 +25,8 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -36,31 +34,37 @@ import java.util.zip.ZipFile;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class CuratedDocumentsExporterTest
 {
     public @TempDir File tempFolder;
@@ -71,6 +75,8 @@ public class CuratedDocumentsExporterTest
 
     private @Mock DocumentService documentService;
     private @Mock AnnotationSchemaService schemaService;
+    private @Mock ChecksRegistry checksRegistry;
+    private @Mock RepairsRegistry repairsRegistry;
 
     private Project project;
     private File workFolder;
@@ -81,8 +87,6 @@ public class CuratedDocumentsExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         workFolder = tempFolder;
 
         project = new Project();
@@ -95,23 +99,15 @@ public class CuratedDocumentsExporterTest
         repositoryProperties.setPath(workFolder);
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties());
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        casStorageService = spy(new CasStorageServiceImpl(driver, null, schemaService,
-                new CasStoragePropertiesImpl()));
+        casStorageService = spy(new CasStorageServiceImpl(driver,
+                new CasStorageCachePropertiesImpl(), null, schemaService));
 
+        var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
-
-        // documentService.exportCas() is just a stupid wrapper around storageService.exportCas()
-        // and it is easiest we emulate it here
-        Mockito.doAnswer(invocation -> {
-            casStorageService.exportCas( //
-                    invocation.getArgument(0, SourceDocument.class),
-                    invocation.getArgument(1, String.class),
-                    invocation.getArgument(2, OutputStream.class));
-            return null;
-        }).when(documentService).exportCas(any(), any(), any());
+                asList(xmiFormatSupport), casStorageService, schemaService, properties,
+                checksRegistry, repairsRegistry, xmiFormatSupport);
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

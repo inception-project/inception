@@ -22,16 +22,16 @@ import java.util.List;
 
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TagSetSelectionPanel
     extends ListPanel_ImplBase
@@ -57,16 +57,13 @@ public class TagSetSelectionPanel
         overviewList = new OverviewListChoice<>("tagset");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(aTagset);
-        overviewList.setChoices(LambdaModel.of(this::listTagSets));
+        overviewList.setChoices(LoadableDetachableModel.of(this::listTagSets));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 
         add(new LambdaAjaxLink("create", this::actionCreate));
 
         tagSetImportPanel = new TagSetImportPanel("importPanel", selectedProject);
-        tagSetImportPanel.setImportCompleteAction(target -> {
-            target.add(findParent(ProjectTagSetsPanel.class));
-        });
         add(tagSetImportPanel);
     }
 

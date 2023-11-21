@@ -24,10 +24,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public interface AgreementMeasureSupportRegistry
 {
 
-    List<AgreementMeasureSupport> getAgreementMeasureSupports();
+    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports();
 
-    AgreementMeasureSupport getAgreementMeasureSupport(String aId);
+    AgreementMeasureSupport<?, ?, ?> getAgreementMeasureSupport(String aId);
 
-    List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature);
+    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports(AnnotationFeature aFeature);
 
 }

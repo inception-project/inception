@@ -27,16 +27,16 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public class GetCollectionInformationResponseTest
 {
     /**
-     * generate BRAT JSON for the collection informations
+     * generate BRAT JSON for the collection information
      *
      * @throws IOException
      *             if an I/O error occurs.
@@ -70,25 +70,25 @@ public class GetCollectionInformationResponseTest
 
         layerList.add(layer);
 
-        collectionInformation.addCollection("/Collection1/");
-        collectionInformation.addCollection("/Collection2/");
-        collectionInformation.addCollection("/Collection3/");
-
-        collectionInformation.addDocument("/Collection1/doc1");
-        collectionInformation.addDocument("/Collection2/doc1");
-        collectionInformation.addDocument("/Collection3/doc1");
-        collectionInformation.addDocument("/Collection1/doc2");
-        collectionInformation.addDocument("/Collection2/doc2");
-        collectionInformation.addDocument("/Collection3/doc2");
-
-        collectionInformation.setSearchConfig(new ArrayList<>());
+        // collectionInformation.addCollection("/Collection1/");
+        // collectionInformation.addCollection("/Collection2/");
+        // collectionInformation.addCollection("/Collection3/");
+        //
+        // collectionInformation.addDocument("/Collection1/doc1");
+        // collectionInformation.addDocument("/Collection2/doc1");
+        // collectionInformation.addDocument("/Collection3/doc1");
+        // collectionInformation.addDocument("/Collection1/doc2");
+        // collectionInformation.addDocument("/Collection2/doc2");
+        // collectionInformation.addDocument("/Collection3/doc2");
+        //
+        // collectionInformation.setSearchConfig(new ArrayList<>());
 
         List<String> tagSetNames = new ArrayList<>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFRELTYPE);
 
         JSONUtil.generatePrettyJson(collectionInformation, new File(jsonFilePath));
 

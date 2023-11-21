@@ -25,6 +25,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.pdf.PdfReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
 /**
@@ -33,12 +34,15 @@ import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportA
  * This class is exposed as a Spring Component via
  * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfFormatSupport()}.
  * </p>
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfFormatSupport
     implements FormatSupport
 {
     public static final String ID = "pdf";
-    public static final String NAME = "PDF";
+    public static final String NAME = "PDF (legacy)";
 
     @Override
     public String getId()
@@ -59,7 +63,8 @@ public class PdfFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+    public CollectionReaderDescription getReaderDescription(Project aProject,
+            TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(PdfReader.class, aTSD);

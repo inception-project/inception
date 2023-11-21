@@ -16,6 +16,12 @@
 
 = NGINX as reverse proxy
 
+====
+IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions>> for running behind 
+       a reverse proxy and have configured your <<sect_settings,settings file>> accordingly, otherwise you will not be able
+       to properly use {product-name} via the reverse proxy!
+====
+
 This section describes using link:https://www.nginx.com/[NGINX] as a web server serving as a reverse proxy for INCEpTION.
 It further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
 
@@ -182,6 +188,14 @@ server {
         #    return 301 https://$host/inception;
         #}
 
+        location /inception/ws {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+        }
+
         location ^~ /inception/ {
             proxy_pass http://127.0.0.1:8080/inception/;
             proxy_redirect http://inception.example.com/ /;
@@ -189,7 +203,7 @@ server {
 
             proxy_set_header   Host             $host;
             proxy_set_header   X-Real-IP        $remote_addr;
-            proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+            proxy_set_header   X-Forwarded-For  $remote_addr;
             proxy_set_header   X-Forwarded-Proto $scheme;
             proxy_max_temp_file_size 0;
 
@@ -233,48 +247,3 @@ If the config works restart the webserver to enable the new site
 $ service nginx restart
 ----
 
-== Tell {product-name} that it is running behind a proxy
-
-If you are running {product-name} via the JAR file, edit the `settings.properties` file to add these settings:
-
-----
-server.tomcat.internal-proxies=127\.0\.[0-1]\.1
-server.tomcat.remote-ip-header=x-forwarded-for
-server.tomcat.accesslog.request-attributes-enabled=true
-server.tomcat.protocol-header=x-forwarded-proto
-server.tomcat.protocol-header-https-value=https
-----
-
-Restart {product-name}
-
-----
-$ service inception restart
-----
-
-{product-name} now knows how to interpret the proxy header fields from NGINX.
-With this step, everything is now set up to access {product-name} trough a secure https connection.
-
-== CSRF protection
-
-Depending on your situation, you may get an error message such as this when trying to use
-{product-name}.
-
-[example]
-====
-Whitelabel Error Page This application has no explicit mapping for /error, so you are seeing this as a fallback.
-
-Fri Nov 29 14:01:15 BRT 2019 There was an unexpected error (type=Bad Request, status=400).
-Origin does not correspond to request
-====
-
-If this is the case, then CSRF protection is kicking in.
-What seems to work in this case is to turn off CSRF entirely by adding the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>):
-
-----
-wicket.core.csrf.enabled=false
-wicket.core.csrf.no-origin-action=allow
-wicket.core.csrf.conflicting-origin-action=allow
-----
-
-NOTE: **Turning off a security feature is obviously not a great solution.** Better check out the documentation for the link:https://github.com/MarcGiffing/wicket-spring-boot/blob/master/README.adoc#core---prevention-of-csrf-attacks[Wicket Spring Boot CSRF settings] and if you figure out a better solution than the above, please get in touch with use via our
-link:https://github.com/inception-project/inception/issues[issue tracker].

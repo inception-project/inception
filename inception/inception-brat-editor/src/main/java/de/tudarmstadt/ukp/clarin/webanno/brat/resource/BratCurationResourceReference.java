@@ -1,5 +1,5 @@
 /*
- * Licensed to the Technische Universität Darmstadt under one
+# * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The Technische Universität Darmstadt 
@@ -41,6 +41,6 @@ public class BratCurationResourceReference
      */
     private BratCurationResourceReference()
     {
-        super(BratCurationResourceReference.class, "brat_curation.js");
+        super(BratCurationResourceReference.class, "brat_curation.min.js");
     }
 }

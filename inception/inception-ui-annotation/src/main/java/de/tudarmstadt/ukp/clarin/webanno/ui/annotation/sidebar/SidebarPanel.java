@@ -33,11 +33,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.context.ApplicationContext;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class SidebarPanel
     extends Panel
@@ -109,13 +109,13 @@ public class SidebarPanel
             }
 
             String factoryId = factory.getBeanName();
-            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getIcon(),
+            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()),
                     factory.getBeanName())
             {
                 private static final long serialVersionUID = 2144644282070158783L;
 
                 @Override
-                public Panel getPanel(String aPanelId)
+                public Panel getPanel(String Id)
                 {
                     try {
                         // We need to get the methods and services directly in here so
@@ -123,8 +123,8 @@ public class SidebarPanel
                         // AnnotationSidebarFactory class.
                         ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
                         return ctx.getBean(AnnotationSidebarRegistry.class)
-                                .getSidebarFactory(factoryId).create(aPanelId, stateModel,
-                                        actionHandler, casProvider, annotationPage);
+                                .getSidebarFactory(factoryId)
+                                .create(Id, stateModel, actionHandler, casProvider, annotationPage);
                     }
                     catch (Exception e) {
                         throw new RuntimeException(e);

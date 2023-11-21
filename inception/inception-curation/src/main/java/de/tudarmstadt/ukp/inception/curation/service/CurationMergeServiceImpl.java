@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -31,9 +32,8 @@ import java.util.Set;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -58,13 +59,13 @@ public class CurationMergeServiceImpl
     private final static Logger LOG = getLogger(lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService,
-            AnnotationEditorProperties aAnnotationEditorProperties)
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         annotationService = aAnnotationService;
-        annotationEditorProperties = aAnnotationEditorProperties;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
 
     @Override
@@ -89,22 +90,25 @@ public class CurationMergeServiceImpl
     {
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, aLayers);
 
-        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+        // If the token/sentence layer is not editable, we do not offer curation of the tokens.
+        // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
+        // assume here that the tokens have never been modified.
+        if (!annotationService.isSentenceLayerEditable(aDocument.getProject())) {
             adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
         }
 
-        if (!annotationEditorProperties.isTokenLayerEditable()) {
+        if (!annotationService.isTokenLayerEditable(aDocument.getProject())) {
             adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
         }
 
         DiffResult diff;
         try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, Integer.MAX_VALUE)
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, MAX_VALUE)
                     .toResult();
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService);
+            CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
             return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
                     aCassesToMerge);

@@ -23,17 +23,22 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class TextOperator
+    implements Operator
 {
-    String unicode;
-    float fx;
-    float fy;
-    float fw;
-    float fh;
-    float gx;
-    float gy;
-    float gw;
-    float gh;
+    final String unicode;
+    final float fx;
+    final float fy;
+    final float fw;
+    final float fh;
+    final float gx;
+    final float gy;
+    final float gw;
+    final float gh;
 
     public TextOperator(String unicode, float fx, float fy, float fw, float fh, float gx, float gy,
             float gw, float gh)

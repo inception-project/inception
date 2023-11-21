@@ -20,28 +20,28 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 import java.io.Serializable;
 
 /**
- * A model comprises of Curation Segments comprising of the begin and end of the sentences,
- * {@link CurationUnitState} Sentence number
+ * A model comprises of Curation Segments comprising of the begin and end of the unit,
+ * {@link CurationUnitState} unit number
  */
 public class CurationUnit
     implements Serializable
 {
     private static final long serialVersionUID = 9219600871129699568L;
 
-    // begin/end offset of sentences list, default is the begin of the document
+    // begin/end offset of unit list, default is the begin of the document
     private final int begin;
     private final int end;
-    private final int sentenceNumber;
+    private final int unitIndex;
 
-    private CurationUnitState sentenceState;
+    private CurationUnitState state;
 
-    private boolean isCurrentSentence;
+    private boolean isCurrentUnit;
 
     public CurationUnit(int aBegin, int aEnd, int aUnitIndex)
     {
         begin = aBegin;
         end = aEnd;
-        sentenceNumber = aUnitIndex;
+        unitIndex = aUnitIndex;
     }
 
     public Integer getBegin()
@@ -56,26 +56,26 @@ public class CurationUnit
 
     public CurationUnitState getState()
     {
-        return sentenceState;
+        return state;
     }
 
     public void setState(CurationUnitState sentenceState)
     {
-        this.sentenceState = sentenceState;
+        this.state = sentenceState;
     }
 
     public Integer getUnitIndex()
     {
-        return sentenceNumber;
+        return unitIndex;
     }
 
-    public boolean isCurrentSentence()
+    public boolean isCurrentUnit()
     {
-        return isCurrentSentence;
+        return isCurrentUnit;
     }
 
-    public void setCurrentSentence(boolean isCurrentSentence)
+    public void setCurrentUnit(boolean isCurrentSentence)
     {
-        this.isCurrentSentence = isCurrentSentence;
+        this.isCurrentUnit = isCurrentSentence;
     }
 }

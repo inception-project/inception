@@ -17,19 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import java.util.List;
-
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 
 public interface PreRenderer
+    extends RenderStep
 {
-    /**
-     * @param aLayers
-     *            the layers which should be rendered.
-     */
-    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
-            List<AnnotationLayer> aLayers);
+    // No additional methods
 }

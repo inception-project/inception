@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,7 +90,11 @@ public class TsvDocument
      */
     public TsvUnit findIdDefiningUnit(AnnotationFS aFS)
     {
-        return fs2unitIndex.get(aFS);
+        TsvUnit unit = fs2unitIndex.get(aFS);
+        if (unit == null) {
+            throw new NoSuchElementException("No ID-defining unit found for annotation: " + aFS);
+        }
+        return unit;
     }
 
     public void mapFS2Unit(AnnotationFS aFS, TsvUnit aUnit)
@@ -204,7 +209,8 @@ public class TsvDocument
     public void addDisambiguationId(AnnotationFS aAnnotation, int aId)
     {
         AnnotationFS oldEntry = id2fsIndex.put(aId, aAnnotation);
-        assert oldEntry == null || aAnnotation.equals(oldEntry);
+        assert oldEntry == null || aAnnotation.equals(oldEntry) : "Disambiguation ID [" + aId
+                + "] is not unique";
         fs2IdIndex.put(aAnnotation, aId);
     }
 

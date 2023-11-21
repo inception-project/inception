@@ -22,51 +22,45 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.setGlobalLo
 import static de.tudarmstadt.ukp.inception.INCEpTION.INCEPTION_BASE_PACKAGE;
 import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
+import static org.springframework.boot.WebApplicationType.NONE;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
+import java.io.IOException;
 import java.util.Optional;
 
-import javax.validation.Validator;
-
-import org.apache.catalina.Context;
-import org.apache.catalina.connector.Connector;
-import org.apache.catalina.webresources.StandardRoot;
-import org.springframework.beans.factory.annotation.Value;
+import org.dkpro.core.api.resources.ResourceObjectProviderBase;
+import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.server.WebServer;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
-import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
+import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication(scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
+@SpringBootApplication(
+        scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
+        exclude = { SolrAutoConfiguration.class, ElasticsearchRestClientAutoConfiguration.class} )
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
 @EnableCaching
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 //@formatter:on
 public class INCEpTION
     extends SpringBootServletInitializer
@@ -74,108 +68,55 @@ public class INCEpTION
     static final String INCEPTION_BASE_PACKAGE = "de.tudarmstadt.ukp.inception";
     static final String WEBANNO_BASE_PACKAGE = "de.tudarmstadt.ukp.clarin.webanno";
 
-    private static final String PROTOCOL = "AJP/1.3";
-
-    @Value("${server.ajp.port:-1}")
-    private int ajpPort;
-
-    @Value("${server.ajp.secret-required:true}")
-    private String ajpSecretRequired;
-
-    @Value("${server.ajp.secret:}")
-    private String ajpSecret;
-
-    @Value("${server.ajp.address:127.0.0.1}")
-    private String ajpAddress;
-
-    private StartupNoticeValve startupNoticeValve;
-
-    @Bean
-    @Primary
-    public Validator validator()
-    {
-        return new LocalValidatorFactoryBean();
-    }
-
-    @Bean
-    public ErrorController errorController()
-    {
-        // Disable default error controller so that Wicket can take over
-        return new ErrorController()
-        {
-        };
-    }
-
-    @Bean
-    public TomcatServletWebServerFactory servletContainer()
-    {
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory()
-        {
-            @Override
-            protected void postProcessContext(Context context)
-            {
-                final int maxCacheSize = 40 * 1024;
-                StandardRoot standardRoot = new StandardRoot(context);
-                standardRoot.setCacheMaxSize(maxCacheSize);
-                context.setResources(standardRoot);
-            }
-
-            @Override
-            public WebServer getWebServer(ServletContextInitializer... initializers)
-            {
-                final WebServer container = super.getWebServer(initializers);
-
-                // Start server early so we can display the boot-up notice
-                container.start();
-
-                return container;
-            }
-        };
-
-        startupNoticeValve = new StartupNoticeValve();
-        factory.addContextValves(startupNoticeValve);
-
-        if (ajpPort > 0) {
-            Connector ajpConnector = new Connector(PROTOCOL);
-            ajpConnector.setPort(ajpPort);
-            ajpConnector.setProperty("secretRequired", ajpSecretRequired);
-            ajpConnector.setProperty("secret", ajpSecret);
-            ajpConnector.setProperty("address", ajpAddress);
-            factory.addAdditionalTomcatConnectors(ajpConnector);
-        }
-
-        return factory;
-    }
-
-    @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event)
-    {
-        if (startupNoticeValve != null && startupNoticeValve.getContainer() != null) {
-            startupNoticeValve.getContainer().getPipeline().removeValve(startupNoticeValve);
-            startupNoticeValve = null;
-        }
-    }
-
+    /**
+     * Called when deployed in an external servlet container.
+     */
     @Override
     protected SpringApplicationBuilder createSpringApplicationBuilder()
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
+        builder.profiles(DeploymentModeService.PROFILE_EXTERNAL_SERVER);
+        builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
+
         init(builder);
 
         return builder;
     }
 
+    /**
+     * Common initialization.
+     */
     private static void init(SpringApplicationBuilder aBuilder)
     {
-        // WebAnno relies on FS IDs being stable, so we need to enable this
+        if (Boolean.getBoolean("inception.dev")) {
+            System.setProperty("wicket.core.settings.debug.enabled", "true");
+            System.setProperty("wicket.core.settings.general.configuration-type", "development");
+            System.setProperty("debug.sendServerSideTimings", "true");
+            System.setProperty("webanno.debug.enforce_cas_thread_lock", "true");
+            aBuilder.profiles(DeploymentModeService.PROFILE_DEVELOPMENT_MODE);
+        }
+        else {
+            aBuilder.profiles(DeploymentModeService.PROFILE_PRODUCTION_MODE);
+        }
+
+        // We rely on FS IDs being stable, so we need to enable this
         System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
+
+        // We do not want DKPro Core to try and auto-download anything
+        System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
+
+        try {
+            new EmbeddedDatabaseBackupHandler().maybeBackupEmbeddedDatabase();
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Error trying to perform a backup of the embedded database",
+                    e);
+        }
 
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
         aBuilder.headless(false);
-
-        SettingsUtil.customizeApplication("inception.home", ".inception");
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
@@ -185,20 +126,61 @@ public class INCEpTION
                 + "optional:${inception.home:${user.home}/.inception}/settings.yml");
     }
 
+    /**
+     * Called when deployed using the internal server.
+     */
     protected static void run(String[] args, Class<?>... aSources)
     {
-        Optional<SplashWindow> splash = LoadingSplashScreen.setupScreen("INCEpTION");
+        var context = start(args, INCEpTION.class);
+        if (isCliCommandMode(args)) {
+            context.close();
+        }
+    }
 
+    /**
+     * Called when deployed using the internal server.
+     */
+    protected static ConfigurableApplicationContext start(String[] args, Class<?>... aSources)
+    {
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+
         // Add the main application as the root Spring context
-        builder.sources(aSources).web(SERVLET);
+        builder.sources(aSources);
 
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
+        builder.profiles(DeploymentModeService.PROFILE_INTERNAL_SERVER);
+
+        Optional<SplashWindow> splash;
+
+        // If invoking in command-mode via the command line, do not start a web server
+        if (isCliCommandMode(args)) {
+            builder.web(NONE);
+            builder.bannerMode(Banner.Mode.OFF);
+            builder.headless(true);
+            splash = Optional.empty();
+            builder.profiles(DeploymentModeService.PROFILE_CLI_MODE);
+        }
+        else {
+            builder.web(SERVLET);
+            splash = LoadingSplashScreen.setupScreen("INCEpTION");
+            builder.headless(splash.isEmpty());
+            builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
+        }
+
         init(builder);
+
         setGlobalLogFolder(getApplicationHome().toPath().resolve("log"));
+
         builder.listeners(event -> splash.ifPresent(_splash -> _splash.handleEvent(event)));
-        builder.run(args);
+        var context = builder.run(args);
+
+        return context;
+    }
+
+    private static boolean isCliCommandMode(String[] args)
+    {
+        return args.length > 0;
     }
 
     public static void main(String[] args) throws Exception

@@ -27,7 +27,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class AllFeatureStructuresIndexedCheck
@@ -38,30 +37,29 @@ public class AllFeatureStructuresIndexedCheck
     {
         Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
-        if (!nonIndexed.isEmpty()) {
-            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed feature structures: %d",
-                    nonIndexed.size()));
-
-            int count = 0;
-            for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
-                if (count >= 100) {
-                    break;
-                }
-
-                aMessages.add(LogMessage.error(this,
-                        "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
-                        e.getValue()));
-                count++;
-            }
-
-            if (count >= 100) {
-                aMessages.add(LogMessage.error(this,
-                        "In total [%d] annotations were reachable but not indexed", count));
-            }
+        if (nonIndexed.isEmpty()) {
+            return true;
         }
-        // else {
-        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
-        // }
+
+        aMessages
+                .add(LogMessage.error(this, "Unindexed feature structures: %d", nonIndexed.size()));
+
+        int count = 0;
+        for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
+            if (count >= 100) {
+                break;
+            }
+
+            aMessages.add(LogMessage.error(this,
+                    "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
+                    e.getValue()));
+            count++;
+        }
+
+        if (count >= 100) {
+            aMessages.add(LogMessage.error(this,
+                    "In total [%d] annotations were reachable but not indexed", count));
+        }
 
         return nonIndexed.isEmpty();
     }

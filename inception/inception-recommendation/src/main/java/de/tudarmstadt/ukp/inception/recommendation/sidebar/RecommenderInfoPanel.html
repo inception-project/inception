@@ -20,7 +20,7 @@
 <wicket:panel>
   <div wicket:id="detailsDialog"/>
   <div class="text-center pb-2">
-    <span wicket:id="progress"></span>
+    <span wicket:id="progress" wicket:message="title:progressTowardsEvaluation"></span>
   </div>
   <div wicket:id="recommenderContainer" class="flex-v-container flex-gutter flex-only-internal-gutter">
     <div wicket:id="recommender" class="card">
@@ -63,17 +63,17 @@
             </div>
           </div>
         </div>
-        <div class="card-footer actions text-end">
-          <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
-            <i class="fas fa-download"/>
-          </button>
-          <button wicket:id="showDetails" class="btn btn-sm btn-secondary">
-            <i class="fas fa-table"/>
-          </button>
-          <button wicket:id="acceptBest" class="btn btn-sm btn-success text-nowrap">
-            <i class="fas fa-check"/> Accept best
-          </button>
-        </div>
+      </div>
+      <div class="card-footer actions text-end">
+        <button wicket:id="exportModel" class="btn btn-sm btn-secondary">
+          <i class="fas fa-download"/>
+        </button>
+        <button wicket:id="showDetails" class="btn btn-sm btn-secondary">
+          <i class="fas fa-table"/>
+        </button>
+        <button wicket:id="acceptBest" class="btn btn-sm btn-success text-nowrap">
+          <i class="fas fa-check"/> Accept best
+        </button>
       </div>
       <div class="clearfix"></div>
     </div>

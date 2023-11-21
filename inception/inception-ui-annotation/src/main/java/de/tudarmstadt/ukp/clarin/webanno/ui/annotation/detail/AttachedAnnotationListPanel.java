@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.rendering.vmodel.VID.NONE;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -35,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.LowLevelException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -50,21 +50,23 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
-import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 public class AttachedAnnotationListPanel
     extends Panel
@@ -139,7 +141,15 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        AnnotationFS annoFs = selectAnnotationByAddr(cas, selection.getAnnotation().getId());
+        AnnotationFS annoFs;
+        try {
+            annoFs = ICasUtil.selectAnnotationByAddr(cas, selection.getAnnotation().getId());
+        }
+        catch (LowLevelException e) {
+            LOG.error("Annotation with ID [{}] not found", selection.getAnnotation().getId());
+            return Collections.emptyList();
+        }
+
         VID localVid = new VID(annoFs);
 
         List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
@@ -165,8 +175,8 @@ public class AttachedAnnotationListPanel
                 adapter = schemaService.getAdapter(layer);
                 adapterCache.put(layer, adapter);
 
-                renderer = layerRegistry.getLayerSupport(layer).createRenderer(layer,
-                        () -> featureCache.get(layer));
+                LayerSupport<?, ?> layerSupport = layerRegistry.getLayerSupport(layer);
+                renderer = layerSupport.createRenderer(layer, () -> featureCache.get(layer));
                 rendererCache.put(layer, renderer);
             }
             else {
@@ -184,7 +194,7 @@ public class AttachedAnnotationListPanel
                         features);
             }
 
-            String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+            String labelText = TypeUtil.getUiLabelText(renderedFeatures);
 
             if (isEmpty(labelText)) {
                 labelText = rel.getLayer().getUiName();
@@ -203,6 +213,7 @@ public class AttachedAnnotationListPanel
         return result;
     }
 
+    @SuppressWarnings("unused")
     private class AttachedAnnotationInfo
         implements Serializable
     {
@@ -276,6 +287,8 @@ public class AttachedAnnotationListPanel
                     _target -> actionHandler.actionSelect(_target, info.relationVid));
             // avoid disabling in read-only mode
             selectRelation.setAlwaysEnabled(info.relationVid != null);
+            selectRelation
+                    .add(visibleWhen(() -> info.relationVid != null && info.relationVid.isSet()));
             aItem.add(selectRelation);
 
             selectRelation.add(new WebMarkupContainer("direction")

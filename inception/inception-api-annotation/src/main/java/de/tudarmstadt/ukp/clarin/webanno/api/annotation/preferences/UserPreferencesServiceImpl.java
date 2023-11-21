@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SETTINGS_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SETTINGS_FOLDER;
 import static java.util.stream.Collectors.toList;
 
 import java.beans.PropertyDescriptor;
@@ -45,24 +45,30 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#userPreferencesService}.
+ * </p>
+ */
 public class UserPreferencesServiceImpl
     implements UserPreferencesService
 {
@@ -75,14 +81,14 @@ public class UserPreferencesServiceImpl
     private final AnnotationSchemaService annotationService;
     private final RepositoryProperties repositoryProperties;
     private final ColoringService coloringService;
-    private final AnnotationEditorProperties annotationEditorProperties;
+    private final AnnotationSchemaProperties annotationEditorProperties;
     private final PreferencesService preferencesService;
 
     public UserPreferencesServiceImpl(
             AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
+            AnnotationSchemaProperties aAnnotationEditorProperties,
             PreferencesService aPreferencesService)
     {
         defaultPreferences = aDefaultPreferences;
@@ -123,7 +129,7 @@ public class UserPreferencesServiceImpl
         }
 
         // Make sure the visibility logic of the right sidebar sees if there are selectable layers
-        aState.refreshSelectableLayers(annotationEditorProperties);
+        aState.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
     }
 
     @Override
@@ -141,12 +147,6 @@ public class UserPreferencesServiceImpl
         // data file. Otherwise, fall back to loading the legacy preferences
 
         AnnotationPreference pref = loadLegacyPreferences(aProject, aUsername, aMode);
-
-        // If the choice for remember layer is not enabled, hard-set to "true" which is the default
-        // and in the future the only option ;)
-        if (!annotationEditorProperties.isRememberLayerEnabled()) {
-            pref.setRememberLayer(true);
-        }
 
         return pref;
     }
@@ -267,7 +267,6 @@ public class UserPreferencesServiceImpl
                     .loadDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS, aProject)
                     .getDefaultPageSize());
             preference.setScrollPage(defaultPreferences.isAutoScroll());
-            preference.setRememberLayer(defaultPreferences.isRememberLayer());
         }
 
         // Get color preferences for each layer, init with default if not found
@@ -278,8 +277,7 @@ public class UserPreferencesServiceImpl
         }
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!colorPerLayer.containsKey(layer.getId())) {
-                colorPerLayer.put(layer.getId(),
-                        coloringService.getBestInitialStrategy(layer, preference));
+                colorPerLayer.put(layer.getId(), coloringService.getBestInitialStrategy(layer));
             }
         }
 
@@ -328,7 +326,17 @@ public class UserPreferencesServiceImpl
     public static class BratAnnotationEditorManagerPrefs
         implements Serializable
     {
+        private static final long serialVersionUID = 8809856241481077303L;
+
         private int defaultPageSize = 10;
+
+        public BratAnnotationEditorManagerPrefs()
+        {
+            AnnotationEditorDefaultPreferencesProperties defaults = ApplicationContextProvider
+                    .getApplicationContext()
+                    .getBean(AnnotationEditorDefaultPreferencesProperties.class);
+            defaultPageSize = defaults.getPageSize();
+        }
 
         public int getDefaultPageSize()
         {

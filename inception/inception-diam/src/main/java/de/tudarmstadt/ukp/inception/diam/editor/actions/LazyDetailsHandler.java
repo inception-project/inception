@@ -17,21 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamEditorAutoConfig#lazyDetailHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#lazyDetailHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_RENDER_HANDLER)
@@ -57,20 +58,22 @@ public class LazyDetailsHandler
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            var page = (AnnotationPageBase) aTarget.getPage();
 
             CasProvider casProvider = () -> page.getEditorCas();
 
             // Parse annotation ID if present in request
-            final VID paramId = getVid(aRequest);
+            var paramId = getVid(aRequest);
+            var state = page.getModelObject();
+            var details = lazyDetailsLookupService.lookupLazyDetails(
+                    aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
+                    state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
+            attachResponse(aTarget, aRequest, toInterpretableJsonString(details));
 
-            AnnotatorState state = page.getModelObject();
-            return lazyDetailsLookupService.actionLookupNormData(aRequest.getRequestParameters(),
-                    paramId, casProvider, state.getDocument(), state.getUser(),
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+            return new DefaultAjaxResponse(COMMAND);
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to load lazy details", e);
         }
     }
 }

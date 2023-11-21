@@ -33,6 +33,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
@@ -93,6 +95,34 @@ public class LearningRecord
 
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionTypeWrapper")
     private SuggestionType suggestionType;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false)
+    private Date actionDate = new Date();
+
+    private LearningRecord(Builder builder)
+    {
+        this.id = builder.id;
+        this.sourceDocument = builder.sourceDocument;
+        this.layer = builder.layer;
+        this.annotationFeature = builder.annotationFeature;
+        this.offsetBegin = builder.offsetBegin;
+        this.offsetEnd = builder.offsetEnd;
+        this.offsetBegin2 = builder.offsetBegin2;
+        this.offsetEnd2 = builder.offsetEnd2;
+        this.tokenText = builder.tokenText;
+        this.annotation = builder.annotation;
+        this.userAction = builder.userAction;
+        this.user = builder.user;
+        this.changeLocation = builder.changeLocation;
+        this.suggestionType = builder.suggestionType;
+        this.actionDate = builder.actionDate;
+    }
+
+    public LearningRecord()
+    {
+        // Required for serialization/JPA
+    }
 
     public Long getId()
     {
@@ -227,8 +257,8 @@ public class LearningRecord
     }
 
     /**
-     * Get annotation label, might be null if the recorded annotation was an annotation without
-     * label.
+     * @return annotation label, might be null if the recorded annotation was an annotation without
+     *         label.
      */
     @Nullable
     public String getAnnotation()
@@ -291,10 +321,6 @@ public class LearningRecord
         annotationFeature = anAnnotationFeature;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
-    private Date actionDate = new Date();
-
     @Override
     public boolean equals(Object o)
     {
@@ -356,5 +382,143 @@ public class LearningRecord
         result = 31 * result + (annotation != null ? annotation.hashCode() : 0);
         result = 31 * result + (user != null ? user.hashCode() : 0);
         return result;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private SourceDocument sourceDocument;
+        private AnnotationLayer layer;
+        private AnnotationFeature annotationFeature;
+        private int offsetBegin;
+        private int offsetEnd;
+        private int offsetBegin2 = -1;
+        private int offsetEnd2 = -1;
+        private String tokenText;
+        private String annotation;
+        private LearningRecordType userAction;
+        private String user;
+        private LearningRecordChangeLocation changeLocation;
+        private SuggestionType suggestionType;
+        private Date actionDate = new Date();
+
+        private Builder()
+        {
+            // No instances
+        }
+
+        public Builder withId(Long aId)
+        {
+            id = aId;
+            return this;
+        }
+
+        public Builder withSourceDocument(SourceDocument aSourceDocument)
+        {
+            sourceDocument = aSourceDocument;
+            return this;
+        }
+
+        public Builder withLayer(AnnotationLayer aLayer)
+        {
+            layer = aLayer;
+            return this;
+        }
+
+        public Builder withAnnotationFeature(AnnotationFeature aAnnotationFeature)
+        {
+            annotationFeature = aAnnotationFeature;
+            return this;
+        }
+
+        public Builder withOffsetBegin(int aOffsetBegin)
+        {
+            offsetBegin = aOffsetBegin;
+            return this;
+        }
+
+        public Builder withOffsetEnd(int aOffsetEnd)
+        {
+            offsetEnd = aOffsetEnd;
+            return this;
+        }
+
+        public Builder withOffsetBegin2(int aOffsetBegin2)
+        {
+            offsetBegin2 = aOffsetBegin2;
+            return this;
+        }
+
+        public Builder withOffsetEnd2(int aOffsetEnd2)
+        {
+            offsetEnd2 = aOffsetEnd2;
+            return this;
+        }
+
+        public Builder withTokenText(String aTokenText)
+        {
+            tokenText = aTokenText;
+            return this;
+        }
+
+        public Builder withAnnotation(String aAnnotation)
+        {
+            annotation = aAnnotation;
+            return this;
+        }
+
+        public Builder withUserAction(LearningRecordType aUserAction)
+        {
+            userAction = aUserAction;
+            return this;
+        }
+
+        public Builder withUser(String aUser)
+        {
+            user = aUser;
+            return this;
+        }
+
+        public Builder withChangeLocation(LearningRecordChangeLocation aChangeLocation)
+        {
+            changeLocation = aChangeLocation;
+            return this;
+        }
+
+        public Builder withSuggestionType(SuggestionType aSuggestionType)
+        {
+            suggestionType = aSuggestionType;
+            return this;
+        }
+
+        public Builder withActionDate(Date aActionDate)
+        {
+            actionDate = aActionDate;
+            return this;
+        }
+
+        public LearningRecord build()
+        {
+            return new LearningRecord(this);
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("id", id)
+                .append("sourceDocument", sourceDocument).append("layer", layer)
+                .append("annotationFeature", annotationFeature).append("offsetBegin", offsetBegin)
+                .append("offsetEnd", offsetEnd).append("offsetBegin2", offsetBegin2)
+                .append("offsetEnd2", offsetEnd2).append("tokenText", tokenText)
+                .append("annotation", annotation).append("userAction", userAction)
+                .append("user", user).append("changeLocation", changeLocation)
+                .append("suggestionType", suggestionType).append("actionDate", actionDate)
+                .toString();
     }
 }

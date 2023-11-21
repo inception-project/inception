@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+import static java.lang.String.format;
+import static java.util.Locale.ROOT;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
@@ -49,7 +53,7 @@ public class ContextMenu
         int clientY = request.getParameterValue("clientY").toInt();
 
         target.add(this);
-        target.appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
+        target.appendJavaScript(wrapInTryCatch(format(ROOT,
                 "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
                 JQueryWidget.getSelector(this), clientX, clientY)));
     }
@@ -59,14 +63,15 @@ public class ContextMenu
      *
      * @param target
      *            the {@link AjaxRequestTarget}
+     * @param aComponent
+     *            the component that holds a {@link ContextMenuBehavior}
      */
     public void onOpen(AjaxRequestTarget target, Component aComponent)
     {
         onContextMenu(target, aComponent);
 
         target.add(this);
-        target.appendJavaScript(
-                WicketUtil.wrapInTryCatch(String.format("jQuery('%s').show().position(%s);",
-                        JQueryWidget.getSelector(this), this.getPositionOption(aComponent))));
+        target.appendJavaScript(wrapInTryCatch(format(ROOT, "jQuery('%s').show().position(%s);",
+                JQueryWidget.getSelector(this), this.getPositionOption(aComponent))));
     }
 }

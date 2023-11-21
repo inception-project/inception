@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -49,14 +48,9 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -68,6 +62,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOptions;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
@@ -79,6 +77,8 @@ import de.tudarmstadt.ukp.inception.support.help.DocLink;
 public class StatisticsAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
+    private static final long serialVersionUID = 2796916194245461498L;
+
     private static final Logger LOG = LoggerFactory.getLogger(StatisticsAnnotationSidebar.class);
 
     private static final String GRANULARITY = "granularity";
@@ -123,7 +123,7 @@ public class StatisticsAnnotationSidebar
 
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
-    private List<AnnotationLayer> layers;
+    // private List<AnnotationLayer> layers;
     Set<Long> hiddenLayerIds;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel
@@ -168,8 +168,6 @@ public class StatisticsAnnotationSidebar
          * features = new ArrayList<AnnotationFeature>(); for (AnnotationFeature feature:
          * annotationService.listAnnotationFeature(projectModel.getObject())) { if
          * (!hiddenLayerIds.contains(feature.getLayer().getId())) { features.add(feature); } }
-         * 
-         * 
          */
 
         features = annotationService.listAnnotationFeature(projectModel.getObject());
@@ -197,7 +195,7 @@ public class StatisticsAnnotationSidebar
         statsProvider = new StatisticsProvider(new ArrayList<>());
 
         columns = new ArrayList<IColumn>();
-        columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
+        columns.add(new PropertyColumn<>(new Model<String>("Features"), "getLayerFeatureName",
                 "getLayerFeatureName"));
 
         resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 20);
@@ -248,12 +246,12 @@ public class StatisticsAnnotationSidebar
         }
 
         try {
-            withoutProblematicStats = hideNull
-                    ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
-                            new HashSet<AnnotationFeature>(features)).getNonZeroResults()
+            withoutProblematicStats = hideNull ? searchService
+                    .getProjectStatistics(currentUser, projectModel.getObject(), Integer.MIN_VALUE,
+                            Integer.MAX_VALUE, new HashSet<AnnotationFeature>(features))
+                    .getNonZeroResults()
                     : searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
+                            Integer.MIN_VALUE, Integer.MAX_VALUE,
                             new HashSet<AnnotationFeature>(features)).getResults();
 
         }
@@ -291,7 +289,7 @@ public class StatisticsAnnotationSidebar
         if (columns.size() > 1) {
             columns.remove(1);
         }
-        columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
+        columns.add(new PropertyColumn<>(new Model<String>(selectedStatistic),
                 propertyExpressionStatistic, propertyExpressionStatistic));
 
         statsProvider.setData(layerStatsList);

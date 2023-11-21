@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE;
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
@@ -33,6 +38,11 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class JSONUtil
 {
@@ -41,11 +51,17 @@ public class JSONUtil
     static {
         OBJECT_MAPPER = new ObjectMapper();
         OBJECT_MAPPER.registerModule(new JavaTimeModule());
+        // Used mainly by traits e.g. when switching from a string to a number trait or back where
+        // the editortype property has different ranges
+        OBJECT_MAPPER.configure(READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true);
+
     }
 
     /**
      * Convert Java objects into JSON format and write it to a file
-     *
+     * 
+     * @param aMapper
+     *            the object mapper to be used
      * @param aObject
      *            the object.
      * @param aFile
@@ -99,6 +115,24 @@ public class JSONUtil
         }
     }
 
+    public static <T> T fromValidatedJsonString(Class<T> aClass, String aJSON, JsonSchema aSchema)
+        throws IOException
+    {
+        if (aJSON == null) {
+            return null;
+        }
+
+        var mapper = getObjectMapper();
+        var jsonNode = mapper.readTree(aJSON);
+        var result = aSchema.validateAndCollect(jsonNode);
+        if (!result.getValidationMessages().isEmpty()) {
+            throw new IOException("JSON does not match JSON schema: "
+                    + result.getValidationMessages().iterator().next().getMessage());
+        }
+
+        return mapper.treeToValue(jsonNode, aClass);
+    }
+
     public static <T> T fromJsonStream(Class<T> aClass, InputStream aSrc) throws IOException
     {
         return getObjectMapper().readValue(aSrc, aClass);
@@ -130,6 +164,24 @@ public class JSONUtil
         jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
         jsonGenerator.writeTree(aTree);
         return out.toString();
+    }
+
+    public static JsonSchema loadJsonSchema(InputStream aSource)
+    {
+        var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+        return factory.getSchema(aSource);
+    }
+
+    public static List<LogMessage> validateJsonString(URL aSchemaUrl, String aJsonString)
+        throws IOException
+    {
+        try (var schemaStream = aSchemaUrl.openStream()) {
+            var jsonNode = getObjectMapper().readTree(aJsonString);
+            var jsonSchema = loadJsonSchema(schemaStream);
+            return jsonSchema.validate(jsonNode).stream() //
+                    .map(e -> LogMessage.error(JSONUtil.class, "%s", e.getMessage())) //
+                    .collect(toList());
+        }
     }
 
     private static class JavaScriptCharacterEscapes

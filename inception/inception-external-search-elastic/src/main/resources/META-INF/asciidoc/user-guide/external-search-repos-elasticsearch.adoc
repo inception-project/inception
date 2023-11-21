@@ -1,6 +1,14 @@
 [[sect_external-search-repos-elasticsearch]]
 = ElasticSearch
 
+====
+CAUTION: Custom builds only. This functionality is no longer included in standard builds of {product-name}. The last version of ElasticSearch that is proper open source under the Apache License 2.0 is version 7.10.2. However, ES 7.10.2 has security issues, so an upgrade to a more recent 7.x version is advised. These, however, are no longer available under the Apache License 2.0 - only under the Elastic License - which is not OSI-approved open source.
+
+Thus, after upgrading the ElasticSearch dependency to a recent 7.x version, ElasticSearch support was removed from the `inception-app-webapp` module. The code remains in the repository, but if you need it, you need to add it as a dependency to `inception-app-webapp` manually and re-build.
+
+As a replacement, {product-name} v25 will support the ElasticSearch fork **OpenSearch** which continues under the Apache License 2.0.
+====
+
 Selecting the **ElasticSearch** repository type allows connecting to remote ElasticSearch instances.
 
 In order to set up a connection to an ElasticSearch repository, the following information needs to
@@ -66,7 +74,7 @@ In a productive environment, you need to use a proper installation of ElasticSea
 +
 [source,sh]
 ----
-$ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.cors.enabled=true" -e "http.cors.allow-origin=http://localhost:9090" docker.elastic.co/elasticsearch/elasticsearch-oss:7.9.3-amd64
+$ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "http.cors.enabled=true" -e "http.cors.allow-origin=http://localhost:9090" elasticsearch:7.17.6
 ----
 2. Open a second terminal and run ElasticVue as a Docker service
 +
@@ -76,7 +84,7 @@ $ docker run -p 9090:8080 cars10/elasticvue
 ----
 3. Open a browser and access ElasticVue at `http://localhost:9090`
 4. Switch to the Indices tab in ElasticVue
-5. Create an index named "test"
+5. Create an index named `test`
 6. Switch to the REST tab in ElasticVue
 7. Set the HTTP Method to "POST" and enter `test/_doc/1` as the Path (means "create a new document with ID 1 in collection test)
 8. Put the following JSON into the request body field
@@ -96,7 +104,7 @@ $ docker run -p 9090:8080 cars10/elasticvue
   }
 }
 ----
-9. Click *Run Query*
+9. Click *Send request*
 10. Start up INCEpTION
 11. Create a new project
 12. Add a document repository with the following settings (and click save):
@@ -110,8 +118,8 @@ $ docker run -p 9090:8080 cars10/elasticvue
 * Result Size: `1000`
 * Random ordering: `false`
 13. Switch to the *Dashboard* and from there to the *Search* page
-14. Select the repository `test`
+14. Select the repository `My ElasticSearch Document Repository`
 15. Enter `document` into the search field and press the *Search* button
 16. You should get result for the document you posted to the ElasticSearch index in step 8
 17. Click on *Import*
-18. The import button should change to *Open* now - click on it to open the documen in the annotation editor
+18. The import button should change to *Open* now - click on it to open the document in the annotation editor

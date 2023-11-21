@@ -34,24 +34,21 @@ import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.DataContainer;
 import org.lappsgrid.serialization.Serializer;
 import org.lappsgrid.serialization.lif.Container;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class LappsGridRecommender
     extends RecommendationEngine
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
-
     private final LappsGridRecommenderTraits traits;
     private final ServiceClient client;
 
@@ -70,8 +67,11 @@ public class LappsGridRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
+        // FIXME: Ignores begin/end - always fetches predictions for the entire CAS
+
         try {
             Container container = new Container();
             new DKPro2Lif().convert(aCas.getJCas(), container);
@@ -97,7 +97,7 @@ public class LappsGridRecommender
             // let's just re-add the tokens that we originally sent. We need the tokens later
             // when extracting the predicted annotations
             Type tokenType = getType(aCas, Token.class);
-            if (select(aCas, getType(aCas, Token.class)).isEmpty()) {
+            if (select(aCas, tokenType).isEmpty()) {
                 container.getView(0).getAnnotations().stream()
                         .filter(a -> Discriminators.Uri.TOKEN.equals(a.getAtType()))
                         .forEach(token -> {
@@ -106,6 +106,8 @@ public class LappsGridRecommender
                             aCas.addFsToIndexes(t);
                         });
             }
+
+            return new Range(aCas);
         }
         catch (Exception e) {
             throw new RecommendationException("Cannot predict", e);
@@ -145,8 +147,8 @@ public class LappsGridRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+        return TrainingCapability.TRAINING_NOT_SUPPORTED;
     }
 }

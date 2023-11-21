@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +28,23 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class LinksReachableThroughChainsCheck
     implements Check
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public LinksReachableThroughChainsCheck(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
@@ -66,8 +69,8 @@ public class LinksReachableThroughChainsCheck
                 continue;
             }
 
-            List<FeatureStructure> chains = new ArrayList<>(selectFS(aCas, chainType));
-            List<AnnotationFS> links = new ArrayList<>(select(aCas, linkType));
+            var chains = aCas.select(chainType).asList();
+            var links = new ArrayList<>(select(aCas, linkType));
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);

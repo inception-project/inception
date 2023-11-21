@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -38,18 +39,19 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import wicket.contrib.input.events.EventType;
 
 public class DashboardMenu
     extends Panel
@@ -161,7 +163,7 @@ public class DashboardMenu
 
             if (currentPage == null) {
                 throw new IllegalStateException(
-                        "Menu item targetting a specific project must be on a project page");
+                        "Menu item targeting a specific project must be on a project page");
             }
 
             Project project = currentPage.getProject();
@@ -180,15 +182,21 @@ public class DashboardMenu
         menulink.add(new Label("label", item.getLabel()));
         menulink.add(AttributeAppender.append("class",
                 () -> getPage().getClass().equals(pageClass) ? "active" : ""));
+        if (item.shortcut() != null && item.shortcut().length > 0) {
+            menulink.add(new InputBehavior(item.shortcut(), EventType.click)
+            {
+                private static final long serialVersionUID = -3230776977218522942L;
+
+                @Override
+                protected Boolean getDisable_in_input()
+                {
+                    return true;
+                };
+            });
+            menulink.add(AttributeModifier.append("title",
+                    "[" + Stream.of(item.shortcut()).map(Object::toString).collect(joining(" + "))
+                            + "]"));
+        }
         aItem.add(menulink);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
     }
 }

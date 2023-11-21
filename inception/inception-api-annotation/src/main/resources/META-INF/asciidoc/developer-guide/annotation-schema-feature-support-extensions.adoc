@@ -13,7 +13,7 @@ It consists of the following classes and interfaces:
   given type of layer.
 
 To add support for a new type of feature, create a Spring component class which implements the
-`FeatureSupport` interface. Note that a single featre support class can handle multiple feature types. 
+`FeatureSupport` interface. Note that a single feature support class can handle multiple feature types.
 However, it is generally recommended to implement a separate layer support for every feature type.
 Implement the following methods:
 

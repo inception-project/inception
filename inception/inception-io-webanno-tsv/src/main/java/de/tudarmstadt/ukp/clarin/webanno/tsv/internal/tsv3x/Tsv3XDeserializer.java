@@ -350,13 +350,13 @@ public class Tsv3XDeserializer
 
         StringBuilder sentenceText = new StringBuilder();
         String sentenceId = null;
-        TsvSentence prevSentence = null;
         TsvSentence sentence = null;
         TsvToken token = null;
 
         List<TsvColumn> headerColumns = aDoc.getSchema()
                 .getHeaderColumns(aDoc.getSchema().getColumns());
 
+        int lineNo = 1;
         String line = aIn.readLine();
         try {
             while (!Tsv3XParserState.END.equals(state)) {
@@ -380,6 +380,12 @@ public class Tsv3XDeserializer
                 }
                 else {
                     fields = splitPreserveAllTokens(line, FIELD_SEPARATOR);
+                    int expectedFieldCount = headerColumns.size() + 3;
+                    if (fields.length < expectedFieldCount) {
+                        throw new IOException("Unable to parse line [" + lineNo + "] as [" + state
+                                + "]: [" + line + "] - expected [" + expectedFieldCount
+                                + "] fields but only found [" + fields.length + "]");
+                    }
 
                     // Get token metadata
                     id = fields[0];
@@ -429,7 +435,6 @@ public class Tsv3XDeserializer
                     // The -1 here is to account for the tailing line break
                     sentence.getUimaSentence().setEnd(text.length() - 1);
                     sentence.getUimaSentence().addToIndexes();
-                    prevSentence = sentence;
                     sentence = null;
                     break;
                 case TOKEN:
@@ -497,6 +502,7 @@ public class Tsv3XDeserializer
 
                 prevState = state;
                 line = aIn.readLine();
+                lineNo++;
             }
 
             aDoc.getJCas().setDocumentText(text.toString());
@@ -521,8 +527,12 @@ public class Tsv3XDeserializer
             }
             fses.forEach(cas::addFsToIndexes);
         }
+        catch (IOException e) {
+            throw e;
+        }
         catch (Exception e) {
-            throw new IOException("Unable to parse line as [" + state + "]: [" + line + "]", e);
+            throw new IOException(
+                    "Unable to parse line [" + lineNo + "] as [" + state + "]: [" + line + "]", e);
         }
     }
 
@@ -684,8 +694,8 @@ public class Tsv3XDeserializer
 
         // If not, then we have to create one
         if (annotation == null) {
-            annotation = aUnit.getDocument().getJCas().getCas().createAnnotation(aCol.uimaType,
-                    aUnit.getBegin(), aUnit.getEnd());
+            annotation = aUnit.getDocument().getJCas().getCas().createAnnotation(aCol.uimaType, -1,
+                    -1);
             aUnit.addUimaAnnotation(annotation);
         }
 
@@ -817,6 +827,8 @@ public class Tsv3XDeserializer
 
                 setFeature(aAnnotation, FEAT_REL_SOURCE, sourceAnnotation);
                 setFeature(aAnnotation, FEAT_REL_TARGET, targetAnnotation);
+                aAnnotation.setBegin(targetAnnotation.getBegin());
+                aAnnotation.setEnd(targetAnnotation.getEnd());
             });
             break;
         }

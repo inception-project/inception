@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
 import io.swagger.v3.oas.models.info.Info;
 
+@ConditionalOnWebApplication
 @Configuration
-@EnableConfigurationProperties(RemoteApiProperties.class)
+@EnableConfigurationProperties({ RemoteApiProperties.class, WebhooksConfiguration.class })
 public class RemoteApiAutoConfiguration
 {
     static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
@@ -55,9 +65,10 @@ public class RemoteApiAutoConfiguration
                 .pathsToExclude("/**") //
                 .addOpenApiCustomiser(openApi -> { //
                     openApi.info(new Info() //
-                            .title("Remote API disbled") //
+                            .title("Remote API disabled") //
                             .description("The remote API is not enabled."));
-                }).build();
+                })//
+                .build();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -70,7 +81,8 @@ public class RemoteApiAutoConfiguration
                     openApi.info(new Info() //
                             .title("Legacy API") //
                             .version("1"));
-                }).build();
+                }) //
+                .build();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -86,6 +98,22 @@ public class RemoteApiAutoConfiguration
                             .description(String.join(" ",
                                     "Annotation Editor Remote Operations API. ",
                                     "https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/")));
-                }).build();
+                }) //
+                .build();
+    }
+
+    @Bean
+    public WebhookService webhookService(WebhooksConfiguration aConfiguration,
+            RestTemplateBuilder aRestTemplateBuilder)
+        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+    {
+        return new WebhookService(aConfiguration, aRestTemplateBuilder);
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public SwaggerUiMenuBarItemSupport swaggerUiMenuBarItemSupport()
+    {
+        return new SwaggerUiMenuBarItemSupport();
     }
 }

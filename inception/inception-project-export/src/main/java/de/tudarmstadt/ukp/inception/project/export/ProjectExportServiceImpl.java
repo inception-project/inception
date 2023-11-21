@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.project.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -52,6 +52,7 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -65,7 +66,6 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
@@ -77,7 +77,9 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
@@ -160,7 +162,7 @@ public class ProjectExportServiceImpl
             }
         }
 
-        log.info("Found [{}] project exporters", exps.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] project exporters", exps.size());
 
         exporters = unmodifiableList(exps);
     }
@@ -170,7 +172,10 @@ public class ProjectExportServiceImpl
     public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
-        File projectZipFile = File.createTempFile(aRequest.getProject().getSlug(), ".zip");
+        String filename = aRequest.getProject().getSlug();
+        // temp-file prefix must be at least 3 chars
+        filename = StringUtils.rightPad(filename, 3, "_");
+        File projectZipFile = File.createTempFile(filename, ".zip");
         boolean success = false;
         try {
             exportProject(aRequest, aMonitor, projectZipFile);
@@ -201,15 +206,13 @@ public class ProjectExportServiceImpl
             ExportedProject exProjekt = exportProjectToPath(aRequest, aMonitor, exportTempDir);
 
             // all metadata and project settings data from the database as JSON file
-            File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
+            File projectSettings = new File(exportTempDir, EXPORTED_PROJECT + ".json");
             JSONUtil.generatePrettyJson(exProjekt, projectSettings);
-            FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
 
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
             finally {
-                FileUtils.forceDelete(projectSettings);
                 System.gc();
                 FileUtils.forceDelete(exportTempDir);
             }
@@ -264,6 +267,9 @@ public class ProjectExportServiceImpl
                     exportersDeferred.add(exporter);
                 }
             }
+        }
+        catch (ProjectExportException e) {
+            throw e;
         }
         catch (InterruptedException | IOException e) {
             // IOExceptions like java.nio.channels.ClosedByInterruptException should be thrown up
@@ -355,6 +361,10 @@ public class ProjectExportServiceImpl
             }
         }
 
+        if (projectSettingsEntry == null) {
+            throw new IOException("Unable to locate JSON file describing the project");
+        }
+
         // Load the project model from the JSON file
         String text;
         try (InputStream is = aZip.getInputStream(projectSettingsEntry)) {
@@ -391,7 +401,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportTaskHandle startTask(ProjectExportTask aTask)
+    public ProjectExportTaskHandle startTask(ProjectExportTask<?> aTask)
     {
         ProjectExportTaskHandle handle = aTask.getHandle();
 
@@ -430,7 +440,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public List<ProjectExportTask> listRunningExportTasks(Project aProject)
+    public List<ProjectExportTask<?>> listRunningExportTasks(Project aProject)
     {
         return tasks.values().stream() //
                 .filter(taskInfo -> aProject.equals(taskInfo.task.getRequest().getProject())) //
@@ -507,9 +517,9 @@ public class ProjectExportServiceImpl
     private static class TaskInfo
     {
         private final Future<?> future;
-        private final ProjectExportTask task;
+        private final ProjectExportTask<?> task;
 
-        public TaskInfo(Future<?> aFuture, ProjectExportTask aTask)
+        public TaskInfo(Future<?> aFuture, ProjectExportTask<?> aTask)
         {
             future = aFuture;
             task = aTask;

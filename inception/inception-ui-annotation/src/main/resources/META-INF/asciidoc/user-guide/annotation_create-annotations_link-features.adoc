@@ -35,8 +35,15 @@ annotation owning the slow is shown in the annotation detail panel. Here, the cr
 .Role labels
 If role labels are enabled they can be changed by the user at any time.
 To change a previously selected role label, no prior deletion is needed.
-Just double-click on the instance you want to change, it will be highlighted in orange, and chose
+Just click on the slot you want to change, it will be highlighted in orange, and chose
 another role label.
+
+If there is a large number of tags in the tagset associated with the link feature, the the role 
+combobox is replaced with an auto-complete field. The difference is that in the auto-complete field, there is no button to open the dropdown to select a role. Instead, you can press space or use the cursor-down keys to cause the dropdown menu for the role to open. Also, the dropdown only shows up
+to a configurable maximum of matching tags. You can type in something (e.g. `action`) to filter for
+items containing `action`. The threshold for displaying an auto-complete field and the maximum number
+of tags shown in the dropdown can be configured globally. The settings are documented in the 
+administrators guide.
 
 If role labels are disabled for the link feature layer they cannot be manually set by the user.
 Instead the UI label of the linked annotation is displayed.

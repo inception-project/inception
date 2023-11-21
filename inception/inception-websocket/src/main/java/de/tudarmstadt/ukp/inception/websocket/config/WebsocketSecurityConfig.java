@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
@@ -31,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.security.access.expression.AbstractSecurityExpressionHandler;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
@@ -42,7 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 public class WebsocketSecurityConfig
     extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
-    private final DefaultMessageSecurityExpressionHandler handler = new DefaultMessageSecurityExpressionHandler();
+    private final AbstractSecurityExpressionHandler<Message<Object>> handler = //
+            new DefaultMessageSecurityExpressionHandler<>();
 
     @Autowired
     public WebsocketSecurityConfig(ApplicationContext aContext,
@@ -60,6 +64,9 @@ public class WebsocketSecurityConfig
                 + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
                 + PARAM_USER + "}/**";
 
+        final var recommenterEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+                + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
+
         // @formatter:off
         aSecurityRegistry //
             .expressionHandler(handler)
@@ -67,11 +74,16 @@ public class WebsocketSecurityConfig
             .simpTypeMatchers(DISCONNECT).permitAll()
             // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
             .nullDestMatcher().authenticated() //
-            // subscribing to logged events is only for admins
             .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
+            .simpSubscribeDestMatchers("/*/scheduler").hasRole("USER")
+            .simpSubscribeDestMatchers("/*" + NS_PROJECT + "/{" + PARAM_PROJECT + "}/exports")
+                .access("@projectAccess.canManageProject(#" + PARAM_PROJECT + ")")
             .simpSubscribeDestMatchers(annotationEditorTopic)
                 .access("@documentAccess.canViewAnnotationDocument(#" + PARAM_PROJECT + 
                         ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")")
+            .simpSubscribeDestMatchers(recommenterEventsTopic)
+                .access("@projectAccess.canAccessProject(#" + PARAM_PROJECT + ") and "
+                        + "@userAccess.isUser(#" + PARAM_USER + ")")
             // authenticated users can subscribe
             .simpTypeMatchers(SUBSCRIBE).authenticated()
             // authenticated clients can send messages

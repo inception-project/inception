@@ -17,21 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
-import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -50,17 +50,13 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -68,6 +64,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 public class FeatureDetailForm
     extends Form<AnnotationFeature>
@@ -121,11 +123,15 @@ public class FeatureDetailForm
         required = new CheckBox("required");
         required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
-            boolean relevant = CAS.TYPE_NAME_STRING
-                    .equals(FeatureDetailForm.this.getModelObject().getType());
-            _this.setEnabled(relevant);
-            if (!relevant) {
-                FeatureDetailForm.this.getModelObject().setRequired(false);
+            boolean mandatory = asList(CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT,
+                    CAS.TYPE_NAME_DOUBLE, CAS.TYPE_NAME_BOOLEAN)
+                            .contains(FeatureDetailForm.this.getModelObject().getType());
+            _this.setEnabled(!mandatory);
+            if (mandatory) {
+                required.setModel(Model.of(true));
+            }
+            else {
+                required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
             }
         }));
         add(required);
@@ -193,8 +199,7 @@ public class FeatureDetailForm
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
 
         confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
-        confirmationDialog
-                .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
+        confirmationDialog.setTitleModel(new ResourceModel("DeleteFeatureDialog.title"));
         add(confirmationDialog);
     }
 
@@ -226,12 +231,10 @@ public class FeatureDetailForm
         setModelObject(null);
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
-        confirmationDialog
-                .setChallengeModel(new StringResourceModel("DeleteFeatureDialog.text", this)
-                        .setParameters(escapeMarkup(getModelObject().getName())));
-        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
+        confirmationDialog.setMessageModel(new ResourceModel("DeleteFeatureDialog.text"));
+        confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationFeature::getName));
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
@@ -251,7 +254,7 @@ public class FeatureDetailForm
         });
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         AnnotationFeature feature = getModelObject();
 

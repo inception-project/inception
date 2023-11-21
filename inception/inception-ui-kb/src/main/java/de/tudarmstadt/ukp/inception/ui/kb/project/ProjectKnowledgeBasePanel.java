@@ -31,7 +31,7 @@ public class ProjectKnowledgeBasePanel
 {
     private static final long serialVersionUID = 2300684106019320208L;
 
-    private static final String DETAILS_PANEL_MARKUP_ID = "details";
+    private static final String CID_DETAILS = "details";
 
     private IModel<Project> projectModel;
     private IModel<KnowledgeBase> selectedKnowledgeBaseModel;
@@ -44,7 +44,7 @@ public class ProjectKnowledgeBasePanel
         setOutputMarkupId(true);
         projectModel = aProject;
 
-        detailsPanel = new EmptyPanel(DETAILS_PANEL_MARKUP_ID);
+        detailsPanel = new EmptyPanel(CID_DETAILS);
         add(detailsPanel);
 
         selectedKnowledgeBaseModel = Model.of();
@@ -52,8 +52,8 @@ public class ProjectKnowledgeBasePanel
                 selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);
-            detailsPanel.replaceWith(new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID,
-                    selectedKnowledgeBaseModel));
+            detailsPanel.replaceWith(
+                    new KnowledgeBaseDetailsPanel(CID_DETAILS, selectedKnowledgeBaseModel));
             t.add(this);
         });
         add(listPanel);

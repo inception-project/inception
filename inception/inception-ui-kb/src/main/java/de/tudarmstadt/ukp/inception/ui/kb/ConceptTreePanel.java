@@ -17,13 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,7 +26,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.extensions.markup.html.repeater.tree.AbstractTree;
 import org.apache.wicket.extensions.markup.html.repeater.tree.DefaultNestedTree;
-import org.apache.wicket.extensions.markup.html.repeater.tree.ITreeProvider;
 import org.apache.wicket.extensions.markup.html.repeater.tree.content.Folder;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -43,15 +36,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.query.QueryEvaluationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
@@ -61,13 +50,12 @@ public class ConceptTreePanel
     extends Panel
 {
     private static final long serialVersionUID = -4032884234215283745L;
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptTreePanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KBObject> selectedConcept;
     private IModel<KnowledgeBase> kbModel;
-    private IModel<Preferences> preferences;
+    private IModel<ConceptTreeProviderOptions> options;
 
     public ConceptTreePanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBObject> selectedConceptModel)
@@ -78,10 +66,10 @@ public class ConceptTreePanel
 
         selectedConcept = selectedConceptModel;
         kbModel = aKbModel;
-        preferences = Model.of(new Preferences());
+        options = Model.of(new ConceptTreeProviderOptions());
 
         AbstractTree<KBObject> tree = new DefaultNestedTree<KBObject>("tree",
-                new ConceptTreeProvider(), Model.ofSet(new HashSet<>()))
+                new ConceptTreeProvider(kbService, kbModel, options), Model.ofSet(new HashSet<>()))
         {
             private static final long serialVersionUID = -270550186750480253L;
 
@@ -132,9 +120,11 @@ public class ConceptTreePanel
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
 
-        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new CheckBox("showAllConcepts").add(
-                new LambdaAjaxFormSubmittingBehavior("change", this::actionPreferenceChanged)));
+        Form<ConceptTreeProviderOptions> form = new Form<>("form",
+                CompoundPropertyModel.of(options));
+        form.add(new CheckBox("showAllConcepts").setOutputMarkupId(true) //
+                .add(new LambdaAjaxFormSubmittingBehavior("change",
+                        this::actionPreferenceChanged)));
         add(form);
     }
 
@@ -152,128 +142,12 @@ public class ConceptTreePanel
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget)
     {
-        if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
+        if (!options.getObject().isShowAllConcepts() && selectedConcept.getObject() != null
                 && IriConstants.isFromImplicitNamespace(selectedConcept.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
         }
         else {
             aTarget.add(this);
         }
-    }
-
-    private class ConceptTreeProvider
-        implements ITreeProvider<KBObject>
-    {
-        private static final long serialVersionUID = 5318498575532049499L;
-
-        private Map<KBObject, Boolean> childrenPresentCache = new HashMap<>();
-        private Map<KBObject, List<KBHandle>> childrensCache = new HashMap<>();
-
-        @Override
-        public void detach()
-        {
-            if (!kbModel.getObject().isReadOnly()) {
-                childrenPresentCache.clear();
-            }
-        }
-
-        @Override
-        public Iterator<? extends KBHandle> getRoots()
-        {
-            try {
-                return kbService.listRootConcepts(kbModel.getObject(),
-                        preferences.getObject().showAllConcepts).iterator();
-            }
-            catch (QueryEvaluationException e) {
-                error(getString("listRootConceptsErrorMsg") + ": " + e.getLocalizedMessage());
-                LOG.error("Unable to list root concepts.", e);
-                return Collections.emptyIterator();
-            }
-        }
-
-        @Override
-        public boolean hasChildren(KBObject aNode)
-        {
-            try {
-                // If the KB is read-only, then we cache the values and re-use the cached values.
-                if (kbModel.getObject().isReadOnly()) {
-                    // Leaving this code here because we might make the preemptive loading of
-                    // child presence optional.
-                    // Boolean childrenPresent = childrenPresentCache.get(aNode);
-                    // if (childrenPresent == null) {
-                    // childrenPresent = kbService.hasChildConcepts(kbModel.getObject(),
-                    // aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-                    // childrenPresentCache.put(aNode, childrenPresent);
-                    // }
-                    // return childrenPresent;
-
-                    // To avoid having to send a query to the KB for every child node, just assume
-                    // that there might be child nodes and show the expander until we have actually
-                    // loaded the children, cached them and can show the true information.
-                    List<KBHandle> children = childrensCache.get(aNode);
-                    if (children == null) {
-                        return true;
-                    }
-                    else {
-                        return !children.isEmpty();
-                    }
-                }
-                else {
-                    Boolean hasChildren = childrenPresentCache.get(aNode);
-                    if (hasChildren == null) {
-                        hasChildren = kbService.hasChildConcepts(kbModel.getObject(),
-                                aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-                        childrenPresentCache.put(aNode, hasChildren);
-                    }
-
-                    return hasChildren;
-                }
-            }
-            catch (QueryEvaluationException e) {
-                error(getString("listChildConceptsErrorMsg") + ": " + e.getLocalizedMessage());
-                LOG.error("Unable to list child concepts.", e);
-                return false;
-            }
-        }
-
-        @Override
-        public Iterator<? extends KBObject> getChildren(KBObject aNode)
-        {
-            try {
-                // If the KB is read-only, then we cache the values and re-use the cached values.
-                if (kbModel.getObject().isReadOnly()) {
-                    List<KBHandle> children = childrensCache.get(aNode);
-                    if (children == null) {
-                        children = kbService.listChildConcepts(kbModel.getObject(),
-                                aNode.getIdentifier(), preferences.getObject().showAllConcepts);
-                        childrensCache.put(aNode, children);
-                    }
-                    return children.iterator();
-                }
-                else {
-                    return kbService.listChildConcepts(kbModel.getObject(), aNode.getIdentifier(),
-                            preferences.getObject().showAllConcepts).iterator();
-                }
-            }
-            catch (QueryEvaluationException e) {
-                error(getString("listChildConceptsErrorMsg") + ": " + e.getLocalizedMessage());
-                LOG.error("Unable to list child concepts.", e);
-                return Collections.emptyIterator();
-            }
-        }
-
-        @Override
-        public IModel<KBObject> model(KBObject aObject)
-        {
-            return Model.of(aObject);
-        }
-    }
-
-    static class Preferences
-        implements Serializable
-    {
-        private static final long serialVersionUID = 8310379405075949753L;
-
-        boolean showAllConcepts;
     }
 }

@@ -1,0 +1,228 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+$dashboard-border-left: 3em;
+
+.dashboard-menu {
+  @extend .flex-content;
+  @extend .flex-v-container;
+  max-width: min-content;
+  position: relative;
+}
+
+.dashboard-sidebar {
+  overflow-x: hidden;
+  position: relative;
+  padding-right: $dashboard-border-left;
+  width: min-content;
+  
+  a {
+    color: inherit;
+  }
+
+  .pin {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: inline;
+    white-space: nowrap;
+    transition: color .1s ease-in, transform .3s ease-in-out .6s;
+    transform: rotate(45deg);
+    
+    a {
+      color: inherit !important;
+    }
+    
+    &:hover {
+      transform: rotate(0deg);
+    }
+  
+    &.active {
+      transform: rotate(0deg);
+      
+      &:hover {
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  .label {
+    white-space: nowrap;
+  }
+
+  
+  &.collapsed {
+    max-width: 4rem;
+    padding-right: 0px;
+
+    .label {
+      /* display: none; */
+    }
+  
+    .pin {
+      display: none;
+    }
+  
+    &:not(:hover) {
+      &::-webkit-scrollbar {
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        display: none;
+      }
+    
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  }
+    
+  &.expand-on-hover {
+    transition: all .3s ease-in-out;
+    position: absolute; 
+    top: 0px; 
+    bottom: 0px;
+    z-index: 9999;
+    
+    &:hover {
+      max-width: 20rem;
+      padding-right: $dashboard-border-left;
+      
+      .label {
+        display: flex;
+      }
+    
+      .pin {
+        display: inline;
+      }
+    }
+  }
+
+  .sidebar-item {
+    font-size: 18px;
+
+    .icon {
+      font-size: 160%;
+      width: 4rem;
+      text-align: center;
+      transition: color .1s ease-in;
+      position: relative;
+    }
+    
+    .icon-badge {
+      position: absolute;
+      font-size: 50%;
+      bottom: 0;
+      right: 0;
+      border-radius: var(--bs-border-radius-sm);
+      text-shadow: 2px 2px 0 var(--bs-light),  2px -2px var(--bs-light), 
+                  -2px 2px 0 var(--bs-light), -2px -2px 0 var(--bs-light), 
+                   2px 0px 0 var(--bs-light),  0px  2px 0 var(--bs-light), 
+                  -2px 0px 0 var(--bs-light),  0px -2px 0 var(--bs-light);
+    }
+  
+    .label {
+      justify-content: center;
+    }
+  }
+
+  &.dashboard-sidebar-dark { 
+    background-color: var(--bs-gray-dark);
+    
+    .pin {
+      color: var(--bs-gray);
+      
+      &:hover {
+        color: var(--bs-light);
+      }
+    }
+        
+    .sidebar-item {
+      color: var(--bs-gray);
+      border-left: solid 0.2rem var(--bs-gray-dark);
+
+      .icon-badge {
+        background-color: var(--bs-light);
+      }
+  
+      .label {
+        color: var(--bs-light) !important;
+      }
+      
+      &:hover {
+        color: var(--bs-light);
+      }
+    
+      &.active {
+        color: var(--bs-light) !important;
+        border-left-color: var(--bs-light);
+      }
+    }
+  }
+
+  &.dashboard-sidebar-light { 
+    background-color: var(--bs-light-bg-subtle);
+    
+    
+    .pin {
+      color: var(--bs-secondary);
+      
+      &:hover {
+        color: var(--bs-emphasis-color);
+      }
+    }
+    
+    .sidebar-item {
+      color: var(--bs-secondary);
+      border-left: solid 0.2rem var(--bs-light-bg-subtle);
+  
+      .icon-badge {
+        background-color: var(--bs-light);
+      }
+
+      .label {
+        color: var(--bs-emphasis-color) !important;
+      }
+      
+      &:hover {
+        color: var(--bs-emphasis-color);
+      }
+    
+      &.active {
+        color: var(--bs-emphasis-color) !important;
+        border-left-color: var(--bs-emphasis-color) !important;
+      }
+    }
+  }
+
+  .nav-stacked {
+    >li {
+      + {
+        li {
+          margin-top: 0px;
+        }
+      }
+    }
+  }
+}
+
+.dashboard-content {
+  .flex-tile {
+    background: var(--bs-body-bg);
+    border: 1px solid #EAEAEA;
+    margin: 10px;
+    padding: 10px 20px 30px 20px;
+    min-height: 10em;
+  }
+}

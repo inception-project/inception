@@ -22,137 +22,280 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.Webhoo
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.PROJECT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookServiceTest.TestService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 
-@SpringBootApplication(exclude = { //
-        SecurityAutoConfiguration.class, //
-        LiquibaseAutoConfiguration.class })
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
+@SpringBootTest( //
+        webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off",
                 "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
+@ImportAutoConfiguration( //
+        exclude = { //
+                SecurityAutoConfiguration.class, //
+                LiquibaseAutoConfiguration.class }, //
+        classes = { //
+                ServletWebServerFactoryAutoConfiguration.class, //
+                RestTemplateAutoConfiguration.class, //
+                DispatcherServletAutoConfiguration.class, //
+                WebMvcAutoConfiguration.class, //
+                RemoteApiAutoConfiguration.class, //
+                TestService.class })
 @EntityScan({ //
-        "de.tudarmstadt.ukp.clarin.webanno.model", //
-        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+        "de.tudarmstadt.ukp.inception", //
+        "de.tudarmstadt.ukp.clarin.webanno" })
 public class WebhookServiceTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";
+
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @LocalServerPort int port;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired WebhooksConfiguration webhooksConfiguration;
     private @Autowired TestService testService;
 
-    @Test
-    public void test()
+    private Project project;
+    private SourceDocument doc;
+    private AnnotationDocument ann;
+
+    private Webhook hook;
+
+    @BeforeEach
+    void setup()
     {
-        Webhook hook = new Webhook();
+        testService.reset();
+
+        hook = new Webhook();
         hook.setUrl("http://localhost:" + port + "/test/subscribe");
-        hook.setTopics(asList(PROJECT_STATE, ANNOTATION_STATE, DOCUMENT_STATE));
         hook.setEnabled(true);
 
         webhooksConfiguration.setGlobalHooks(asList(hook));
 
-        Project project = new Project();
+        project = new Project("test");
         project.setState(ProjectState.NEW);
         project.setId(1l);
 
-        SourceDocument doc = new SourceDocument();
+        doc = new SourceDocument();
         doc.setProject(project);
+        doc.setName("testDoc");
         doc.setId(2l);
         doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
 
-        AnnotationDocument ann = new AnnotationDocument();
+        ann = new AnnotationDocument();
+        ann.setName("testDoc");
         ann.setProject(project);
+        ann.setUser("user");
         ann.setId(3l);
         ann.setDocument(doc);
         ann.setState(AnnotationDocumentState.FINISHED);
+        ann.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
+        ann.setAnnotatorComment("Test comment");
+    }
 
-        applicationEventPublisher.publishEvent(
-                new ProjectStateChangedEvent(this, project, ProjectState.CURATION_FINISHED));
+    @Test
+    public void thatProjectStateHookIsTriggered()
+    {
+        hook.setTopics(asList(PROJECT_STATE));
+
+        var event = new ProjectStateChangedEvent(this, project, ProjectState.CURATION_FINISHED);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.projectStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new ProjectStateChangeMessage(event));
+    }
+
+    @Test
+    public void thatAnnotationStateHookIsTriggered()
+    {
+        hook.setTopics(asList(ANNOTATION_STATE));
+
+        var event = new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.annStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new AnnotationStateChangeMessage(event));
+    }
+
+    @Test
+    public void thatDocumentStateHookIsTriggered()
+    {
+        hook.setTopics(asList(DOCUMENT_STATE));
+
+        var event = new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.docStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new DocumentStateChangeMessage(event));
+    }
+
+    @Test
+    public void thatAuthHeaderIsSent()
+    {
+        var header = "Bearer";
+        var headerValue = "MY-SECRET-TOKEN";
+
+        hook.setTopics(asList(DOCUMENT_STATE));
+        hook.setAuthHeader(header);
+        hook.setAuthHeaderValue(headerValue);
+
         applicationEventPublisher
                 .publishEvent(new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW));
-        applicationEventPublisher.publishEvent(
-                new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS));
 
-        assertEquals(1, testService.projectStateChangeMsgs.size());
-        assertEquals(1, testService.docStateChangeMsgs.size());
-        assertEquals(1, testService.annStateChangeMsgs.size());
+        assertThat(testService.docStateChangeMsgs) //
+                .extracting(Pair::getRight) //
+                .extracting(httpHeaders -> httpHeaders.getOrEmpty(header)) //
+                .containsExactly(asList(headerValue));
+    }
+
+    @Test
+    public void thatDeliveryIsRetried()
+    {
+        webhooksConfiguration.setRetryCount(3);
+        webhooksConfiguration.setRetryDelay(50);
+        hook.setUrl("http://localhost:" + port + "/test/failFirstTime");
+        hook.setTopics(asList(ANNOTATION_STATE));
+
+        var event = new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.callCount).isEqualTo(2);
+
+        assertThat(testService.annStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new AnnotationStateChangeMessage(event));
     }
 
     @RequestMapping("/test")
     @Controller
     public static class TestService
     {
-        private List<ProjectStateChangeMessage> projectStateChangeMsgs = new ArrayList<>();
-        private List<DocumentStateChangeMessage> docStateChangeMsgs = new ArrayList<>();
-        private List<AnnotationStateChangeMessage> annStateChangeMsgs = new ArrayList<>();
+        private List<Pair<ProjectStateChangeMessage, HttpHeaders>> projectStateChangeMsgs = new ArrayList<>();
+        private List<Pair<DocumentStateChangeMessage, HttpHeaders>> docStateChangeMsgs = new ArrayList<>();
+        private List<Pair<AnnotationStateChangeMessage, HttpHeaders>> annStateChangeMsgs = new ArrayList<>();
+        private int callCount;
 
-        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
-                + "="
-                + PROJECT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
-        public ResponseEntity<Void> onProjectStateEvent(@RequestBody ProjectStateChangeMessage aMsg)
+        public void reset()
+        {
+            projectStateChangeMsgs.clear();
+            docStateChangeMsgs.clear();
+            annStateChangeMsgs.clear();
+            callCount = 0;
+        }
+
+        @PostMapping( //
+                value = "/subscribe", //
+                headers = X_AERO_NOTIFICATION + "=" + PROJECT_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> onProjectStateEvent( //
+                @RequestHeader HttpHeaders aHeaders, //
+                @RequestBody ProjectStateChangeMessage aMsg)
             throws Exception
         {
-            projectStateChangeMsgs.add(aMsg);
+            LOG.info("Received: {}", aMsg);
+            projectStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
 
-        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
-                + "="
-                + DOCUMENT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
-        public ResponseEntity<Void> onDocumentStateEvent(
+        @PostMapping( //
+                value = "/subscribe", //
+                headers = X_AERO_NOTIFICATION + "=" + DOCUMENT_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> onDocumentStateEvent( //
+                @RequestHeader HttpHeaders aHeaders, //
                 @RequestBody DocumentStateChangeMessage aMsg)
             throws Exception
         {
-            docStateChangeMsgs.add(aMsg);
+            LOG.info("Received: {}", aMsg);
+            docStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
 
-        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
-                + "="
-                + ANNOTATION_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
-        public ResponseEntity<Void> onAnnotationStateEvent(
+        @PostMapping( //
+                value = "/subscribe", //
+                headers = X_AERO_NOTIFICATION + "=" + ANNOTATION_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> onAnnotationStateEvent( //
+                @RequestHeader HttpHeaders aHeaders, //
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception
         {
-            annStateChangeMsgs.add(aMsg);
+            LOG.info("Received: {}", aMsg);
+            annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
+            return ResponseEntity.ok().build();
+        }
+
+        @PostMapping( //
+                value = "/failFirstTime", //
+                headers = X_AERO_NOTIFICATION + "=" + ANNOTATION_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> failFirstTime( //
+                @RequestHeader HttpHeaders aHeaders, //
+                @RequestBody AnnotationStateChangeMessage aMsg)
+            throws Exception
+        {
+            callCount++;
+
+            if (callCount == 1) {
+                return ResponseEntity.internalServerError().build();
+            }
+
+            annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
     }

@@ -22,6 +22,7 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -35,4 +36,6 @@ public interface WorkloadManagerExtensionPoint
     WorkloadManagerExtension<?> getDefault();
 
     List<WorkloadManagerType> getTypes();
+
+    WorkloadManagerType getWorkloadManagerType(WorkloadManager aWorkloadManager);
 }

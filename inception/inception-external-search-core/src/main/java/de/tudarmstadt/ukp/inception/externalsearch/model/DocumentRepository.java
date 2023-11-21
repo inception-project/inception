@@ -148,7 +148,7 @@ public class DocumentRepository
     @Override
     public String toString()
     {
-        final StringBuilder sb = new StringBuilder("Recommender{");
+        final StringBuilder sb = new StringBuilder("DocumentRepository{");
         sb.append("id=").append(id);
         sb.append(", project=").append(project);
         sb.append(", name='").append(name).append('\'');

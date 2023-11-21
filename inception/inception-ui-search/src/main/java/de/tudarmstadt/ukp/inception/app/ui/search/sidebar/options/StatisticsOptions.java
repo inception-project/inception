@@ -18,6 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
@@ -25,8 +27,10 @@ import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.Metrics;
 
 public class StatisticsOptions
-    extends Options
+    implements Serializable
 {
+    private static final long serialVersionUID = 1103399322884303842L;
+
     private Metrics statistic;
     private Granularities granularity;
     private Formats format;

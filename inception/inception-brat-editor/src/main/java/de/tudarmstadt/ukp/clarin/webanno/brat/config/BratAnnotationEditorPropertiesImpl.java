@@ -20,20 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("ui.brat")
 @ManagedResource
 public class BratAnnotationEditorPropertiesImpl
     implements BratAnnotationEditorProperties
 {
-    private boolean singleClickSelection = false;
-    private boolean deferredRendering = false;
+    private boolean singleClickSelection = true;
     private boolean clientSideProfiling = false;
-    private boolean clientSideTraceLog = false;
     private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;
-    private boolean useCasTokens = false;
 
     @ManagedAttribute
     @Override
@@ -50,19 +45,6 @@ public class BratAnnotationEditorPropertiesImpl
 
     @ManagedAttribute
     @Override
-    public boolean isDeferredRendering()
-    {
-        return deferredRendering;
-    }
-
-    @ManagedAttribute
-    public void setDeferredRendering(boolean aDeferredRendering)
-    {
-        deferredRendering = aDeferredRendering;
-    }
-
-    @ManagedAttribute
-    @Override
     public boolean isClientSideProfiling()
     {
         return clientSideProfiling;
@@ -74,19 +56,6 @@ public class BratAnnotationEditorPropertiesImpl
         clientSideProfiling = aClientSideProfiling;
     }
 
-    @ManagedAttribute
-    @Override
-    public boolean isClientSideTraceLog()
-    {
-        return clientSideTraceLog;
-    }
-
-    @ManagedAttribute
-    public void setClientSideTraceLog(boolean aClientSideTraceLog)
-    {
-        clientSideTraceLog = aClientSideTraceLog;
-    }
-
     @Override
     public String getWhiteSpaceReplacementCharacter()
     {
@@ -96,18 +65,5 @@ public class BratAnnotationEditorPropertiesImpl
     public void setWhiteSpaceReplacementCharacter(String aWhiteSpaceReplacementCharacter)
     {
         whiteSpaceReplacementCharacter = aWhiteSpaceReplacementCharacter;
-    }
-
-    @ManagedAttribute
-    public void setUseCasTokens(boolean aIgnoreCasTokens)
-    {
-        useCasTokens = aIgnoreCasTokens;
-    }
-
-    @ManagedAttribute
-    @Override
-    public boolean isUseCasTokens()
-    {
-        return useCasTokens;
     }
 }

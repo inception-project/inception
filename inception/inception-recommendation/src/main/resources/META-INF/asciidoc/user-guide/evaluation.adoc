@@ -22,7 +22,7 @@ The evaluation simulation panel provides a visualization of the performance of t
 The training data use for the evaluation can be selected using the *Annotator* dropdown. Here,
 you can select to train on the annotations of a specific user. Selecting *INITIAL_CAS* trains on
 annotations present in the imported original documents. Selecting *CURATION_USER* trains on curated
-documents. The data is split into *80% training data* and *20% test data*. The system tries to split the training data in 10 blocks of roughly the same size. For each training run, an additonal block
+documents. The data is split into *80% training data* and *20% test data*. The system tries to split the training data in 10 blocks of roughly the same size. For each training run, an additional block
 is added to the training data for that run until in the last run, all training data is used.
 
 image::evaluation.png[align="center"]

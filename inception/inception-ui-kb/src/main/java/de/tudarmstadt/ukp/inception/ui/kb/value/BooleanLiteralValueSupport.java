@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -63,8 +63,7 @@ public class BooleanLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XMLSchema.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
+        return asList(new ValueType(XSD.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
     }
 
     @Override
@@ -76,13 +75,13 @@ public class BooleanLiteralValueSupport
 
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
 
-        return iri != null && XMLSchema.BOOLEAN.equals(iri);
+        return iri != null && XSD.BOOLEAN.equals(iri);
     }
 
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
-        if (range != null && range.equals(XMLSchema.BOOLEAN.stringValue())) {
+        if (range != null && range.equals(XSD.BOOLEAN.stringValue())) {
             return true;
         }
         return false;

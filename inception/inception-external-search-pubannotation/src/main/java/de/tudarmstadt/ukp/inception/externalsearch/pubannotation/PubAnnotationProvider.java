@@ -17,8 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
+import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF;
+import static java.lang.Integer.parseInt;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
+import static org.springframework.http.HttpMethod.GET;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,10 +35,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -46,39 +49,59 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnot
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
+import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.DocSum;
 
 public class PubAnnotationProvider
     implements ExternalSearchProvider<PubAnnotationProviderTraits>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PubAnnotationProvider.class);
+    private static final String EXT_JSON = ".json";
 
-    public List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits,
-            String aQuery)
+    private final EntrezClient entrezClient;
+
+    public PubAnnotationProvider(EntrezClient aEntrezClient)
+    {
+        entrezClient = aEntrezClient;
+    }
+
+    List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits, String aQuery,
+            int aPage, int aPageSize)
     {
         Map<String, String> variables = new HashMap<>();
         variables.put("keywords", aQuery);
+        variables.put("page", Integer.toString(aPage));
+        variables.put("per", Integer.toString(aPageSize));
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<List<PubAnnotationDocumentHandle>> response = restTemplate.exchange(
-                aTraits.getUrl() + "/docs.json?keywords={keywords}", HttpMethod.GET, null,
-                new DocumentHandleList(), variables);
+        ResponseEntity<PubAnnotationDocumentHandle[]> response = restTemplate.exchange(
+                aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}", GET,
+                null, PubAnnotationDocumentHandle[].class, variables);
 
-        return response.getBody();
+        return asList(response.getBody());
     }
 
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aQuery)
     {
-        List<PubAnnotationDocumentHandle> response = query(aTraits, aQuery);
+        List<PubAnnotationDocumentHandle> response = query(aTraits, aQuery, 1, 100);
+
+        var documentSummaries = lookupDocumentSummaries(response);
 
         List<ExternalSearchResult> results = new ArrayList<>();
         for (PubAnnotationDocumentHandle handle : response) {
-            ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
-                    handle.getSourceDb(), handle.getSourceId() + ".json");
-            result.setOriginalSource(handle.getSourceDb());
-            result.setDocumentTitle(handle.getUrl());
-            result.setHighlights(handle.getHighlights().stream().map(ExternalSearchHighlight::new)
+            var summary = documentSummaries
+                    .get(Pair.of(handle.getSourceDb(), parseInt(handle.getSourceId())));
+            var result = new ExternalSearchResult(aDocumentRepository, handle.getSourceDb(),
+                    handle.getSourceId() + EXT_JSON);
+            result.setOriginalSource(summary != null ? summary.source() : handle.getSourceDb());
+            result.setDocumentTitle(
+                    summary != null ? summary.title() : handle.getSourceId() + EXT_JSON);
+            if (summary != null) {
+                result.setTimestamp(summary.date());
+            }
+            result.setHighlights(handle.getHighlights().stream() //
+                    .map(ExternalSearchHighlight::new) //
                     .collect(Collectors.toList()));
             results.add(result);
         }
@@ -86,6 +109,25 @@ public class PubAnnotationProvider
         return results;
     }
 
+    private Map<Pair<String, Integer>, DocSum> lookupDocumentSummaries(
+            List<PubAnnotationDocumentHandle> response)
+    {
+        Map<Pair<String, Integer>, DocSum> documentDetails = new HashMap<>();
+        var groupedByDb = response.stream()
+                .collect(groupingBy(PubAnnotationDocumentHandle::getSourceDb));
+        for (var group : groupedByDb.entrySet()) {
+            var db = group.getKey();
+            var ids = group.getValue().stream() //
+                    .map(PubAnnotationDocumentHandle::getSourceId) //
+                    .mapToInt(Integer::parseInt).toArray();
+            var summaries = entrezClient.esummary(db, ids).getDocSumaries();
+            documentDetails.putAll(summaries.stream()
+                    .collect(toMap(summary -> Pair.of(db, summary.getId()), identity())));
+        }
+        return documentDetails;
+    }
+
+    @Deprecated
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
@@ -124,19 +166,17 @@ public class PubAnnotationProvider
 
         RestTemplate restTemplate = new RestTemplate();
 
+        var url = aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}.json";
         try {
             // If the document has multiple sections, a list is returned...
-            ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(
-                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
-                    HttpMethod.GET, null, PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF,
-                    variables);
+            ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(url,
+                    GET, null, SPRING_LIST_TYPE_REF, variables);
 
             return response.getBody();
         }
         catch (RestClientException e) {
             // If the document has as single section, an object is returned...
-            PubAnnotationDocumentSection section = restTemplate.getForObject(
-                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
+            PubAnnotationDocumentSection section = restTemplate.getForObject(url,
                     PubAnnotationDocumentSection.class, variables);
 
             return asList(section);
@@ -149,11 +189,5 @@ public class PubAnnotationProvider
         throws IOException
     {
         return PubAnnotationSectionsFormatSupport.ID;
-    }
-
-    private static class DocumentHandleList
-        extends ParameterizedTypeReference<List<PubAnnotationDocumentHandle>>
-    {
-        // Just a type reference
     }
 }

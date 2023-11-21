@@ -21,6 +21,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,10 @@ public class LambdaForm<T>
         super(aId);
     }
 
-    public void onSubmit(AjaxFormCallback<T> aCallback)
+    public LambdaForm<T> onSubmit(AjaxFormCallback<T> aCallback)
     {
         submitAction = aCallback;
+        return this;
     }
 
     @Override
@@ -56,6 +58,10 @@ public class LambdaForm<T>
         try {
             submitAction.accept(RequestCycle.get().find(AjaxRequestTarget.class).orElse(null),
                     this);
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
         }
         catch (Exception e) {
             LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);

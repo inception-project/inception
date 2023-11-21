@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations
  *
  */
-public interface RecommendationTypeRenderer
+public interface RecommendationTypeRenderer<T extends TypeAdapter>
 {
     String COLOR = "#cccccc";
 
@@ -34,11 +34,10 @@ public interface RecommendationTypeRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the intermediate
      * rendering representation {@link VDocument}.
      *
-     * @param aCas
-     *            The CAS object containing annotations
      * @param aVdoc
-     *            A VDocument containing annotations for the given layer
+     *            a {@link VDocument} containing annotations for the given layer
+     * @param aRequest
+     *            a render request
      */
-    void render(CAS aCas, VDocument aVdoc, AnnotatorState aState, int aWindowBeginOffset,
-            int aWindowEndOffset);
+    void render(VDocument aVdoc, RenderRequest aRequest, Predictions aPredictions, T aAdapter);
 }

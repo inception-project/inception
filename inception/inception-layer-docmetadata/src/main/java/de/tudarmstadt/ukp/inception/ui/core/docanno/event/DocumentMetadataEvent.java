@@ -19,9 +19,10 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class DocumentMetadataEvent
     extends AnnotationEvent
@@ -44,6 +45,12 @@ public class DocumentMetadataEvent
     }
 
     @Override
+    public Range getAffectedRange()
+    {
+        return Range.UNDEFINED;
+    }
+
+    @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
@@ -53,7 +60,7 @@ public class DocumentMetadataEvent
             builder.append("docID=");
             builder.append(getDocument().getId());
             builder.append(", user=");
-            builder.append(getUser());
+            builder.append(getDocumentOwner());
         }
         builder.append("]");
         return builder.toString();

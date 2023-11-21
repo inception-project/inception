@@ -29,10 +29,36 @@ public interface ExternalSearchProvider<T extends Object>
             String aQuery)
         throws IOException;
 
-    String getDocumentText(DocumentRepository aRepository, T aTraits, String aSource,
+    /**
+     * @return the document in plain text as a string.
+     * @param aRepository
+     *            the repository from which to fetch the document
+     * @param aTraits
+     *            the repository traits
+     * @param aCollectionId
+     *            the ID of the collection containing the document
+     * @param aDocumentId
+     *            the document ID
+     * @throws IOException
+     *             if there was a problem obtaining the document
+     */
+    String getDocumentText(DocumentRepository aRepository, T aTraits, String aCollectionId,
             String aDocumentId)
         throws IOException;
 
+    /**
+     * @return the document in the format returned by {@link #getDocumentFormat} as a stream.
+     * @param aRepository
+     *            the repository from which to fetch the document
+     * @param aTraits
+     *            the repository traits
+     * @param aCollectionId
+     *            the ID of the collection containing the document
+     * @param aDocumentId
+     *            the document ID
+     * @throws IOException
+     *             if there was a problem obtaining the document
+     */
     InputStream getDocumentAsStream(DocumentRepository aRepository, T aTraits, String aCollectionId,
             String aDocumentId)
         throws IOException;
@@ -41,6 +67,7 @@ public interface ExternalSearchProvider<T extends Object>
             String aDocumentId)
         throws IOException;
 
+    @Deprecated
     ExternalSearchResult getDocumentResult(DocumentRepository aRepository, T aTraits,
             String aCollectionId, String aDocumentId)
         throws IOException;

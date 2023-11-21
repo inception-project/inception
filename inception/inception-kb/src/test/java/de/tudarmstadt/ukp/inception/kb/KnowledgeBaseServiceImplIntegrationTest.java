@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.WIKIDATA;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
@@ -63,8 +62,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -78,7 +77,11 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false)
+@DataJpaTest( //
+        showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" }, //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //
@@ -102,8 +105,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public static Collection<Object[]> data()
     {
-        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-                .collect(Collectors.toList());
+        return Arrays.stream(Reification.values()) //
+                .map(r -> new Object[] { r }) //
+                .collect(toList());
     }
 
     @BeforeAll
@@ -129,11 +133,6 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         testEntityManager.clear();
         sut.destroy();
-    }
-
-    public void thatApplicationContextStarts()
-    {
-
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -206,9 +205,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        Project project = createProject("Empty project");
+        Project proj = createProject("Empty project");
 
-        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
+        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(proj);
 
         assertThat(knowledgeBases).as("Check that no knowledge base is found").isEmpty();
     }
@@ -411,8 +410,16 @@ public class KnowledgeBaseServiceImplIntegrationTest
         String[] expectedProps = { kb.getSubclassIri(), kb.getLabelIri(), kb.getDescriptionIri(),
                 kb.getTypeIri() };
 
-        assertEquals(listProperties.size(), 5);
-        assertThat(listIdentifier).as("Check that base properties are created")
+        assertThat(listProperties) //
+                .extracting(KBProperty::getIdentifier) //
+                .containsExactly( //
+                        "http://www.w3.org/2000/01/rdf-schema#comment",
+                        "http://www.w3.org/2000/01/rdf-schema#label",
+                        "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+                        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+                        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        assertThat(listIdentifier) //
+                .as("Check that base properties are created") //
                 .contains(expectedProps);
     }
 
@@ -689,7 +696,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteConcept(kb, concept))
-                .as("Check that deleting non-existant concept does nothing")
+                .as("Check that deleting non-existent concept does nothing")
                 .doesNotThrowAnyException();
     }
 
@@ -1009,7 +1016,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteProperty(kb, property))
-                .as("Check that deleting non-existant property does nothing")
+                .as("Check that deleting non-existent property does nothing")
                 .doesNotThrowAnyException();
     }
 
@@ -1341,7 +1348,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         assertThatCode(() -> sut.deleteInstance(kb, instance))
-                .as("Check that deleting non-existant instance does nothing")
+                .as("Check that deleting non-existent instance does nothing")
                 .doesNotThrowAnyException();
     }
 
@@ -1595,8 +1602,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that all root concepts have been found")
-                .usingElementComparatorOnFields("identifier", "name").containsExactlyInAnyOrder(
+        assertThat(rootConcepts) //
+                .as("Check that all root concepts have been found")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name")
+                .containsExactlyInAnyOrder(
                         new KBHandle("http://purl.org/ontology/wo/Adaptation", "Adaptation"),
                         new KBHandle("http://purl.org/ontology/wo/AnimalIntelligence",
                                 "Animal Intelligence"),
@@ -1997,9 +2006,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
+    private KnowledgeBase buildKnowledgeBase(Project aProject, String aName,
+            Reification aReification)
     {
-        return testFixtures.buildKnowledgeBase(project, name, reification);
+        return testFixtures.buildKnowledgeBase(aProject, aName, aReification);
     }
 
     private KBConcept buildConcept()

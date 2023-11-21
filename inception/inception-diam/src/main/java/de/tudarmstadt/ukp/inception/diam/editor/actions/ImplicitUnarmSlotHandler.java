@@ -21,17 +21,16 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Any handlers with a later priority that this one should be called only after a potentially armed
  * slot has been cleared. The handler does the disarming in its {@link #accepts} method as a
  * side-effect.
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#implicitUnarmSlotHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#implicitUnarmSlotHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_UNARM_SLOT_HANDLER)
@@ -48,7 +47,6 @@ public class ImplicitUnarmSlotHandler
     @Override
     public boolean accepts(Request aRequest)
     {
-        System.out.println(getClass());
         AnnotatorState state = getAnnotatorState();
         if (state.isSlotArmed()) {
             state.clearArmedSlot();
