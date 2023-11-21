@@ -30,7 +30,6 @@ export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
   readonly root: Element
   private toCleanUp = new Set<Function>()
-  private observer: IntersectionObserver
   private resizer: ResizeManager
   private tracker: ViewportTracker
   private showInlineLabels = false
@@ -75,15 +74,17 @@ export class ApacheAnnotatorVisualizer {
     this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
+    let initialized = false
     showLabels.subscribe(enabled => {
       this.showInlineLabels = enabled
-      this.loadAnnotations()
+      if (initialized) this.loadAnnotations()
     })
 
     showEmptyHighlights.subscribe(enabled => {
       this.showEmptyHighlights = enabled
-      this.loadAnnotations()
+      if (initialized) this.loadAnnotations()
     })
+    initialized = true
   }
 
   private showResizer (event: Event): void {
@@ -332,8 +333,10 @@ export class ApacheAnnotatorVisualizer {
 
       const coreBegin = Math.max(begin, viewportBegin)
       const coreEnd = Math.min(end, viewportEnd)
-      this.renderHighlight(span, coreBegin, coreEnd, attributes)
-      fragmentCount++
+      if (coreBegin <= coreEnd) {
+        this.renderHighlight(span, coreBegin, coreEnd, attributes)
+        fragmentCount++
+      }
 
       attributes.class += ' iaa-zero-width' // Prevent prefix/suffix fragmens from being cleaned up
       if (!(viewportBegin <= begin && begin <= viewportEnd)) {
@@ -424,10 +427,6 @@ export class ApacheAnnotatorVisualizer {
   }
 
   destroy (): void {
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-
     this.clearHighlights()
   }
 }

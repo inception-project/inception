@@ -51,9 +51,9 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehav
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @ExtendWith(MockitoExtension.class)
 public class ChainAdapterTest

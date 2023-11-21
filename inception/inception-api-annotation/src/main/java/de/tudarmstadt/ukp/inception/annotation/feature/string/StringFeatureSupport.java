@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 
 /**
  * <p>
@@ -236,7 +236,7 @@ public class StringFeatureSupport
         if (aValue instanceof String) {
             var value = (String) aValue;
             var tag = schemaService.getTag(value, aFeature.getTagset());
-            if (tag.isEmpty()) {
+            if (aFeature.getTagset() != null && tag.isEmpty()) {
                 return asList(new VLazyDetailGroup(new VLazyDetail(value, "Tag not in tagset")));
             }
 

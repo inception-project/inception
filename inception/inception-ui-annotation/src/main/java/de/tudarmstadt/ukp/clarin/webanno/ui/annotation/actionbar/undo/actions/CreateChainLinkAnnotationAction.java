@@ -28,8 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public class CreateChainLinkAnnotationAction
     extends AnnotationAction_ImplBase

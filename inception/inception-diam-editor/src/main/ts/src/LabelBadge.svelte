@@ -55,7 +55,7 @@
             type="button"
             class="btn-accept btn btn-outline-success btn-sm py-0 px-1"
             on:click={handleAccept}
-            title="Accept ({annotation.vid})"
+            title="Accept"
         >
             <i class="far fa-check-circle" />
             {#if showText}
@@ -71,7 +71,7 @@
             type="button"
             class="btn-reject btn btn-outline-danger btn-sm py-0 px-1"
             on:click={handleReject}
-            title="Reject ({annotation.vid})"
+            title="Reject"
         >
             <i class="far fa-times-circle" />
         </button>
@@ -82,7 +82,7 @@
         class="btn-merge btn btn-colored btn-sm py-0 px-1 border-dark"
         style="color: {textColor}; background-color: {backgroundColor}"
         on:click={handleMerge}
-        title="Merge ({annotation.vid})"
+        title="Merge"
     >
         <i class="fas fa-clipboard-check" />
         {#if showText}
@@ -101,7 +101,7 @@
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleSelect}
-            title="Select ({annotation.vid})"
+            title="Select"
         >
             {#if showText}
                 {renderLabel(annotation)}
@@ -114,7 +114,7 @@
             class="btn-delete btn btn-colored btn-sm py-0 px-1 border-dark"
             style="color: {textColor}; background-color: {backgroundColor}"
             on:click={handleDelete}
-            title="Delete ({annotation.vid})"
+            title="Delete"
         >
             <i class="far fa-times-circle" />
         </button>

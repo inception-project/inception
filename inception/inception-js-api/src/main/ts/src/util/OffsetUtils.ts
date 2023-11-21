@@ -19,10 +19,10 @@
 export function caretRangeFromPoint (clientX: number, clientY: number) : Range | null {
   const range = document.createRange()
 
-  // @ts-expect-error
+  // @ts-ignore
   if (document.caretPositionFromPoint) {
     // Use CSSOM-proprietary caretPositionFromPoint method
-    // @ts-expect-error
+    // @ts-ignore
     const caretPosition = document.caretPositionFromPoint(clientX, clientY)
     if (!caretPosition) {
       console.error(`Unable to determine caret position from point: ${clientX},${clientY}`)

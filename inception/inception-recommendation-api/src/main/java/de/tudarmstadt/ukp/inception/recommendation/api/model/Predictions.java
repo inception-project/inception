@@ -68,6 +68,8 @@ public class Predictions
     // session, the pool of IDs of positive integer values is never exhausted.
     private int nextId;
 
+    private int newSuggestionCount = 0;
+
     public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -227,6 +229,10 @@ public class Predictions
                 var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, prediction);
+
+                if (prediction.getAge() == 0) {
+                    newSuggestionCount++;
+                }
             }
         }
     }
@@ -241,6 +247,16 @@ public class Predictions
         synchronized (predictionsLock) {
             return idxDocuments.values().stream().allMatch(Map::isEmpty);
         }
+    }
+
+    public boolean hasNewSuggestions()
+    {
+        return newSuggestionCount > 0;
+    }
+
+    public int getNewSuggestionCount()
+    {
+        return newSuggestionCount;
     }
 
     public int size()

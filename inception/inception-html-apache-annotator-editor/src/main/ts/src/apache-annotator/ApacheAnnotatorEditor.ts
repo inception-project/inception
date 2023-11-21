@@ -21,6 +21,7 @@ import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import { Writable } from 'svelte/store'
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
   private ajax: DiamAjax
@@ -43,51 +44,54 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     ajax.loadPreferences(userPreferencesKey).then((p) => {
       preferences = Object.assign(preferences, defaultPreferences, p)
       console.log('Loaded preferences', preferences)
-      showLabels.set(
-        preferences.showLabels !== undefined
-          ? preferences.showLabels
-          : defaultPreferences.showLabels
-      )
+      let preferencesDebounceTimeout: number | undefined = undefined
 
-      showEmptyHighlights.set(
-        preferences.showEmptyHighlights !== undefined
-          ? preferences.showEmptyHighlights
-          : defaultPreferences.showEmptyHighlights
-      )
+      function bindPreference(writable: Writable<any>, propertyName: string) {
+        writable.set(
+          preferences[propertyName] !== undefined
+            ? preferences[propertyName]
+            : defaultPreferences[propertyName]
+        )
 
-      showLabels.subscribe((mode) => {
-        preferences.showLabels = mode
-        ajax.savePreferences(userPreferencesKey, preferences)
-      })
-
-      showEmptyHighlights.subscribe((mode) => {
-        preferences.showEmptyHighlights = mode
-        ajax.savePreferences(userPreferencesKey, preferences)
-      })
-    })
-
-    this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
-    this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
-    this.toolbar = this.createToolbar()
-
-    this.popover = new AnnotationDetailPopOver({
-      target: this.root.ownerDocument.body,
-      props: {
-        root: this.root,
-        ajax: this.ajax
+        writable.subscribe((value) => {
+          preferences[propertyName] = value
+          if (preferencesDebounceTimeout) {
+            window.clearTimeout(preferencesDebounceTimeout)
+            preferencesDebounceTimeout = undefined
+          }
+          preferencesDebounceTimeout = window.setTimeout(() => { 
+            console.log("Saved preferences")
+            ajax.savePreferences(userPreferencesKey, preferences)
+          }, 250)
+        })
       }
+
+      bindPreference(showLabels, "showLabels")
+      bindPreference(showEmptyHighlights, "showEmptyHighlights")
+    }).then(() => {
+      this.vis = new ApacheAnnotatorVisualizer(this.root, this.ajax)
+      this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
+      this.toolbar = this.createToolbar()
+
+      this.popover = new AnnotationDetailPopOver({
+        target: this.root.ownerDocument.body,
+        props: {
+          root: this.root,
+          ajax: this.ajax
+        }
+      })
+
+      // Event handler for creating an annotion or selecting an annotation
+      this.root.addEventListener('mouseup', e => this.onMouseUp(e))
+
+      // Event handler for opening the context menu
+      this.root.addEventListener('contextmenu', e => this.onRightClick(e))
+
+      // Prevent right-click from triggering a selection event
+      this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
+      this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
+      this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
     })
-
-    // Event handler for creating an annotion or selecting an annotation
-    this.root.addEventListener('mouseup', e => this.onMouseUp(e))
-
-    // Event handler for opening the context menu
-    this.root.addEventListener('contextmenu', e => this.onRightClick(e))
-
-    // Prevent right-click from triggering a selection event
-    this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
-    this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
-    this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
   }
 
   private createToolbar () {
@@ -151,15 +155,15 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   loadAnnotations (): void {
-    this.vis.loadAnnotations()
+    this.vis?.loadAnnotations()
   }
 
   scrollTo (args: { offset: number; position: string; }): void {
-    this.vis.scrollTo(args)
+    this.vis?.scrollTo(args)
   }
 
   destroy (): void {
-    this.vis.destroy()
-    this.selector.destroy()
+    this.vis?.destroy()
+    this.selector?.destroy()
   }
 }

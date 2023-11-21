@@ -22,8 +22,6 @@ import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.io.FilenameUtils.normalize;
-import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
@@ -32,13 +30,14 @@ import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +51,7 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.util.LifeCycleUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
@@ -126,14 +125,41 @@ public interface FormatSupport
             throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
         }
 
-        var path = prependIfMissing(normalize(aResourcePath, true), "/");
-        return new URL("jar:" + aDocFile.toURI().toURL() + "!" + path).openStream();
+        // var path = prependIfMissing(normalize(aResourcePath, true), "/");
+
+        ZipFile zipFile = null;
+        var success = false;
+        try {
+            zipFile = new ZipFile(aDocFile);
+            var entry = zipFile.getEntry(aResourcePath);
+            if (entry == null) {
+                throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
+            }
+
+            var finalZipFile = zipFile;
+            var is = new FilterInputStream(zipFile.getInputStream(entry))
+            {
+                @Override
+                public void close() throws IOException
+                {
+                    super.close();
+                    finalZipFile.close();
+                }
+            };
+            success = true;
+            return is;
+        }
+        finally {
+            if (!success && zipFile != null) {
+                zipFile.close();
+            }
+        }
     }
 
     /**
      * @return format-specific CSS style-sheets that styleable editors should load.
      */
-    default List<CssResourceReference> getCssStylesheets()
+    default List<ResourceReference> getCssStylesheets()
     {
         return Collections.emptyList();
     }

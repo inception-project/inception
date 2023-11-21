@@ -81,7 +81,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
@@ -107,11 +106,12 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -1057,7 +1057,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                state.refreshSelectableLayers(annotationEditorProperties);
+                state.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1234,24 +1234,17 @@ public abstract class AnnotationDetailEditorPanel
         try {
             var selection = getModelObject().getSelection();
             int id = selection.getAnnotation().getId();
-            // https://github.com/apache/uima-uimaj/issues/345
-            // boolean annotationStillExists = getEditorCas().select(Annotation.class) //
-            // .at(selection.getBegin(), selection.getEnd()) //
-            // .anyMatch(ann -> ann._id() == id);
-            var cas = getEditorCas();
-            boolean annotationStillExists = CasUtil
-                    .selectAt(cas, CasUtil.getType(cas, Annotation.class), selection.getBegin(),
-                            selection.getEnd())
-                    .stream() //
+            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+                    .at(selection.getBegin(), selection.getEnd()) //
                     .anyMatch(ann -> ann._id() == id);
 
             if (!annotationStillExists) {
                 selection.clear();
-                refresh(aEvent.getRequestTarget());
+                aEvent.getRequestTarget().ifPresent(this::refresh);
             }
         }
         catch (Exception e) {
-            handleException(this, aEvent.getRequestTarget(), e);
+            handleException(this, aEvent.getRequestTarget().orElse(null), e);
         }
     }
 
@@ -1390,7 +1383,7 @@ public abstract class AnnotationDetailEditorPanel
         state.getSelection().clear();
 
         // Refresh the selectable layers dropdown
-        state.refreshSelectableLayers(annotationEditorProperties);
+        state.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }

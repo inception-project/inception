@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonStream;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static java.nio.file.Files.isDirectory;
 
 import java.io.File;
@@ -91,7 +92,7 @@ public class ExternalEditorLoader
     private void registerEditorPlugin(BeanDefinitionRegistry aRegistry,
             ExternalEditorPluginDescripion aDesc)
     {
-        log.info("Loading editor plugin: {}", aDesc.getName());
+        BOOT_LOG.info("Loading editor plugin: {}", aDesc.getName());
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
                 ExternalAnnotationEditorFactory.class,
                 () -> new ExternalAnnotationEditorFactory(aDesc));

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -39,7 +40,6 @@ import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -237,6 +237,13 @@ public class AnnotatorStateImpl
     }
 
     @Override
+    public void clearProject()
+    {
+        project = null;
+        clearDocument();
+    }
+
+    @Override
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
@@ -275,6 +282,12 @@ public class AnnotatorStateImpl
     public int getNumberOfDocuments()
     {
         return numberOfDocuments;
+    }
+
+    @Override
+    public void clearDocument()
+    {
+        setDocument(null, null);
     }
 
     @Override
@@ -403,12 +416,12 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void refreshSelectableLayers(AnnotationSchemaProperties aProperties)
+    public void refreshSelectableLayers(Predicate<AnnotationLayer> isLayerBlocked)
     {
         selectableLayers.clear();
 
         for (AnnotationLayer layer : getAnnotationLayers()) {
-            if (!layer.isEnabled() || layer.isReadonly() || aProperties.isLayerBlocked(layer)) {
+            if (!layer.isEnabled() || layer.isReadonly() || isLayerBlocked.test(layer)) {
                 continue;
             }
 

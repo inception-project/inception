@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public class PdfDocumentIFrameView
     extends WebMarkupContainer

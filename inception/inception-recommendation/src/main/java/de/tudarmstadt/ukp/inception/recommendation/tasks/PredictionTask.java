@@ -104,10 +104,20 @@ public class PredictionTask
 
             recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
-            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                    .builder(this, project, sessionOwner.getUsername()) //
-                    .withMessage(LogMessage.info(this, "New predictions available")) //
-                    .build());
+            if (predictions.hasNewSuggestions()) {
+                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                        .builder(this, project, sessionOwner.getUsername()) //
+                        .withMessage(LogMessage.info(this,
+                                predictions.getNewSuggestionCount() + " new predictions available")) //
+                        .build());
+            }
+            else {
+                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                        .builder(this, project, sessionOwner.getUsername()) //
+                        .withMessage(
+                                LogMessage.info(this, "Prediction run produced no new suggestions")) //
+                        .build());
+            }
 
             // We reset this in case the state was not properly cleared, e.g. the AL session
             // was started but then the browser closed. Places where it is set include

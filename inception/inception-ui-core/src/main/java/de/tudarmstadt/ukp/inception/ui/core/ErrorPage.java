@@ -51,7 +51,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import com.giffing.wicket.spring.boot.context.scan.WicketAccessDeniedPage;
 import com.giffing.wicket.spring.boot.context.scan.WicketExpiredPage;
 import com.giffing.wicket.spring.boot.context.scan.WicketInternalErrorPage;
 
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.inception.ui.core.config.ErrorPageProperties;
 
 @WicketInternalErrorPage
 @WicketExpiredPage
-@WicketAccessDeniedPage
 @MountPath("/whoops")
 public class ErrorPage
     extends ApplicationPageBase

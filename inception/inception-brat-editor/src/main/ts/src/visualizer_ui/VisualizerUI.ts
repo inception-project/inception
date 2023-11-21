@@ -72,7 +72,7 @@ export class VisualizerUI {
       .on('dataReady', this, this.rememberData)
 //      .on('displaySpanComment', this, this.displaySpanComment)
 //      .on('displayArcComment', this, this.displayArcComment)
-      .on('displaySentComment', this, this.displaySentComment)
+//      .on('displaySentComment', this, this.displaySentComment)
       .on('hideComment', this, this.hideComment)
       .on('resize', this, this.onResize)
       .on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded)
