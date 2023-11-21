@@ -107,13 +107,18 @@ public class ExternalRecommenderSslTest
         sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
-                .withMessageContaining("match any of the subject alternative names");
+                .withMessageContaining("No subject alternative DNS name matching");
 
-        traits.setVerifyCertificates(false);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
-        assertThatExceptionOfType(RecommendationException.class) //
-                .isThrownBy(() -> sut.train(context, data)) //
-                .withMessageContaining("404 Not Found");
+        // Disabling certificate validation does not disable host checking for recommenders.
+        // Instead the VM would need to be started with {@code
+        // -Djdk.internal.httpclient.disableHostnameVerification}
+        // System.setProperty("", "true");
+        // // traits.setVerifyCertificates(false);
+        // sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender,
+        // traits);
+        // assertThatExceptionOfType(RecommendationException.class) //
+        // .isThrownBy(() -> sut.train(context, data)) //
+        // .withMessageContaining("404 Not Found");
     }
 
     @Test
