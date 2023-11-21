@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerIn
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.empty.EmptyProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 public class ProjectInitializersAutoConfiguration

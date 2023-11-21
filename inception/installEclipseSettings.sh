@@ -15,7 +15,6 @@ function installPrefs {
 installPrefs inception-active-learning
 installPrefs inception-agreement
 installPrefs inception-annotation-storage
-installPrefs inception-api
 installPrefs inception-api-annotation
 installPrefs inception-api-dao
 installPrefs inception-api-editor
@@ -39,6 +38,7 @@ installPrefs inception-diam-word-alignment-editor
 installPrefs inception-doc
 installPrefs inception-docker
 installPrefs inception-documents
+installPrefs inception-documents-api
 installPrefs inception-editor-api
 installPrefs inception-example-imls-data-majority
 installPrefs inception-experimental-editor

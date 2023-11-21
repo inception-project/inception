@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.util.List;
+import java.util.function.Predicate;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface LayerSelectionState
@@ -75,7 +75,7 @@ public interface LayerSelectionState
      */
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 
-    void refreshSelectableLayers(AnnotationSchemaProperties aProperties);
+    void refreshSelectableLayers(Predicate<AnnotationLayer> isLayerBlocked);
 
     List<AnnotationLayer> getSelectableLayers();
 }

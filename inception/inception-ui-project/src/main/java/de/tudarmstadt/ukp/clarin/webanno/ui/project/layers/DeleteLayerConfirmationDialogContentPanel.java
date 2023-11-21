@@ -33,7 +33,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialogContentPanel_ImplBase;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class DeleteLayerConfirmationDialogContentPanel
     extends ChallengeResponseDialogContentPanel_ImplBase

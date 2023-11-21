@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUni
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport

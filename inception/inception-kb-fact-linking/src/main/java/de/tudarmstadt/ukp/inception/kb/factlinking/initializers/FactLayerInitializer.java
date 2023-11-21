@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfigu
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
