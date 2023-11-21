@@ -19,18 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.PROP_VERSION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getVersionProperties;
-import static java.lang.String.format;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -104,7 +98,6 @@ public class MatomoTelemetrySupportImpl
     private ScheduledExecutorService scheduler;
     private boolean trackerInitialized = false;
     private MatomoTracker tracker;
-    // private PiwikConfig config;
 
     @Autowired
     public MatomoTelemetrySupportImpl(TelemetryService aTelemetryService,
@@ -133,7 +126,14 @@ public class MatomoTelemetrySupportImpl
         try {
             String url = properties.getServerScheme() + "://" + properties.getServerHost()
                     + prependIfMissing(properties.getServerPath(), "/");
-            tracker = new SslIgnoringMatomoTracker(url, Duration.of(30, SECONDS));
+            Duration timeout = Duration.ofSeconds(30L);
+            tracker = new MatomoTracker(
+                TrackerConfiguration.builder()
+                    .apiEndpoint(URI.create(url))
+                    .connectTimeout(timeout)
+                    .socketTimeout(timeout)
+                    .disableSslCertValidation(true)
+                    .build());
         }
         catch (Exception e) {
             log.info("Unable to set up telemetry client: {}", e.getMessage());
@@ -333,7 +333,7 @@ public class MatomoTelemetrySupportImpl
             MatomoRequest request = MatomoRequest.request().siteId(properties.getSiteId()).actionUrl(properties.getContext()).build();
             request.setHeaderUserAgent(System.getProperty("os.name"));
             request.setActionName(aAction);
-            request.setVisitorId(VisitorId.fromHash(uuid.getMostSignificantBits()));
+            request.setVisitorId(VisitorId.fromUUID(uuid));
             request.setUserId(id.getId());
             request.setVisitCustomVariables(new CustomVariables()
                 .add(new CustomVariable("app", applicationName), 1)
@@ -443,14 +443,4 @@ public class MatomoTelemetrySupportImpl
         aTraits.setEnabled(false);
     }
 
-    private class SslIgnoringMatomoTracker
-        extends MatomoTracker
-    {
-
-        public SslIgnoringMatomoTracker(String aHostUrl, Duration aTimeout)
-        {
-            super(TrackerConfiguration.builder().apiEndpoint(URI.create(aHostUrl)).connectTimeout(aTimeout).socketTimeout(aTimeout).disableSslCertValidation(true).build());
-        }
-
-    }
 }
