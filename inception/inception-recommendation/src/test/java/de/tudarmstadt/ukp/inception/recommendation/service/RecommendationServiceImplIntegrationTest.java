@@ -83,7 +83,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 

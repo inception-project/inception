@@ -171,7 +171,6 @@
     <module>inception-ui-core</module>
     <module>inception-log</module>
     <module>inception-scheduling</module>
-    <module>inception-api</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
     <module>inception-annotation-storage-api</module>
@@ -181,7 +180,7 @@
     <module>inception-documents</module>
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
-    <module>inception-api-schema</module>
+    <module>inception-schema-api</module>
     <module>inception-export</module>
     <module>inception-export-api</module>
     <module>inception-diag</module>

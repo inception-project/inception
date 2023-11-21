@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.chain;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.inception.schema.feature.TypeUtil.getUiLabelText;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil.getUiLabelText;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -49,8 +49,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 public class ChainRenderer
     extends Renderer_ImplBase<ChainAdapter>

@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfAnnotationEditorJava
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class PdfAnnotationEditor
     extends ExternalAnnotationEditorBase

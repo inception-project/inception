@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter(name = {

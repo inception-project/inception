@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class NamedEntityLinker
     extends RecommendationEngine

@@ -52,9 +52,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * <p>

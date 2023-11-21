@@ -59,8 +59,8 @@ import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationService
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
  * Provides all back-end Spring beans for the recommendation functionality.

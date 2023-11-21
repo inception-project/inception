@@ -57,7 +57,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -117,7 +116,6 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 @Transactional(propagation = Propagation.NEVER)
 @Import({ //
         AnnotationSchemaServiceAutoConfiguration.class, //
-        AnnotationSchemaAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         ConllFormatsAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //

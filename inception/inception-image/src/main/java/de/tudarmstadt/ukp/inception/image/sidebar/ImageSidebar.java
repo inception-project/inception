@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class ImageSidebar
     extends AnnotationSidebar_ImplBase

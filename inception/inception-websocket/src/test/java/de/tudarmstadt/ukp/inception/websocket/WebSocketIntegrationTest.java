@@ -71,7 +71,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -87,6 +86,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;

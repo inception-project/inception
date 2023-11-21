@@ -118,10 +118,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -147,6 +143,10 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
@@ -191,10 +191,10 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * The implementation of the RecommendationService.

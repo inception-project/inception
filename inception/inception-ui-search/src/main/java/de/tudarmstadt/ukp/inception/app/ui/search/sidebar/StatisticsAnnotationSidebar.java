@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOpti
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;

@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class PredictionsSwitchedEvent

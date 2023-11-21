@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingServiceImp
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.SubjectObjectFeatureSupport;
 import de.tudarmstadt.ukp.inception.kb.factlinking.initializers.FactLayerInitializer;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Deprecated
 @Configuration

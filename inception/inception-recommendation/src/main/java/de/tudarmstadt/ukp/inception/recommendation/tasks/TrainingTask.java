@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TrainingTask
     extends RecommendationTask_ImplBase

@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -84,7 +83,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 
 /**
  * <p>

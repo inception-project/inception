@@ -84,7 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class PairwiseCodingAgreementTable
     extends Panel

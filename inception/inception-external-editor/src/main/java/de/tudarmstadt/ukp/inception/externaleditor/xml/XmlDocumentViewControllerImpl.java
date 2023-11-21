@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;

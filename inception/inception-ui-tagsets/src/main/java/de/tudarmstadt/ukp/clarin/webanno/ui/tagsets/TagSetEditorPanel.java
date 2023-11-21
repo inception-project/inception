@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TagSetEditorPanel
     extends LambdaPanel

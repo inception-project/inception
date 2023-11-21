@@ -54,11 +54,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.util.CachingReuseStrategy
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class FeatureEditorListPanel
     extends Panel

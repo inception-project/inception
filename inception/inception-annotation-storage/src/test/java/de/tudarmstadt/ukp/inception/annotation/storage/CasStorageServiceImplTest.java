@@ -62,7 +62,6 @@ import org.slf4j.MDC;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 
 public class CasStorageServiceImplTest
 {

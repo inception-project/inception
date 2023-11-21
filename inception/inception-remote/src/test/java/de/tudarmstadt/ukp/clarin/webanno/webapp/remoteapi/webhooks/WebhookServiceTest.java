@@ -56,8 +56,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -71,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookServic
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
+import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 
 @SpringBootTest( //

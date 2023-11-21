@@ -63,7 +63,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>

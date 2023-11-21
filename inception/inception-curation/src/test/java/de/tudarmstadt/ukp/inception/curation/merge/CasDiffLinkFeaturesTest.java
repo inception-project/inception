@@ -23,7 +23,7 @@ import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil.setLinkFeatureValue;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setLinkFeatureValue;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.assertj.core.api.Assertions.assertThat;

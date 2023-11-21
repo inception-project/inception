@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
 import de.tudarmstadt.ukp.inception.image.sidebar.ImageSidebarFactory;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 public class ImageSupportAutoConfiguration

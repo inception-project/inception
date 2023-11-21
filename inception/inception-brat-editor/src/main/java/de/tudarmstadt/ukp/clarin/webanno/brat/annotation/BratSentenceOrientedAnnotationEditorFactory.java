@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>

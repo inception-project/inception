@@ -32,8 +32,8 @@ import org.apache.uima.fit.util.FSUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**

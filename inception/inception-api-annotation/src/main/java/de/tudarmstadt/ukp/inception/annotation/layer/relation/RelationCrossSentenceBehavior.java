@@ -47,8 +47,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * <p>

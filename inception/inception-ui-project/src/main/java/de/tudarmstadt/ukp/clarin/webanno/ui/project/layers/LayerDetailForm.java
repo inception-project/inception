@@ -56,7 +56,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
@@ -72,11 +71,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerType;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class LayerDetailForm

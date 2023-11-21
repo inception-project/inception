@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 /**
  * @deprecated Superseded by the new PDF editor
