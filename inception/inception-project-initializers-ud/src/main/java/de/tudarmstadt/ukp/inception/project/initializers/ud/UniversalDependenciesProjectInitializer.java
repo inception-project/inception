@@ -20,8 +20,13 @@ package de.tudarmstadt.ukp.inception.project.initializers.ud;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.DependencyLayerInitializer;
@@ -40,13 +45,23 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
  * {@link ProjectInitializersAutoConfiguration#standardProjectInitializer}.
  * </p>
  */
+@Order(6000)
 public class UniversalDependenciesProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+
     @Override
     public String getName()
     {
         return "Universal Dependencies";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

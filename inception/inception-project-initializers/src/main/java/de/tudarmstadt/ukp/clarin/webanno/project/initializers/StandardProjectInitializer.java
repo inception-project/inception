@@ -18,12 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
@@ -36,9 +40,13 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
  * {@link ProjectInitializersAutoConfiguration#standardProjectInitializer}.
  * </p>
  */
+@Order(100000)
 public class StandardProjectInitializer
     implements QuickProjectInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "webanno.png");
+
     private final ProjectService projectService;
 
     @Autowired
@@ -51,6 +59,12 @@ public class StandardProjectInitializer
     public String getName()
     {
         return "Classic linguistic project";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
