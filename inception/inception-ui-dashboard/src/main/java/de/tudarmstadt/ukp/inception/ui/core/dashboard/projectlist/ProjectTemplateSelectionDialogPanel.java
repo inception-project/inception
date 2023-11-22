@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
-import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -108,8 +107,7 @@ public class ProjectTemplateSelectionDialogPanel
     {
         return projectService.listProjectInitializers().stream()
                 .filter(initializer -> initializer instanceof QuickProjectInitializer)
-                .map(initializer -> (QuickProjectInitializer) initializer)
-                .sorted(comparing(QuickProjectInitializer::getName)) //
+                .map(initializer -> (QuickProjectInitializer) initializer) //
                 .collect(toList());
     }
 
