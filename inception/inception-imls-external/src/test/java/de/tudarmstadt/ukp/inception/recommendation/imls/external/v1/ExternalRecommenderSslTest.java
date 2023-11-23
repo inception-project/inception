@@ -70,6 +70,7 @@ public class ExternalRecommenderSslTest
 
         JCas jcas = JCasFactory.createJCas(
                 mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem())));
+        jcas.setDocumentText("No text");
         addCasMetadata(jcas, 1l);
         data = Arrays.asList(jcas.getCas());
     }
