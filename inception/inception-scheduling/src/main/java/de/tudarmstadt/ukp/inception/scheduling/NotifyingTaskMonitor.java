@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerContro
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NotifyingTaskMonitor
     extends TaskMonitor

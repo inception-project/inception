@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.STATE;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -45,11 +45,11 @@ import org.apache.wicket.model.ResourceModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentStateFilterPanel;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class AnnotationDocumentTable
     extends Panel

@@ -23,8 +23,8 @@ import org.slf4j.MDC;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 /**
  * <p>

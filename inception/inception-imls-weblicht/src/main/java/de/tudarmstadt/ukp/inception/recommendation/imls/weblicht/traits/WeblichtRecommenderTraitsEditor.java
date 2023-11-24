@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommenderFactoryImpl.DEFAULT_WEBLICHT_URL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.PLAIN_TEXT;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.TCF;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -51,8 +51,6 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.DateTextField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInput;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
@@ -60,6 +58,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecomme
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class WeblichtRecommenderTraitsEditor
     extends AbstractTraitsEditor

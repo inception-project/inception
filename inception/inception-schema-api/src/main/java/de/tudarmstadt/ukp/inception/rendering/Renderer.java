@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.schema.api.validation.ValidationUtils.isRequiredFeatureMissing;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.ArrayList;

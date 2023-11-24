@@ -22,8 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface EditorAjaxRequestHandler
     extends Extension<Request>

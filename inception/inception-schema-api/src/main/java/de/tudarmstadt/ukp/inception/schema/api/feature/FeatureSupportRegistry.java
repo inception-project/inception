@@ -24,7 +24,7 @@ import org.danekja.java.util.function.serializable.SerializableSupplier;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ContextLookupExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ContextLookupExtensionPoint;
 
 public interface FeatureSupportRegistry
     extends ContextLookupExtensionPoint<AnnotationFeature, FeatureSupport<?>>

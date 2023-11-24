@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil.handleException;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;

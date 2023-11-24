@@ -28,9 +28,9 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.db.LiquibaseLockManager;
-import de.tudarmstadt.ukp.clarin.webanno.support.db.LockRemovedException;
-import de.tudarmstadt.ukp.clarin.webanno.support.db.NotLockedException;
+import de.tudarmstadt.ukp.inception.support.db.LiquibaseLockManager;
+import de.tudarmstadt.ukp.inception.support.db.LockRemovedException;
+import de.tudarmstadt.ukp.inception.support.db.NotLockedException;
 import liquibase.exception.LockException;
 import liquibase.integration.spring.SpringLiquibase;
 

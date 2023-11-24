@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.CUSTOMSCHEMA;
 import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.WIKIDATASCHEMA;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators.IRI_VALIDATOR;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -41,11 +41,11 @@ import org.eclipse.rdf4j.model.IRI;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class KnowledgeBaseIriPanel
     extends Panel

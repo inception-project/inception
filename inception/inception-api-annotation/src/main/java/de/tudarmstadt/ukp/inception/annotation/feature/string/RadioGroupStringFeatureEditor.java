@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -44,12 +44,12 @@ import com.googlecode.wicket.kendo.ui.form.Radio;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DescriptionTooltipBehavior.Mode;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior.Mode;
 
 public class RadioGroupStringFeatureEditor
     extends TextFeatureEditorBase

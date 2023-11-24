@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.PROP_VERSION;
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getVersionProperties;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.PROP_VERSION;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getVersionProperties;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.curation.merge;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface MergeStrategyFactoryExtensionPoint
     extends ExtensionPoint<Project, MergeStrategyFactory<?>>

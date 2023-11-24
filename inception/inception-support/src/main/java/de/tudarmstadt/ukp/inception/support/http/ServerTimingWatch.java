@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.http;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class ServerTimingWatch
     implements AutoCloseable

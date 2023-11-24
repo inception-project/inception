@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionLocateSettingsProperties;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowAbout;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowLog;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.bringToFront;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getSettingsFileLocation;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.awt.BorderLayout.CENTER;
 import static java.awt.Component.CENTER_ALIGNMENT;
 import static java.awt.Desktop.getDesktop;
@@ -69,7 +69,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @ConditionalOnWebApplication
 @Component("standaloneShutdownDialogManager")

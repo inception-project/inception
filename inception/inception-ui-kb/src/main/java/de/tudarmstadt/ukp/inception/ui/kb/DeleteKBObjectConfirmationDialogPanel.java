@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 
 import java.util.Collection;
 

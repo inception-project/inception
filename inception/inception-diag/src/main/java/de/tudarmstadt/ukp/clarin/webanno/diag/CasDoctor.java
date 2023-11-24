@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -38,8 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class CasDoctor
 {

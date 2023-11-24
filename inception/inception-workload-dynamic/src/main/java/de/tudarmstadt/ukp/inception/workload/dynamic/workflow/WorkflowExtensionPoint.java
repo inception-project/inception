@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 

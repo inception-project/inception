@@ -25,10 +25,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.interceptors.GlobalInterceptor;
 
 /**
  * Make sure that administrator users are force to provide valid choices for telemetry collection

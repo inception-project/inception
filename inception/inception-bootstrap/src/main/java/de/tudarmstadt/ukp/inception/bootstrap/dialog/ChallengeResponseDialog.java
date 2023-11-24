@@ -22,8 +22,8 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.support.lambda.AjaxCallback;
 
 /**
  * @deprecated Use {@link BootstrapModalDialog#open(org.apache.wicket.Component, AjaxRequestTarget)}
