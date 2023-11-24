@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.config;
+package de.tudarmstadt.ukp.inception.support.jquery;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.PriorityHeaderItem;
+import org.apache.wicket.settings.JavaScriptLibrarySettings;
 
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
-
-public class JQueryUIResourceBehavior
+public class JQueryJavascriptBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -41338584738835064L;
 
-    private static final JQueryUIResourceBehavior INSTANCE = new JQueryUIResourceBehavior();
+    private static final JQueryJavascriptBehavior INSTANCE = new JQueryJavascriptBehavior();
 
-    public static JQueryUIResourceBehavior get()
+    public static JQueryJavascriptBehavior get()
     {
         return INSTANCE;
     }
@@ -41,10 +41,11 @@ public class JQueryUIResourceBehavior
     {
         // We also load the JQuery CSS always just to get a consistent look across
         // the app
-        JQueryUILibrarySettings jqueryCfg = JQueryUILibrarySettings.get();
+        JavaScriptLibrarySettings cfg = aComponent.getApplication().getJavaScriptLibrarySettings();
 
-        if (jqueryCfg.getStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
+        if (cfg.getJQueryReference() != null) {
+            aResponse.render(new PriorityHeaderItem(
+                    JavaScriptHeaderItem.forReference(cfg.getJQueryReference())));
         }
     }
 }

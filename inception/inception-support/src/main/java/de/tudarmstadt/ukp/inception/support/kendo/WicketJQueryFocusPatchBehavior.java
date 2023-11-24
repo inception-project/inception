@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo;
+package de.tudarmstadt.ukp.inception.support.kendo;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;

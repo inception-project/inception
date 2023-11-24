@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo;
+package de.tudarmstadt.ukp.inception.support.kendo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-import de.agilecoders.wicket.core.util.Dependencies;
 
 public class WicketJQueryFocusPatch
     extends JavaScriptResourceReference
@@ -54,7 +53,10 @@ public class WicketJQueryFocusPatch
     @Override
     public List<HeaderItem> getDependencies()
     {
-        return Dependencies.combine(super.getDependencies(),
-                JavaScriptHeaderItem.forReference(WicketAjaxJQueryResourceReference.get()));
+        var dependencies = new ArrayList<HeaderItem>();
+        dependencies.addAll(super.getDependencies());
+        dependencies
+                .add(JavaScriptHeaderItem.forReference(WicketAjaxJQueryResourceReference.get()));
+        return dependencies;
     }
 }
