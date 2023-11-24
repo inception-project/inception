@@ -210,7 +210,7 @@
               <configuration>
                 <excludes combine.children="append">
                   <!-- Trivial template file which a license header would bloat too much-->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicket/input/remove-input-behavior.js</exclude>
+                  <exclude>**/remove-input-behavior.js</exclude>
                 </excludes>
               </configuration>
             </execution>

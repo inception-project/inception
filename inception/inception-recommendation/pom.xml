@@ -127,7 +127,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-bootstrap</artifactId>
+      <artifactId>inception-support-bootstrap</artifactId>
     </dependency>
 
     <dependency>
