@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;

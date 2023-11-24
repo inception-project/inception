@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;

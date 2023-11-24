@@ -26,8 +26,8 @@ import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @Safe(false)
 public class CoverAllTextInSentencesRepair

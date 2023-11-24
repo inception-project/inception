@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 
 import org.springframework.core.annotation.Order;
 

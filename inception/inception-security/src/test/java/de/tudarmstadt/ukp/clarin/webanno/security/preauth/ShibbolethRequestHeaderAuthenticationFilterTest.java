@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @Transactional
 @ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)

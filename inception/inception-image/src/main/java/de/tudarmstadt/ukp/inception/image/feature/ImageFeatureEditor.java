@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.image.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;

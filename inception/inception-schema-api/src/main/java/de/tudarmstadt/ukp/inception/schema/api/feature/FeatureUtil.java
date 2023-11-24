@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class FeatureUtil
 {

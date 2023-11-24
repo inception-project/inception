@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.svelte;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretableJsonString;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -39,7 +39,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class SvelteBehavior
     extends Behavior

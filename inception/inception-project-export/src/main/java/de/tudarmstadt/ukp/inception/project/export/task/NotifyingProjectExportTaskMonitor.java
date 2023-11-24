@@ -25,8 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.model.MProjectExportStateUpdate;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NotifyingProjectExportTaskMonitor
     extends ProjectExportTaskMonitor

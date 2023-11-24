@@ -23,8 +23,8 @@ import org.springframework.security.authentication.event.AuthenticationSuccessEv
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.SessionDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class AuthenticationSuccessEventAdapter

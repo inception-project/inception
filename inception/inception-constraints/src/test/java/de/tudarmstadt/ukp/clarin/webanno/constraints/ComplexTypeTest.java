@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parseFile;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -150,7 +150,7 @@
     <module>inception-build</module>
     <module>inception-boot-loader</module>
     <!-- Core -->
-    <module>inception-bootstrap</module>
+    <module>inception-support-bootstrap</module>
     <module>inception-support</module>
     <module>inception-support-standalone</module>
     <module>inception-model</module>

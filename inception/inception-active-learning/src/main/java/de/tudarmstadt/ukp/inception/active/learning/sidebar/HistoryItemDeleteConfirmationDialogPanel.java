@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ConfirmationDialogContentPanel_ImplBase;
 
 public class HistoryItemDeleteConfirmationDialogPanel
     extends ConfirmationDialogContentPanel_ImplBase

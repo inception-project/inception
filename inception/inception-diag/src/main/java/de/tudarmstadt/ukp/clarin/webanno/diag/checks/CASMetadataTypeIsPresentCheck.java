@@ -23,7 +23,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * Checks if the type {@link CASMetadata} is defined in the type system of this CAS. If this is not

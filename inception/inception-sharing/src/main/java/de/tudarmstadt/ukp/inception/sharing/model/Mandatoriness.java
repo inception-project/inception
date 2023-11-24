@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.sharing.model;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
 
 public enum Mandatoriness
     implements PersistentEnum, Serializable

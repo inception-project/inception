@@ -62,7 +62,6 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Tra
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 
 public class ExternalRecommender

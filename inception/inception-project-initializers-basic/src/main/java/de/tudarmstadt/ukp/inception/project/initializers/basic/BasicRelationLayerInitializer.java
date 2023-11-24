@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationTagSetInitializer.BASIC_RELATION_TAG_SET_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 

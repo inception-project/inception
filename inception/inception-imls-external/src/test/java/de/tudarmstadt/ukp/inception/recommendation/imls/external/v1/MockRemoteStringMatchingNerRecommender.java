@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.ByteArrayInputStream;
@@ -39,7 +39,6 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.util.XMLInputSource;
 import org.xml.sax.SAXException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Pre
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderTraits;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class MockRemoteStringMatchingNerRecommender
 {

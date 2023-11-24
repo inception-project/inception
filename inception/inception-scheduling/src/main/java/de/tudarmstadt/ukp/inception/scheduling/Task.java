@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;

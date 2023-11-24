@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.core;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toPrettyJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -54,8 +54,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 import com.giffing.wicket.spring.boot.context.scan.WicketExpiredPage;
 import com.giffing.wicket.spring.boot.context.scan.WicketInternalErrorPage;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.ui.core.config.ErrorPageProperties;
 
 @WicketInternalErrorPage

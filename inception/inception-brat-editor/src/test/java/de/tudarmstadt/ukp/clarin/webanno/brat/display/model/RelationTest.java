@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class RelationTest
 {

@@ -58,8 +58,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
@@ -75,6 +73,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryPrimaryConditions;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 /**
  * <p>

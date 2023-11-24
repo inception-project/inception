@@ -21,7 +21,7 @@ import org.apache.commons.lang3.Validate;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class RecommenderTaskNotificationEvent
     extends ApplicationEvent

@@ -91,7 +91,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-bootstrap</artifactId>
+      <artifactId>inception-support-bootstrap</artifactId>
     </dependency>
     
     <dependency>
@@ -269,7 +269,7 @@
             </goals>
             <phase>${ts-link-dependency-phase}</phase>
             <configuration>
-              <arguments>link @inception-project/inception-bootstrap</arguments>
+              <arguments>link @inception-project/inception-support-bootstrap</arguments>
             </configuration>
           </execution>
           <execution>
@@ -302,7 +302,7 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
-              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-bootstrap</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-support-bootstrap</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

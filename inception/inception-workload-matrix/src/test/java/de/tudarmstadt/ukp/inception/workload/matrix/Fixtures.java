@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
+import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 

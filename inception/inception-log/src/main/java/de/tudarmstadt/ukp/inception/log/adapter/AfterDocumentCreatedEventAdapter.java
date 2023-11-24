@@ -22,8 +22,8 @@ import java.io.IOException;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class AfterDocumentCreatedEventAdapter

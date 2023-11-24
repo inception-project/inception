@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Render documents using brat. This class converts a UIMA annotation representation into the object

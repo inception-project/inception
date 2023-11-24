@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
+import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 
 //CHECKSTYLE:OFF
 class IllegalXmlCharacterSanitizingContentHandlerTest

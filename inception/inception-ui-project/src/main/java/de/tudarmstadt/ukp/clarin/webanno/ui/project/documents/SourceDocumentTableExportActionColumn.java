@@ -32,8 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
 public class SourceDocumentTableExportActionColumn
     extends AbstractColumn<SourceDocumentTableRow, SourceDocumentTableSortKeys>

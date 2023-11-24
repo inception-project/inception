@@ -24,8 +24,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.LoginProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class CloseSessionPanel
     extends Panel

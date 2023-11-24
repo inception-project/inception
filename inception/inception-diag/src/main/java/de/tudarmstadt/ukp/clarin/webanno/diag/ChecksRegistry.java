@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface ChecksRegistry
     extends ExtensionPoint<Void, Check>

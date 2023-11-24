@@ -43,9 +43,9 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class UserProjectPreferenceExporterTest

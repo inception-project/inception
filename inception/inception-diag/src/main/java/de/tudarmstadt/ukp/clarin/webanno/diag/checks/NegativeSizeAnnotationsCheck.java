@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.error;
+import static de.tudarmstadt.ukp.inception.support.logging.LogMessage.error;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NegativeSizeAnnotationsCheck
     implements Check
