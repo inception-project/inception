@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.PersistentEnum;
 
 public enum LearningRecordType
     implements PersistentEnum

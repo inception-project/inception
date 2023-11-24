@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.getObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;

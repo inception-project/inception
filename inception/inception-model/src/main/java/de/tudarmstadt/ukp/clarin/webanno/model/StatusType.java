@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.PersistentEnumUserType;
 
 /**
  * Implementation of {@link PersistentEnumUserType}

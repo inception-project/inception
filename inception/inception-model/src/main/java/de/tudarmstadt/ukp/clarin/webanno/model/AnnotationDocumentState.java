@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.PersistentEnum;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
 
 /**

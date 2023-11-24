@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.io.FileUtils.copyFile;

@@ -15,31 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support;
 
-import java.io.File;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
-import org.apache.wicket.request.resource.IResource;
-import org.apache.wicket.request.resource.ResourceStreamResource;
-import org.apache.wicket.util.resource.FileResourceStream;
+import java.io.Serializable;
+import java.util.Iterator;
 
-public class FileSystemResource
-    implements IResource
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.model.IModel;
+
+public abstract class DefaultRefreshingView<T extends Serializable>
+    extends RefreshingView<T>
 {
-    private static final long serialVersionUID = 6435457858590524482L;
+    private static final long serialVersionUID = -4301501168097494558L;
 
-    private final File file;
-
-    public FileSystemResource(File aFile)
+    public DefaultRefreshingView(String aId)
     {
-        file = aFile;
+        super(aId);
+    }
+
+    public DefaultRefreshingView(String aId, IModel<?> aModel)
+    {
+        super(aId, aModel);
     }
 
     @Override
-    public void respond(Attributes attributes)
+    protected Iterator<IModel<T>> getItemModels()
     {
-        FileResourceStream fileResourceStream = new FileResourceStream(file);
-        ResourceStreamResource resource = new ResourceStreamResource(fileResourceStream);
-        resource.respond(attributes);
+        return DefaultModelIteratorAdapter.of(getModelObject());
+    }
+
+    @SuppressWarnings("unchecked")
+    public Iterable<T> getModelObject()
+    {
+        return (Iterable<T>) getDefaultModelObject();
     }
 }

@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class ElgServiceModelDeserializationTest
 {

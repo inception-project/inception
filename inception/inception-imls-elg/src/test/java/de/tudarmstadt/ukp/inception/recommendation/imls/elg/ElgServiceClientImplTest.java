@@ -21,10 +21,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class ElgServiceClientImplTest
 {

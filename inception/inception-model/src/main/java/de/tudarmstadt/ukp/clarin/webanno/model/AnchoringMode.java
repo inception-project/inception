@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.PersistentEnum;
 
 /**
  * Annotation anchoring mode.

@@ -26,7 +26,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.commons.lang3.StringUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.YamlUtil;
+import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
 
 public class PolicyCollectionIOUtils
 {

@@ -32,7 +32,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 public class EmbeddedDatabaseBackupHandler
 {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.clarin.webanno.support;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import java.io.Serializable;
 

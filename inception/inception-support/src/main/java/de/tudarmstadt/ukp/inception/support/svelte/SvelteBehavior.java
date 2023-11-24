@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.svelte;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretableJsonString;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;

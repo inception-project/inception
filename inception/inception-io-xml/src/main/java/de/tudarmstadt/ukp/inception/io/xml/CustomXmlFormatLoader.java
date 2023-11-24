@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonStream;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonStream;
 import static java.nio.file.Files.isDirectory;
 
 import java.io.File;

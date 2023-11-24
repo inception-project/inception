@@ -25,6 +25,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.inception.support.text.NaturalStringComparator;
+
 public class NaturalStringComparatorTest
 {
     @Test

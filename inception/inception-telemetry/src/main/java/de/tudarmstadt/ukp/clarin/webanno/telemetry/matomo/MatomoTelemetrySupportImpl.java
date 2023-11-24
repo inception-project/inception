@@ -64,7 +64,6 @@ import org.springframework.security.web.session.HttpSessionCreatedEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.MatomoTelemetryServiceProperties;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.TelemetryServiceAutoCo
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
