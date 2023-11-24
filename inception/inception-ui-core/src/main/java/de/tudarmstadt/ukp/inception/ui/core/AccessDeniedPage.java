@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toPrettyJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static java.util.Arrays.asList;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.parseMediaTypes;

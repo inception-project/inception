@@ -20,13 +20,13 @@ package de.tudarmstadt.ukp.inception.export;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_LAYER;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_NAME;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_UI_NAME;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_FEATURE_DEFINITION;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_LAYER_DEFINITION;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
@@ -74,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -89,6 +88,7 @@ import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentImportExportServiceImplTest

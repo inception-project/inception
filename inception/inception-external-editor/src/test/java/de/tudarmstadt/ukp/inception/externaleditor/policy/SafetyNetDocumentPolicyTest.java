@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy.SAFETY_NET_POLICY_OVERRIDE_YAML;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.makeXmlSerializer;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;

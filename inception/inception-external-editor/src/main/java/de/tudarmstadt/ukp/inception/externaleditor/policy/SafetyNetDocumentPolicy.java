@@ -22,9 +22,9 @@ import static java.util.regex.Pattern.compile;
 import java.io.File;
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorProperties;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.AttributeAction;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;

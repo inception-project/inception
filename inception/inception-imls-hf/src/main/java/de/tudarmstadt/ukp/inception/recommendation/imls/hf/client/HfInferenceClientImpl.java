@@ -31,9 +31,9 @@ import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfEntityGroup;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfTokenClassificationTaskRequest;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class HfInferenceClientImpl
     extends HfClientImplBase

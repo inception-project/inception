@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.vmodel.serialization;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface VDocumentSerializer<T>
     extends Extension<RenderRequest>

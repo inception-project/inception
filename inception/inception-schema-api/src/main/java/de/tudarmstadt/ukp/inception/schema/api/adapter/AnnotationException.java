@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.CommonException;
+import de.tudarmstadt.ukp.inception.support.wicket.CommonException;
 
 public class AnnotationException
     extends CommonException

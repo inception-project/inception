@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.editor.view;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface DocumentViewExtensionPoint
     extends ExtensionPoint<SourceDocument, DocumentViewFactory>

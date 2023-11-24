@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.LAST_LOGIN;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.users.UserTableSortKeys.UI_NAME;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -51,8 +51,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 
 public class UserTable
     extends Panel

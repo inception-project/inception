@@ -53,7 +53,6 @@ import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
@@ -61,6 +60,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPol
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
 
 @ConditionalOnWebApplication
 @RestController

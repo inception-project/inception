@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfReader;
@@ -53,6 +52,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class PdfDocumentIFrameView
     extends WebMarkupContainer

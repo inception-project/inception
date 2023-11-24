@@ -34,7 +34,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 public class EventLoggingAdapterRegistryImpl
     implements EventLoggingAdapterRegistry

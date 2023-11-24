@@ -27,7 +27,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialogContentPanel_ImplBase;
 
 public class DeleteDocumentConfirmationDialogContentPanel
     extends ChallengeResponseDialogContentPanel_ImplBase

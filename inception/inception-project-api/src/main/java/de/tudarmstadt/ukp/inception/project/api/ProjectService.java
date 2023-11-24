@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.project.api;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,8 +43,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.support.logging.MDCContext;
 
 public interface ProjectService
 {
