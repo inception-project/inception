@@ -23,9 +23,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class MTaskStateUpdate
 {

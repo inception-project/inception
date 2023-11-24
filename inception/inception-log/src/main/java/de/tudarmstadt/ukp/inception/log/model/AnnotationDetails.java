@@ -23,7 +23,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 @JsonInclude(Include.NON_NULL)
 public class AnnotationDetails

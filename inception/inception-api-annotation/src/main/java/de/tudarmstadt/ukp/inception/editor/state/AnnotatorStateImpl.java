@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;

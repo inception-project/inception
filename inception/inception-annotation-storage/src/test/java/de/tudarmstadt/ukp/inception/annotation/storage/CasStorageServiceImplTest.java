@@ -24,9 +24,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
@@ -65,13 +65,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 public class CasStorageServiceImplTest
 {

@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public class DocumentOpenedEvent
     extends ApplicationEvent

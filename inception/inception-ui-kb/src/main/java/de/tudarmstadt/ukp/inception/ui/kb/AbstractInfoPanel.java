@@ -42,13 +42,13 @@ import org.eclipse.rdf4j.model.Statement;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;

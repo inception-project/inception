@@ -75,16 +75,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * <p>

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.theme;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getApplicationHome;
 
 import java.io.File;
 

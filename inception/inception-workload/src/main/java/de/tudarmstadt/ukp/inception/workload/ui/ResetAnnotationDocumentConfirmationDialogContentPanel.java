@@ -27,7 +27,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialogContentPanel_ImplBase;
 
 public class ResetAnnotationDocumentConfirmationDialogContentPanel
     extends ChallengeResponseDialogContentPanel_ImplBase

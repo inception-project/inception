@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.Webhoo
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.lang.invoke.MethodHandles;
@@ -55,6 +56,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -63,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookServiceTest.TestService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
@@ -72,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
 import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @SpringBootTest( //
         webEnvironment = WebEnvironment.RANDOM_PORT, //
@@ -102,6 +105,7 @@ public class WebhookServiceTest
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired WebhooksConfiguration webhooksConfiguration;
     private @Autowired TestService testService;
+    private @Autowired WebhookService webhookService;
 
     private Project project;
     private SourceDocument doc;
@@ -219,6 +223,97 @@ public class WebhookServiceTest
                 .extracting(Pair::getLeft) //
                 .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactly(new AnnotationStateChangeMessage(event));
+    }
+
+    @Test
+    void thatDisablingCertificateValidationWorks_expired()
+    {
+        hook.setUrl("https://expired.badssl.com/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(ResourceAccessException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("PKIX path validation failed");
+
+        hook.setVerifyCertificates(false);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
+    }
+
+    @Test
+    void thatDisablingCertificateValidationWorks_wrongHost()
+    {
+        hook.setUrl("https://wrong.host.badssl.com/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(ResourceAccessException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("match any of the subject alternative names");
+
+        hook.setVerifyCertificates(false);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
+    }
+
+    @Test
+    void thatDisablingCertificateValidationWorks_selfSigned()
+    {
+        hook.setUrl("https://self-signed.badssl.com/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(ResourceAccessException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("PKIX path building failed");
+
+        hook.setVerifyCertificates(false);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
+    }
+
+    @Test
+    void thatDisablingCertificateValidationWorks_untrusted()
+    {
+        hook.setUrl("https://untrusted-root.badssl.com/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(ResourceAccessException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("PKIX path building failed");
+
+        hook.setVerifyCertificates(false);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
+    }
+
+    @Test
+    void thatDisablingCertificateValidationWorks_revoked()
+    {
+        hook.setUrl("https://revoked.badssl.com/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(ResourceAccessException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("PKIX path validation failed");
+
+        hook.setVerifyCertificates(false);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
+    }
+
+    @Test
+    void thatCertificateValidationWorks()
+    {
+        hook.setUrl("https://tls-v1-2.badssl.com:1012/");
+
+        hook.setVerifyCertificates(true);
+        assertThatExceptionOfType(HttpClientErrorException.class) //
+                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
+                .withMessageContaining("405 Not Allowed");
     }
 
     @RequestMapping("/test")

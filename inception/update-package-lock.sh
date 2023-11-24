@@ -4,7 +4,7 @@ set -e
 MVN=${MVN:-'mvn'}
 # Do not change the order without a good reason - modules that imported by other modules must come before them!
 TS_MODULES="
-./inception-bootstrap/src/main/ts
+./inception-support-bootstrap/src/main/ts
 ./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
 ./inception-brat-editor/src/main/ts

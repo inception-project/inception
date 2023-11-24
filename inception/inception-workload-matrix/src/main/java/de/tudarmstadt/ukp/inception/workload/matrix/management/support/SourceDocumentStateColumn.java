@@ -27,7 +27,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLabel;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
 public class SourceDocumentStateColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>

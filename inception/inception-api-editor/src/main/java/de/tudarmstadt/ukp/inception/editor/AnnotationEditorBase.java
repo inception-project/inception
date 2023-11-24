@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.lang.invoke.MethodHandles;
@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxComponentRespondListener;
 
 public abstract class AnnotationEditorBase
     extends Panel

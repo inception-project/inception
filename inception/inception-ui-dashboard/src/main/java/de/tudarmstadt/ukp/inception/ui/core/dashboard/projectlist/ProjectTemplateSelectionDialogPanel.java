@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
-import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -49,10 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 public class ProjectTemplateSelectionDialogPanel
@@ -108,8 +107,7 @@ public class ProjectTemplateSelectionDialogPanel
     {
         return projectService.listProjectInitializers().stream()
                 .filter(initializer -> initializer instanceof QuickProjectInitializer)
-                .map(initializer -> (QuickProjectInitializer) initializer)
-                .sorted(comparing(QuickProjectInitializer::getName)) //
+                .map(initializer -> (QuickProjectInitializer) initializer) //
                 .collect(toList());
     }
 

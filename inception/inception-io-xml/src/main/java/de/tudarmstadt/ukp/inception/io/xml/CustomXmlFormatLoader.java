@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonStream;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonStream;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.nio.file.Files.isDirectory;
 
 import java.io.File;
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @ConditionalOnProperty(prefix = "format.custom-xml", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Configuration

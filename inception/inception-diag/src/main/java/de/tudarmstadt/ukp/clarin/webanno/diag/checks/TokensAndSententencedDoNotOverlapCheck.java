@@ -26,9 +26,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class TokensAndSententencedDoNotOverlapCheck
     implements Check

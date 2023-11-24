@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.JCasUtil.selectSingle;
 

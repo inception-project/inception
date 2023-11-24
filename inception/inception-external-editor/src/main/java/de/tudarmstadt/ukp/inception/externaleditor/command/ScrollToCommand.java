@@ -28,10 +28,10 @@ import org.springframework.core.annotation.Order;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactRange;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Order(1000)
 @JsonInclude(JsonInclude.Include.NON_NULL)

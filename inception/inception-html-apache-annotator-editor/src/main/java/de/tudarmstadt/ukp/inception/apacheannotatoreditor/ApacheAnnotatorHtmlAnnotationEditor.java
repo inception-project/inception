@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.apacheannotatoreditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
 import javax.servlet.ServletContext;

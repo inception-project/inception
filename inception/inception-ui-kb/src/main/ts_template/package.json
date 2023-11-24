@@ -11,7 +11,7 @@
   },
   "external": {},
   "devDependencies": {
-    "@inception-project/inception-bootstrap": "${semver}",
+    "@inception-project/inception-support-bootstrap": "${semver}",
     "bootstrap": "${bootstrap.version}",
     "sass": "${sass.version}"
   }

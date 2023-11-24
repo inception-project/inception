@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.getObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,13 +40,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommenderFactory;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class LappsGridRecommenderTraitsEditor
     extends AbstractTraitsEditor

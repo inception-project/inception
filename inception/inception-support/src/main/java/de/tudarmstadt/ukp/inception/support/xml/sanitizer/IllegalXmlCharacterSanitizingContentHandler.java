@@ -22,7 +22,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
+import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 
 /**
  * Replaces characters which are illegal in XML 1.0 or XML 1.1 with a replacement character. The

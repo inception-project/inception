@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
+import de.tudarmstadt.ukp.inception.support.wicket.HasSymbol;
 
 public enum UserState
     implements HasSymbol

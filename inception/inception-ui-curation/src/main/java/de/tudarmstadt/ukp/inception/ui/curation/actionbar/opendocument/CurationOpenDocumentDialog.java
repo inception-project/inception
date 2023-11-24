@@ -25,9 +25,9 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 
 public class CurationOpenDocumentDialog
     extends BootstrapModalDialog

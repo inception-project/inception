@@ -23,11 +23,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_PASTEL;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.GRAY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.LEGACY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.STATIC_PASTELLE;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour.NORMAL;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.schema.api.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public class TagEvent
     extends ApplicationEvent

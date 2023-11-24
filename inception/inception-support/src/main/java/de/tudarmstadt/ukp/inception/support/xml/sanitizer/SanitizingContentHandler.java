@@ -44,7 +44,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
+import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 
 public class SanitizingContentHandler
     extends ContentHandlerAdapter

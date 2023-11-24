@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class EntityTest
 {
