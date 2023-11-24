@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.spring;
+package de.tudarmstadt.ukp.inception.support.spring;
 
 import javax.persistence.EntityManagerFactory;
 

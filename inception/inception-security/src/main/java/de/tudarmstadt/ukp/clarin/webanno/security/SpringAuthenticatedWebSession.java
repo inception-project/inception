@@ -42,7 +42,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 
 import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 
 /**
  * An {@link AuthenticatedWebSession} based on {@link Authentication}

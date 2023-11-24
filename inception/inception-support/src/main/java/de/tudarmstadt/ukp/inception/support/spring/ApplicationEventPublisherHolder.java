@@ -15,21 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.spring;
+package de.tudarmstadt.ukp.inception.support.spring;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
-@Component
-public class ApplicationEventPublisherHolderImpl
-    implements ApplicationEventPublisherHolder
+/**
+ * Helper component because we cannot inject the {@link ApplicationEventPublisher} directly into
+ * Wicket components.
+ */
+public interface ApplicationEventPublisherHolder
 {
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-    @Override
-    public ApplicationEventPublisher get()
-    {
-        return applicationEventPublisher;
-    }
+    public ApplicationEventPublisher get();
 }
