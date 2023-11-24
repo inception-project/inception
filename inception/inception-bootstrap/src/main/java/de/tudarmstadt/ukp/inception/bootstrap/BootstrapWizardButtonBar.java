@@ -15,22 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.bootstrap;
+package de.tudarmstadt.ukp.inception.bootstrap;
 
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
-import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
+import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
+import org.apache.wicket.extensions.wizard.Wizard;
 
-/**
- * Variation of the Wicket {@link ModalDialog} which resolves a few CSS clashes with Bootstrap 4.
- */
-public class BootstrapModalDialog
-    extends ModalDialog
+public class BootstrapWizardButtonBar
+    extends AjaxWizardButtonBar
 {
-    private static final long serialVersionUID = -7136680114981428314L;
 
-    public BootstrapModalDialog(String aId)
+    private static final long serialVersionUID = 7136194479524182883L;
+
+    public BootstrapWizardButtonBar(String id, Wizard wizard)
     {
-        super(aId);
-        add(new DefaultTheme());
+        super(id, wizard);
     }
 }

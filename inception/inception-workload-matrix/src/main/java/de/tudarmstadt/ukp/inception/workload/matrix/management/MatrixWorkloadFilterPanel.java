@@ -27,8 +27,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.FilterStateChangedEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.Filter;
 

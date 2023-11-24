@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.bootstrap;
+package de.tudarmstadt.ukp.inception.bootstrap;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFileInputField.initConfig;
+import static de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField.initConfig;
 
 import java.util.List;
 
@@ -30,6 +30,12 @@ import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 
+/**
+ * @deprecated Use
+ *             {@link de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInput}
+ *             instead.
+ */
+@Deprecated
 public class BootstrapFileInput
     extends de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInput
 {

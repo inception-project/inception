@@ -28,7 +28,7 @@ import org.apache.wicket.util.visit.IVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFeedbackPanel;
 
 public class FeedbackPanelExtensionBehavior
     extends Behavior

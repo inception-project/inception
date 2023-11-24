@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
+package de.tudarmstadt.ukp.inception.bootstrap.dialog;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 
 /**
  * @deprecated Use {@link BootstrapModalDialog#open(org.apache.wicket.Component, AjaxRequestTarget)}

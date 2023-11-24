@@ -53,9 +53,9 @@ import org.springframework.security.web.csrf.CsrfToken;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 
 public abstract class ApplicationPageBase

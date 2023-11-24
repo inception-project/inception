@@ -15,19 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.bootstrap;
+package de.tudarmstadt.ukp.inception.bootstrap;
 
-import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
-import org.apache.wicket.extensions.wizard.Wizard;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 
-public class BootstrapWizardButtonBar
-    extends AjaxWizardButtonBar
+public class NoIcon
+    extends IconType
 {
+    private static final long serialVersionUID = 8880468355252050240L;
 
-    private static final long serialVersionUID = 7136194479524182883L;
+    public static final IconType NO_ICON = new NoIcon();
 
-    public BootstrapWizardButtonBar(String id, Wizard wizard)
+    private NoIcon()
     {
-        super(id, wizard);
+        super("-");
+    }
+
+    @Override
+    public String cssClassName()
+    {
+        return "";
+    }
+
+    @Override
+    public String getTagBody()
+    {
+        return "";
     }
 }

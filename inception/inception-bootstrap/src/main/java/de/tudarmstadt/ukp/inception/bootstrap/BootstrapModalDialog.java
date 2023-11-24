@@ -15,31 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.bootstrap;
+package de.tudarmstadt.ukp.inception.bootstrap;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
 
-public class NoIcon
-    extends IconType
+/**
+ * Variation of the Wicket {@link ModalDialog} which resolves a few CSS clashes with Bootstrap 4.
+ */
+public class BootstrapModalDialog
+    extends ModalDialog
 {
-    private static final long serialVersionUID = 8880468355252050240L;
+    private static final long serialVersionUID = -7136680114981428314L;
 
-    public static final IconType NO_ICON = new NoIcon();
-
-    private NoIcon()
+    public BootstrapModalDialog(String aId)
     {
-        super("-");
-    }
-
-    @Override
-    public String cssClassName()
-    {
-        return "";
-    }
-
-    @Override
-    public String getTagBody()
-    {
-        return "";
+        super(aId);
+        add(new DefaultTheme());
     }
 }
