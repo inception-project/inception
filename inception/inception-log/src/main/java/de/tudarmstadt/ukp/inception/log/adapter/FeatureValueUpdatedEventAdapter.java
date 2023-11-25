@@ -21,9 +21,9 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class FeatureValueUpdatedEventAdapter

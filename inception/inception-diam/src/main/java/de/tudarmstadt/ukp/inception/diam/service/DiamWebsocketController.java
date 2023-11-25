@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
@@ -56,17 +56,13 @@ import com.flipkart.zjsonpatch.JsonDiff;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
@@ -74,10 +70,14 @@ import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializerExtensionPoint;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
@@ -190,13 +190,13 @@ public class DiamWebsocketController
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
         sendUpdate(aEvent.getDocument());
     }
 
     @EventListener
-    public void onRecommendationRejected(TransientAnnotationStateChangedEvent aEvent)
+    public void onTransientAnnotationStateChanged(TransientAnnotationStateChangedEvent aEvent)
     {
         var doc = aEvent.getDocument();
         sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);

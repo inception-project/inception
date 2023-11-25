@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;

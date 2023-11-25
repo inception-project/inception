@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -74,15 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
@@ -98,6 +89,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -122,11 +114,19 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -1103,8 +1103,8 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
-                aEvent.getDocument());
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().orElse(null),
+                aEvent.getLayer(), aEvent.getDocument());
     }
 
     @OnEvent
@@ -1122,7 +1122,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(), aEvent.getLayer(),
                 aEvent.getDocument());
     }
 
@@ -1153,7 +1153,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(),
                 aEvent.getFeature().getLayer(), aEvent.getDocument());
     }
 
@@ -1180,7 +1180,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget(), aEvent.getLayer(),
+        reactToAnnotationsBeingCreatedOrDeleted(aEvent.getRequestTarget().get(), aEvent.getLayer(),
                 aEvent.getDocument());
     }
 
@@ -1381,7 +1381,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestTarget().add(alMainContainer);
+            aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;
         }
 
@@ -1390,11 +1390,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestTarget());
+            moveToNextSuggestion(aEvent.getRequestTarget().get());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget().get());
     }
 
     @OnEvent
@@ -1405,7 +1405,7 @@ public class ActiveLearningSidebar
         // If active learning is not active, update the sidebar in case the session auto-terminated
         ActiveLearningUserState alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
-            aEvent.getRequestTarget().add(alMainContainer);
+            aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;
         }
 
@@ -1414,11 +1414,11 @@ public class ActiveLearningSidebar
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {
-            moveToNextSuggestion(aEvent.getRequestTarget());
+            moveToNextSuggestion(aEvent.getRequestTarget().get());
             return;
         }
 
-        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget());
+        refreshCurrentSuggestionOrMoveToNextSuggestion(aEvent.getRequestTarget().get());
     }
 
     private void refreshCurrentSuggestionOrMoveToNextSuggestion(AjaxRequestTarget aTarget)

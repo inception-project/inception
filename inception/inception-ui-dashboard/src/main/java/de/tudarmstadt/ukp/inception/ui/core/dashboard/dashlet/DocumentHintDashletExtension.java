@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
+@Order(100)
 @Component
 public class DocumentHintDashletExtension
     implements ProjectDashboardDashletExtension

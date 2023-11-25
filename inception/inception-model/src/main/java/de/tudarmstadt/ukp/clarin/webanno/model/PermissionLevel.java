@@ -21,8 +21,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.wicket.HasSymbol;
 
 /**
  * Permission levels for a project. {@link PermissionLevel#ANNOTATOR} is an annotator while

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.policy;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy.HTML_POLICY_OVERRIDE_YAML;
 import static de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest.touch;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static java.lang.System.setProperty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.FileUtils.write;

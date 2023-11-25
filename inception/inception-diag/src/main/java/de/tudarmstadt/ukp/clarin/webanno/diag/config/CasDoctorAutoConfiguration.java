@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSen
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @EnableConfigurationProperties(CasDoctorPropertiesImpl.class)

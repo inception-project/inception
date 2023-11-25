@@ -21,7 +21,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ConfirmationDialogContentPanel_ImplBase;
 
 public class LeaveProjectConfirmationDialogPanel
     extends ConfirmationDialogContentPanel_ImplBase

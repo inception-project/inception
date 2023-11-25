@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -59,21 +59,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.feature.TypeUtil;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -392,8 +392,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     @OnEvent
     public void onDocumentMetadataEvent(DocumentMetadataEvent aEvent)
     {
-        aEvent.getRequestTarget().add(annotationsContainer);
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+        aEvent.getRequestTarget().ifPresent(target -> target.add(annotationsContainer));
+        findParent(AnnotationPageBase.class)
+                .actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     @OnEvent
@@ -403,7 +404,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         annotationsContainer.visitChildren(DocumentMetadataAnnotationDetailPanel.class, (c, v) -> {
             var detailPanel = (DocumentMetadataAnnotationDetailPanel) c;
             if (detailPanel.getModelObject().getId() == vid.getId()) {
-                aEvent.getRequestTarget().add(detailPanel.findParent(ListItem.class));
+                aEvent.getRequestTarget()
+                        .ifPresent(target -> target.add(detailPanel.findParent(ListItem.class)));
             }
         });
 
@@ -416,7 +418,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         // aEvent.getRequestTarget().add(selectedDetailPanel);
         // }
 
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+        findParent(AnnotationPageBase.class)
+                .actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,

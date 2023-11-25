@@ -21,7 +21,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 /**
  * Extensions for the workflow.

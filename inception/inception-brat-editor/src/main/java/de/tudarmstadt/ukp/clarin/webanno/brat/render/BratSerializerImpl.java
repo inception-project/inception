@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Render documents using brat. This class converts a UIMA annotation representation into the object
@@ -213,7 +213,8 @@ public class BratSerializerImpl
                 }
 
                 int index = sentenceIndexes.get(fs);
-                aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
+                aResponse.addComment(
+                        new SentenceComment(VID.of(fs), index, type, vcomment.getComment()));
             }
             else {
                 aResponse.addComment(
@@ -312,8 +313,8 @@ public class BratSerializerImpl
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
             // comment.
             if (isNotBlank(unit.getId())) {
-                aResponse.addComment(new SentenceComment(unitNum, Comment.ANNOTATOR_NOTES,
-                        String.format("Sentence ID: %s", unit.getId())));
+                aResponse.addComment(new SentenceComment(unit.getVid(), unitNum,
+                        Comment.ANNOTATOR_NOTES, String.format("Sentence ID: %s", unit.getId())));
             }
 
             unitNum++;

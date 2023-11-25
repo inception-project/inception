@@ -19,6 +19,28 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 public enum AttributeAction
 {
+    /**
+     * Pass attribute as-is.
+     */
     PASS, //
+
+    /**
+     * Pass attribute but remove the namespace.
+     * <p>
+     * The CSS {@code content: attr(XXX)} construct is unable to access attributes that are not in
+     * the default namespace. Support for adding access to namespaced-attributes appears to have
+     * been present in early proposals of the
+     * <a href="https://www.w3.org/1999/06/25/WD-css3-namespace-19990625/#attr-function">CSS3
+     * namespace enhancements</a> but appear to have been dropped for the final recommendation.
+     * Also, browsers do not appear (yet) to have implemented support for this on their own.
+     * <p>
+     * Thus, if the attribute contains data that needs to be accessed using
+     * {@code content: attr(XXX)}, then use this.
+     */
+    PASS_NO_NS, //
+
+    /**
+     * Attribute is not passed on - it is dropped.
+     */
     DROP;
 }

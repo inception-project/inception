@@ -33,8 +33,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 /**
  * <p>

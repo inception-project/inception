@@ -22,9 +22,9 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class DocumentStateChangedEventAdapter

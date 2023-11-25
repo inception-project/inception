@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler.PARAM_LAYER_ID;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
 
@@ -36,14 +38,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 /**
  * <p>
@@ -82,27 +86,49 @@ public class LazyDetailsLookupServiceImpl
         }
 
         var cas = aCas.get();
-        var layer = findLayer(aVid, cas, layerParam, aDocument.getProject());
 
         var detailGroups = new ArrayList<VLazyDetailGroup>();
+        if (isSentence(cas, aVid)) {
+            var fs = selectFsByAddr(cas, aVid.getId());
+            var id = FSUtil.getFeature(fs, Sentence._FeatName_id, String.class);
+            if (StringUtils.isNotBlank(id)) {
+                var group = new VLazyDetailGroup();
+                group.addDetail(new VLazyDetail(Sentence._FeatName_id, id));
+                detailGroups.add(group);
+            }
+        }
+        else {
+            var layer = findLayer(aVid, cas, layerParam, aDocument.getProject());
 
-        lookupLayerLevelDetails(aVid, cas, windowBeginOffset, windowEndOffset, layer)
-                .forEach(detailGroups::add);
-
-        for (var feature : annotationService.listAnnotationFeature(layer)) {
-            lookupExtensionLevelDetails(aVid, aDocument, cas, aUser, feature)
+            lookupLayerLevelDetails(aVid, cas, windowBeginOffset, windowEndOffset, layer)
                     .forEach(detailGroups::add);
 
-            // FIXME: We would like to get feature-level lazy details for the annotation label
-            // provided by the extension or said otherwise, we want to e.g. get KB details for a
-            // concept
-            // feature suggestion... this worked when we used the "query", but now is broken!
-            lookupFeatureLevelDetail(aVid, cas, feature).forEach(detailGroups::add);
+            for (var feature : annotationService.listAnnotationFeature(layer)) {
+                lookupExtensionLevelDetails(aVid, aDocument, cas, aUser, feature)
+                        .forEach(detailGroups::add);
+
+                // FIXME: We would like to get feature-level lazy details for the annotation label
+                // provided by the extension or said otherwise, we want to e.g. get KB details for a
+                // concept feature suggestion... this worked when we used the "query", but now is
+                // broken!
+                lookupFeatureLevelDetail(aVid, cas, feature).forEach(detailGroups::add);
+            }
         }
 
         return detailGroups.stream() //
                 .map(this::toExternalForm) //
                 .collect(toList());
+    }
+
+    private boolean isSentence(CAS aCas, VID aVid)
+    {
+        if (aVid.isSynthetic()) {
+            return false;
+        }
+
+        var fs = selectFsByAddr(aCas, aVid.getId());
+        return Sentence._TypeName.equals(fs.getType().getName());
+
     }
 
     private LazyDetailGroup toExternalForm(VLazyDetailGroup aGroup)

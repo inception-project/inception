@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -40,11 +40,11 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
 
 /**
  * String feature editor using a Kendo ComboBox field.
@@ -110,10 +110,7 @@ public class KendoComboboxTextFeatureEditor
 
         // If the tag was created in the tagset used by this editor, then we re-render the editor
         // to ensure it picks up the new tag
-        AjaxRequestTarget target = aEvent.getRequestTarget();
-        if (target != null) {
-            target.add(this);
-        }
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 
     @SuppressWarnings("rawtypes")

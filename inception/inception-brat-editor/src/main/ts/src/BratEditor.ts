@@ -79,6 +79,6 @@ export class BratEditor implements AnnotationEditor {
 
   destroy (): void {
     // Nothing to do
-    console.log('destroy: not implemnented')
+    console.log('destroy: not implemented')
   }
 }

@@ -21,8 +21,8 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.dumpAgreementStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -57,10 +57,10 @@ import org.dkpro.statistics.agreement.InsufficientDataException;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class AgreementTestUtils
 {

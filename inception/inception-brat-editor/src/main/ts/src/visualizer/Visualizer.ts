@@ -735,11 +735,12 @@ export class Visualizer {
       if (comment[0] instanceof Array && comment[0][0] === 'sent') {
         // sentence comment
         const sent = comment[0][1]
+        const id = comment[0][2]
         let text = comment[2]
         if (docData.sentComment[sent]) {
           text = docData.sentComment[sent].text + '<br/>' + text
         }
-        docData.sentComment[sent] = { type: comment[1], text }
+        docData.sentComment[sent] = { id, type: comment[1], text }
         continue
       }
 
@@ -3739,6 +3740,14 @@ export class Visualizer {
     if (id) {
       const comment = this.data.sentComment[id]
       if (comment) {
+        if (evt.target) {
+          const fakeSpan = new Span()
+          fakeSpan.vid = comment.id
+          fakeSpan.document = { text: this.data.text }
+          fakeSpan.layer = { id: 0, name: Util.spanDisplayForm(this.entityTypes, comment.type) }
+          evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
+        }
+  
         this.dispatcher.post('displaySentComment', [evt, comment.text, comment.type])
       }
     }

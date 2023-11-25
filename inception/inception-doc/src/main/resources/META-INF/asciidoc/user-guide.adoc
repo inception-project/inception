@@ -290,6 +290,8 @@ include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
 
 include::{include-dir}formats-xml.adoc[leveloffset=+2]
 
+include::{include-dir}formats-xml-custom.adoc.adoc[leveloffset=+2]
+
 <<<
 
 [appendix]

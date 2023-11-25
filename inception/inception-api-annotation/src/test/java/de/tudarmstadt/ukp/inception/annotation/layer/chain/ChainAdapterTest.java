@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.substring;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -51,9 +51,9 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehav
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @ExtendWith(MockitoExtension.class)
 public class ChainAdapterTest

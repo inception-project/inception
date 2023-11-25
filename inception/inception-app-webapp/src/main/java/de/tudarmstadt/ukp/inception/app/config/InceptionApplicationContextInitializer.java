@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.CFG_AUTH_MODE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.CFG_AUTH_MODE;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,10 +30,10 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.util.unit.DataSize;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
 
 public class InceptionApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>

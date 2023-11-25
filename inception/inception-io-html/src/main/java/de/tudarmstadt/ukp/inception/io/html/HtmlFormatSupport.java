@@ -19,20 +19,25 @@ package de.tudarmstadt.ukp.inception.io.html;
 
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
+import java.io.IOException;
+import java.util.Optional;
+
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.html.config.HtmlSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.dkprocore.HtmlDocumentReader;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 /**
  * Support for HTML format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlSupportAutoConfiguration#htmlFormatSupport()}.
+ * {@link HtmlSupportAutoConfiguration#htmlFormatSupport}.
  * </p>
  */
 public class HtmlFormatSupport
@@ -40,6 +45,13 @@ public class HtmlFormatSupport
 {
     public static final String ID = "htmldoc";
     public static final String NAME = "HTML";
+
+    private final DefaultHtmlDocumentPolicy defaultPolicy;
+
+    public HtmlFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
+    {
+        defaultPolicy = aDefaultPolicy;
+    }
 
     @Override
     public String getId()
@@ -65,5 +77,11 @@ public class HtmlFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(HtmlDocumentReader.class, aTSD);
+    }
+
+    @Override
+    public Optional<PolicyCollection> getPolicy() throws IOException
+    {
+        return Optional.of(defaultPolicy.getPolicy());
     }
 }

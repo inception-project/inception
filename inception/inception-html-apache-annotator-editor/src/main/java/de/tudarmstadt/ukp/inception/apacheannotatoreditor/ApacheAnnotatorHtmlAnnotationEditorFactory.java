@@ -28,18 +28,19 @@ import com.networknt.schema.JsonSchema;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.apacheannotatoreditor.config.ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
+import de.tudarmstadt.ukp.inception.io.xml.CustomXmlFormatLoader;
 import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferencesKey;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * Support for HTML-oriented editor component.
@@ -73,6 +74,10 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
     @Override
     public int accepts(Project aProject, String aFormat)
     {
+        if (aFormat.startsWith(CustomXmlFormatLoader.CUSTOM_XML_FORMAT_PREFIX)) {
+            return PREFERRED;
+        }
+        
         switch (aFormat) {
         case HtmlFormatSupport.ID: // fall-through
         case XmlFormatSupport.ID:

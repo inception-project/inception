@@ -40,9 +40,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * If the prediction task has run it stores the predicted annotations for an annotation layer in the
@@ -67,6 +67,8 @@ public class Predictions
     // Predictions are (currently) scoped to a user session. We assume that within a single user
     // session, the pool of IDs of positive integer values is never exhausted.
     private int nextId;
+
+    private int newSuggestionCount = 0;
 
     public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
@@ -227,6 +229,10 @@ public class Predictions
                 var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, prediction);
+
+                if (prediction.getAge() == 0) {
+                    newSuggestionCount++;
+                }
             }
         }
     }
@@ -241,6 +247,16 @@ public class Predictions
         synchronized (predictionsLock) {
             return idxDocuments.values().stream().allMatch(Map::isEmpty);
         }
+    }
+
+    public boolean hasNewSuggestions()
+    {
+        return newSuggestionCount > 0;
+    }
+
+    public int getNewSuggestionCount()
+    {
+        return newSuggestionCount;
     }
 
     public int size()

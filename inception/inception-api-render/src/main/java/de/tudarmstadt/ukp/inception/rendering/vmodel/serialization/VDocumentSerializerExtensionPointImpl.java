@@ -22,9 +22,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.config.RenderingAutoConfig;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 /**
  * <p>

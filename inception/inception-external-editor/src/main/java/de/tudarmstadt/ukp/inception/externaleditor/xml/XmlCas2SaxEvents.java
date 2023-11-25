@@ -38,8 +38,8 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
+import de.tudarmstadt.ukp.inception.support.xml.TextSanitizingContentHandler;
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
 public class XmlCas2SaxEvents

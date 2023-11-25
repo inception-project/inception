@@ -27,6 +27,9 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public interface EventLoggingAdapter<T>
 {
+    public static final String SYSTEM_USER = "<SYSTEM>";
+    public static final String ANONYMOUS_USER = "anonymousUser";
+
     boolean accepts(Object aEvent);
 
     default String getDetails(T aEvent) throws Exception
@@ -71,7 +74,7 @@ public interface EventLoggingAdapter<T>
             return context.getAuthentication().getName();
         }
         else {
-            return "<SYSTEM>";
+            return SYSTEM_USER;
         }
     }
 

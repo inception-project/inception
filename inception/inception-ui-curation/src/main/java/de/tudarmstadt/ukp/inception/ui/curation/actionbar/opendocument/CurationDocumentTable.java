@@ -21,9 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.INPUT_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.KeyCodes.ENTER;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.NAME;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.STATE;
 import static java.time.Duration.ofMillis;
@@ -46,11 +46,11 @@ import org.apache.wicket.model.ResourceModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.SymbolLambdaColumn;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class CurationDocumentTable
     extends Panel

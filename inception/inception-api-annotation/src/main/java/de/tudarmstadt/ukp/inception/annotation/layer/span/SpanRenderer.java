@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
@@ -42,7 +41,6 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -51,9 +49,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Render spans.
@@ -100,40 +99,9 @@ public class SpanRenderer
     @Override
     public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        // https://github.com/apache/uima-uimaj/issues/345
-        // return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
-        // .map(fs -> (AnnotationFS) fs)
-        // .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-        // .collect(toList());
-
-        List<AnnotationFS> list = new ArrayList<AnnotationFS>();
-
-        // withSnapshotIterators() not needed here since we copy the FSes to a list anyway
-        FSIterator<AnnotationFS> it = aCas.getAnnotationIndex(type).iterator();
-
-        // Skip annotations whose start is before the start parameter.
-        while (it.isValid() && (it.get()).getBegin() < aWindowBegin) {
-            it.moveToNext();
-        }
-
-        boolean strict = false;
-        while (it.isValid()) {
-            AnnotationFS a = it.get();
-            // If the start of the current annotation is past the end parameter, we're done.
-            if (a.getBegin() > aWindowEnd) {
-                break;
-            }
-            it.moveToNext();
-            if (strict && a.getEnd() > aWindowEnd) {
-                continue;
-            }
-
-            list.add(a);
-        }
-
-        return list.stream() //
-                .map(fs -> (AnnotationFS) fs) //
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
+        return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
+                .map(fs -> (AnnotationFS) fs)
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
                 .collect(toList());
     }
 

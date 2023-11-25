@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.about;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.loadJsonDependencies;
+import static de.tudarmstadt.ukp.inception.support.about.ApplicationInformation.loadJsonDependencies;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.join;
 import static java.util.Comparator.comparing;
@@ -34,8 +34,8 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.StringResourceModel;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.about.Dependency;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.support.about.Dependency;
 
 @MountPath("/about")
 public class AboutPage

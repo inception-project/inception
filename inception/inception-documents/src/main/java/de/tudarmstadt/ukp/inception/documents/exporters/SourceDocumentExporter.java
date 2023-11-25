@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.documents.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.createDirectory;
 import static java.util.function.Function.identity;
@@ -54,10 +54,10 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * <p>
