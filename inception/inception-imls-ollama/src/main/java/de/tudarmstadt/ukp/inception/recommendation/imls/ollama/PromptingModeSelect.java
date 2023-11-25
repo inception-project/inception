@@ -23,6 +23,8 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode;
+
 public class PromptingModeSelect
     extends DropDownChoice<PromptingMode>
 {

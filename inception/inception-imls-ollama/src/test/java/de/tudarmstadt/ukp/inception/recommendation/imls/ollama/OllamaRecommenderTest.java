@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode;
 
 @Disabled("Requires locally running ollama")
 class OllamaRecommenderTest

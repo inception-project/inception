@@ -22,6 +22,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Preset

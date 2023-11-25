@@ -15,18 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.uima.cas.CAS;
 
-public enum PromptingMode
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
+
+public interface ResponseExtractor
 {
-    @JsonProperty("per-annotation")
-    PER_ANNOTATION, //
-
-    @JsonProperty("per-sentence")
-    PER_SENTENCE, //
-
-    @JsonProperty("per-document")
-    PER_DOCUMENT
+    void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
+            String aResponse);
 }
