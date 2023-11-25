@@ -35,7 +35,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 @Component
 public class AgreementMeasureSupportRegistryImpl

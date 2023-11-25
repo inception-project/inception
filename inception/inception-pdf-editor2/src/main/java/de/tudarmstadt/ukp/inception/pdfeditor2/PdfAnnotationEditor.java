@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.Component;
@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfAnnotationEditorJava
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.servlet.ServletContext;
 
 public class PdfAnnotationEditor

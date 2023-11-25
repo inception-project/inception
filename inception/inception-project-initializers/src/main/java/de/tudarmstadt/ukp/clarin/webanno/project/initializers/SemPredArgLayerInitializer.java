@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,7 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>

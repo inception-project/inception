@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.preferences;
 import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesProperties;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 public class BratAnnotationEditorManagerPrefs
     implements Serializable

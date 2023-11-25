@@ -41,8 +41,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.config.AuthenticationConfigurationHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import jakarta.servlet.http.HttpSession;
 
 /**

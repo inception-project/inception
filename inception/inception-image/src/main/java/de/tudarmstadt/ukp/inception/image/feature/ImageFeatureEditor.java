@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.image.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 
 public class ImageFeatureEditor
     extends FeatureEditor

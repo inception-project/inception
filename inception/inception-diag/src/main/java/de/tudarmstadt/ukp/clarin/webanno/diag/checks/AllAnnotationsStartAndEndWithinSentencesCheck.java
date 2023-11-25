@@ -27,14 +27,13 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.springframework.util.CollectionUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class AllAnnotationsStartAndEndWithinSentencesCheck
     implements Check
@@ -77,19 +76,10 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
             }
 
             for (AnnotationFS ann : select(aCas, type)) {
-                // https://github.com/apache/uima-uimaj/issues/345
-                // var startsOutside = aCas.select(Sentence._TypeName)
-                // .covering(ann.getBegin(), ann.getBegin()).isEmpty();
-                var startsOutside = CasUtil
-                        .selectCovering(ann.getCAS(), CasUtil.getType(ann.getCAS(), Sentence.class),
-                                ann.getBegin(), ann.getBegin())
-                        .isEmpty();
-                // https://github.com/apache/uima-uimaj/issues/345
-                // var endsOutside = aCas.select(Sentence._TypeName)
-                // .covering(ann.getEnd(), ann.getEnd()).isEmpty();
-                var endsOutside = CasUtil.selectCovering(ann.getCAS(),
-                        CasUtil.getType(ann.getCAS(), Sentence.class), ann.getEnd(), ann.getEnd())
-                        .isEmpty();
+                var startsOutside = aCas.select(Sentence._TypeName)
+                        .covering(ann.getBegin(), ann.getBegin()).isEmpty();
+                var endsOutside = aCas.select(Sentence._TypeName)
+                        .covering(ann.getEnd(), ann.getEnd()).isEmpty();
 
                 if (!startsOutside && !endsOutside) {
                     continue;

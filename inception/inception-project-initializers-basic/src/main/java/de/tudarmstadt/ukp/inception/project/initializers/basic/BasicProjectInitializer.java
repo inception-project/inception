@@ -26,10 +26,11 @@ import java.util.Optional;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 
 /**
@@ -38,6 +39,7 @@ import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionB
  * {@link InceptionBasicProjectInitializersAutoConfiguration#basicProjectInitializer}.
  * </p>
  */
+@Order(1000)
 public class BasicProjectInitializer
     implements QuickProjectInitializer
 {

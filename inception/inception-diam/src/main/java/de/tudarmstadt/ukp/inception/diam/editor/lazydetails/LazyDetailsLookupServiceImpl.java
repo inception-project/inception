@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler.PARAM_LAYER_ID;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -44,10 +44,10 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 /**
  * <p>

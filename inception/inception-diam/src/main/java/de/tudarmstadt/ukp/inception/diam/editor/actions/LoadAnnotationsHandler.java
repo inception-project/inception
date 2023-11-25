@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toInterpretableJsonString;
 
 import java.io.IOException;
 

@@ -41,16 +41,16 @@ import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.ListPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.support.wicket.OverviewListChoice;
 
 class UserSelectionPanel
     extends ListPanel_ImplBase

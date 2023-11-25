@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,15 +38,15 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.feature.lookup.config.LookupServiceProperties;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
 import de.tudarmstadt.ukp.inception.security.client.auth.NoAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.header.HeaderAuthenticationTraitsEditor;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class LookupFeatureTraitsEditor
     extends Panel

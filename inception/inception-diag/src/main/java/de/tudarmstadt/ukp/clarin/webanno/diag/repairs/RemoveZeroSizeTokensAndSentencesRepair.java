@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.INFO;
+import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.INFO;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ import org.apache.uima.fit.util.FSUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @Safe(false)
 public class RemoveZeroSizeTokensAndSentencesRepair

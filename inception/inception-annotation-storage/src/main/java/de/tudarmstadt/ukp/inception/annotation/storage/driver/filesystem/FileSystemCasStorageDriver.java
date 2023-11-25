@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setDocumentId;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -60,13 +60,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class FileSystemCasStorageDriver
     implements CasStorageDriver

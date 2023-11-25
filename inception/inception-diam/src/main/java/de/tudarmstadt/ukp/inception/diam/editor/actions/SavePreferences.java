@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromValidatedJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromValidatedJsonString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Map;

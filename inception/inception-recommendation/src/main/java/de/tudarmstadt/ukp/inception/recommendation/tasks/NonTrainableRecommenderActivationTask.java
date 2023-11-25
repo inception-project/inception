@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.ERROR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.support.logging.LogLevel.ERROR;
 import static java.lang.System.currentTimeMillis;
 
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -43,7 +42,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import jakarta.persistence.NoResultException;
 
 /**

@@ -53,14 +53,14 @@ import org.springframework.util.FileSystemUtils;
 
 import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -235,10 +235,10 @@ class AeroRemoteApiController_Authentication_Jwt_Test
                 @Override
                 public Jwt decode(String aToken)
                 {
-                    var parser = Jwts.parserBuilder().build();
+                    var parser = Jwts.parser().unsecured().build();
                     var jwt = parser.parse(aToken);
 
-                    return new Jwt(aToken, null, null, jwt.getHeader(), (Claims) jwt.getBody());
+                    return new Jwt(aToken, null, null, jwt.getHeader(), (Claims) jwt.getPayload());
                 }
             };
         }

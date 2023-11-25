@@ -25,10 +25,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class ProjectPermissionsChangedEventAdapter

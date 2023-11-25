@@ -23,8 +23,8 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
 public class LinkFeatureDeletedEvent
     extends LinkFeatureEvent

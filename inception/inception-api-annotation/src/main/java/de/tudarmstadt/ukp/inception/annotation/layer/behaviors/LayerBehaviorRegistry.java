@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 
 public interface LayerBehaviorRegistry
 {

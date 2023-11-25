@@ -21,10 +21,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.COMPLETED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.FAILED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.project.export.controller.ExportServiceController.BASE_URL;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -44,9 +44,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBas
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import jakarta.servlet.ServletContext;
 
 public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>

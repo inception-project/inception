@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -46,10 +45,11 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -236,7 +236,7 @@ public class StringFeatureSupport
         if (aValue instanceof String) {
             var value = (String) aValue;
             var tag = schemaService.getTag(value, aFeature.getTagset());
-            if (tag.isEmpty()) {
+            if (aFeature.getTagset() != null && tag.isEmpty()) {
                 return asList(new VLazyDetailGroup(new VLazyDetail(value, "Tag not in tagset")));
             }
 

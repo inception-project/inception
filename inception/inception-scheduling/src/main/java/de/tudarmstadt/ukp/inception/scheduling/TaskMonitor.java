@@ -26,7 +26,7 @@ import static java.util.Arrays.asList;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class TaskMonitor
 {

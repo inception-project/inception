@@ -32,7 +32,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;

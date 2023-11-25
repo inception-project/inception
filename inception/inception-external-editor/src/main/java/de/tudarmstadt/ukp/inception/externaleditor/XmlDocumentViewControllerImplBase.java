@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import org.xml.sax.ContentHandler;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;

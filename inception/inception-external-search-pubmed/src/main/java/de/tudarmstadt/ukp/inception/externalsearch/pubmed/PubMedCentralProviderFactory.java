@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubmed;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
 
@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.pmcoa.PmcOaClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderTraitsEditor;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * Support for PubAnnotation.

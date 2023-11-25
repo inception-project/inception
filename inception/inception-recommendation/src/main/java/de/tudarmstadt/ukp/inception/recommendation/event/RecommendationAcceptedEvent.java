@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class RecommendationAcceptedEvent
     extends ApplicationEvent

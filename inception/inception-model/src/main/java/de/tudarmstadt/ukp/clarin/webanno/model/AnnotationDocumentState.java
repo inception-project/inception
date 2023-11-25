@@ -24,8 +24,8 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.HasSymbol;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.wicket.HasSymbol;
 
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.

@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.Math.min;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -77,13 +77,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -96,9 +89,16 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.inception.support.io.FastIOUtils;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 

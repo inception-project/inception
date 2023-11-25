@@ -48,14 +48,14 @@ import org.springframework.util.FileSystemUtils;
 
 import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_DATABASE)
 @SpringBootTest( //

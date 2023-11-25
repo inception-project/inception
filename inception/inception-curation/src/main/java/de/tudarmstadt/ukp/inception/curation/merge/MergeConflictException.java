@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 /**
  * Indicates that a merge operation could not be performed because there was a conflict, e.g.

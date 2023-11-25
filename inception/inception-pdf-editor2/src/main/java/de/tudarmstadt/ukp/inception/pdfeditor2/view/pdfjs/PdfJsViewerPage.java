@@ -36,9 +36,9 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.value.AttributeMap;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2WebMvcConfiguration;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsViewerJavaScriptReference;
+import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
 import jakarta.servlet.ServletContext;
 
 @MountPath(PdfAnnotationEditor2WebMvcConfiguration.BASE_URL + "/viewer.html")

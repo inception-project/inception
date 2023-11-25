@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ConstraintsInUseIndicator;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public abstract class TextFeatureEditorBase
     extends FeatureEditor

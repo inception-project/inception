@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.setGlobalLogFolder;
 import static de.tudarmstadt.ukp.inception.INCEpTION.INCEPTION_BASE_PACKAGE;
 import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getApplicationHome;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.setGlobalLogFolder;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.NONE;
 import static org.springframework.boot.WebApplicationType.SERVLET;
@@ -41,11 +41,11 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
+import de.tudarmstadt.ukp.inception.support.db.EmbeddedDatabaseBackupHandler;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 /**

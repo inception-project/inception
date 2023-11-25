@@ -23,10 +23,10 @@ import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;

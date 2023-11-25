@@ -21,7 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 
 import java.io.File;
 import java.io.FileOutputStream;

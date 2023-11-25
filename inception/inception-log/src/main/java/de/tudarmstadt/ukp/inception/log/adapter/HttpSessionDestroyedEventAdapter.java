@@ -23,8 +23,8 @@ import java.util.Set;
 import org.springframework.security.web.session.HttpSessionDestroyedEvent;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.SessionDetails;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @Component
 public class HttpSessionDestroyedEventAdapter

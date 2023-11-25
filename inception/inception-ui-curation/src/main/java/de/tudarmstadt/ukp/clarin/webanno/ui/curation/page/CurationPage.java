@@ -26,10 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBeha
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.AGREE;
@@ -39,6 +35,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUni
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.STACKED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
@@ -75,7 +75,6 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterAdapter;
 import com.googlecode.wicket.kendo.ui.widget.splitter.SplitterBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
@@ -93,9 +92,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
@@ -115,12 +111,16 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**

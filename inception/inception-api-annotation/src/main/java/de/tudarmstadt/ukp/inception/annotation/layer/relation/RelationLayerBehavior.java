@@ -26,13 +26,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public abstract class RelationLayerBehavior
     implements LayerBehavior

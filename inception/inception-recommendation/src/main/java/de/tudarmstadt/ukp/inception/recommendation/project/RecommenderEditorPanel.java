@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -59,19 +59,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormSubmittingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
 
 public class RecommenderEditorPanel
     extends Panel

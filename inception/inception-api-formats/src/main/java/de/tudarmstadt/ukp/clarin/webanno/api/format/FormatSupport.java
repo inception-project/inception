@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.io.FileUtils.copyFile;
@@ -51,7 +51,7 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.util.LifeCycleUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
@@ -159,7 +159,7 @@ public interface FormatSupport
     /**
      * @return format-specific CSS style-sheets that styleable editors should load.
      */
-    default List<CssResourceReference> getCssStylesheets()
+    default List<ResourceReference> getCssStylesheets()
     {
         return Collections.emptyList();
     }

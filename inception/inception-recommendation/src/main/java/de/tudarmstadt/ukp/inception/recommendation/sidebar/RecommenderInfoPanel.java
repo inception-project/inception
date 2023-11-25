@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -49,12 +49,9 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -72,8 +69,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.TempFileResource;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -117,7 +117,7 @@ public class RecommenderInfoPanel
             protected void populateItem(ListItem<Recommender> item)
             {
                 var recommender = item.getModelObject();
-                Optional<EvaluatedRecommender> evaluatedRecommender = recommendationService
+                var evaluatedRecommender = recommendationService
                         .getEvaluatedRecommender(sessionOwner, recommender);
                 item.add(new Label("name", recommender.getName()));
 
@@ -145,7 +145,7 @@ public class RecommenderInfoPanel
                 }
                 item.add(state);
 
-                Optional<EvaluationResult> evalResult = evaluatedRecommender
+                var evalResult = evaluatedRecommender
                         .map(EvaluatedRecommender::getEvaluationResult);
                 var resultsContainer = new WebMarkupContainer("resultsContainer");
                 // Show results only if the evaluation was not skipped (and of course only if the
@@ -189,10 +189,8 @@ public class RecommenderInfoPanel
                                         .isModelExportSupported()));
                 item.add(exportModel);
 
-                item.add(new Label("noEvaluationMessage", evaluatedRecommender //
-                        .flatMap(r -> r.getEvaluationResult().getErrorMsg())
-                        // .map(EvaluatedRecommender::getReasonForState)
-                        .orElse("Waiting for evalation..."))
+                item.add(new Label("noEvaluationMessage",
+                        getStateMessage(evaluatedRecommender.orElse(null)))
                                 .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
@@ -203,6 +201,20 @@ public class RecommenderInfoPanel
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
         recommenderContainer.add(searchResultGroups);
+    }
+
+    private String getStateMessage(EvaluatedRecommender aEvaluatedRecommender)
+    {
+        if (aEvaluatedRecommender == null) {
+            return "Waiting for evaluation...";
+        }
+
+        var maybeError = aEvaluatedRecommender.getEvaluationResult().getErrorMsg();
+        if (maybeError.isPresent()) {
+            return maybeError.get();
+        }
+
+        return aEvaluatedRecommender.getReasonForState();
     }
 
     private String exportModelName(Recommender aRecommender)

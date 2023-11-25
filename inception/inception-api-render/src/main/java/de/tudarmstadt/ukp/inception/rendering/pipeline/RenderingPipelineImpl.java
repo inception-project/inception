@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.pipeline;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 
 import java.lang.invoke.MethodHandles;

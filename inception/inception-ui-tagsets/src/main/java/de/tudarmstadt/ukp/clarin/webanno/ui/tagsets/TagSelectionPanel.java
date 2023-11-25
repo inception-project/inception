@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,11 +30,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.wicket.ListPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.support.wicket.OverviewListChoice;
 
 public class TagSelectionPanel
     extends ListPanel_ImplBase

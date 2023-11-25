@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.makeLinkHostFS;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 
 public class CasMergeRemergeTest
     extends CasMergeTestBase

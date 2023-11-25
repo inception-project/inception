@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -32,11 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumIntegerUserType;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.support.PersistentEnumIntegerUserType;
 
 public class KnowledgeBaseType
     extends PersistentEnumIntegerUserType<RepositoryType>

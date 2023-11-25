@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>30.0-SNAPSHOT</version>
+    <version>31.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-scheduling</artifactId>
   <name>INCEpTION - Scheduling</name>
@@ -32,7 +32,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api</artifactId>
+      <artifactId>inception-project-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

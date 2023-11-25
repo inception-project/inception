@@ -159,7 +159,7 @@ export class RecogitoEditor implements AnnotationEditor {
       this.root.ownerDocument.body.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
       this.root.ownerDocument.body.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
 
-      this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
+      this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations(), { ignoreSelector: '.r6o-relations-layer' })
 
       this.popover = new AnnotationDetailPopOver({
         target: this.root.ownerDocument.body,

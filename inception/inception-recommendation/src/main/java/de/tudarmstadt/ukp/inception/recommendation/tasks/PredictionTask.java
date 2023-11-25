@@ -31,13 +31,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class PredictionTask
     extends RecommendationTask_ImplBase
@@ -104,10 +104,20 @@ public class PredictionTask
 
             recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
-            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                    .builder(this, project, sessionOwner.getUsername()) //
-                    .withMessage(LogMessage.info(this, "New predictions available")) //
-                    .build());
+            if (predictions.hasNewSuggestions()) {
+                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                        .builder(this, project, sessionOwner.getUsername()) //
+                        .withMessage(LogMessage.info(this,
+                                predictions.getNewSuggestionCount() + " new predictions available")) //
+                        .build());
+            }
+            else {
+                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                        .builder(this, project, sessionOwner.getUsername()) //
+                        .withMessage(
+                                LogMessage.info(this, "Prediction run produced no new suggestions")) //
+                        .build());
+            }
 
             // We reset this in case the state was not properly cleared, e.g. the AL session
             // was started but then the browser closed. Places where it is set include

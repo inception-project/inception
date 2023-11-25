@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 

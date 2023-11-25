@@ -44,7 +44,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.xml.ContentHandlerAdapter;
+import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 
 public class SanitizingContentHandler
     extends ContentHandlerAdapter
@@ -163,13 +163,13 @@ public class SanitizingContentHandler
 
         if (stack.isEmpty()) {
             if (policies.isDebug() && log.isDebugEnabled()) {
-                log.debug("Masked elements: {}", maskedElements.stream() //
+                log.debug("[{}] Masked elements: {}", policies.getName(), maskedElements.stream() //
                         .map(QName::toString) //
                         .sorted() //
                         .collect(toList()));
                 for (var element : maskedAttributes.keySet().stream()
                         .sorted(comparing(QName::getLocalPart)).collect(toList())) {
-                    log.debug("Masked attributes on {}: {}", element,
+                    log.debug("[{}] Masked attributes on {}: {}", policies.getName(), element,
                             maskedAttributes.get(element).stream().map(QName::toString) //
                                     .sorted() //
                                     .collect(toList()));
@@ -251,6 +251,10 @@ public class SanitizingContentHandler
         switch (action) {
         case PASS:
             aSanitizedAttributes.addAttribute(uri, localName, qName, type, value);
+            break;
+        case PASS_NO_NS:
+            aSanitizedAttributes.addAttribute("", attribute.getLocalPart(),
+                    attribute.getLocalPart(), type, value);
             break;
         case DROP:
             if (policies.isDebug()) {

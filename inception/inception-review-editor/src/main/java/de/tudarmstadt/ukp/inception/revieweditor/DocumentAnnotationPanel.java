@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -46,16 +46,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
-import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class DocumentAnnotationPanel
     extends Panel

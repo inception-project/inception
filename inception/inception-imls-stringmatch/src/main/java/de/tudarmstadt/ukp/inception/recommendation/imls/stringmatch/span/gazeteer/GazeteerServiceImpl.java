@@ -21,7 +21,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 

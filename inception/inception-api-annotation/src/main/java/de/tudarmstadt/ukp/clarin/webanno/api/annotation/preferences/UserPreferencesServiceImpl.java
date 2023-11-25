@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SETTINGS_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SETTINGS_FOLDER;
 import static java.util.stream.Collectors.toList;
 
 import java.beans.PropertyDescriptor;
@@ -49,11 +49,9 @@ import org.springframework.beans.PropertyAccessorFactory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -61,7 +59,9 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 /**
  * <p>
@@ -129,7 +129,7 @@ public class UserPreferencesServiceImpl
         }
 
         // Make sure the visibility logic of the right sidebar sees if there are selectable layers
-        aState.refreshSelectableLayers(annotationEditorProperties);
+        aState.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
     }
 
     @Override

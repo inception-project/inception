@@ -20,10 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
@@ -39,8 +35,13 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
@@ -111,15 +112,8 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -129,12 +123,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -145,7 +133,14 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.inception.documents.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -186,10 +181,16 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
-import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.StopWatch;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
@@ -228,7 +229,7 @@ public class RecommendationServiceImpl
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
 
     /*
-     * Marks user/projects to which annotations were added during this request.
+     * Marks users/projects to which annotations were added during this request.
      */
     @SuppressWarnings("serial")
     private static final MetaDataKey<Set<DirtySpot>> DIRTIES = //
@@ -1090,12 +1091,9 @@ public class RecommendationServiceImpl
         var aEnd = aSuggestion.getEnd();
         var aValue = aSuggestion.getLabel();
 
-        // https://github.com/apache/uima-uimaj/issues/345
-        // var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
-        // .at(aBegin, aEnd) //
-        // .asList();
-        var candidates = CasUtil.selectAt(aCas,
-                CasUtil.getType(aCas, aAdapter.getAnnotationTypeName()), aBegin, aEnd);
+        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
+                .at(aBegin, aEnd) //
+                .asList();
 
         var candidateWithEmptyLabel = candidates.stream() //
                 .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
@@ -1647,6 +1645,7 @@ public class RecommendationServiceImpl
             // If the recommender is not trainable and not sensitive to annotations,
             // we can actually re-use the predictions.
             if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
+                    && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
                 inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,
@@ -2161,15 +2160,9 @@ public class RecommendationServiceImpl
             Annotation aPredictedAnnotation)
     {
         Type tokenType = getType(aOriginalCas, Token.class);
-        // https://github.com/apache/uima-uimaj/issues/345
-        // var tokens = aOriginalCas.<Annotation> select(tokenType) //
-        // .coveredBy(aPredictedAnnotation) //
-        // .limit(2).asList();
-        var tokens = CasUtil
-                .selectCovered(aOriginalCas, tokenType, aPredictedAnnotation.getBegin(),
-                        aPredictedAnnotation.getEnd())
-                .stream() //
-                .limit(2).collect(toList());
+        var tokens = aOriginalCas.<Annotation> select(tokenType) //
+                .coveredBy(aPredictedAnnotation) //
+                .limit(2).asList();
 
         if (tokens.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2196,13 +2189,9 @@ public class RecommendationServiceImpl
     private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        // https://github.com/apache/uima-uimaj/issues/345
-        // var sentences = aOriginalCas.select(Sentence.class) //
-        // .coveredBy(aPredictedAnnotation) //
-        // .asList();
-        var sentences = CasUtil.selectCovered(aOriginalCas,
-                CasUtil.getType(aOriginalCas, Sentence.class), aPredictedAnnotation.getBegin(),
-                aPredictedAnnotation.getEnd());
+        var sentences = aOriginalCas.select(Sentence.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
 
         if (sentences.isEmpty()) {
             // This can happen if a recommender uses different token boundaries (e.g. if a
@@ -2221,12 +2210,9 @@ public class RecommendationServiceImpl
     static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
-        // https://github.com/apache/uima-uimaj/issues/345
-        // var tokens = aOriginalCas.select(Token.class) //
-        // .coveredBy(aPredictedAnnotation) //
-        // .asList();
-        var tokens = CasUtil.selectCovered(aOriginalCas, CasUtil.getType(aOriginalCas, Token.class),
-                aPredictedAnnotation.getBegin(), aPredictedAnnotation.getEnd());
+        var tokens = aOriginalCas.select(Token.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
 
         if (tokens.isEmpty()) {
             if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {

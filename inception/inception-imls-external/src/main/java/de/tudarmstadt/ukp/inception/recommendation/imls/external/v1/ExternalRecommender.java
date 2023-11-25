@@ -35,8 +35,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -54,7 +62,6 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -70,6 +77,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Tra
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 
 public class ExternalRecommender
@@ -84,7 +92,8 @@ public class ExternalRecommender
 
     private final ExternalRecommenderProperties properties;
     private final ExternalRecommenderTraits traits;
-    private final HttpClient client;
+
+    private HttpClient _client;
 
     public ExternalRecommender(ExternalRecommenderProperties aProperties, Recommender aRecommender,
             ExternalRecommenderTraits aTraits)
@@ -93,9 +102,56 @@ public class ExternalRecommender
 
         properties = aProperties;
         traits = aTraits;
-        client = HttpClient.newBuilder() //
-                .connectTimeout(properties.getConnectTimeout()) //
-                .build();
+    }
+
+    private HttpClient getClient() throws RecommendationException
+    {
+        try {
+            if (_client == null) {
+                var clientBuilder = HttpClient.newBuilder() //
+                        .connectTimeout(properties.getConnectTimeout());
+                if (!traits.isVerifyCertificates()) {
+                    var sslContext = makeNonVerifyingSslContext();
+
+                    clientBuilder.sslContext(sslContext);
+
+                }
+                _client = clientBuilder.build();
+            }
+            return _client;
+        }
+        catch (KeyManagementException | NoSuchAlgorithmException e) {
+            throw new RecommendationException("Unable to initialize HTTP client", e);
+        }
+    }
+
+    private SSLContext makeNonVerifyingSslContext()
+        throws NoSuchAlgorithmException, KeyManagementException
+    {
+        var trustManager = new X509TrustManager()
+        {
+            @Override
+            public X509Certificate[] getAcceptedIssuers()
+            {
+                return null;
+            }
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] certs, String authType)
+            {
+                // no check
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] certs, String authType)
+            {
+                // no check
+            }
+        };
+
+        var sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[] { trustManager }, new SecureRandom());
+        return sslContext;
     }
 
     @Override
@@ -111,6 +167,8 @@ public class ExternalRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
+        var client = getClient();
+
         var trainingRequest = new TrainingRequest();
 
         // We assume that the type system for all CAS are the same
@@ -129,7 +187,7 @@ public class ExternalRecommender
                 buildMetadata(representativeCas, Range.rangeCoveringDocument(representativeCas)));
 
         var documents = new ArrayList<Document>();
-        for (CAS cas : aCasses) {
+        for (var cas : aCasses) {
             documents.add(buildDocument(cas));
         }
         trainingRequest.setDocuments(documents);
@@ -140,7 +198,7 @@ public class ExternalRecommender
                 .timeout(properties.getReadTimeout())
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
 
-        var response = sendRequest(request);
+        var response = sendRequest(client, request);
         if (response.statusCode() == HTTP_TOO_MANY_REQUESTS) {
             LOG.info("External recommender is already training");
         }
@@ -161,6 +219,8 @@ public class ExternalRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
+        var client = getClient();
+
         var typeSystem = serializeTypeSystem(aCas);
 
         var predictionRequest = new PredictionRequest();
@@ -177,7 +237,7 @@ public class ExternalRecommender
                 .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)) //
                 .build();
 
-        var response = sendRequest(request);
+        var response = sendRequest(client, request);
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (response.statusCode() >= HTTP_BAD_REQUEST) {
@@ -287,10 +347,11 @@ public class ExternalRecommender
         }
     }
 
-    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws RecommendationException
+    private HttpResponse<String> sendRequest(HttpClient aClient, HttpRequest aRequest)
+        throws RecommendationException
     {
         try {
-            return client.send(aRequest, BodyHandlers.ofString(UTF_8));
+            return aClient.send(aRequest, BodyHandlers.ofString(UTF_8));
         }
         catch (IOException | InterruptedException e) {
             throw new RecommendationException("Error while sending request: " + e.getMessage(), e);

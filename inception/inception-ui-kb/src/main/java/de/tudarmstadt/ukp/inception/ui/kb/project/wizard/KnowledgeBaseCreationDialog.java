@@ -21,7 +21,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 
 public class KnowledgeBaseCreationDialog
     extends BootstrapModalDialog

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
@@ -53,6 +52,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
