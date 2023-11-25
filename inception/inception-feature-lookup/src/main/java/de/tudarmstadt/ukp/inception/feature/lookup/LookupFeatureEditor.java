@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.feature.lookup;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static org.apache.wicket.event.Broadcast.BUBBLE;

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 
 import java.io.Serializable;
 

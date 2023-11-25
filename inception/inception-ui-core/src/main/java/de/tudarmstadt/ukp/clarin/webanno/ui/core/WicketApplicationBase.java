@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getApplicationHome;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
@@ -81,20 +81,20 @@ import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.kendo.KendoFixDisabledInputComponentStylingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.jquery.JQueryJavascriptBehavior;
+import de.tudarmstadt.ukp.inception.support.jquery.JQueryUIResourceBehavior;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponentStylingBehavior;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoResourceBehavior;
+import de.tudarmstadt.ukp.inception.support.kendo.WicketJQueryFocusPatchBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
 import de.tudarmstadt.ukp.inception.ui.core.config.CspProperties;

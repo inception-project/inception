@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
 
 public class LearningRecordChangeLocationType
     extends PersistentEnumUserType<LearningRecordChangeLocation>

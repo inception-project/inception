@@ -38,7 +38,7 @@ import org.springframework.http.HttpHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class OllamaClientImpl
     implements OllamaClient

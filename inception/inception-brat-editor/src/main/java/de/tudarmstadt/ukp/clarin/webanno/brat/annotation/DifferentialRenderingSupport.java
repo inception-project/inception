@@ -37,8 +37,8 @@ import com.flipkart.zjsonpatch.JsonDiff;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
+import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 class DifferentialRenderingSupport
     implements Serializable

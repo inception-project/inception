@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.guidelines.settings;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialogContentPanel_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ConfirmationDialogContentPanel_ImplBase;
 
 public class DeleteGuidelinesConfirmationDialogPanel
     extends ConfirmationDialogContentPanel_ImplBase

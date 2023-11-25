@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class CasDoctorException
     extends RuntimeException

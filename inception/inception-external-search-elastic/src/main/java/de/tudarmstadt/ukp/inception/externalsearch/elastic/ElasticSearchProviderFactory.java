@@ -21,8 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
 

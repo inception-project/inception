@@ -40,7 +40,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -51,6 +50,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnota
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.DocSum;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class PubAnnotationProvider
     implements ExternalSearchProvider<PubAnnotationProviderTraits>

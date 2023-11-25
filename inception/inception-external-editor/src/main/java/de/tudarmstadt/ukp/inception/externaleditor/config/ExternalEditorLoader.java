@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonStream;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.BaseLoggers.BOOT_LOG;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonStream;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.nio.file.Files.isDirectory;
 
 import java.io.File;
@@ -45,8 +45,8 @@ import org.springframework.core.io.PathResource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 @ConditionalOnWebApplication
 @Configuration

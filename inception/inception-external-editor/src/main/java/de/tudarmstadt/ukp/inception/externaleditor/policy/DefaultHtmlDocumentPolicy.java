@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.externaleditor.policy;
 import java.io.File;
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
