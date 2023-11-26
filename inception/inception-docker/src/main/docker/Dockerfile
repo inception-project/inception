@@ -46,6 +46,8 @@ RUN groupadd -g ${APP_GID} ${APP_GROUP} \
 # Set up application data folder
 RUN mkdir /export
 VOLUME /export
+VOLUME /tmp
+VOLUME /var/log
 
 # Launch application
 ENV JAVA_OPTS="-Xmx750m"
