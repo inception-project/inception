@@ -235,10 +235,10 @@ class AeroRemoteApiController_Authentication_Jwt_Test
                 @Override
                 public Jwt decode(String aToken)
                 {
-                    var parser = Jwts.parserBuilder().build();
+                    var parser = Jwts.parser().unsecured().build();
                     var jwt = parser.parse(aToken);
 
-                    return new Jwt(aToken, null, null, jwt.getHeader(), (Claims) jwt.getBody());
+                    return new Jwt(aToken, null, null, jwt.getHeader(), (Claims) jwt.getPayload());
                 }
             };
         }
