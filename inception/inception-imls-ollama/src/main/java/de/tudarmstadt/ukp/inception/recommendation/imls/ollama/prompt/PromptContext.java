@@ -25,7 +25,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 public class PromptContext
 {
     private final AnnotationFS candidate;
-    private final Map<String, String> bindings;
+    private final Map<String, Object> bindings;
 
     public PromptContext(AnnotationFS aCandidate)
     {
@@ -38,12 +38,12 @@ public class PromptContext
         return candidate;
     }
 
-    public void set(String aKey, String aValue)
+    public void set(String aKey, Object aValue)
     {
         bindings.put(aKey, aValue);
     }
 
-    public Map<String, String> getBindings()
+    public Map<String, Object> getBindings()
     {
         return bindings;
     }

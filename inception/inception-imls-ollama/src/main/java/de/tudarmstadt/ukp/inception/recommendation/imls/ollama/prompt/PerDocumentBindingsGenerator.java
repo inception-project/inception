@@ -21,12 +21,15 @@ import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+
 public class PerDocumentBindingsGenerator
     implements PromptBindingsGenerator
 {
 
     @Override
-    public Stream<PromptContext> generate(CAS aCas, int aBegin, int aEnd)
+    public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
+            int aEnd)
     {
         var candidate = aCas.getDocumentAnnotation();
         var context = new PromptContext(candidate);

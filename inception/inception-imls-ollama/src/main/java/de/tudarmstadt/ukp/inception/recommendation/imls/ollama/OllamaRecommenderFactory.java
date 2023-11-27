@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -121,7 +120,7 @@ public class OllamaRecommenderFactory
         try {
             return presets.get().get();
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to load presets", e);
             return Collections.emptyList();
         }

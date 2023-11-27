@@ -25,13 +25,14 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 
 public class PerSentenceBindingsGenerator
     implements PromptBindingsGenerator
 {
-
     @Override
-    public Stream<PromptContext> generate(CAS aCas, int aBegin, int aEnd)
+    public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
+            int aEnd)
     {
         var candidateType = CasUtil.getAnnotationType(aCas, Sentence.class);
         return selectOverlapping(aCas, candidateType, aBegin, aEnd).stream().map(candidate -> {

@@ -100,7 +100,7 @@ public class OllamaRecommender
     private Range predict(PromptBindingsGenerator aGenerator, RecommenderContext aContext, CAS aCas,
             int aBegin, int aEnd)
     {
-        aGenerator.generate(aCas, aBegin, aEnd).forEach(promptContext -> {
+        aGenerator.generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
             try {
                 var prompt = jinjava.render(traits.getPrompt(), promptContext.getBindings());
                 var response = query(prompt);

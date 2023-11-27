@@ -21,11 +21,14 @@ import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+
 public interface PromptBindingsGenerator
 {
     static final String VAR_TEXT = "text";
     static final String VAR_SENTENCE = "sentence";
     static final String VAR_DOCUMENT = "document";
+    static final String VAR_EXAMPLES = "examples";
 
-    Stream<PromptContext> generate(CAS aCas, int aBegin, int aEnd);
+    Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin, int aEnd);
 }
