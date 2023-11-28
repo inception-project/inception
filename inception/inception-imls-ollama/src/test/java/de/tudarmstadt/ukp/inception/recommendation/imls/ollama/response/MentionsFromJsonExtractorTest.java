@@ -28,7 +28,22 @@ class MentionsFromJsonExtractorTest
     private MentionsFromJsonExtractor sut = new MentionsFromJsonExtractor();
 
     @Test
-    void testExtractMentionFromJson_variant1()
+    void testExtractMentionFromJson_categorizedNumbers()
+    {
+        var json = """
+                {
+                    "even_numbers": [2, 4, 6]
+                }
+                """;
+        assertThat(sut.extractMentionFromJson(json)) //
+                .containsExactly( //
+                        Pair.of("2", "even_numbers"), //
+                        Pair.of("4", "even_numbers"), //
+                        Pair.of("6", "even_numbers"));
+    }
+
+    @Test
+    void testExtractMentionFromJson_categorizedStrings()
     {
         var json = """
                 {
@@ -44,7 +59,7 @@ class MentionsFromJsonExtractorTest
     }
 
     @Test
-    void testExtractMentionFromJson_variant2()
+    void testExtractMentionFromJson_categorizedObjects()
     {
         var json = """
                 {
@@ -63,7 +78,7 @@ class MentionsFromJsonExtractorTest
     }
 
     @Test
-    void testExtractMentionFromJson_variant3()
+    void testExtractMentionFromJson_namedObjects()
     {
         var json = """
                 {
@@ -80,7 +95,7 @@ class MentionsFromJsonExtractorTest
     }
 
     @Test
-    void testExtractMentionFromJson_variant4()
+    void testExtractMentionFromJson_keyValue()
     {
         var json = """
                 {
@@ -98,9 +113,9 @@ class MentionsFromJsonExtractorTest
                         Pair.of("Don Horny", "politician"));
     }
 
-    @Disabled("Cannot really tell this one apart from variant 4")
+    @Disabled("Cannot really tell this one apart from keyValue")
     @Test
-    void testExtractMentionFromJson_variant5()
+    void testExtractMentionFromJson_valueKey()
     {
         // We assume that the first item is the most relevant one (the
         // mention) so we do not get a bad mention in cases like this:

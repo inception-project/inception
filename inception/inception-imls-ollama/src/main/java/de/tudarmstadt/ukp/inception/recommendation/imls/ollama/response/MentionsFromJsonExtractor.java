@@ -113,7 +113,7 @@ public class MentionsFromJsonExtractor
                 var fieldEntry = fieldIterator.next();
                 if (fieldEntry.getValue().isArray()) {
                     for (var item : fieldEntry.getValue()) {
-                        if (item.isTextual()) {
+                        if (item.isTextual() || item.isNumber() || item.isBoolean()) {
                             // Looks like this
                             // "Person": ["John"],
                             // "Location": ["diner", "Starbucks"]

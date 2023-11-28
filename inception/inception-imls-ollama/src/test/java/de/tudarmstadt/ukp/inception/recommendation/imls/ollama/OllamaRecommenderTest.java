@@ -111,8 +111,10 @@ class OllamaRecommenderTest
 
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
-        traits.setPrompt(
-                "Identify all even numbers in the following list and return them as JSON.\n\n{{ text }}");
+        traits.setPrompt("""
+                Identify all even numbers in the following list and return them as JSON.
+
+                {{ text }}""");
         traits.setFormat(JSON);
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
