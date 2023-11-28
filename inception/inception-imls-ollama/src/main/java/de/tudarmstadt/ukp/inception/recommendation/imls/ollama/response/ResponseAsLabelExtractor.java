@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -30,6 +31,13 @@ public class ResponseAsLabelExtractor
     implements ResponseExtractor
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Override
+    public List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas,
+            int aNum)
+    {
+        return null;
+    }
 
     @Override
     public void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,

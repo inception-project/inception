@@ -17,27 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Disabled("Requires locally running ollama")
+import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
+
 class OllamaClientImplTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String OLLAMA_LOCAL = "http://localhost:11434";
     private OllamaClientImpl sut = new OllamaClientImpl();
+
+    @BeforeAll
+    static void checkIfOllamaIsRunning()
+    {
+        assumeThat(HttpTestUtils.checkURL(DEFAULT_OLLAMA_URL)).isTrue();
+    }
 
     @Test
     void testStream() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
+        var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
@@ -48,7 +56,7 @@ class OllamaClientImplTest
     @Test
     void testNonStream() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
+        var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Tell me a joke.") //
                 .withStream(false) //
@@ -59,7 +67,7 @@ class OllamaClientImplTest
     @Test
     void testJson() throws Exception
     {
-        var response = sut.generate(OLLAMA_LOCAL, OllamaGenerateRequest.builder() //
+        var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //

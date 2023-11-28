@@ -20,14 +20,21 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -36,6 +43,53 @@ public class MentionsFromJsonExtractor
     implements ResponseExtractor
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Override
+    public List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum)
+    {
+        var examples = generateSamples(aEngine, aCas, aNum);
+
+        return new ArrayList<>(examples.values());
+    }
+
+    Map<String, MentionsSample> generateSamples(RecommendationEngine aEngine, CAS aCas, int aNum)
+    {
+        var predictedType = aEngine.getPredictedType(aCas);
+        var predictedFeature = aEngine.getPredictedFeature(aCas);
+
+        var examples = new LinkedHashMap<String, MentionsSample>();
+        for (var candidate : aCas.<Annotation> select(predictedType)) {
+            var sentence = aCas.select(Sentence.class).covering(candidate) //
+                    .map(Sentence::getCoveredText) //
+                    .findFirst().orElse("");
+
+            // Skip mentions for which we did not find a sentence
+            if (StringUtils.isBlank(sentence)) {
+                continue;
+            }
+
+            // Stop once we have sufficient samples
+            if (!examples.containsKey(sentence) && examples.size() > aNum) {
+                break;
+            }
+
+            var example = examples.computeIfAbsent(sentence, MentionsSample::new);
+            var text = candidate.getCoveredText();
+            var label = FSUtil.getFeature(candidate, predictedFeature, String.class);
+            example.addMention(text, label);
+        }
+        return examples;
+    }
+
+    private String toJson(Object aObject)
+    {
+        try {
+            return JSONUtil.toJsonString(aObject);
+        }
+        catch (IOException e) {
+            return null;
+        }
+    }
 
     @Override
     public void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,

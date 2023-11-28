@@ -83,6 +83,7 @@ public class OllamaGenerateRequest
         format = builder.format;
         stream = builder.stream;
         raw = builder.raw;
+        options = builder.options;
     }
 
     public OllamaGenerateResponseFormat getFormat()

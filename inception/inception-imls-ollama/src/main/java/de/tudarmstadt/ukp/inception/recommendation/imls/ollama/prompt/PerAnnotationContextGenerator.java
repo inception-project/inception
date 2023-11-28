@@ -17,23 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+
 import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 
-public class PerDocumentBindingsGenerator
-    implements PromptBindingsGenerator
+public class PerAnnotationContextGenerator
+    implements PromptContextGenerator
 {
-
     @Override
     public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
             int aEnd)
     {
-        var candidate = aCas.getDocumentAnnotation();
-        var context = new PromptContext(candidate);
-        context.set(VAR_TEXT, aCas.getDocumentText());
-        return Stream.of(context);
+        var predictedType = aEngine.getPredictedType(aCas);
+        var candidates = selectOverlapping(aCas, predictedType, aBegin, aEnd);
+        return candidates.stream().map(candidate -> {
+            var sentence = aCas.select(Sentence.class).covering(candidate) //
+                    .map(Sentence::getCoveredText) //
+                    .findFirst().orElse("");
+            var context = new PromptContext(candidate);
+            context.set(VAR_TEXT, candidate.getCoveredText());
+            context.set(VAR_SENTENCE, sentence);
+            return context;
+        });
     }
 }

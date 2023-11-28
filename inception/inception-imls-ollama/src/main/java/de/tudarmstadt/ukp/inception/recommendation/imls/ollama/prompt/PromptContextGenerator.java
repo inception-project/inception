@@ -15,19 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
 
-public interface ResponseExtractor
+public interface PromptContextGenerator
 {
-    void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
-            String aResponse);
+    static final String VAR_TEXT = "text";
+    static final String VAR_SENTENCE = "sentence";
+    static final String VAR_DOCUMENT = "document";
+    static final String VAR_EXAMPLES = "examples";
 
-    List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum);
+    Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin, int aEnd);
 }

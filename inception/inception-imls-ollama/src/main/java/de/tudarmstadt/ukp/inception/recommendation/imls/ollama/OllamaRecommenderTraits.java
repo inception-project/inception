@@ -33,9 +33,11 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingM
 public class OllamaRecommenderTraits
     implements Serializable
 {
+    public static final String DEFAULT_OLLAMA_URL = "http://localhost:11434/";
+
     private static final long serialVersionUID = -8760059914187478368L;
 
-    private String url = "http://localhost:11434/";
+    private String url = DEFAULT_OLLAMA_URL;
 
     private String model;
 

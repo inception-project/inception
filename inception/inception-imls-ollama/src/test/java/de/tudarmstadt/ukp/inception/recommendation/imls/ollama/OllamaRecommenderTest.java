@@ -18,17 +18,25 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.ExtractionMode.MENTIONS_FROM_JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode.PER_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode.PER_SENTENCE;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +44,14 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptingMode;
+import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
-@Disabled("Requires locally running ollama")
 class OllamaRecommenderTest
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -52,6 +60,12 @@ class OllamaRecommenderTest
     private AnnotationFeature feature;
     private Recommender recommender;
     private CAS cas;
+
+    @BeforeAll
+    static void checkIfOllamaIsRunning()
+    {
+        assumeThat(HttpTestUtils.checkURL(DEFAULT_OLLAMA_URL)).isTrue();
+    }
 
     @BeforeEach
     void setup() throws Exception
@@ -77,7 +91,7 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("What do you see in the following text?\n\n{{ text }}");
-        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
+        traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
@@ -86,8 +100,7 @@ class OllamaRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
 
-        predictions.forEach(prediction -> LOG.info("Prediction: {} {}", prediction.getCoveredText(),
-                prediction.getValue()));
+        predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
     }
 
@@ -100,9 +113,9 @@ class OllamaRecommenderTest
         traits.setModel("mistral");
         traits.setPrompt(
                 "Identify all even numbers in the following list and return them as JSON.\n\n{{ text }}");
-        traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
-        traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
+        traits.setFormat(JSON);
+        traits.setPromptingMode(PER_DOCUMENT);
+        traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
         sut.predict(new RecommenderContext(), cas);
@@ -110,8 +123,7 @@ class OllamaRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
 
-        predictions.forEach(prediction -> LOG.info("Prediction: {} {}", prediction.getCoveredText(),
-                prediction.getValue()));
+        predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
     }
 
@@ -124,9 +136,9 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("Identify all named entities in the following text.\n\n{{ text }}");
-        traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
-        traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
+        traits.setFormat(JSON);
+        traits.setPromptingMode(PER_DOCUMENT);
+        traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
         sut.predict(new RecommenderContext(), cas);
@@ -134,24 +146,27 @@ class OllamaRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
 
-        predictions.forEach(prediction -> LOG.info("Prediction: {} {}", prediction.getCoveredText(),
-                prediction.getValue()));
+        predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
     }
 
     @Test
     void testPerDocumentUsingMentionsFromJsonList_Politicians() throws Exception
     {
-        cas.setDocumentText(
-                "John is will meet President Livingston tomorrow. They will lunch together with the minister of foreign affairs. Later they meet the the Lord of Darkness, Don Horny.");
+        cas.setDocumentText("""
+                John is will meet President Livingston tomorrow.
+                They will lunch together with the minister of foreign affairs.
+                Later they meet the the Lord of Darkness, Don Horny.""");
 
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
-        traits.setPrompt(
-                "Identify all politicians in the following text and return them as JSON.\n\n{{ text }}");
-        traits.setFormat(OllamaGenerateResponseFormat.JSON);
-        traits.setPromptingMode(PromptingMode.PER_DOCUMENT);
-        traits.setExtractionMode(ExtractionMode.MENTIONS_FROM_JSON);
+        traits.setPrompt("""
+                Identify all politicians in the following text and return them as JSON.
+
+                {{ text }}""");
+        traits.setFormat(JSON);
+        traits.setPromptingMode(PER_DOCUMENT);
+        traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
         sut.predict(new RecommenderContext(), cas);
@@ -159,8 +174,56 @@ class OllamaRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
 
-        predictions.forEach(prediction -> LOG.info("Prediction: {} {}", prediction.getCoveredText(),
-                prediction.getValue()));
+        predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
+        assertThat(predictions).as("predictions").isNotEmpty();
+    }
+
+    @Test
+    void testPerSentenceUsingMentionsFromJsonList_Politicians_fewShjot() throws Exception
+    {
+        TokenBuilder.create(Token.class, Sentence.class).buildTokens(cas.getJCas(), """
+                John is will meet President Livingston tomorrow .
+                They will lunch together with the minister of foreign affairs .
+                Later they meet the the Lord of Darkness, Don Horny .""");
+        buildAnnotation(cas, NamedEntity.class).on("John") //
+                .withFeature(NamedEntity._FeatName_value, "PER") //
+                .buildAndAddToIndexes();
+        buildAnnotation(cas, NamedEntity.class).on("President Livingston") //
+                .withFeature(NamedEntity._FeatName_value, "PER") //
+                .buildAndAddToIndexes();
+
+        var traits = new OllamaRecommenderTraits();
+        traits.setModel("mistral");
+        traits.setPrompt("""
+                Identify all politicians in the following text and return them as JSON.
+
+                {% for example in examples %}
+                Text:
+                '''
+                {{ example.getText() }}
+                '''
+
+                Response:
+                {{ example.getLabelledMentions() | tojson }}
+                {% endfor %}
+
+                Text:
+                '''
+                {{ text }}
+                '''
+
+                Response:""");
+        traits.setFormat(JSON);
+        traits.setPromptingMode(PER_SENTENCE);
+        traits.setExtractionMode(MENTIONS_FROM_JSON);
+
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        sut.predict(new RecommenderContext(), cas);
+
+        var predictions = cas.select(NamedEntity.class)
+                .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
+
+        predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
     }
 }

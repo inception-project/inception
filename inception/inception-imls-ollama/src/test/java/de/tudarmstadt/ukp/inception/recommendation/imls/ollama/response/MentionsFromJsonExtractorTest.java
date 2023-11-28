@@ -23,7 +23,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-class JsonExtractorTest
+class MentionsFromJsonExtractorTest
 {
     private MentionsFromJsonExtractor sut = new MentionsFromJsonExtractor();
 

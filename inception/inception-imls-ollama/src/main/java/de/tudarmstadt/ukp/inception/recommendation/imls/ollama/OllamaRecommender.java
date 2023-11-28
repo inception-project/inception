@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator.VAR_EXAMPLES;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -38,18 +41,22 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerAnnotationBindingsGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerDocumentBindingsGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerSentenceBindingsGenerator;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptBindingsGenerator;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerAnnotationContextGenerator;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerDocumentContextGenerator;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerSentenceContextGenerator;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsFromJsonExtractor;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsSample;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseAsLabelExtractor;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseExtractor;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class OllamaRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
+    private static final int MAX_FEW_SHOT_EXAMPLES = 10;
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final OllamaRecommenderTraits traits;
@@ -84,28 +91,18 @@ public class OllamaRecommender
     public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        switch (traits.getPromptingMode()) {
-        case PER_ANNOTATION:
-            return predict(new PerAnnotationBindingsGenerator(), aContext, aCas, aBegin, aEnd);
-        case PER_SENTENCE:
-            return predict(new PerSentenceBindingsGenerator(), aContext, aCas, aBegin, aEnd);
-        case PER_DOCUMENT:
-            return predict(new PerDocumentBindingsGenerator(), aContext, aCas, aBegin, aEnd);
-        default:
-            throw new RecommendationException(
-                    "Unsupported mode [" + traits.getPromptingMode() + "]");
-        }
-    }
+        var responseExtractor = getResponseExtractor();
+        List<MentionsSample> examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
 
-    private Range predict(PromptBindingsGenerator aGenerator, RecommenderContext aContext, CAS aCas,
-            int aBegin, int aEnd)
-    {
-        aGenerator.generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
+        getPromptContextGenerator().generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
             try {
-                var prompt = jinjava.render(traits.getPrompt(), promptContext.getBindings());
-                var response = query(prompt);
+                var bindings = promptContext.getBindings();
 
-                extractPredictions(aCas, promptContext, response);
+                bindings.put(VAR_EXAMPLES, examples);
+
+                var response = query(promptContext);
+
+                responseExtractor.extract(this, aCas, promptContext, response);
             }
             catch (IOException e) {
                 LOG.error("Ollama [{}] failed to respond: {}", traits.getModel(),
@@ -116,8 +113,10 @@ public class OllamaRecommender
         return new Range(aBegin, aEnd);
     }
 
-    private String query(String prompt) throws IOException
+    private String query(PromptContext aContext) throws IOException
     {
+        var prompt = jinjava.render(traits.getPrompt(), aContext.getBindings());
+
         LOG.trace("Querying ollama [{}]: [{}]", traits.getModel(), prompt);
         var request = OllamaGenerateRequest.builder() //
                 .withModel(traits.getModel()) //
@@ -125,21 +124,36 @@ public class OllamaRecommender
                 .withFormat(traits.getFormat()) //
                 .withRaw(traits.isRaw()) //
                 .withStream(false) //
+                // FIXME: Make NUM_PREDICT accessible in UI
+                .withOption(OllamaGenerateRequest.NUM_PREDICT, 300) //
                 .build();
         var response = client.generate(traits.getUrl(), request).trim();
         LOG.trace("Ollama [{}] responds: [{}]", traits.getModel(), response);
         return response;
     }
 
-    private void extractPredictions(CAS aCas, PromptContext aContext, String aResponse)
+    private PromptContextGenerator getPromptContextGenerator()
+    {
+        switch (traits.getPromptingMode()) {
+        case PER_ANNOTATION:
+            return new PerAnnotationContextGenerator();
+        case PER_SENTENCE:
+            return new PerSentenceContextGenerator();
+        case PER_DOCUMENT:
+            return new PerDocumentContextGenerator();
+        default:
+            throw new IllegalArgumentException(
+                    "Unsupported mode [" + traits.getPromptingMode() + "]");
+        }
+    }
+
+    private ResponseExtractor getResponseExtractor()
     {
         switch (traits.getExtractionMode()) {
         case RESPONSE_AS_LABEL:
-            new ResponseAsLabelExtractor().extract(this, aCas, aContext, aResponse);
-            break;
+            return new ResponseAsLabelExtractor();
         case MENTIONS_FROM_JSON:
-            new MentionsFromJsonExtractor().extract(this, aCas, aContext, aResponse);
-            break;
+            return new MentionsFromJsonExtractor();
         default:
             throw new IllegalArgumentException(
                     "Unsupported extraction mode [" + traits.getExtractionMode() + "]");

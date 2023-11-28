@@ -15,20 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
-import java.util.stream.Stream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-
-public interface PromptBindingsGenerator
+public class MentionsSample
 {
-    static final String VAR_TEXT = "text";
-    static final String VAR_SENTENCE = "sentence";
-    static final String VAR_DOCUMENT = "document";
-    static final String VAR_EXAMPLES = "examples";
+    private final String text;
+    private final Map<String, String> labelledMentions = new LinkedHashMap<>();
 
-    Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin, int aEnd);
+    public MentionsSample(String aText)
+    {
+        text = aText;
+    }
+
+    public void addMention(String aMention, String aLabel)
+    {
+        labelledMentions.put(aMention, aLabel);
+    }
+
+    public String getText()
+    {
+        return text;
+    }
+
+    public Map<String, String> getLabelledMentions()
+    {
+        return labelledMentions;
+    }
 }

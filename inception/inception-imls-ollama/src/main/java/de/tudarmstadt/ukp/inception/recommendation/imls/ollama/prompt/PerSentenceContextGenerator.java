@@ -19,48 +19,28 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 
-import java.util.LinkedHashMap;
 import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 
-public class PerAnnotationBindingsGenerator
-    implements PromptBindingsGenerator
+public class PerSentenceContextGenerator
+    implements PromptContextGenerator
 {
     @Override
     public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
             int aEnd)
     {
-        var candidateType = CasUtil.getAnnotationType(aCas, Sentence.class);
-        var predictedFeature = aEngine.getPredictedFeature(aCas);
+        var sentenceType = CasUtil.getAnnotationType(aCas, Sentence.class);
 
-        var candidates = selectOverlapping(aCas, candidateType, aBegin, aEnd);
-
-        var examples = new LinkedHashMap<String, String>();
-        for (var candidate : candidates) {
-            var text = candidate.getCoveredText();
-            var label = FSUtil.getFeature(candidate, predictedFeature, String.class);
-
-            examples.put(text, label);
-
-            if (examples.size() >= 10) {
-                break;
-            }
-        }
+        var candidates = selectOverlapping(aCas, sentenceType, aBegin, aEnd);
 
         return candidates.stream().map(candidate -> {
-            var sentence = aCas.select(Sentence.class).covering(candidate) //
-                    .map(Sentence::getCoveredText) //
-                    .findFirst().orElse("");
             var context = new PromptContext(candidate);
             context.set(VAR_TEXT, candidate.getCoveredText());
-            context.set(VAR_SENTENCE, sentence);
-            context.set(VAR_EXAMPLES, examples);
             return context;
         });
     }
