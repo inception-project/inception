@@ -75,4 +75,11 @@ class OllamaClientImplTest
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }
+
+    @Test
+    void testListModels() throws Exception
+    {
+        var response = sut.listModels(DEFAULT_OLLAMA_URL);
+        LOG.info("Response: [{}]", response);
+    }
 }

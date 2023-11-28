@@ -30,6 +30,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -63,14 +64,7 @@ public class OllamaClientImpl
         try {
             var response = client.send(aRequest, HttpResponse.BodyHandlers.ofInputStream());
 
-            // If the response indicates that the request was not successful,
-            // then it does not make sense to go on and try to decode the XMI
-            if (response.statusCode() >= HTTP_BAD_REQUEST) {
-                String responseBody = getResponseBody(response);
-                String msg = format("Request was not successful: [%d] - [%s]",
-                        response.statusCode(), responseBody);
-                throw new IOException(msg);
-            }
+            handleError(response);
 
             return response;
         }
@@ -129,14 +123,7 @@ public class OllamaClientImpl
 
         var response = sendRequest(request);
 
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new IOException(msg);
-        }
+        handleError(response);
 
         var result = new StringBuilder();
         try (var is = response.body()) {
@@ -148,5 +135,31 @@ public class OllamaClientImpl
         }
 
         return result.toString();
+    }
+
+    public List<OllamaModel> listModels(String aUrl) throws IOException
+    {
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
+                .header(HttpHeaders.CONTENT_TYPE, "application/json").GET() //
+                .build();
+
+        var response = sendRequest(request);
+
+        handleError(response);
+
+        try (var is = response.body()) {
+            return objectMapper.readValue(is, OllamaTagsResponse.class).getModels();
+        }
+    }
+
+    private void handleError(HttpResponse<InputStream> response) throws IOException
+    {
+        if (response.statusCode() >= HTTP_BAD_REQUEST) {
+            String responseBody = getResponseBody(response);
+            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
+                    responseBody);
+            throw new IOException(msg);
+        }
     }
 }

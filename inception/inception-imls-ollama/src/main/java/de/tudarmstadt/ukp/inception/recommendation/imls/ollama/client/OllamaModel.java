@@ -15,43 +15,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class MentionsSample
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class OllamaModel
 {
-    private final String text;
-    private final Map<String, String> labelledMentions = new LinkedHashMap<>();
+    private @JsonProperty("name") String name;
+    private @JsonProperty("modified_at") String modifiedAt;
+    private @JsonProperty("size") long size;
 
-    public MentionsSample(String aText)
+    public String getName()
     {
-        text = aText;
+        return name;
     }
 
-    public void addMention(String aMention, String aLabel)
+    public void setName(String aName)
     {
-        labelledMentions.put(aMention, aLabel);
+        name = aName;
     }
 
-    public String getText()
+    public String getModifiedAt()
     {
-        return text;
+        return modifiedAt;
     }
 
-    public Map<String, String> getLabelledMentions()
+    public void setModifiedAt(String aModifiedAt)
     {
-        return labelledMentions;
+        modifiedAt = aModifiedAt;
+    }
+
+    public long getSize()
+    {
+        return size;
+    }
+
+    public void setSize(long aSize)
+    {
+        size = aSize;
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("text", text)
-                .append("labelledMentions", labelledMentions).toString();
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("name", name)
+                .toString();
     }
 }

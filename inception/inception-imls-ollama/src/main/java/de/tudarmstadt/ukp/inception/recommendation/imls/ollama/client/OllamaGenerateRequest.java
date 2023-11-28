@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
+import static java.util.Arrays.asList;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -68,6 +71,15 @@ public class OllamaGenerateRequest
     public static final Option<Double> ROPE_FREQUENCY_SCALE = new Option<>(Double.class,
             "rope_frequency_scale");
     public static final Option<Integer> NUM_THREAD = new Option<>(Integer.class, "num_thread");
+
+    public static List<Option<?>> getAllOptions()
+    {
+        return asList(NUM_KEEP, SEED, NUM_PREDICT, TOP_K, TOP_P, TFS_Z, TYPICAL_P, REPEAT_LAST_N,
+                TEMPERATURE, REPEAT_PENALTY, PRESENCE_PENALTY, FREQUENCY_PENALTY, MIROSTAT,
+                MIROSTAT_TAU, MIROSTAT_ETA, PENALIZE_NEWLINE, STOP, NUMA, NUM_CTX, NUM_BATCH,
+                NUM_GQA, NUM_GPU, MAIN_GPU, LOW_VRAM, F16_KV, LOGITS_ALL, VOCAB_ONLY, USE_MMAP,
+                USE_MLOCK, EMBEDDING_ONLY, ROPE_FREQUENCY_BASE, ROPE_FREQUENCY_SCALE, NUM_THREAD);
+    }
 
     private String model;
     private String prompt;

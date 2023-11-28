@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -51,7 +52,7 @@ public class OllamaRecommenderTraits
 
     private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
 
-    private @JsonInclude(NON_EMPTY) Map<String, Object> options = new HashMap<String, Object>();
+    private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 
     public String getUrl()
     {
@@ -121,5 +122,16 @@ public class OllamaRecommenderTraits
     public void setExtractionMode(ExtractionMode aExtractionMode)
     {
         extractionMode = aExtractionMode;
+    }
+
+    public Map<String, Object> getOptions()
+    {
+        return Collections.unmodifiableMap(options);
+    }
+
+    public void setOptions(Map<String, Object> aOptions)
+    {
+        options.clear();
+        options.putAll(aOptions);
     }
 }
