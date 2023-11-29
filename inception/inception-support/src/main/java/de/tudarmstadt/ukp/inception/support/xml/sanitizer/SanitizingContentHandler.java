@@ -52,6 +52,7 @@ public class SanitizingContentHandler
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String MASKED = "MASKED-";
+    private static final String NO_LOCAL_NAME = "NO-LOCAL-NAME";
     private static final String XMLNS = "xmlns";
     private static final String XMLNS_PREFIX = "xmlns:";
 
@@ -119,15 +120,20 @@ public class SanitizingContentHandler
         throws SAXException
     {
         QName element = aElement;
+        ElementAction action = aAction;
 
-        if ((aAction == ElementAction.DROP || aAction == ElementAction.SKIP)
-                && policies.isDebug()) {
+        if (StringUtils.isBlank(element.getLocalPart())) {
+            action = ElementAction.SKIP;
+            element = new QName(element.getNamespaceURI(), NO_LOCAL_NAME, "");
+        }
+
+        if ((action == ElementAction.DROP || action == ElementAction.SKIP) && policies.isDebug()) {
             element = maskElement(element);
         }
 
-        stack.push(new Frame(element, aPolicy, aAction, aLocalNamespaces));
+        stack.push(new Frame(element, aPolicy, action, aLocalNamespaces));
 
-        if (aAction == ElementAction.PASS || policies.isDebug()) {
+        if (action == ElementAction.PASS || policies.isDebug()) {
             super.startElement(element.getNamespaceURI(), element.getLocalPart(), getQName(element),
                     aAtts);
         }
@@ -244,8 +250,13 @@ public class SanitizingContentHandler
         var action = policies.forAttribute(aElement, attribute, type, value)
                 .orElse(policies.getDefaultAttributeAction());
 
-        if ("xmlns".equals(attribute.getPrefix())) {
+        if (XMLNS.equals(attribute.getPrefix())) {
             action = AttributeAction.PASS;
+        }
+
+        if (StringUtils.isBlank(attribute.getLocalPart())) {
+            action = AttributeAction.DROP;
+            attribute = new QName(attribute.getNamespaceURI(), NO_LOCAL_NAME, "");
         }
 
         switch (action) {
