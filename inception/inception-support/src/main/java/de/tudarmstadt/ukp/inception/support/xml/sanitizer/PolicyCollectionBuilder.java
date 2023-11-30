@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.caseInsensitiveQNameComparator;
 import static de.tudarmstadt.ukp.inception.support.xml.sanitizer.ElementAction.PASS;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
@@ -46,6 +47,8 @@ public class PolicyCollectionBuilder
     private ElementAction defaultElementAction = ElementAction.DROP;
     private AttributeAction defaultAttributeAction = AttributeAction.DROP;
 
+    private String defaultNamespace;
+
     public static PolicyCollectionBuilder caseSensitive()
     {
         return new PolicyCollectionBuilder(LinkedHashMap::new);
@@ -64,6 +67,12 @@ public class PolicyCollectionBuilder
         elementPolicyBuilders = mapSupplier.get();
         elementAttributePolicies = mapSupplier.get();
         globalAttributePolicies = mapSupplier.get();
+    }
+
+    public PolicyCollectionBuilder defaultNamespace(String aDefaultNamespace)
+    {
+        defaultNamespace = aDefaultNamespace;
+        return this;
     }
 
     public PolicyCollectionBuilder defaultAttributeAction(AttributeAction aDefaultAttributeAction)
@@ -137,6 +146,10 @@ public class PolicyCollectionBuilder
         elementPolicyBuilders.put(aElement,
                 new ElementPolicyBuilder(aElement, aAction, mapSupplier));
 
+        if (isEmpty(aElement.getNamespaceURI()) && defaultNamespace != null) {
+            elementPolicy(new QName(defaultNamespace, aElement.getLocalPart()), aAction);
+        }
+
         return this;
     }
 
@@ -200,6 +213,12 @@ public class PolicyCollectionBuilder
                 log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
                         aElementName, aAttributeName, oldPolicy, aPolicy);
             }
+        }
+
+        if (isEmpty(aElementName.getNamespaceURI()) && isEmpty(aAttributeName.getNamespaceURI())
+                && defaultNamespace != null) {
+            attributePolicy(new QName(defaultNamespace, aElementName.getLocalPart()),
+                    new QName(defaultNamespace, aAttributeName.getLocalPart()), aPolicy);
         }
     }
 
