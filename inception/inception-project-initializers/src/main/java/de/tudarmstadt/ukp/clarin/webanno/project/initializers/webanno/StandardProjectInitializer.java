@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
+package de.tudarmstadt.ukp.clarin.webanno.project.initializers.webanno;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -45,7 +46,7 @@ public class StandardProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "webanno.png");
+            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
 
     private final ProjectService projectService;
 

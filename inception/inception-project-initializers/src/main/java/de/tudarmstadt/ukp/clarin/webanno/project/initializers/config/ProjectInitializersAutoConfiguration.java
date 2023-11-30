@@ -38,10 +38,10 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSet
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SemPredArgLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperationTagSetInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.StandardProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.empty.EmptyProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.webanno.StandardProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
