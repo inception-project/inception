@@ -50,5 +50,5 @@ VOLUME /tmp
 VOLUME /var/log
 
 # Launch application
-ENV JAVA_OPTS=""
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=80"
 CMD /opt/inception/launch.sh java ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar
