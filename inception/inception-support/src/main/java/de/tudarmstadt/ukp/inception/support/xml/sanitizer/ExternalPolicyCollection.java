@@ -32,6 +32,7 @@ public class ExternalPolicyCollection
     private boolean debug;
     private ElementAction defaultElementAction;
     private AttributeAction defaultAttributeAction;
+    private String defaultNamespace;
 
     public String getName()
     {
@@ -101,5 +102,15 @@ public class ExternalPolicyCollection
     public AttributeAction getDefaultAttributeAction()
     {
         return defaultAttributeAction;
+    }
+
+    public String getDefaultNamespace()
+    {
+        return defaultNamespace;
+    }
+
+    public void setDefaultNamespace(String aDefaultNamespace)
+    {
+        defaultNamespace = aDefaultNamespace;
     }
 }
