@@ -46,6 +46,8 @@ include::{include-dir}installation_ssl_caddy.adoc[leveloffset=+2]
 
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
+include::{include-dir}installation_kubernetes.adoc[leveloffset=+1]
+
 include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
 
 <<<

@@ -53,6 +53,9 @@ public class PolicyCollectionIOUtils
             policyCollectionBuilder
                     .defaultAttributeAction(externalCollection.getDefaultAttributeAction());
         }
+        if (externalCollection.getDefaultNamespace() != null) {
+            policyCollectionBuilder.defaultNamespace(externalCollection.getDefaultNamespace());
+        }
 
         for (ExternalPolicy policy : externalCollection.getPolicies()) {
             var isElementPolicy = policy.getElements() != null;
