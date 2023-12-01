@@ -22,11 +22,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum PromptingMode
 {
     @JsonProperty("per-annotation")
-    PER_ANNOTATION, //
+    PER_ANNOTATION("""
+            Template variables:
+            * `text`: annotation text,
+            * `sentence`: sentence containing annotation,
+            * `examples`: labeled annotations"""),
 
     @JsonProperty("per-sentence")
-    PER_SENTENCE, //
+    PER_SENTENCE("""
+            Template variables:
+            * `text`: sentence text,
+            * `examples`: labeled annotations"""),
 
     @JsonProperty("per-document")
-    PER_DOCUMENT
+    PER_DOCUMENT("""
+            Template variables:
+            * `text`: document text""");
+
+    private final String hints;
+
+    private PromptingMode(String aHints)
+    {
+        hints = aHints;
+    }
+
+    public String getHints()
+    {
+        return hints;
+    }
 }

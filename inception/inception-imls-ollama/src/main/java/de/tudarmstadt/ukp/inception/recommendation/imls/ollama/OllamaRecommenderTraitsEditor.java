@@ -35,6 +35,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.Option;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class OllamaRecommenderTraitsEditor
     extends AbstractTraitsEditor
@@ -109,7 +111,14 @@ public class OllamaRecommenderTraitsEditor
         form.add(new TextField<String>("model"));
         form.add(new TextArea<String>("prompt"));
         form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
-        form.add(new PromptingModeSelect("promptingMode"));
+        var markdownLabel = new MarkdownLabel("promptHints",
+                LoadableDetachableModel.of(this::getPromptHints));
+        markdownLabel.setOutputMarkupId(true);
+        form.add(markdownLabel);
+        form.add(new PromptingModeSelect("promptingMode")
+                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+                    _target.add(markdownLabel);
+                })));
         form.add(new ExtractionModeSelect("extractionMode"));
         form.add(new OllamaResponseFormatSelect("format"));
         add(form);
@@ -168,5 +177,10 @@ public class OllamaRecommenderTraitsEditor
     {
         optionSettings.getObject().remove(aBinding);
         aTarget.add(optionSettingsContainer);
+    }
+
+    private String getPromptHints()
+    {
+        return traits.getObject().getPromptingMode().getHints();
     }
 }

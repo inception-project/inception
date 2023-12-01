@@ -77,9 +77,10 @@
     <div class="row form-row" wicket:enclosure="prompt">
       <label class="col-sm-3 col-form-label" wicket:for="prompt">
         <wicket:message key="prompt"/>
-        <div class="small text-muted">
+        <div class="small text-muted mb-2">
           <i class="fas fa-torii-gate"></i> Jinja supported
         </div>
+        <div wicket:id="promptHints" class="small text-muted"/>
       </label>
       <div class="col-sm-9">
         <textarea wicket:id="prompt" class="form-control" rows="10"/>
