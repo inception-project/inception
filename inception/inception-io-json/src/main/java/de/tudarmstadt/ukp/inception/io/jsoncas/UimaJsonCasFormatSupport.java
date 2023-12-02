@@ -43,7 +43,7 @@ public class UimaJsonCasFormatSupport
     implements FormatSupport
 {
     public static final String ID = "jsoncas";
-    public static final String NAME = "UIMA CAS JSON 0.4.0 (experimental)";
+    public static final String NAME = "UIMA CAS JSON 0.4.0";
 
     private final DocumentImportExportService documentImportExportService;
 
