@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_uimajson]]
-= UIMA CAS JSON (experimental)
+= UIMA CAS JSON
 
 This is a new and still experimental UIMA CAS JSON format which is able to capture not only the
 annotations but also the type system. As such, it is self-contained like the <<sect_formats_uimabinarycas>>
@@ -33,7 +33,7 @@ The current draft specification of the format is available link:https://github.c
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[UIMA CAS JSON (experimental)] (`jsoncas`)
+| link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[UIMA CAS JSON] (`jsoncas`)
 | yes
 | yes
 | yes

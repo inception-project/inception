@@ -239,10 +239,24 @@ export class RecogitoEditor implements AnnotationEditor {
             }
           }
         }
+
+        this.removeWhitepaceOnlyHighlights()
       })
     }
   }
 
+  /**
+   * Some highlights may only contain whitepace. This method removes such highlights.
+   */
+    private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
+      this.root.querySelectorAll(selector).forEach(e => {
+        if (!e.classList.contains('iaa-zero-width') && !e.textContent?.trim()) {
+          e.after(...e.childNodes)
+          e.remove()
+        }
+      })
+    }
+  
   /**
    * Recogito does not support rendering annotations with a custom color. This is a workaround.
    */
@@ -377,7 +391,9 @@ export class RecogitoEditor implements AnnotationEditor {
       // console.log(`From ${span[1][0][0]}-${span[1][0][1]} +${offset}`, this.root)
 
       const classList = ['iaa-highlighted']
-      
+
+      if (begin === end) classList.push('iaa-zero-width')
+
       const ms = doc.annotationMarkers.get(span.vid) || []
       ms.forEach(m => classList.push(`i7n-marker-${m[0]}`))
 
