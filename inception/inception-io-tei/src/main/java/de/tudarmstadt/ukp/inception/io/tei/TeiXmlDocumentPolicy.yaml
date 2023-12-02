@@ -1,0 +1,47 @@
+# Licensed to the Technische Universität Darmstadt under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The Technische Universität Darmstadt 
+# licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.
+#  
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+name: TEI XML policy
+version: 1.0
+case_sensitive: false
+default_attribute_action: DROP
+default_element_action: DROP
+debug: true
+policies:
+  - {
+      elements:
+        [
+          "{http://www.tei-c.org/ns/1.0}head",
+          "{http://www.tei-c.org/ns/1.0}body",
+          "{http://www.tei-c.org/ns/1.0}div",
+          "{http://www.tei-c.org/ns/1.0}TEI",
+          "{http://www.tei-c.org/ns/1.0}text",
+          "{http://www.tei-c.org/ns/1.0}pb",
+          "{http://www.tei-c.org/ns/1.0}l",
+          "{http://www.tei-c.org/ns/1.0}lg",
+          "{http://www.tei-c.org/ns/1.0}s",
+          "{http://www.tei-c.org/ns/1.0}p",
+          "{http://www.tei-c.org/ns/1.0}sp",
+          "{http://www.tei-c.org/ns/1.0}speaker",
+          "{http://www.tei-c.org/ns/1.0}note",
+          "{http://www.tei-c.org/ns/1.0}stage",
+          "{http://www.tei-c.org/ns/1.0}castList",
+          "{http://www.tei-c.org/ns/1.0}castItem",
+          "{http://www.tei-c.org/ns/1.0}role",
+          "{http://www.tei-c.org/ns/1.0}roleDesc"
+        ],
+      action: "PASS",
+    }
+  - { attributes: ["class", "type"], action: "PASS" }
