@@ -37,7 +37,7 @@ public class TeiFormatsAutoConfiguration
 
     @Bean
     @ConditionalOnProperty(prefix = "format.tei", name = "enabled", //
-            havingValue = "true", matchIfMissing = true)
+            havingValue = "true", matchIfMissing = false)
     public TeiXmlDocumentFormatSupport teiXmlDocumentFormatSupport()
     {
         return new TeiXmlDocumentFormatSupport();
