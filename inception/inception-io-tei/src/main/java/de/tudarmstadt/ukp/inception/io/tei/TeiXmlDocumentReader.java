@@ -21,29 +21,32 @@ import static org.apache.uima.fit.util.FSCollectionFactory.createFSArray;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.uima.UimaContext;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.MimeTypeCapability;
 import org.apache.uima.fit.descriptor.ResourceMetaData;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.FSArray;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.parameter.MimeTypes;
 import org.dkpro.core.api.resources.CompressionUtils;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler.ElementListener;
+import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
 @ResourceMetaData(name = "TEI-XML Document Reader")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XML, MimeTypes.TEXT_XML })
@@ -57,25 +60,36 @@ import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler.ElementListen
 public class TeiXmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase
 {
+    private SAXParser parser;
+
+    @Override
+    public void initialize(UimaContext aContext) throws ResourceInitializationException
+    {
+        super.initialize(aContext);
+
+        try {
+            parser = XmlParserUtils.newSaxParser();
+        }
+        catch (ParserConfigurationException | SAXException e) {
+            throw new ResourceInitializationException(e);
+        }
+    }
+
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
-        Resource res = nextFile();
+        var res = nextFile();
         initCas(aJCas, res);
 
-        try (InputStream is = new BufferedInputStream(
+        try (var is = new BufferedInputStream(
                 CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
 
-            // Create handler
-            DefaultHandler handler = makeHandler(aJCas);
-            
-            // Parser XML
-            SAXParserFactory pf = SAXParserFactory.newInstance();
-            SAXParser parser = pf.newSAXParser();
-
-            InputSource source = new InputSource(is);
+            var source = new InputSource(is);
             source.setPublicId(res.getLocation());
             source.setSystemId(res.getLocation());
+
+            var handler = makeXmlToCasHandler(aJCas);
+
             parser.parse(source, handler);
         }
         catch (IOException e) {
@@ -85,14 +99,15 @@ public class TeiXmlDocumentReader
             throw new CollectionException(e);
         }
     }
-    
-    private DefaultHandler makeHandler(JCas aJCas) {
-        CasXmlHandler handler = new CasXmlHandler(aJCas);
+
+    private DefaultHandler makeXmlToCasHandler(JCas aJCas)
+    {
+        var handler = new CasXmlHandler(aJCas);
         handler.captureText(false);
         handler.addListener(new ElementListener()
         {
             private List<XmlElement> captureRoots = new ArrayList<>();
-            
+
             @Override
             public void startElement(XmlElement aElement)
             {
@@ -101,11 +116,11 @@ public class TeiXmlDocumentReader
                     captureRoots.add(aElement);
                 }
             }
-            
+
             @Override
             public void endDocument(XmlDocument aDocument)
             {
-                aDocument.setCaptureRoots((FSArray)createFSArray(aJCas, captureRoots));
+                aDocument.setCaptureRoots((FSArray) createFSArray(aJCas, captureRoots));
             }
         });
         return handler;

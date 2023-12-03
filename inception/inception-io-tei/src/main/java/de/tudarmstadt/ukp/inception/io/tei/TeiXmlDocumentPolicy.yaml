@@ -18,30 +18,62 @@ version: 1.0
 case_sensitive: false
 default_attribute_action: DROP
 default_element_action: DROP
+default_namespace: http://www.tei-c.org/ns/1.0
 debug: true
 policies:
-  - {
-      elements:
-        [
-          "{http://www.tei-c.org/ns/1.0}head",
-          "{http://www.tei-c.org/ns/1.0}body",
-          "{http://www.tei-c.org/ns/1.0}div",
-          "{http://www.tei-c.org/ns/1.0}TEI",
-          "{http://www.tei-c.org/ns/1.0}text",
-          "{http://www.tei-c.org/ns/1.0}pb",
-          "{http://www.tei-c.org/ns/1.0}l",
-          "{http://www.tei-c.org/ns/1.0}lg",
-          "{http://www.tei-c.org/ns/1.0}s",
-          "{http://www.tei-c.org/ns/1.0}p",
-          "{http://www.tei-c.org/ns/1.0}sp",
-          "{http://www.tei-c.org/ns/1.0}speaker",
-          "{http://www.tei-c.org/ns/1.0}note",
-          "{http://www.tei-c.org/ns/1.0}stage",
-          "{http://www.tei-c.org/ns/1.0}castList",
-          "{http://www.tei-c.org/ns/1.0}castItem",
-          "{http://www.tei-c.org/ns/1.0}role",
-          "{http://www.tei-c.org/ns/1.0}roleDesc"
-        ],
-      action: "PASS",
-    }
+  - elements: [ "teiHeader" ]
+    action: PRUNE
+  - elements: [
+      "head",
+      "body",
+      "div",
+      "TEI",
+      "text",
+      "pb",
+      "hi",
+      "fw",
+      "quote",
+      "sic",
+      "l",
+      "lb",
+      "lg",
+      "s",
+      "p",
+      "sp",
+      "speaker",
+      "note",
+      "stage",
+      "castList",
+      "castItem",
+      "role",
+      "roleDesc",
+      "titlePage",
+      "docTitle",
+      "titlePart",
+      "docImprint",
+      "docAuthor",
+      "pubPlace",
+      "publisher",
+      "docDate",
+      "list",
+      "item",
+      "opener",
+      "closer",
+      "salute",
+      "supplied",
+      "gap",
+      "figure",
+      "cit",
+      "choice",
+      "corr",
+      "space",
+      "byline",
+      "cb",
+      "ref",
+      "milestone",
+      "front",
+      "back"
+    ]
+    action: PASS
   - { attributes: ["class", "type"], action: "PASS" }
+  - { attributes: ["rendition"], on_elements: ["hi"], action: "PASS" }

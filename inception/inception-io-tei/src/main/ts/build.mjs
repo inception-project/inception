@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import esbuild from 'esbuild'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
-import esbuild from 'esbuild'
 import { sassPlugin } from 'esbuild-sass-plugin'
 import fs from 'fs-extra'
 
@@ -26,31 +26,28 @@ const argv = yargs(hideBin(process.argv)).argv
 const packagePath = 'de/tudarmstadt/ukp/inception/io/tei'
 
 let outbase = `../../../target/js/${packagePath}`
+if (argv.live) {
+  outbase = `../../../target/classes/${packagePath}`
+}
 
 const defaults = {
+  entryPoints: ['src/TeiXmlDocument.scss'],
+  outfile: `${outbase}/TeiXmlDocument.min.css`,
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es6',
+  target: 'es2018',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [sassPlugin()]
 }
 
-if (argv.live) {
-  defaults.watch = {
-    onRebuild (error, result) {
-      if (error) console.error('watch build failed:', error)
-      else console.log('watch build succeeded:', result)
-    }
-  }
-  outbase = `../../../target/classes/${packagePath}`
-} else {
-  fs.emptyDirSync(outbase)
-}
 fs.mkdirsSync(`${outbase}`)
+fs.emptyDirSync(outbase)
 
-esbuild.build(Object.assign({
-  entryPoints: ['src/TeiXmlDocument.scss'],
-  outfile: `${outbase}/TeiXmlDocument.min.css`
-}, defaults))
+if (argv.live) {
+  const context = await esbuild.context(defaults)
+  await context.watch()
+} else {
+  esbuild.build(defaults)
+}
