@@ -70,9 +70,9 @@ public class AttributePolicyBuilder
             throw new IllegalArgumentException("onElements does not accept an empty list");
         }
 
-        for (var elementName : aElementNames) {
-            for (var attributeName : attributeNames) {
-                AttributePolicy policy = makePolicy(attributeName);
+        for (var attributeName : attributeNames) {
+            var policy = makePolicy(attributeName);
+            for (var elementName : aElementNames) {
                 parent.attributePolicy(elementName, attributeName, policy);
             }
         }

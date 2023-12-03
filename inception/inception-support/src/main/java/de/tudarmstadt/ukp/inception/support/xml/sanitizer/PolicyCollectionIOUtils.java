@@ -56,8 +56,14 @@ public class PolicyCollectionIOUtils
         if (externalCollection.getDefaultNamespace() != null) {
             policyCollectionBuilder.defaultNamespace(externalCollection.getDefaultNamespace());
         }
+        if (externalCollection.isMatchWithoutNamespace()) {
+            policyCollectionBuilder.matchWithoutNamespace();
+        }
+        if (externalCollection.isUseDefaultNamespaceForAttributes()) {
+            policyCollectionBuilder.useDefaultNamespaceForAttributes();
+        }
 
-        for (ExternalPolicy policy : externalCollection.getPolicies()) {
+        for (var policy : externalCollection.getPolicies()) {
             var isElementPolicy = policy.getElements() != null;
             var isAttributesPolicy = policy.getAttributes() != null;
 
