@@ -48,6 +48,8 @@ public class PolicyCollectionBuilder
     private AttributeAction defaultAttributeAction = AttributeAction.DROP;
 
     private String defaultNamespace;
+    private boolean useDefaultNamespaceForAttributes = true;
+    private boolean matchWithoutNamespace = false;
 
     public static PolicyCollectionBuilder caseSensitive()
     {
@@ -72,6 +74,18 @@ public class PolicyCollectionBuilder
     public PolicyCollectionBuilder defaultNamespace(String aDefaultNamespace)
     {
         defaultNamespace = aDefaultNamespace;
+        return this;
+    }
+
+    public PolicyCollectionBuilder useDefaultNamespaceForAttributes()
+    {
+        useDefaultNamespaceForAttributes = true;
+        return this;
+    }
+
+    public PolicyCollectionBuilder matchWithoutNamespace()
+    {
+        matchWithoutNamespace = true;
         return this;
     }
 
@@ -123,6 +137,24 @@ public class PolicyCollectionBuilder
         return this;
     }
 
+    public PolicyCollectionBuilder pruneElements(String... aElementNames)
+    {
+        for (var elementName : aElementNames) {
+            elementPolicy(new QName(elementName), ElementAction.PRUNE);
+        }
+
+        return this;
+    }
+
+    public PolicyCollectionBuilder pruneElements(QName... aElementNames)
+    {
+        for (var elementName : aElementNames) {
+            elementPolicy(elementName, ElementAction.PRUNE);
+        }
+
+        return this;
+    }
+
     public PolicyCollectionBuilder skipElements(String... aElementNames)
     {
         for (var elementName : aElementNames) {
@@ -143,14 +175,26 @@ public class PolicyCollectionBuilder
 
     PolicyCollectionBuilder elementPolicy(QName aElement, ElementAction aAction)
     {
-        elementPolicyBuilders.put(aElement,
-                new ElementPolicyBuilder(aElement, aAction, mapSupplier));
+        if (defaultNamespace == null) {
+            _elementPolicy(aElement, aAction);
+            return this;
+        }
 
-        if (isEmpty(aElement.getNamespaceURI()) && defaultNamespace != null) {
-            elementPolicy(new QName(defaultNamespace, aElement.getLocalPart()), aAction);
+        if (isEmpty(aElement.getNamespaceURI())) {
+            _elementPolicy(new QName(defaultNamespace, aElement.getLocalPart()), aAction);
+
+            if (matchWithoutNamespace) {
+                _elementPolicy(aElement, aAction);
+            }
         }
 
         return this;
+    }
+
+    private void _elementPolicy(QName aElement, ElementAction aAction)
+    {
+        elementPolicyBuilders.put(aElement,
+                new ElementPolicyBuilder(aElement, aAction, mapSupplier));
     }
 
     public AttributePolicyBuilder allowAttributes(String... aAttributeNames)
@@ -197,10 +241,29 @@ public class PolicyCollectionBuilder
 
     void attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
     {
+        if (defaultNamespace == null) {
+            _attributePolicy(aElementName, aAttributeName, aPolicy);
+        }
+
+        if (isEmpty(aElementName.getNamespaceURI()) && isEmpty(aAttributeName.getNamespaceURI())) {
+            var elementName = new QName(defaultNamespace, aElementName.getLocalPart());
+            var attributeName = useDefaultNamespaceForAttributes
+                    ? new QName(defaultNamespace, aAttributeName.getLocalPart())
+                    : aAttributeName;
+            _attributePolicy(elementName, attributeName, aPolicy);
+
+            if (matchWithoutNamespace) {
+                _attributePolicy(aElementName, aAttributeName, aPolicy);
+            }
+        }
+    }
+
+    private void _attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
+    {
         @SuppressWarnings("unchecked")
         Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies
                 .computeIfAbsent(aElementName, k -> mapSupplier.get());
-        AttributePolicy attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
+        var attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
                 k -> AttributePolicy.UNDEFINED);
 
         if (aPolicy instanceof DelegatingAttributePolicy) {
@@ -208,17 +271,11 @@ public class PolicyCollectionBuilder
             attributePolicies.put(aAttributeName, aPolicy);
         }
         else {
-            AttributePolicy oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
+            var oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
             if (!AttributePolicy.isUndefined(oldPolicy)) {
                 log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
                         aElementName, aAttributeName, oldPolicy, aPolicy);
             }
-        }
-
-        if (isEmpty(aElementName.getNamespaceURI()) && isEmpty(aAttributeName.getNamespaceURI())
-                && defaultNamespace != null) {
-            attributePolicy(new QName(defaultNamespace, aElementName.getLocalPart()),
-                    new QName(defaultNamespace, aAttributeName.getLocalPart()), aPolicy);
         }
     }
 
