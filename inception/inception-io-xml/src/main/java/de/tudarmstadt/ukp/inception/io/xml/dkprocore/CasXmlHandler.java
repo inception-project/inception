@@ -27,6 +27,7 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.FSArray;
@@ -160,6 +161,10 @@ public class CasXmlHandler
             element.setChildren(children);
         }
 
+        for (var l : frame.onEndElementCallbacks) {
+            l.accept(element);
+        }
+
         for (var l : listeners) {
             l.endElement(element);
         }
@@ -211,7 +216,7 @@ public class CasXmlHandler
         return text;
     }
 
-    public Collection<StackFrame> getStack()
+    protected Collection<StackFrame> getStack()
     {
         return Collections.unmodifiableCollection(stack);
     }
@@ -229,6 +234,16 @@ public class CasXmlHandler
         }
 
         stack.peek().setCaptureText(aCapture);
+    }
+
+    public void onEndElement(Consumer<XmlElement> aCallback)
+    {
+        if (stack.isEmpty()) {
+            throw new IllegalStateException(
+                    "onEndElement callback can only be added if an element has been opened");
+        }
+
+        stack.peek().onEndElement(aCallback);
     }
 
     public boolean isCapturingText()
@@ -263,11 +278,12 @@ public class CasXmlHandler
         }
     }
 
-    private static class StackFrame
+    protected static final class StackFrame
     {
         private final XmlElement element;
         private final List<XmlNode> children = new ArrayList<>();
         private boolean captureText;
+        private final List<Consumer<XmlElement>> onEndElementCallbacks = new ArrayList<>(1);
 
         public StackFrame(XmlElement aElement, boolean aCaptureText)
         {
@@ -280,9 +296,14 @@ public class CasXmlHandler
             return element;
         }
 
-        public void addChild(XmlNode aChild)
+        void addChild(XmlNode aChild)
         {
             children.add(aChild);
+        }
+
+        void onEndElement(Consumer<XmlElement> aCallback)
+        {
+            onEndElementCallbacks.add(aCallback);
         }
 
         public List<XmlNode> getChildren()

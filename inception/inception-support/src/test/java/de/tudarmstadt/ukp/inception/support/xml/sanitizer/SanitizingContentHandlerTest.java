@@ -227,6 +227,34 @@ public class SanitizingContentHandlerTest
         assertThat(buffer.toString()).isEqualTo("<root><child attr1=\"x\">text</child></root>");
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("builderVariants")
+    void thatPrunedBranchesAreDropped(String aName, PolicyCollectionBuilder aBuilder)
+        throws Exception
+    {
+        var buffer = new StringWriter();
+        var policy = aBuilder //
+                .defaultElementAction(ElementAction.DROP) //
+                .defaultAttributeAction(AttributeAction.DROP) //
+                .allowElements("root", "child") //
+                .pruneElements("prune") //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        sut.startDocument();
+        sut.startElement("root");
+        sut.startElement("prune");
+        sut.startElement("child");
+        sut.characters("text");
+        sut.endElement("child");
+        sut.endElement("prune");
+        sut.endElement("root");
+        sut.endDocument();
+
+        assertThat(buffer.toString()).isEqualTo("<root>    </root>");
+    }
+
     @Test
     void thatCaseInsensitiveModeWorks() throws Exception
     {
