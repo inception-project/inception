@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.FORMAT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.NAME;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.SIZE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.STATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFallbackHeadersToolbar;
@@ -120,6 +122,8 @@ public class SourceDocumentTable
                 $ -> $.getDocument().getName()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentFormat"), FORMAT,
                 $ -> renderFormat($.getDocument().getFormat())));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSize"), SIZE,
+                $ -> renderSize($.getDocument())));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new SourceDocumentTableDeleteActionColumn(this));
@@ -192,6 +196,12 @@ public class SourceDocumentTable
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(aDate);
+    }
+
+    private String renderSize(SourceDocument aDocumnent)
+    {
+        return FileUtils.byteCountToDisplaySize(
+                FileUtils.sizeOf(documentService.getSourceDocumentFile(aDocumnent)));
     }
 
     @Override
