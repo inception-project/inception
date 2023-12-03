@@ -16,13 +16,19 @@
  * limitations under the License.
  */
 @import 'typography';
+@import 'layout';
+@import 'tables';
+@import 'notes';
 
 TEI {
-  display: block;
-  margin: 15px;
-
   teiHeader {
     display: none;
+  }
+
+  body {
+    counter-reset: act;
+    counter-reset: scene;
+    counter-reset: line;
   }
 
   castList {
@@ -36,12 +42,6 @@ TEI {
 
   castList > castItem {
     display: block;
-  }
-
-  body {
-    counter-reset: act;
-    counter-reset: scene;
-    counter-reset: line;
   }
 
   sp {
@@ -112,18 +112,6 @@ TEI {
 
   sp l:hover:before {
     color: #999;
-  }
-
-  note {
-    color: #999;
-  }
-
-  note::before {
-    content: " (";
-  }
-
-  note::after {
-    content: ") ";
   }
 
   head {
