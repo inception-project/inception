@@ -20,6 +20,7 @@ case_sensitive: false
 default_attribute_action: DROP
 default_element_action: DROP
 default_namespace: http://www.w3.org/1999/xhtml
+match_without_namespace: true
 debug: true
 policies:
   - action: PASS
