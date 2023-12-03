@@ -60,6 +60,7 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
       body.style.flexDirection = 'column'
       body.style.height = '100vh'
       body.style.width = '100vw'
+      body.style.overflow = 'hidden'
     }
 
     element[PROP_EDITOR] = new ApacheAnnotatorEditor(targetElement, ajax, props.userPreferencesKey)
