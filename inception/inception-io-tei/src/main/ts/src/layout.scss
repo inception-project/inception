@@ -29,10 +29,23 @@ TEI {
     margin-right: var(--page-margin);
   }
 
-  front, back, body {
+  front, back, body, div {
+    display: block;
+  }
+
+  titlePage, titlePart, byline, docImprint {
+    display: block;
+  }
+
+  figure {
     display: block;
   }
   
+  p {
+    display: block;
+    margin-bottom: 0.3em;
+  }
+
   // Page break
   pb {
     display: block;
