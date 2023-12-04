@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.FORMAT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.NAME;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.SIZE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.documents.SourceDocumentTableSortKeys.STATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -122,7 +121,7 @@ public class SourceDocumentTable
                 $ -> $.getDocument().getName()));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentFormat"), FORMAT,
                 $ -> renderFormat($.getDocument().getFormat())));
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSize"), SIZE,
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSize"),
                 $ -> renderSize($.getDocument())));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getDocument().getCreated())));
