@@ -235,14 +235,15 @@ public class PolicyCollectionBuilder
             elementPolicies.put(entry.getKey(), entry.getValue().build());
         }
 
-        return new PolicyCollection(elementPolicies, globalAttributePolicies, defaultElementAction,
-                defaultAttributeAction);
+        return new PolicyCollection(defaultNamespace, elementPolicies, globalAttributePolicies,
+                defaultElementAction, defaultAttributeAction);
     }
 
     void attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
     {
         if (defaultNamespace == null) {
             _attributePolicy(aElementName, aAttributeName, aPolicy);
+            return;
         }
 
         if (isEmpty(aElementName.getNamespaceURI()) && isEmpty(aAttributeName.getNamespaceURI())) {
@@ -261,21 +262,21 @@ public class PolicyCollectionBuilder
     private void _attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
     {
         @SuppressWarnings("unchecked")
-        Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies
-                .computeIfAbsent(aElementName, k -> mapSupplier.get());
+        Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies.computeIfAbsent(aElementName,
+                k -> mapSupplier.get());
         var attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
                 k -> AttributePolicy.UNDEFINED);
 
         if (aPolicy instanceof DelegatingAttributePolicy) {
             ((DelegatingAttributePolicy) aPolicy).setDelegate(attributePolicy);
             attributePolicies.put(aAttributeName, aPolicy);
+            return;
         }
-        else {
-            var oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
-            if (!AttributePolicy.isUndefined(oldPolicy)) {
-                log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
-                        aElementName, aAttributeName, oldPolicy, aPolicy);
-            }
+
+        var oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
+        if (!AttributePolicy.isUndefined(oldPolicy)) {
+            log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
+                    aElementName, aAttributeName, oldPolicy, aPolicy);
         }
     }
 
@@ -291,9 +292,29 @@ public class PolicyCollectionBuilder
 
     public void globalAttributePolicy(AttributePolicy aPolicy)
     {
+        if (defaultNamespace == null) {
+            _globalAttributePolicy(aPolicy);
+            return;
+        }
+
+        if (isEmpty(aPolicy.getQName().getNamespaceURI())) {
+            var attributeName = useDefaultNamespaceForAttributes
+                    ? new QName(defaultNamespace, aPolicy.getQName().getLocalPart())
+                    : aPolicy.getQName();
+            _globalAttributePolicy(new AttributePolicy(attributeName, aPolicy.getAction()));
+
+            if (matchWithoutNamespace) {
+                _globalAttributePolicy(aPolicy);
+            }
+        }
+    }
+
+    private void _globalAttributePolicy(AttributePolicy aPolicy)
+    {
         var newPolicy = aPolicy;
         var oldPolicy = globalAttributePolicies.put(aPolicy.getQName(), newPolicy);
-        if (!AttributePolicy.isUndefined(oldPolicy)) {
+        if (!AttributePolicy.isUndefined(oldPolicy)
+                && oldPolicy.getAction() != newPolicy.getAction()) {
             log.warn("Globally overriding policy for attribute [{}]: [{}] -> [{}]",
                     aPolicy.getQName(), oldPolicy, newPolicy);
         }

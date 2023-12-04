@@ -41,7 +41,12 @@ class PolicyCollectionIOUtilsTest
 
         assertThat(sut.getElementPolicies()).isEmpty();
 
-        assertThat(sut.getGlobalAttributeElementPolicies()).isEmpty();
+        assertThat(sut.getGlobalAttributeElementPolicies())
+                .extracting(p -> p.getQName().getNamespaceURI(), p -> p.getQName().getLocalPart(),
+                        p -> p.getAction()) //
+                .containsExactly( //
+                        tuple(NULL_NS_URI, "data-capture-root", AttributeAction.PASS));
+
     }
 
     @Test
@@ -68,6 +73,7 @@ class PolicyCollectionIOUtilsTest
                 .extracting(p -> p.getQName().getNamespaceURI(), p -> p.getQName().getLocalPart(),
                         p -> p.getAction()) //
                 .containsExactly( //
+                        tuple(NULL_NS_URI, "data-capture-root", AttributeAction.PASS),
                         tuple(NULL_NS_URI, "style", AttributeAction.PASS));
 
         assertThat(sut.forAttribute(new QName("div"), new QName("title"), null, "blah")).get() //
