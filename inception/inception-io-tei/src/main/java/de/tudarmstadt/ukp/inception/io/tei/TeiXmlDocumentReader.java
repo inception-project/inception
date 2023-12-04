@@ -33,13 +33,13 @@ import org.apache.uima.fit.descriptor.MimeTypeCapability;
 import org.apache.uima.fit.descriptor.ResourceMetaData;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.cas.FSArray;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.parameter.MimeTypes;
 import org.dkpro.core.api.resources.CompressionUtils;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
+import org.dkpro.core.api.xml.type.XmlNode;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -106,7 +106,7 @@ public class TeiXmlDocumentReader
         handler.captureText(false);
         handler.addListener(new ElementListener()
         {
-            private List<XmlElement> captureRoots = new ArrayList<>();
+            private List<XmlNode> captureRoots = new ArrayList<>();
 
             @Override
             public void startElement(XmlElement aElement)
@@ -120,7 +120,7 @@ public class TeiXmlDocumentReader
             @Override
             public void endDocument(XmlDocument aDocument)
             {
-                aDocument.setCaptureRoots((FSArray) createFSArray(aJCas, captureRoots));
+                aDocument.setCaptureRoots(createFSArray(aJCas, captureRoots));
             }
         });
         return handler;

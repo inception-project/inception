@@ -80,12 +80,16 @@ policies:
       "formula",
       "trailer",
       "reg",
-      "orig"
+      "orig",
+      "add",
+      "del",
+      "metamark",
+      "unclear"
     ]
     action: PASS
+  - { attributes: ["class", "type"], action: "PASS" }
   - { attributes: ["place", "n"], on_elements: ["note"], action: "PASS" }
   - { attributes: ["n"], on_elements: ["pb"], action: "PASS" }
-  - { attributes: ["class", "type"], action: "PASS" }
   - { attributes: ["type", "place"], on_elements: ["fw"], action: "PASS" }
   - { attributes: ["rendition", "unit"], on_elements: ["milestone"], action: "PASS" }
   - { attributes: ["rendition"], on_elements: ["hi"], action: "PASS" }
