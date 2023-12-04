@@ -81,6 +81,8 @@ public class PolicyCollectionIOUtils
             }
         }
 
+        policyCollectionBuilder.allowAttributes("data-capture-root").globally();
+
         var policies = policyCollectionBuilder.build();
         policies.setDebug(externalCollection.isDebug());
 

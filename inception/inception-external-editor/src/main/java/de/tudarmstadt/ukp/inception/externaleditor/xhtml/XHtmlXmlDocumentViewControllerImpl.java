@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
+import javax.xml.XMLConstants;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
@@ -170,7 +171,19 @@ public class XHtmlXmlDocumentViewControllerImpl
                 renderTextContent(cas, sanitizingHandler);
             }
             else {
+                var formatPolicy = formatRegistry.getFormatPolicy(doc);
+                var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
+
+                if (defaultNamespace.isPresent()) {
+                    sanitizingHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
+                            defaultNamespace.get());
+                }
+
                 renderXmlContent(doc, sanitizingHandler, aEditor, maybeXmlDocument.get());
+
+                if (defaultNamespace.isPresent()) {
+                    sanitizingHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
+                }
             }
             rawHandler.endElement(null, null, BODY);
 
