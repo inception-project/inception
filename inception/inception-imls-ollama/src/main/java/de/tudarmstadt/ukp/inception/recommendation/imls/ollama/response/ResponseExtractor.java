@@ -15,20 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import org.apache.uima.cas.CAS;
 
-public interface RecommenderFactoryRegistry
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
+
+public interface ResponseExtractor
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
+    void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
+            String aResponse);
 
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
-
-    RecommendationEngineFactory<?> getFactory(String aId);
+    List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum);
 }

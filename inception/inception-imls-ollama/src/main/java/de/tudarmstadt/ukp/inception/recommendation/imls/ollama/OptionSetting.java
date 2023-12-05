@@ -15,20 +15,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-import java.util.List;
+import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-
-public interface RecommenderFactoryRegistry
+public class OptionSetting
+    implements Serializable
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
+    private static final long serialVersionUID = 639108348141364660L;
 
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
+    private String option;
+    private String value;
 
-    RecommendationEngineFactory<?> getFactory(String aId);
+    public OptionSetting()
+    {
+        // For serialization
+    }
+
+    public OptionSetting(String aOption, String aValue)
+    {
+        option = aOption;
+        value = aValue;
+    }
+
+    public String getOption()
+    {
+        return option;
+    }
+
+    public void setOption(String aOption)
+    {
+        option = aOption;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue(String aValue)
+    {
+        value = aValue;
+    }
 }

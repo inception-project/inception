@@ -15,20 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import org.apache.uima.cas.text.AnnotationFS;
 
-public interface RecommenderFactoryRegistry
+public class PromptContext
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
+    private final AnnotationFS candidate;
+    private final Map<String, Object> bindings;
 
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
+    public PromptContext(AnnotationFS aCandidate)
+    {
+        candidate = aCandidate;
+        bindings = new HashMap<>();
+    }
 
-    RecommendationEngineFactory<?> getFactory(String aId);
+    public AnnotationFS getCandidate()
+    {
+        return candidate;
+    }
+
+    public void set(String aKey, Object aValue)
+    {
+        bindings.put(aKey, aValue);
+    }
+
+    public Map<String, Object> getBindings()
+    {
+        return bindings;
+    }
 }

@@ -15,20 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-
-public interface RecommenderFactoryRegistry
+public enum OllamaGenerateResponseFormat
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
-
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
-
-    RecommendationEngineFactory<?> getFactory(String aId);
+    @JsonProperty("json")
+    JSON
 }

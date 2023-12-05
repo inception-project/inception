@@ -15,20 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
 
-import java.util.List;
+import java.util.stream.Stream;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import org.apache.uima.cas.CAS;
 
-public interface RecommenderFactoryRegistry
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+
+public class PerDocumentContextGenerator
+    implements PromptContextGenerator
 {
-    List<RecommendationEngineFactory<?>> getAllFactories();
 
-    List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature);
-
-    RecommendationEngineFactory<?> getFactory(String aId);
+    @Override
+    public Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin,
+            int aEnd)
+    {
+        var candidate = aCas.getDocumentAnnotation();
+        var context = new PromptContext(candidate);
+        context.set(VAR_TEXT, aCas.getDocumentText());
+        return Stream.of(context);
+    }
 }
