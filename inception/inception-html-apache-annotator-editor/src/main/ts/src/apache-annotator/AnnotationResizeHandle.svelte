@@ -44,7 +44,7 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    scrollContainer = handle.parentElement
+    scrollContainer = handle.closest('.i7n-wrapper')
   })
 
   $: {
