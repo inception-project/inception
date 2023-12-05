@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 public enum SourceDocumentTableSortKeys
 {
-    NAME, STATE, CREATED, UPDATED, FORMAT;
+    NAME, STATE, CREATED, UPDATED, SIZE, FORMAT;
 }

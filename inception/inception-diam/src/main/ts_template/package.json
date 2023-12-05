@@ -33,6 +33,7 @@
     "fs-extra": "${fs-extra.version}",
     "mocha": "${mocha.version}",
     "mocha-junit-reporter": "${mocha-junit-reporter.version}",
+    "temp-write": "${temp-write.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",

@@ -230,7 +230,7 @@ export class ApacheAnnotatorVisualizer {
   }
 
   /**
-   * Some highliths may only contain whitepace. This method removes such highlights.
+   * Some highlights may only contain whitepace. This method removes such highlights.
    */
   private removeWhitepaceOnlyHighlights (selector: string = '.iaa-highlighted') {
     this.root.querySelectorAll(selector).forEach(e => {

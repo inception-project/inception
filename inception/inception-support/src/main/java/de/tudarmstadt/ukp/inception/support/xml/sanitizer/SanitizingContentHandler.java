@@ -22,13 +22,13 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
@@ -49,9 +49,10 @@ import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 public class SanitizingContentHandler
     extends ContentHandlerAdapter
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String MASKED = "MASKED-";
+    private static final String PRUNED = "PRUNED-";
     private static final String NO_LOCAL_NAME = "NO-LOCAL-NAME";
     private static final String XMLNS = "xmlns";
     private static final String XMLNS_PREFIX = "xmlns:";
@@ -62,10 +63,10 @@ public class SanitizingContentHandler
 
     private char filteredCharacter = ' ';
 
-    private final LinkedHashMap<String, String> namespaceMappings = new LinkedHashMap<>();
+    private final Map<String, String> namespaceMappings = new LinkedHashMap<>();
 
-    private Set<QName> maskedElements = new HashSet<>();
-    private Map<QName, Set<QName>> maskedAttributes = new HashMap<>();
+    private final Set<QName> maskedElements = new HashSet<>();
+    private final Map<QName, Set<QName>> maskedAttributes = new HashMap<>();
 
     public SanitizingContentHandler(ContentHandler aDelegate, PolicyCollection aPolicies)
     {
@@ -85,14 +86,30 @@ public class SanitizingContentHandler
     }
 
     @Override
+    public void startPrefixMapping(String aPrefix, String aUri) throws SAXException
+    {
+        namespaceMappings.put(aPrefix, aUri);
+
+        super.startPrefixMapping(aPrefix, aUri);
+    }
+
+    @Override
+    public void endPrefixMapping(String aPrefix) throws SAXException
+    {
+        namespaceMappings.remove(aPrefix);
+
+        super.endPrefixMapping(aPrefix);
+    }
+
+    @Override
     public void startElement(String aUri, String aLocalName, String aQName, Attributes aAtts)
         throws SAXException
     {
-        var localNamespace = new LinkedHashMap<String, String>();
-        for (Entry<String, String> xmlns : prefixMappings(aAtts).entrySet()) {
-            var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
+        var localNamespaces = new LinkedHashMap<String, String>();
+        for (var nsDecl : prefixMappings(aAtts).entrySet()) {
+            var oldValue = namespaceMappings.put(nsDecl.getKey(), nsDecl.getValue());
             if (oldValue == null) {
-                localNamespace.put(xmlns.getKey(), xmlns.getValue());
+                localNamespaces.put(nsDecl.getKey(), nsDecl.getValue());
             }
         }
 
@@ -101,14 +118,16 @@ public class SanitizingContentHandler
         var policy = policies.forElement(element);
         var action = policy.map(ElementPolicy::getAction)
                 .orElse(policies.getDefaultElementAction());
+
         switch (action) {
         case PASS:
             var attributes = sanitizeAttributes(element, aAtts);
-            startElement(element, attributes, policy, action, localNamespace);
+            startElement(element, attributes, policy, action, localNamespaces);
             break;
+        case PRUNE: // fall-through
         case SKIP: // fall-through
         case DROP:
-            startElement(element, null, policy, action, localNamespace);
+            startElement(element, null, policy, action, localNamespaces);
             break;
         default:
             throw new SAXException("Unsupported element action: [" + action + "]");
@@ -119,16 +138,32 @@ public class SanitizingContentHandler
             ElementAction aAction, Map<String, String> aLocalNamespaces)
         throws SAXException
     {
-        QName element = aElement;
-        ElementAction action = aAction;
+        var element = aElement;
+        var action = aAction;
 
-        if (StringUtils.isBlank(element.getLocalPart())) {
+        var stackAction = stack.isEmpty() ? policies.getDefaultElementAction()
+                : stack.peek().action;
+        if (stackAction == ElementAction.PRUNE) {
+            action = ElementAction.PRUNE;
+        }
+        else if (StringUtils.isBlank(element.getLocalPart())) {
             action = ElementAction.SKIP;
             element = new QName(element.getNamespaceURI(), NO_LOCAL_NAME, "");
         }
 
-        if ((action == ElementAction.DROP || action == ElementAction.SKIP) && policies.isDebug()) {
-            element = maskElement(element);
+        if ((action != ElementAction.PASS) && policies.isDebug()) {
+            switch (action) {
+            case SKIP: // fall-through
+            case DROP:
+                maskedElements.add(element);
+                element = mask(element);
+                break;
+            case PRUNE:
+                element = prune(element);
+                break;
+            default:
+                throw new IllegalStateException("Unknown element action [" + action + "]");
+            }
         }
 
         stack.push(new Frame(element, aPolicy, action, aLocalNamespaces));
@@ -168,14 +203,14 @@ public class SanitizingContentHandler
         frame.namespaces.keySet().forEach(namespaceMappings::remove);
 
         if (stack.isEmpty()) {
-            if (policies.isDebug() && log.isDebugEnabled()) {
-                log.debug("[{}] Masked elements: {}", policies.getName(), maskedElements.stream() //
+            if (policies.isDebug() && LOG.isDebugEnabled()) {
+                LOG.debug("[{}] Masked elements: {}", policies.getName(), maskedElements.stream() //
                         .map(QName::toString) //
                         .sorted() //
                         .collect(toList()));
                 for (var element : maskedAttributes.keySet().stream()
                         .sorted(comparing(QName::getLocalPart)).collect(toList())) {
-                    log.debug("[{}] Masked attributes on {}: {}", policies.getName(), element,
+                    LOG.debug("[{}] Masked attributes on {}: {}", policies.getName(), element,
                             maskedAttributes.get(element).stream().map(QName::toString) //
                                     .sorted() //
                                     .collect(toList()));
@@ -189,6 +224,7 @@ public class SanitizingContentHandler
     {
         var action = stack.isEmpty() ? policies.getDefaultElementAction() : stack.peek().action;
         switch (action) {
+        case PRUNE: // pass-through
         case DROP:
             var placeholder = new char[aLength];
             Arrays.fill(placeholder, filteredCharacter);
@@ -208,6 +244,7 @@ public class SanitizingContentHandler
     {
         var action = stack.peek().action;
         switch (action) {
+        case PRUNE: // pass-through
         case DROP:
             var placeholder = new char[aLength];
             Arrays.fill(placeholder, filteredCharacter);
@@ -228,8 +265,12 @@ public class SanitizingContentHandler
             return null;
         }
 
-        AttributesImpl sanitizedAttributes = new AttributesImpl();
-        for (int i = 0; i < aAtts.getLength(); i++) {
+        var sanitizedAttributes = new AttributesImpl();
+        for (var i = 0; i < aAtts.getLength(); i++) {
+            if (XMLNS.equals(aAtts.getQName(i)) || aAtts.getQName(i).startsWith(XMLNS_PREFIX)) {
+                continue;
+            }
+
             sanitizeAttribute(sanitizedAttributes, aElement, aAtts, i);
         }
         return sanitizedAttributes;
@@ -308,12 +349,6 @@ public class SanitizingContentHandler
         }
     }
 
-    private QName maskElement(QName aElement)
-    {
-        maskedElements.add(aElement);
-        return mask(aElement);
-    }
-
     private QName maskAttribute(QName aElement, QName aAttribute)
     {
         maskedAttributes.computeIfAbsent(aElement, k -> new HashSet<>()).add(aAttribute);
@@ -323,6 +358,12 @@ public class SanitizingContentHandler
     private QName mask(QName element)
     {
         return new QName(element.getNamespaceURI(), MASKED + element.getLocalPart(),
+                element.getPrefix());
+    }
+
+    private QName prune(QName element)
+    {
+        return new QName(element.getNamespaceURI(), PRUNED + element.getLocalPart(),
                 element.getPrefix());
     }
 

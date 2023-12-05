@@ -158,6 +158,13 @@ public interface DocumentImportExportService
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException;
 
+    CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument)
+        throws UIMAException, IOException;
+
+    CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException;
+
     /**
      * Exports the given CAS to a file on disk.
      * 

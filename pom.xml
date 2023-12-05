@@ -188,6 +188,7 @@
     <svelte-preprocess.version>^5.0.4</svelte-preprocess.version>
     <svgdotjs-svg-js.version>^3.2.0</svgdotjs-svg-js.version>
     <svgdotjs-svg-filter-js.version>^3.0.8</svgdotjs-svg-filter-js.version>
+    <temp-write.version>^5.0.0</temp-write.version>
     <testing-library-svelte.version>^3.2.2</testing-library-svelte.version>
     <ts-mocha.version>^10.0.0</ts-mocha.version>
     <typescript.version>^5.2.2</typescript.version>
