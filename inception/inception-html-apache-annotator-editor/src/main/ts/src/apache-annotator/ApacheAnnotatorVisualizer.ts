@@ -181,7 +181,7 @@ export class ApacheAnnotatorVisualizer {
       return
     }
 
-    const scrollerContainerRect = this.root.getBoundingClientRect()
+    const scrollerContainerRect = this.root.closest('.i7n-wrapper')?.getBoundingClientRect() || this.root.getBoundingClientRect()
 
     const vhl = this.root.ownerDocument.createElement('div')
     vhl.classList.add('iaa-vertical-marker-focus')
