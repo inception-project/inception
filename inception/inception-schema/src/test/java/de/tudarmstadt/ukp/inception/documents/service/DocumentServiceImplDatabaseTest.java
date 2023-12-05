@@ -108,9 +108,9 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void testThatAnnotationDocumentsForNonExistingUserAreNotReturned() throws Exception
     {
-        SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
+        var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut
+        var ann = sut
                 .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         assertThat(sut.listAnnotationDocuments(doc))
@@ -127,9 +127,9 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void thatExplicitUserActionsSetAnnotatorState()
     {
-        SourceDocument doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
+        var doc = sut.createSourceDocument(new SourceDocument("doc", project, "text"));
 
-        AnnotationDocument ann = sut
+        var ann = sut
                 .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IGNORE);
@@ -191,10 +191,10 @@ public class DocumentServiceImplDatabaseTest
     @Test
     public void thatResettingADocumentSetsAlsoResetsTheStates() throws Exception
     {
-        SourceDocument doc = sut
+        var doc = sut
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
 
-        AnnotationDocument ann = sut
+        var ann = sut
                 .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         try (var session = CasStorageSession.open()) {
@@ -226,7 +226,7 @@ public class DocumentServiceImplDatabaseTest
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);
-            when(importService.importCasFromFile(any(), any(), any()))
+            when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
             return importService;
         }
