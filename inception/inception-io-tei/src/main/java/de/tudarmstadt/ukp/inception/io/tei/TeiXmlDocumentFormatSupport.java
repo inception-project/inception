@@ -17,32 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.io.tei;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.cas.CAS;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.io.tei.config.TeiFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiReader;
-import de.tudarmstadt.ukp.inception.io.tei.dkprobackport.TeiWriter;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
+import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link TeiFormatsAutoConfiguration#teiFormatSupport()}.
- * </p>
- */
-public class TeiFormatSupport
+public class TeiXmlDocumentFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "dkpro-core-tei";
-    public static final String NAME = "TEI P5 XML (legacy)";
+    public static final String ID = "tei-xml-document";
+    public static final String NAME = "TEI P5 XML (experimental)";
 
     @Override
     public String getId()
@@ -63,9 +60,9 @@ public class TeiFormatSupport
     }
 
     @Override
-    public boolean isWritable()
+    public List<ResourceReference> getCssStylesheets()
     {
-        return true;
+        return asList(TeiXmlDocumentCssReference.get());
     }
 
     @Override
@@ -73,14 +70,14 @@ public class TeiFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(TeiReader.class, aTSD);
+        return createReaderDescription(TeiXmlDocumentReader.class, aTSD);
     }
 
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject,
-            TypeSystemDescription aTSD, CAS aCAS)
-        throws ResourceInitializationException
+    public Optional<PolicyCollection> getPolicy() throws IOException
     {
-        return createEngineDescription(TeiWriter.class, aTSD);
+        return new WatchedResourceFile<PolicyCollection>(
+                getClass().getResource("TeiXmlDocumentPolicy.yaml"),
+                PolicyCollectionIOUtils::loadPolicies).get();
     }
 }
