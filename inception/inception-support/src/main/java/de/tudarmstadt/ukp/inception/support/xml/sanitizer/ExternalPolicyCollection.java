@@ -33,6 +33,8 @@ public class ExternalPolicyCollection
     private ElementAction defaultElementAction;
     private AttributeAction defaultAttributeAction;
     private String defaultNamespace;
+    private boolean matchWithoutNamespace = false;
+    private boolean useDefaultNamespaceForAttributes = true;
 
     public String getName()
     {
@@ -112,5 +114,25 @@ public class ExternalPolicyCollection
     public void setDefaultNamespace(String aDefaultNamespace)
     {
         defaultNamespace = aDefaultNamespace;
+    }
+
+    public boolean isMatchWithoutNamespace()
+    {
+        return matchWithoutNamespace;
+    }
+
+    public void setMatchWithoutNamespace(boolean aMatchWithoutNamespace)
+    {
+        matchWithoutNamespace = aMatchWithoutNamespace;
+    }
+
+    public boolean isUseDefaultNamespaceForAttributes()
+    {
+        return useDefaultNamespaceForAttributes;
+    }
+
+    public void setUseDefaultNamespaceForAttributes(boolean aUseDefaultNamespaceForAttribues)
+    {
+        useDefaultNamespaceForAttributes = aUseDefaultNamespaceForAttribues;
     }
 }

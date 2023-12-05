@@ -866,7 +866,7 @@ public class DocumentServiceImpl
                     // adding this feature, the existing projects do not yet have initial CASes, so
                     // we create them here lazily
                     try {
-                        return importExportService.importCasFromFile(
+                        return importExportService.importCasFromFileNoChecks(
                                 getSourceDocumentFile(aDocument), aDocument,
                                 aFullProjectTypeSystem);
                     }

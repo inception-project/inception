@@ -32,5 +32,12 @@ public enum ElementAction
     /**
      * Element is not passed through.
      */
-    DROP;
+    DROP,
+
+    /**
+     * Element is not passed through and neither are any descendants even if they might otherwise be
+     * marked to pass.
+     */
+    PRUNE;
+
 }
