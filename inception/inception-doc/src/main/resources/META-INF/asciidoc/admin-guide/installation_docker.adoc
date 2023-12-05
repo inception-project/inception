@@ -124,7 +124,7 @@ The applications logs the amount of memory it will use during startup. Check thi
 
 ----
 INFO [main] [SYSTEM] boot - Max. application memory: 4096MB
----
+----
 
 You also pass additional options to the Java runtime through the `JAVA_OPTS` environment variable. This also includes system properties, e.g. `-DpropertName=value`. Most of the settings that can be configured in the `settings.properties` file can also be supplied in this way instead.
 
