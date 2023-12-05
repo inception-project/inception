@@ -24,11 +24,14 @@
         <div>
           <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="btn-group" role="group">
-              <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
+              <button wicket:id="newProject" class="btn btn-primary">
+                <i class="fas fa-plus me-1"/><wicket:message key="newProject"/>
+              </button> 
             </span>
           </span>
           <span wicket:id="projectImportGroup" class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
-            <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
+            <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
+              <i class="fas fa-upload me-1"/> <wicket:message key="importProject"/>
             </button>
             <div class="border-0 dropdown-menu shadow-lg pt-0 pb-0" role="menu">
               <wicket:container wicket:id="importProjectPanel" />
