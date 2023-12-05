@@ -304,6 +304,37 @@ public class DocumentImportExportServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException
     {
+        var cas = importCasFromFileNoChecks(aFile, aDocument, aFormat, aFullProjectTypeSystem);
+
+        // Convert the source document to CAS
+        var format = getReadableFormatById(aFormat).orElseThrow(
+                () -> new IOException("No reader available for format [" + aFormat + "]"));
+
+        runCasDoctorOnImport(aDocument, format, cas);
+
+        return cas;
+    }
+
+    @Override
+    public CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument)
+        throws UIMAException, IOException
+    {
+        return importCasFromFileNoChecks(aFile, aDocument, aDocument.getFormat(), null);
+    }
+
+    @Override
+    public CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException
+    {
+        return importCasFromFileNoChecks(aFile, aDocument, aDocument.getFormat(),
+                aFullProjectTypeSystem);
+    }
+
+    private CAS importCasFromFileNoChecks(File aFile, SourceDocument aDocument, String aFormat,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException
+    {
         TypeSystemDescription tsd = aFullProjectTypeSystem;
 
         if (tsd == null) {
@@ -311,11 +342,11 @@ public class DocumentImportExportServiceImpl
         }
 
         // Convert the source document to CAS
-        FormatSupport format = getReadableFormatById(aFormat).orElseThrow(
+        var format = getReadableFormatById(aFormat).orElseThrow(
                 () -> new IOException("No reader available for format [" + aFormat + "]"));
 
         // Prepare a CAS with the project type system
-        CAS cas = WebAnnoCasUtil.createCas(tsd);
+        var cas = WebAnnoCasUtil.createCas(tsd);
         format.read(aDocument.getProject(), WebAnnoCasUtil.getRealCas(cas), aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
@@ -326,8 +357,6 @@ public class DocumentImportExportServiceImpl
         LOG.info("Imported CAS with [{}] tokens and [{}] sentences from file [{}] (size: {} bytes)",
                 cas.getAnnotationIndex(getType(cas, Token.class)).size(),
                 cas.getAnnotationIndex(getType(cas, Sentence.class)).size(), aFile, aFile.length());
-
-        runCasDoctorOnImport(aDocument, format, cas);
 
         return cas;
     }
