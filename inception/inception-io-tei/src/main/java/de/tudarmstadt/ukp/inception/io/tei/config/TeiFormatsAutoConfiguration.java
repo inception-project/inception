@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.io.tei.TeiFormatSupport;
+import de.tudarmstadt.ukp.inception.io.tei.TeiXmlDocumentFormatSupport;
 
 @Configuration
 public class TeiFormatsAutoConfiguration
@@ -32,5 +33,13 @@ public class TeiFormatsAutoConfiguration
     public TeiFormatSupport teiFormatSupport()
     {
         return new TeiFormatSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "format.tei", name = "enabled", //
+            havingValue = "true", matchIfMissing = false)
+    public TeiXmlDocumentFormatSupport teiXmlDocumentFormatSupport()
+    {
+        return new TeiXmlDocumentFormatSupport();
     }
 }
