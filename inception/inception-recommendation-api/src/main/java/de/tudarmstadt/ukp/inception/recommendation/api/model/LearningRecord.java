@@ -93,7 +93,7 @@ public class LearningRecord
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocationType")
     private LearningRecordChangeLocation changeLocation;
 
-    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionTypeWrapper")
+    @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamilyType")
     private SuggestionLayerFamily suggestionType;
 
     @Temporal(TemporalType.TIMESTAMP)
