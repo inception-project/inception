@@ -91,6 +91,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -2283,7 +2284,8 @@ public class RecommendationServiceImpl
                 // ... and in the given window
                 .filter(group -> {
                     Offset offset = (Offset) group.getPosition();
-                    return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
+                    return AnnotationPredicates.coveredBy(offset.getBegin(), offset.getEnd(),
+                            aWindowBegin, aWindowEnd);
                 }) //
                 .collect(toList());
 
@@ -2559,12 +2561,12 @@ public class RecommendationServiceImpl
             int aWindowEnd)
     {
         if (type == null) {
-            return List.of();
+            return Collections.emptyList();
         }
 
-        return select(aCas, type).stream()
-                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
-                .collect(toList());
+        return select(aCas, type).stream() //
+                .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
+                .toList();
     }
 
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
@@ -2779,8 +2781,8 @@ public class RecommendationServiceImpl
     }
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordUserAction aUserAction,
-            LearningRecordChangeLocation aLocation)
+            SpanSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
         record.setUser(aUsername);
@@ -2919,10 +2921,13 @@ public class RecommendationServiceImpl
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
                 .setParameter("user", aDataOwner) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordUserAction.SHOWN); // SHOWN records NOT returned
+                // SHOWN records NOT returned
+                .setParameter("action", LearningRecordUserAction.SHOWN);
+
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
         }
+
         return query.getResultList();
     }
 
