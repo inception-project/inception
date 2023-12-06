@@ -49,7 +49,6 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -2599,34 +2598,33 @@ public class RecommendationServiceImpl
         @Override
         public void onEndRequest(RequestCycle cycle)
         {
-            Set<DirtySpot> dirties = cycle.getMetaData(DIRTIES);
-            Set<CommittedDocument> committed = cycle.getMetaData(COMMITTED);
+            var dirties = cycle.getMetaData(DIRTIES);
+            var committed = cycle.getMetaData(COMMITTED);
 
             if (dirties == null || committed == null) {
                 return;
             }
 
             // Any dirties which have not been committed can be ignored
-            for (CommittedDocument committedDocument : committed) {
+            for (var committedDocument : committed) {
                 dirties.removeIf(dirty -> dirty.affectsDocument(committedDocument.getDocumentId(),
                         committedDocument.getUser()));
             }
 
             // Concurrent action has deleted project, so we can ignore this
             var affectedProjects = dirties.stream() //
-                    .map(d -> d.getProject()) //
+                    .map(DirtySpot::getProject) //
                     .distinct() //
                     .collect(toMap(p -> p.getId(), p -> p));
-            for (Project project : affectedProjects.values()) {
+            for (var project : affectedProjects.values()) {
                 if (projectService.getProject(project.getId()) == null) {
                     dirties.removeIf(dirty -> dirty.getProject().equals(project));
                 }
             }
 
-            Map<RecommendationStateKey, Set<DirtySpot>> dirtiesByContext = new LinkedHashMap<>();
-            for (DirtySpot spot : dirties) {
-                RecommendationStateKey key = new RecommendationStateKey(spot.getUser(),
-                        spot.getProject().getId());
+            var dirtiesByContext = new LinkedHashMap<RecommendationStateKey, Set<DirtySpot>>();
+            for (var spot : dirties) {
+                var key = new RecommendationStateKey(spot.getUser(), spot.getProject().getId());
                 dirtiesByContext.computeIfAbsent(key, k -> new HashSet<>()).add(spot);
             }
 
@@ -2878,7 +2876,7 @@ public class RecommendationServiceImpl
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
                             && r.getUserAction() != LearningRecordUserAction.SHOWN)
-                    .collect(toUnmodifiableList());
+                    .toList();
         }
     }
 
@@ -2895,7 +2893,7 @@ public class RecommendationServiceImpl
             if (aLimit > 0) {
                 stream = stream.limit(aLimit);
             }
-            return stream.collect(toUnmodifiableList());
+            return stream.toList();
         }
     }
 
