@@ -206,10 +206,6 @@ public class Predictions
         }
     }
 
-    /**
-     * @param aPredictions
-     *            list of sentences containing recommendations
-     */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
         synchronized (predictionsLock) {
@@ -291,9 +287,8 @@ public class Predictions
     }
 
     /**
-     * TODO #176 use the document Id once it it available in the CAS Returns a list of predictions
-     * for a given token that matches the given layer and the annotation feature in the given
-     * document
+     * Returns a list of predictions for a given token that matches the given layer and the
+     * annotation feature in the given document
      *
      * @param aDocumentName
      *            the given document name
@@ -307,6 +302,7 @@ public class Predictions
      *            the given annotation feature name
      * @return the annotation suggestions
      */
+    // TODO #176 use the document Id once it it available in the CAS
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
