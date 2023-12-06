@@ -181,7 +181,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
@@ -705,13 +704,13 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAnnotation(AnnotationEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
         }
 
-        Set<DirtySpot> dirties = requestCycle.getMetaData(DIRTIES);
+        var dirties = requestCycle.getMetaData(DIRTIES);
         if (dirties == null) {
             dirties = new HashSet<>();
             requestCycle.setMetaData(DIRTIES, dirties);
@@ -728,7 +727,7 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
@@ -747,8 +746,8 @@ public class RecommendationServiceImpl
         var annDoc = aEvent.getDocument();
         committed.add(new CommittedDocument(annDoc));
 
-        boolean containsTrainingTrigger = false;
-        for (IRequestCycleListener listener : requestCycle.getListeners()) {
+        var containsTrainingTrigger = false;
+        for (var listener : requestCycle.getListeners()) {
             if (listener instanceof TriggerTrainingTaskListener) {
                 containsTrainingTrigger = true;
             }
@@ -823,6 +822,7 @@ public class RecommendationServiceImpl
             String aDataOwner)
     {
         User user = userRepository.get(aUsername);
+
         if (user == null) {
             return;
         }
@@ -834,17 +834,19 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false,
+                null);
     }
 
     @Override
     public void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true,
+                null);
     }
 
-    private void triggerRun(String aSessionOwner, Project aProject, String aEventName,
+    private void triggerTraining(String aSessionOwner, Project aProject, String aEventName,
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
@@ -869,8 +871,8 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-            schedulingService.enqueue(task);
+            schedulingService.enqueue(
+                    new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
             var state = getState(aSessionOwner, aProject);
             synchronized (state) {
@@ -881,8 +883,8 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-        schedulingService.enqueue(task);
+        schedulingService.enqueue(
+                new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {
@@ -2630,7 +2632,7 @@ public class RecommendationServiceImpl
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                triggerTraining(key.getUser(), affectedProjects.get(key.getProjectId()),
                         "Committed dirty CAS at end of request", currentDocument, dataOwner, false,
                         contextDirties.getValue());
             }
