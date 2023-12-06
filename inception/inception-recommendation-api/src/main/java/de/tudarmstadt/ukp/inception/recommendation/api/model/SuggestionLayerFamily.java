@@ -17,10 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-public class TaskType
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+
+public enum SuggestionLayerFamily
+    implements PersistentEnum
 {
-    public enum Type
+    SPAN("SPAN"), RELATION("RELATION");
+
+    private final String id;
+
+    SuggestionLayerFamily(String aId)
     {
-        SELECTION, TRAINING_AND_PREDICTION
-    };
+        id = aId;
+    }
+
+    public String getName()
+    {
+        return getId();
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
+
+    @Override
+    public String toString()
+    {
+        return getId();
+    }
 }

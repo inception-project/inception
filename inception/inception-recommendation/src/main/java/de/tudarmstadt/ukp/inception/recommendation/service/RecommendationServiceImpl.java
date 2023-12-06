@@ -28,13 +28,13 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
@@ -151,7 +151,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -1082,7 +1082,7 @@ public class RecommendationServiceImpl
     private AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
             SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var aBegin = aSuggestion.getBegin();
@@ -1123,7 +1123,7 @@ public class RecommendationServiceImpl
     private void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, String aValue, AnnotationFS annotation,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         // Update the feature value
@@ -1151,7 +1151,7 @@ public class RecommendationServiceImpl
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
             RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var sourceBegin = aSuggestion.getPosition().getSourceBegin();
@@ -2749,7 +2749,7 @@ public class RecommendationServiceImpl
     @Override
     public void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = null;
         if (aSuggestion instanceof SpanSuggestion) {
@@ -2779,7 +2779,7 @@ public class RecommendationServiceImpl
     }
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
+            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordUserAction aUserAction,
             LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
@@ -2801,7 +2801,7 @@ public class RecommendationServiceImpl
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             RelationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var pos = aSuggestion.getPosition();
         var record = new LearningRecord();
@@ -2875,7 +2875,7 @@ public class RecommendationServiceImpl
                     .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN)
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN)
                     .collect(toUnmodifiableList());
         }
     }
@@ -2889,7 +2889,7 @@ public class RecommendationServiceImpl
         synchronized (state) {
             var stream = state.listLearningRecords(aLayer).stream()
                     .filter(r -> Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN);
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN);
             if (aLimit > 0) {
                 stream = stream.limit(aLimit);
             }
@@ -2919,7 +2919,7 @@ public class RecommendationServiceImpl
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
                 .setParameter("user", aDataOwner) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+                .setParameter("action", LearningRecordUserAction.SHOWN); // SHOWN records NOT returned
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
         }

@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
 
-public class SuggestionTypeWrapper
-    extends PersistentEnumUserType<SuggestionType>
+public class SuggestionLayerFamilyType
+    extends PersistentEnumUserType<SuggestionLayerFamily>
 {
     private static final long serialVersionUID = 9106353026811614399L;
 
     @Override
-    public Class<SuggestionType> returnedClass()
+    public Class<SuggestionLayerFamily> returnedClass()
     {
-        return de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.class;
+        return de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.class;
     }
 }

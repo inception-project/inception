@@ -19,14 +19,36 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
 
-public enum SuggestionType
+public enum LearningRecordUserAction
     implements PersistentEnum
 {
-    SPAN("SPAN"), RELATION("RELATION");
+    /**
+     * Rejected suggestion.
+     */
+    REJECTED("rejected"),
+    /**
+     * Accepted suggestion.
+     */
+    ACCEPTED("accepted"),
+    /**
+     * Skipped suggestion.
+     */
+    SKIPPED("skipped"),
+    /**
+     * Suggestion offered to the user by an AL strategy.
+     * 
+     * @deprecated Records of this type are no longer generated. Look for
+     *             {@code ActiveLearningSuggestionOfferedEvent} in the action log instead.
+     */
+    SHOWN("shown"),
+    /**
+     * Suggestion corrected by the user via the AL sidebar.
+     */
+    CORRECTED("corrected");
 
     private final String id;
 
-    SuggestionType(String aId)
+    LearningRecordUserAction(String aId)
     {
         id = aId;
     }

@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
@@ -143,7 +143,7 @@ public class SpanSuggestionVisibilityCalculationTest
         List<LearningRecord> records = new ArrayList<>();
         LearningRecord rejectedRecord = new LearningRecord();
         rejectedRecord.setSourceDocument(doc);
-        rejectedRecord.setUserAction(LearningRecordType.REJECTED);
+        rejectedRecord.setUserAction(LearningRecordUserAction.REJECTED);
         rejectedRecord.setLayer(layer);
         rejectedRecord.setAnnotationFeature(feature);
         rejectedRecord.setOffsetBegin(5);
