@@ -27,7 +27,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMo
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.getOffsetsAnchoredOnTokens;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.getOffsetsAnchoredOnTokens;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;

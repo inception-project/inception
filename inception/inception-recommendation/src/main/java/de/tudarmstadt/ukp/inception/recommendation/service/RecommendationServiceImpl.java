@@ -37,21 +37,16 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLa
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -87,12 +82,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
@@ -115,7 +108,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -125,9 +117,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
@@ -183,7 +172,6 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
@@ -202,8 +190,6 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 public class RecommendationServiceImpl
     implements RecommendationService, LearningRecordService
 {
-    private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final int TRAININGS_PER_SELECTION = 5;
@@ -1972,287 +1958,6 @@ public class RecommendationServiceImpl
 
         return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
                 agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
-    }
-
-    static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
-            CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
-    {
-        var layer = aRecommender.getLayer();
-        var featureName = aRecommender.getFeature().getName();
-        var typeName = layer.getName();
-
-        var predictedType = CasUtil.getType(aPredictionCas, typeName);
-        var labelFeature = predictedType.getFeatureByBaseName(featureName);
-        var sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        var targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-        var scoreFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
-        var scoreExplanationFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
-        var modeFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
-        var predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
-        var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
-
-        var result = new ArrayList<AnnotationSuggestion>();
-
-        var documentText = aOriginalCas.getDocumentText();
-        for (var predictedFS : aPredictionCas.select(predictedType)) {
-            if (!predictedFS.getBooleanValue(predictionFeature)) {
-                continue;
-            }
-
-            var autoAcceptMode = getAutoAcceptMode(predictedFS, modeFeature);
-            var labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
-            var score = predictedFS.getDoubleValue(scoreFeature);
-            var scoreExplanation = predictedFS.getStringValue(scoreExplanationFeature);
-
-            switch (layer.getType()) {
-            case SPAN_TYPE: {
-                var predictedAnnotation = (Annotation) predictedFS;
-                var targetOffsets = getOffsets(layer.getAnchoringMode(), aOriginalCas,
-                        predictedAnnotation);
-
-                if (targetOffsets.isEmpty()) {
-                    LOG.trace("Prediction cannot be anchored to [{}]: {}", layer.getAnchoringMode(),
-                            predictedAnnotation);
-                    continue;
-                }
-
-                var offsets = targetOffsets.get();
-                var coveredText = documentText.substring(offsets.getBegin(), offsets.getEnd());
-
-                for (var label : labels) {
-                    var suggestion = SpanSuggestion.builder() //
-                            .withId(RelationSuggestion.NEW_ID) //
-                            .withGeneration(aGeneration) //
-                            .withRecommender(aRecommender) //
-                            .withDocumentName(aDocument.getName()) //
-                            .withPosition(offsets) //
-                            .withCoveredText(coveredText) //
-                            .withLabel(label) //
-                            .withUiLabel(label) //
-                            .withScore(score) //
-                            .withScoreExplanation(scoreExplanation) //
-                            .withAutoAcceptMode(autoAcceptMode) //
-                            .build();
-                    result.add(suggestion);
-                }
-                break;
-            }
-            case RELATION_TYPE: {
-                var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
-                var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
-
-                var originalSource = findEquivalent(aOriginalCas, source);
-                var originalTarget = findEquivalent(aOriginalCas, target);
-                if (originalSource.isEmpty() || originalTarget.isEmpty()) {
-                    continue;
-                }
-
-                var position = new RelationPosition(originalSource.get(), originalTarget.get());
-
-                for (var label : labels) {
-                    var suggestion = RelationSuggestion.builder() //
-                            .withId(RelationSuggestion.NEW_ID) //
-                            .withGeneration(aGeneration) //
-                            .withRecommender(aRecommender) //
-                            .withDocumentName(aDocument.getName()) //
-                            .withPosition(position).withLabel(label) //
-                            .withUiLabel(label) //
-                            .withScore(score) //
-                            .withScoreExplanation(scoreExplanation) //
-                            .withAutoAcceptMode(autoAcceptMode) //
-                            .build();
-                    result.add(suggestion);
-                }
-                break;
-            }
-            default:
-                throw new IllegalStateException("Unsupported layer type [" + layer.getType() + "]");
-            }
-        }
-
-        return result;
-    }
-
-    private static AutoAcceptMode getAutoAcceptMode(FeatureStructure aFS, Feature aModeFeature)
-    {
-        var autoAcceptMode = AutoAcceptMode.NEVER;
-        var autoAcceptFeatureValue = aFS.getStringValue(aModeFeature);
-        if (autoAcceptFeatureValue != null) {
-            switch (autoAcceptFeatureValue) {
-            case AUTO_ACCEPT_ON_FIRST_ACCESS:
-                autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
-            }
-        }
-        return autoAcceptMode;
-    }
-
-    private static String[] getPredictedLabels(FeatureStructure predictedFS,
-            Feature predictedFeature, boolean isStringMultiValue)
-    {
-        if (isStringMultiValue) {
-            return FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
-        }
-
-        return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
-    }
-
-    /**
-     * Locates an annotation in the given CAS which is equivalent of the provided annotation.
-     *
-     * @param aOriginalCas
-     *            the original CAS.
-     * @param aAnnotation
-     *            an annotation in the prediction CAS. return the equivalent in the original CAS.
-     */
-    private static Optional<Annotation> findEquivalent(CAS aOriginalCas, AnnotationFS aAnnotation)
-    {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType())
-                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
-                        aAnnotation, null))
-                .findFirst();
-    }
-
-    /**
-     * Calculates the offsets of the given predicted annotation in the original CAS .
-     *
-     * @param aMode
-     *            the anchoring mode of the target layer
-     * @param aOriginalCas
-     *            the original CAS.
-     * @param aPredictedAnnotation
-     *            the predicted annotation.
-     * @return the proper offsets.
-     */
-    static Optional<Offset> getOffsets(AnchoringMode aMode, CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        switch (aMode) {
-        case CHARACTERS: {
-            return getOffsetsAnchoredOnCharacters(aOriginalCas, aPredictedAnnotation);
-        }
-        case SINGLE_TOKEN: {
-            return getOffsetsAnchoredOnSingleTokens(aOriginalCas, aPredictedAnnotation);
-        }
-        case TOKENS: {
-            return getOffsetsAnchoredOnTokens(aOriginalCas, aPredictedAnnotation);
-        }
-        case SENTENCES: {
-            return getOffsetsAnchoredOnSentences(aOriginalCas, aPredictedAnnotation);
-        }
-        default:
-            throw new IllegalStateException("Unsupported anchoring mode: [" + aMode + "]");
-        }
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnCharacters(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
-                min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
-        TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
-        var begin = offsets[0];
-        var end = offsets[1];
-        return Optional.of(new Offset(begin, end));
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnSingleTokens(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        Type tokenType = getType(aOriginalCas, Token.class);
-        var tokens = aOriginalCas.<Annotation> select(tokenType) //
-                .coveredBy(aPredictedAnnotation) //
-                .limit(2).asList();
-
-        if (tokens.isEmpty()) {
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping tokens instead of contained tokens.
-            LOG.trace("Discarding suggestion because no covering token was found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        if (tokens.size() > 1) {
-            // We only want to accept single-token suggestions
-            LOG.trace("Discarding suggestion because only single-token suggestions are "
-                    + "accepted: {}", aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        AnnotationFS token = tokens.get(0);
-        var begin = token.getBegin();
-        var end = token.getEnd();
-        return Optional.of(new Offset(begin, end));
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        var sentences = aOriginalCas.select(Sentence.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
-
-        if (sentences.isEmpty()) {
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping sentences instead of covered sentences.
-            LOG.trace("Discarding suggestion because no covered sentences were found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        var begin = sentences.get(0).getBegin();
-        var end = sentences.get(sentences.size() - 1).getEnd();
-        return Optional.of(new Offset(begin, end));
-    }
-
-    static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        var tokens = aOriginalCas.select(Token.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
-
-        if (tokens.isEmpty()) {
-            if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
-                var pos = aPredictedAnnotation.getBegin();
-                var allTokens = aOriginalCas.select(Token.class).asList();
-                Token prevToken = null;
-                for (var token : allTokens) {
-                    if (prevToken == null && pos < token.getBegin()) {
-                        return Optional.of(new Offset(token.getBegin(), token.getBegin()));
-                    }
-
-                    if (token.covering(aPredictedAnnotation)) {
-                        return Optional.of(new Offset(pos, pos));
-                    }
-
-                    if (prevToken != null && pos < token.getBegin()) {
-                        return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
-                    }
-
-                    prevToken = token;
-                }
-
-                if (prevToken != null && pos >= prevToken.getEnd()) {
-                    return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
-                }
-            }
-
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping tokens instead of covered tokens.
-            LOG.trace("Discarding suggestion because no covered tokens were found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        var begin = tokens.get(0).getBegin();
-        var end = tokens.get(tokens.size() - 1).getEnd();
-        return Optional.of(new Offset(begin, end));
     }
 
     /**
