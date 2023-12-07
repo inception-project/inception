@@ -28,13 +28,13 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
@@ -49,7 +49,6 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -91,6 +90,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -151,7 +151,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -181,7 +181,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
@@ -705,13 +704,13 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAnnotation(AnnotationEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
         }
 
-        Set<DirtySpot> dirties = requestCycle.getMetaData(DIRTIES);
+        var dirties = requestCycle.getMetaData(DIRTIES);
         if (dirties == null) {
             dirties = new HashSet<>();
             requestCycle.setMetaData(DIRTIES, dirties);
@@ -728,7 +727,7 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
@@ -747,8 +746,8 @@ public class RecommendationServiceImpl
         var annDoc = aEvent.getDocument();
         committed.add(new CommittedDocument(annDoc));
 
-        boolean containsTrainingTrigger = false;
-        for (IRequestCycleListener listener : requestCycle.getListeners()) {
+        var containsTrainingTrigger = false;
+        for (var listener : requestCycle.getListeners()) {
             if (listener instanceof TriggerTrainingTaskListener) {
                 containsTrainingTrigger = true;
             }
@@ -823,6 +822,7 @@ public class RecommendationServiceImpl
             String aDataOwner)
     {
         User user = userRepository.get(aUsername);
+
         if (user == null) {
             return;
         }
@@ -834,17 +834,19 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false,
+                null);
     }
 
     @Override
     public void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true,
+                null);
     }
 
-    private void triggerRun(String aSessionOwner, Project aProject, String aEventName,
+    private void triggerTraining(String aSessionOwner, Project aProject, String aEventName,
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
@@ -869,8 +871,8 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-            schedulingService.enqueue(task);
+            schedulingService.enqueue(
+                    new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
             var state = getState(aSessionOwner, aProject);
             synchronized (state) {
@@ -881,8 +883,8 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-        schedulingService.enqueue(task);
+        schedulingService.enqueue(
+                new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {
@@ -1082,7 +1084,7 @@ public class RecommendationServiceImpl
     private AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
             SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var aBegin = aSuggestion.getBegin();
@@ -1123,7 +1125,7 @@ public class RecommendationServiceImpl
     private void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, String aValue, AnnotationFS annotation,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         // Update the feature value
@@ -1151,7 +1153,7 @@ public class RecommendationServiceImpl
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
             RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var sourceBegin = aSuggestion.getPosition().getSourceBegin();
@@ -2283,7 +2285,8 @@ public class RecommendationServiceImpl
                 // ... and in the given window
                 .filter(group -> {
                     Offset offset = (Offset) group.getPosition();
-                    return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
+                    return AnnotationPredicates.coveredBy(offset.getBegin(), offset.getEnd(),
+                            aWindowBegin, aWindowEnd);
                 }) //
                 .collect(toList());
 
@@ -2559,12 +2562,12 @@ public class RecommendationServiceImpl
             int aWindowEnd)
     {
         if (type == null) {
-            return List.of();
+            return Collections.emptyList();
         }
 
-        return select(aCas, type).stream()
-                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
-                .collect(toList());
+        return select(aCas, type).stream() //
+                .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
+                .toList();
     }
 
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
@@ -2597,40 +2600,39 @@ public class RecommendationServiceImpl
         @Override
         public void onEndRequest(RequestCycle cycle)
         {
-            Set<DirtySpot> dirties = cycle.getMetaData(DIRTIES);
-            Set<CommittedDocument> committed = cycle.getMetaData(COMMITTED);
+            var dirties = cycle.getMetaData(DIRTIES);
+            var committed = cycle.getMetaData(COMMITTED);
 
             if (dirties == null || committed == null) {
                 return;
             }
 
             // Any dirties which have not been committed can be ignored
-            for (CommittedDocument committedDocument : committed) {
+            for (var committedDocument : committed) {
                 dirties.removeIf(dirty -> dirty.affectsDocument(committedDocument.getDocumentId(),
                         committedDocument.getUser()));
             }
 
             // Concurrent action has deleted project, so we can ignore this
             var affectedProjects = dirties.stream() //
-                    .map(d -> d.getProject()) //
+                    .map(DirtySpot::getProject) //
                     .distinct() //
                     .collect(toMap(p -> p.getId(), p -> p));
-            for (Project project : affectedProjects.values()) {
+            for (var project : affectedProjects.values()) {
                 if (projectService.getProject(project.getId()) == null) {
                     dirties.removeIf(dirty -> dirty.getProject().equals(project));
                 }
             }
 
-            Map<RecommendationStateKey, Set<DirtySpot>> dirtiesByContext = new LinkedHashMap<>();
-            for (DirtySpot spot : dirties) {
-                RecommendationStateKey key = new RecommendationStateKey(spot.getUser(),
-                        spot.getProject().getId());
+            var dirtiesByContext = new LinkedHashMap<RecommendationStateKey, Set<DirtySpot>>();
+            for (var spot : dirties) {
+                var key = new RecommendationStateKey(spot.getUser(), spot.getProject().getId());
                 dirtiesByContext.computeIfAbsent(key, k -> new HashSet<>()).add(spot);
             }
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                triggerTraining(key.getUser(), affectedProjects.get(key.getProjectId()),
                         "Committed dirty CAS at end of request", currentDocument, dataOwner, false,
                         contextDirties.getValue());
             }
@@ -2749,7 +2751,7 @@ public class RecommendationServiceImpl
     @Override
     public void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = null;
         if (aSuggestion instanceof SpanSuggestion) {
@@ -2779,8 +2781,8 @@ public class RecommendationServiceImpl
     }
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation)
+            SpanSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
         record.setUser(aUsername);
@@ -2801,7 +2803,7 @@ public class RecommendationServiceImpl
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             RelationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var pos = aSuggestion.getPosition();
         var record = new LearningRecord();
@@ -2875,8 +2877,8 @@ public class RecommendationServiceImpl
                     .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN)
-                    .collect(toUnmodifiableList());
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN)
+                    .toList();
         }
     }
 
@@ -2889,11 +2891,11 @@ public class RecommendationServiceImpl
         synchronized (state) {
             var stream = state.listLearningRecords(aLayer).stream()
                     .filter(r -> Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN);
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN);
             if (aLimit > 0) {
                 stream = stream.limit(aLimit);
             }
-            return stream.collect(toUnmodifiableList());
+            return stream.toList();
         }
     }
 
@@ -2919,10 +2921,13 @@ public class RecommendationServiceImpl
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
                 .setParameter("user", aDataOwner) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+                // SHOWN records NOT returned
+                .setParameter("action", LearningRecordUserAction.SHOWN);
+
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
         }
+
         return query.getResultList();
     }
 
