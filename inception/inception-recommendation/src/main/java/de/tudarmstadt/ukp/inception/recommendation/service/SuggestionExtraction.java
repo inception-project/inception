@@ -164,24 +164,27 @@ public class SuggestionExtraction
 
         var originalSource = findEquivalent(ctx.originalCas, source);
         var originalTarget = findEquivalent(ctx.originalCas, target);
-        if (!originalSource.isEmpty() && !originalTarget.isEmpty()) {
-            var position = new RelationPosition(originalSource.get(), originalTarget.get());
+        if (originalSource.isEmpty() || originalTarget.isEmpty()) {
+            LOG.debug("Unable to find source or target of predicted relation in original CAS");
+            return;
+        }
 
-            for (var label : labels) {
-                var suggestion = RelationSuggestion.builder() //
-                        .withId(RelationSuggestion.NEW_ID) //
-                        .withGeneration(ctx.generation) //
-                        .withRecommender(ctx.recommender) //
-                        .withDocumentName(ctx.document.getName()) //
-                        .withPosition(position) //
-                        .withLabel(label) //
-                        .withUiLabel(label) //
-                        .withScore(score) //
-                        .withScoreExplanation(scoreExplanation) //
-                        .withAutoAcceptMode(autoAcceptMode) //
-                        .build();
-                ctx.result.add(suggestion);
-            }
+        var position = new RelationPosition(originalSource.get(), originalTarget.get());
+
+        for (var label : labels) {
+            var suggestion = RelationSuggestion.builder() //
+                    .withId(RelationSuggestion.NEW_ID) //
+                    .withGeneration(ctx.generation) //
+                    .withRecommender(ctx.recommender) //
+                    .withDocumentName(ctx.document.getName()) //
+                    .withPosition(position) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.result.add(suggestion);
         }
     }
 
@@ -197,29 +200,29 @@ public class SuggestionExtraction
                 predictedAnnotation);
 
         if (targetOffsets.isEmpty()) {
-            LOG.trace("Prediction cannot be anchored to [{}]: {}", ctx.layer.getAnchoringMode(),
+            LOG.debug("Prediction cannot be anchored to [{}]: {}", ctx.layer.getAnchoringMode(),
                     predictedAnnotation);
+            return;
         }
-        else {
-            var offsets = targetOffsets.get();
-            var coveredText = ctx.documentText.substring(offsets.getBegin(), offsets.getEnd());
 
-            for (var label : labels) {
-                var suggestion = SpanSuggestion.builder() //
-                        .withId(RelationSuggestion.NEW_ID) //
-                        .withGeneration(ctx.generation) //
-                        .withRecommender(ctx.recommender) //
-                        .withDocumentName(ctx.document.getName()) //
-                        .withPosition(offsets) //
-                        .withCoveredText(coveredText) //
-                        .withLabel(label) //
-                        .withUiLabel(label) //
-                        .withScore(score) //
-                        .withScoreExplanation(scoreExplanation) //
-                        .withAutoAcceptMode(autoAcceptMode) //
-                        .build();
-                ctx.result.add(suggestion);
-            }
+        var offsets = targetOffsets.get();
+        var coveredText = ctx.documentText.substring(offsets.getBegin(), offsets.getEnd());
+
+        for (var label : labels) {
+            var suggestion = SpanSuggestion.builder() //
+                    .withId(RelationSuggestion.NEW_ID) //
+                    .withGeneration(ctx.generation) //
+                    .withRecommender(ctx.recommender) //
+                    .withDocumentName(ctx.document.getName()) //
+                    .withPosition(offsets) //
+                    .withCoveredText(coveredText) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.result.add(suggestion);
         }
     }
 
