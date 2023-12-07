@@ -2410,10 +2410,9 @@ public class RecommendationServiceImpl
         // the entire document or even for the part visible on screen.
         suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        if (suggestion instanceof SpanSuggestion) {
+        if (suggestion instanceof SpanSuggestion spanSuggestion) {
             var recommender = getRecommender(suggestion.getVID().getId());
             var feature = recommender.getFeature();
-            var spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
             logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, REJECTED,
                     aAction);
@@ -2424,8 +2423,7 @@ public class RecommendationServiceImpl
                     spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
 
         }
-        else if (suggestion instanceof RelationSuggestion) {
-            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
+        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
             // TODO: Log rejection
             // TODO: Publish rejection event
         }
@@ -2443,6 +2441,7 @@ public class RecommendationServiceImpl
         if (suggestion instanceof SpanSuggestion spanSuggestion) {
             var recommender = getRecommender(spanSuggestion.getVID().getId());
             var feature = recommender.getFeature();
+
             // Log the action to the learning record
             logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, SKIPPED,
                     aAction);

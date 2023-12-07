@@ -24,7 +24,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations
- *
  */
 public interface RecommendationTypeRenderer<T extends TypeAdapter>
 {
