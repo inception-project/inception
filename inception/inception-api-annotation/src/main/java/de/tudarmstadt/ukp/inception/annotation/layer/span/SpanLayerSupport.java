@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
@@ -103,7 +102,7 @@ public class SpanLayerSupport
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+        var adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
                 eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
@@ -116,9 +115,10 @@ public class SpanLayerSupport
     {
         var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
 
-        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+        var featureForLayer = aAllFeaturesInProject.stream()
                 .filter(feature -> aLayer.equals(feature.getLayer())) //
-                .collect(toList());
+                .toList();
+
         generateFeatures(aTsd, td, featureForLayer);
     }
 
