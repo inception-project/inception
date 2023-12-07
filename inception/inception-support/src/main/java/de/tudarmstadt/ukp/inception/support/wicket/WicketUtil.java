@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.support.wicket;
 
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.wicket.Application;
@@ -29,13 +31,23 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.request.Response;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
-public class WicketUtil
+public final class WicketUtil
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private WicketUtil()
+    {
+        // No instances
+    }
+
     /**
      * Focus a component either via the current AJAX request or by adding a focus script as a header
      * item.
@@ -53,6 +65,20 @@ public class WicketUtil
                 target -> target.appendJavaScript(script),
                 () -> aResponse.render(OnDomReadyHeaderItem.forScript(script)));
 
+    }
+
+    public static Optional<Page> getPage()
+    {
+        try {
+            var requestCycle = RequestCycle.get();
+            var handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
+            var page = (Page) handler.getPage();
+            return Optional.of(page);
+        }
+        catch (Exception e) {
+            LOG.debug("Unable to get page", e);
+        }
+        return Optional.empty();
     }
 
     public static void serverTiming(String aKey, long aTime)
