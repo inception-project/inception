@@ -162,8 +162,8 @@ public class SuggestionExtraction
         var source = (AnnotationFS) predictedFS.getFeatureValue(ctx.sourceFeature);
         var target = (AnnotationFS) predictedFS.getFeatureValue(ctx.targetFeature);
 
-        var originalSource = findEquivalent(ctx.originalCas, source);
-        var originalTarget = findEquivalent(ctx.originalCas, target);
+        var originalSource = findEquivalentSpan(ctx.originalCas, source);
+        var originalTarget = findEquivalentSpan(ctx.originalCas, target);
         if (originalSource.isEmpty() || originalTarget.isEmpty()) {
             LOG.debug("Unable to find source or target of predicted relation in original CAS");
             return;
@@ -403,9 +403,10 @@ public class SuggestionExtraction
      * @param aAnnotation
      *            an annotation in the prediction CAS. return the equivalent in the original CAS.
      */
-    private static Optional<Annotation> findEquivalent(CAS aOriginalCas, AnnotationFS aAnnotation)
+    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas, AnnotationFS aAnnotation)
     {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType())
+        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
+                .at(aAnnotation) //
                 .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
                         aAnnotation, null))
                 .findFirst();
