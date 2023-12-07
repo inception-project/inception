@@ -57,6 +57,9 @@ public class ChainLayerSupport
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.CHAIN_TYPE;
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -88,7 +91,7 @@ public class ChainLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(WebAnnoConst.CHAIN_TYPE, "Chain", layerSupportId));
+        types = asList(new LayerType(TYPE, "Chain", layerSupportId));
     }
 
     @Override
@@ -100,7 +103,7 @@ public class ChainLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return WebAnnoConst.CHAIN_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override
