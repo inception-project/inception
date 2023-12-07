@@ -113,14 +113,14 @@ public class ReorderableTagAutoCompleteField
             public Object convertToObject(String aValue, Locale aLocale) throws ConversionException
             {
                 Object value = originalConverter.convertToObject(aValue, aLocale);
-                if (value instanceof String) {
-                    return value;
+                if (value instanceof String stringValue) {
+                    return stringValue;
                 }
-                else if (value instanceof Tag) {
-                    return ((Tag) value).getName();
+                else if (value instanceof Tag tag) {
+                    return tag.getName();
                 }
-                else if (value instanceof ReorderableTag) {
-                    return ((ReorderableTag) value).getName();
+                else if (value instanceof ReorderableTag reorderableTag) {
+                    return reorderableTag.getName();
                 }
                 else {
                     return null;

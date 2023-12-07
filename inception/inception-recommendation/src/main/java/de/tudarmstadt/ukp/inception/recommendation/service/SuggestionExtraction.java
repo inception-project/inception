@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
@@ -53,6 +51,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -162,8 +162,8 @@ public class SuggestionExtraction
         var source = (AnnotationFS) predictedFS.getFeatureValue(ctx.sourceFeature);
         var target = (AnnotationFS) predictedFS.getFeatureValue(ctx.targetFeature);
 
-        var originalSource = findEquivalent(ctx.originalCas, source);
-        var originalTarget = findEquivalent(ctx.originalCas, target);
+        var originalSource = findEquivalentSpan(ctx.originalCas, source);
+        var originalTarget = findEquivalentSpan(ctx.originalCas, target);
         if (originalSource.isEmpty() || originalTarget.isEmpty()) {
             LOG.debug("Unable to find source or target of predicted relation in original CAS");
             return;
@@ -238,11 +238,11 @@ public class SuggestionExtraction
             }
 
             switch (ctx.layer.getType()) {
-            case SPAN_TYPE: {
+            case SpanLayerSupport.TYPE: {
                 extractSpanSuggestion(ctx, predictedFS);
                 break;
             }
-            case RELATION_TYPE: {
+            case RelationLayerSupport.TYPE: {
                 extractRelationSuggestion(ctx, predictedFS);
                 break;
             }
@@ -403,9 +403,11 @@ public class SuggestionExtraction
      * @param aAnnotation
      *            an annotation in the prediction CAS. return the equivalent in the original CAS.
      */
-    private static Optional<Annotation> findEquivalent(CAS aOriginalCas, AnnotationFS aAnnotation)
+    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas,
+            AnnotationFS aAnnotation)
     {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType())
+        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
+                .at(aAnnotation) //
                 .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
                         aAnnotation, null))
                 .findFirst();
