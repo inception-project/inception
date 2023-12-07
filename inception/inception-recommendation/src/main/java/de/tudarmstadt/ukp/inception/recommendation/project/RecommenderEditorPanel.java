@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -406,9 +407,10 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         return annotationSchemaService.listAnnotationLayer(projectModel.getObject()).stream() //
-                .filter(layer -> (SPAN_TYPE.equals(layer.getType())
-                        || RELATION_TYPE.equals(layer.getType())) && //
-                        !(Token._TypeName.equals(layer.getName())
+                .filter(layer -> (!SPAN_TYPE.equals(layer.getType())
+                        || RELATION_TYPE.equals(layer.getType()) //
+                        || DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) //
+                        && !(Token._TypeName.equals(layer.getName())
                                 || Sentence._TypeName.equals(layer.getName())))
                 .collect(toList());
     }
