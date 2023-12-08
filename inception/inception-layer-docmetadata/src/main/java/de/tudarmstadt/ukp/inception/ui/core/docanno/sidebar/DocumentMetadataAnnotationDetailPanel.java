@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
@@ -88,13 +89,13 @@ public class DocumentMetadataAnnotationDetailPanel
     private final CasProvider jcasProvider;
     private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
-    private final IModel<String> username;
+    private final IModel<User> user;
     private final ListView<FeatureState> featureList;
     private final AnnotationActionHandler actionHandler;
     private final AnnotatorState state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
+            IModel<SourceDocument> aDocument, IModel<User> aUser, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage,
             AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
@@ -103,7 +104,7 @@ public class DocumentMetadataAnnotationDetailPanel
         setOutputMarkupPlaceholderTag(true);
 
         sourceDocument = aDocument;
-        username = aUsername;
+        user = aUser;
         annotationPage = aAnnotationPage;
         jcasProvider = aCasProvider;
         project = aProject;
@@ -324,8 +325,8 @@ public class DocumentMetadataAnnotationDetailPanel
 
             LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
                     + featureState.value);
-            aAdapter.setFeatureValue(sourceDocument.getObject(), username.getObject(), aCas,
-                    getModelObject().getId(), featureState.feature, featureState.value);
+            aAdapter.setFeatureValue(sourceDocument.getObject(), user.getObject().getUsername(),
+                    aCas, getModelObject().getId(), featureState.feature, featureState.value);
         }
     }
 
