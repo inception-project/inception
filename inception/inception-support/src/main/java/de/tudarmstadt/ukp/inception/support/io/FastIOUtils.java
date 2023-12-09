@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -58,8 +56,7 @@ public final class FastIOUtils
     {
         aTargetFile.getParentFile().mkdirs();
 
-        try (ReadableByteChannel in = newChannel(aIS);
-                WritableByteChannel out = newChannel(new FileOutputStream(aTargetFile))) {
+        try (var in = newChannel(aIS); var out = newChannel(new FileOutputStream(aTargetFile))) {
             final ByteBuffer buffer = allocateDirect(8192);
             while (in.read(buffer) != -1) {
                 // Cast to buffer to permit code to run on Java 8.
