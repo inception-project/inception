@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.wicket.AttributeModifier;
@@ -76,7 +77,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
-import de.tudarmstadt.ukp.inception.support.wicket.TempFileResource;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSpecificSettingsPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
@@ -254,10 +255,10 @@ public class LocalRepositorySettingsPanel
             {
                 // creates an appropriately labeled {@link AjaxDownloadLink} which triggers the
                 // download of the contents of the current KB in the given format
-                String fileExtension = item.getModelObject();
-                KnowledgeBase kb = LocalRepositorySettingsPanel.this.getModel().getObject().getKb();
-                Model<String> exportFileNameModel = Model.of(kb.getName() + "." + fileExtension);
-                AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
+                var fileExtension = item.getModelObject();
+                var kb = LocalRepositorySettingsPanel.this.getModel().getObject().getKb();
+                var exportFileNameModel = Model.of(kb.getName() + "." + fileExtension + ".gz");
+                var exportLink = new AjaxDownloadLink("link", exportFileNameModel,
                         LoadableDetachableModel.of(() -> actionExport(fileExtension)));
                 exportLink.add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
                 item.add(exportLink);
@@ -378,8 +379,10 @@ public class LocalRepositorySettingsPanel
 
     private IResourceStream actionExport(String rdfFormatFileExt)
     {
-        return new TempFileResource((os) -> kbService.exportData(getModel().getObject().getKb(),
-                getRdfFormatForFileExt(rdfFormatFileExt), os));
+        var kb = getModel().getObject().getKb();
+        var format = getRdfFormatForFileExt(rdfFormatFileExt);
+        return new PipedStreamResource((os) -> kbService.exportData(kb, format, os),
+                GZIPOutputStream::new);
     }
 
     private void actionDownloadKbAndSetIRIs(AjaxRequestTarget aTarget)
