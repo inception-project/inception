@@ -274,6 +274,30 @@ public class KnowledgeBaseServiceImpl
         repoManager.shutDown();
     }
 
+    @Override
+    public long getRepositorySize(KnowledgeBase aKB)
+    {
+        var dataDir = new File(kbRepositoriesRoot, "repositories/" + aKB.getRepositoryId());
+        return FileUtils.sizeOfDirectory(dataDir);
+    }
+
+    @Override
+    public long getIndexSize(KnowledgeBase aKB)
+    {
+        var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
+        return FileUtils.sizeOfDirectory(indexDir);
+    }
+
+    @Override
+    public long getStatementCount(KnowledgeBase aKB)
+    {
+        // Load files into the repository
+        try (var conn = getConnection(aKB)) {
+            conn.setIsolationLevel(IsolationLevels.NONE);
+            return conn.size();
+        }
+    }
+
     /**
      * Sanity check to test if a knowledge base is already registered with RDF4J.
      *

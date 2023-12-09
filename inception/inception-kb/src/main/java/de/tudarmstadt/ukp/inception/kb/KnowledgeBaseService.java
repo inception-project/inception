@@ -362,7 +362,7 @@ public interface KnowledgeBaseService
      *            The knowledge base to query
      * @param aIdentifier
      *            The identifier of the entity
-     * @return All statements that match the specification
+     * @return All statements that match the specificat@Override ion
      */
     List<Statement> listStatementsWithPredicateOrObjectReference(KnowledgeBase kb,
             String aIdentifier);
@@ -629,4 +629,10 @@ public interface KnowledgeBaseService
     List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
 
     Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
+
+    long getRepositorySize(KnowledgeBase aKB);
+
+    long getStatementCount(KnowledgeBase aKB);
+
+    long getIndexSize(KnowledgeBase aKB);
 }
