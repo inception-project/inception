@@ -21,8 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -40,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
 public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgreementTraits>
     extends
@@ -50,7 +50,7 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     {
         AnnotationLayer layer = aFeature.getLayer();
 
-        return asList(SPAN_TYPE, RELATION_TYPE).contains(layer.getType())
+        return asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE).contains(layer.getType())
                 && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())
                 // Link features are supported (because the links generate sub-positions in the diff
                 // but multi-value primitives (e.g. multi-value strings) are not supported

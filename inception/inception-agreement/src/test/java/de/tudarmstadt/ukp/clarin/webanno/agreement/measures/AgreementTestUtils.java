@@ -21,8 +21,6 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.dumpAgreementStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -60,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class AgreementTestUtils
@@ -217,14 +217,14 @@ public class AgreementTestUtils
         throws Exception
     {
         TypeSystemDescription type = new TypeSystemDescription_impl();
-        if (aType.equals(SPAN_TYPE)) {
+        if (aType.equals(SpanLayerSupport.TYPE)) {
             TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", CAS.TYPE_NAME_STRING);
             }
 
         }
-        else if (aType.equals(RELATION_TYPE)) {
+        else if (aType.equals(RelationLayerSupport.TYPE)) {
             TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
             td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);

@@ -207,7 +207,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
             // Perform actual actions
-            adapter.delete(sourceDocument.getObject(), username.getObject(), cas, new VID(fs));
+            adapter.delete(sourceDocument.getObject(), username.getObject(), cas, VID.of(fs));
 
             // persist changes
             annotationPage.writeEditorCas(cas);

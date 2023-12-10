@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -109,8 +108,8 @@ public class AgreementMeasureTestSuite_ImplBase
     R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
-                SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer layer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE,
+                project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -147,7 +146,7 @@ public class AgreementMeasureTestSuite_ImplBase
     R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         AnnotationLayer layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -185,8 +184,8 @@ public class AgreementMeasureTestSuite_ImplBase
     public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(Lemma.class.getName(),
-                Lemma.class.getSimpleName(), SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(Lemma.class.getName(), Lemma.class.getSimpleName(),
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -216,8 +215,8 @@ public class AgreementMeasureTestSuite_ImplBase
     R singleNoDifferencesWithAdditionalCasTest(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -244,8 +243,8 @@ public class AgreementMeasureTestSuite_ImplBase
     public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
     {
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -285,8 +284,8 @@ public class AgreementMeasureTestSuite_ImplBase
     {
         TagSet tagset = new TagSet(project, "tagset");
 
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
@@ -318,8 +317,8 @@ public class AgreementMeasureTestSuite_ImplBase
     {
         TagSet tagset = new TagSet(project, "tagset");
 
-        AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer.setId(1l);
         layers.add(layer);
 
