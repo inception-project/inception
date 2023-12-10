@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
+import static java.util.Arrays.asList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,6 +26,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.wicket.util.resource.AbstractResourceStream;
@@ -42,11 +45,13 @@ public class PipedStreamResource
 
     private final DataSupplier supplier;
     private PipedInputStream is;
-    private PipedOutputStream os;
+    private OutputStream os;
+    private List<Filter> filters;
 
-    public PipedStreamResource(DataSupplier aSupplier)
+    public PipedStreamResource(DataSupplier aSupplier, Filter... aFilters)
     {
         supplier = aSupplier;
+        filters = asList(aFilters);
     }
 
     @Override
@@ -56,6 +61,9 @@ public class PipedStreamResource
 
         try {
             os = new PipedOutputStream(is);
+            for (var filter : filters) {
+                os = filter.apply(os);
+            }
         }
         catch (IOException e) {
             throw new ResourceStreamNotFoundException(e);
@@ -105,5 +113,12 @@ public class PipedStreamResource
         extends Serializable
     {
         void write(OutputStream aOS) throws IOException;
+    }
+
+    @FunctionalInterface
+    public interface Filter
+        extends Serializable
+    {
+        OutputStream apply(OutputStream aT) throws IOException;
     }
 }
