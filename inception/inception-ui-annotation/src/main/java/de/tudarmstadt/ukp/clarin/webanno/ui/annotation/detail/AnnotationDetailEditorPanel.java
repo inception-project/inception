@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
@@ -93,7 +91,9 @@ import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -359,7 +359,7 @@ public abstract class AnnotationDetailEditorPanel
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                 .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
 
-        VID slotFillerVid = new VID(adapter.add(state.getDocument(), state.getUser().getUsername(),
+        VID slotFillerVid = VID.of(adapter.add(state.getDocument(), state.getUser().getUsername(),
                 aCas, aSlotFillerBegin, aSlotFillerEnd));
 
         actionFillSlot(aTarget, aCas, slotFillerVid);
@@ -558,7 +558,7 @@ public abstract class AnnotationDetailEditorPanel
 
                 // If we drag an arc in a chain layer, then the arc is of the same layer as the span
                 // Chain layers consist of arcs and spans
-                if (originLayer.getType().equals(CHAIN_TYPE)) {
+                if (ChainLayerSupport.TYPE.equals(originLayer.getType())) {
                     // one layer both for the span and arc annotation
                     state.setSelectedAnnotationLayer(originLayer);
                 }
@@ -604,7 +604,7 @@ public abstract class AnnotationDetailEditorPanel
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
     {
         for (AnnotationLayer l : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
-            if (!RELATION_TYPE.equals(l.getType())) {
+            if (!RelationLayerSupport.TYPE.equals(l.getType())) {
                 continue;
             }
 
@@ -872,7 +872,7 @@ public abstract class AnnotationDetailEditorPanel
                 TypeAdapter attachedSpanLayerAdapter = annotationService
                         .findAdapter(state.getProject(), attachedFs);
 
-                deleteAnnotation(aCas, state, new VID(attachedFs),
+                deleteAnnotation(aCas, state, VID.of(attachedFs),
                         attachedSpanLayerAdapter.getLayer(), attachedSpanLayerAdapter);
             }
         }
@@ -886,7 +886,7 @@ public abstract class AnnotationDetailEditorPanel
                         .findAdapter(state.getProject(), rel.getRelation());
 
                 relationAdapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
-                        new VID(rel.getRelation()));
+                        VID.of(rel.getRelation()));
 
                 info(generateMessage(relationAdapter.getLayer(), null, true));
             }
@@ -1140,14 +1140,14 @@ public abstract class AnnotationDetailEditorPanel
             VID vid = null;
             if (aFS != null) {
                 value = annotationService.getAdapter(aLayer).getFeatureValue(feature, aFS);
-                vid = new VID(aFS);
+                vid = VID.of(aFS);
             }
             else if (aRemembered != null) {
                 value = aRemembered.get(feature);
             }
 
             FeatureState featureState = null;
-            if (CHAIN_TYPE.equals(feature.getLayer().getType())) {
+            if (ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
                 if (state.getSelection().isArc()) {
                     if (feature.getLayer().isLinkedListBehavior()
                             && COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
@@ -1465,7 +1465,8 @@ public abstract class AnnotationDetailEditorPanel
 
             _this.setVisible(
                     state.getSelection().getAnnotation().isSet() && state.getSelection().isArc()
-                            && RELATION_TYPE.equals(state.getSelectedAnnotationLayer().getType())
+                            && RelationLayerSupport.TYPE
+                                    .equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
         }));
         return link;
