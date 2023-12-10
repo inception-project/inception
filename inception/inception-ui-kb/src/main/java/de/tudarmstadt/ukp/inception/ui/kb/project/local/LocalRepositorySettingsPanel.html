@@ -21,6 +21,13 @@
 
 <body>
   <wicket:panel>
+    <div class="row form-row" wicket:enclosure="repositorySize">
+      <div class="offset-sm-3 col-sm-9 d-flex flex-row text-muted">
+        <div class="me-5"><i class="fas fa-hdd me-1"></i> Repository: <span wicket:id="repositorySize"/> (<span wicket:id="statementCount"/> statements)</div>
+        <div><i class="fas fa-search me-1"></i> Full-text index: <span wicket:id="indexSize"/></div>
+      </div>
+    </div>
+
     <!-- Import -->
     <div wicket:enclosure="uploadForm">
       <div class="row form-row">

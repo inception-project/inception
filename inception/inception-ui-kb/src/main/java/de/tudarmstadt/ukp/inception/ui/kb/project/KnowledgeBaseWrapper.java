@@ -70,6 +70,11 @@ public class KnowledgeBaseWrapper
         return kb;
     }
 
+    public boolean isKbSaved()
+    {
+        return kb != null && kb.getRepositoryId() != null;
+    }
+
     public void setKb(KnowledgeBase aKB)
     {
         kb = aKB;
