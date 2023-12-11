@@ -330,4 +330,25 @@ public class SanitizingContentHandlerTest
 
         assertThat(buffer.toString()).isEqualTo("<ns:ROOT xmlns:ns=\"http://namespace.org\"/>");
     }
+
+    @Test
+    void thatNamespaceDeclarationsPass() throws Exception
+    {
+        QName root = new QName("http://namespace.org", "ROOT");
+
+        var buffer = new StringWriter();
+        var policy = PolicyCollectionBuilder.caseSensitive() //
+                .allowElements(root) //
+                .build();
+
+        var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
+
+        String xml = "<ns:ROOT xmlns:ns='http://namespace.org' xmlns:other='otherNs' xmlns='default'/>";
+
+        var parser = newSaxParser();
+        parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));
+
+        assertThat(buffer.toString()).isEqualTo(
+                "<ns:ROOT xmlns:ns=\"http://namespace.org\" xmlns:other=\"otherNs\" xmlns=\"default\"/>");
+    }
 }

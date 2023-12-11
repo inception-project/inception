@@ -267,10 +267,6 @@ public class SanitizingContentHandler
 
         var sanitizedAttributes = new AttributesImpl();
         for (var i = 0; i < aAtts.getLength(); i++) {
-            if (XMLNS.equals(aAtts.getQName(i)) || aAtts.getQName(i).startsWith(XMLNS_PREFIX)) {
-                continue;
-            }
-
             sanitizeAttribute(sanitizedAttributes, aElement, aAtts, i);
         }
         return sanitizedAttributes;
@@ -291,7 +287,8 @@ public class SanitizingContentHandler
         var action = policies.forAttribute(aElement, attribute, type, value)
                 .orElse(policies.getDefaultAttributeAction());
 
-        if (XMLNS.equals(attribute.getPrefix())) {
+        // Default namespace and namespace prefix declarations always pass
+        if (XMLNS.equals(aAtts.getQName(i)) || XMLNS.equals(attribute.getPrefix())) {
             action = AttributeAction.PASS;
         }
 
