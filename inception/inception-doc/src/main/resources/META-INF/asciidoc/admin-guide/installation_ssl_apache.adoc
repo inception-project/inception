@@ -55,6 +55,11 @@ ProxyPreserveHost On
   Allow from all
 </Proxy>
 
+<Location "/inception">
+  RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
+  RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
+</Location>
+
 ProxyPass /inception/ws ws://localhost:8080/inception/ws
 ProxyPass /inception http://localhost:8080/inception
 ProxyPassReverse /inception https://your.public.domain.name.com/inception
