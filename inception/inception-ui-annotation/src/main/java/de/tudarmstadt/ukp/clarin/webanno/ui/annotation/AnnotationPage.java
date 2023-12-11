@@ -29,7 +29,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -81,6 +80,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
@@ -363,7 +363,8 @@ public class AnnotationPage
         rightSidebar.add(detailEditor);
         rightSidebar.add(visibleWhen(getModel() //
                 .map(AnnotatorState::getAnnotationLayers) //
-                .map(layers -> layers.stream().anyMatch(l -> SPAN_TYPE.equals(l.getType())))));
+                .map(layers -> layers.stream()
+                        .anyMatch(l -> SpanLayerSupport.TYPE.equals(l.getType())))));
         return rightSidebar;
     }
 

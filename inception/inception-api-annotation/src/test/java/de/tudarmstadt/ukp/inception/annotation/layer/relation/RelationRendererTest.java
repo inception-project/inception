@@ -285,7 +285,7 @@ public class RelationRendererTest
         }
 
         // Remove the stacked annotation and introduce one that is purely overlapping
-        adapter.delete(document, username, jcas.getCas(), new VID(dep2));
+        adapter.delete(document, username, jcas.getCas(), VID.of(dep2));
         depLayer.setOverlapMode(ANY_OVERLAP);
         AnnotationFS dep3 = adapter.add(document, username, source, posAnnotations.get(2),
                 jcas.getCas());

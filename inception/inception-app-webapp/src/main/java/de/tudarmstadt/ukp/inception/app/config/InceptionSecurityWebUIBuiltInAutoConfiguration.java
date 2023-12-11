@@ -64,11 +64,11 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         aHttp.csrf().disable();
         aHttp.headers().frameOptions().sameOrigin();
 
-        var authorizations = aHttp.authorizeRequests();
-        authorizations.antMatchers("/login.html*").permitAll();
+        var authorizations = aHttp.authorizeHttpRequests();
+        authorizations.requestMatchers("/login.html*").permitAll();
         accessToStaticResources(authorizations);
         accessToRemoteApiAndSwagger(authorizations);
-        authorizations.antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll();
+        authorizations.requestMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll();
         accessToApplication(authorizations);
         authorizations.anyRequest().denyAll();
 

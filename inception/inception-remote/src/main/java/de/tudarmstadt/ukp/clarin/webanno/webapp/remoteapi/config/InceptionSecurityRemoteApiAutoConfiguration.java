@@ -52,7 +52,7 @@ public class InceptionSecurityRemoteApiAutoConfiguration
         authProvider.setUserDetailsService(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
 
-        aHttp.antMatcher("/api/**");
+        aHttp.securityMatcher("/api/**");
         aHttp.csrf().disable();
         aHttp.cors();
 
@@ -60,8 +60,8 @@ public class InceptionSecurityRemoteApiAutoConfiguration
         // because the API shouldn't work with external pre-authentication
         aHttp.authenticationProvider(authProvider);
 
-        aHttp.authorizeRequests() //
-                .anyRequest().access("hasAnyRole('ROLE_REMOTE')");
+        aHttp.authorizeHttpRequests() //
+                .anyRequest().hasAnyRole("REMOTE");
 
         if (aProperties.getHttpBasic().isEnabled()) {
             aHttp.httpBasic();

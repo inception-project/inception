@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupp
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Component
@@ -63,9 +61,9 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
-        AnnotationLayer layer = aFeature.getLayer();
+        var layer = aFeature.getLayer();
 
-        if (SPAN_TYPE.equals(layer.getType())) {
+        if (SpanLayerSupport.TYPE.equals(layer.getType())) {
             return true;
         }
 

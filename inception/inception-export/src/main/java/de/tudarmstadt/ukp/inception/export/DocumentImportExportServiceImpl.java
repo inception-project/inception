@@ -28,7 +28,6 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_F
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
@@ -93,6 +92,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
@@ -741,7 +741,7 @@ public class DocumentImportExportServiceImpl
 
         for (AnnotationFeature feature : features) {
             TagSet tagSet = feature.getTagset();
-            if (tagSet == null || CHAIN_TYPE.equals(feature.getLayer().getType())) {
+            if (tagSet == null || ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
                 continue;
             }
             String aLayer = feature.getLayer().getName();

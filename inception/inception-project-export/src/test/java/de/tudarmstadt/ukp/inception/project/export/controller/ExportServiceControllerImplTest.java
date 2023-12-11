@@ -197,7 +197,7 @@ class ExportServiceControllerImplTest
         }
 
         assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("AccessDeniedException");
+        assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
         assertThat(errorRecieved).isTrue();
     }
 
@@ -327,9 +327,9 @@ class ExportServiceControllerImplTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

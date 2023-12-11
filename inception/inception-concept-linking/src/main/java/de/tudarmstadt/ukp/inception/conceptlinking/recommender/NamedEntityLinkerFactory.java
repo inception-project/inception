@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.model.IModel;
@@ -28,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
@@ -96,7 +96,7 @@ public class NamedEntityLinkerFactory
             return false;
         }
         return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
-                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
+                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType())
                 && aFeature.getType().startsWith(PREFIX);
     }
 

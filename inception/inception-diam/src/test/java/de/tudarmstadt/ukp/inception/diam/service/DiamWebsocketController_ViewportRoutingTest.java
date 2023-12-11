@@ -365,9 +365,9 @@ public class DiamWebsocketController_ViewportRoutingTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.antMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeRequests() //
-                    .antMatchers("/**").authenticated() //
+            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
+            aHttp.authorizeHttpRequests() //
+                    .requestMatchers("/**").authenticated() //
                     .anyRequest().denyAll();
             aHttp.sessionManagement() //
                     .sessionCreationPolicy(STATELESS);

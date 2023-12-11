@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImp
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_UI_NAME;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_FEATURE_DEFINITION;
 import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_LAYER_DEFINITION;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
@@ -181,8 +181,10 @@ public class DocumentImportExportServiceImplTest
     @Test
     public void thatExportedCasContainsLayerAndFeatureDefinitions() throws Exception
     {
-        var l1 = new AnnotationLayer("my.A", "A", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
-        var l2 = new AnnotationLayer("my.B", "B", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
+        var l1 = new AnnotationLayer("my.A", "A", SpanLayerSupport.TYPE, project, false, TOKENS,
+                NO_OVERLAP);
+        var l2 = new AnnotationLayer("my.B", "B", SpanLayerSupport.TYPE, project, false, TOKENS,
+                NO_OVERLAP);
         var f1 = new AnnotationFeature(project, l1, "f1", "feature1", TYPE_NAME_STRING);
         var f2 = new AnnotationFeature(project, l2, "f2", "feature2", TYPE_NAME_STRING);
 
@@ -246,7 +248,7 @@ public class DocumentImportExportServiceImplTest
         try (ZipArchiveInputStream zipInput = new ZipArchiveInputStream(
                 new FileInputStream(exportedXmi))) {
             ZipArchiveEntry entry;
-            while ((entry = zipInput.getNextZipEntry()) != null) {
+            while ((entry = zipInput.getNextEntry()) != null) {
                 if (entry.getName().endsWith(".xmi")) {
                     XmiCasDeserializer.deserialize(zipInput, jcas.getCas());
                     break;
