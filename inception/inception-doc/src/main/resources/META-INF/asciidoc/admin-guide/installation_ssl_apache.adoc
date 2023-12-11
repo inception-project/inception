@@ -64,7 +64,7 @@ ProxyPass /inception/ws ws://localhost:8080/inception/ws
 ProxyPass /inception http://localhost:8080/inception
 ProxyPassReverse /inception https://your.public.domain.name.com/inception
 ----
-If you use Apache 2.4 without `mod_apache_compat` exchange the `<Proxy> … </Proxy>` section from the above example with this:
+If you use Apache 2.4 without `mod_access_compat` exchange the `<Proxy> … </Proxy>` section from the above example with this:
 +
 [source,xml]
 ----
