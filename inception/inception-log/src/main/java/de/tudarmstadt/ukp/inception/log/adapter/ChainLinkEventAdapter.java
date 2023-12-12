@@ -57,9 +57,9 @@ public class ChainLinkEventAdapter
     @Override
     public String getDetails(ChainLinkEvent aEvent) throws IOException
     {
-        AnnotationDetails annotation = new AnnotationDetails(aEvent.getAnnotation());
-        AnnotationDetails nextLink = new AnnotationDetails(aEvent.getNextLink());
-        ChainLinkDetails details = new ChainLinkDetails(annotation, nextLink);
+        var annotation = new AnnotationDetails(aEvent.getAnnotation());
+        var nextLink = new AnnotationDetails(aEvent.getNextLink());
+        var details = new ChainLinkDetails(annotation, nextLink);
         return JSONUtil.toJsonString(details);
     }
 }
