@@ -21,12 +21,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -49,16 +47,16 @@ public class ProjectPermissionsChangedEventAdapter
     @Override
     public String getDetails(ProjectPermissionsChangedEvent aEvent) throws IOException
     {
-        Map<String, PermissionChanges> permissionChangesByUser = new LinkedHashMap<>();
+        var permissionChangesByUser = new LinkedHashMap<String, PermissionChanges>();
 
-        for (ProjectPermission p : aEvent.getAddedPermissions()) {
-            PermissionChanges changes = permissionChangesByUser.computeIfAbsent(p.getUser(),
+        for (var p : aEvent.getAddedPermissions()) {
+            var changes = permissionChangesByUser.computeIfAbsent(p.getUser(),
                     _key -> new PermissionChanges());
             changes.granted.add(p.getLevel());
         }
 
-        for (ProjectPermission p : aEvent.getRemovedPermissions()) {
-            PermissionChanges changes = permissionChangesByUser.computeIfAbsent(p.getUser(),
+        for (var p : aEvent.getRemovedPermissions()) {
+            var changes = permissionChangesByUser.computeIfAbsent(p.getUser(),
                     _key -> new PermissionChanges());
             changes.revoked.add(p.getLevel());
         }

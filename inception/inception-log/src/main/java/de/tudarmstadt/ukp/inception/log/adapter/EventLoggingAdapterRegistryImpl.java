@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
@@ -33,8 +34,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-
-import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
 public class EventLoggingAdapterRegistryImpl
     implements EventLoggingAdapterRegistry
@@ -74,7 +73,7 @@ public class EventLoggingAdapterRegistryImpl
             }
         }
 
-        BaseLoggers.BOOT_LOG.info("Found [{}] event logging adapters", exts.size());
+        BOOT_LOG.info("Found [{}] event logging adapters", exts.size());
 
         adapters = unmodifiableList(exts);
     }

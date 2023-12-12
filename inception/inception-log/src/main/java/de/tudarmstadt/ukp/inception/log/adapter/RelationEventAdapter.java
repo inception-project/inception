@@ -39,9 +39,9 @@ public class RelationEventAdapter
     @Override
     public String getDetails(RelationEvent aEvent) throws IOException
     {
-        AnnotationDetails source = new AnnotationDetails(aEvent.getSourceAnnotation());
-        AnnotationDetails target = new AnnotationDetails(aEvent.getTargetAnnotation());
-        RelationDetails details = new RelationDetails(aEvent.getAnnotation(), source, target);
+        var source = new AnnotationDetails(aEvent.getSourceAnnotation());
+        var target = new AnnotationDetails(aEvent.getTargetAnnotation());
+        var details = new RelationDetails(aEvent.getAnnotation(), source, target);
         return JSONUtil.toJsonString(details);
     }
 

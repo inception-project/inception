@@ -49,7 +49,7 @@ public class TagEventAdapter
     public String getDetails(TagEvent aEvent)
     {
         try {
-            TagDetails details = new TagDetails(aEvent.getTag());
+            var details = new TagDetails(aEvent.getTag());
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {
