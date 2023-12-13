@@ -103,7 +103,7 @@ SQL database.
 
 == Memory and other Java options
 
-By default, {application-name} will use 80% of the memory allocated to the container.
+By default, {product-name} will use 80% of the memory allocated to the container.
 However, if you allocate very little or very much memory to the container, you may want to adjust this.
 
 For example, to set the available memory (RAM) to e.g. 4GB, append `-Xmx4g`.
@@ -113,7 +113,7 @@ For example, to set the available memory (RAM) to e.g. 4GB, append `-Xmx4g`.
 $ docker run -it -e JAVA_OPTS=-Xmx4g ghcr.io/inception-project/inception:{revnumber}
 ----
 
-Be sure to leave some memory for the operating system inside the Docker container as well. Instead of setting a fixed value for the memory, you might consider allocating a percentage of the container's memory to {application-name} using `-XX:MaxRAMPercentage=80`.
+Be sure to leave some memory for the operating system inside the Docker container as well. Instead of setting a fixed value for the memory, you might consider allocating a percentage of the container's memory to {product-name} using `-XX:MaxRAMPercentage=80`.
 
 [source,shell,subs="+attributes"]
 ----
