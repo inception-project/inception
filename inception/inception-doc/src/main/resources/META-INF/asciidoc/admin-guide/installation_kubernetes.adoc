@@ -17,13 +17,13 @@
 [[sect_kubernetes]]
 = Running via Kubernetes
 
-NOTE: This is a **very rough** guide on how {application-name} could be deployed using
+NOTE: This is a **very rough** guide on how {product-name} could be deployed using
       Kubernetes. If you are familiar with Kubernetes and cloud deployment, you will
       probably find a lot here that can be improved. Great! Best help us improving this
       guide by sending us your improvement suggestions through 
       link:https://github.com/inception-project/inception[GitHub].
       
-The following Kubernetes file sets up {application-name} along with a few volumes.
+The following Kubernetes file sets up {product-name} along with a few volumes.
 It does currently **NOT** set up a database container but instead uses the built-in
 database **which is not recommended for production environments**. Also, it uses
 folders on the host system for volumes. It is only meant as an illustration.
@@ -35,7 +35,7 @@ folders on the host system for volumes. It is only meant as an illustration.
 include::scripts/kubernetes.yml[]
 ----
 
-To deploy an {application-name} service copy this to a file called `inception.yml` and then run it using
+To deploy an {product-name} service copy this to a file called `inception.yml` and then run it using
 
 [source,text]
 .Create Kubernetes environment
