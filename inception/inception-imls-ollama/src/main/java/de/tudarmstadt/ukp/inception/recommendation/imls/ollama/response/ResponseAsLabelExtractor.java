@@ -33,8 +33,7 @@ public class ResponseAsLabelExtractor
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
-    public List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas,
-            int aNum)
+    public List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum)
     {
         return null;
     }

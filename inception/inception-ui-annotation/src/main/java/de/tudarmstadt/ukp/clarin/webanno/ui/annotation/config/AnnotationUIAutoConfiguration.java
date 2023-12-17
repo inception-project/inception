@@ -86,7 +86,7 @@ public class AnnotationUIAutoConfiguration
     {
         return new FeatureValueActionUndoSupport();
     }
-    
+
     @Bean
     public CloseSessionActionBarExtension closeSessionActionBarExtension()
     {

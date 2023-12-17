@@ -15,22 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.apacheannotatoreditor.config;
+package de.tudarmstadt.ukp.inception.log.model;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.time.Instant;
 
-import de.tudarmstadt.ukp.inception.apacheannotatoreditor.ApacheAnnotatorHtmlAnnotationEditorFactory;
-
-@Configuration
-@ConditionalOnProperty(prefix = "ui.html-apacheannotator", name = "enabled", //
-        havingValue = "true", matchIfMissing = true)
-public class ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration
+public class SummarizedLoggedEvent
 {
-    @Bean
-    public ApacheAnnotatorHtmlAnnotationEditorFactory apacheAnnotatorHtmlAnnotationEditorFactory()
+    private final long document;
+    private final String event;
+    private final Instant date;
+    private final long count;
+
+    public SummarizedLoggedEvent(String aEvent, long aDocument, Instant aDate, long aCount)
     {
-        return new ApacheAnnotatorHtmlAnnotationEditorFactory();
+        document = aDocument;
+        event = aEvent;
+        date = aDate;
+        count = aCount;
+    }
+
+    public Instant getDate()
+    {
+        return date;
+    }
+
+    public long getCount()
+    {
+        return count;
+    }
+
+    public String getEvent()
+    {
+        return event;
+    }
+
+    public long getDocument()
+    {
+        return document;
     }
 }

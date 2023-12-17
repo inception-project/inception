@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class CompactSerializerV2ImplTest
 {
     private @Mock AnnotationSchemaProperties annotationSchemaProperties;
-    
+
     @Test
     void thatSerializationWorks() throws Exception
     {
