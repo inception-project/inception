@@ -17,19 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.copyDocumentMetadata;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createDocumentMetadata;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createSentence;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createToken;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isPrimitiveType;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -66,7 +66,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -97,6 +96,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * Do a merge CAS out of multiple user annotations

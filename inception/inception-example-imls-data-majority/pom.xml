@@ -61,6 +61,11 @@
       <artifactId>inception-annotation-storage</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>

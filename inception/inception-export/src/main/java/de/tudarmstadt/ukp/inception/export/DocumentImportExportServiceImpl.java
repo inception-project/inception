@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
@@ -26,6 +24,8 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FO
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
@@ -69,7 +69,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -95,6 +94,8 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePro
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * <p>

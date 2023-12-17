@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getFeature;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;

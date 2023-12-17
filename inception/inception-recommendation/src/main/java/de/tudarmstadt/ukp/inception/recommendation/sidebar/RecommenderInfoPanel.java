@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.repeat;
 

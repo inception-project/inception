@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export;
+package de.tudarmstadt.ukp.inception.support.uima;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createSentence;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createToken;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 
 import java.text.BreakIterator;
 import java.util.Locale;

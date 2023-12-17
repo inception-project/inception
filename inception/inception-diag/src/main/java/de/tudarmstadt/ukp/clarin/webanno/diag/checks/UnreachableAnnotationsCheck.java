@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
@@ -31,9 +31,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class UnreachableAnnotationsCheck
     implements Check

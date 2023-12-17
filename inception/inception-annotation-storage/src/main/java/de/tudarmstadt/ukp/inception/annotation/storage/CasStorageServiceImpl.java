@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
@@ -27,6 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;

@@ -40,11 +40,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.export.SegmentationUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 class SuggestionExtractionTest

@@ -35,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.uima.UIMAException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -46,6 +45,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.traits.PubMedProviderT
 import de.tudarmstadt.ukp.inception.io.bioc.BioCFormatSupport;
 import de.tudarmstadt.ukp.inception.io.bioc.model.BioCToCas;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class PubMedCentralProvider
     implements ExternalSearchProvider<PubMedProviderTraits>

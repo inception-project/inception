@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;

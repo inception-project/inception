@@ -21,26 +21,24 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 @Component
-public class OpenNlpDoccatRecommenderFactory
+public class OpenNlpDoccatMetadataRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpDoccatRecommenderTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatMetadataRecommender";
 
     @Override
     public String getId()
@@ -52,13 +50,13 @@ public class OpenNlpDoccatRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         OpenNlpDoccatRecommenderTraits traits = new OpenNlpDoccatRecommenderTraits();
-        return new OpenNlpDoccatRecommender(aRecommender, traits);
+        return new OpenNlpDoccatMetadataRecommender(aRecommender, traits);
     }
 
     @Override
     public String getName()
     {
-        return "Sentence Classifier (OpenNLP Document Categorizer)";
+        return "Document Classifier (OpenNLP Document Categorizer)";
     }
 
     @Override
@@ -68,9 +66,7 @@ public class OpenNlpDoccatRecommenderFactory
             return false;
         }
 
-        var compatibleSpanLayer = SENTENCES == aLayer.getAnchoringMode() //
-                && !aLayer.isCrossSentence() //
-                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+        var compatibleSpanLayer = DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType());
 
         var compatibleFeature = CAS.TYPE_NAME_STRING.equals(aFeature.getType())
                 || aFeature.isVirtualFeature();

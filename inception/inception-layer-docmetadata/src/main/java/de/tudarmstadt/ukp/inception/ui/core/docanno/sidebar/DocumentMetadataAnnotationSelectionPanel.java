@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLIC
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -51,6 +53,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -59,10 +62,12 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -92,6 +97,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final String CID_DELETE = "delete";
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
+    private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
 
@@ -357,7 +363,11 @@ public class DocumentMetadataAnnotationSelectionPanel
         var items = new ArrayList<AnnotationListItem>();
 
         for (var layer : listMetadataLayers()) {
+            // Bulk-load all the features of this layer to avoid having to do repeated DB accesses
+            // later
             var features = annotationService.listSupportedFeatures(layer);
+            var featuresIndex = features.stream()
+                    .collect(toMap(AnnotationFeature::getName, identity()));
             var adapter = annotationService.getAdapter(layer);
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             var renderer = layerSupport.createRenderer(layer,
@@ -369,11 +379,24 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var labelText = TypeUtil.getUiLabelText(renderedFeatures);
                 items.add(new AnnotationListItem(VID.of(fs), labelText, layer, singleton));
             }
-        }
 
-        var predictions = recommendationService.getPredictions(user.getObject(), getModelObject());
-        if (predictions != null) {
-            predictions.getPredictionsByDocument(sourceDocument.getObject().getName());
+            var predictions = recommendationService.getPredictions(user.getObject(),
+                    getModelObject());
+            if (predictions != null) {
+                for (var suggestion : predictions
+                        .getPredictionsByDocument(sourceDocument.getObject().getName())) {
+                    if (suggestion instanceof MetadataSuggestion metadataSuggestion) {
+                        var feature = featuresIndex.get(suggestion.getFeature());
+
+                        // Retrieve the UI display label for the given feature value
+                        var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
+                        var annotation = featureSupport.renderFeatureValue(feature,
+                                suggestion.getLabel());
+                        items.add(new AnnotationListItem(suggestion.getVID(), annotation, layer,
+                                singleton));
+                    }
+                }
+            }
         }
 
         return items;

@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.SegmentationUtils;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PredictionsTest
