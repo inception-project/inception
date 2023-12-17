@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
@@ -15,23 +16,10 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-  <div class="card border-start-0 border-end-0 border-bottom-0 rounded-0 flex-content flex-v-container">
-      <div class="card-header rounded-0">
-        Recent activity
-        <div class="actions">
-          <button wicket:id="showActivity" class="btn btn-secondary btn-action">
-            <i class="fas fa-scroll"></i>
-            Show all
-          </button>
-        </div>
-      </div>
-      <div wicket:id="content" class="d-flex flex-grow-1"/>
-      <div wicket:id="dialog"/>
-  </div>
-  </wicket:panel>
+  <wicket:extend>
+    <div wicket:id="panel"/>
+  </wicket:extend>
 </body>
 </html>

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
 
 public interface EventRepository
 {
@@ -100,4 +102,7 @@ public interface EventRepository
      *            return this number of recent events or less
      */
     List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize);
+
+    List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject, Instant aNow,
+            Instant aMinus);
 }

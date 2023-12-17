@@ -189,16 +189,17 @@ class ExportServiceControllerImplTest
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
+
+        assertThat(messageRecieved).isFalse();
+        assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
+        assertThat(errorRecieved).isTrue();
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        assertThat(messageRecieved).isFalse();
-        assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
-        assertThat(errorRecieved).isTrue();
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -217,11 +218,17 @@ class ExportServiceControllerImplTest
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
-        session.disconnect();
 
         assertThat(messageRecieved).isTrue();
         assertThat(sessionHandler.errorMsg).isNull();
         assertThat(errorRecieved).isFalse();
+
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
     }
 
     private final class SessionHandler
