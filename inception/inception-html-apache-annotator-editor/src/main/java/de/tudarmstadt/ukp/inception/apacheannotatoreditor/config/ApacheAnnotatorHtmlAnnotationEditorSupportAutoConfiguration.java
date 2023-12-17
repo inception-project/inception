@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.inception.apacheannotatoreditor.ApacheAnnotatorHtmlAnn
 
 @Configuration
 @ConditionalOnProperty(prefix = "ui.html-apacheannotator", name = "enabled", //
-havingValue = "true", matchIfMissing = true)
+        havingValue = "true", matchIfMissing = true)
 public class ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean

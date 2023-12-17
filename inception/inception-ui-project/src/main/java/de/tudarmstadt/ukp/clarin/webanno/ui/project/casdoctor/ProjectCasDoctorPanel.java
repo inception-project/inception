@@ -159,7 +159,8 @@ public class ProjectCasDoctorPanel
 
                 try {
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc, messageSet),
+                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                                    messageSet),
                             (cas) -> casDoctor.repair(project, cas, messageSet.messages), //
                             true);
                 }
@@ -257,7 +258,8 @@ public class ProjectCasDoctorPanel
                 try {
                     objectCount++;
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc, messageSet),
+                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                                    messageSet),
                             (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
                             false);
                 }

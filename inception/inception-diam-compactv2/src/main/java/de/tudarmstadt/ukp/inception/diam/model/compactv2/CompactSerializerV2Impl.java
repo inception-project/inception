@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamCompactV2AutoConfig#compactSerializerV2}.
+ * This class is exposed as a Spring Component via
+ * {@link DiamCompactV2AutoConfig#compactSerializerV2}.
  * </p>
  */
 public class CompactSerializerV2Impl

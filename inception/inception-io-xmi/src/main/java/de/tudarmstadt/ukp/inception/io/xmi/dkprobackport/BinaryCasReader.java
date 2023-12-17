@@ -174,12 +174,10 @@ public class BinaryCasReader
                         (TypePriorities) null, (FsIndexDescription[]) null).getJCas();
 
                 // Create a holder for the CAS metadata
-                var cms = Serialization
-                        .serializeCASMgr((mergedTypeSystemCas).getCasImpl());
+                var cms = Serialization.serializeCASMgr((mergedTypeSystemCas).getCasImpl());
 
                 // Reinitialize CAS with merged type system
-                ((CASImpl) aCAS).getBinaryCasSerDes()
-                        .setupCasFromCasMgrSerializer(cms);
+                ((CASImpl) aCAS).getBinaryCasSerDes().setupCasFromCasMgrSerializer(cms);
             }
             catch (CASException | ResourceInitializationException e) {
                 throw new CollectionException(e);
