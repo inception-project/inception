@@ -233,13 +233,13 @@ public class LookupFeatureSupport
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
-    
+
     @Override
     public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof LookupEntry) {
             var handle = (LookupEntry) aValue;
-            
+
             var result = new VLazyDetailGroup();
             result.addDetail(new VLazyDetail("Label", handle.getUiLabel()));
 
@@ -249,7 +249,7 @@ public class LookupFeatureSupport
 
             return asList(result);
         }
-        
+
         return Collections.emptyList();
     }
 }

@@ -2756,6 +2756,5 @@ public class RecommendationServiceImpl
 
     final record ReconciliationResult(int added, int removed, int aged,
             List<AnnotationSuggestion> suggestions)
-    {
-    }
+    {}
 }

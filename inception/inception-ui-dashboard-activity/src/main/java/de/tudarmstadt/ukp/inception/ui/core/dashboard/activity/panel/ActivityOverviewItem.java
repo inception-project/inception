@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.apacheannotatoreditor.config;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.time.Instant;
 
-import de.tudarmstadt.ukp.inception.apacheannotatoreditor.ApacheAnnotatorHtmlAnnotationEditorFactory;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Configuration
-@ConditionalOnProperty(prefix = "ui.html-apacheannotator", name = "enabled", //
-        havingValue = "true", matchIfMissing = true)
-public class ApacheAnnotatorHtmlAnnotationEditorSupportAutoConfiguration
+public class ActivityOverviewItem
 {
-    @Bean
-    public ApacheAnnotatorHtmlAnnotationEditorFactory apacheAnnotatorHtmlAnnotationEditorFactory()
+    public final @JsonProperty long count;
+
+    public ActivityOverviewItem(Instant aDate, long aCount)
     {
-        return new ApacheAnnotatorHtmlAnnotationEditorFactory();
+        count = aCount;
     }
 }

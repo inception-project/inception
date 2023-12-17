@@ -75,13 +75,13 @@ public class ApacheAnnotatorHtmlAnnotationEditor
         props.setEditorFactoryId(getFactory().getBeanName());
         if (getFactory() instanceof ClientSideUserPreferencesProvider) {
             ((ClientSideUserPreferencesProvider) getFactory()).getUserPreferencesKey()
-            .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
+                    .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         }
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
-        props.setStylesheetSources(
-                asList(referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get())));
-        props.setScriptSources(asList(
-                referenceToUrl(servletContext, ApacheAnnotatorJsJavascriptResourceReference.get())));
+        props.setStylesheetSources(asList(
+                referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get())));
+        props.setScriptSources(asList(referenceToUrl(servletContext,
+                ApacheAnnotatorJsJavascriptResourceReference.get())));
         return props;
     }
 }

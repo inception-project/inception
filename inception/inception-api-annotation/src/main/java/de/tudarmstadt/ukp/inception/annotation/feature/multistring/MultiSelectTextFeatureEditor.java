@@ -98,7 +98,7 @@ public class MultiSelectTextFeatureEditor
             super.addFeatureUpdateBehavior();
             featureUpdateBehaviorAdded = true;
         }
-        
+
         // Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied
         // and feature doesn't match any constraint rule
         // if enabled and constraints rule execution returns anything other than green

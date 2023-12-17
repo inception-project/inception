@@ -77,7 +77,7 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
         if (aFormat.startsWith(CustomXmlFormatLoader.CUSTOM_XML_FORMAT_PREFIX)) {
             return PREFERRED;
         }
-        
+
         switch (aFormat) {
         case HtmlFormatSupport.ID: // fall-through
         case XmlFormatSupport.ID:
@@ -105,8 +105,8 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
     @Override
     public Optional<ClientSidePreferencesKey<Map>> getUserPreferencesKey()
     {
-        return Optional
-                .of(new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
+        return Optional.of(
+                new ClientSidePreferencesKey<>(Map.class, "annotation/apache-annotator-editor"));
     }
 
     @Override

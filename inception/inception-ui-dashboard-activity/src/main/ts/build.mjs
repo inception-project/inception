@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import esbuild from "esbuild"
-import esbuildSvelte from "esbuild-svelte"
-import sveltePreprocess from "svelte-preprocess"
+import esbuild from 'esbuild'
+import esbuildSvelte from 'esbuild-svelte'
+import sveltePreprocess from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
+import { sassPlugin } from 'esbuild-sass-plugin'
 import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
-const packagePath = "de/tudarmstadt/ukp/inception/ui/core/dashboard/activity"
+const packagePath = 'de/tudarmstadt/ukp/inception/ui/core/dashboard/activity'
 
 let outbase = `../../../target/js/${packagePath}`
 if (argv.live) {
@@ -33,14 +33,22 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ["src/ActivitiesDashlet.svelte"],
-  outfile: `${outbase}/ActivitiesDashlet.min.js`,
-  mainFields: ["svelte", "browser", "module", "main"],
-  format: "esm",
+  mainFields: ['svelte', 'browser', 'module', 'main'],
+  format: 'esm',
   plugins: [
+    sassPlugin(),
     esbuildSvelte({
+      compilerOptions: { dev: argv.live },
       preprocess: sveltePreprocess(),
-    }),
+      filterWarnings: (warning) => {
+        // Ignore warnings about unused CSS selectors in Svelte components which appear as we import
+        // Bootstrap CSS files. We do not use all selectors in the files and thus the warnings are
+        // expected.
+        if (warning.code === 'css-unused-selector') {
+          return false
+        }
+      }
+    })
   ],
   bundle: true,
   sourcemap: true,
@@ -54,8 +62,22 @@ fs.mkdirsSync(`${outbase}`)
 fs.emptyDirSync(outbase)
 
 if (argv.live) {
-  const context = await esbuild.context(defaults)
-  await context.watch()
+  const context1 = await esbuild.context(Object.assign({
+    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    outfile: `${outbase}/ActivitiesDashlet.min.js`
+  }, defaults))
+  const context2 = await esbuild.context(Object.assign({
+    entryPoints: ['src/ActivityPanel.svelte'],
+    outfile: `${outbase}/panel/ActivityPanel.min.js`
+  }, defaults))
+  await Promise.all([context1.watch(), context2.watch()])
 } else {
-  esbuild.build(defaults)
+  esbuild.build(Object.assign({
+    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    outfile: `${outbase}/ActivitiesDashlet.min.js`
+  }, defaults))
+  esbuild.build(Object.assign({
+    entryPoints: ['src/ActivityPanel.svelte'],
+    outfile: `${outbase}/panel/ActivityPanel.min.js`
+  }, defaults))
 }

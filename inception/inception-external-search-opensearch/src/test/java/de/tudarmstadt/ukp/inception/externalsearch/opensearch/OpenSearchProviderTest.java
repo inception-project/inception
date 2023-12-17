@@ -58,7 +58,7 @@ public class OpenSearchProviderTest
             @Override
             public void build(int aIndex, Builder aBuilder)
             {
-                // This should hopefully allow running tests on machines with less than the 
+                // This should hopefully allow running tests on machines with less than the
                 // default 90% high watermark disk space free (e.g on a 1TB drive less than 100 GB).
                 aBuilder.put("cluster.routing.allocation.disk.threshold_enabled", false);
             }
