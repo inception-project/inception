@@ -189,6 +189,7 @@ class ExportServiceControllerImplTest
         var session = stompClient.connect(websocketUrl, sessionHandler).get(10, SECONDS);
 
         responseRecievedLatch.await(20, SECONDS);
+        sessionHandler.detach();
 
         assertThat(messageRecieved).isFalse();
         assertThat(sessionHandler.errorMsg).containsIgnoringCase("Failed to send message");
@@ -237,6 +238,7 @@ class ExportServiceControllerImplTest
         private final AtomicBoolean errorRecieved;
         private final AtomicBoolean messageRecieved;
         private final CountDownLatch responseRecievedLatch;
+        private boolean attached = true;
 
         private String errorMsg;
 
@@ -248,9 +250,18 @@ class ExportServiceControllerImplTest
             errorRecieved = aErrorRecieved;
         }
 
+        public void detach()
+        {
+            attached = false;
+        }
+
         @Override
         public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
         {
+            if (!attached) {
+                return;
+            }
+
             aSession.subscribe("/app" + NS_PROJECT + "/" + project.getId() + "/exports",
                     new StompFrameHandler()
                     {
@@ -273,6 +284,10 @@ class ExportServiceControllerImplTest
         @Override
         public void handleFrame(StompHeaders aHeaders, Object aPayload)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Error: {}", aHeaders.get("message"));
             errorMsg = aHeaders.getFirst("message");
             errorRecieved.set(true);
@@ -283,6 +298,10 @@ class ExportServiceControllerImplTest
         public void handleException(StompSession aSession, StompCommand aCommand,
                 StompHeaders aHeaders, byte[] aPayload, Throwable aException)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Exception: {}", aException.getMessage(), aException);
             errorMsg = aException.getMessage();
             errorRecieved.set(true);
@@ -292,6 +311,10 @@ class ExportServiceControllerImplTest
         @Override
         public void handleTransportError(StompSession aSession, Throwable aException)
         {
+            if (!attached) {
+                return;
+            }
+
             LOG.error("Transport error: {}", aException.getMessage(), aException);
             errorMsg = aException.getMessage();
             errorRecieved.set(true);
