@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -51,6 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
@@ -425,7 +426,8 @@ public class AnnotatorStateImpl
                 continue;
             }
 
-            if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
+            if (layer.getType().equals(SpanLayerSupport.TYPE)
+                    || layer.getType().equals(ChainLayerSupport.TYPE)) {
                 selectableLayers.add(layer);
             }
         }

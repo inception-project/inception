@@ -20,7 +20,13 @@ import { compareOffsets } from '@inception-project/inception-js-api/src/model/Of
 
 export function renderLabel (ann?: Annotation): string {
   if (!ann) return ''
-  return `${ann.label || `[${ann.layer.name}]`}`
+  const maxLength = 300
+  let label = `${ann.label || `[${ann.layer.name}]`}`
+  label = label.replace(/\s+/g, ' ').trim()
+  if (label.length > maxLength) {
+    label = label.substring(0, maxLength).trim() + '…'
+  }
+  return label
 }
 
 export function uniqueLabels (data: AnnotatedText): string[] {

@@ -317,9 +317,9 @@ public abstract class AnnotationPageBase
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
-        if (aException instanceof ReplaceHandlerException) {
+        if (aException instanceof ReplaceHandlerException replaceHandlerException) {
             // Let Wicket redirects still work
-            throw (ReplaceHandlerException) aException;
+            throw replaceHandlerException;
         }
 
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);

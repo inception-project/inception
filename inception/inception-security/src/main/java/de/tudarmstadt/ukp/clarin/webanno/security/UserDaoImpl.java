@@ -30,14 +30,15 @@ import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveD
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
-import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -149,7 +150,8 @@ public class UserDaoImpl
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
                 User admin = new User();
-                admin.setUsername(defaultString(defaultAdminUsername, ADMIN_DEFAULT_PASSWORD));
+                final String str = defaultAdminUsername;
+                admin.setUsername(Objects.toString(str, ADMIN_DEFAULT_PASSWORD));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
@@ -297,12 +299,12 @@ public class UserDaoImpl
     {
         Validate.notBlank(aUiName, "User must be specified");
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE ((:realm is null and realm is null) or realm = :realm)", //
                 "AND   uiName = :uiName");
 
-        List<User> users = entityManager.createQuery(query, User.class) //
+        var users = entityManager.createQuery(query, User.class) //
                 .setParameter("realm", aRealm) //
                 .setParameter("uiName", aUiName) //
                 .getResultList();
@@ -330,7 +332,7 @@ public class UserDaoImpl
     @Transactional
     public List<User> listEnabledUsers()
     {
-        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+        var query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
         return entityManager.createQuery(query, User.class) //
                 .setParameter("enabled", true) //
@@ -341,7 +343,7 @@ public class UserDaoImpl
     @Transactional
     public List<User> listDisabledUsers()
     {
-        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+        var query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
 
         return entityManager.createQuery(query, User.class) //
                 .setParameter("enabled", false) //
@@ -363,10 +365,12 @@ public class UserDaoImpl
     @Transactional
     public User getCurrentUser()
     {
-        String username = getCurrentUsername();
+        var username = getCurrentUsername();
+
         if (username == null) {
             return null;
         }
+
         return get(username);
     }
 
@@ -410,34 +414,35 @@ public class UserDaoImpl
     @Override
     public boolean isCurrentUserAdmin()
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
             return false;
         }
 
-        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> ROLE_ADMIN.toString().equals(auth));
+        return authentication.getAuthorities().stream() //
+                .map(GrantedAuthority::getAuthority) //
+                .anyMatch(auth -> ROLE_ADMIN.name().equals(auth));
     }
 
     @Override
     @Transactional
     public boolean isProjectCreator(User aUser)
     {
-        boolean roleAdmin = false;
-        for (String role : getRoles(aUser)) {
-            if (Role.ROLE_PROJECT_CREATOR.name().equals(role)) {
-                roleAdmin = true;
-                break;
-            }
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return false;
         }
-        return roleAdmin;
+
+        return authentication.getAuthorities().stream() //
+                .map(GrantedAuthority::getAuthority) //
+                .anyMatch(auth -> Role.ROLE_PROJECT_CREATOR.name().equals(auth));
     }
 
     @Override
     public List<ValidationError> validateEmail(String eMail)
     {
-
         var errors = new ArrayList<ValidationError>();
 
         var len = eMail.length();
@@ -661,7 +666,7 @@ public class UserDaoImpl
     @Override
     public String getCurrentUsername()
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Principal authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication != null ? authentication.getName() : null;
     }

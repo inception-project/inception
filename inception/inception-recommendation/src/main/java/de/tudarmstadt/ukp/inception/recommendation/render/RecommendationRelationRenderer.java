@@ -25,18 +25,13 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.Map;
 
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -99,24 +94,24 @@ public class RecommendationRelationRenderer
                 aRequest.getAnnotationUser().getUsername(), layer, groupedPredictions,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
+        var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
-        Type attachType = CasUtil.getType(cas, layer.getAttachType().getName());
+        var attachType = CasUtil.getType(cas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
         var features = annotationService.listSupportedFeatures(layer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
-        for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
-            for (RelationSuggestion suggestion : group.bestSuggestions(pref)) {
+        for (var group : groupedPredictions) {
+            for (var suggestion : group.bestSuggestions(pref)) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
                     continue;
                 }
 
-                RelationPosition position = suggestion.getPosition();
+                var position = suggestion.getPosition();
                 int sourceBegin = position.getSourceBegin();
                 int sourceEnd = position.getSourceEnd();
                 int targetBegin = position.getTargetBegin();
@@ -125,24 +120,23 @@ public class RecommendationRelationRenderer
                 // FIXME: We get the first match for the (begin, end) span. With stacking, there can
                 // be more than one and we need to get the right one then which does not need to be
                 // the first. We wait for #2135 for a maybe fix.
-                AnnotationFS source = selectAt(cas, attachType, sourceBegin, sourceEnd) //
+                var source = selectAt(cas, attachType, sourceBegin, sourceEnd) //
                         .stream().findFirst().orElse(null);
 
-                AnnotationFS target = selectAt(cas, attachType, targetBegin, targetEnd) //
+                var target = selectAt(cas, attachType, targetBegin, targetEnd) //
                         .stream().findFirst().orElse(null);
 
                 // Retrieve the UI display label for the given feature value
-                AnnotationFeature feature = features.get(suggestion.getFeature());
+                var feature = features.get(suggestion.getFeature());
 
                 FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
-                String annotation = featureSupport.renderFeatureValue(feature,
-                        suggestion.getLabel());
+                var annotation = featureSupport.renderFeatureValue(feature, suggestion.getLabel());
 
                 Map<String, String> featureAnnotation = annotation != null
                         ? Map.of(suggestion.getFeature(), annotation)
                         : Map.of();
 
-                VArc arc = new VArc(layer, suggestion.getVID(), VID.of(source), VID.of(target),
+                var arc = new VArc(layer, suggestion.getVID(), VID.of(source), VID.of(target),
                         "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
                 arc.setScore(suggestion.getScore());
 

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
 
-public enum LearningRecordType
+public enum LearningRecordUserAction
     implements PersistentEnum
 {
     /**
@@ -48,7 +48,7 @@ public enum LearningRecordType
 
     private final String id;
 
-    LearningRecordType(String aId)
+    LearningRecordUserAction(String aId)
     {
         id = aId;
     }

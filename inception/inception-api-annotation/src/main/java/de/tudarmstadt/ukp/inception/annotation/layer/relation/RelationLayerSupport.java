@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 /**
  * <p>
@@ -54,6 +54,9 @@ public class RelationLayerSupport
     extends LayerSupport_ImplBase<RelationAdapter, RelationLayerTraits>
     implements InitializingBean
 {
+    @SuppressWarnings("deprecation")
+    public static final String TYPE = WebAnnoConst.RELATION_TYPE;
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -85,7 +88,7 @@ public class RelationLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(RELATION_TYPE, "Relation", layerSupportId));
+        types = asList(new LayerType(TYPE, "Relation", layerSupportId));
     }
 
     @Override
@@ -97,7 +100,7 @@ public class RelationLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return RELATION_TYPE.equals(aLayer.getType());
+        return TYPE.equals(aLayer.getType());
     }
 
     @Override

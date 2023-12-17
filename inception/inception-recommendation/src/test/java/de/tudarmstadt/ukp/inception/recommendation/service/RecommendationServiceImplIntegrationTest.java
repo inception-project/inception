@@ -26,8 +26,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.getOffsetsAnchoredOnTokens;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.getOffsetsAnchoredOnTokens;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.JCasFactory.createText;
@@ -75,12 +75,12 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -420,7 +420,7 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", MAIN_EDITOR) //
                 .hasFieldOrPropertyWithValue("userAction", ACCEPTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionType.SPAN);
+                .hasFieldOrPropertyWithValue("suggestionType", SuggestionLayerFamily.SPAN);
     }
 
     @Test
@@ -435,7 +435,7 @@ public class RecommendationServiceImplIntegrationTest
                 "testUiLabel", 0.42, "Test confidence", NEVER);
 
         sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature,
-                LearningRecordType.REJECTED, DETAIL_EDITOR);
+                LearningRecordUserAction.REJECTED, DETAIL_EDITOR);
 
         var records = sut.listLearningRecords(USER_NAME, USER_NAME, layer);
         assertThat(records).hasSize(1);
@@ -453,8 +453,8 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("tokenText", "") //
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", DETAIL_EDITOR) //
-                .hasFieldOrPropertyWithValue("userAction", LearningRecordType.REJECTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionType.RELATION);
+                .hasFieldOrPropertyWithValue("userAction", LearningRecordUserAction.REJECTED) //
+                .hasFieldOrPropertyWithValue("suggestionType", SuggestionLayerFamily.RELATION);
     }
 
     @Test

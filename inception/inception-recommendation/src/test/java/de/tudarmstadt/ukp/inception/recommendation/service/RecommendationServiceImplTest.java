@@ -26,11 +26,11 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.extractSuggestions;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.getOffsets;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.hideSuggestionsRejectedOrSkipped;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.getOffsets;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;

@@ -28,34 +28,25 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.RELATION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.SPAN;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
-import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
-import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
-import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -87,11 +78,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
@@ -108,25 +98,21 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.session.SessionDestroyedEvent;
-import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
@@ -144,12 +130,13 @@ import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -179,14 +166,11 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -205,8 +189,6 @@ import jakarta.persistence.TypedQuery;
 public class RecommendationServiceImpl
     implements RecommendationService, LearningRecordService
 {
-    private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final int TRAININGS_PER_SELECTION = 5;
@@ -283,21 +265,21 @@ public class RecommendationServiceImpl
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         return state.getActivePredictions();
     }
 
     @Override
     public Predictions getIncomingPredictions(User aUser, Project aProject)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         return state.getIncomingPredictions();
     }
 
     @Override
     public void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             state.setIncomingPredictions(aPredictions);
         }
@@ -306,7 +288,7 @@ public class RecommendationServiceImpl
     @Override
     public boolean hasActiveRecommenders(String aUser, Project aProject)
     {
-        RecommendationState state = getState(aUser, aProject);
+        var state = getState(aUser, aProject);
         synchronized (state) {
             return !state.getActiveRecommenders().isEmpty();
         }
@@ -316,7 +298,7 @@ public class RecommendationServiceImpl
     public void setEvaluatedRecommenders(User aUser, AnnotationLayer aLayer,
             List<EvaluatedRecommender> aRecommenders)
     {
-        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             state.setEvaluatedRecommenders(aLayer, aRecommenders);
         }
@@ -325,7 +307,7 @@ public class RecommendationServiceImpl
     @Override
     public List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer)
     {
-        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getEvaluatedRecommenders().get(aLayer));
         }
@@ -335,7 +317,7 @@ public class RecommendationServiceImpl
     public Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser,
             Recommender aRecommender)
     {
-        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        var state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getEvaluatedRecommenders().get(aRecommender.getLayer()).stream()
                     .filter(r -> r.getRecommender().equals(aRecommender)).findAny();
@@ -345,7 +327,7 @@ public class RecommendationServiceImpl
     @Override
     public List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
     {
-        RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getActiveRecommenders().get(aLayer));
         }
@@ -354,7 +336,7 @@ public class RecommendationServiceImpl
     @Override
     public List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             return new ArrayList<>(state.getActiveRecommenders().values());
         }
@@ -380,7 +362,7 @@ public class RecommendationServiceImpl
     @Transactional
     public void deleteRecommender(Recommender aRecommender)
     {
-        Recommender settings = aRecommender;
+        var settings = aRecommender;
 
         if (!entityManager.contains(settings)) {
             settings = entityManager.merge(settings);
@@ -397,24 +379,34 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listRecommenders(Project aProject)
     {
-        List<Recommender> settings = entityManager
-                .createQuery("FROM Recommender WHERE project = :project ORDER BY name ASC",
-                        Recommender.class)
-                .setParameter("project", aProject).getResultList();
-        return settings;
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Recommender.class);
+        var root = query.from(Recommender.class);
+
+        query.select(root) //
+                .where(cb.equal(root.get(Recommender_.project), aProject)) //
+                .orderBy(cb.asc(root.get(Recommender_.name)));
+
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
-        String query = "SELECT DISTINCT r.layer " + "FROM Recommender r "
-                + "WHERE r.project = :project AND r.enabled = :enabled "
-                + "ORDER BY r.layer.name ASC";
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationLayer.class);
+        var root = query.from(Recommender.class);
 
-        return entityManager.createQuery(query, AnnotationLayer.class) //
-                .setParameter("project", aProject) //
-                .setParameter("enabled", true) //
-                .getResultList();
+        var layerJoin = root.join(Recommender_.layer);
+        query.select(layerJoin) //
+                .distinct(true) //
+                .where(cb.and( //
+                        cb.equal(root.get(Recommender_.project), aProject), //
+                        cb.equal(root.get(Recommender_.enabled), true))) //
+                .orderBy(cb.asc(layerJoin.get(AnnotationLayer_.name)));
+
+        var typedQuery = entityManager.createQuery(query);
+        return typedQuery.getResultList();
     }
 
     @Override
@@ -428,15 +420,15 @@ public class RecommendationServiceImpl
     @Transactional
     public boolean existsRecommender(Project aProject, String aName)
     {
-        String query = String.join("\n", //
-                "SELECT COUNT(*)", "FROM Recommender ", //
-                "WHERE name = :name ", //
-                "AND project = :project");
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Long.class);
+        var root = query.from(Recommender.class);
 
-        long count = entityManager.createQuery(query, Long.class) //
-                .setParameter("name", aName) //
-                .setParameter("project", aProject) //
-                .getSingleResult();
+        query.select(cb.count(root)).where(cb.and( //
+                cb.equal(root.get(Recommender_.name), aName), //
+                cb.equal(root.get(Recommender_.project), aProject)));
+
+        long count = entityManager.createQuery(query).getSingleResult();
 
         return count > 0;
     }
@@ -535,7 +527,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        boolean predictionSessionExistedOnOpen = false;
+        var predictionSessionExistedOnOpen = false;
         if (predictions != null) {
             if (predictions.getDataOwner().equals(dataOwner)) {
                 predictionSessionExistedOnOpen = true;
@@ -550,7 +542,7 @@ public class RecommendationServiceImpl
         // We want to get predictions from all trained recommenders immediately - be they externally
         // pre-trained or possibly internal recommenders that have been trained due to earlier
         // actions.
-        String trigger = aEvent.getClass().getSimpleName();
+        var trigger = aEvent.getClass().getSimpleName();
         if (!predictionSessionExistedOnOpen) {
             // Activate all non-trainable recommenders - execute synchronously - blocking
             schedulingService.executeSync(
@@ -559,7 +551,7 @@ public class RecommendationServiceImpl
 
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
-        boolean predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
+        var predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
                 trigger, dataOwner);
 
         // Is it the first time a document has been opened? If yes, there might be auto-accept
@@ -707,13 +699,13 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAnnotation(AnnotationEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
         }
 
-        Set<DirtySpot> dirties = requestCycle.getMetaData(DIRTIES);
+        var dirties = requestCycle.getMetaData(DIRTIES);
         if (dirties == null) {
             dirties = new HashSet<>();
             requestCycle.setMetaData(DIRTIES, dirties);
@@ -730,7 +722,7 @@ public class RecommendationServiceImpl
     @EventListener
     public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
             return;
@@ -749,8 +741,8 @@ public class RecommendationServiceImpl
         var annDoc = aEvent.getDocument();
         committed.add(new CommittedDocument(annDoc));
 
-        boolean containsTrainingTrigger = false;
-        for (IRequestCycleListener listener : requestCycle.getListeners()) {
+        var containsTrainingTrigger = false;
+        for (var listener : requestCycle.getListeners()) {
             if (listener instanceof TriggerTrainingTaskListener) {
                 containsTrainingTrigger = true;
             }
@@ -824,7 +816,8 @@ public class RecommendationServiceImpl
     public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument,
             String aDataOwner)
     {
-        User user = userRepository.get(aUsername);
+        var user = userRepository.get(aUsername);
+
         if (user == null) {
             return;
         }
@@ -836,17 +829,19 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false,
+                null);
     }
 
     @Override
     public void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
-        triggerRun(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true, null);
+        triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true,
+                null);
     }
 
-    private void triggerRun(String aSessionOwner, Project aProject, String aEventName,
+    private void triggerTraining(String aSessionOwner, Project aProject, String aEventName,
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
@@ -871,8 +866,8 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-            schedulingService.enqueue(task);
+            schedulingService.enqueue(
+                    new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
             var state = getState(aSessionOwner, aProject);
             synchronized (state) {
@@ -883,8 +878,8 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var task = new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner);
-        schedulingService.enqueue(task);
+        schedulingService.enqueue(
+                new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
 
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {
@@ -934,7 +929,7 @@ public class RecommendationServiceImpl
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
-        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        var info = sessionRegistry.getSessionInformation(event.getId());
         // Could be an anonymous session without information.
         if (info == null) {
             return;
@@ -958,8 +953,8 @@ public class RecommendationServiceImpl
     @EventListener
     public void afterDocumentReset(AfterDocumentResetEvent aEvent)
     {
-        SourceDocument currentDocument = aEvent.getDocument().getDocument();
-        String currentUser = aEvent.getDocument().getUser();
+        var currentDocument = aEvent.getDocument().getDocument();
+        var currentUser = aEvent.getDocument().getUser();
         clearState(currentUser);
         deleteLearningRecords(currentDocument, currentUser);
     }
@@ -967,14 +962,14 @@ public class RecommendationServiceImpl
     @Override
     public Preferences getPreferences(User aUser, Project aProject)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         return state.getPreferences();
     }
 
     @Override
     public void setPreferences(User aUser, Project aProject, Preferences aPreferences)
     {
-        RecommendationState state = getState(aUser.getUsername(), aProject);
+        var state = getState(aUser.getUsername(), aProject);
         state.setPreferences(aPreferences);
     }
 
@@ -1029,7 +1024,7 @@ public class RecommendationServiceImpl
     @Override
     public boolean switchPredictions(String aSessionOwner, Project aProject)
     {
-        RecommendationState state = getState(aSessionOwner, aProject);
+        var state = getState(aSessionOwner, aProject);
         synchronized (state) {
             return state.switchPredictions();
         }
@@ -1038,7 +1033,7 @@ public class RecommendationServiceImpl
     @Override
     public Optional<RecommenderContext> getContext(String aSessionOwner, Recommender aRecommender)
     {
-        RecommendationState state = getState(aSessionOwner, aRecommender.getProject());
+        var state = getState(aSessionOwner, aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
         }
@@ -1047,7 +1042,7 @@ public class RecommendationServiceImpl
     @Override
     public void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext)
     {
-        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        var state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             state.putContext(aRecommender, aContext);
         }
@@ -1084,7 +1079,7 @@ public class RecommendationServiceImpl
     private AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
             SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var aBegin = aSuggestion.getBegin();
@@ -1125,7 +1120,7 @@ public class RecommendationServiceImpl
     private void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, String aValue, AnnotationFS annotation,
-            LearningRecordChangeLocation aLocation, LearningRecordType aAction)
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         // Update the feature value
@@ -1153,7 +1148,7 @@ public class RecommendationServiceImpl
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
             RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var sourceBegin = aSuggestion.getPosition().getSourceBegin();
@@ -1974,285 +1969,6 @@ public class RecommendationServiceImpl
                 agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
     }
 
-    static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
-            CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
-    {
-        var layer = aRecommender.getLayer();
-        var featureName = aRecommender.getFeature().getName();
-        var typeName = layer.getName();
-
-        var predictedType = CasUtil.getType(aPredictionCas, typeName);
-        var labelFeature = predictedType.getFeatureByBaseName(featureName);
-        var sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        var targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-        var scoreFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
-        var scoreExplanationFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
-        var modeFeature = predictedType
-                .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
-        var predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
-        var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
-
-        var result = new ArrayList<AnnotationSuggestion>();
-
-        var documentText = aOriginalCas.getDocumentText();
-        for (var predictedFS : aPredictionCas.select(predictedType)) {
-            if (!predictedFS.getBooleanValue(predictionFeature)) {
-                continue;
-            }
-
-            var autoAcceptMode = getAutoAcceptMode(predictedFS, modeFeature);
-            var labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
-            var score = predictedFS.getDoubleValue(scoreFeature);
-            var scoreExplanation = predictedFS.getStringValue(scoreExplanationFeature);
-
-            switch (layer.getType()) {
-            case SPAN_TYPE: {
-                var predictedAnnotation = (Annotation) predictedFS;
-                var targetOffsets = getOffsets(layer.getAnchoringMode(), aOriginalCas,
-                        predictedAnnotation);
-
-                if (targetOffsets.isEmpty()) {
-                    continue;
-                }
-
-                var offsets = targetOffsets.get();
-                var coveredText = documentText.substring(offsets.getBegin(), offsets.getEnd());
-
-                for (var label : labels) {
-                    var suggestion = SpanSuggestion.builder() //
-                            .withId(RelationSuggestion.NEW_ID) //
-                            .withGeneration(aGeneration) //
-                            .withRecommender(aRecommender) //
-                            .withDocumentName(aDocument.getName()) //
-                            .withPosition(offsets) //
-                            .withCoveredText(coveredText) //
-                            .withLabel(label) //
-                            .withUiLabel(label) //
-                            .withScore(score) //
-                            .withScoreExplanation(scoreExplanation) //
-                            .withAutoAcceptMode(autoAcceptMode) //
-                            .build();
-                    result.add(suggestion);
-                }
-                break;
-            }
-            case RELATION_TYPE: {
-                var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
-                var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
-
-                var originalSource = findEquivalent(aOriginalCas, source);
-                var originalTarget = findEquivalent(aOriginalCas, target);
-                if (originalSource.isEmpty() || originalTarget.isEmpty()) {
-                    continue;
-                }
-
-                var position = new RelationPosition(originalSource.get(), originalTarget.get());
-
-                for (var label : labels) {
-                    var suggestion = RelationSuggestion.builder() //
-                            .withId(RelationSuggestion.NEW_ID) //
-                            .withGeneration(aGeneration) //
-                            .withRecommender(aRecommender) //
-                            .withDocumentName(aDocument.getName()) //
-                            .withPosition(position).withLabel(label) //
-                            .withUiLabel(label) //
-                            .withScore(score) //
-                            .withScoreExplanation(scoreExplanation) //
-                            .withAutoAcceptMode(autoAcceptMode) //
-                            .build();
-                    result.add(suggestion);
-                }
-                break;
-            }
-            default:
-                throw new IllegalStateException("Unsupported layer type [" + layer.getType() + "]");
-            }
-        }
-
-        return result;
-    }
-
-    private static AutoAcceptMode getAutoAcceptMode(FeatureStructure aFS, Feature aModeFeature)
-    {
-        var autoAcceptMode = AutoAcceptMode.NEVER;
-        var autoAcceptFeatureValue = aFS.getStringValue(aModeFeature);
-        if (autoAcceptFeatureValue != null) {
-            switch (autoAcceptFeatureValue) {
-            case AUTO_ACCEPT_ON_FIRST_ACCESS:
-                autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
-            }
-        }
-        return autoAcceptMode;
-    }
-
-    private static String[] getPredictedLabels(FeatureStructure predictedFS,
-            Feature predictedFeature, boolean isStringMultiValue)
-    {
-        if (isStringMultiValue) {
-            return FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
-        }
-
-        return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
-    }
-
-    /**
-     * Locates an annotation in the given CAS which is equivalent of the provided annotation.
-     *
-     * @param aOriginalCas
-     *            the original CAS.
-     * @param aAnnotation
-     *            an annotation in the prediction CAS. return the equivalent in the original CAS.
-     */
-    private static Optional<Annotation> findEquivalent(CAS aOriginalCas, AnnotationFS aAnnotation)
-    {
-        return aOriginalCas.<Annotation> select(aAnnotation.getType())
-                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
-                        aAnnotation, null))
-                .findFirst();
-    }
-
-    /**
-     * Calculates the offsets of the given predicted annotation in the original CAS .
-     *
-     * @param aMode
-     *            the anchoring mode of the target layer
-     * @param aOriginalCas
-     *            the original CAS.
-     * @param aPredictedAnnotation
-     *            the predicted annotation.
-     * @return the proper offsets.
-     */
-    static Optional<Offset> getOffsets(AnchoringMode aMode, CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        switch (aMode) {
-        case CHARACTERS: {
-            return getOffsetsAnchoredOnCharacters(aOriginalCas, aPredictedAnnotation);
-        }
-        case SINGLE_TOKEN: {
-            return getOffsetsAnchoredOnSingleTokens(aOriginalCas, aPredictedAnnotation);
-        }
-        case TOKENS: {
-            return getOffsetsAnchoredOnTokens(aOriginalCas, aPredictedAnnotation);
-        }
-        case SENTENCES: {
-            return getOffsetsAnchoredOnSentences(aOriginalCas, aPredictedAnnotation);
-        }
-        default:
-            throw new IllegalStateException("Unsupported anchoring mode: [" + aMode + "]");
-        }
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnCharacters(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
-                min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
-        TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
-        var begin = offsets[0];
-        var end = offsets[1];
-        return Optional.of(new Offset(begin, end));
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnSingleTokens(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        Type tokenType = getType(aOriginalCas, Token.class);
-        var tokens = aOriginalCas.<Annotation> select(tokenType) //
-                .coveredBy(aPredictedAnnotation) //
-                .limit(2).asList();
-
-        if (tokens.isEmpty()) {
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping tokens instead of contained tokens.
-            LOG.trace("Discarding suggestion because no covering token was found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        if (tokens.size() > 1) {
-            // We only want to accept single-token suggestions
-            LOG.trace("Discarding suggestion because only single-token suggestions are "
-                    + "accepted: {}", aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        AnnotationFS token = tokens.get(0);
-        var begin = token.getBegin();
-        var end = token.getEnd();
-        return Optional.of(new Offset(begin, end));
-    }
-
-    private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        var sentences = aOriginalCas.select(Sentence.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
-
-        if (sentences.isEmpty()) {
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping sentences instead of covered sentences.
-            LOG.trace("Discarding suggestion because no covered sentences were found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        var begin = sentences.get(0).getBegin();
-        var end = sentences.get(sentences.size() - 1).getEnd();
-        return Optional.of(new Offset(begin, end));
-    }
-
-    static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
-            Annotation aPredictedAnnotation)
-    {
-        var tokens = aOriginalCas.select(Token.class) //
-                .coveredBy(aPredictedAnnotation) //
-                .asList();
-
-        if (tokens.isEmpty()) {
-            if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
-                var pos = aPredictedAnnotation.getBegin();
-                var allTokens = aOriginalCas.select(Token.class).asList();
-                Token prevToken = null;
-                for (var token : allTokens) {
-                    if (prevToken == null && pos < token.getBegin()) {
-                        return Optional.of(new Offset(token.getBegin(), token.getBegin()));
-                    }
-
-                    if (token.covering(aPredictedAnnotation)) {
-                        return Optional.of(new Offset(pos, pos));
-                    }
-
-                    if (prevToken != null && pos < token.getBegin()) {
-                        return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
-                    }
-
-                    prevToken = token;
-                }
-
-                if (prevToken != null && pos >= prevToken.getEnd()) {
-                    return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
-                }
-            }
-
-            // This can happen if a recommender uses different token boundaries (e.g. if a
-            // remote service performs its own tokenization). We might be smart here by
-            // looking for overlapping tokens instead of covered tokens.
-            LOG.trace("Discarding suggestion because no covered tokens were found: {}",
-                    aPredictedAnnotation);
-            return Optional.empty();
-        }
-
-        var begin = tokens.get(0).getBegin();
-        var end = tokens.get(tokens.size() - 1).getEnd();
-        return Optional.of(new Offset(begin, end));
-    }
-
     /**
      * Goes through all SpanSuggestions and determines the visibility of each one
      */
@@ -2283,7 +1999,8 @@ public class RecommendationServiceImpl
                 // ... and in the given window
                 .filter(group -> {
                     Offset offset = (Offset) group.getPosition();
-                    return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
+                    return AnnotationPredicates.coveredBy(offset.getBegin(), offset.getEnd(),
+                            aWindowBegin, aWindowEnd);
                 }) //
                 .collect(toList());
 
@@ -2559,12 +2276,12 @@ public class RecommendationServiceImpl
             int aWindowEnd)
     {
         if (type == null) {
-            return List.of();
+            return Collections.emptyList();
         }
 
-        return select(aCas, type).stream()
-                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
-                .collect(toList());
+        return select(aCas, type).stream() //
+                .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
+                .toList();
     }
 
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
@@ -2574,42 +2291,7 @@ public class RecommendationServiceImpl
             var tsd = schemaService.getFullProjectTypeSystem(aProject);
             var features = schemaService.listAnnotationFeature(aProject);
 
-            for (var feature : features) {
-                var td = tsd.getType(feature.getLayer().getName());
-                if (td == null) {
-                    if (!WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                        LOG.trace(
-                                "Could not monkey patch feature {} because type for layer {} was not "
-                                        + "found in the type system",
-                                feature, feature.getLayer());
-                    }
-                    continue;
-                }
-
-                var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-                td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
-
-                var scoreExplanationFeatureName = feature.getName()
-                        + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-                td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
-                        TYPE_NAME_STRING);
-
-                var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-                td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
-            }
-
-            var layers = features.stream().map(AnnotationFeature::getLayer).distinct()
-                    .collect(toList());
-            for (var layer : layers) {
-                var td = tsd.getType(layer.getName());
-                if (td == null) {
-                    LOG.trace("Could not monkey patch layer {} because its type was not found in "
-                            + "the type system", layer);
-                    continue;
-                }
-
-                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", TYPE_NAME_BOOLEAN);
-            }
+            RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, features);
 
             schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }
@@ -2632,40 +2314,39 @@ public class RecommendationServiceImpl
         @Override
         public void onEndRequest(RequestCycle cycle)
         {
-            Set<DirtySpot> dirties = cycle.getMetaData(DIRTIES);
-            Set<CommittedDocument> committed = cycle.getMetaData(COMMITTED);
+            var dirties = cycle.getMetaData(DIRTIES);
+            var committed = cycle.getMetaData(COMMITTED);
 
             if (dirties == null || committed == null) {
                 return;
             }
 
             // Any dirties which have not been committed can be ignored
-            for (CommittedDocument committedDocument : committed) {
+            for (var committedDocument : committed) {
                 dirties.removeIf(dirty -> dirty.affectsDocument(committedDocument.getDocumentId(),
                         committedDocument.getUser()));
             }
 
             // Concurrent action has deleted project, so we can ignore this
             var affectedProjects = dirties.stream() //
-                    .map(d -> d.getProject()) //
+                    .map(DirtySpot::getProject) //
                     .distinct() //
                     .collect(toMap(p -> p.getId(), p -> p));
-            for (Project project : affectedProjects.values()) {
+            for (var project : affectedProjects.values()) {
                 if (projectService.getProject(project.getId()) == null) {
                     dirties.removeIf(dirty -> dirty.getProject().equals(project));
                 }
             }
 
-            Map<RecommendationStateKey, Set<DirtySpot>> dirtiesByContext = new LinkedHashMap<>();
-            for (DirtySpot spot : dirties) {
-                RecommendationStateKey key = new RecommendationStateKey(spot.getUser(),
-                        spot.getProject().getId());
+            var dirtiesByContext = new LinkedHashMap<RecommendationStateKey, Set<DirtySpot>>();
+            for (var spot : dirties) {
+                var key = new RecommendationStateKey(spot.getUser(), spot.getProject().getId());
                 dirtiesByContext.computeIfAbsent(key, k -> new HashSet<>()).add(spot);
             }
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                triggerTraining(key.getUser(), affectedProjects.get(key.getProjectId()),
                         "Committed dirty CAS at end of request", currentDocument, dataOwner, false,
                         contextDirties.getValue());
             }
@@ -2728,10 +2409,9 @@ public class RecommendationServiceImpl
         // the entire document or even for the part visible on screen.
         suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        if (suggestion instanceof SpanSuggestion) {
+        if (suggestion instanceof SpanSuggestion spanSuggestion) {
             var recommender = getRecommender(suggestion.getVID().getId());
             var feature = recommender.getFeature();
-            var spanSuggestion = (SpanSuggestion) suggestion;
             // Log the action to the learning record
             logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, REJECTED,
                     aAction);
@@ -2742,8 +2422,7 @@ public class RecommendationServiceImpl
                     spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
 
         }
-        else if (suggestion instanceof RelationSuggestion) {
-            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
+        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
             // TODO: Log rejection
             // TODO: Publish rejection event
         }
@@ -2758,10 +2437,10 @@ public class RecommendationServiceImpl
         // the entire document or even for the part visible on screen.
         suggestion.hide(FLAG_SKIPPED);
 
-        if (suggestion instanceof SpanSuggestion) {
-            var recommender = getRecommender(suggestion.getVID().getId());
+        if (suggestion instanceof SpanSuggestion spanSuggestion) {
+            var recommender = getRecommender(spanSuggestion.getVID().getId());
             var feature = recommender.getFeature();
-            var spanSuggestion = (SpanSuggestion) suggestion;
+
             // Log the action to the learning record
             logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, SKIPPED,
                     aAction);
@@ -2784,7 +2463,7 @@ public class RecommendationServiceImpl
     @Override
     public void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = null;
         if (aSuggestion instanceof SpanSuggestion) {
@@ -2814,8 +2493,8 @@ public class RecommendationServiceImpl
     }
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation)
+            SpanSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
         record.setUser(aUsername);
@@ -2836,7 +2515,7 @@ public class RecommendationServiceImpl
 
     private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             RelationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var pos = aSuggestion.getPosition();
         var record = new LearningRecord();
@@ -2910,8 +2589,8 @@ public class RecommendationServiceImpl
                     .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN)
-                    .collect(toUnmodifiableList());
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN)
+                    .toList();
         }
     }
 
@@ -2924,11 +2603,11 @@ public class RecommendationServiceImpl
         synchronized (state) {
             var stream = state.listLearningRecords(aLayer).stream()
                     .filter(r -> Objects.equals(r.getUser(), aDataOwner)
-                            && r.getUserAction() != LearningRecordType.SHOWN);
+                            && r.getUserAction() != LearningRecordUserAction.SHOWN);
             if (aLimit > 0) {
                 stream = stream.limit(aLimit);
             }
-            return stream.collect(toUnmodifiableList());
+            return stream.toList();
         }
     }
 
@@ -2954,10 +2633,13 @@ public class RecommendationServiceImpl
         TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
                 .setParameter("user", aDataOwner) //
                 .setParameter("layer", aLayer) //
-                .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
+                // SHOWN records NOT returned
+                .setParameter("action", LearningRecordUserAction.SHOWN);
+
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
         }
+
         return query.getResultList();
     }
 

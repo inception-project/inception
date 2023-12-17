@@ -15,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
+import java.util.List;
 
-public class SuggestionTypeWrapper
-    extends PersistentEnumUserType<SuggestionType>
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
+
+public interface ResponseExtractor
 {
-    private static final long serialVersionUID = 9106353026811614399L;
+    void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
+            String aResponse);
 
-    @Override
-    public Class<SuggestionType> returnedClass()
-    {
-        return de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType.class;
-    }
+    List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum);
 }

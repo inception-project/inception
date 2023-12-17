@@ -262,8 +262,8 @@ public class LinkFeatureSupport
         }
 
         FeatureStructure[] values = null;
-        if (aValue instanceof ArrayFS) {
-            values = ((ArrayFS<?>) aValue).toArray();
+        if (aValue instanceof ArrayFS array) {
+            values = array.toArray();
         }
 
         if (aValue instanceof Collection) {

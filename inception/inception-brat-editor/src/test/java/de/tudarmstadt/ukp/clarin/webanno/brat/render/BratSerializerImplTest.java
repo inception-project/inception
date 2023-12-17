@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
@@ -105,8 +104,8 @@ public class BratSerializerImplTest
         project = new Project();
         sourceDocument = new SourceDocument("test.txt", project, null);
 
-        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                SINGLE_TOKEN, NO_OVERLAP);
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SpanLayerSupport.TYPE,
+                null, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -119,8 +118,8 @@ public class BratSerializerImplTest
         tokenPosFeature.setProject(project);
         tokenPosFeature.setVisible(true);
 
-        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                SINGLE_TOKEN, NO_OVERLAP);
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SpanLayerSupport.TYPE, project,
+                true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);

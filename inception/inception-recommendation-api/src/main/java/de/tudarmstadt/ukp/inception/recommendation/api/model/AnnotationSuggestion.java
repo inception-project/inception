@@ -279,7 +279,7 @@ public abstract class AnnotationSuggestion
                 aRange.getEnd());
     }
 
-    public boolean hideSuggestion(LearningRecordType aAction)
+    public boolean hideSuggestion(LearningRecordUserAction aAction)
     {
         switch (aAction) {
         case REJECTED:

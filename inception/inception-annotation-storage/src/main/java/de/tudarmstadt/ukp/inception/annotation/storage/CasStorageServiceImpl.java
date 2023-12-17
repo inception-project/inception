@@ -155,7 +155,7 @@ public class CasStorageServiceImpl
         config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
         // CASes that are used regularly are dropped from the pool too quickly.
-        config.setMinEvictableIdleTime(casStorageProperties.getMinIdleCasTime());
+        config.setMinEvictableIdleDuration(casStorageProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX

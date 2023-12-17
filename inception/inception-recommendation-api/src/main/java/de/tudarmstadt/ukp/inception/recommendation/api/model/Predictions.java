@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -169,19 +170,17 @@ public class Predictions
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
+        var windowBegin = aWindowBegin == -1 ? 0 : aWindowBegin;
+        var windowEnd = aWindowEnd == -1 ? Integer.MAX_VALUE : aWindowEnd;
+
         synchronized (predictionsLock) {
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> type.isInstance(f.getValue())) //
                     .map(f -> (Entry<ExtendedId, T>) (Entry) f) //
                     .filter(f -> f.getKey().getLayerId() == aLayer.getId()) //
-                    // .filter(f -> overlapping(f.getValue().getWindowBegin(),
-                    // f.getValue().getWindowEnd(),
-                    // aWindowBegin == -1 ? 0 : aWindowBegin,
-                    // aWindowEnd == -1 ? MAX_VALUE : aWindowEnd))
-                    .filter(f -> aWindowBegin == -1
-                            || (f.getValue().getWindowBegin() >= aWindowBegin))
-                    .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
+                    .filter(f -> AnnotationPredicates.overlapping(f.getValue().getWindowBegin(),
+                            f.getValue().getWindowEnd(), windowBegin, windowEnd))
                     .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())) //
                     .map(Map.Entry::getValue) //
                     .collect(toList());
@@ -207,10 +206,6 @@ public class Predictions
         }
     }
 
-    /**
-     * @param aPredictions
-     *            list of sentences containing recommendations
-     */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
         synchronized (predictionsLock) {
@@ -292,9 +287,8 @@ public class Predictions
     }
 
     /**
-     * TODO #176 use the document Id once it it available in the CAS Returns a list of predictions
-     * for a given token that matches the given layer and the annotation feature in the given
-     * document
+     * Returns a list of predictions for a given token that matches the given layer and the
+     * annotation feature in the given document
      *
      * @param aDocumentName
      *            the given document name
@@ -308,6 +302,7 @@ public class Predictions
      *            the given annotation feature name
      * @return the annotation suggestions
      */
+    // TODO #176 use the document Id once it it available in the CAS
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)

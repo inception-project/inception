@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
@@ -214,7 +214,7 @@ public interface RecommendationService
     AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
             RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordType aAction)
+            LearningRecordUserAction aAction)
         throws AnnotationException;
 
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,

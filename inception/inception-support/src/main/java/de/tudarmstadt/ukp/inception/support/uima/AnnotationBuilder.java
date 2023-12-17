@@ -52,7 +52,7 @@ public class AnnotationBuilder<T extends AnnotationFS>
     public AnnotationBuilder<T> on(String aPattern)
     {
         Matcher m = Pattern.compile(aPattern).matcher(getCas().getDocumentText());
-        if (m.matches()) {
+        if (m.find()) {
             at(m.start(), m.end());
         }
         return this;

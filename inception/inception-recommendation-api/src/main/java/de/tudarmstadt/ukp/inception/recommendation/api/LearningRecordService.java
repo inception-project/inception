@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 
 public interface LearningRecordService
 {
@@ -42,7 +42,7 @@ public interface LearningRecordService
     /**
      * @return the learning records for the given document, user and layer. An optional limit can be
      *         used, e.g. for loading only a reduced part of the history in the active learning
-     *         sidebar. Learning records with the action {@link LearningRecordType#SHOWN} are
+     *         sidebar. Learning records with the action {@link LearningRecordUserAction#SHOWN} are
      *         <b>not</b> returned by this method.
      * @param aDataOwner
      *            the annotator user
@@ -76,21 +76,21 @@ public interface LearningRecordService
      */
     void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
      *            the layer
-     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the history of
      *         the given layer for the given user.
      * 
      */
     boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
 
     /**
-     * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of the given
+     * Removes all records of type {@link LearningRecordUserAction#SKIPPED} in the history of the given
      * layer for the given user.
      * 
      * @param aDataOwner

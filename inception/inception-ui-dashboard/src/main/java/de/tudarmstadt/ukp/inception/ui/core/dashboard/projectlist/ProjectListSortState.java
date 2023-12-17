@@ -24,7 +24,7 @@ public class ProjectListSortState
     public ProjectListSortState()
     {
         // Used for default constructing this preference
-        strategy = ProjectListSortStrategy.CREATED_NEWEST;
+        strategy = ProjectListSortStrategy.RECENTLY_UPDATED;
     }
 
     public ProjectListSortState(ProjectListSortStrategy aKey)

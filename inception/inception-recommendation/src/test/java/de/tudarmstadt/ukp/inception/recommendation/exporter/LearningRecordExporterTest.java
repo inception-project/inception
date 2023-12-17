@@ -47,8 +47,8 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
@@ -146,10 +146,10 @@ public class LearningRecordExporterTest
                 .withOffsetBegin2(-1) //
                 .withOffsetEnd2(-1) //
                 .withSourceDocument(document) //
-                .withSuggestionType(SuggestionType.SPAN) //
+                .withSuggestionType(SuggestionLayerFamily.SPAN) //
                 .withTokenText("0123456789") //
                 .withUser("user1") //
-                .withUserAction(LearningRecordType.ACCEPTED) //
+                .withUserAction(LearningRecordUserAction.ACCEPTED) //
                 .build();
 
         return asList(r1);

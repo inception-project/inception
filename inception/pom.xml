@@ -275,6 +275,7 @@
     <module>inception-imls-hf</module>
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
+    <module>inception-imls-ollama</module>
     <module>inception-imls-weblicht</module>
     <!-- Documentation -->
     <module>inception-doc</module>

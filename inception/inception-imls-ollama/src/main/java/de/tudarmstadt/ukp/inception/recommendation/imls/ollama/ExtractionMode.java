@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-public class TaskType
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public enum ExtractionMode
 {
-    public enum Type
-    {
-        SELECTION, TRAINING_AND_PREDICTION
-    };
+    @JsonProperty("response-as-label")
+    RESPONSE_AS_LABEL, //
+
+    @JsonProperty("mentions-from-json")
+    MENTIONS_FROM_JSON
 }

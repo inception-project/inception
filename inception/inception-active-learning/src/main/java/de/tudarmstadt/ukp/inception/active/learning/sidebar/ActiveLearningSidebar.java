@@ -22,10 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -89,6 +88,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -295,7 +295,7 @@ public class ActiveLearningSidebar
         return recommendationService.listLayersWithEnabledRecommenders(getModelObject() //
                 .getProject()) //
                 .stream() //
-                .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                .filter(layer -> layer.getType().equals(SpanLayerSupport.TYPE)) //
                 .collect(toList());
     }
 
@@ -564,7 +564,6 @@ public class ActiveLearningSidebar
 
     private FeatureEditor createFeatureEditor(SpanSuggestion aSuggestion)
     {
-        var state = ActiveLearningSidebar.this.getModelObject();
         var alState = alStateModel.getObject();
 
         // Obtain the feature state which serves as a model to the editor
@@ -1082,7 +1081,7 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), cas, aRecord.getOffsetBegin(),
+            state.getSelection().selectSpan(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
                     aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }

@@ -63,7 +63,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
@@ -269,7 +268,7 @@ public class ProjectsOverviewPage
 
     private WebMarkupContainer createProjectCreationGroup()
     {
-        WebMarkupContainer projectCreationGroup = new WebMarkupContainer("projectCreationGroup");
+        var projectCreationGroup = new WebMarkupContainer("projectCreationGroup");
         authorize(projectCreationGroup, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         projectCreationGroup.add(createNewProjectLink());
@@ -278,11 +277,9 @@ public class ProjectsOverviewPage
 
     private WebMarkupContainer createProjectImportGroup()
     {
-        WebMarkupContainer projectImportGroup = new WebMarkupContainer("projectImportGroup");
+        var projectImportGroup = new WebMarkupContainer("projectImportGroup");
         authorize(projectImportGroup, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
-        projectImportGroup.add(
-                new Label(MID_IMPORT_PROJECT_BUTTON, new StringResourceModel("importProject")));
         projectImportGroup.add(new ProjectImportPanel(MID_IMPORT_PROJECT_PANEL, Model.of()));
         return projectImportGroup;
     }

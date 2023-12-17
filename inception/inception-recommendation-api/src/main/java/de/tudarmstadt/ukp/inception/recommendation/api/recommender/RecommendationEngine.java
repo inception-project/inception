@@ -191,12 +191,12 @@ public abstract class RecommendationEngine
      */
     public abstract int estimateSampleCount(List<CAS> aCasses);
 
-    protected Type getPredictedType(CAS aCas)
+    public Type getPredictedType(CAS aCas)
     {
         return getType(aCas, layerName);
     }
 
-    protected Feature getPredictedFeature(CAS aCas)
+    public Feature getPredictedFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(featureName);
     }
@@ -219,7 +219,7 @@ public abstract class RecommendationEngine
         return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
-    protected Feature getIsPredictionFeature(CAS aCas)
+    public Feature getIsPredictionFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
     }
