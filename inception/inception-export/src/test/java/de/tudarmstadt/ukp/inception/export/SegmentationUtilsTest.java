@@ -31,14 +31,14 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class SegmentationTest
+public class SegmentationUtilsTest
 {
     @Test
     public void testSplitSentences() throws Exception
     {
         JCas jcas = JCasFactory.createText("I am one. I am two.", "en");
 
-        DocumentImportExportServiceImpl.splitSentences(jcas.getCas());
+        SegmentationUtils.splitSentences(jcas.getCas());
 
         assertThat(toText(select(jcas, Sentence.class))) //
                 .containsExactly("I am one.", "I am two.");
@@ -51,7 +51,7 @@ public class SegmentationTest
         new Heading(jcas, 0, 7).addToIndexes();
         new Paragraph(jcas, 8, 17).addToIndexes();
 
-        DocumentImportExportServiceImpl.splitSentences(jcas.getCas(), jcas.select(Div.class));
+        SegmentationUtils.splitSentences(jcas.getCas(), jcas.select(Div.class));
 
         assertThat(toText(select(jcas, Sentence.class))) //
                 .containsExactly("Heading", "I am two.");
@@ -64,7 +64,7 @@ public class SegmentationTest
         new Sentence(jcas, 0, 9).addToIndexes();
         new Sentence(jcas, 9, 18).addToIndexes();
 
-        DocumentImportExportServiceImpl.tokenize(jcas.getCas());
+        SegmentationUtils.tokenize(jcas.getCas());
 
         assertThat(toText(select(jcas, Sentence.class))) //
                 .containsExactly("i am one.", "i am two.");

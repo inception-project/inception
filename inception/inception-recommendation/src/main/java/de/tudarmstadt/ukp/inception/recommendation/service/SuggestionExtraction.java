@@ -70,7 +70,7 @@ public class SuggestionExtraction
 
     private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
 
-    private static final class ExtractionContext
+    static final class ExtractionContext
     {
         private final int generation;
 
@@ -154,7 +154,7 @@ public class SuggestionExtraction
         return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
     }
 
-    private static void extractDocumentMetadataSuggestion(ExtractionContext ctx, TOP predictedFS)
+    static void extractDocumentMetadataSuggestion(ExtractionContext ctx, TOP predictedFS)
     {
         var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.modeFeature);
         var labels = getPredictedLabels(predictedFS, ctx.labelFeature, ctx.isMultiLabels);
