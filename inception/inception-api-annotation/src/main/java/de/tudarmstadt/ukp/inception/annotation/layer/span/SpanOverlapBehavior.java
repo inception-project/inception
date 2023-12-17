@@ -157,20 +157,20 @@ public class SpanOverlapBehavior
             overlappingOrStackingSpans(sortedSpans, stacking, overlapping);
 
             overlapping.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Overlap is not permitted.")));
 
             stacking.forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
         case STACKING_ONLY:
             // Here, we must find all overlapping relations because they are not permitted
             overlappingNonStackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Only stacking is permitted.")));
             break;
         case OVERLAP_ONLY:
             stackingSpans(sortedSpans).forEach(fs -> aResponse
-                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+                    .add(new VComment(VID.of(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
     }

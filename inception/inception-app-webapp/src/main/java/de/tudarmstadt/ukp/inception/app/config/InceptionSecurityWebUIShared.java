@@ -18,44 +18,43 @@
 package de.tudarmstadt.ukp.inception.app.config;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 
 public class InceptionSecurityWebUIShared
 {
     public static void accessToStaticResources(
-            ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry aCfg)
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry aCfg)
     {
         // Resources need to be publicly accessible so they don't trigger the login
         // page. Otherwise it could happen that the user is redirected to a resource
         // upon login instead of being forwarded to a proper application page.
         aCfg //
-                .antMatchers("/favicon.ico").permitAll() //
-                .antMatchers("/favicon.png").permitAll() //
-                .antMatchers("/assets/**").permitAll() //
-                .antMatchers("/images/**").permitAll() //
-                .antMatchers("/resources/**").permitAll() //
-                .antMatchers("/whoops").permitAll() //
-                .antMatchers("/nowhere").permitAll() //
-                .antMatchers("/about/**").permitAll() //
-                .antMatchers("/wicket/resource/**").permitAll();
+                .requestMatchers("/favicon.ico").permitAll() //
+                .requestMatchers("/favicon.png").permitAll() //
+                .requestMatchers("/assets/**").permitAll() //
+                .requestMatchers("/images/**").permitAll() //
+                .requestMatchers("/resources/**").permitAll() //
+                .requestMatchers("/whoops").permitAll() //
+                .requestMatchers("/nowhere").permitAll() //
+                .requestMatchers("/about/**").permitAll() //
+                .requestMatchers("/wicket/resource/**").permitAll();
     }
 
     public static void accessToRemoteApiAndSwagger(
-            ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry aCfg)
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry aCfg)
     {
         aCfg //
-                .antMatchers("/swagger-ui/**").access("hasAnyRole('ROLE_REMOTE')")
-                .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
-                .antMatchers("/v3/**").access("hasAnyRole('ROLE_REMOTE')");
+                .requestMatchers("/swagger-ui/**").hasAnyRole("REMOTE") //
+                .requestMatchers("/swagger-ui.html").hasAnyRole("REMOTE") //
+                .requestMatchers("/v3/**").hasAnyRole("REMOTE");
     }
 
     public static void accessToApplication(
-            ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry aCfg)
+            AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry aCfg)
     {
         aCfg //
-                .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')") //
-                .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')") //
-                .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')");
-
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN") //
+                .requestMatchers("/doc/**").hasAnyRole("ADMIN", "USER") //
+                .requestMatchers("/**").hasAnyRole("ADMIN", "USER");
     }
 }

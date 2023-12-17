@@ -56,7 +56,7 @@ public class SpanEventAdapter
     @Override
     public String getDetails(SpanEvent aEvent) throws IOException
     {
-        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        var details = new AnnotationDetails(aEvent.getAnnotation());
         return JSONUtil.toJsonString(details);
     }
 }

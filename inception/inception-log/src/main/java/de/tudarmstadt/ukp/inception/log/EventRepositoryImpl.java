@@ -19,18 +19,16 @@ package de.tudarmstadt.ukp.inception.log;
 
 import static java.lang.String.join;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
@@ -53,9 +51,9 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 public class EventRepositoryImpl
     implements EventRepository
 {
-    private final int RECENT_ACTIVITY_HORIZON = 3500;
+    private static final int RECENT_ACTIVITY_HORIZON = 3500;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @PersistenceContext EntityManager entityManager;
 
@@ -69,15 +67,15 @@ public class EventRepositoryImpl
     @Transactional
     public void create(LoggedEvent... aEvents)
     {
-        long start = System.currentTimeMillis();
-        for (LoggedEvent event : aEvents) {
-            log.trace("{}", event);
+        var start = System.currentTimeMillis();
+        for (var event : aEvents) {
+            LOG.trace("{}", event);
             entityManager.persist(event);
         }
         long duration = System.currentTimeMillis() - start;
 
-        if (aEvents.length > 0 && !log.isTraceEnabled()) {
-            log.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
+        if (aEvents.length > 0 && !LOG.isTraceEnabled()) {
+            LOG.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
         }
     }
 
@@ -86,7 +84,7 @@ public class EventRepositoryImpl
     public List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId)
     {
-        String detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
+        var detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
 
         return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
     }
@@ -118,7 +116,7 @@ public class EventRepositoryImpl
     public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventTypes, int aMaxSize)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM LoggedEvent WHERE", //
                 "id IN", //
                 // select one event when time-stamps are the same per document
@@ -138,7 +136,7 @@ public class EventRepositoryImpl
                 "   GROUP BY document)", //
                 "ORDER BY created DESC");
 
-        TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
+        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
                 .setParameter("user", aUsername) //
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", Arrays.asList(aEventTypes)); //
@@ -150,29 +148,29 @@ public class EventRepositoryImpl
     public List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
             Collection<String> aEventTypes, int aMaxSize)
     {
-        String query = join("\n", //
+        var query = join("\n", //
                 "FROM  LoggedEvent", //
                 "WHERE user = :user", //
                 "  AND project = :project", //
                 "  AND event in (:eventTypes)", //
                 "ORDER BY created DESC");
 
-        List<LoggedEvent> result = entityManager.createQuery(query, LoggedEvent.class) //
+        var result = entityManager.createQuery(query, LoggedEvent.class) //
                 .setParameter("user", aUsername) //
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", aEventTypes) //
                 .setMaxResults(RECENT_ACTIVITY_HORIZON) //
                 .getResultList();
 
-        List<LoggedEvent> reducedResults = new ArrayList<>();
-        Set<Pair<Long, String>> documentsSeen = new HashSet<>();
+        var reducedResults = new ArrayList<LoggedEvent>();
+        var documentsSeen = new HashSet<Pair<Long, String>>();
 
-        Iterator<LoggedEvent> i = result.iterator();
+        var i = result.iterator();
         while (i.hasNext() && reducedResults.size() < aMaxSize) {
             LoggedEvent event = i.next();
 
             // Check if we already have the latest event of this doc/annotator combination
-            Pair<Long, String> doc = Pair.of(event.getDocument(), event.getAnnotator());
+            var doc = Pair.of(event.getDocument(), event.getAnnotator());
             if (documentsSeen.contains(doc)) {
                 continue;
             }
@@ -187,7 +185,7 @@ public class EventRepositoryImpl
     @Override
     public List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize)
     {
-        String query = join("\n", //
+        var query = join("\n", //
                 "FROM  LoggedEvent", //
                 "WHERE user = :user", //
                 "ORDER BY created DESC");
@@ -204,15 +202,15 @@ public class EventRepositoryImpl
             FailableConsumer<LoggedEvent, E> aConsumer)
     {
         // Set up data source
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM LoggedEvent WHERE ", //
                 "project = :project ", //
                 "ORDER BY id");
-        TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
+        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
                 .setParameter("project", aProject.getId());
 
         try (Stream<LoggedEvent> eventStream = typedQuery.getResultStream()) {
-            Streams.stream(eventStream).forEach(aConsumer);
+            Streams.failableStream(eventStream).forEach(aConsumer);
         }
     }
 }

@@ -43,7 +43,9 @@ public interface EventRepository
      * @param aRecommenderId
      *            the recommender to which the events relate
      * @return logged events of the given type, user name, project and recommender id from the db.
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
 
@@ -61,7 +63,9 @@ public interface EventRepository
      *            the type of event
      * @param aMaxSize
      *            the maximum number of events to return
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventType, int aMaxSize);
 
@@ -78,7 +82,9 @@ public interface EventRepository
      * @param aDetail
      *            the detail pattern per SQL LIKE operator, e.g. {@code "%recommender%"} finds all
      *            events containing the string {@code "recommender"} in their detail
+     * @deprecated Not used anymore.
      */
+    @Deprecated
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
 

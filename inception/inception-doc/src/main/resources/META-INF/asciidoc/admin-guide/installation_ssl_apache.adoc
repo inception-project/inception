@@ -55,10 +55,24 @@ ProxyPreserveHost On
   Allow from all
 </Proxy>
 
+<Location "/inception">
+  RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
+  RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
+</Location>
+
 ProxyPass /inception/ws ws://localhost:8080/inception/ws
 ProxyPass /inception http://localhost:8080/inception
 ProxyPassReverse /inception https://your.public.domain.name.com/inception
 ----
+If you use Apache 2.4 without `mod_access_compat` exchange the `<Proxy> … </Proxy>` section from the above example with this:
++
+[source,xml]
+----
+<Proxy http://localhost/inception >
+  require all granted
+</Proxy>
+----
+It is important to not mix both styles in any case throughout your configuration in order to avoid unforseen errors.
 
 * Enable the configuration with
 +

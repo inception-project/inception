@@ -39,7 +39,7 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     @Bean
     public SecurityFilterChain uiApiFilterChain(HttpSecurity aHttp) throws Exception
     {
-        aHttp.antMatcher(BASE_API_URL + "/**");
+        aHttp.securityMatcher(BASE_API_URL + "/**");
         commonConfiguration(aHttp);
         return aHttp.build();
     }
@@ -48,7 +48,7 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     @Bean
     public SecurityFilterChain uiViewFilterChain(HttpSecurity aHttp) throws Exception
     {
-        aHttp.antMatcher(BASE_VIEW_URL + "/**");
+        aHttp.securityMatcher(BASE_VIEW_URL + "/**");
         // Views render data that we generally want to display in an IFrame on the editor page
         aHttp.headers() //
                 .frameOptions().sameOrigin()//
@@ -71,8 +71,8 @@ public class InceptionSecurityWebUIApiAutoConfiguration
 
     private void commonConfiguration(HttpSecurity aHttp) throws Exception
     {
-        aHttp.authorizeRequests() //
-                .antMatchers("/**").access("hasAnyRole('ROLE_USER')") //
+        aHttp.authorizeHttpRequests() //
+                .requestMatchers("/**").hasAnyRole("USER") //
                 .anyRequest().denyAll();
         aHttp.sessionManagement().sessionCreationPolicy(NEVER);
         aHttp.exceptionHandling() //
