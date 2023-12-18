@@ -178,13 +178,9 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
 
         // Determine the maximum score per Label
         Map<LabelMapKey, Double> maxScorePerLabel = new HashMap<>();
-        for (LabelMapKey label : labelMap.keySet()) {
-            double maxScore = 0;
-            for (Entry<Long, T> classifier : labelMap.get(label).entrySet()) {
-                if (classifier.getValue().getScore() > maxScore) {
-                    maxScore = classifier.getValue().getScore();
-                }
-            }
+        for (var label : labelMap.keySet()) {
+            double maxScore = labelMap.get(label).values().stream()
+                    .mapToDouble(AnnotationSuggestion::getScore).max().orElse(0.0d);
             maxScorePerLabel.put(label, maxScore);
         }
 

@@ -125,6 +125,7 @@ public class CompactSerializerV2Impl
                 getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                 varc.getColorHint());
         carc.getAttributes().setScore(varc.getScore());
+        carc.getAttributes().setHideScore(varc.isHideScore());
         return carc;
     }
 
@@ -151,6 +152,7 @@ public class CompactSerializerV2Impl
                     vspan.getColorHint());
         }
         cspan.getAttributes().setScore(vspan.getScore());
+        cspan.getAttributes().setHideScore(vspan.isHideScore());
         return cspan;
     }
 
