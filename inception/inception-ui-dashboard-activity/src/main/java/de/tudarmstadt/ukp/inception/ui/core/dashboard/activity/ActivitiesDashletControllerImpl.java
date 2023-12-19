@@ -137,6 +137,7 @@ public class ActivitiesDashletControllerImpl
         return recentEvents.stream() //
                 .filter(Objects::nonNull) //
                 .filter(event -> event.getDocument() != -1l) //
+                .filter(event -> event.getAnnotator() != null) //
                 // Filter out documents which are not annotatable or curatable
                 .filter(event -> {
                     if (CURATION_USER.equals(event.getAnnotator())) {
