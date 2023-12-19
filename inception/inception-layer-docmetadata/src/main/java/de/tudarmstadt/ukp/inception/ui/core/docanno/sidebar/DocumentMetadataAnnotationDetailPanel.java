@@ -195,8 +195,8 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private Optional<AnnotationLayer> getLayer()
     {
-        VID vid = getModelObject();
-        Project proj = project.getObject();
+        var vid = getModelObject();
+        var proj = project.getObject();
 
         CAS cas;
         try {
@@ -221,8 +221,8 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private List<FeatureState> listFeatures()
     {
-        VID vid = getModelObject();
-        Project proj = project.getObject();
+        var vid = getModelObject();
+        var proj = project.getObject();
 
         if (proj == null || vid == null || vid.isNotSet()) {
             return emptyList();
@@ -245,12 +245,13 @@ public class DocumentMetadataAnnotationDetailPanel
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.findLayer(proj, fs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+
+        var layer = annotationService.findLayer(proj, fs);
+        var adapter = annotationService.getAdapter(layer);
 
         // Populate from feature structure
-        List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
+        var featureStates = new ArrayList<FeatureState>();
+        for (var feature : annotationService.listSupportedFeatures(layer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
@@ -260,7 +261,7 @@ public class DocumentMetadataAnnotationDetailPanel
                 value = adapter.getFeatureValue(feature, fs);
             }
 
-            FeatureState featureState = new FeatureState(vid, feature, value);
+            var featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());

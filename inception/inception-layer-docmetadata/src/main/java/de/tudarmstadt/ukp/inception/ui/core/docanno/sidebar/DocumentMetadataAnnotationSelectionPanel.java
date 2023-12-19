@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -363,6 +364,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         var items = new ArrayList<AnnotationListItem>();
 
         for (var layer : listMetadataLayers()) {
+            // --- Populate with annotations ---
+
             // Bulk-load all the features of this layer to avoid having to do repeated DB accesses
             // later
             var features = annotationService.listSupportedFeatures(layer);
@@ -380,12 +383,14 @@ public class DocumentMetadataAnnotationSelectionPanel
                 items.add(new AnnotationListItem(VID.of(fs), labelText, layer, singleton));
             }
 
+            // --- Populate with predictions ---
             var predictions = recommendationService.getPredictions(user.getObject(),
                     getModelObject());
             if (predictions != null) {
                 for (var suggestion : predictions
                         .getPredictionsByDocument(sourceDocument.getObject().getName())) {
-                    if (suggestion instanceof MetadataSuggestion metadataSuggestion) {
+                    if (suggestion instanceof MetadataSuggestion metadataSuggestion
+                            && Objects.equals(suggestion.getLayerId(), layer.getId())) {
                         var feature = featuresIndex.get(suggestion.getFeature());
 
                         // Retrieve the UI display label for the given feature value

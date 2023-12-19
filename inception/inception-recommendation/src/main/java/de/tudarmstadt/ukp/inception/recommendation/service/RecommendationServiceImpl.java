@@ -2264,7 +2264,7 @@ public class RecommendationServiceImpl
         // layers or features which do not exist in the CAS.
 
         try {
-            return CasUtil.getType(aCas, aLayer.getName());
+            return CasUtil.getAnnotationType(aCas, aLayer.getName());
         }
         catch (IllegalArgumentException e) {
             // Type does not exist in the type system of the CAS. Probably it has not been upgraded
