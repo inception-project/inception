@@ -36,11 +36,7 @@ public class DocumentMetadataSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        var project = aModel.map(AnnotatorState::getProject);
-        var sourceDocument = aModel.map(AnnotatorState::getDocument);
-        var user = aModel.map(AnnotatorState::getUser);
-
-        add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                user, aCasProvider, aAnnotationPage, aActionHandler, getModelObject()));
+        add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
+                aAnnotationPage, aActionHandler, aModel));
     }
 }

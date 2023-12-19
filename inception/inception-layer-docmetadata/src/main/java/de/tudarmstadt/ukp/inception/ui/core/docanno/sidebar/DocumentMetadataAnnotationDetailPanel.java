@@ -92,22 +92,21 @@ public class DocumentMetadataAnnotationDetailPanel
     private final IModel<User> user;
     private final ListView<FeatureState> featureList;
     private final AnnotationActionHandler actionHandler;
-    private final AnnotatorState state;
+    private final IModel<AnnotatorState> state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            IModel<SourceDocument> aDocument, IModel<User> aUser, CasProvider aCasProvider,
-            IModel<Project> aProject, AnnotationPage aAnnotationPage,
-            AnnotationActionHandler aActionHandler, AnnotatorState aState)
+            CasProvider aCasProvider, AnnotationPage aAnnotationPage,
+            AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aState)
     {
         super(aId, aModel);
 
         setOutputMarkupPlaceholderTag(true);
 
-        sourceDocument = aDocument;
-        user = aUser;
+        sourceDocument = aState.map(AnnotatorState::getDocument);
+        user = aState.map(AnnotatorState::getUser);
         annotationPage = aAnnotationPage;
         jcasProvider = aCasProvider;
-        project = aProject;
+        project = aState.map(AnnotatorState::getProject);
         actionHandler = aActionHandler;
         state = aState;
 
@@ -341,7 +340,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
     public void toggleVisibility()
     {
-        state.clearArmedSlot();
+        state.getObject().clearArmedSlot();
         setVisible(!isVisible());
     }
 
@@ -353,8 +352,8 @@ public class DocumentMetadataAnnotationDetailPanel
             CAS cas = jcasProvider.get();
             AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas,
                     aEvent.getLinkWithRoleModel().targetAddr);
-            state.getSelection().selectSpan(fs);
-            if (state.getSelection().getAnnotation().isSet()) {
+            state.getObject().getSelection().selectSpan(fs);
+            if (state.getObject().getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);
 
                 findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getTarget());

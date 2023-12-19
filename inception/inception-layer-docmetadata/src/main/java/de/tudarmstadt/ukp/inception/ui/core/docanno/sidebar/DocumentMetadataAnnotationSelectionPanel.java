@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +43,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -52,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -81,12 +81,11 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerA
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class DocumentMetadataAnnotationSelectionPanel
-    extends Panel
+    extends GenericPanel<Project>
 {
     private static final long serialVersionUID = 8318858582025740458L;
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(DocumentMetadataAnnotationSelectionPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String CID_LABEL = "label";
     private static final String CID_TYPE = "type";
@@ -104,7 +103,6 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private final AnnotationPage annotationPage;
     private final CasProvider jcasProvider;
-    private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<User> user;
     private final IModel<AnnotationLayer> selectedLayer;
@@ -114,26 +112,26 @@ public class DocumentMetadataAnnotationSelectionPanel
     private WebMarkupContainer selectedAnnotation;
     private DocumentMetadataAnnotationDetailPanel selectedDetailPanel;
     private int createdAnnotationAddress;
-    private final AnnotatorState state;
+    private final IModel<AnnotatorState> state;
 
-    public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
-            IModel<SourceDocument> aDocument, IModel<User> aUser, CasProvider aCasProvider,
+    public DocumentMetadataAnnotationSelectionPanel(String aId, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage, AnnotationActionHandler aActionHandler,
-            AnnotatorState aState)
+            IModel<AnnotatorState> aState)
     {
-        super(aId, aProject);
+        super(aId, aState.map(AnnotatorState::getProject));
 
         setOutputMarkupPlaceholderTag(true);
 
+        state = aState;
+
+        sourceDocument = aState.map(AnnotatorState::getDocument);
+        user = aState.map(AnnotatorState::getUser);
+
         annotationPage = aAnnotationPage;
-        sourceDocument = aDocument;
-        user = aUser;
         jcasProvider = aCasProvider;
-        project = aProject;
         selectedLayer = Model.of(listCreatableMetadataLayers().stream().findFirst().orElse(null));
         var availableLayers = LoadableDetachableModel.of(this::listCreatableMetadataLayers);
         actionHandler = aActionHandler;
-        state = aState;
         annotations = LoadableDetachableModel.of(this::listAnnotations);
 
         var content = new WebMarkupContainer("content");
@@ -168,11 +166,6 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     }
 
-    public Project getModelObject()
-    {
-        return (Project) getDefaultModelObject();
-    }
-
     private void actionCreate(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
         try {
@@ -188,7 +181,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
             aTarget.add(annotationsContainer);
 
-            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+            annotationPage.actionRefreshDocument(aTarget);
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
@@ -202,9 +195,10 @@ public class DocumentMetadataAnnotationSelectionPanel
             annotationPage.ensureIsEditable();
 
             // Load the boiler-plate
+            var project = getModelObject();
             var cas = jcasProvider.get();
             var fs = ICasUtil.selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
-            var layer = annotationService.findLayer(project.getObject(), fs);
+            var layer = annotationService.findLayer(project, fs);
             var adapter = annotationService.getAdapter(layer);
 
             // Perform actual actions
@@ -220,7 +214,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             }
             remove(aDetailPanel);
 
-            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+            annotationPage.actionRefreshDocument(aTarget);
             aTarget.add(annotationsContainer);
         }
         catch (Exception e) {
@@ -265,13 +259,6 @@ public class DocumentMetadataAnnotationSelectionPanel
         {
             private static final long serialVersionUID = -6833373063896777785L;
 
-            /**
-             * Determines if new annotations should be rendered visible or not. For the
-             * initialization of existing annotations this value should be false. Afterwards when
-             * manually creating new annotations it should be true to immediately open them
-             * afterwards. If there are no annotations at initialization it is initialized with true
-             * else false.
-             */
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
@@ -283,8 +270,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                 aItem.add(container);
 
                 var detailPanel = new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
-                        Model.of(vid), sourceDocument, user, jcasProvider, project, annotationPage,
-                        actionHandler, state);
+                        Model.of(vid), jcasProvider, annotationPage, actionHandler, state);
                 aItem.add(detailPanel);
 
                 container.add(new LambdaAjaxEventBehavior(CLICK,
@@ -411,8 +397,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     public void onDocumentMetadataEvent(DocumentMetadataEvent aEvent)
     {
         aEvent.getRequestTarget().ifPresent(target -> target.add(annotationsContainer));
-        findParent(AnnotationPageBase.class)
-                .actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
+        annotationPage.actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
     @OnEvent
@@ -427,8 +412,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             }
         });
 
-        findParent(AnnotationPageBase.class)
-                .actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
+        annotationPage.actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
