@@ -25,6 +25,8 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_INTEGER;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
+import java.util.List;
+
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -100,7 +102,7 @@ public class PrimitiveUimaIndexingSupport
         String featureIndexName = featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature);
         if (aFeature.getMultiValueMode() == ARRAY) {
             var valuesMap = new HashSetValuedHashMap<String, String>();
-            var values = FSUtil.getFeature(aAnnotation, aFeature.getName(), String[].class);
+            List<String> values = featSup.getFeatureValue(aFeature, aAnnotation);
             if (values != null) {
                 for (String value : values) {
                     String featureValue = featSup.renderFeatureValue(aFeature, value);
