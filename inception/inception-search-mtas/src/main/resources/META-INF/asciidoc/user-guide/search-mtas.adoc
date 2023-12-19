@@ -38,7 +38,8 @@ feature has the given value.
 Notice that the multi-token query syntax can also be used to retrieve single token annotations (e.g.
 POS or lemma annotations).
 
-=== Basic Annotation queries
+
+=== Text queriess
 
 .Single token: all occurrences of the token *Galicia*
 ----
@@ -59,6 +60,9 @@ The capital of Galicia
 ----
 "The" "capital" "of" "Galicia"
 ----
+
+
+=== Span layer queries
  
 .Lemma: all occurrences of the lemma *sign*
 ----
@@ -167,6 +171,12 @@ The capital of Galicia
 ----
 (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting <SemArg/>
 ----
+
+.Search for sentences containing a PER named entity
+----
+<s> []{0,50} <Named_entity.value="PER"/> []{0,50} </s> within <s/>
+----
+
 
 === Relation layer queries
 
