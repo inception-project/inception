@@ -282,13 +282,23 @@ public interface RecommendationService
             SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
             int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor);
 
+    /**
+     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
+     *             instead.
+     */
+    @Deprecated
     void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
             String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 
-    void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
-            AnnotationLayer aLayer,
+    /**
+     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
+     *             instead.
+     */
+    @Deprecated
+    public void calculateRelationSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 

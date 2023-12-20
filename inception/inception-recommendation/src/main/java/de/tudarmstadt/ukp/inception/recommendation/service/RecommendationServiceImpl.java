@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
@@ -32,15 +31,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.Predic
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Collections.emptyList;
-import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
-import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -55,7 +49,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,18 +59,13 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.cas.text.AnnotationPredicates;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -91,7 +79,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.lang.Nullable;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,14 +118,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -155,7 +139,6 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommender
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
-import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
@@ -682,12 +665,14 @@ public class RecommendationServiceImpl
 
     private SpanRecommendationSupportImpl getSpanRecommendationSupport()
     {
-        return new SpanRecommendationSupportImpl(this, this, applicationEventPublisher);
+        return new SpanRecommendationSupportImpl(this, this, applicationEventPublisher,
+                schemaService);
     }
 
     private RelationRecommendationSupportImpl getRelationRecommendationSupport()
     {
-        return new RelationRecommendationSupportImpl(this, this, applicationEventPublisher);
+        return new RelationRecommendationSupportImpl(this, this, applicationEventPublisher,
+                schemaService);
     }
 
     /*
@@ -1837,319 +1822,26 @@ public class RecommendationServiceImpl
                 agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
     }
 
-    /**
-     * Goes through all SpanSuggestions and determines the visibility of each one
-     */
+    @Deprecated
     @Override
     public void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
             CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        LOG.trace(
-                "calculateSpanSuggestionVisibility() for layer {} on document {} in range [{}, {}]",
-                aLayer, aDocument, aWindowBegin, aWindowEnd);
-
-        var type = getAnnotationType(aCas, aLayer);
-        if (type == null) {
-            // The type does not exist in the type system of the CAS. Probably it has not
-            // been upgraded to the latest version of the type system yet. If this is the case,
-            // we'll just skip.
-            return;
-        }
-
-        var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
-
-        // Collect all suggestions of the given layer within the view window
-        var suggestionsInWindow = aRecommendations.stream()
-                // Only suggestions for the given layer
-                .filter(group -> group.getLayerId() == aLayer.getId())
-                // ... and in the given window
-                .filter(group -> {
-                    Offset offset = (Offset) group.getPosition();
-                    return AnnotationPredicates.coveredBy(offset.getBegin(), offset.getEnd(),
-                            aWindowBegin, aWindowEnd);
-                }) //
-                .collect(toList());
-
-        // Get all the skipped/rejected entries for the current layer
-        var recordedAnnotations = listLearningRecords(aSessionOwner, aDataOwner, aLayer);
-
-        for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = type.getFeatureByBaseName(feature.getName());
-
-            if (feat == null) {
-                // The feature does not exist in the type system of the CAS. Probably it has not
-                // been upgraded to the latest version of the type system yet. If this is the case,
-                // we'll just skip.
-                return;
-            }
-
-            // Reduce the suggestions to the ones for the given feature. We can use the tree here
-            // since we only have a single SuggestionGroup for every position
-            var suggestions = new TreeMap<Offset, SuggestionGroup<SpanSuggestion>>(
-                    comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
-            suggestionsInWindow.stream()
-                    .filter(group -> group.getFeature().equals(feature.getName())) //
-                    .map(group -> {
-                        group.showAll(AnnotationSuggestion.FLAG_ALL);
-                        return group;
-                    }) //
-                    .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
-
-            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, feature, feat,
-                    suggestions);
-
-            // Anything that was not hidden so far might still have been rejected
-            suggestions.values().stream() //
-                    .flatMap(SuggestionGroup::stream) //
-                    .filter(AnnotationSuggestion::isVisible) //
-                    .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
-                            recordedAnnotations));
-        }
+        getSpanRecommendationSupport().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas,
+                aDataOwner, aLayer, aRecommendations, aWindowBegin, aWindowEnd);
     }
 
-    private void hideSpanSuggestionsThatOverlapWithAnnotations(
-            List<AnnotationFS> annotationsInWindow, AnnotationFeature feature, Feature feat,
-            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
-    {
-        // If there are no suggestions or annotations, there is nothing to do here
-        if (annotationsInWindow.isEmpty() || suggestions.isEmpty()) {
-            return;
-        }
-
-        // Reduce the annotations to the ones which have a non-null feature value. We need to
-        // use a multi-valued map here because there may be multiple annotations at a
-        // given position.
-        var annotations = new ArrayListValuedHashMap<Offset, AnnotationFS>();
-        annotationsInWindow
-                .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
-
-        // We need to constructed a sorted list of the keys for the OverlapIterator below
-        var sortedAnnotationKeys = new ArrayList<Offset>(annotations.keySet());
-        sortedAnnotationKeys.sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
-
-        // This iterator gives us pairs of annotations and suggestions. Note that both lists
-        // must be sorted in the same way. The suggestion offsets are sorted because they are
-        // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
-        var oi = new OverlapIterator(sortedAnnotationKeys, new ArrayList<>(suggestions.keySet()));
-
-        // Bulk-hide any groups that overlap with existing annotations on the current layer
-        // and for the current feature
-        var hiddenForOverlap = new ArrayList<AnnotationSuggestion>();
-        while (oi.hasNext()) {
-            if (oi.getA().overlaps(oi.getB())) {
-                // Fetch the current suggestion and annotation
-                var group = suggestions.get(oi.getB());
-                for (var annotation : annotations.get(oi.getA())) {
-                    var label = annotation.getFeatureValueAsString(feat);
-                    for (var suggestion : group) {
-                        // The suggestion would just create an annotation and not set any
-                        // feature
-                        boolean colocated = colocated(annotation, suggestion.getBegin(),
-                                suggestion.getEnd());
-                        if (suggestion.getLabel() == null) {
-                            // If there is already an annotation, then we hide any suggestions
-                            // that would just trigger the creation of the same annotation and
-                            // not set any new feature. This applies whether stacking is allowed
-                            // or not.
-                            if (colocated) {
-                                suggestion.hide(FLAG_OVERLAP);
-                                hiddenForOverlap.add(suggestion);
-                                continue;
-                            }
-
-                            // If stacking is enabled, we do allow suggestions that create an
-                            // annotation with no label, but only if the offsets differ
-                            if (feature.getLayer().isAllowStacking() && !colocated) {
-                                suggestion.hide(FLAG_OVERLAP);
-                                hiddenForOverlap.add(suggestion);
-                                continue;
-                            }
-                        }
-                        // The suggestion would merge the suggested feature value into an
-                        // existing annotation or create a new annotation with the feature if
-                        // stacking were enabled.
-                        else {
-                            // Is the feature still unset in the current annotation - i.e. would
-                            // accepting the suggestion merge the feature into it? If yes, we do
-                            // not hide
-                            if (label == null && colocated) {
-                                continue;
-                            }
-
-                            // Does the suggested label match the label of an existing annotation
-                            // at the same position then we hide
-                            if (label != null && label.equals(suggestion.getLabel()) && colocated) {
-                                suggestion.hide(FLAG_OVERLAP);
-                                hiddenForOverlap.add(suggestion);
-                                continue;
-                            }
-
-                            // Would accepting the suggestion create a new annotation but
-                            // stacking is not enabled - then we need to hide
-                            if (!feature.getLayer().isAllowStacking()) {
-                                suggestion.hide(FLAG_OVERLAP);
-                                hiddenForOverlap.add(suggestion);
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                // Do not want to process the annotation again since the relevant suggestions are
-                // already hidden
-                oi.ignoreA();
-            }
-
-            oi.step();
-        }
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Hidden due to overlapping: {}", hiddenForOverlap.size());
-            for (var s : hiddenForOverlap) {
-                LOG.trace("- {}", s);
-            }
-        }
-    }
-
+    @Deprecated
     @Override
-    public void calculateRelationSuggestionVisibility(String aSessionOwner, CAS aCas, String aUser,
-            AnnotationLayer aLayer,
+    public void calculateRelationSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        var type = getAnnotationType(aCas, aLayer);
-
-        if (type == null) {
-            // The type does not exist in the type system of the CAS. Probably it has not
-            // been upgraded to the latest version of the type system yet. If this is the case,
-            // we'll just skip.
-            return;
-        }
-
-        var governorFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        var dependentFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        if (dependentFeature == null || governorFeature == null) {
-            LOG.warn("Missing Dependent or Governor feature on [{}]", aLayer.getName());
-            return;
-        }
-
-        var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
-
-        // Group annotations by relation position, that is (source, target) address
-        MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
-        for (AnnotationFS annotationFS : annotationsInWindow) {
-            var source = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
-            var target = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
-
-            var relationPosition = new RelationPosition(source.getBegin(), source.getEnd(),
-                    target.getBegin(), target.getEnd());
-
-            groupedAnnotations.put(relationPosition, annotationFS);
-        }
-
-        // Collect all suggestions of the given layer
-        var groupedSuggestions = aRecommendations.stream()
-                .filter(group -> group.getLayerId() == aLayer.getId()) //
-                .collect(toList());
-
-        // Get previously rejected suggestions
-        MultiValuedMap<Position, LearningRecord> groupedRecordedAnnotations = new ArrayListValuedHashMap<>();
-        for (var learningRecord : listLearningRecords(aSessionOwner, aUser, aLayer)) {
-            RelationPosition relationPosition = new RelationPosition(
-                    learningRecord.getOffsetSourceBegin(), learningRecord.getOffsetSourceEnd(),
-                    learningRecord.getOffsetTargetBegin(), learningRecord.getOffsetTargetEnd());
-
-            groupedRecordedAnnotations.put(relationPosition, learningRecord);
-        }
-
-        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
-            Feature feat = type.getFeatureByBaseName(feature.getName());
-
-            if (feat == null) {
-                // The feature does not exist in the type system of the CAS. Probably it has not
-                // been upgraded to the latest version of the type system yet. If this is the case,
-                // we'll just skip.
-                return;
-            }
-
-            for (SuggestionGroup<RelationSuggestion> group : groupedSuggestions) {
-                if (!feature.getName().equals(group.getFeature())) {
-                    continue;
-                }
-
-                group.showAll(AnnotationSuggestion.FLAG_ALL);
-
-                Position position = group.getPosition();
-
-                // If any annotation at this position has a non-null label for this feature,
-                // then we hide the suggestion group
-                for (AnnotationFS annotationFS : groupedAnnotations.get(position)) {
-                    if (annotationFS.getFeatureValueAsString(feat) != null) {
-                        for (RelationSuggestion suggestion : group) {
-                            suggestion.hide(FLAG_OVERLAP);
-                        }
-                    }
-                }
-
-                // Hide previously rejected suggestions
-                for (LearningRecord learningRecord : groupedRecordedAnnotations.get(position)) {
-                    for (RelationSuggestion suggestion : group) {
-                        if (suggestion.labelEquals(learningRecord.getAnnotation())) {
-                            suggestion.hideSuggestion(learningRecord.getUserAction());
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    static void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
-            List<LearningRecord> aRecordedRecommendations)
-    {
-        aRecordedRecommendations.stream() //
-                .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId())) //
-                .filter(r -> Objects.equals(r.getAnnotationFeature().getName(),
-                        aSuggestion.getFeature())) //
-                .filter(r -> Objects.equals(r.getSourceDocument().getName(),
-                        aSuggestion.getDocumentName())) //
-                .filter(r -> aSuggestion.labelEquals(r.getAnnotation())) //
-                .filter(r -> r.getOffsetBegin() == aSuggestion.getBegin()
-                        && r.getOffsetEnd() == aSuggestion.getEnd()) //
-                .filter(r -> aSuggestion.hideSuggestion(r.getUserAction())) //
-                .findAny();
-    }
-
-    @Nullable
-    private Type getAnnotationType(CAS aCas, AnnotationLayer aLayer)
-    {
-        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
-        // method is implemented in such a way that it gracefully handles cases where the CAS and
-        // the project type system are not in sync - specifically the CAS where the project defines
-        // layers or features which do not exist in the CAS.
-
-        try {
-            return CasUtil.getAnnotationType(aCas, aLayer.getName());
-        }
-        catch (IllegalArgumentException e) {
-            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
-            // to the latest version of the type system yet. If this is the case, we'll just skip.
-            return null;
-        }
-    }
-
-    private List<AnnotationFS> getAnnotationsInWindow(CAS aCas, Type type, int aWindowBegin,
-            int aWindowEnd)
-    {
-        if (type == null) {
-            return Collections.emptyList();
-        }
-
-        return select(aCas, type).stream() //
-                .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
-                .toList();
+        getRelationRecommendationSupport().calculateSuggestionVisibility(aSessionOwner, aDocument,
+                aCas, aUser, aLayer, aRecommendations, aWindowBegin, aWindowEnd);
     }
 
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)

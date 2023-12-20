@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
+import java.util.Collection;
+
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
@@ -42,4 +46,8 @@ public interface LayerRecommendationSupport<T extends TypeAdapter, S extends Ann
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             S suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException;
+
+    void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
+            String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<S>> aRecommendations, int aWindowBegin, int aWindowEnd);
 }

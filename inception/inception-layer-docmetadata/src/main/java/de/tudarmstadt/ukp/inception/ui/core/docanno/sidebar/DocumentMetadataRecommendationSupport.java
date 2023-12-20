@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import java.util.Collection;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
@@ -24,6 +26,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -31,6 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
@@ -98,6 +102,15 @@ public class DocumentMetadataRecommendationSupport
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             MetadataSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
+    {
+        throw new NotImplementedException("Not yet implemented");
+    }
+
+    @Override
+    public void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
+            CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<MetadataSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd)
     {
         throw new NotImplementedException("Not yet implemented");
     }

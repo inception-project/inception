@@ -17,31 +17,49 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static java.util.stream.Collectors.toList;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.lang.Nullable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public class RelationRecommendationSupportImpl
@@ -49,11 +67,16 @@ public class RelationRecommendationSupportImpl
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private final AnnotationSchemaService schemaService;
+
     public RelationRecommendationSupportImpl(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
+
+        schemaService = aSchemaService;
     }
 
     /**
@@ -179,5 +202,129 @@ public class RelationRecommendationSupportImpl
 
         // TODO: Log rejection
         // TODO: Publish rejection event
+    }
+
+    @Override
+    public void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
+            CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd)
+    {
+        var type = getAnnotationType(aCas, aLayer);
+
+        if (type == null) {
+            // The type does not exist in the type system of the CAS. Probably it has not
+            // been upgraded to the latest version of the type system yet. If this is the case,
+            // we'll just skip.
+            return;
+        }
+
+        var governorFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        var dependentFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
+
+        if (dependentFeature == null || governorFeature == null) {
+            LOG.warn("Missing Dependent or Governor feature on [{}]", aLayer.getName());
+            return;
+        }
+
+        var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
+
+        // Group annotations by relation position, that is (source, target) address
+        MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
+        for (AnnotationFS annotationFS : annotationsInWindow) {
+            var source = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
+            var target = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
+
+            var relationPosition = new RelationPosition(source.getBegin(), source.getEnd(),
+                    target.getBegin(), target.getEnd());
+
+            groupedAnnotations.put(relationPosition, annotationFS);
+        }
+
+        // Collect all suggestions of the given layer
+        var groupedSuggestions = aRecommendations.stream()
+                .filter(group -> group.getLayerId() == aLayer.getId()) //
+                .collect(toList());
+
+        // Get previously rejected suggestions
+        MultiValuedMap<Position, LearningRecord> groupedRecordedAnnotations = new ArrayListValuedHashMap<>();
+        for (var learningRecord : learningRecordService.listLearningRecords(aSessionOwner, aUser,
+                aLayer)) {
+            RelationPosition relationPosition = new RelationPosition(
+                    learningRecord.getOffsetSourceBegin(), learningRecord.getOffsetSourceEnd(),
+                    learningRecord.getOffsetTargetBegin(), learningRecord.getOffsetTargetEnd());
+
+            groupedRecordedAnnotations.put(relationPosition, learningRecord);
+        }
+
+        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
+            Feature feat = type.getFeatureByBaseName(feature.getName());
+
+            if (feat == null) {
+                // The feature does not exist in the type system of the CAS. Probably it has not
+                // been upgraded to the latest version of the type system yet. If this is the case,
+                // we'll just skip.
+                return;
+            }
+
+            for (SuggestionGroup<RelationSuggestion> group : groupedSuggestions) {
+                if (!feature.getName().equals(group.getFeature())) {
+                    continue;
+                }
+
+                group.showAll(AnnotationSuggestion.FLAG_ALL);
+
+                Position position = group.getPosition();
+
+                // If any annotation at this position has a non-null label for this feature,
+                // then we hide the suggestion group
+                for (AnnotationFS annotationFS : groupedAnnotations.get(position)) {
+                    if (annotationFS.getFeatureValueAsString(feat) != null) {
+                        for (RelationSuggestion suggestion : group) {
+                            suggestion.hide(FLAG_OVERLAP);
+                        }
+                    }
+                }
+
+                // Hide previously rejected suggestions
+                for (LearningRecord learningRecord : groupedRecordedAnnotations.get(position)) {
+                    for (RelationSuggestion suggestion : group) {
+                        if (suggestion.labelEquals(learningRecord.getAnnotation())) {
+                            suggestion.hideSuggestion(learningRecord.getUserAction());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Nullable
+    private Type getAnnotationType(CAS aCas, AnnotationLayer aLayer)
+    {
+        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
+        // method is implemented in such a way that it gracefully handles cases where the CAS and
+        // the project type system are not in sync - specifically the CAS where the project defines
+        // layers or features which do not exist in the CAS.
+
+        try {
+            return CasUtil.getAnnotationType(aCas, aLayer.getName());
+        }
+        catch (IllegalArgumentException e) {
+            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
+            // to the latest version of the type system yet. If this is the case, we'll just skip.
+            return null;
+        }
+    }
+
+    private List<AnnotationFS> getAnnotationsInWindow(CAS aCas, Type type, int aWindowBegin,
+            int aWindowEnd)
+    {
+        if (type == null) {
+            return Collections.emptyList();
+        }
+
+        return select(aCas, type).stream() //
+                .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
+                .toList();
     }
 }
