@@ -36,7 +36,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -45,21 +45,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public class RelationRecommendationSupportImpl
-    implements LayerRecommendationSupport<RelationAdapter, RelationSuggestion>
+    extends LayerRecommendationSupport_ImplBase<RelationAdapter, RelationSuggestion>
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private final RecommendationService recommendationService;
-    private final LearningRecordService learningRecordService;
-    private final ApplicationEventPublisher applicationEventPublisher;
 
     public RelationRecommendationSupportImpl(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
-        recommendationService = aRecommendationService;
-        learningRecordService = aLearningRecordService;
-        applicationEventPublisher = aApplicationEventPublisher;
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
     }
 
     /**
@@ -154,9 +148,8 @@ public class RelationRecommendationSupportImpl
             annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
         }
 
-        recommendationService.commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas,
-                aAdapter, aFeature, aSuggestion, aSuggestion.getLabel(), annotation, aLocation,
-                aAction);
+        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aSuggestion.getLabel(), annotation, aLocation, aAction);
 
         return annotation;
     }

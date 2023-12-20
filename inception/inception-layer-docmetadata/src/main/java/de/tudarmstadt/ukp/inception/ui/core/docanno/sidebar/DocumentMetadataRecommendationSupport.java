@@ -21,10 +21,12 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -34,14 +36,14 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerA
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 public class DocumentMetadataRecommendationSupport
-    implements LayerRecommendationSupport<DocumentMetadataLayerAdapter, MetadataSuggestion>
+    extends LayerRecommendationSupport_ImplBase<DocumentMetadataLayerAdapter, MetadataSuggestion>
 
 {
-    private final RecommendationService recommendationService;
-
-    public DocumentMetadataRecommendationSupport(RecommendationService aRecommendationService)
+    public DocumentMetadataRecommendationSupport(RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
-        recommendationService = aRecommendationService;
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
     }
 
     @Override
@@ -78,9 +80,8 @@ public class DocumentMetadataRecommendationSupport
             annotation = candidates.get(0);
         }
 
-        recommendationService.commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas,
-                aAdapter, aFeature, aSuggestion, aValue, annotation, aLocation,
-                LearningRecordUserAction.ACCEPTED);
+        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aValue, annotation, aLocation, LearningRecordUserAction.ACCEPTED);
 
         return annotation;
     }

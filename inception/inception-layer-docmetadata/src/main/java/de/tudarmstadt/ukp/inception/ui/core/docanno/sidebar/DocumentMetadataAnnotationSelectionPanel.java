@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
@@ -116,6 +117,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean LearningRecordService learningRecordService;
     private @SpringBean UserDao userService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private final AnnotationPage annotationPage;
     private final CasProvider jcasProvider;
@@ -193,9 +195,10 @@ public class DocumentMetadataAnnotationSelectionPanel
 
             var aCas = jcasProvider.get();
 
-            var annotation = new DocumentMetadataRecommendationSupport(recommendationService)
-                    .acceptSuggestion(sessionOwner.getUsername(), state.getObject().getDocument(),
-                            dataOwner, aCas, adapter, feature, suggestion, MAIN_EDITOR, ACCEPTED);
+            var annotation = new DocumentMetadataRecommendationSupport(recommendationService,
+                    learningRecordService, applicationEventPublisherHolder.get()).acceptSuggestion(
+                            sessionOwner.getUsername(), state.getObject().getDocument(), dataOwner,
+                            aCas, adapter, feature, suggestion, MAIN_EDITOR, ACCEPTED);
 
             page.writeEditorCas(aCas);
 

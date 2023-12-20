@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -49,7 +48,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
 /**
@@ -318,10 +316,4 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
-
-    void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS aAnnotation,
-            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
-        throws AnnotationException;
 }

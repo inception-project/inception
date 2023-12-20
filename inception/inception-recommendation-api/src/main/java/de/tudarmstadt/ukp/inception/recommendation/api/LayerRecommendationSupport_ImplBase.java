@@ -1,0 +1,62 @@
+package de.tudarmstadt.ukp.inception.recommendation.api;
+
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+
+import org.apache.uima.cas.AnnotationBaseFS;
+import org.apache.uima.cas.CAS;
+import org.springframework.context.ApplicationEventPublisher;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+
+public abstract class LayerRecommendationSupport_ImplBase<T extends TypeAdapter, S extends AnnotationSuggestion>
+    implements LayerRecommendationSupport<T, S>
+{
+    protected final RecommendationService recommendationService;
+    protected final LearningRecordService learningRecordService;
+    protected final ApplicationEventPublisher applicationEventPublisher;
+
+    public LayerRecommendationSupport_ImplBase(RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher)
+    {
+        recommendationService = aRecommendationService;
+        learningRecordService = aLearningRecordService;
+        applicationEventPublisher = aApplicationEventPublisher;
+    }
+
+    protected void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS annotation,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+        throws AnnotationException
+    {
+        // Update the feature value
+        aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
+                aFeature, aValue);
+
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        aSuggestion
+                .hide((aAction == ACCEPTED) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
+
+        // Log the action to the learning record
+        if (!aAdapter.isSilenced()) {
+            learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, aSuggestion,
+                    aFeature, aAction, aLocation);
+
+            // Send an application event that the suggestion has been accepted
+            aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
+                    annotation, aFeature, aSuggestion.getLabel()));
+        }
+    }
+}

@@ -33,7 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
@@ -43,20 +43,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public class SpanRecommendationSupportImpl
-    implements LayerRecommendationSupport<SpanAdapter, SpanSuggestion>
+    extends LayerRecommendationSupport_ImplBase<SpanAdapter, SpanSuggestion>
 
 {
-    private final RecommendationService recommendationService;
-    private final LearningRecordService learningRecordService;
-    private final ApplicationEventPublisher applicationEventPublisher;
-
     public SpanRecommendationSupportImpl(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
-        recommendationService = aRecommendationService;
-        learningRecordService = aLearningRecordService;
-        applicationEventPublisher = aApplicationEventPublisher;
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
     }
 
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -120,8 +114,8 @@ public class SpanRecommendationSupportImpl
             annotation = candidates.get(0);
         }
 
-        recommendationService.commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas,
-                aAdapter, aFeature, aSuggestion, aValue, annotation, aLocation, aAction);
+        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+                aSuggestion, aValue, annotation, aLocation, aAction);
 
         return annotation;
     }
@@ -130,7 +124,6 @@ public class SpanRecommendationSupportImpl
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             SpanSuggestion spanSuggestion, LearningRecordChangeLocation aAction)
     {
-
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
         spanSuggestion.hide(FLAG_TRANSIENT_REJECTED);
