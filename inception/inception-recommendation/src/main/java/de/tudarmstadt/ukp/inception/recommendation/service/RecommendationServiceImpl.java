@@ -21,16 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
@@ -48,7 +43,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -80,13 +74,13 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -134,6 +128,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -156,8 +151,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
@@ -640,6 +633,7 @@ public class RecommendationServiceImpl
             return;
         }
 
+        var srs = getSpanRecommendationSupport();
         var count = 0;
         for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
@@ -661,7 +655,7 @@ public class RecommendationServiceImpl
             try {
                 if (prediction instanceof SpanSuggestion) {
                     var spanPrediction = (SpanSuggestion) prediction;
-                    acceptOrCorrectSuggestion(null, aDocument, aUser.getUsername(), cas,
+                    srs.acceptOrCorrectSuggestion(null, aDocument, aUser.getUsername(), cas,
                             (SpanAdapter) adapter, feature, spanPrediction, AUTO_ACCEPT, ACCEPTED);
                     count++;
                 }
@@ -690,6 +684,16 @@ public class RecommendationServiceImpl
                 WicketExceptionUtil.handleException(LOG, page, aTarget, e);
             }
         }
+    }
+
+    private SpanRecommendationSupportImpl getSpanRecommendationSupport()
+    {
+        return new SpanRecommendationSupportImpl(this, this, applicationEventPublisher);
+    }
+
+    private RelationRecommendationSupportImpl getRelationRecommendationSupport()
+    {
+        return new RelationRecommendationSupportImpl(this, this, applicationEventPublisher);
     }
 
     /*
@@ -1049,6 +1053,7 @@ public class RecommendationServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     @Transactional
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -1057,15 +1062,12 @@ public class RecommendationServiceImpl
             LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        // If the action was a correction (i.e. suggestion label != annotation value) then generate
-        // a rejection for the original value - we do not want the original value to re-appear
-        logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, aFeature, REJECTED,
-                AL_SIDEBAR);
-
-        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
-                aFeature, aCorrectedSuggestion, aLocation, CORRECTED);
+        return getSpanRecommendationSupport().correctSuggestion(aSessionOwner, aDocument,
+                aDataOwner, aCas, aAdapter, aFeature, aOriginalSuggestion, aCorrectedSuggestion,
+                aLocation);
     }
 
+    @Deprecated
     @Override
     @Transactional
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -1073,54 +1075,14 @@ public class RecommendationServiceImpl
             SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
-                aFeature, aSuggestion, aLocation, ACCEPTED);
+        return getSpanRecommendationSupport().acceptOrCorrectSuggestion(aSessionOwner, aDocument,
+                aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
     }
 
-    private AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
-        throws AnnotationException
-    {
-        var aBegin = aSuggestion.getBegin();
-        var aEnd = aSuggestion.getEnd();
-        var aValue = aSuggestion.getLabel();
-
-        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
-                .at(aBegin, aEnd) //
-                .asList();
-
-        var candidateWithEmptyLabel = candidates.stream() //
-                .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
-                .findFirst();
-
-        AnnotationFS annotation;
-        if (candidateWithEmptyLabel.isPresent()) {
-            // If there is an annotation where the predicted feature is unset, use it ...
-            annotation = candidateWithEmptyLabel.get();
-        }
-        else if (candidates.isEmpty() || aAdapter.getLayer().isAllowStacking()) {
-            // ... if not or if stacking is allowed, then we create a new annotation - this also
-            // takes care of attaching to an annotation if necessary
-            var newAnnotation = aAdapter.add(aDocument, aDataOwner, aCas, aBegin, aEnd);
-            annotation = newAnnotation;
-        }
-        else {
-            // ... if yes and stacking is not allowed, then we update the feature on the existing
-            // annotation
-            annotation = candidates.get(0);
-        }
-
-        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aValue, annotation, aLocation, aAction);
-
-        return annotation;
-    }
-
-    private void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
+    @Override
+    public void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, String aValue, AnnotationFS annotation,
+            AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS annotation,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
@@ -1144,6 +1106,7 @@ public class RecommendationServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     @Transactional
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -1152,71 +1115,8 @@ public class RecommendationServiceImpl
             LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var sourceBegin = aSuggestion.getPosition().getSourceBegin();
-        var sourceEnd = aSuggestion.getPosition().getSourceEnd();
-        var targetBegin = aSuggestion.getPosition().getTargetBegin();
-        var targetEnd = aSuggestion.getPosition().getTargetEnd();
-
-        // Check if there is already a relation for the given source and target
-        var type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
-        var attachType = CasUtil.getType(aCas, aAdapter.getAttachTypeName());
-
-        var sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        var targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
-
-        // The begin and end feature of a relation in the CAS are of the dependent/target
-        // annotation. See also RelationAdapter::createRelationAnnotation.
-        // We use that fact to search for existing relations for this relation suggestion
-        var candidates = new ArrayList<AnnotationFS>();
-        for (AnnotationFS relationCandidate : selectAt(aCas, type, targetBegin, targetEnd)) {
-            AnnotationFS source = (AnnotationFS) relationCandidate.getFeatureValue(sourceFeature);
-            AnnotationFS target = (AnnotationFS) relationCandidate.getFeatureValue(targetFeature);
-
-            if (source == null || target == null) {
-                continue;
-            }
-
-            if (source.getBegin() == sourceBegin && source.getEnd() == sourceEnd
-                    && target.getBegin() == targetBegin && target.getEnd() == targetEnd) {
-                candidates.add(relationCandidate);
-            }
-        }
-
-        AnnotationFS annotation = null;
-        if (candidates.size() == 1) {
-            // One candidate, we just return it
-            annotation = candidates.get(0);
-        }
-        else if (candidates.size() == 2) {
-            LOG.warn("Found multiple candidates for upserting relation from suggestion");
-            annotation = candidates.get(0);
-        }
-
-        // We did not find a relation for this suggestion, so we create a new one
-        if (annotation == null) {
-            // FIXME: We get the first match for the (begin, end) span. With stacking, there can
-            // be more than one and we need to get the right one then which does not need to be
-            // the first. We wait for #2135 to fix this. When stacking is enabled, then also
-            // consider creating a new relation instead of upserting an existing one.
-
-            var source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream().findFirst()
-                    .orElse(null);
-            var target = selectAt(aCas, attachType, targetBegin, targetEnd).stream().findFirst()
-                    .orElse(null);
-
-            if (source == null || target == null) {
-                String msg = "Cannot find source or target annotation for upserting relation";
-                LOG.error(msg);
-                throw new IllegalStateException(msg);
-            }
-
-            annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
-        }
-
-        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aSuggestion.getLabel(), annotation, aLocation, aAction);
-
-        return annotation;
+        return getRelationRecommendationSupport().acceptSuggestion(aSessionOwner, aDocument,
+                aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aLocation, aAction);
     }
 
     private static class CommittedDocument
@@ -2401,62 +2301,36 @@ public class RecommendationServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     @Transactional
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
     {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
-
         if (suggestion instanceof SpanSuggestion spanSuggestion) {
-            var recommender = getRecommender(suggestion.getVID().getId());
-            var feature = recommender.getFeature();
-            // Log the action to the learning record
-            logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, REJECTED,
-                    aAction);
-
-            // Send an application event that the suggestion has been rejected
-            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                    aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-                    spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
-
+            getSpanRecommendationSupport().rejectSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    spanSuggestion, aAction);
         }
         else if (suggestion instanceof RelationSuggestion relationSuggestion) {
-            // TODO: Log rejection
-            // TODO: Publish rejection event
+            getRelationRecommendationSupport().rejectSuggestion(aSessionOwner, aDocument,
+                    aDataOwner, relationSuggestion, aAction);
         }
     }
 
+    @Deprecated
     @Override
     @Transactional
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+        throws AnnotationException
     {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_SKIPPED);
-
         if (suggestion instanceof SpanSuggestion spanSuggestion) {
-            var recommender = getRecommender(spanSuggestion.getVID().getId());
-            var feature = recommender.getFeature();
-
-            // Log the action to the learning record
-            logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion, feature, SKIPPED,
-                    aAction);
-
-            // // Send an application event that the suggestion has been rejected
-            // applicationEventPublisher.publishEvent(new RecommendationSkippedEvent(this,
-            // aDocument,
-            // aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-            // spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
-
+            getSpanRecommendationSupport().skipSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    spanSuggestion, aAction);
         }
-        else if (suggestion instanceof RelationSuggestion) {
-            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
-            // TODO: Log rejection
-            // TODO: Publish rejection event
+        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
+            getRelationRecommendationSupport().skipSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    relationSuggestion, aAction);
         }
     }
 

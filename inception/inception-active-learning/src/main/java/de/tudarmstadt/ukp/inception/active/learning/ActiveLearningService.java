@@ -69,5 +69,6 @@ public interface ActiveLearningService
             SpanSuggestion aSuggestion);
 
     void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 }

@@ -94,6 +94,9 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -102,9 +105,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
@@ -701,12 +701,15 @@ public class ActiveLearningSidebar
 
         var sessionOwner = userService.getCurrentUsername();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
-                    alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.skipSpanSuggestion(sessionOwner, getModelObject().getUser(),
+                alStateModel.getObject().getLayer(), maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void actionReject(AjaxRequestTarget aTarget) throws AnnotationException

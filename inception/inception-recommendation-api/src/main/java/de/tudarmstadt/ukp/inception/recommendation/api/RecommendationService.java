@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -48,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
 /**
@@ -154,6 +156,10 @@ public interface RecommendationService
      */
     void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
+    /**
+     * @deprecated Obtain {@link LayerRecommendationSupport} for span layer and use that instead.
+     */
+    @Deprecated
     AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
             SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
@@ -181,7 +187,9 @@ public interface RecommendationService
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
+     * @deprecated Obtain {@link LayerRecommendationSupport} for span layer and use that instead.
      */
+    @Deprecated
     AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
@@ -210,18 +218,32 @@ public interface RecommendationService
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
+     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
+     *             instead.
      */
+    @Deprecated
     AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
             RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
             LearningRecordUserAction aAction)
         throws AnnotationException;
 
+    /**
+     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
+     *             instead.
+     */
+    @Deprecated
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
 
+    /**
+     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
+     *             instead.
+     */
+    @Deprecated
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+        throws AnnotationException;
 
     /**
      * Compute predictions.
@@ -296,4 +318,10 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
+
+    void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS aAnnotation,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+        throws AnnotationException;
 }

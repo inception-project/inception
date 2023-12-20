@@ -261,6 +261,7 @@ public class ActiveLearningServiceImpl
     @Transactional
     public void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)
+        throws AnnotationException
     {
         var document = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());
