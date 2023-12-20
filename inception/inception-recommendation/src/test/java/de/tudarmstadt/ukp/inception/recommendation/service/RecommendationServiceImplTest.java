@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -67,7 +68,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 class RecommendationServiceImplTest
 {
@@ -351,7 +351,7 @@ class RecommendationServiceImplTest
         var layer = AnnotationLayer.builder() //
                 .withId(1l) //
                 .forUimaType(targetCas.getTypeSystem().getType(predType.getName())) //
-                .withType(WebAnnoConst.SPAN_TYPE) //
+                .withType(SpanLayerSupport.TYPE) //
                 .withAnchoringMode(TOKENS) //
                 .build();
         var feature = AnnotationFeature.builder() //

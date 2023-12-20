@@ -24,13 +24,10 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.EntityManager;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -47,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -56,13 +54,14 @@ public class RelationSuggestionVisibilityCalculationTest
     private static final String TEST_USER = "Testuser";
 
     private @Mock AnnotationSchemaService annoService;
+    private @Mock LearningRecordService learningRecordService;
 
     private Project project;
     private SourceDocument doc;
     private AnnotationLayer layer;
     private AnnotationFeature feature;
 
-    private RecommendationServiceImpl sut;
+    private RelationRecommendationSupportImpl sut;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -84,20 +83,20 @@ public class RelationSuggestionVisibilityCalculationTest
                 .add(new AnnotationFeature(Dependency._FeatName_DependencyType, TYPE_NAME_STRING));
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
-        sut = spy(new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
-                null, (EntityManager) null, null));
+        sut = new RelationRecommendationSupportImpl(null, learningRecordService, null, annoService);
     }
 
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer,
-                suggestions, 0, 25);
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -113,13 +112,14 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer,
-                suggestions, 0, 25);
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
                 .as("No suggestions are visible as they overlap with annotations") //
@@ -130,8 +130,8 @@ public class RelationSuggestionVisibilityCalculationTest
 
         cas.select(Dependency.class).forEach(Dependency::removeFromIndexes);
 
-        sut.calculateRelationSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer,
-                suggestions, 0, 25);
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("No suggestions are hidden as they no longer overlap with annotations") //
