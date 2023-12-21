@@ -147,6 +147,7 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
@@ -791,6 +792,12 @@ public class RecommendationServiceImpl
         clearState(aEvent.getProject());
     }
 
+    @EventListener
+    public void onLayerConfigurationChangedEvent(LayerConfigurationChangedEvent aEvent)
+    {
+        clearState(aEvent.getProject());
+    }
+
     @Override
     public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument,
             String aDataOwner)
@@ -1074,16 +1081,19 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
-            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            String aDataOwner, CAS aCas, RelationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
+        var layer = schemaService.getLayer(aSuggestion.getLayerId());
+        var adapter = (RelationAdapter) schemaService.getAdapter(layer);
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
+
         var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
 
         if (rls.isPresent()) {
             return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
+                    aCas, adapter, feature, aSuggestion, aLocation, ACCEPTED);
         }
 
         return null;

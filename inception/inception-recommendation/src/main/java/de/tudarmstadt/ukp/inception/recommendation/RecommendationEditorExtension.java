@@ -246,10 +246,9 @@ public class RecommendationEditorExtension
         var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
-        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
 
         var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
-                aCas, adapter, feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
+                aCas, aSuggestion, MAIN_EDITOR, ACCEPTED);
 
         page.writeEditorCas(aCas);
 

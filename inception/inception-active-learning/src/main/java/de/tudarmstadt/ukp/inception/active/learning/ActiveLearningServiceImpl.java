@@ -198,8 +198,6 @@ public class ActiveLearningServiceImpl
         var sessionOwner = userService.getCurrentUsername();
         var dataOwner = aDataOwner.getUsername();
         var cas = documentService.readAnnotationCas(aDocument, dataOwner);
-        var document = documentService.getSourceDocument(feature.getProject(),
-                aSuggestion.getDocumentName());
 
         // Create AnnotationFeature and FeatureSupport
         var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
@@ -231,8 +229,9 @@ public class ActiveLearningServiceImpl
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
                         suggestionWithUserSelectedLabel.getFeature());
-        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
-                suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
+
+        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this,
+                aDocument, suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
                 suggestionWithUserSelectedLabel.getFeature(), action, alternativeSuggestions));
     }
 

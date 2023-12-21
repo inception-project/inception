@@ -95,7 +95,7 @@ public class DocumentMetadataRecommendationSupport
         }
 
         commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aValue, annotation, aLocation, LearningRecordUserAction.ACCEPTED);
+                aSuggestion, aValue, annotation, aLocation, aAction);
 
         return annotation;
     }
