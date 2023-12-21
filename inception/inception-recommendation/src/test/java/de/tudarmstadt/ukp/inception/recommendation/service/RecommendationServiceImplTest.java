@@ -28,7 +28,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.SpanRecommendationSupportImpl.hideSuggestionsRejectedOrSkipped;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SpanRecommendationSupport.hideSuggestionsRejectedOrSkipped;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.getOffsets;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;

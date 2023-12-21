@@ -61,7 +61,7 @@ public class RelationSuggestionVisibilityCalculationTest
     private AnnotationLayer layer;
     private AnnotationFeature feature;
 
-    private RelationRecommendationSupportImpl sut;
+    private RelationRecommendationSupport sut;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -83,7 +83,7 @@ public class RelationSuggestionVisibilityCalculationTest
                 .add(new AnnotationFeature(Dependency._FeatName_DependencyType, TYPE_NAME_STRING));
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
-        sut = new RelationRecommendationSupportImpl(null, learningRecordService, null, annoService);
+        sut = new RelationRecommendationSupport(null, learningRecordService, null, annoService);
     }
 
     @Test

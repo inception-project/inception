@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -35,12 +36,14 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-public abstract class LayerRecommendationSupport_ImplBase<T extends TypeAdapter, S extends AnnotationSuggestion>
-    implements LayerRecommendationSupport<T, S>
+public abstract class LayerRecommendationSupport_ImplBase<S extends AnnotationSuggestion>
+    implements LayerRecommendationSupport<S>, BeanNameAware
 {
     protected final RecommendationService recommendationService;
     protected final LearningRecordService learningRecordService;
     protected final ApplicationEventPublisher applicationEventPublisher;
+
+    private String id;
 
     public LayerRecommendationSupport_ImplBase(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
@@ -49,6 +52,18 @@ public abstract class LayerRecommendationSupport_ImplBase<T extends TypeAdapter,
         recommendationService = aRecommendationService;
         learningRecordService = aLearningRecordService;
         applicationEventPublisher = aApplicationEventPublisher;
+    }
+
+    @Override
+    public void setBeanName(String aName)
+    {
+        id = aName;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
     }
 
     protected void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,

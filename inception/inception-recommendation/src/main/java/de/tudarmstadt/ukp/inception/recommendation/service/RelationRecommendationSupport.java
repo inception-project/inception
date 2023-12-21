@@ -61,15 +61,16 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
-public class RelationRecommendationSupportImpl
-    extends LayerRecommendationSupport_ImplBase<RelationAdapter, RelationSuggestion>
+public class RelationRecommendationSupport
+    extends LayerRecommendationSupport_ImplBase<RelationSuggestion>
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService schemaService;
 
-    public RelationRecommendationSupportImpl(RecommendationService aRecommendationService,
+    public RelationRecommendationSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
@@ -77,6 +78,12 @@ public class RelationRecommendationSupportImpl
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
 
         schemaService = aSchemaService;
+    }
+
+    @Override
+    public boolean accepts(AnnotationSuggestion aContext)
+    {
+        return aContext instanceof RelationSuggestion;
     }
 
     /**
@@ -105,15 +112,18 @@ public class RelationRecommendationSupportImpl
      */
     @Override
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, RelationAdapter aAdapter, AnnotationFeature aFeature,
-            RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
             LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var sourceBegin = aSuggestion.getPosition().getSourceBegin();
-        var sourceEnd = aSuggestion.getPosition().getSourceEnd();
-        var targetBegin = aSuggestion.getPosition().getTargetBegin();
-        var targetEnd = aSuggestion.getPosition().getTargetEnd();
+        var suggestion = (RelationSuggestion) aSuggestion;
+        var adapter = (RelationAdapter) aAdapter;
+
+        var sourceBegin = suggestion.getPosition().getSourceBegin();
+        var sourceEnd = suggestion.getPosition().getSourceEnd();
+        var targetBegin = suggestion.getPosition().getTargetBegin();
+        var targetEnd = suggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
         var type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
@@ -168,7 +178,7 @@ public class RelationRecommendationSupportImpl
                 throw new IllegalStateException(msg);
             }
 
-            annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
+            annotation = adapter.add(aDocument, aDataOwner, source, target, aCas);
         }
 
         commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
@@ -179,7 +189,7 @@ public class RelationRecommendationSupportImpl
 
     @Override
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            RelationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for
@@ -192,7 +202,7 @@ public class RelationRecommendationSupportImpl
 
     @Override
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            RelationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status
@@ -205,10 +215,9 @@ public class RelationRecommendationSupportImpl
     }
 
     @Override
-    public void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
-            CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
+    public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         var type = getAnnotationType(aCas, aLayer);
 
@@ -244,6 +253,7 @@ public class RelationRecommendationSupportImpl
         // Collect all suggestions of the given layer
         var groupedSuggestions = aRecommendations.stream()
                 .filter(group -> group.getLayerId() == aLayer.getId()) //
+                .map(group -> (SuggestionGroup) group) //
                 .collect(toList());
 
         // Get previously rejected suggestions

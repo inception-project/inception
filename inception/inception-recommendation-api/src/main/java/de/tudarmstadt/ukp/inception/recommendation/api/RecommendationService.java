@@ -232,7 +232,8 @@ public interface RecommendationService
      */
     @Deprecated
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction);
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+        throws AnnotationException;
 
     /**
      * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that

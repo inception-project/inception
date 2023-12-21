@@ -31,23 +31,26 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public interface LayerRecommendationSupport<T extends TypeAdapter, S extends AnnotationSuggestion>
+public interface LayerRecommendationSupport<S extends AnnotationSuggestion>
+    extends Extension<AnnotationSuggestion>
 {
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, T aAdapter, AnnotationFeature aFeature, S aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordUserAction aAction)
         throws AnnotationException;
 
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            S suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException;
 
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            S suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException;
 
-    void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
-            String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<S>> aRecommendations, int aWindowBegin, int aWindowEnd);
+    <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 }

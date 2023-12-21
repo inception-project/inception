@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static java.util.Comparator.comparingInt;
@@ -70,15 +68,16 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
-public class SpanRecommendationSupportImpl
-    extends LayerRecommendationSupport_ImplBase<SpanAdapter, SpanSuggestion>
+public class SpanRecommendationSupport
+    extends LayerRecommendationSupport_ImplBase<SpanSuggestion>
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService schemaService;
 
-    public SpanRecommendationSupportImpl(RecommendationService aRecommendationService,
+    public SpanRecommendationSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
@@ -88,30 +87,21 @@ public class SpanRecommendationSupportImpl
 
     }
 
-    public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
-            LearningRecordChangeLocation aLocation)
-        throws AnnotationException
+    @Override
+    public boolean accepts(AnnotationSuggestion aContext)
     {
-        // If the action was a correction (i.e. suggestion label != annotation value) then generate
-        // a rejection for the original value - we do not want the original value to re-appear
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion,
-                aFeature, REJECTED, AL_SIDEBAR);
-
-        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
-                aFeature, aCorrectedSuggestion, aLocation, CORRECTED);
+        return aContext instanceof SpanSuggestion;
     }
 
     @Override
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
             LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter,
-                aFeature, aSuggestion, aLocation, aAction);
+        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
+                (SpanAdapter) aAdapter, aFeature, (SpanSuggestion) aSuggestion, aLocation, aAction);
     }
 
     public AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -157,8 +147,10 @@ public class SpanRecommendationSupportImpl
 
     @Override
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            SpanSuggestion spanSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
     {
+        var spanSuggestion = (SpanSuggestion) suggestion;
+
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
         spanSuggestion.hide(FLAG_TRANSIENT_REJECTED);
@@ -178,7 +170,7 @@ public class SpanRecommendationSupportImpl
 
     @Override
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            SpanSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status
@@ -199,10 +191,10 @@ public class SpanRecommendationSupportImpl
         // spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
     }
 
-    public void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
-            CAS aCas, String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
+    @Override
+    public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         LOG.trace(
                 "calculateSpanSuggestionVisibility() for layer {} on document {} in range [{}, {}]",
@@ -254,7 +246,8 @@ public class SpanRecommendationSupportImpl
                         group.showAll(AnnotationSuggestion.FLAG_ALL);
                         return group;
                     }) //
-                    .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
+                    .forEach(group -> suggestions.put((Offset) group.getPosition(),
+                            (SuggestionGroup) group));
 
             hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, feature, feat,
                     suggestions);

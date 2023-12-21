@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -31,6 +33,7 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataRecommendationSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 
 /**
@@ -78,5 +81,16 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
     {
         return new DocumentMetadataAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public DocumentMetadataRecommendationSupport documentMetadataRecommendationSupport(
+            RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher)
+    {
+        return new DocumentMetadataRecommendationSupport(aRecommendationService,
+                aLearningRecordService, aApplicationEventPublisher);
     }
 }

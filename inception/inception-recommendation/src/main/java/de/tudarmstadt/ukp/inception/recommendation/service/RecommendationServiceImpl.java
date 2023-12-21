@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
@@ -108,6 +110,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendtionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -177,6 +180,7 @@ public class RecommendationServiceImpl
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PreferencesService preferencesService;
+    private final LayerRecommendtionSupportRegistry layerRecommendtionSupportRegistry;
 
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -205,7 +209,8 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, ProjectService aProjectService,
-            EntityManager aEntityManager, ApplicationEventPublisher aApplicationEventPublisher)
+            EntityManager aEntityManager, ApplicationEventPublisher aApplicationEventPublisher,
+            LayerRecommendtionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         preferencesService = aPreferencesService;
         sessionRegistry = aSessionRegistry;
@@ -217,6 +222,7 @@ public class RecommendationServiceImpl
         projectService = aProjectService;
         entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
+        layerRecommendtionSupportRegistry = aLayerRecommendtionSupportRegistry;
 
         trainingTaskCounter = new ConcurrentHashMap<>();
         states = new ConcurrentHashMap<>();
@@ -226,11 +232,13 @@ public class RecommendationServiceImpl
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, EntityManager aEntityManager)
+            DocumentService aDocumentService,
+            LayerRecommendtionSupportRegistry aLayerRecommendtionSupportRegistry,
+            EntityManager aEntityManager)
     {
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
                 aSchedulingService, aAnnoService, aDocumentService, (ProjectService) null,
-                aEntityManager, null);
+                aEntityManager, null, aLayerRecommendtionSupportRegistry);
     }
 
     @Override
@@ -610,7 +618,6 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var srs = getSpanRecommendationSupport();
         var count = 0;
         for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
@@ -630,18 +637,12 @@ public class RecommendationServiceImpl
             adapter.silenceEvents();
 
             try {
-                if (prediction instanceof SpanSuggestion) {
-                    var spanPrediction = (SpanSuggestion) prediction;
-                    srs.acceptOrCorrectSuggestion(null, aDocument, aUser.getUsername(), cas,
-                            (SpanAdapter) adapter, feature, spanPrediction, AUTO_ACCEPT, ACCEPTED);
-                    count++;
-                }
-
-                if (prediction instanceof RelationSuggestion) {
-                    var relationPrediction = (RelationSuggestion) prediction;
-                    acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
-                            (RelationAdapter) adapter, feature, relationPrediction, AUTO_ACCEPT,
-                            ACCEPTED);
+                var rls = layerRecommendtionSupportRegistry.findGenericExtension(prediction);
+                if (rls.isPresent()) {
+                    rls.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas, adapter,
+                            feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                    rls.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
+                            (SpanAdapter) adapter, feature, prediction, AUTO_ACCEPT, ACCEPTED);
                     count++;
                 }
             }
@@ -663,15 +664,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    private SpanRecommendationSupportImpl getSpanRecommendationSupport()
+    private RelationRecommendationSupport getRelationRecommendationSupport()
     {
-        return new SpanRecommendationSupportImpl(this, this, applicationEventPublisher,
-                schemaService);
-    }
-
-    private RelationRecommendationSupportImpl getRelationRecommendationSupport()
-    {
-        return new RelationRecommendationSupportImpl(this, this, applicationEventPublisher,
+        return new RelationRecommendationSupport(this, this, applicationEventPublisher,
                 schemaService);
     }
 
@@ -1041,9 +1036,20 @@ public class RecommendationServiceImpl
             LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        return getSpanRecommendationSupport().correctSuggestion(aSessionOwner, aDocument,
-                aDataOwner, aCas, aAdapter, aFeature, aOriginalSuggestion, aCorrectedSuggestion,
-                aLocation);
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aOriginalSuggestion);
+
+        if (rls.isPresent()) {
+            // If the action was a correction (i.e. suggestion label != annotation value) then
+            // generate a rejection for the original value - we do not want the original value to
+            // re-appear
+            logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, aFeature, REJECTED,
+                    aLocation);
+
+            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    aCas, aAdapter, aFeature, aCorrectedSuggestion, aLocation, CORRECTED);
+        }
+
+        return null;
     }
 
     @Deprecated
@@ -1054,8 +1060,14 @@ public class RecommendationServiceImpl
             SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        return getSpanRecommendationSupport().acceptOrCorrectSuggestion(aSessionOwner, aDocument,
-                aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
+
+        if (rls.isPresent()) {
+            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
+        }
+
+        return null;
     }
 
     @Deprecated
@@ -1067,8 +1079,14 @@ public class RecommendationServiceImpl
             LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        return getRelationRecommendationSupport().acceptSuggestion(aSessionOwner, aDocument,
-                aDataOwner, aCas, aAdapter, aFeature, aSuggestion, aLocation, aAction);
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
+
+        if (rls.isPresent()) {
+            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
+                    aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
+        }
+
+        return null;
     }
 
     private static class CommittedDocument
@@ -1829,19 +1847,29 @@ public class RecommendationServiceImpl
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        getSpanRecommendationSupport().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas,
-                aDataOwner, aLayer, aRecommendations, aWindowBegin, aWindowEnd);
+        var rls = layerRecommendtionSupportRegistry
+                .findGenericExtension(SpanSuggestion.builder().build());
+
+        if (rls.isPresent()) {
+            rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
+                    aLayer, (Collection) aRecommendations, aWindowBegin, aWindowEnd);
+        }
     }
 
     @Deprecated
     @Override
     public void calculateRelationSuggestionVisibility(String aSessionOwner,
-            SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        getRelationRecommendationSupport().calculateSuggestionVisibility(aSessionOwner, aDocument,
-                aCas, aUser, aLayer, aRecommendations, aWindowBegin, aWindowEnd);
+        var rls = layerRecommendtionSupportRegistry
+                .findGenericExtension(RelationSuggestion.builder().build());
+
+        if (rls.isPresent()) {
+            rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
+                    aLayer, (Collection) aRecommendations, aWindowBegin, aWindowEnd);
+        }
     }
 
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
@@ -1965,14 +1993,12 @@ public class RecommendationServiceImpl
     @Transactional
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+        throws AnnotationException
     {
-        if (suggestion instanceof SpanSuggestion spanSuggestion) {
-            getSpanRecommendationSupport().rejectSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    spanSuggestion, aAction);
-        }
-        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
-            getRelationRecommendationSupport().rejectSuggestion(aSessionOwner, aDocument,
-                    aDataOwner, relationSuggestion, aAction);
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(suggestion);
+
+        if (rls.isPresent()) {
+            rls.get().rejectSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
         }
     }
 
@@ -1983,13 +2009,10 @@ public class RecommendationServiceImpl
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        if (suggestion instanceof SpanSuggestion spanSuggestion) {
-            getSpanRecommendationSupport().skipSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    spanSuggestion, aAction);
-        }
-        else if (suggestion instanceof RelationSuggestion relationSuggestion) {
-            getRelationRecommendationSupport().skipSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    relationSuggestion, aAction);
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(suggestion);
+
+        if (rls.isPresent()) {
+            rls.get().skipSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
         }
     }
 

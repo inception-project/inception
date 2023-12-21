@@ -31,16 +31,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 public class DocumentMetadataRecommendationSupport
-    extends LayerRecommendationSupport_ImplBase<DocumentMetadataLayerAdapter, MetadataSuggestion>
+    extends LayerRecommendationSupport_ImplBase<MetadataSuggestion>
 
 {
     public DocumentMetadataRecommendationSupport(RecommendationService aRecommendationService,
@@ -51,12 +53,20 @@ public class DocumentMetadataRecommendationSupport
     }
 
     @Override
+    public boolean accepts(AnnotationSuggestion aContext)
+    {
+        return aContext instanceof MetadataSuggestion;
+    }
+
+    @Override
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, DocumentMetadataLayerAdapter aAdapter,
-            AnnotationFeature aFeature, MetadataSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordUserAction aAction)
         throws AnnotationException
     {
+        var adapter = (DocumentMetadataLayerAdapter) aAdapter;
+
         var aValue = aSuggestion.getLabel();
 
         var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
@@ -75,7 +85,7 @@ public class DocumentMetadataRecommendationSupport
                 .map(DocumentMetadataLayerTraits::isSingleton).orElse(false)) {
             // ... if not or if stacking is allowed, then we create a new annotation - this also
             // takes care of attaching to an annotation if necessary
-            var newAnnotation = aAdapter.add(aDocument, aDataOwner, aCas);
+            var newAnnotation = adapter.add(aDocument, aDataOwner, aCas);
             annotation = newAnnotation;
         }
         else {
@@ -92,7 +102,7 @@ public class DocumentMetadataRecommendationSupport
 
     @Override
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            MetadataSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
         throw new NotImplementedException("Not yet implemented");
@@ -100,17 +110,16 @@ public class DocumentMetadataRecommendationSupport
 
     @Override
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            MetadataSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
         throw new NotImplementedException("Not yet implemented");
     }
 
     @Override
-    public void calculateSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
-            CAS aCas, String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<MetadataSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
+    public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         throw new NotImplementedException("Not yet implemented");
     }

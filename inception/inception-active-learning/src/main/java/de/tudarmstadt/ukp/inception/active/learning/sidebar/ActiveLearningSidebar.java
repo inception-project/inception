@@ -718,12 +718,16 @@ public class ActiveLearningSidebar
 
         getAnnotationPage().ensureIsEditable();
 
-        alStateModel.getObject().getSuggestion().ifPresent(suggestion -> {
-            requestClearningSelectionAndJumpingToSuggestion();
-            activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
-                    getModelObject().getUser(), alStateModel.getObject().getLayer(), suggestion);
-            moveToNextSuggestion(aTarget);
-        });
+        var maybeSuggestion = alStateModel.getObject().getSuggestion();
+        if (!maybeSuggestion.isPresent()) {
+            return;
+        }
+
+        requestClearningSelectionAndJumpingToSuggestion();
+        activeLearningService.rejectSpanSuggestion(userService.getCurrentUsername(),
+                getModelObject().getUser(), alStateModel.getObject().getLayer(),
+                maybeSuggestion.get());
+        moveToNextSuggestion(aTarget);
     }
 
     private void moveToNextSuggestion(AjaxRequestTarget aTarget)

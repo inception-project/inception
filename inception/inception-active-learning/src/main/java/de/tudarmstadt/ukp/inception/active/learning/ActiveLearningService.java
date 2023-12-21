@@ -66,7 +66,8 @@ public interface ActiveLearningService
         throws IOException, AnnotationException;
 
     void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
-            SpanSuggestion aSuggestion);
+            SpanSuggestion aSuggestion)
+        throws AnnotationException;
 
     void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)

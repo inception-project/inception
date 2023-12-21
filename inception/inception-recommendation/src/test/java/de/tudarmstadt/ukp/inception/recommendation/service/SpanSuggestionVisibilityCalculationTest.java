@@ -66,7 +66,7 @@ public class SpanSuggestionVisibilityCalculationTest
     private AnnotationLayer layer;
     private AnnotationFeature feature;
 
-    private SpanRecommendationSupportImpl sut;
+    private SpanRecommendationSupport sut;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -87,7 +87,7 @@ public class SpanSuggestionVisibilityCalculationTest
         featureList.add(new AnnotationFeature(NamedEntity._FeatName_value, TYPE_NAME_STRING));
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
-        sut = new SpanRecommendationSupportImpl(null, learningRecordService, null, annoService);
+        sut = new SpanRecommendationSupport(null, learningRecordService, null, annoService);
     }
 
     @Test

@@ -110,6 +110,7 @@ public class RecommendationServiceImplIntegrationTest
     private RecommendationServiceImpl sut;
 
     private FeatureSupportRegistryImpl featureSupportRegistry;
+    private LayerRecommendtionSupportRegistryImpl layerRecommendtionSupportRegistry;
     private Project project;
     private AnnotationLayer layer;
     private Recommender rec;
@@ -118,8 +119,12 @@ public class RecommendationServiceImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
+        layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(
+                asList(new SpanRecommendationSupport(sut, sut, null, schemaService)));
+
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
-                schemaService, null, testEntityManager.getEntityManager());
+                schemaService, null, layerRecommendtionSupportRegistry,
+                testEntityManager.getEntityManager());
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport()));
         featureSupportRegistry.init();
