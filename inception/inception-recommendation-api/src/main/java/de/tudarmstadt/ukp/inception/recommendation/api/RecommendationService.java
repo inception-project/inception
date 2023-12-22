@@ -166,21 +166,17 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
-     * 
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aDataOwner
      *            the annotator user to whom the annotations belong
      * @param aCas
      *            the CAS containing the annotations
-     * @param aAdapter
-     *            an adapter for the layer to upsert
-     * @param aFeature
-     *            the feature on the layer that should be upserted
      * @param aSuggestion
      *            the suggestion
      * @param aLocation
      *            the location from where the change was triggered
+     * 
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
@@ -188,8 +184,7 @@ public interface RecommendationService
      */
     @Deprecated
     AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature, SpanSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation)
+            CAS aCas, SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**

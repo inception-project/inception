@@ -224,7 +224,7 @@ public class RecommendationEditorExtension
         var adapter = (SpanAdapter) annotationService.getAdapter(layer);
 
         var span = recommendationService.acceptSuggestion(sessionOwner, aSocument, dataOwner, aCas,
-                adapter, feature, aSuggestion, MAIN_EDITOR);
+                aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 

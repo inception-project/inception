@@ -214,8 +214,8 @@ public class ActiveLearningServiceImpl
                     adapter, feature, aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
-            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, adapter,
-                    feature, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, suggestionWithUserSelectedLabel,
+                    AL_SIDEBAR);
         }
 
         // Save CAS after annotation has been created

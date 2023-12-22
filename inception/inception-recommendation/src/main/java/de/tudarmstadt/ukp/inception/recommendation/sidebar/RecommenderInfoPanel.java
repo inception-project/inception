@@ -49,7 +49,6 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -314,13 +313,9 @@ public class RecommenderInfoPanel
 
             try {
                 // Upsert an annotation based on the suggestion
-                var layer = annotationService.getLayer(suggestion.getLayerId());
-                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
-                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
-                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

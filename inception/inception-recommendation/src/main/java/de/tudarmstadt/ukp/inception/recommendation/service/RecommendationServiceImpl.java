@@ -98,7 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -1063,15 +1062,18 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
+        var layer = schemaService.getLayer(aSuggestion.getLayerId());
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
+        var adapter = schemaService.getAdapter(layer);
+
         var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
 
         if (rls.isPresent()) {
             return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    aCas, aAdapter, aFeature, aSuggestion, aLocation, ACCEPTED);
+                    aCas, adapter, feature, aSuggestion, aLocation, ACCEPTED);
         }
 
         return null;
@@ -1086,7 +1088,7 @@ public class RecommendationServiceImpl
         throws AnnotationException
     {
         var layer = schemaService.getLayer(aSuggestion.getLayerId());
-        var adapter = (RelationAdapter) schemaService.getAdapter(layer);
+        var adapter = schemaService.getAdapter(layer);
         var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
 
         var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);

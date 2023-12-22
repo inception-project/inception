@@ -35,11 +35,10 @@ import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescripti
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -121,6 +120,7 @@ public class RecommendationServiceImplIntegrationTest
     {
         layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(
                 asList(new SpanRecommendationSupport(sut, sut, null, schemaService)));
+        layerRecommendtionSupportRegistry.init();
 
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
                 schemaService, null, layerRecommendtionSupportRegistry,
@@ -173,8 +173,7 @@ public class RecommendationServiceImplIntegrationTest
 
         sut.createOrUpdateRecommender(rec);
 
-        long numOfRecommenders = sut.countEnabledRecommenders();
-        assertThat(numOfRecommenders).isEqualTo(1);
+        assertThat(sut.countEnabledRecommenders()).isEqualTo(1);
     }
 
     @Test
@@ -208,8 +207,8 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOtherRecommenderId_ShouldReturnEmptyList()
     {
-        long otherId = 9999L;
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId);
+        var otherId = 9999L;
+        var enabledRecommenders = sut.getEnabledRecommender(otherId);
 
         assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
     }
@@ -249,7 +248,7 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     void thatZeroWithAnnotationsAreCorrectlyAnchoredOnTokens() throws Exception
     {
-        JCas jCas = createJCas();
+        var jCas = createJCas();
         TokenBuilder.create(Token.class, Sentence.class).buildTokens(jCas, "  This is  a test.  ");
         var textLength = jCas.getDocumentText().length();
         var tokens = jCas.select(Token.class).asList();
@@ -291,6 +290,10 @@ public class RecommendationServiceImplIntegrationTest
         var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, layer,
                 () -> asList(), asList());
 
+        when(schemaService.getLayer(anyLong())).thenReturn(layer);
+        when(schemaService.getAdapter(any())).thenReturn(adapter);
+        when(schemaService.getFeature(any(), any())).thenReturn(feature);
+
         layer.setOverlapMode(NO_OVERLAP);
         var cas = createJCas();
         var targetFS = new NamedEntity(cas, 0, 10);
@@ -299,8 +302,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s1 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
                 .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s1,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s1, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
@@ -308,16 +310,14 @@ public class RecommendationServiceImplIntegrationTest
 
         var s2 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
                 .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s2,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s2, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing previous label") //
                 .isEqualTo("V2");
 
         var s3 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s3,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s3, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -334,8 +334,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s4 = SpanSuggestion.builder().withLabel("V1").withPosition(new Offset(targetFS))
                 .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s4,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s4, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
@@ -343,8 +342,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s5 = SpanSuggestion.builder().withLabel("V2").withPosition(new Offset(targetFS))
                 .build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s5,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s5, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -354,8 +352,7 @@ public class RecommendationServiceImplIntegrationTest
                         tuple(0, 10, "V2"));
 
         var s6 = SpanSuggestion.builder().withLabel("V3").withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s6,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s6, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -369,8 +366,7 @@ public class RecommendationServiceImplIntegrationTest
         new NamedEntity(cas, 0, 10).addToIndexes();
 
         var s7 = SpanSuggestion.builder().withLabel("V4").withPosition(new Offset(0, 10)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), adapter, feature, s7,
-                MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s7, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged again into one of the entities without a label") //
@@ -386,9 +382,9 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void thatSpanSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument("doc");
-        AnnotationLayer layer = createAnnotationLayer("layer");
-        AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var sourceDoc = createSourceDocument("doc");
+        var layer = createAnnotationLayer("layer");
+        var feature = createAnnotationFeature(layer, FEATURE_NAME);
 
         var suggestion = SpanSuggestion.builder() //
                 .withId(42) //
@@ -431,13 +427,13 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void thatRelationSuggestionsCanBeRecorded()
     {
-        SourceDocument sourceDoc = createSourceDocument("doc");
-        AnnotationLayer layer = createAnnotationLayer("layer");
-        AnnotationFeature feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var sourceDoc = createSourceDocument("doc");
+        var layer = createAnnotationLayer("layer");
+        var feature = createAnnotationFeature(layer, FEATURE_NAME);
 
-        RelationSuggestion suggestion = new RelationSuggestion(42, 1337, "testRecommender",
-                layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
-                "testUiLabel", 0.42, "Test confidence", NEVER);
+        var suggestion = new RelationSuggestion(42, 1337, "testRecommender", layer.getId(),
+                feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel", "testUiLabel",
+                0.42, "Test confidence", NEVER);
 
         sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature,
                 LearningRecordUserAction.REJECTED, DETAIL_EDITOR);
@@ -445,7 +441,7 @@ public class RecommendationServiceImplIntegrationTest
         var records = sut.listLearningRecords(USER_NAME, USER_NAME, layer);
         assertThat(records).hasSize(1);
 
-        LearningRecord record = records.get(0);
+        var record = records.get(0);
         assertThat(record).hasFieldOrProperty("id") //
                 .hasFieldOrPropertyWithValue("sourceDocument", sourceDoc) //
                 .hasFieldOrPropertyWithValue("user", USER_NAME) //
