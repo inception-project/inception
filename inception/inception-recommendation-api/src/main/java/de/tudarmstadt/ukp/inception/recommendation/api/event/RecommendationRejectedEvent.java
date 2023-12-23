@@ -37,6 +37,12 @@ public class RecommendationRejectedEvent
     private final Object recommendedValue;
 
     public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationFeature aFeature, Object aRecommendedValue)
+    {
+        this(aSource, aDocument, aUser, -1, -1, null, aFeature, aRecommendedValue);
+    }
+
+    public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
             int aBegin, int aEnd, String aText, AnnotationFeature aFeature,
             Object aRecommendedValue)
     {

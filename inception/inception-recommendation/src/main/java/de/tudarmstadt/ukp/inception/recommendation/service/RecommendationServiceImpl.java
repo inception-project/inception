@@ -63,6 +63,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -390,6 +391,12 @@ public class RecommendationServiceImpl
     public Recommender getRecommender(long aId)
     {
         return entityManager.find(Recommender.class, aId);
+    }
+
+    @Override
+    public Recommender getRecommender(AnnotationSuggestion aSuggestion)
+    {
+        return getRecommender(aSuggestion.getVID().getId());
     }
 
     @Override
@@ -1059,7 +1066,7 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+    public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException
@@ -1071,8 +1078,8 @@ public class RecommendationServiceImpl
         var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
 
         if (rls.isPresent()) {
-            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    aCas, adapter, feature, aSuggestion, aLocation, ACCEPTED);
+            return rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, adapter,
+                    feature, aSuggestion, aLocation, ACCEPTED);
         }
 
         return null;

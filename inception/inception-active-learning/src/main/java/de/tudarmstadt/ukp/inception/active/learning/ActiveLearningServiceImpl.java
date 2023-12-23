@@ -175,7 +175,8 @@ public class ActiveLearningServiceImpl
         var pref = recommendationService.getPreferences(aDataOwner,
                 alState.getLayer().getProject());
         var nextSuggestion = alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
-        assert nextSuggestion.get().getFirst().isVisible() : "Generated suggestion must be visible";
+        assert !nextSuggestion.isPresent() || nextSuggestion.get().getFirst()
+                .isVisible() : "Generated suggestion must be visible";
         return nextSuggestion;
     }
 
@@ -214,8 +215,8 @@ public class ActiveLearningServiceImpl
                     aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
-            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, suggestionWithUserSelectedLabel,
-                    AL_SIDEBAR);
+            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas,
+                    suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
 
         // Save CAS after annotation has been created

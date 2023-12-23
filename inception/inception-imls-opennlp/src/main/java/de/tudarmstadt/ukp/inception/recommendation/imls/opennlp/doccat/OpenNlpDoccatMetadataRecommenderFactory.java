@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -32,7 +31,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
-@Component
 public class OpenNlpDoccatMetadataRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpDoccatRecommenderTraits>
 {

@@ -146,24 +146,24 @@ public class SpanSuggestionSupport
 
     @Override
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
     {
-        var spanSuggestion = (SpanSuggestion) suggestion;
+        var suggestion = (SpanSuggestion) aSuggestion;
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
-        spanSuggestion.hide(FLAG_TRANSIENT_REJECTED);
+        suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        var recommender = recommendationService.getRecommender(spanSuggestion.getVID().getId());
+        var recommender = recommendationService.getRecommender(suggestion);
         var feature = recommender.getFeature();
         // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, spanSuggestion,
-                feature, REJECTED, aAction);
+        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
+                REJECTED, aAction);
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-                spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+                aDataOwner, suggestion.getBegin(), suggestion.getEnd(), suggestion.getCoveredText(),
+                feature, suggestion.getLabel()));
 
     }
 
@@ -176,7 +176,7 @@ public class SpanSuggestionSupport
         // for the entire document or even for the part visible on screen.
         aSuggestion.hide(FLAG_SKIPPED);
 
-        var recommender = recommendationService.getRecommender(aSuggestion.getVID().getId());
+        var recommender = recommendationService.getRecommender(aSuggestion);
         var feature = recommender.getFeature();
 
         // Log the action to the learning record

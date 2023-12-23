@@ -19,10 +19,13 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -39,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -121,7 +125,21 @@ public class MetadataSuggestionSupport
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        throw new NotImplementedException("Not yet implemented");
+        var suggestion = (MetadataSuggestion) aSuggestion;
+
+        // Hide the suggestion. This is faster than having to recalculate the visibility status
+        // for the entire document or even for the part visible on screen.
+        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+
+        var recommender = recommendationService.getRecommender(suggestion);
+        var feature = recommender.getFeature();
+        // Log the action to the learning record
+        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
+                REJECTED, aAction);
+
+        // Send an application event that the suggestion has been rejected
+        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
+                aDataOwner, feature, suggestion.getLabel()));
     }
 
     @Override
@@ -158,6 +176,8 @@ public class MetadataSuggestionSupport
         var recordedAnnotations = learningRecordService.listLearningRecords(aSessionOwner,
                 aDataOwner, aLayer);
 
+        var adapter = schemaService.getAdapter(aLayer);
+        var traits = adapter.getTraits(DocumentMetadataLayerTraits.class).get();
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
             var feat = type.getFeatureByBaseName(feature.getName());
 
@@ -178,25 +198,22 @@ public class MetadataSuggestionSupport
                     }) //
                     .toList();
 
-            hideSpanSuggestionsThatMatchAnnotations(annotations, feature, feat,
-                    suggestionsForFeature);
+            hideSpanSuggestionsThatMatchAnnotations(traits.isSingleton(), annotations, feature,
+                    feat, suggestionsForFeature);
 
-            // // Anything that was not hidden so far might still have been rejected
-            // suggestionsForFeature.stream() //
-            // .flatMap(SuggestionGroup::stream) //
-            // .filter(AnnotationSuggestion::isVisible) //
-            // .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
-            // recordedAnnotations));
+            // Anything that was not hidden so far might still have been rejected
+            suggestionsForFeature.stream() //
+                    .flatMap(SuggestionGroup::stream) //
+                    .filter(AnnotationSuggestion::isVisible) //
+                    .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
+                            recordedAnnotations));
         }
     }
 
-    private void hideSpanSuggestionsThatMatchAnnotations(List<AnnotationBase> aAnnotations,
-            AnnotationFeature aFeature, Feature aFeat,
+    private void hideSpanSuggestionsThatMatchAnnotations(boolean singleton,
+            List<AnnotationBase> aAnnotations, AnnotationFeature aFeature, Feature aFeat,
             List<SuggestionGroup<MetadataSuggestion>> aSuggestionsForFeature)
     {
-        var layer = aFeature.getLayer();
-        var adapter = schemaService.getAdapter(layer);
-        var traits = adapter.getTraits(DocumentMetadataLayerTraits.class);
 
         for (var annotation : aAnnotations) {
             var label = annotation.getFeatureValueAsString(aFeat);
@@ -206,7 +223,7 @@ public class MetadataSuggestionSupport
             }
 
             for (var sugGroup : aSuggestionsForFeature) {
-                if (traits.get().isSingleton()) {
+                if (singleton) {
                     sugGroup.hideAll(FLAG_OVERLAP);
                 }
                 else {
@@ -218,6 +235,20 @@ public class MetadataSuggestionSupport
                 }
             }
         }
+    }
+
+    static void hideSuggestionsRejectedOrSkipped(MetadataSuggestion aSuggestion,
+            List<LearningRecord> aRecordedRecommendations)
+    {
+        aRecordedRecommendations.stream() //
+                .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId())) //
+                .filter(r -> Objects.equals(r.getAnnotationFeature().getName(),
+                        aSuggestion.getFeature())) //
+                .filter(r -> Objects.equals(r.getSourceDocument().getName(),
+                        aSuggestion.getDocumentName())) //
+                .filter(r -> aSuggestion.labelEquals(r.getAnnotation())) //
+                .filter(r -> aSuggestion.hideSuggestion(r.getUserAction())) //
+                .findAny();
     }
 
     @Override

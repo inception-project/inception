@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -67,6 +68,8 @@ public interface RecommendationService
     void deleteRecommender(Recommender aRecommender);
 
     Recommender getRecommender(long aId);
+
+    Recommender getRecommender(AnnotationSuggestion aSuggestion);
 
     Optional<Recommender> getRecommender(Project aProject, String aName);
 
@@ -199,8 +202,9 @@ public interface RecommendationService
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+    AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**

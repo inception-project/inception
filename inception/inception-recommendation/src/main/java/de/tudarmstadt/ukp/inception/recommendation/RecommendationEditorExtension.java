@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -219,11 +220,10 @@ public class RecommendationEditorExtension
         var dataOwner = aState.getUser().getUsername();
         var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
-        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
         var adapter = (SpanAdapter) annotationService.getAdapter(layer);
 
-        var span = recommendationService.acceptSuggestion(sessionOwner, aSocument, dataOwner, aCas,
-                aSuggestion, MAIN_EDITOR);
+        var span = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aSocument,
+                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
@@ -246,8 +246,8 @@ public class RecommendationEditorExtension
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
 
-        var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
-                aCas, aSuggestion, MAIN_EDITOR);
+        var relation = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aDocument,
+                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
