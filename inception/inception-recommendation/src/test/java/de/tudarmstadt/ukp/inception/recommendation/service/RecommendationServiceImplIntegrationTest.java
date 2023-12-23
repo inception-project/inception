@@ -119,7 +119,7 @@ public class RecommendationServiceImplIntegrationTest
     public void setUp() throws Exception
     {
         layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(
-                asList(new SpanRecommendationSupport(sut, sut, null, schemaService)));
+                asList(new SpanSuggestionSupport(sut, sut, null, schemaService)));
         layerRecommendtionSupportRegistry.init();
 
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,

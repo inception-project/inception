@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public interface LayerRecommendationSupport<S extends AnnotationSuggestion>
+public interface SuggestionSupport<S extends AnnotationSuggestion>
     extends Extension<AnnotationSuggestion>
 {
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,

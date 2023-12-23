@@ -33,8 +33,8 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataRecommendationSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.MetadataSuggestionSupport;
 
 /**
  * Provides support for document-level annotations.
@@ -85,12 +85,12 @@ public class DocumentMetadataLayerSupportAutoConfiguration
 
     @Bean
     @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public DocumentMetadataRecommendationSupport documentMetadataRecommendationSupport(
+    public MetadataSuggestionSupport metadataSuggestionSupport(
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
-        return new DocumentMetadataRecommendationSupport(aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher);
+        return new MetadataSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher);
     }
 }

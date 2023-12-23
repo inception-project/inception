@@ -38,8 +38,8 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarExtension;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendtionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -60,8 +60,8 @@ import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRend
 import de.tudarmstadt.ukp.inception.recommendation.service.LayerRecommendtionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
-import de.tudarmstadt.ukp.inception.recommendation.service.RelationRecommendationSupport;
-import de.tudarmstadt.ukp.inception.recommendation.service.SpanRecommendationSupport;
+import de.tudarmstadt.ukp.inception.recommendation.service.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.service.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -84,7 +84,7 @@ public class RecommenderServiceAutoConfiguration
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, ProjectService aProjectService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            LayerRecommendtionSupportRegistry aLayerRecommendtionSupportRegistry)
+            SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
@@ -227,30 +227,30 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public SpanRecommendationSupport spanRecommendationSupport(
+    public SpanSuggestionSupport spanRecommendationSupport(
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
     {
-        return new SpanRecommendationSupport(aRecommendationService, aLearningRecordService,
+        return new SpanSuggestionSupport(aRecommendationService, aLearningRecordService,
                 aApplicationEventPublisher, aSchemaService);
     }
 
     @Bean
-    public RelationRecommendationSupport relationRecommendationSupport(
+    public RelationSuggestionSupport relationRecommendationSupport(
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
     {
-        return new RelationRecommendationSupport(aRecommendationService, aLearningRecordService,
+        return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
                 aApplicationEventPublisher, aSchemaService);
     }
 
     @Bean
-    public LayerRecommendtionSupportRegistry layerRecommendtionSupportRegistry(
-            @Lazy @Autowired(required = false) List<LayerRecommendationSupport<?>> aExtensions)
+    public SuggestionSupportRegistry layerRecommendtionSupportRegistry(
+            @Lazy @Autowired(required = false) List<SuggestionSupport<?>> aExtensions)
     {
         return new LayerRecommendtionSupportRegistryImpl(aExtensions);
     }

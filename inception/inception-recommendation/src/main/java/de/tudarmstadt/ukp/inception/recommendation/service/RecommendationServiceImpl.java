@@ -109,7 +109,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendtionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -180,7 +180,7 @@ public class RecommendationServiceImpl
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PreferencesService preferencesService;
-    private final LayerRecommendtionSupportRegistry layerRecommendtionSupportRegistry;
+    private final SuggestionSupportRegistry layerRecommendtionSupportRegistry;
 
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -210,7 +210,7 @@ public class RecommendationServiceImpl
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, ProjectService aProjectService,
             EntityManager aEntityManager, ApplicationEventPublisher aApplicationEventPublisher,
-            LayerRecommendtionSupportRegistry aLayerRecommendtionSupportRegistry)
+            SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         preferencesService = aPreferencesService;
         sessionRegistry = aSessionRegistry;
@@ -233,7 +233,7 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService,
-            LayerRecommendtionSupportRegistry aLayerRecommendtionSupportRegistry,
+            SuggestionSupportRegistry aLayerRecommendtionSupportRegistry,
             EntityManager aEntityManager)
     {
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,

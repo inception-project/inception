@@ -195,7 +195,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
             var aCas = jcasProvider.get();
 
-            var annotation = new DocumentMetadataRecommendationSupport(recommendationService,
+            var annotation = new MetadataSuggestionSupport(recommendationService,
                     learningRecordService, applicationEventPublisherHolder.get()).acceptSuggestion(
                             sessionOwner.getUsername(), state.getObject().getDocument(), dataOwner,
                             aCas, adapter, feature, suggestion, MAIN_EDITOR, ACCEPTED);

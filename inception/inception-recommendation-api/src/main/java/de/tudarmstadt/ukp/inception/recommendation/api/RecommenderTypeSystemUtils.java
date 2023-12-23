@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
@@ -29,16 +30,33 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 public class RecommenderTypeSystemUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static CAS makePredictionCas(CAS aOriginalCas, AnnotationFeature... aFeatures)
+        throws ResourceInitializationException
+    {
+        var tsd = TypeSystemUtil.typeSystem2TypeSystemDescription(aOriginalCas.getTypeSystem());
+        RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, asList(aFeatures));
+        var predictionCas = CasFactory.createCas(tsd);
+        predictionCas.setDocumentText(aOriginalCas.getDocumentText());
+        SegmentationUtils.splitSentences(predictionCas);
+        SegmentationUtils.tokenize(predictionCas);
+        return predictionCas;
+    }
 
     public static void addPredictionFeaturesToTypeSystem(TypeSystemDescription tsd,
             List<AnnotationFeature> features)

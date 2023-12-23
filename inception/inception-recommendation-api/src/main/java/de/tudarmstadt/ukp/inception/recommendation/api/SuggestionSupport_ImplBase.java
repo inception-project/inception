@@ -36,8 +36,8 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-public abstract class LayerRecommendationSupport_ImplBase<S extends AnnotationSuggestion>
-    implements LayerRecommendationSupport<S>, BeanNameAware
+public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
+    implements SuggestionSupport<S>, BeanNameAware
 {
     protected final RecommendationService recommendationService;
     protected final LearningRecordService learningRecordService;
@@ -45,7 +45,7 @@ public abstract class LayerRecommendationSupport_ImplBase<S extends AnnotationSu
 
     private String id;
 
-    public LayerRecommendationSupport_ImplBase(RecommendationService aRecommendationService,
+    public SuggestionSupport_ImplBase(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher)
     {

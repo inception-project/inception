@@ -23,25 +23,25 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendationSupport;
-import de.tudarmstadt.ukp.inception.recommendation.api.LayerRecommendtionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 public class LayerRecommendtionSupportRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationSuggestion, LayerRecommendationSupport<?>>
-    implements LayerRecommendtionSupportRegistry
+    extends ExtensionPoint_ImplBase<AnnotationSuggestion, SuggestionSupport<?>>
+    implements SuggestionSupportRegistry
 {
     @Autowired
     public LayerRecommendtionSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<LayerRecommendationSupport<?>> aExtensions)
+            @Lazy @Autowired(required = false) List<SuggestionSupport<?>> aExtensions)
     {
         super(aExtensions);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X extends LayerRecommendationSupport<?>> Optional<X> findGenericExtension(
+    public <X extends SuggestionSupport<?>> Optional<X> findGenericExtension(
             AnnotationSuggestion aKey)
     {
         return getExtensions().stream() //
