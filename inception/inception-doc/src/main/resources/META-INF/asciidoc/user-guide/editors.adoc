@@ -33,26 +33,17 @@ provides.
 | brat (wrapping @ 120 chars)
 | `ui.brat.enabled`
 
-| brat (wrapping @ 120 chars)
-| `ui.brat.enabled`
-
-// | DIAM debugger
-// | `ui.diam-debugger.enabled`
-
 | HTML (AnnotatorJS)
 | `ui.html-annotatorjs.enabled`
 
 | HTML (RecogitoJS)
-| `ui.ui.html-recogitojs.enabled`
+| `ui.html-recogitojs.enabled`
 
 | PDF
 | `ui.pdf.enabled`
 
 | PDF (legacy)
 | `ui.pdf-legacy.enabled`
-
-// | Review editor
-// | `ui.review.enabled`
 |====
 
 == Editor plugins
