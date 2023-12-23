@@ -47,9 +47,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -67,16 +67,15 @@ public class RelationSuggestionSupport
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AnnotationSchemaService schemaService;
+    public static final String TYPE = "RELATION";
 
     public RelationSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
     {
-        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
-
-        schemaService = aSchemaService;
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
+                aSchemaService);
     }
 
     @Override
@@ -336,5 +335,28 @@ public class RelationSuggestionSupport
         return select(aCas, type).stream() //
                 .filter(fs -> fs.coveredBy(aWindowBegin, aWindowEnd)) //
                 .toList();
+    }
+
+    @Override
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        var pos = ((RelationSuggestion) aSuggestion).getPosition();
+        var record = new LearningRecord();
+        record.setUser(aDataOwner);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(pos.getSourceBegin());
+        record.setOffsetEnd(pos.getSourceEnd());
+        record.setOffsetBegin2(pos.getTargetBegin());
+        record.setOffsetEnd2(pos.getTargetEnd());
+        record.setTokenText("");
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(TYPE);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
     }
 }

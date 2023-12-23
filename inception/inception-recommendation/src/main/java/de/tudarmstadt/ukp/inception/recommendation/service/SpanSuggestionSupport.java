@@ -54,9 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -75,16 +75,15 @@ public class SpanSuggestionSupport
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AnnotationSchemaService schemaService;
+    public static final String TYPE = "SPAN";
 
     public SpanSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService)
     {
-        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
-        schemaService = aSchemaService;
-
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
+                aSchemaService);
     }
 
     @Override
@@ -139,8 +138,8 @@ public class SpanSuggestionSupport
             annotation = candidates.get(0);
         }
 
-        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aValue, annotation, aLocation, aAction);
+        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
+                aValue, annotation, aLocation, aAction);
 
         return annotation;
     }
@@ -409,5 +408,28 @@ public class SpanSuggestionSupport
                         && r.getOffsetEnd() == aSuggestion.getEnd()) //
                 .filter(r -> aSuggestion.hideSuggestion(r.getUserAction())) //
                 .findAny();
+    }
+
+    @Override
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        var pos = ((SpanSuggestion) aSuggestion).getPosition();
+        var record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin(pos.getBegin());
+        record.setOffsetEnd(pos.getEnd());
+        record.setOffsetBegin2(-1);
+        record.setOffsetEnd2(-1);
+        record.setTokenText(((SpanSuggestion) aSuggestion).getCoveredText());
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(TYPE);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
     }
 }

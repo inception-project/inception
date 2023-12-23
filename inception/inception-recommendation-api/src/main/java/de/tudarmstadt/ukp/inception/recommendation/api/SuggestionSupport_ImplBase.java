@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAccep
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -42,16 +43,19 @@ public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
     protected final RecommendationService recommendationService;
     protected final LearningRecordService learningRecordService;
     protected final ApplicationEventPublisher applicationEventPublisher;
+    protected final AnnotationSchemaService schemaService;
 
     private String id;
 
     public SuggestionSupport_ImplBase(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
     {
         recommendationService = aRecommendationService;
         learningRecordService = aLearningRecordService;
         applicationEventPublisher = aApplicationEventPublisher;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -66,8 +70,8 @@ public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
         return id;
     }
 
-    protected void commmitLabel(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
+    protected void commmitLabel(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS annotation,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException

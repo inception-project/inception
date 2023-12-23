@@ -17,25 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.jcas.cas.AnnotationBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
@@ -45,11 +55,17 @@ public class MetadataSuggestionSupport
     extends SuggestionSupport_ImplBase<MetadataSuggestion>
 
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String TYPE = "META";
+
     public MetadataSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
     {
-        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher);
+        super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
+                aSchemaService);
     }
 
     @Override
@@ -69,7 +85,7 @@ public class MetadataSuggestionSupport
 
         var aValue = aSuggestion.getLabel();
 
-        var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
+        var candidates = aCas.<AnnotationBase> select(aAdapter.getAnnotationTypeName()) //
                 .asList();
 
         var candidateWithEmptyLabel = candidates.stream() //
@@ -94,8 +110,8 @@ public class MetadataSuggestionSupport
             annotation = candidates.get(0);
         }
 
-        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aValue, annotation, aLocation, aAction);
+        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
+                aValue, annotation, aLocation, aAction);
 
         return annotation;
     }
@@ -121,6 +137,105 @@ public class MetadataSuggestionSupport
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
-        throw new NotImplementedException("Not yet implemented");
+        LOG.trace("calculateSuggestionVisibility() for layer {} on document {}", aLayer, aDocument);
+
+        var type = aCas.getTypeSystem().getType(aLayer.getName());
+        if (type == null) {
+            // The type does not exist in the type system of the CAS. Probably it has not
+            // been upgraded to the latest version of the type system yet. If this is the case,
+            // we'll just skip.
+            return;
+        }
+
+        var annotations = aCas.<AnnotationBase> select(type).asList();
+
+        var suggestionsForLayer = aRecommendations.stream()
+                // Only suggestions for the given layer
+                .filter(group -> group.getLayerId() == aLayer.getId()) //
+                .toList();
+
+        // Get all the skipped/rejected entries for the current layer
+        var recordedAnnotations = learningRecordService.listLearningRecords(aSessionOwner,
+                aDataOwner, aLayer);
+
+        for (var feature : schemaService.listSupportedFeatures(aLayer)) {
+            var feat = type.getFeatureByBaseName(feature.getName());
+
+            if (feat == null) {
+                // The feature does not exist in the type system of the CAS. Probably it has not
+                // been upgraded to the latest version of the type system yet. If this is the case,
+                // we'll just skip.
+                return;
+            }
+
+            // Reduce the suggestions to the ones for the given feature. We can use the tree here
+            // since we only have a single SuggestionGroup for every position
+            var suggestionsForFeature = suggestionsForLayer.stream()
+                    .filter(group -> group.getFeature().equals(feature.getName())) //
+                    .map(group -> {
+                        group.showAll(FLAG_ALL);
+                        return (SuggestionGroup<MetadataSuggestion>) group;
+                    }) //
+                    .toList();
+
+            hideSpanSuggestionsThatMatchAnnotations(annotations, feature, feat,
+                    suggestionsForFeature);
+
+            // // Anything that was not hidden so far might still have been rejected
+            // suggestionsForFeature.stream() //
+            // .flatMap(SuggestionGroup::stream) //
+            // .filter(AnnotationSuggestion::isVisible) //
+            // .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
+            // recordedAnnotations));
+        }
+    }
+
+    private void hideSpanSuggestionsThatMatchAnnotations(List<AnnotationBase> aAnnotations,
+            AnnotationFeature aFeature, Feature aFeat,
+            List<SuggestionGroup<MetadataSuggestion>> aSuggestionsForFeature)
+    {
+        var layer = aFeature.getLayer();
+        var adapter = schemaService.getAdapter(layer);
+        var traits = adapter.getTraits(DocumentMetadataLayerTraits.class);
+
+        for (var annotation : aAnnotations) {
+            var label = annotation.getFeatureValueAsString(aFeat);
+
+            if (label == null) {
+                continue;
+            }
+
+            for (var sugGroup : aSuggestionsForFeature) {
+                if (traits.get().isSingleton()) {
+                    sugGroup.hideAll(FLAG_OVERLAP);
+                }
+                else {
+                    for (var sug : sugGroup) {
+                        if (label.equals(sug.getLabel())) {
+                            sug.hide(FLAG_OVERLAP);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
+    {
+        var record = new LearningRecord();
+        record.setUser(aUsername);
+        record.setSourceDocument(aDocument);
+        record.setUserAction(aUserAction);
+        record.setOffsetBegin2(-1);
+        record.setOffsetEnd2(-1);
+        record.setAnnotation(aSuggestion.getLabel());
+        record.setLayer(aFeature.getLayer());
+        record.setSuggestionType(TYPE);
+        record.setChangeLocation(aLocation);
+        record.setAnnotationFeature(aFeature);
+        return record;
     }
 }

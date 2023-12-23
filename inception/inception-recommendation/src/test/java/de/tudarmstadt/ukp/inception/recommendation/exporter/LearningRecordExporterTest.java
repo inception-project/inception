@@ -43,12 +43,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
@@ -146,7 +146,7 @@ public class LearningRecordExporterTest
                 .withOffsetBegin2(-1) //
                 .withOffsetEnd2(-1) //
                 .withSourceDocument(document) //
-                .withSuggestionType(SuggestionLayerFamily.SPAN) //
+                .withSuggestionType(SpanLayerSupport.TYPE) //
                 .withTokenText("0123456789") //
                 .withUser("user1") //
                 .withUserAction(LearningRecordUserAction.ACCEPTED) //

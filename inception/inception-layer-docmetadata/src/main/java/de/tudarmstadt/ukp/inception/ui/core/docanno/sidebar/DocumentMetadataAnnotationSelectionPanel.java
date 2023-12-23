@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.EXTENSION_ID;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -189,16 +189,11 @@ public class DocumentMetadataAnnotationSelectionPanel
             var suggestion = (MetadataSuggestion) recommendationService
                     .getPredictions(sessionOwner, state.getObject().getProject())
                     .getPredictionByVID(state.getObject().getDocument(), aItem.vid).get();
-            var layer = annotationService.getLayer(suggestion.getLayerId());
-            var feature = annotationService.getFeature(suggestion.getFeature(), layer);
-            var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
 
             var aCas = jcasProvider.get();
 
-            var annotation = new MetadataSuggestionSupport(recommendationService,
-                    learningRecordService, applicationEventPublisherHolder.get()).acceptSuggestion(
-                            sessionOwner.getUsername(), state.getObject().getDocument(), dataOwner,
-                            aCas, adapter, feature, suggestion, MAIN_EDITOR, ACCEPTED);
+            var annotation = recommendationService.acceptSuggestion(sessionOwner.getUsername(),
+                    state.getObject().getDocument(), dataOwner, aCas, suggestion, MAIN_EDITOR);
 
             page.writeEditorCas(aCas);
 
@@ -477,10 +472,26 @@ public class DocumentMetadataAnnotationSelectionPanel
         // --- Populate with predictions ---
         var predictions = recommendationService.getPredictions(user.getObject(), getModelObject());
         if (predictions != null) {
-            for (var suggestion : predictions
-                    .getPredictionsByDocument(sourceDocument.getObject().getName())) {
-                if (suggestion instanceof MetadataSuggestion metadataSuggestion
-                        && Objects.equals(suggestion.getLayerId(), aLayer.getId())) {
+            var predictionsByDocument = predictions
+                    .getPredictionsByDocument(sourceDocument.getObject().getName());
+
+            var group = SuggestionDocumentGroup.groupsOfType(MetadataSuggestion.class,
+                    predictionsByDocument);
+
+            recommendationService.calculateSuggestionVisibility(userService.getCurrentUsername(),
+                    state.getObject().getDocument(), cas, state.getObject().getUser().getUsername(),
+                    aLayer, group, -1, -1);
+
+            var pref = recommendationService.getPreferences(state.getObject().getUser(),
+                    state.getObject().getProject());
+
+            for (var suggestion : predictionsByDocument) {
+                if ((!suggestion.isVisible() && !pref.isShowAllPredictions())
+                        || !Objects.equals(suggestion.getLayerId(), aLayer.getId())) {
+                    continue;
+                }
+
+                if (suggestion instanceof MetadataSuggestion metadataSuggestion) {
                     var feature = featuresIndex.get(suggestion.getFeature());
 
                     // Retrieve the UI display label for the given feature value

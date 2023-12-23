@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -53,4 +54,8 @@ public interface SuggestionSupport<S extends AnnotationSuggestion>
     <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
+
+    LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+            AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
+            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 }

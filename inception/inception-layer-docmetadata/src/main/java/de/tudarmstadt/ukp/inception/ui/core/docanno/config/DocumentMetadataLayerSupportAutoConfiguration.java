@@ -88,9 +88,10 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     public MetadataSuggestionSupport metadataSuggestionSupport(
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
     {
         return new MetadataSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher);
+                aApplicationEventPublisher, aSchemaService);
     }
 }

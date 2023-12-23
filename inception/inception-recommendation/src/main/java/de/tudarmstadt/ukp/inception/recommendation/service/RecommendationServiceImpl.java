@@ -26,9 +26,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.RELATION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.SPAN;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
@@ -109,11 +106,11 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
@@ -125,8 +122,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -1768,11 +1765,12 @@ public class RecommendationServiceImpl
 
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.
-        var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
-        calculateSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
-                aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
-                groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
-        // FIXME calculateRelationSuggestionVisibility?
+        var groupedSuggestions = SuggestionDocumentGroup.groupByType(suggestions);
+        for (var groupEntry : groupedSuggestions.entrySet()) {
+            calculateSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
+                    aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
+                    groupEntry.getValue(), 0, aOriginalCas.getDocumentText().length());
+        }
 
         aIncomingPredictions.putPredictions(suggestions);
     }
@@ -1837,8 +1835,14 @@ public class RecommendationServiceImpl
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
-        var rls = layerRecommendtionSupportRegistry
-                .findGenericExtension(SpanSuggestion.builder().build());
+        var maybeSuggestion = aRecommendations.stream().filter(group -> !group.isEmpty())
+                .flatMap(group -> group.stream()).findAny();
+
+        if (maybeSuggestion.isEmpty()) {
+            return;
+        }
+
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(maybeSuggestion.get());
 
         if (rls.isPresent()) {
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
@@ -2011,13 +2015,12 @@ public class RecommendationServiceImpl
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         LearningRecord record = null;
-        if (aSuggestion instanceof SpanSuggestion) {
-            record = toLearningRecord(aDocument, aDataOwner, (SpanSuggestion) aSuggestion, aFeature,
+
+        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
+
+        if (rls.isPresent()) {
+            record = rls.get().toLearningRecord(aDocument, aDataOwner, aSuggestion, aFeature,
                     aUserAction, aLocation);
-        }
-        else if (aSuggestion instanceof RelationSuggestion) {
-            record = toLearningRecord(aDocument, aDataOwner, (RelationSuggestion) aSuggestion,
-                    aFeature, aUserAction, aLocation);
         }
 
         if (record == null) {
@@ -2035,49 +2038,6 @@ public class RecommendationServiceImpl
 
         deleteLearningRecords(record);
         createLearningRecord(record);
-    }
-
-    private LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
-            SpanSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
-    {
-        var record = new LearningRecord();
-        record.setUser(aUsername);
-        record.setSourceDocument(aDocument);
-        record.setUserAction(aUserAction);
-        record.setOffsetBegin(aSuggestion.getBegin());
-        record.setOffsetEnd(aSuggestion.getEnd());
-        record.setOffsetBegin2(-1);
-        record.setOffsetEnd2(-1);
-        record.setTokenText(aSuggestion.getCoveredText());
-        record.setAnnotation(aSuggestion.getLabel());
-        record.setLayer(aFeature.getLayer());
-        record.setSuggestionType(SPAN);
-        record.setChangeLocation(aLocation);
-        record.setAnnotationFeature(aFeature);
-        return record;
-    }
-
-    private LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
-            RelationSuggestion aSuggestion, AnnotationFeature aFeature,
-            LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
-    {
-        var pos = aSuggestion.getPosition();
-        var record = new LearningRecord();
-        record.setUser(aDataOwner);
-        record.setSourceDocument(aDocument);
-        record.setUserAction(aUserAction);
-        record.setOffsetBegin(pos.getSourceBegin());
-        record.setOffsetEnd(pos.getSourceEnd());
-        record.setOffsetBegin2(pos.getTargetBegin());
-        record.setOffsetEnd2(pos.getTargetEnd());
-        record.setTokenText("");
-        record.setAnnotation(aSuggestion.getLabel());
-        record.setLayer(aFeature.getLayer());
-        record.setSuggestionType(RELATION);
-        record.setChangeLocation(aLocation);
-        record.setAnnotationFeature(aFeature);
-        return record;
     }
 
     private void deleteLearningRecords(LearningRecord aRecord)

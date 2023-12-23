@@ -80,7 +80,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -118,8 +117,9 @@ public class RecommendationServiceImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(
-                asList(new SpanSuggestionSupport(sut, sut, null, schemaService)));
+        layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(asList( //
+                new SpanSuggestionSupport(sut, sut, null, schemaService),
+                new RelationSuggestionSupport(sut, sut, null, schemaService)));
         layerRecommendtionSupportRegistry.init();
 
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
@@ -421,7 +421,7 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", MAIN_EDITOR) //
                 .hasFieldOrPropertyWithValue("userAction", ACCEPTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionLayerFamily.SPAN);
+                .hasFieldOrPropertyWithValue("suggestionType", SpanSuggestionSupport.TYPE);
     }
 
     @Test
@@ -455,7 +455,7 @@ public class RecommendationServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("annotation", "testLabel") //
                 .hasFieldOrPropertyWithValue("changeLocation", DETAIL_EDITOR) //
                 .hasFieldOrPropertyWithValue("userAction", LearningRecordUserAction.REJECTED) //
-                .hasFieldOrPropertyWithValue("suggestionType", SuggestionLayerFamily.RELATION);
+                .hasFieldOrPropertyWithValue("suggestionType", RelationSuggestionSupport.TYPE);
     }
 
     @Test
