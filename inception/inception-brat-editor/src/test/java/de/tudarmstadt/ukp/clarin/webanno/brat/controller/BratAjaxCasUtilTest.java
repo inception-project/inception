@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginInSameSentence;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isBeginEndInSameSentence;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isBeginInSameSentence;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

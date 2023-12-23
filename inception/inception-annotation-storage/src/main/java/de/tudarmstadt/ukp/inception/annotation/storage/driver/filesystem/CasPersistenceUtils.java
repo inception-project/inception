@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.io.ObjectInputFilter.Config.createFilter;
 import static java.lang.String.join;
 import static org.apache.uima.cas.SerialFormat.XMI;
@@ -51,8 +51,8 @@ import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyFramedInputStream;
 import org.xerial.snappy.SnappyFramedOutputStream;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public final class CasPersistenceUtils
 {

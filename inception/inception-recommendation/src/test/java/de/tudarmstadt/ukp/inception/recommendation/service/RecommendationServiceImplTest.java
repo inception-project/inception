@@ -25,10 +25,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl.hideSuggestionsRejectedOrSkipped;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.getOffsets;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
@@ -60,14 +56,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 class RecommendationServiceImplTest
 {
@@ -145,92 +140,6 @@ class RecommendationServiceImplTest
                 .extracting(AnnotationSuggestion::getId, AnnotationSuggestion::getLabel,
                         AnnotationSuggestion::getAge) //
                 .containsExactlyInAnyOrder(tuple(0, "aged", 1), tuple(3, "added", 0));
-    }
-
-    @Test
-    void thatRejectedSuggestionIsHidden()
-    {
-        var records = asList(LearningRecord.builder() //
-                .withSourceDocument(doc1) //
-                .withLayer(layer1) //
-                .withAnnotationFeature(feature1) //
-                .withOffsetBegin(0) //
-                .withOffsetEnd(10) //
-                .withAnnotation("x") //
-                .withUserAction(REJECTED) //
-                .build());
-
-        var doc1Suggestion = makeSuggestion(0, 10, "x", doc1, layer1, feature1);
-        assertThat(doc1Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc1Suggestion, records);
-        assertThat(doc1Suggestion.isVisible()) //
-                .as("Suggestion in same document/layer/feature should be hidden") //
-                .isFalse();
-        assertThat(doc1Suggestion.getReasonForHiding().trim()).isEqualTo("rejected");
-
-        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer1, feature1);
-        assertThat(doc2Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
-        assertThat(doc2Suggestion.isVisible()) //
-                .as("Suggestion in other document should not be hidden") //
-                .isTrue();
-
-        var doc3Suggestion = makeSuggestion(0, 10, "x", doc1, layer2, feature1);
-        assertThat(doc3Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
-        assertThat(doc3Suggestion.isVisible()) //
-                .as("Suggestion in other layer should not be hidden") //
-                .isTrue();
-
-        var doc4Suggestion = makeSuggestion(0, 10, "x", doc1, layer1, feature2);
-        assertThat(doc4Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
-        assertThat(doc4Suggestion.isVisible()) //
-                .as("Suggestion in other feature should not be hidden") //
-                .isTrue();
-    }
-
-    @Test
-    void thatSkippedSuggestionIsHidden()
-    {
-        var records = asList(LearningRecord.builder() //
-                .withSourceDocument(doc1) //
-                .withLayer(layer1) //
-                .withAnnotationFeature(feature1) //
-                .withOffsetBegin(0) //
-                .withOffsetEnd(10) //
-                .withAnnotation("x") //
-                .withUserAction(SKIPPED) //
-                .build());
-
-        var doc1Suggestion = makeSuggestion(0, 10, "x", doc1, layer1, feature1);
-        assertThat(doc1Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc1Suggestion, records);
-        assertThat(doc1Suggestion.isVisible()) //
-                .as("Suggestion in same document/layer/feature should be hidden") //
-                .isFalse();
-        assertThat(doc1Suggestion.getReasonForHiding().trim()).isEqualTo("skipped");
-
-        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer1, feature1);
-        assertThat(doc2Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
-        assertThat(doc2Suggestion.isVisible()) //
-                .as("Suggestion in other document should not be hidden") //
-                .isTrue();
-
-        var doc3Suggestion = makeSuggestion(0, 10, "x", doc1, layer2, feature1);
-        assertThat(doc3Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
-        assertThat(doc3Suggestion.isVisible()) //
-                .as("Suggestion in other layer should not be hidden") //
-                .isTrue();
-
-        var doc4Suggestion = makeSuggestion(0, 10, "x", doc1, layer1, feature2);
-        assertThat(doc4Suggestion.isVisible()).isTrue();
-        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
-        assertThat(doc4Suggestion.isVisible()) //
-                .as("Suggestion in other feature should not be hidden") //
-                .isTrue();
     }
 
     @Test
@@ -351,7 +260,7 @@ class RecommendationServiceImplTest
         var layer = AnnotationLayer.builder() //
                 .withId(1l) //
                 .forUimaType(targetCas.getTypeSystem().getType(predType.getName())) //
-                .withType(WebAnnoConst.SPAN_TYPE) //
+                .withType(SpanLayerSupport.TYPE) //
                 .withAnchoringMode(TOKENS) //
                 .build();
         var feature = AnnotationFeature.builder() //
@@ -398,23 +307,4 @@ class RecommendationServiceImplTest
                         tuple("bar", 0.5d, "two", new Offset(5, 9)));
     }
 
-    private SpanSuggestion makeSuggestion(int aBegin, int aEnd, String aLabel, SourceDocument aDoc,
-            AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        return new SpanSuggestion(0, // aId,
-                0, // aRecommenderId,
-                "", // aRecommenderName
-                aLayer.getId(), // aLayerId,
-                aFeature.getName(), // aFeature,
-                aDoc.getName(), // aDocumentName
-                aBegin, // aBegin
-                aEnd, // aEnd
-                "", // aCoveredText,
-                aLabel, // aLabel
-                aLabel, // aUiLabel
-                0.0, // aScore
-                "", // aScoreExplanation,
-                NEVER // autoAccept
-        );
-    }
 }

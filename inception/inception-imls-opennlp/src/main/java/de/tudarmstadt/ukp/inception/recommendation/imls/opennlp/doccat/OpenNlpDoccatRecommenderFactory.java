@@ -21,21 +21,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
-import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
-@Component
 public class OpenNlpDoccatRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpDoccatRecommenderTraits>
 {
@@ -69,9 +66,14 @@ public class OpenNlpDoccatRecommenderFactory
             return false;
         }
 
-        return (asList(AnchoringMode.SENTENCES).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
+        var compatibleSpanLayer = SENTENCES == aLayer.getAnchoringMode() //
+                && !aLayer.isCrossSentence() //
+                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+
+        var compatibleFeature = CAS.TYPE_NAME_STRING.equals(aFeature.getType())
+                || aFeature.isVirtualFeature();
+
+        return compatibleSpanLayer && compatibleFeature;
     }
 
     @Override

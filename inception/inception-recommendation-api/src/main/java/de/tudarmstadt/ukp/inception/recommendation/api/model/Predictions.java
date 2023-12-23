@@ -133,6 +133,8 @@ public class Predictions
     }
 
     /**
+     * Gets suggestions of the specified type for the given document.
+     * 
      * TODO #176 use the document Id once it it available in the CAS
      * 
      * @param type
@@ -160,11 +162,11 @@ public class Predictions
     }
 
     /**
-     * TODO #176 use the document Id once it it available in the CAS
-     * 
      * Get the predictions of a document for a given window in a flattened list. If the parameters
      * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
      * respectively. This is useful when all suggestions should be fetched.
+     * 
+     * TODO #176 use the document Id once it it available in the CAS
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,

@@ -15,18 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ContextLookupExtensionPoint;
 
-public class SuggestionLayerFamilyType
-    extends PersistentEnumUserType<SuggestionLayerFamily>
+public interface SuggestionSupportRegistry
+    extends ContextLookupExtensionPoint<AnnotationSuggestion, SuggestionSupport<?>>
 {
-    private static final long serialVersionUID = 9106353026811614399L;
 
-    @Override
-    public Class<SuggestionLayerFamily> returnedClass()
-    {
-        return de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.class;
-    }
 }

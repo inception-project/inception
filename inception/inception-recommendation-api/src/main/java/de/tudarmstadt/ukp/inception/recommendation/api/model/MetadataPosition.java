@@ -17,34 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import java.io.Serializable;
 
-public enum SuggestionLayerFamily
-    implements PersistentEnum
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+public class MetadataPosition
+    implements Position, Serializable
 {
-    SPAN("SPAN"), RELATION("RELATION");
+    private static final long serialVersionUID = 6214696010810100968L;
 
-    private final String id;
+    public static final MetadataPosition INSTANCE = new MetadataPosition();
 
-    SuggestionLayerFamily(String aId)
+    @Override
+    public boolean equals(final Object other)
     {
-        id = aId;
-    }
+        if (!(other instanceof MetadataPosition)) {
+            return false;
+        }
 
-    public String getName()
-    {
-        return getId();
+        return true;
     }
 
     @Override
-    public String getId()
+    public int hashCode()
     {
-        return id;
-    }
-
-    @Override
-    public String toString()
-    {
-        return getId();
+        return new HashCodeBuilder().toHashCode();
     }
 }

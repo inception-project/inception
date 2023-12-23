@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.recommendation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -60,14 +60,14 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.actionbar.RecommenderActionBarPanel;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -220,11 +220,10 @@ public class RecommendationEditorExtension
         var dataOwner = aState.getUser().getUsername();
         var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
-        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
         var adapter = (SpanAdapter) annotationService.getAdapter(layer);
 
-        var span = recommendationService.acceptSuggestion(sessionOwner, aSocument, dataOwner, aCas,
-                adapter, feature, aSuggestion, MAIN_EDITOR);
+        var span = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aSocument,
+                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
@@ -246,10 +245,9 @@ public class RecommendationEditorExtension
         var sessionOwner = userService.getCurrentUsername();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
-        var feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
 
-        var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
-                aCas, adapter, feature, aSuggestion, MAIN_EDITOR, ACCEPTED);
+        var relation = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aDocument,
+                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 

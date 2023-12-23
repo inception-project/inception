@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -32,6 +34,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnota
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.MetadataSuggestionSupport;
 
 /**
  * Provides support for document-level annotations.
@@ -78,5 +81,17 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
     {
         return new DocumentMetadataAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public MetadataSuggestionSupport metadataSuggestionSupport(
+            RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService)
+    {
+        return new MetadataSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService);
     }
 }

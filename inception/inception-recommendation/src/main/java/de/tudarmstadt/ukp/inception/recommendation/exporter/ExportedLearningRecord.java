@@ -28,7 +28,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -71,7 +70,7 @@ public class ExportedLearningRecord
     private LearningRecordChangeLocation changeLocation;
 
     @JsonProperty("type")
-    private SuggestionLayerFamily suggestionType;
+    private String suggestionType;
 
     @JsonProperty("timestamp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -197,12 +196,12 @@ public class ExportedLearningRecord
         changeLocation = aChangeLocation;
     }
 
-    public SuggestionLayerFamily getSuggestionType()
+    public String getSuggestionType()
     {
         return suggestionType;
     }
 
-    public void setSuggestionType(SuggestionLayerFamily aSuggestionType)
+    public void setSuggestionType(String aSuggestionType)
     {
         suggestionType = aSuggestionType;
     }

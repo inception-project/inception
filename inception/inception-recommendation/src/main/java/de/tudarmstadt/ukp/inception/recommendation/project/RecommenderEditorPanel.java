@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_CAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -61,6 +60,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -152,7 +154,7 @@ public class RecommenderEditorPanel
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
-        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
+        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, t -> {
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
             autoUpdateName(t, nameField, recommenderModel.getObject());
@@ -406,11 +408,12 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         return annotationSchemaService.listAnnotationLayer(projectModel.getObject()).stream() //
-                .filter(layer -> (SPAN_TYPE.equals(layer.getType())
-                        || RELATION_TYPE.equals(layer.getType())) && //
-                        !(Token._TypeName.equals(layer.getName())
+                .filter(layer -> (SpanLayerSupport.TYPE.equals(layer.getType())
+                        || RelationLayerSupport.TYPE.equals(layer.getType()) //
+                        || DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) //
+                        && !(Token._TypeName.equals(layer.getName())
                                 || Sentence._TypeName.equals(layer.getName())))
-                .collect(toList());
+                .toList();
     }
 
     private List<AnnotationFeature> listFeatures()
@@ -419,7 +422,7 @@ public class RecommenderEditorPanel
             return emptyList();
         }
 
-        AnnotationLayer layer = recommenderModel.getObject().getLayer();
+        var layer = recommenderModel.getObject().getLayer();
         if (layer == null) {
             return emptyList();
         }
@@ -435,8 +438,8 @@ public class RecommenderEditorPanel
             return emptyList();
         }
 
-        AnnotationLayer layer = recommenderModel.getObject().getLayer();
-        AnnotationFeature feature = recommenderModel.getObject().getFeature();
+        var layer = recommenderModel.getObject().getLayer();
+        var feature = recommenderModel.getObject().getFeature();
         if (layer == null || feature == null) {
             return emptyList();
         }
@@ -449,7 +452,7 @@ public class RecommenderEditorPanel
 
     private void actionSave(AjaxRequestTarget aTarget)
     {
-        Recommender recommender = recommenderModel.getObject();
+        var recommender = recommenderModel.getObject();
         recommender.setProject(recommender.getLayer().getProject());
 
         recommendationService.createOrUpdateRecommender(recommender);

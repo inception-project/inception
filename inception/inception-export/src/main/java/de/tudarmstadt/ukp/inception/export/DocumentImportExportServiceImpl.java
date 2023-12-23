@@ -17,11 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
@@ -29,6 +24,8 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FO
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
@@ -46,13 +43,11 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
-import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -63,7 +58,6 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -75,7 +69,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -101,7 +94,8 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePro
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * <p>
@@ -385,7 +379,7 @@ public class DocumentImportExportServiceImpl
         Type tokenType = getType(cas, Token.class);
 
         if (!exists(cas, tokenType)) {
-            tokenize(cas);
+            SegmentationUtils.tokenize(cas);
         }
 
         if (properties.getMaxTokens() > 0) {
@@ -410,7 +404,7 @@ public class DocumentImportExportServiceImpl
         Type sentenceType = getType(cas, Sentence.class);
 
         if (!exists(cas, sentenceType)) {
-            splitSentences(cas);
+            SegmentationUtils.splitSentences(cas);
         }
 
         if (properties.getMaxSentences() > 0) {
@@ -426,133 +420,6 @@ public class DocumentImportExportServiceImpl
         if (!exists(cas, sentenceType)) {
             throw new IOException("The document appears to be empty. Unable to detect any "
                     + "sentences. Empty documents cannot be imported.");
-        }
-    }
-
-    public static void splitSentences(CAS aCas)
-    {
-        splitSentences(aCas, null);
-    }
-
-    public static void splitSentences(CAS aCas, Iterable<? extends AnnotationFS> aZones)
-    {
-        if (aCas.getDocumentText() == null) {
-            return;
-        }
-
-        int[] sortedZoneBoundaries = null;
-
-        if (aZones != null) {
-            var zoneBoundaries = new IntArrayList();
-            for (var zone : aZones) {
-                zoneBoundaries.add(zone.getBegin());
-                zoneBoundaries.add(zone.getEnd());
-            }
-
-            sortedZoneBoundaries = zoneBoundaries.intStream().distinct().sorted().toArray();
-        }
-
-        if (sortedZoneBoundaries == null || sortedZoneBoundaries.length < 2) {
-            sortedZoneBoundaries = new int[] { 0, aCas.getDocumentText().length() };
-        }
-
-        for (int i = 1; i < sortedZoneBoundaries.length; i++) {
-            var begin = sortedZoneBoundaries[i - 1];
-            var end = sortedZoneBoundaries[i];
-            BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
-            bi.setText(aCas.getDocumentText().substring(begin, end));
-            int last = bi.first();
-            int cur = bi.next();
-            while (cur != BreakIterator.DONE) {
-                int[] span = new int[] { last + begin, cur + begin };
-                trim(aCas.getDocumentText(), span);
-                if (!isEmpty(span[0], span[1])) {
-                    aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
-                }
-                last = cur;
-                cur = bi.next();
-            }
-        }
-    }
-
-    public static void tokenize(CAS aCas)
-    {
-        if (aCas.getDocumentText() == null) {
-            return;
-        }
-
-        BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
-        for (AnnotationFS s : selectSentences(aCas)) {
-            bi.setText(s.getCoveredText());
-            int last = bi.first();
-            int cur = bi.next();
-            while (cur != BreakIterator.DONE) {
-                int[] span = new int[] { last, cur };
-                trim(s.getCoveredText(), span);
-                if (!isEmpty(span[0], span[1])) {
-                    aCas.addFsToIndexes(
-                            createToken(aCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
-                }
-                last = cur;
-                cur = bi.next();
-            }
-        }
-    }
-
-    /**
-     * Remove trailing or leading whitespace from the annotation.
-     * 
-     * @param aText
-     *            the text.
-     * @param aSpan
-     *            the offsets.
-     */
-    public static void trim(String aText, int[] aSpan)
-    {
-        String data = aText;
-
-        int begin = aSpan[0];
-        int end = aSpan[1] - 1;
-
-        // Remove whitespace at end
-        while ((end > 0) && trimChar(data.charAt(end))) {
-            end--;
-        }
-        end++;
-
-        // Remove whitespace at start
-        while ((begin < end) && trimChar(data.charAt(begin))) {
-            begin++;
-        }
-
-        aSpan[0] = begin;
-        aSpan[1] = end;
-    }
-
-    public static boolean isEmpty(int aBegin, int aEnd)
-    {
-        return aBegin >= aEnd;
-    }
-
-    public static boolean trimChar(final char aChar)
-    {
-        switch (aChar) {
-        case '\n':
-            return true; // Line break
-        case '\r':
-            return true; // Carriage return
-        case '\t':
-            return true; // Tab
-        case '\u200E':
-            return true; // LEFT-TO-RIGHT MARK
-        case '\u200F':
-            return true; // RIGHT-TO-LEFT MARK
-        case '\u2028':
-            return true; // LINE SEPARATOR
-        case '\u2029':
-            return true; // PARAGRAPH SEPARATOR
-        default:
-            return Character.isWhitespace(aChar);
         }
     }
 
