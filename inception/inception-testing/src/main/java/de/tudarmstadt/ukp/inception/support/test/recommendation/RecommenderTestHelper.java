@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -103,4 +104,13 @@ public class RecommenderTestHelper
                 .collect(Collectors.toList());
     }
 
+    public static List<FeatureStructure> getPredictionFSes(CAS aCas, String aTypeName)
+        throws Exception
+    {
+        Type type = CasUtil.getType(aCas, aTypeName);
+        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+
+        return aCas.select(type).filter(fs -> fs.getBooleanValue(feature))
+                .collect(Collectors.toList());
+    }
 }

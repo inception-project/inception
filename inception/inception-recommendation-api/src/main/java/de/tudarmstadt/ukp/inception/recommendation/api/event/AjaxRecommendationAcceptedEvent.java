@@ -19,25 +19,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.recommendation.api.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
-public class AjaxRecommendationRejectedEvent
+public class AjaxRecommendationAcceptedEvent
 {
     protected AjaxRequestTarget target;
     private AnnotatorState annotatorState;
     private VID vid;
 
-    public AjaxRecommendationRejectedEvent(AjaxRequestTarget aTarget,
+    public AjaxRecommendationAcceptedEvent(AjaxRequestTarget aTarget,
             AnnotatorState aAnnotatorState, VID aVid)
     {
-        this.target = aTarget;
-        this.annotatorState = aAnnotatorState;
-        this.vid = aVid;
+        target = aTarget;
+        annotatorState = aAnnotatorState;
+        vid = aVid;
     }
 
     public AjaxRequestTarget getTarget()
@@ -45,13 +49,28 @@ public class AjaxRecommendationRejectedEvent
         return target;
     }
 
-    public AnnotatorState getAnnotatorState()
+    public SourceDocument getDocument()
     {
-        return annotatorState;
+        return annotatorState.getDocument();
     }
 
-    public VID getVid()
+    public AnnotationLayer getLayer()
+    {
+        return annotatorState.getSelectedAnnotationLayer();
+    }
+
+    public VID getSuggestionVid()
     {
         return vid;
+    }
+
+    public User getDataOwner()
+    {
+        return annotatorState.getUser();
+    }
+
+    public Project getProject()
+    {
+        return getDocument().getProject();
     }
 }

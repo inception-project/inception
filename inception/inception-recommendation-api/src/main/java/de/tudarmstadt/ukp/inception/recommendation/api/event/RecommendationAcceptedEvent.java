@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.recommendation.api.event;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -31,12 +31,12 @@ public class RecommendationAcceptedEvent
 
     private final SourceDocument document;
     private final String user;
-    private final AnnotationFS fs;
+    private final AnnotationBaseFS fs;
     private final AnnotationFeature feature;
     private final Object recommendedValue;
 
     public RecommendationAcceptedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFS aFS, AnnotationFeature aFeature, Object aRecommendedValue)
+            AnnotationBaseFS aFS, AnnotationFeature aFeature, Object aRecommendedValue)
     {
         super(aSource);
 
@@ -57,7 +57,7 @@ public class RecommendationAcceptedEvent
         return user;
     }
 
-    public AnnotationFS getFS()
+    public AnnotationBaseFS getFS()
     {
         return fs;
     }

@@ -50,12 +50,12 @@ public class ExternalRecommenderTraits
     {
         trainable = aTrainable;
     }
-    
+
     public void setVerifyCertificates(boolean aVerifyCertificates)
     {
         verifyCertificates = aVerifyCertificates;
     }
-    
+
     public boolean isVerifyCertificates()
     {
         return verifyCertificates;

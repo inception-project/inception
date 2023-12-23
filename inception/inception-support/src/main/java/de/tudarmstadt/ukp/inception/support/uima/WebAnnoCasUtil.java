@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
+package de.tudarmstadt.ukp.inception.support.uima;
 
 import static java.io.ObjectInputFilter.Config.createFilter;
 import static java.lang.String.join;
@@ -66,7 +66,6 @@ import org.apache.uima.util.CasCreationUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to

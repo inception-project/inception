@@ -314,7 +314,7 @@ public class TrainingTask
             return false;
         }
 
-        return CasUtil.iterator(aCas, type).hasNext();
+        return !aCas.select(type).isEmpty();
     }
 
     private void logUnsupportedRecommenderType(User user, EvaluatedRecommender evaluatedRecommender)

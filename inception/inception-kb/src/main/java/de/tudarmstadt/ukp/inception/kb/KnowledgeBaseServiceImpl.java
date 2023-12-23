@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,7 @@ import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
+import org.eclipse.rdf4j.repository.sparql.SPARQLConnection;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -322,7 +324,7 @@ public class KnowledgeBaseServiceImpl
 
         // We want to have a separate Lucene index for every local repo, so we need to hack the
         // index dir in here because this is the place where we finally know the repo ID.
-        syncIndexParameters(aKB, aCfg);
+        setLuceneIndexConfigurtionParameters(aKB, aCfg);
 
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, aCfg));
         entityManager.persist(aKB);
@@ -406,12 +408,17 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
-    public void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
+    public void updateKnowledgeBase(KnowledgeBase aKB, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException
     {
-        assertRegistration(kb);
-        repoManager.addRepositoryConfig(new RepositoryConfig(kb.getRepositoryId(), cfg));
-        updateKnowledgeBase(kb);
+        assertRegistration(aKB);
+        repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), cfg));
+
+        // Drop cached results from the KB being updated
+        queryCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.kb.getRepositoryId(), aKB.getRepositoryId()));
+
+        updateKnowledgeBase(aKB);
     }
 
     @Transactional
@@ -516,7 +523,9 @@ public class KnowledgeBaseServiceImpl
             {
                 skipCertificateChecks(kb.isSkipSslValidation());
 
-                syncIndexParameters(kb, getDelegate());
+                syncLuceneQueryLiveParameters(kb, getDelegate());
+
+                syncSparqlUrlLiveParameters(kb, getDelegate());
             }
 
             @Override
@@ -1392,11 +1401,11 @@ public class KnowledgeBaseServiceImpl
          */
 
         var config = getNativeConfig();
-        syncIndexParameters(aKB, config);
+        setLuceneIndexConfigurtionParameters(aKB, config);
         repoManager.addRepositoryConfig(new RepositoryConfig(aKB.getRepositoryId(), config));
     }
 
-    private void syncIndexParameters(KnowledgeBase aKB, RepositoryImplConfig aCfg)
+    private void setLuceneIndexConfigurtionParameters(KnowledgeBase aKB, RepositoryImplConfig aCfg)
     {
         assertRegistration(aKB);
 
@@ -1420,7 +1429,7 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
-    private void syncIndexParameters(KnowledgeBase kb, RepositoryConnection aConn)
+    private void syncLuceneQueryLiveParameters(KnowledgeBase kb, RepositoryConnection aConn)
     {
         try {
             if (aConn instanceof SailRepositoryConnection sailRepo) {
@@ -1436,6 +1445,35 @@ public class KnowledgeBaseServiceImpl
         catch (Exception e) {
             throw new RuntimeException("Unable to sync query parameters into live index - "
                     + "maybe the RDF4J Lucene index implementation has changed.", e);
+        }
+    }
+
+    private void syncSparqlUrlLiveParameters(KnowledgeBase kb,
+            RepositoryConnection aRepositoryConnection)
+    {
+        try {
+            if (aRepositoryConnection instanceof SPARQLConnection sparqlConnection) {
+                var sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(kb);
+                var repository = sparqlConnection.getRepository();
+
+                var queryEndpointUrl = sparqlRepoConfig.getQueryEndpointUrl();
+                var updateEndpointUrl = sparqlRepoConfig.getUpdateEndpointUrl();
+                if (updateEndpointUrl == null) {
+                    updateEndpointUrl = queryEndpointUrl;
+                }
+
+                writeField(repository, "queryEndpointUrl", queryEndpointUrl, true);
+                writeField(repository, "updateEndpointUrl", updateEndpointUrl, true);
+
+                var session = readField(sparqlConnection, "client", true);
+                writeField(session, "queryURL", queryEndpointUrl, true);
+                writeField(session, "updateURL", updateEndpointUrl, true);
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to sync URL into live SPARQL connection - "
+                    + "maybe the SPARQLConnection or SPARQLProtocolSession implementation has changed.",
+                    e);
         }
     }
 

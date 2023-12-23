@@ -196,11 +196,17 @@ public class WebSocketIntegrationTest
 
         session = stompClient.connectAsync(websocketUrl, sessionHandler).get(5, SECONDS);
         latch.await(10, SECONDS);
-        session.disconnect();
 
         assertThat(receivedMessages.size()).isEqualTo(1);
         LoggedEventMessage msg1 = receivedMessages.get(0);
         assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
+
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
     }
 
     private final class SessionHandler

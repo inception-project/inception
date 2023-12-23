@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOCUMENT_ANNOTATION;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +29,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class WebAnnoCasUtilTest
 {

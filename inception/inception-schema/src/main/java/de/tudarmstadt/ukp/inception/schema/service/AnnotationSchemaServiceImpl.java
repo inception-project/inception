@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.schema.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
@@ -28,6 +25,9 @@ import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Directi
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isNativeUimaType;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;

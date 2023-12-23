@@ -28,16 +28,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
@@ -53,8 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -85,8 +80,8 @@ public class OpenNlpDoccatRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadArxivData();
+        var sut = new OpenNlpDoccatRecommender(recommender, traits);
+        var casList = loadArxivData();
 
         sut.train(context, casList);
 
@@ -97,11 +92,11 @@ public class OpenNlpDoccatRecommenderTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadArxivData();
+        var sut = new OpenNlpDoccatRecommender(recommender, traits);
+        var casList = loadArxivData();
 
-        CAS cas = casList.get(0);
-        try (CasStorageSession session = CasStorageSession.open()) {
+        var cas = casList.get(0);
+        try (var session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         }
@@ -110,7 +105,7 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
@@ -118,16 +113,16 @@ public class OpenNlpDoccatRecommenderTest
     @Test
     public void thatEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadArxivData();
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new OpenNlpDoccatRecommender(recommender, traits);
+        var casList = loadArxivData();
 
-        EvaluationResult result = sut.evaluate(casList, splitStrategy);
+        var result = sut.evaluate(casList, splitStrategy);
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        var fscore = result.computeF1Score();
+        var accuracy = result.computeAccuracyScore();
+        var precision = result.computePrecisionScore();
+        var recall = result.computeRecallScore();
 
         System.out.printf("F1-Score: %f%n", fscore);
         System.out.printf("Accuracy: %f%n", accuracy);
@@ -143,15 +138,15 @@ public class OpenNlpDoccatRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
-        OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadArxivData();
+        var splitStrategy = new IncrementalSplitter(0.8, 250, 10);
+        var sut = new OpenNlpDoccatRecommender(recommender, traits);
+        var casList = loadArxivData();
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
 
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
@@ -163,22 +158,24 @@ public class OpenNlpDoccatRecommenderTest
 
     private List<CAS> loadArxivData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("sentence-classification-en");
+        var ds = loader.load("sentence-classification-en");
         return loadData(ds, Arrays.stream(ds.getDataFiles())
                 .filter(file -> file.getName().contains("arxiv")).toArray(File[]::new));
     }
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Reader.class, Reader.PARAM_PATTERNS, files,
+        var reader = createReader(Reader.class, //
+                Reader.PARAM_PATTERNS, files, //
                 Reader.PARAM_LANGUAGE, ds.getLanguage());
 
-        AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class,
+        var segmenter = createEngine( //
+                BreakIteratorSegmenter.class, //
                 BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, false);
 
-        List<CAS> casList = new ArrayList<>();
+        var casList = new ArrayList<CAS>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             segmenter.process(cas);
             casList.add(cas.getCas());
@@ -188,13 +185,13 @@ public class OpenNlpDoccatRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
 
@@ -207,23 +204,23 @@ public class OpenNlpDoccatRecommenderTest
         @Override
         public void getNext(JCas aJCas) throws IOException, CollectionException
         {
-            Resource res = nextFile();
+            var res = nextFile();
             initCas(aJCas, res);
 
-            StringBuilder text = new StringBuilder();
+            var text = new StringBuilder();
 
-            try (InputStream is = new BufferedInputStream(
+            try (var is = new BufferedInputStream(
                     CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
 
                 try (var i = lineIterator(is, "UTF-8")) {
                     while (i.hasNext()) {
-                        String line = i.next();
+                        var line = i.next();
 
                         if (line.startsWith("#")) {
                             continue;
                         }
 
-                        String[] fields = line.split("\\s", 2);
+                        var fields = line.split("\\s", 2);
 
                         if (text.length() > 0) {
                             text.append("\n");
@@ -232,7 +229,7 @@ public class OpenNlpDoccatRecommenderTest
                         int sentenceBegin = text.length();
                         text.append(fields[1]);
 
-                        NamedEntity ne = new NamedEntity(aJCas, sentenceBegin, text.length());
+                        var ne = new NamedEntity(aJCas, sentenceBegin, text.length());
                         ne.setValue(fields[0]);
                         ne.addToIndexes();
 

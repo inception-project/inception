@@ -20,19 +20,17 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeRelationSuggestionGroup;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,9 +43,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class RelationSuggestionVisibilityCalculationTest
@@ -55,47 +53,42 @@ public class RelationSuggestionVisibilityCalculationTest
     private static final String TEST_USER = "Testuser";
 
     private @Mock AnnotationSchemaService annoService;
+    private @Mock LearningRecordService learningRecordService;
 
     private Project project;
     private SourceDocument doc;
     private AnnotationLayer layer;
     private AnnotationFeature feature;
 
-    private RecommendationServiceImpl sut;
+    private RelationSuggestionSupport sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        layer = new AnnotationLayer();
-        layer.setName(Dependency._TypeName);
-        layer.setId(42l);
+        layer = AnnotationLayer.builder().withId(42l).forJCasClass(Dependency.class).build();
 
         feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
-                .withName(Dependency._FeatName_DependencyType).build();
+                .withName(Dependency._FeatName_DependencyType).withType(TYPE_NAME_STRING).build();
 
-        project = new Project();
-        project.setName("Test Project");
+        project = Project.builder().withName("Test Project").build();
 
         doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
 
-        List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
-        featureList
-                .add(new AnnotationFeature(Dependency._FeatName_DependencyType, TYPE_NAME_STRING));
-        when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
+        when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
 
-        sut = spy(new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
-                null, (EntityManager) null, null));
+        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService);
     }
 
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
@@ -112,12 +105,13 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3, 13, 20 } });
-        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
@@ -129,7 +123,7 @@ public class RelationSuggestionVisibilityCalculationTest
 
         cas.select(Dependency.class).forEach(Dependency::removeFromIndexes);
 
-        sut.calculateRelationSuggestionVisibility(TEST_USER, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
@@ -143,18 +137,17 @@ public class RelationSuggestionVisibilityCalculationTest
 
     private CAS getTestCas() throws Exception
     {
-        String documentText = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen"
-                + " Testtexten.";
-        JCas jcas = JCasFactory.createText(documentText, "de");
+        var jcas = JCasFactory.createText("Dies ist ein Testtext, ach ist der schoen, "
+                + "der schoenste von allen Testtexten.", "de");
 
-        Token governor = new Token(jcas, 0, 3);
+        var governor = new Token(jcas, 0, 3);
         governor.addToIndexes();
 
         // the annotation's feature value is initialized as null
-        Token dependent = new Token(jcas, 13, 20);
+        var dependent = new Token(jcas, 13, 20);
         dependent.addToIndexes();
 
-        Dependency dep = new Dependency(jcas, dependent.getBegin(), dependent.getEnd());
+        var dep = new Dependency(jcas, dependent.getBegin(), dependent.getEnd());
         dep.setDependent(dependent);
         dep.setGovernor(governor);
         dep.setDependencyType("DEP");

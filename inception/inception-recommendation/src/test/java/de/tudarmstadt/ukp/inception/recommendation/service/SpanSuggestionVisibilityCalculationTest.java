@@ -17,16 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeSpanSuggestionGroup;
+import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeSuggestion;
+import static de.tudarmstadt.ukp.inception.recommendation.service.SpanSuggestionSupport.hideSuggestionsRejectedOrSkipped;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -52,7 +56,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import jakarta.persistence.EntityManager;
 
 @ExtendWith(MockitoExtension.class)
 public class SpanSuggestionVisibilityCalculationTest
@@ -60,46 +63,50 @@ public class SpanSuggestionVisibilityCalculationTest
     private static final String TEST_USER = "Testuser";
 
     private @Mock AnnotationSchemaService annoService;
+    private @Mock LearningRecordService learningRecordService;
 
     private Project project;
     private SourceDocument doc;
+    private SourceDocument doc2;
     private AnnotationLayer layer;
+    private AnnotationLayer layer2;
     private AnnotationFeature feature;
+    private AnnotationFeature feature2;
 
-    private RecommendationServiceImpl sut;
+    private SpanSuggestionSupport sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        layer = new AnnotationLayer();
-        layer.setName(NamedEntity._TypeName);
-        layer.setId(42l);
+        layer = AnnotationLayer.builder().withId(42l).forJCasClass(NamedEntity.class).build();
+        layer2 = AnnotationLayer.builder().withId(43l).withName("custom.Layer2").build();
 
         feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
-                .withName(NamedEntity._FeatName_value).build();
+                .withName(NamedEntity._FeatName_value).withType(TYPE_NAME_STRING).build();
+        feature2 = AnnotationFeature.builder().withId(3l).withLayer(layer2).withName("value")
+                .withType(TYPE_NAME_STRING).build();
 
-        project = new Project();
-        project.setName("Test Project");
+        project = Project.builder().withName("Test Project").build();
 
         doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
+        doc2 = SourceDocument.builder().withId(13l).withName("doc2").withProject(project).build();
 
-        List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
-        featureList.add(new AnnotationFeature(NamedEntity._FeatName_value, TYPE_NAME_STRING));
-        when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
+        lenient().when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
+        lenient().when(annoService.listSupportedFeatures(layer2)).thenReturn(asList(feature2));
 
-        sut = spy(new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
-                (EntityManager) null));
+        sut = new SpanSuggestionSupport(null, learningRecordService, null, annoService);
     }
 
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeSpanSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         var invisibleSuggestions = getInvisibleSuggestions(suggestions);
@@ -121,11 +128,12 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void testCalculateVisibilityNoRecordsNotHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeSpanSuggestionGroup(doc, feature, new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         var invisibleSuggestions = getInvisibleSuggestions(suggestions);
@@ -148,11 +156,12 @@ public class SpanSuggestionVisibilityCalculationTest
         rejectedRecord.setOffsetBegin(5);
         rejectedRecord.setOffsetEnd(10);
         records.add(rejectedRecord);
-        doReturn(records).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(records).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
 
         var cas = getTestCas();
         var suggestions = makeSpanSuggestionGroup(doc, feature, new int[][] { { 1, 5, 10 } });
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         var invisibleSuggestions = getInvisibleSuggestions(suggestions);
@@ -170,12 +179,13 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         var cas = getTestCas();
         var suggestions = makeSpanSuggestionGroup(doc, feature,
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         assertThat(getVisibleSuggestions(suggestions)) //
@@ -187,7 +197,7 @@ public class SpanSuggestionVisibilityCalculationTest
 
         cas.select(NamedEntity.class).forEach(NamedEntity::removeFromIndexes);
 
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
                 25);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
@@ -202,7 +212,8 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void thatOverlappingSuggestionsAreNotHiddenWhenStackingIsEnabled() throws Exception
     {
-        doReturn(new ArrayList<>()).when(sut).listLearningRecords(TEST_USER, TEST_USER, layer);
+        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
 
         layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
 
@@ -226,7 +237,7 @@ public class SpanSuggestionVisibilityCalculationTest
                 .build();
         var suggestions = new SuggestionDocumentGroup<>(asList(suggestion1, suggestion2));
 
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
                 suggestions, 0, 2);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
@@ -246,7 +257,7 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isEmpty();
 
         ne1.setValue("blah");
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
                 suggestions, 0, 2);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
@@ -256,12 +267,98 @@ public class SpanSuggestionVisibilityCalculationTest
         var ne2 = new NamedEntity(cas, 1, 2);
         ne2.setValue("blah");
         ne2.addToIndexes();
-        sut.calculateSpanSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
                 suggestions, 0, 2);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("Second suggestion is noew also no longer visible because annotation with the same label exists") //
                 .containsExactly(suggestion1, suggestion2);
+    }
+
+    @Test
+    void thatRejectedSuggestionIsHidden()
+    {
+        var records = asList(LearningRecord.builder() //
+                .withSourceDocument(doc) //
+                .withLayer(layer) //
+                .withAnnotationFeature(feature) //
+                .withOffsetBegin(0) //
+                .withOffsetEnd(10) //
+                .withAnnotation("x") //
+                .withUserAction(REJECTED) //
+                .build());
+
+        var docSuggestion = makeSuggestion(0, 10, "x", doc, layer, feature);
+        assertThat(docSuggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(docSuggestion, records);
+        assertThat(docSuggestion.isVisible()) //
+                .as("Suggestion in same document/layer/feature should be hidden") //
+                .isFalse();
+        assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("rejected");
+
+        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer, feature);
+        assertThat(doc2Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
+        assertThat(doc2Suggestion.isVisible()) //
+                .as("Suggestion in other document should not be hidden") //
+                .isTrue();
+
+        var doc3Suggestion = makeSuggestion(0, 10, "x", doc, layer2, feature);
+        assertThat(doc3Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
+        assertThat(doc3Suggestion.isVisible()) //
+                .as("Suggestion in other layer should not be hidden") //
+                .isTrue();
+
+        var doc4Suggestion = makeSuggestion(0, 10, "x", doc, layer, feature2);
+        assertThat(doc4Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
+        assertThat(doc4Suggestion.isVisible()) //
+                .as("Suggestion in other feature should not be hidden") //
+                .isTrue();
+    }
+
+    @Test
+    void thatSkippedSuggestionIsHidden()
+    {
+        var records = asList(LearningRecord.builder() //
+                .withSourceDocument(doc) //
+                .withLayer(layer) //
+                .withAnnotationFeature(feature) //
+                .withOffsetBegin(0) //
+                .withOffsetEnd(10) //
+                .withAnnotation("x") //
+                .withUserAction(SKIPPED) //
+                .build());
+
+        var docSuggestion = makeSuggestion(0, 10, "x", doc, layer, feature);
+        assertThat(docSuggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(docSuggestion, records);
+        assertThat(docSuggestion.isVisible()) //
+                .as("Suggestion in same document/layer/feature should be hidden") //
+                .isFalse();
+        assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("skipped");
+
+        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer, feature);
+        assertThat(doc2Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
+        assertThat(doc2Suggestion.isVisible()) //
+                .as("Suggestion in other document should not be hidden") //
+                .isTrue();
+
+        var doc3Suggestion = makeSuggestion(0, 10, "x", doc, layer2, feature);
+        assertThat(doc3Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
+        assertThat(doc3Suggestion.isVisible()) //
+                .as("Suggestion in other layer should not be hidden") //
+                .isTrue();
+
+        var doc4Suggestion = makeSuggestion(0, 10, "x", doc, layer, feature2);
+        assertThat(doc4Suggestion.isVisible()).isTrue();
+        hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
+        assertThat(doc4Suggestion.isVisible()) //
+                .as("Suggestion in other feature should not be hidden") //
+                .isTrue();
     }
 
     private CAS getTestCas() throws Exception

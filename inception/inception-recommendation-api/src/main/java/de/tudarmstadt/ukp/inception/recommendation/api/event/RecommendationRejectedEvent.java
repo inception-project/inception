@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.event;
+package de.tudarmstadt.ukp.inception.recommendation.api.event;
 
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.event.TransientAnnotationStateChangedEvent;
 
 public class RecommendationRejectedEvent
     extends ApplicationEvent
@@ -36,6 +35,12 @@ public class RecommendationRejectedEvent
     private final String text;
     private final AnnotationFeature feature;
     private final Object recommendedValue;
+
+    public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationFeature aFeature, Object aRecommendedValue)
+    {
+        this(aSource, aDocument, aUser, -1, -1, null, aFeature, aRecommendedValue);
+    }
 
     public RecommendationRejectedEvent(Object aSource, SourceDocument aDocument, String aUser,
             int aBegin, int aEnd, String aText, AnnotationFeature aFeature,

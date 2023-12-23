@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
+package de.tudarmstadt.ukp.inception.support.uima;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;

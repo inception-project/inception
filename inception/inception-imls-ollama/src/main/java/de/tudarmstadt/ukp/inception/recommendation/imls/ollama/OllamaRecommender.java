@@ -92,7 +92,8 @@ public class OllamaRecommender
         throws RecommendationException
     {
         var responseExtractor = getResponseExtractor();
-        List<MentionsSample> examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
+        List<MentionsSample> examples = responseExtractor.generate(this, aCas,
+                MAX_FEW_SHOT_EXAMPLES);
 
         getPromptContextGenerator().generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
             try {

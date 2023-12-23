@@ -18,13 +18,18 @@
 package de.tudarmstadt.ukp.inception.log;
 
 import static java.lang.String.join;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -38,8 +43,11 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent_;
+import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 
 /**
  * <p>
@@ -212,4 +220,41 @@ public class EventRepositoryImpl
             Streams.failableStream(eventStream).forEach(aConsumer);
         }
     }
+
+    @Override
+    public List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject,
+            Instant aFrom, Instant aTo)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Tuple.class);
+        var root = query.from(LoggedEvent.class);
+
+        query //
+                .multiselect( //
+                        root.get(LoggedEvent_.created), //
+                        root.get(LoggedEvent_.document), //
+                        root.get(LoggedEvent_.event))
+                .where( //
+                        cb.equal(root.get(LoggedEvent_.user), aUsername), //
+                        cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
+                                Date.from(aTo)));
+
+        var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();
+
+        entityManager.createQuery(query).getResultStream().forEach(tuple -> {
+            var truncDate = tuple.get(0, Date.class).toInstant().truncatedTo(DAYS);
+            var document = tuple.get(1, Long.class);
+            var event = tuple.get(2, String.class);
+            var key = new SummarizedLoggedEventKey(event, truncDate, document);
+            aggregator.computeIfAbsent(key, $ -> new AtomicLong()).addAndGet(1);
+        });
+
+        return aggregator.entrySet().stream() //
+                .map(e -> new SummarizedLoggedEvent(e.getKey().event(), e.getKey().document(),
+                        e.getKey().date(), e.getValue().get())) //
+                .toList();
+    }
+
+    private static record SummarizedLoggedEventKey(String event, Instant date, long document) {}
 }

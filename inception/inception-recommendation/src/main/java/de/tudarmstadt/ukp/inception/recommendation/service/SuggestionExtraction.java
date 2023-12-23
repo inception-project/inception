@@ -55,12 +55,14 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class SuggestionExtraction
 {
@@ -68,7 +70,7 @@ public class SuggestionExtraction
 
     private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
 
-    private static final class ExtractionContext
+    static final class ExtractionContext
     {
         private final int generation;
 
@@ -150,6 +152,29 @@ public class SuggestionExtraction
         }
 
         return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
+    }
+
+    static void extractDocumentMetadataSuggestion(ExtractionContext ctx, TOP predictedFS)
+    {
+        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.modeFeature);
+        var labels = getPredictedLabels(predictedFS, ctx.labelFeature, ctx.isMultiLabels);
+        var score = predictedFS.getDoubleValue(ctx.scoreFeature);
+        var scoreExplanation = predictedFS.getStringValue(ctx.scoreExplanationFeature);
+
+        for (var label : labels) {
+            var suggestion = MetadataSuggestion.builder() //
+                    .withId(MetadataSuggestion.NEW_ID) //
+                    .withGeneration(ctx.generation) //
+                    .withRecommender(ctx.recommender) //
+                    .withDocumentName(ctx.document.getName()) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.result.add(suggestion);
+        }
     }
 
     static void extractRelationSuggestion(ExtractionContext ctx, TOP predictedFS)
@@ -244,6 +269,10 @@ public class SuggestionExtraction
             }
             case RelationLayerSupport.TYPE: {
                 extractRelationSuggestion(ctx, predictedFS);
+                break;
+            }
+            case DocumentMetadataLayerSupport.TYPE: {
+                extractDocumentMetadataSuggestion(ctx, predictedFS);
                 break;
             }
             default:

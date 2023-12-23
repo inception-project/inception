@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -25,7 +24,6 @@ import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -76,21 +74,17 @@ public class RecommendationSpanRenderer
             SpanAdapter aTypeAdapter)
     {
         var cas = aRequest.getCas();
-
         var layer = aTypeAdapter.getLayer();
-
-        // TODO #176 use the document Id once it it available in the CAS
-        var sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
-                .orElse(getDocumentTitle(cas));
-        var groups = aPredictions.getGroupedPredictions(SpanSuggestion.class, sourceDocumentName,
-                layer, aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
+        var groups = aPredictions.getGroupedPredictions(SpanSuggestion.class,
+                aRequest.getSourceDocument().getName(), layer, aRequest.getWindowBeginOffset(),
+                aRequest.getWindowEndOffset());
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
             return;
         }
 
-        recommendationService.calculateSpanSuggestionVisibility(
+        recommendationService.calculateSuggestionVisibility(
                 aRequest.getSessionOwner().getUsername(), aRequest.getSourceDocument(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());

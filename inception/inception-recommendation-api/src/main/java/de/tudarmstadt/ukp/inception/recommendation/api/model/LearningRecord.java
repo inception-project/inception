@@ -93,8 +93,7 @@ public class LearningRecord
     @Type(LearningRecordChangeLocationType.class)
     private LearningRecordChangeLocation changeLocation;
 
-    @Type(SuggestionLayerFamilyType.class)
-    private SuggestionLayerFamily suggestionType;
+    private String suggestionType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
@@ -239,12 +238,12 @@ public class LearningRecord
         return tokenText;
     }
 
-    public SuggestionLayerFamily getSuggestionType()
+    public String getSuggestionType()
     {
         return suggestionType;
     }
 
-    public void setSuggestionType(SuggestionLayerFamily aSuggestionType)
+    public void setSuggestionType(String aSuggestionType)
     {
         suggestionType = aSuggestionType;
     }
@@ -344,13 +343,11 @@ public class LearningRecord
             return false;
         }
 
-        if (SuggestionLayerFamily.RELATION.equals(suggestionType)) {
-            if (offsetBegin2 != that.offsetBegin2) {
-                return false;
-            }
-            if (offsetEnd2 != that.offsetEnd2) {
-                return false;
-            }
+        if (offsetBegin2 != that.offsetBegin2) {
+            return false;
+        }
+        if (offsetEnd2 != that.offsetEnd2) {
+            return false;
         }
 
         if (!Objects.equals(sourceDocument, that.sourceDocument)) {
@@ -374,7 +371,7 @@ public class LearningRecord
         int result = sourceDocument != null ? sourceDocument.hashCode() : 0;
         result = 31 * result + (layer != null ? layer.hashCode() : 0);
         result = 31 * result + (annotationFeature != null ? annotationFeature.hashCode() : 0);
-        result = 31 * result + (suggestionType != null ? suggestionType.getId().hashCode() : 0);
+        result = 31 * result + (suggestionType != null ? suggestionType.hashCode() : 0);
         result = 31 * result + offsetBegin;
         result = 31 * result + offsetEnd;
         result = 31 * result + offsetBegin2;
@@ -404,7 +401,7 @@ public class LearningRecord
         private LearningRecordUserAction userAction;
         private String user;
         private LearningRecordChangeLocation changeLocation;
-        private SuggestionLayerFamily suggestionType;
+        private String suggestionType;
         private Date actionDate = new Date();
 
         private Builder()
@@ -490,7 +487,7 @@ public class LearningRecord
             return this;
         }
 
-        public Builder withSuggestionType(SuggestionLayerFamily aSuggestionType)
+        public Builder withSuggestionType(String aSuggestionType)
         {
             suggestionType = aSuggestionType;
             return this;

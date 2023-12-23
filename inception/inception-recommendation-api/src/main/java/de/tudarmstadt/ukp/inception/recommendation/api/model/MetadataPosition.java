@@ -17,16 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
+import java.io.Serializable;
 
-public class SuggestionLayerFamilyType
-    extends PersistentEnumUserType<SuggestionLayerFamily>
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+public class MetadataPosition
+    implements Position, Serializable
 {
-    private static final long serialVersionUID = 9106353026811614399L;
+    private static final long serialVersionUID = 6214696010810100968L;
+
+    public static final MetadataPosition INSTANCE = new MetadataPosition();
 
     @Override
-    public Class<SuggestionLayerFamily> returnedClass()
+    public boolean equals(final Object other)
     {
-        return de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionLayerFamily.class;
+        if (!(other instanceof MetadataPosition)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().toHashCode();
     }
 }

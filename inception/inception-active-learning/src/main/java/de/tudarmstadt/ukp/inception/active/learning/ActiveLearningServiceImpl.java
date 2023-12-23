@@ -175,7 +175,8 @@ public class ActiveLearningServiceImpl
         var pref = recommendationService.getPreferences(aDataOwner,
                 alState.getLayer().getProject());
         var nextSuggestion = alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
-        assert nextSuggestion.get().getFirst().isVisible() : "Generated suggestion must be visible";
+        assert !nextSuggestion.isPresent() || nextSuggestion.get().getFirst()
+                .isVisible() : "Generated suggestion must be visible";
         return nextSuggestion;
     }
 
@@ -198,8 +199,6 @@ public class ActiveLearningServiceImpl
         var sessionOwner = userService.getCurrentUsername();
         var dataOwner = aDataOwner.getUsername();
         var cas = documentService.readAnnotationCas(aDocument, dataOwner);
-        var document = documentService.getSourceDocument(feature.getProject(),
-                aSuggestion.getDocumentName());
 
         // Create AnnotationFeature and FeatureSupport
         var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();
@@ -213,11 +212,11 @@ public class ActiveLearningServiceImpl
         var action = aSuggestion.labelEquals(label) ? ACCEPTED : CORRECTED;
         if (action == CORRECTED) {
             recommendationService.correctSuggestion(sessionOwner, aDocument, dataOwner, cas,
-                    adapter, feature, aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+                    aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
-            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, adapter,
-                    feature, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+            recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas,
+                    suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
 
         // Save CAS after annotation has been created
@@ -231,8 +230,9 @@ public class ActiveLearningServiceImpl
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
                         suggestionWithUserSelectedLabel.getFeature());
-        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
-                suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
+
+        applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this,
+                aDocument, suggestionWithUserSelectedLabel, dataOwner, feature.getLayer(),
                 suggestionWithUserSelectedLabel.getFeature(), action, alternativeSuggestions));
     }
 
@@ -240,6 +240,7 @@ public class ActiveLearningServiceImpl
     @Transactional
     public void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)
+        throws AnnotationException
     {
         var document = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());
@@ -261,6 +262,7 @@ public class ActiveLearningServiceImpl
     @Transactional
     public void skipSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,
             SpanSuggestion aSuggestion)
+        throws AnnotationException
     {
         var document = documentService.getSourceDocument(aLayer.getProject(),
                 aSuggestion.getDocumentName());

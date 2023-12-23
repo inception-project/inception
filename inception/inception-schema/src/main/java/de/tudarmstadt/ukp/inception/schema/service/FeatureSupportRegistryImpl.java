@@ -89,7 +89,7 @@ public class FeatureSupportRegistryImpl
 
         // Figure out which feature support provides the given type.
         // If we can find a suitable feature support, then use it to resolve the type to a
-        // FeaatureType
+        // FeatureType
         FeatureType featureType = null;
         for (FeatureSupport<?> s : getExtensions()) {
             Optional<FeatureType> ft = s.getFeatureType(aFeature);

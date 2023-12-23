@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getSourceDocumentName;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -89,8 +89,8 @@ public class RecommendationRelationRenderer
             return;
         }
 
-        recommendationService.calculateRelationSuggestionVisibility(
-                aRequest.getSessionOwner().getUsername(), cas,
+        recommendationService.calculateSuggestionVisibility(
+                aRequest.getSessionOwner().getUsername(), aRequest.getSourceDocument(), cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groupedPredictions,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 

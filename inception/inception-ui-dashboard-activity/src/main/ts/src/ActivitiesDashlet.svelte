@@ -51,8 +51,7 @@
     }
 </script>
 
-<div class="card border-start-0 border-end-0 border-bottom-0 rounded-0 flex-content flex-v-container">
-    <div class="card-header rounded-0">Recent activity</div>
+<div class="card-body">
     {#if loading}
         <div class="mt-5 d-flex flex-column justify-content-center">
             <div class="d-flex flex-row justify-content-center">

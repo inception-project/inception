@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
 import java.util.Map;
 
-import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -27,7 +27,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityPanel;
 
 public class ActivitiesDashlet
     extends Panel
@@ -36,22 +39,35 @@ public class ActivitiesDashlet
 
     private @SpringBean ActivitiesDashletController controller;
 
-    public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
+    private IModel<Project> project;
+    private BootstrapModalDialog dialog;
+
+    public ActivitiesDashlet(String aId, IModel<Project> aProject)
     {
         super(aId);
 
-        long projectId = aCurrentProject.map(Project::getId).orElse(-1l).getObject();
-        setDefaultModel(Model.ofMap(Map.of("dataUrl", controller.listActivitiesUrl(projectId))));
+        project = aProject;
+
+        long projectId = aProject.map(Project::getId).orElse(-1l).getObject();
+        setDefaultModel(Model.ofMap(Map.of("dataUrl", controller.getListActivitiesUrl(projectId))));
 
         setOutputMarkupPlaceholderTag(true);
 
         add(new WebMarkupContainer("content").setOutputMarkupId(true)
                 .add(new SvelteBehavior(this)));
+
+        dialog = new BootstrapModalDialog("dialog");
+        dialog.closeOnClick();
+        dialog.closeOnEscape();
+        add(dialog);
+
+        add(new LambdaAjaxLink("showActivity", this::actionShowActivity));
     }
 
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
+    public void actionShowActivity(AjaxRequestTarget aTarget)
     {
-        super.renderHead(aResponse);
+        var dialogContent = new ActivityPanel(BootstrapModalDialog.CONTENT_ID, project);
+
+        dialog.open(dialogContent, aTarget);
     }
 }

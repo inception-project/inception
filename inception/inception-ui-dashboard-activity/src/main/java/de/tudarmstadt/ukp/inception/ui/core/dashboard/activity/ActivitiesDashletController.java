@@ -20,13 +20,27 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
 
 import java.util.List;
+import java.util.Optional;
+
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOverview;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivitySummary;
 
 public interface ActivitiesDashletController
 {
     String BASE_URL = BASE_API_URL + "/activity";
-    String LIST_PATH = "/project/{projectId}/list";
+    String RECENT_ACTIVITY_PATH = "/project/{projectId}/recent";
+    String ACTIVITY_OVERVIEW_PATH = "/project/{projectId}/overview";
+    String ACTIVITY_PATH = "/project/{projectId}";
 
-    String listActivitiesUrl(long aProjectId);
+    String getListActivitiesUrl(long aProjectId);
 
     List<Activity> listActivities(long aProjectId);
+
+    String getActivityOverviewUrl(long aProjectId);
+
+    ActivityOverview activityOverview(long aProjectId, Optional<Integer> aYear);
+
+    ActivitySummary activitySummary(long aProjectId, Optional<String> aFrom, Optional<String> aTo);
+
+    String getActivitySummaryUrl(long aProjectId);
 }

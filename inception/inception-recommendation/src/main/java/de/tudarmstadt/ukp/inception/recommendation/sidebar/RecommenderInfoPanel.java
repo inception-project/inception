@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
@@ -49,12 +49,12 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Gro
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -314,13 +313,10 @@ public class RecommenderInfoPanel
 
             try {
                 // Upsert an annotation based on the suggestion
-                var layer = annotationService.getLayer(suggestion.getLayerId());
-                var feature = annotationService.getFeature(suggestion.getFeature(), layer);
-                var adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, adapter, feature,
-                        suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, suggestion,
+                        LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

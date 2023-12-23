@@ -189,16 +189,18 @@ class RecommendationEventWebsocketControllerImplTest
                 .build();
 
         var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
+
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -216,16 +218,18 @@ class RecommendationEventWebsocketControllerImplTest
                 .build();
 
         var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
+
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+
+        sessionHandler
+                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
+
         try {
             session.disconnect();
         }
         catch (Exception e) {
             // Ignore exceptions during disconnect
         }
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
     }
 
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
@@ -246,9 +250,15 @@ class RecommendationEventWebsocketControllerImplTest
 
         var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
         Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
-        session.disconnect();
 
         sessionHandler.assertSuccess();
+
+        try {
+            session.disconnect();
+        }
+        catch (Exception e) {
+            // Ignore exceptions during disconnect
+        }
     }
 
     private void sendTestMessage()

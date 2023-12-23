@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
@@ -84,5 +85,25 @@ public class Fixtures
         }
 
         return new SuggestionDocumentGroup<>(suggestions);
+    }
+
+    public static SpanSuggestion makeSuggestion(int aBegin, int aEnd, String aLabel,
+            SourceDocument aDoc, AnnotationLayer aLayer, AnnotationFeature aFeature)
+    {
+        return new SpanSuggestion(0, // aId,
+                0, // aRecommenderId,
+                "", // aRecommenderName
+                aLayer.getId(), // aLayerId,
+                aFeature.getName(), // aFeature,
+                aDoc.getName(), // aDocumentName
+                aBegin, // aBegin
+                aEnd, // aEnd
+                "", // aCoveredText,
+                aLabel, // aLabel
+                aLabel, // aUiLabel
+                0.0, // aScore
+                "", // aScoreExplanation,
+                NEVER // autoAccept
+        );
     }
 }

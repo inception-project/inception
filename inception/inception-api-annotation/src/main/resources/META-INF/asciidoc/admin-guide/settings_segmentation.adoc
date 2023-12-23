@@ -24,7 +24,7 @@ adding/removing/changing segmentation annotations (i.e. sentences or tokens).
 
 This section describes the global settings related to the support for editable segmentation annotations (i.e. sentences or tokens).
 
-.Knowledge base settings overview
+.Segmentation settings overview
 [cols="4*", options="header"]
 |===
 | Setting
@@ -33,8 +33,8 @@ This section describes the global settings related to the support for editable s
 | Example
 
 
-| ui.sentence-layer-editable=true
+| `ui.sentence-layer-editable`
 | Enable/disable editing sentences
-| false
-| true
+| `false`
+| `true`
 |===

@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PredictionsTest
@@ -63,8 +63,8 @@ class PredictionsTest
         layer = AnnotationLayer.builder().withId(1l).withName("Entity").build();
 
         cas = createText(contentOf(getClass().getResource("/text/lorem.txt"), UTF_8), "en");
-        DocumentImportExportServiceImpl.splitSentences(cas);
-        DocumentImportExportServiceImpl.tokenize(cas);
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
 
         sut = new Predictions(user, user.getUsername(), project);
     }

@@ -262,8 +262,8 @@ public class PolicyCollectionBuilder
     private void _attributePolicy(QName aElementName, QName aAttributeName, AttributePolicy aPolicy)
     {
         @SuppressWarnings("unchecked")
-        Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies.computeIfAbsent(aElementName,
-                k -> mapSupplier.get());
+        Map<QName, AttributePolicy> attributePolicies = elementAttributePolicies
+                .computeIfAbsent(aElementName, k -> mapSupplier.get());
         var attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
                 k -> AttributePolicy.UNDEFINED);
 

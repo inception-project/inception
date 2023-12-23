@@ -15,36 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum SuggestionLayerFamily
-    implements PersistentEnum
-{
-    SPAN("SPAN"), RELATION("RELATION");
-
-    private final String id;
-
-    SuggestionLayerFamily(String aId)
-    {
-        id = aId;
-    }
-
-    public String getName()
-    {
-        return getId();
-    }
-
-    @Override
-    public String getId()
-    {
-        return id;
-    }
-
-    @Override
-    public String toString()
-    {
-        return getId();
-    }
-}
+public record ActivitySummaryItem( //
+        @JsonProperty String event, //
+        @JsonProperty long count)
+{}

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
