@@ -315,7 +315,8 @@ public class RecommenderInfoPanel
                 // Upsert an annotation based on the suggestion
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, suggestion, LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, suggestion,
+                        LearningRecordChangeLocation.REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

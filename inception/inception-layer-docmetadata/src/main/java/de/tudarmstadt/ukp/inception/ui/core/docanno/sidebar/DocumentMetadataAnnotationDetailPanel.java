@@ -196,6 +196,9 @@ public class DocumentMetadataAnnotationDetailPanel
     {
         var vid = getModelObject();
         var proj = project.getObject();
+        if (proj == null || vid == null || vid.isNotSet() || vid.isSynthetic()) {
+            return Optional.empty();
+        }
 
         CAS cas;
         try {
@@ -223,7 +226,7 @@ public class DocumentMetadataAnnotationDetailPanel
         var vid = getModelObject();
         var proj = project.getObject();
 
-        if (proj == null || vid == null || vid.isNotSet()) {
+        if (proj == null || vid == null || vid.isNotSet() || vid.isSynthetic()) {
             return emptyList();
         }
 
