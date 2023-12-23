@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.recommendation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -248,7 +247,7 @@ public class RecommendationEditorExtension
         var adapter = (RelationAdapter) annotationService.getAdapter(layer);
 
         var relation = recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner,
-                aCas, aSuggestion, MAIN_EDITOR, ACCEPTED);
+                aCas, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 

@@ -24,23 +24,19 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -154,18 +150,40 @@ public interface RecommendationService
     void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext);
 
     /**
-     * @deprecated Obtain {@link LayerRecommendationSupport} for span layer and use that instead.
+     * Uses the given suggestion to create a new annotation or to update a feature in an existing
+     * annotation. However, the given suggestion is not the one actually produced by a recommender
+     * but a suggestion adjusted by the user. The original one is marked as rejected.
+     * 
+     * @param aSessionOwner
+     *            the session owner
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aCas
+     *            the CAS containing the annotations
+     * @param aOriginalSuggestion
+     *            the original suggestion by the recommender
+     * @param aCorrectedSuggestion
+     *            the corrected suggestion by the user
+     * @param aLocation
+     *            the location from where the change was triggered
+     * 
+     * @return the created/updated annotation.
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
-    @Deprecated
     AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
-            LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
+            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
+     * 
+     * @param aSessionOwner
+     *            the session owner
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aDataOwner
@@ -180,57 +198,51 @@ public interface RecommendationService
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
-     * @deprecated Obtain {@link LayerRecommendationSupport} for span layer and use that instead.
      */
-    @Deprecated
     AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+            CAS aCas, AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
-     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
-     * existing annotation.
+     * Mark the given suggestion as rejected.
+     * 
+     * @param aSessionOwner
+     *            the session owner
      * @param aDocument
      *            the source document to which the annotations belong
      * @param aDataOwner
      *            the annotator user to whom the annotations belong
-     * @param aCas
-     *            the CAS containing the annotations
      * @param aSuggestion
      *            the suggestion
      * @param aLocation
      *            the location from where the change was triggered
-     * @param aAction
-     *            TODO
      * 
-     * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
-     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
-     *             instead.
      */
-    @Deprecated
-    AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, RelationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
-        throws AnnotationException;
-
-    /**
-     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
-     *             instead.
-     */
-    @Deprecated
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
-     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
-     *             instead.
+     * Mark the given suggestion as skipped.
+     * 
+     * @param aSessionOwner
+     *            the session owner
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aSuggestion
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * 
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
      */
-    @Deprecated
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
@@ -273,24 +285,30 @@ public interface RecommendationService
             int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor);
 
     /**
-     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
-     *             instead.
+     * Determine the visibility of suggestions.
+     * 
+     * @param <T>
+     *            type of suggestions to inspect.
+     * @param aSessionOwner
+     *            session owner.
+     * @param aDocument
+     *            the document to which the suggestions belong.
+     * @param aCas
+     *            the CAS for the document.
+     * @param aDataOwner
+     *            the user to whom the CAS belongs.
+     * @param aLayer
+     *            the layer to which the suggestions belong.
+     * @param aRecommendations
+     *            the suggestions.
+     * @param aWindowBegin
+     *            the range of the document for which to update the suggestions.
+     * @param aWindowEnd
+     *            the range of the document for which to update the suggestions.
      */
-    @Deprecated
-    void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument, CAS aCas,
-            String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd);
-
-    /**
-     * @deprecated Obtain {@link LayerRecommendationSupport} for relation layer and use that
-     *             instead.
-     */
-    @Deprecated
-    public void calculateRelationSuggestionVisibility(String aSessionOwner,
-            SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd);
+    <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 
     void clearState(String aSessionOwner);
 

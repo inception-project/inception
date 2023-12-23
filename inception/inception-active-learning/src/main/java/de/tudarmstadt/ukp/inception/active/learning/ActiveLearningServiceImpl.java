@@ -211,7 +211,7 @@ public class ActiveLearningServiceImpl
         var action = aSuggestion.labelEquals(label) ? ACCEPTED : CORRECTED;
         if (action == CORRECTED) {
             recommendationService.correctSuggestion(sessionOwner, aDocument, dataOwner, cas,
-                    adapter, feature, aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+                    aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
             recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas, suggestionWithUserSelectedLabel,

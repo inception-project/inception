@@ -66,7 +66,7 @@ public abstract class LayerRecommendationSupport_ImplBase<S extends AnnotationSu
         return id;
     }
 
-    protected void commmitAcceptedLabel(String aSessionOwner, SourceDocument aDocument,
+    protected void commmitLabel(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS annotation,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)

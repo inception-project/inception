@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.stream.Collectors.toList;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -32,10 +33,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -105,7 +104,7 @@ public class RelationRecommendationSupport
      * @param aLocation
      *            the location from where the change was triggered
      * @param aAction
-     *            TODO
+     *            whether the annotation was accepted or corrected
      * @return the created/updated annotation.
      * @throws AnnotationException
      *             if there was an annotation-level problem
@@ -126,26 +125,26 @@ public class RelationRecommendationSupport
         var targetEnd = suggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
-        var type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
-        var attachType = CasUtil.getType(aCas, aAdapter.getAttachTypeName());
+        var type = adapter.getAnnotationType(aCas);
+        var attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
 
-        var sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
-        var targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
+        var sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
+        var targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
 
         // The begin and end feature of a relation in the CAS are of the dependent/target
         // annotation. See also RelationAdapter::createRelationAnnotation.
         // We use that fact to search for existing relations for this relation suggestion
         var candidates = new ArrayList<AnnotationFS>();
-        for (AnnotationFS relationCandidate : selectAt(aCas, type, targetBegin, targetEnd)) {
-            AnnotationFS source = (AnnotationFS) relationCandidate.getFeatureValue(sourceFeature);
-            AnnotationFS target = (AnnotationFS) relationCandidate.getFeatureValue(targetFeature);
+        for (var relationCandidate : selectAt(aCas, type, targetBegin, targetEnd)) {
+            var source = (AnnotationFS) relationCandidate.getFeatureValue(sourceFeature);
+            var target = (AnnotationFS) relationCandidate.getFeatureValue(targetFeature);
 
             if (source == null || target == null) {
                 continue;
             }
 
-            if (source.getBegin() == sourceBegin && source.getEnd() == sourceEnd
-                    && target.getBegin() == targetBegin && target.getEnd() == targetEnd) {
+            if (colocated(source, sourceBegin, sourceEnd)
+                    && colocated(target, targetBegin, targetEnd)) {
                 candidates.add(relationCandidate);
             }
         }
@@ -155,8 +154,9 @@ public class RelationRecommendationSupport
             // One candidate, we just return it
             annotation = candidates.get(0);
         }
-        else if (candidates.size() == 2) {
-            LOG.warn("Found multiple candidates for upserting relation from suggestion");
+        else if (candidates.size() > 1) {
+            LOG.warn(
+                    "Found multiple candidates for upserting relation from suggestion, using first one");
             annotation = candidates.get(0);
         }
 
@@ -181,8 +181,8 @@ public class RelationRecommendationSupport
             annotation = adapter.add(aDocument, aDataOwner, source, target, aCas);
         }
 
-        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
-                aSuggestion, aSuggestion.getLabel(), annotation, aLocation, aAction);
+        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
+                aSuggestion.getLabel(), annotation, aLocation, aAction);
 
         return annotation;
     }
@@ -239,8 +239,8 @@ public class RelationRecommendationSupport
         var annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin, aWindowEnd);
 
         // Group annotations by relation position, that is (source, target) address
-        MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
-        for (AnnotationFS annotationFS : annotationsInWindow) {
+        var groupedAnnotations = new ArrayListValuedHashMap<Position, AnnotationFS>();
+        for (var annotationFS : annotationsInWindow) {
             var source = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
             var target = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
 
@@ -257,18 +257,18 @@ public class RelationRecommendationSupport
                 .collect(toList());
 
         // Get previously rejected suggestions
-        MultiValuedMap<Position, LearningRecord> groupedRecordedAnnotations = new ArrayListValuedHashMap<>();
+        var groupedRecordedAnnotations = new ArrayListValuedHashMap<Position, LearningRecord>();
         for (var learningRecord : learningRecordService.listLearningRecords(aSessionOwner, aUser,
                 aLayer)) {
-            RelationPosition relationPosition = new RelationPosition(
-                    learningRecord.getOffsetSourceBegin(), learningRecord.getOffsetSourceEnd(),
-                    learningRecord.getOffsetTargetBegin(), learningRecord.getOffsetTargetEnd());
+            var relationPosition = new RelationPosition(learningRecord.getOffsetSourceBegin(),
+                    learningRecord.getOffsetSourceEnd(), learningRecord.getOffsetTargetBegin(),
+                    learningRecord.getOffsetTargetEnd());
 
             groupedRecordedAnnotations.put(relationPosition, learningRecord);
         }
 
-        for (AnnotationFeature feature : schemaService.listSupportedFeatures(aLayer)) {
-            Feature feat = type.getFeatureByBaseName(feature.getName());
+        for (var feature : schemaService.listSupportedFeatures(aLayer)) {
+            var feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
@@ -284,11 +284,11 @@ public class RelationRecommendationSupport
 
                 group.showAll(AnnotationSuggestion.FLAG_ALL);
 
-                Position position = group.getPosition();
+                var position = group.getPosition();
 
                 // If any annotation at this position has a non-null label for this feature,
                 // then we hide the suggestion group
-                for (AnnotationFS annotationFS : groupedAnnotations.get(position)) {
+                for (var annotationFS : groupedAnnotations.get(position)) {
                     if (annotationFS.getFeatureValueAsString(feat) != null) {
                         for (RelationSuggestion suggestion : group) {
                             suggestion.hide(FLAG_OVERLAP);
@@ -297,8 +297,8 @@ public class RelationRecommendationSupport
                 }
 
                 // Hide previously rejected suggestions
-                for (LearningRecord learningRecord : groupedRecordedAnnotations.get(position)) {
-                    for (RelationSuggestion suggestion : group) {
+                for (var learningRecord : groupedRecordedAnnotations.get(position)) {
+                    for (var suggestion : group) {
                         if (suggestion.labelEquals(learningRecord.getAnnotation())) {
                             suggestion.hideSuggestion(learningRecord.getUserAction());
                         }

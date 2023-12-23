@@ -664,12 +664,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    private RelationRecommendationSupport getRelationRecommendationSupport()
-    {
-        return new RelationRecommendationSupport(this, this, applicationEventPublisher,
-                schemaService);
-    }
-
     /*
      * There can be multiple annotation changes in a single user request. Thus, we do not trigger a
      * training on every action but rather mark the project/user as dirty and trigger the training
@@ -1037,59 +1031,45 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
-            LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
+            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aOriginalSuggestion);
+        var layer = schemaService.getLayer(aOriginalSuggestion.getLayerId());
+        var feature = schemaService.getFeature(aOriginalSuggestion.getFeature(), layer);
 
-        if (rls.isPresent()) {
+        var originalRls = layerRecommendtionSupportRegistry
+                .findGenericExtension(aOriginalSuggestion);
+        if (originalRls.isPresent()) {
             // If the action was a correction (i.e. suggestion label != annotation value) then
             // generate a rejection for the original value - we do not want the original value to
             // re-appear
-            logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, aFeature, REJECTED,
+            logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, feature, REJECTED,
                     aLocation);
+        }
 
-            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    aCas, aAdapter, aFeature, aCorrectedSuggestion, aLocation, CORRECTED);
+        var correctedRls = layerRecommendtionSupportRegistry
+                .findGenericExtension(aCorrectedSuggestion);
+        if (correctedRls.isPresent()) {
+            var adapter = schemaService.getAdapter(layer);
+
+            return (AnnotationFS) originalRls.get().acceptSuggestion(aSessionOwner, aDocument,
+                    aDataOwner, aCas, adapter, feature, aCorrectedSuggestion, aLocation, CORRECTED);
         }
 
         return null;
     }
 
-    @Deprecated
     @Override
     @Transactional
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
         var layer = schemaService.getLayer(aSuggestion.getLayerId());
         var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
         var adapter = schemaService.getAdapter(layer);
-
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
-
-        if (rls.isPresent()) {
-            return (AnnotationFS) rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner,
-                    aCas, adapter, feature, aSuggestion, aLocation, ACCEPTED);
-        }
-
-        return null;
-    }
-
-    @Deprecated
-    @Override
-    @Transactional
-    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, RelationSuggestion aSuggestion,
-            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
-        throws AnnotationException
-    {
-        var layer = schemaService.getLayer(aSuggestion.getLayerId());
-        var adapter = schemaService.getAdapter(layer);
-        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
 
         var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
 
@@ -1789,7 +1769,7 @@ public class RecommendationServiceImpl
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.
         var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
-        calculateSpanSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
+        calculateSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
                 aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
                 groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
         // FIXME calculateRelationSuggestionVisibility?
@@ -1852,38 +1832,36 @@ public class RecommendationServiceImpl
                 agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
     }
 
-    @Deprecated
     @Override
-    public void calculateSpanSuggestionVisibility(String aSessionOwner, SourceDocument aDocument,
-            CAS aCas, String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
+    public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         var rls = layerRecommendtionSupportRegistry
                 .findGenericExtension(SpanSuggestion.builder().build());
 
         if (rls.isPresent()) {
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
-                    aLayer, (Collection) aRecommendations, aWindowBegin, aWindowEnd);
+                    aLayer, aRecommendations, aWindowBegin, aWindowEnd);
         }
     }
 
-    @Deprecated
-    @Override
-    public void calculateRelationSuggestionVisibility(String aSessionOwner,
-            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
-            int aWindowEnd)
-    {
-        var rls = layerRecommendtionSupportRegistry
-                .findGenericExtension(RelationSuggestion.builder().build());
-
-        if (rls.isPresent()) {
-            rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
-                    aLayer, (Collection) aRecommendations, aWindowBegin, aWindowEnd);
-        }
-    }
-
+    /**
+     * Clones the source CAS to the target CAS while adding the features required for encoding
+     * predictions to the respective types.
+     * 
+     * @param aProject
+     *            the project to which the CASes belong.
+     * @param aSourceCas
+     *            the source CAS.
+     * @param aTargetCas
+     *            the target CAS which is meant to be sent off to a recommender.
+     * @return the target CAS which is meant to be sent off to a recommender.
+     * @throws UIMAException
+     *             if there was a CAS-related error.
+     * @throws IOException
+     *             if there was a serialization-related errror.
+     */
     CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
         throws UIMAException, IOException
     {
@@ -2000,7 +1978,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    @Deprecated
     @Override
     @Transactional
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
@@ -2014,7 +1991,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    @Deprecated
     @Override
     @Transactional
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,

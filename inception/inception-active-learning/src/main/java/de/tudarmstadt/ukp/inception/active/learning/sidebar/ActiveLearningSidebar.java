@@ -1212,7 +1212,7 @@ public class ActiveLearningSidebar
             var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
-            recommendationService.calculateSpanSuggestionVisibility(sessionOwner, aDocument, cas,
+            recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,
                     dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
             moveToNextSuggestion(aTarget);

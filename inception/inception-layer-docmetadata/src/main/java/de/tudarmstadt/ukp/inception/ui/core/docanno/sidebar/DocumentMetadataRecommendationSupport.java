@@ -94,7 +94,7 @@ public class DocumentMetadataRecommendationSupport
             annotation = candidates.get(0);
         }
 
-        commmitAcceptedLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
+        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature,
                 aSuggestion, aValue, annotation, aLocation, aAction);
 
         return annotation;

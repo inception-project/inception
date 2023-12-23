@@ -29,6 +29,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
+/**
+ * Encapsulates information related to rendering an annotated document.
+ */
 public class RenderRequest
 {
     private final AnnotatorState state;
