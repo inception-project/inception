@@ -80,6 +80,10 @@ public class ExternalRecommenderTraitsEditor
 
         getTrainingStatesChoice().add(visibleWhen(() -> trainable.getModelObject() == true));
 
+        var ranker = new CheckBox("ranker");
+        ranker.setOutputMarkupId(true);
+        form.add(ranker);
+
         add(form);
     }
 }

@@ -61,7 +61,8 @@
             {#if showText}
                 <span class="label">{renderLabel(annotation)}</span>
             {/if}
-            {#if annotation.score}
+            <!-- Negative scores used only for sorting/ranking but not shown -->
+            {#if annotation.score && !annotation.hideScore}
                 <span class="small font-monospace score"
                     >{annotation.score.toFixed(2)}</span
                 >
@@ -88,7 +89,8 @@
         {#if showText}
             <span class="label">{renderLabel(annotation)}</span>
         {/if}
-        {#if annotation.score}
+        <!-- Negative scores used only for sorting/ranking but not shown -->
+        {#if annotation.score && !annotation.hideScore}
             <span class="small font-monospace score"
                 >{annotation.score.toFixed(2)}</span
             >
