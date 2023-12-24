@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.Pro
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
-import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -37,8 +36,8 @@ import com.hubspot.jinjava.loader.ResourceNotFoundException;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerAnnotationContextGenerator;
@@ -47,7 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerSentenc
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsFromJsonExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsSample;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseAsLabelExtractor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseExtractor;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
@@ -88,12 +86,11 @@ public class OllamaRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         var responseExtractor = getResponseExtractor();
-        List<MentionsSample> examples = responseExtractor.generate(this, aCas,
-                MAX_FEW_SHOT_EXAMPLES);
+        var examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
 
         getPromptContextGenerator().generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
             try {
@@ -106,6 +103,8 @@ public class OllamaRecommender
                 responseExtractor.extract(this, aCas, promptContext, response);
             }
             catch (IOException e) {
+                aContext.error("Ollama [%s] failed to respond: %s", traits.getModel(),
+                        ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Ollama [{}] failed to respond: {}", traits.getModel(),
                         ExceptionUtils.getRootCauseMessage(e));
             }

@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
@@ -95,7 +96,7 @@ class OllamaRecommenderTest
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
-        sut.predict(new RecommenderContext(), cas);
+        sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
@@ -120,7 +121,7 @@ class OllamaRecommenderTest
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
-        sut.predict(new RecommenderContext(), cas);
+        sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
@@ -143,7 +144,7 @@ class OllamaRecommenderTest
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
-        sut.predict(new RecommenderContext(), cas);
+        sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
@@ -171,7 +172,7 @@ class OllamaRecommenderTest
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
-        sut.predict(new RecommenderContext(), cas);
+        sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
@@ -220,7 +221,7 @@ class OllamaRecommenderTest
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
-        sut.predict(new RecommenderContext(), cas);
+        sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();

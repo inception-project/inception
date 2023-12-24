@@ -50,6 +50,7 @@ public class LearningRecord
 {
     private static final long serialVersionUID = -8487663728083806672L;
     private static final int TOKEN_TEXT_LENGTH = 255;
+    private static final int LABEL_LENGTH = 255;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -267,7 +268,8 @@ public class LearningRecord
 
     public void setAnnotation(String aAnnotation)
     {
-        annotation = aAnnotation;
+        int targetLength = Math.min(aAnnotation.length(), LABEL_LENGTH);
+        annotation = aAnnotation.substring(0, targetLength);
     }
 
     public LearningRecordUserAction getUserAction()

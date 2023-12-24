@@ -84,7 +84,7 @@ public abstract class RecommendationEngine
      * @throws RecommendationException
      *             if there was a problem during prediction
      */
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(PredictionContext aContext, CAS aCas) throws RecommendationException
     {
         predict(aContext, aCas, 0, aCas.getDocumentText().length());
     }
@@ -111,7 +111,7 @@ public abstract class RecommendationEngine
      * @throws RecommendationException
      *             if there was a problem during prediction
      */
-    public abstract Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public abstract Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**

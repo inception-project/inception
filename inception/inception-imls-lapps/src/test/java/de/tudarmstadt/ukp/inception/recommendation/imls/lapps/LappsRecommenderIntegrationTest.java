@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import okhttp3.mockwebserver.MockResponse;
@@ -83,7 +84,7 @@ public class LappsRecommenderIntegrationTest
         RecommenderContext context = new RecommenderContext();
         CAS cas = loadData();
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         Collection<POS> predictions = JCasUtil.select(cas.getJCas(), POS.class);
 

@@ -17,6 +17,13 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
+  <style>
+    .small p {
+      margin-bottom: 0.25em;
+    }
+  </style>
+</wicket:head>
 <wicket:panel>
   <form wicket:id="form">
     <div class="row form-row" wicket:enclosure="url">
@@ -32,7 +39,7 @@
         <wicket:message key="model"/>
       </label>
       <div class="col-sm-9">
-        <input wicket:id="model" type="text" class="form-control"/>
+        <input wicket:id="model" type="text"/>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="preset">

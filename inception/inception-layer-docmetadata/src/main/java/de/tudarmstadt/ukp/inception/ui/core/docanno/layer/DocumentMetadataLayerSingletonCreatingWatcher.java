@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.context.event.EventListener;
@@ -59,7 +58,7 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
         return annotationService.listAnnotationLayer(aProject).stream()
                 .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
                         && layer.isEnabled())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @EventListener
@@ -72,13 +71,12 @@ public class DocumentMetadataLayerSingletonCreatingWatcher
         }
 
         CAS cas = aEvent.getCas();
-        for (AnnotationLayer layer : listMetadataLayers(aEvent.getDocument().getProject())) {
+        for (var layer : listMetadataLayers(aEvent.getDocument().getProject())) {
             if (!getLayerSupport(layer).readTraits(layer).isSingleton()) {
                 continue;
             }
 
-            DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
-                    .getAdapter(layer);
+            var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
             if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
                 adapter.add(aEvent.getDocument(), aEvent.getSessionOwner(), cas);
             }
