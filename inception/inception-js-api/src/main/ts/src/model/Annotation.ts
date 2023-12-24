@@ -40,6 +40,11 @@ export interface Annotation {
     score?: number
 
     /**
+     * Whether to display the score in the UI or not.
+     */
+    hideScore: boolean
+
+    /**
      * Comments
      */
     comments?: Comment[]

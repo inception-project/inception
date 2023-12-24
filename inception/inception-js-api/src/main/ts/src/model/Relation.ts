@@ -24,6 +24,7 @@ export class Relation implements Annotation {
   color?: string
   label?: string
   score?: number
+  hideScore: boolean
   comments?: Comment[]
   arguments: Array<Argument>
 
@@ -36,6 +37,7 @@ export class Relation implements Annotation {
       this.label = other.label
       this.comments = other.comments
       this.arguments = other.arguments
+      this.hideScore = other.hideScore
     }
   }
 }

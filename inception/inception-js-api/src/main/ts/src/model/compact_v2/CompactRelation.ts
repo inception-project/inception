@@ -36,6 +36,7 @@ export function unpackCompactRelation (doc: AnnotatedText, raw: CompactRelation)
   cooked.color = raw[3]?.c
   cooked.label = raw[3]?.l
   cooked.score = raw[3]?.s
+  cooked.hideScore = raw[3]?.hs ? true : false
   cooked.comments = unpackCompactComments(doc, cooked, raw[3]?.cm)
   return cooked
 }

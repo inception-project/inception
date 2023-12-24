@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -102,6 +103,8 @@ public class RecommendationSpanRenderer
         var features = annotationService.listSupportedFeatures(layer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
+        var rankerCache = new HashMap<Long, Boolean>();
+
         for (var suggestionGroup : groups) {
             // Render annotations for each label
             for (var suggestion : suggestionGroup.bestSuggestions(pref)) {
@@ -120,9 +123,19 @@ public class RecommendationSpanRenderer
                         ? Map.of(suggestion.getFeature(), annotation)
                         : Map.of();
 
+                var isRanker = rankerCache.computeIfAbsent(suggestion.getRecommenderId(), id -> {
+                    var recommender = recommendationService.getRecommender(id);
+                    if (recommender != null) {
+                        var factory = recommendationService.getRecommenderFactory(recommender);
+                        return factory.map(f -> f.isRanker(recommender)).orElse(false);
+                    }
+                    return false;
+                });
+
                 var v = new VSpan(layer, suggestion.getVID(), range.get(), featureAnnotation,
                         COLOR);
                 v.setScore(suggestion.getScore());
+                v.setHideScore(isRanker);
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 
                 vdoc.add(v);

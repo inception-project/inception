@@ -37,4 +37,9 @@ export interface CompactAnnotationAttributes {
    * Score (optional)
    */
   s: number
+
+  /**
+   * Hide score (optional)
+   */
+  hs: number
 }
