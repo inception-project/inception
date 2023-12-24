@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,7 +64,7 @@ public class OllamaRecommenderTraitsEditor
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<OllamaRecommenderTraits> toolFactory;
 
-    private final IModel<OllamaRecommenderTraits> traits;
+    private final CompoundPropertyModel<OllamaRecommenderTraits> traits;
 
     private final WebMarkupContainer optionSettingsContainer;
     private final IModel<List<OptionSetting>> optionSettings;
@@ -93,18 +95,8 @@ public class OllamaRecommenderTraitsEditor
         presetSelect.setModel(Model.of());
         presetSelect.setChoiceRenderer(new ChoiceRenderer<>("name"));
         presetSelect.setChoices(aPresets);
-        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-            var preset = presetSelect.getModelObject();
-            if (preset != null) {
-                var settings = traits.getObject();
-                settings.setPrompt(preset.getPrompt());
-                settings.setExtractionMode(preset.getExtractionMode());
-                settings.setFormat(preset.getFormat());
-                settings.setPromptingMode(preset.getPromptingMode());
-                settings.setRaw(preset.isRaw());
-            }
-            _target.add(form);
-        }));
+        presetSelect.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         form.add(presetSelect);
 
         form.add(new TextField<String>("url"));
@@ -116,10 +108,10 @@ public class OllamaRecommenderTraitsEditor
         markdownLabel.setOutputMarkupId(true);
         form.add(markdownLabel);
         form.add(new PromptingModeSelect("promptingMode")
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-                    _target.add(markdownLabel);
-                })));
-        form.add(new ExtractionModeSelect("extractionMode"));
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                        _target -> _target.add(markdownLabel))));
+        form.add(new ExtractionModeSelect("extractionMode", traits.bind("extractionMode"),
+                getModel()));
         form.add(new OllamaResponseFormatSelect("format"));
         add(form);
 
@@ -142,6 +134,20 @@ public class OllamaRecommenderTraitsEditor
                 .collect(Collectors.toCollection(ArrayList::new)));
 
         optionSettingsContainer.add(createOptionSettingsList("optionSettings", optionSettings));
+    }
+
+    private void applyPreset(Form<OllamaRecommenderTraits> aForm, Preset aPreset,
+            AjaxRequestTarget aTarget)
+    {
+        if (aPreset != null) {
+            var settings = traits.getObject();
+            settings.setPrompt(aPreset.getPrompt());
+            settings.setExtractionMode(aPreset.getExtractionMode());
+            settings.setFormat(aPreset.getFormat());
+            settings.setPromptingMode(aPreset.getPromptingMode());
+            settings.setRaw(aPreset.isRaw());
+        }
+        aTarget.add(aForm);
     }
 
     private ListView<OptionSetting> createOptionSettingsList(String aId,

@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.Pro
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
-import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -47,7 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerSentenc
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PromptContextGenerator;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsFromJsonExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.MentionsSample;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseAsLabelExtractor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseExtractor;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
@@ -92,8 +90,7 @@ public class OllamaRecommender
         throws RecommendationException
     {
         var responseExtractor = getResponseExtractor();
-        List<MentionsSample> examples = responseExtractor.generate(this, aCas,
-                MAX_FEW_SHOT_EXAMPLES);
+        var examples = responseExtractor.generate(this, aCas, MAX_FEW_SHOT_EXAMPLES);
 
         getPromptContextGenerator().generate(this, aCas, aBegin, aEnd).forEach(promptContext -> {
             try {
