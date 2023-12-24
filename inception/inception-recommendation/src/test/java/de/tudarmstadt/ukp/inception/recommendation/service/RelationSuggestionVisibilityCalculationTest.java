@@ -76,7 +76,7 @@ public class RelationSuggestionVisibilityCalculationTest
 
         when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
 
-        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService);
+        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService, null);
     }
 
     @Test

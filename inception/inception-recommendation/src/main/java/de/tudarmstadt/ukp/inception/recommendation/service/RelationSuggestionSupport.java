@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.cas.CAS;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationTypeRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -58,9 +60,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRelationRenderer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class RelationSuggestionSupport
     extends SuggestionSupport_ImplBase<RelationSuggestion>
@@ -69,13 +73,16 @@ public class RelationSuggestionSupport
 
     public static final String TYPE = "RELATION";
 
+    private final FeatureSupportRegistry featureSupportRegistry;
+
     public RelationSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
@@ -358,5 +365,12 @@ public class RelationSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<RecommendationTypeRenderer<?>> getRenderer()
+    {
+        return Optional.of(new RecommendationRelationRenderer(recommendationService, schemaService,
+                featureSupportRegistry));
     }
 }

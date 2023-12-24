@@ -94,7 +94,7 @@ public class SpanSuggestionVisibilityCalculationTest
         lenient().when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
         lenient().when(annoService.listSupportedFeatures(layer2)).thenReturn(asList(feature2));
 
-        sut = new SpanSuggestionSupport(null, learningRecordService, null, annoService);
+        sut = new SpanSuggestionSupport(null, learningRecordService, null, annoService, null, null);
     }
 
     @Test

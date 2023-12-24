@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -56,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationTypeRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -65,10 +67,13 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class SpanSuggestionSupport
     extends SuggestionSupport_ImplBase<SpanSuggestion>
@@ -77,13 +82,19 @@ public class SpanSuggestionSupport
 
     public static final String TYPE = "SPAN";
 
+    private final FeatureSupportRegistry featureSupportRegistry;
+    private final RecommenderProperties recommenderProperties;
+
     public SpanSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
+            RecommenderProperties aRecommenderProperties)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
+        featureSupportRegistry = aFeatureSupportRegistry;
+        recommenderProperties = aRecommenderProperties;
     }
 
     @Override
@@ -431,5 +442,12 @@ public class SpanSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<RecommendationTypeRenderer<?>> getRenderer()
+    {
+        return Optional.of(new RecommendationSpanRenderer(recommendationService, schemaService,
+                featureSupportRegistry, recommenderProperties));
     }
 }

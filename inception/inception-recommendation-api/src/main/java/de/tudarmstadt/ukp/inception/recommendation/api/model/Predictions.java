@@ -345,6 +345,20 @@ public class Predictions
         }
     }
 
+    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName,
+            int aWindowBegin, int aWindowEnd)
+    {
+        synchronized (predictionsLock) {
+            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            return byDocument.entrySet().stream() //
+                    .filter(f -> AnnotationPredicates.overlapping(f.getValue().getWindowBegin(),
+                            f.getValue().getWindowEnd(), aWindowBegin, aWindowEnd))
+                    .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())) //
+                    .map(Map.Entry::getValue) //
+                    .collect(toList());
+        }
+    }
+
     public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
     {
         synchronized (seenDocumentsForPrediction) {

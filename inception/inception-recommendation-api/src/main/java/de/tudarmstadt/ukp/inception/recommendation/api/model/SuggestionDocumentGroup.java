@@ -22,6 +22,7 @@ import static org.apache.commons.collections4.IteratorUtils.unmodifiableIterator
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,9 +77,13 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
      *            the list to retrieve suggestions from
      * @return a SuggestionDocumentGroup where only suggestions of type V are added
      */
-    public static Map<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<?>> groupByType(
+    public static Map<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<? extends AnnotationSuggestion>> groupByType(
             List<AnnotationSuggestion> aSuggestions)
     {
+        if (aSuggestions == null || aSuggestions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
         var groups = new LinkedHashMap<Class<? extends AnnotationSuggestion>, List<AnnotationSuggestion>>();
 
         for (var suggestion : aSuggestions) {

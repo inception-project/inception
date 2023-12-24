@@ -23,12 +23,14 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationTypeRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -36,12 +38,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link RecommenderServiceAutoConfiguration#recommendationSpanRenderer}.
- * </p>
- */
 public class RecommendationSpanRenderer
     implements RecommendationTypeRenderer<SpanAdapter>
 {
@@ -60,40 +56,30 @@ public class RecommendationSpanRenderer
         recommenderProperties = aRecommenderProperties;
     }
 
-    /**
-     * Add annotations from the CAS, which is controlled by the window size, to the VDocument
-     * {@link VDocument}
-     *
-     * @param vdoc
-     *            A VDocument containing annotations for the given layer
-     * @param aPredictions
-     *            the predictions to render
-     */
     @Override
-    public void render(VDocument vdoc, RenderRequest aRequest, Predictions aPredictions,
-            SpanAdapter aTypeAdapter)
+    public void render(VDocument vdoc, RenderRequest aRequest,
+            SuggestionDocumentGroup<? extends AnnotationSuggestion> aSuggestions,
+            AnnotationLayer aLayer)
     {
-        var cas = aRequest.getCas();
-        var layer = aTypeAdapter.getLayer();
-        var groups = aPredictions.getGroupedPredictions(SpanSuggestion.class,
-                aRequest.getSourceDocument().getName(), layer, aRequest.getWindowBeginOffset(),
-                aRequest.getWindowEndOffset());
+        var groups = (SuggestionDocumentGroup<SpanSuggestion>) aSuggestions;
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
             return;
         }
 
+        var cas = aRequest.getCas();
+
         recommendationService.calculateSuggestionVisibility(
                 aRequest.getSessionOwner().getUsername(), aRequest.getSourceDocument(), cas,
-                aRequest.getAnnotationUser().getUsername(), layer, groups,
+                aRequest.getAnnotationUser().getUsername(), aLayer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
         var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
-                layer.getProject());
+                aLayer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        var features = annotationService.listSupportedFeatures(layer).stream()
+        var features = annotationService.listSupportedFeatures(aLayer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
         for (var suggestionGroup : groups) {
@@ -114,7 +100,7 @@ public class RecommendationSpanRenderer
                         ? Map.of(suggestion.getFeature(), annotation)
                         : Map.of();
 
-                var v = new VSpan(layer, suggestion.getVID(), range.get(), featureAnnotation,
+                var v = new VSpan(aLayer, suggestion.getVID(), range.get(), featureAnnotation,
                         COLOR);
                 v.setScore(suggestion.getScore());
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());

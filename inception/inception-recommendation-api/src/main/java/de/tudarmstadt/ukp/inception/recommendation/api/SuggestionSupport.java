@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
@@ -58,4 +59,6 @@ public interface SuggestionSupport<S extends AnnotationSuggestion>
     LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
+
+    Optional<RecommendationTypeRenderer<?>> getRenderer();
 }

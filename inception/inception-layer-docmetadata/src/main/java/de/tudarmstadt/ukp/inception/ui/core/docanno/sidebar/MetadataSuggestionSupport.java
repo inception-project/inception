@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationTypeRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -268,5 +270,11 @@ public class MetadataSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<RecommendationTypeRenderer<?>> getRenderer()
+    {
+        return Optional.empty();
     }
 }
