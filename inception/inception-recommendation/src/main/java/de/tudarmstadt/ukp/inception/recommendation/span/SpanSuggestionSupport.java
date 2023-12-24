@@ -22,9 +22,12 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.lang.invoke.MethodHandles;
@@ -45,15 +48,20 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.cas.TOP;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -65,9 +73,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
+import de.tudarmstadt.ukp.inception.recommendation.service.ExtractionContext;
+import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -448,5 +459,185 @@ public class SpanSuggestionSupport
     {
         return Optional.of(new SpanSuggestionRenderer(recommendationService, schemaService,
                 featureSupportRegistry, recommenderProperties));
+    }
+
+    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    {
+        var autoAcceptMode = SuggestionExtraction.getAutoAcceptMode(predictedFS,
+                ctx.getModeFeature());
+        var labels = SuggestionExtraction.getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                ctx.isMultiLabels());
+        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+        var predictedAnnotation = (Annotation) predictedFS;
+        var targetOffsets = getOffsets(ctx.getLayer().getAnchoringMode(), ctx.getOriginalCas(),
+                predictedAnnotation);
+
+        if (targetOffsets.isEmpty()) {
+            LOG.debug("Prediction cannot be anchored to [{}]: {}",
+                    ctx.getLayer().getAnchoringMode(), predictedAnnotation);
+            return;
+        }
+
+        var offsets = targetOffsets.get();
+        var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
+
+        for (var label : labels) {
+            var suggestion = SpanSuggestion.builder() //
+                    .withId(RelationSuggestion.NEW_ID) //
+                    .withGeneration(ctx.getGeneration()) //
+                    .withRecommender(ctx.getRecommender()) //
+                    .withDocumentName(ctx.getDocument().getName()) //
+                    .withPosition(offsets) //
+                    .withCoveredText(coveredText) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.getResult().add(suggestion);
+        }
+    }
+
+    /**
+     * Calculates the offsets of the given predicted annotation in the original CAS .
+     *
+     * @param aMode
+     *            the anchoring mode of the target layer
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aPredictedAnnotation
+     *            the predicted annotation.
+     * @return the proper offsets.
+     */
+    static Optional<Offset> getOffsets(AnchoringMode aMode, CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        switch (aMode) {
+        case CHARACTERS: {
+            return getOffsetsAnchoredOnCharacters(aOriginalCas, aPredictedAnnotation);
+        }
+        case SINGLE_TOKEN: {
+            return getOffsetsAnchoredOnSingleTokens(aOriginalCas, aPredictedAnnotation);
+        }
+        case TOKENS: {
+            return getOffsetsAnchoredOnTokens(aOriginalCas, aPredictedAnnotation);
+        }
+        case SENTENCES: {
+            return getOffsetsAnchoredOnSentences(aOriginalCas, aPredictedAnnotation);
+        }
+        default:
+            throw new IllegalStateException("Unsupported anchoring mode: [" + aMode + "]");
+        }
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnCharacters(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
+                min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
+        TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
+        var begin = offsets[0];
+        var end = offsets[1];
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var sentences = aOriginalCas.select(Sentence.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (sentences.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping sentences instead of covered sentences.
+            LOG.trace("Discarding suggestion because no covered sentences were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = sentences.get(0).getBegin();
+        var end = sentences.get(sentences.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSingleTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        Type tokenType = getType(aOriginalCas, Token.class);
+        var tokens = aOriginalCas.<Annotation> select(tokenType) //
+                .coveredBy(aPredictedAnnotation) //
+                .limit(2).asList();
+
+        if (tokens.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of contained tokens.
+            LOG.trace("Discarding suggestion because no covering token was found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        if (tokens.size() > 1) {
+            // We only want to accept single-token suggestions
+            LOG.trace("Discarding suggestion because only single-token suggestions are "
+                    + "accepted: {}", aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        AnnotationFS token = tokens.get(0);
+        var begin = token.getBegin();
+        var end = token.getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    public static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var tokens = aOriginalCas.select(Token.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (tokens.isEmpty()) {
+            if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
+                var pos = aPredictedAnnotation.getBegin();
+                var allTokens = aOriginalCas.select(Token.class).asList();
+                Token prevToken = null;
+                for (var token : allTokens) {
+                    if (prevToken == null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(token.getBegin(), token.getBegin()));
+                    }
+
+                    if (token.covering(aPredictedAnnotation)) {
+                        return Optional.of(new Offset(pos, pos));
+                    }
+
+                    if (prevToken != null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                    }
+
+                    prevToken = token;
+                }
+
+                if (prevToken != null && pos >= prevToken.getEnd()) {
+                    return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                }
+            }
+
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of covered tokens.
+            LOG.trace("Discarding suggestion because no covered tokens were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = tokens.get(0).getBegin();
+        var end = tokens.get(tokens.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
     }
 }

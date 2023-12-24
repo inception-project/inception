@@ -39,6 +39,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.cas.TOP;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -60,7 +62,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.service.ExtractionContext;
+import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -371,5 +376,61 @@ public class RelationSuggestionSupport
     {
         return Optional.of(new RelationSuggestionRenderer(recommendationService, schemaService,
                 featureSupportRegistry));
+    }
+
+    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    {
+        var autoAcceptMode = SuggestionExtraction.getAutoAcceptMode(predictedFS,
+                ctx.getModeFeature());
+        var labels = SuggestionExtraction.getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                ctx.isMultiLabels());
+        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+        var source = (AnnotationFS) predictedFS.getFeatureValue(ctx.getSourceFeature());
+        var target = (AnnotationFS) predictedFS.getFeatureValue(ctx.getTargetFeature());
+
+        var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
+        var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
+        if (originalSource.isEmpty() || originalTarget.isEmpty()) {
+            LOG.debug("Unable to find source or target of predicted relation in original CAS");
+            return;
+        }
+
+        var position = new RelationPosition(originalSource.get(), originalTarget.get());
+
+        for (var label : labels) {
+            var suggestion = RelationSuggestion.builder() //
+                    .withId(RelationSuggestion.NEW_ID) //
+                    .withGeneration(ctx.getGeneration()) //
+                    .withRecommender(ctx.getRecommender()) //
+                    .withDocumentName(ctx.getDocument().getName()) //
+                    .withPosition(position) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.getResult().add(suggestion);
+        }
+    }
+
+    /**
+     * Locates an annotation in the given CAS which is equivalent of the provided annotation.
+     *
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aAnnotation
+     *            an annotation in the prediction CAS. return the equivalent in the original CAS.
+     */
+    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas,
+            AnnotationFS aAnnotation)
+    {
+        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
+                .at(aAnnotation) //
+                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
+                        aAnnotation, null))
+                .findFirst();
     }
 }
