@@ -21,6 +21,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.uima.fit.util.CasUtil;
@@ -85,9 +86,10 @@ public class RecommendationRelationRenderer
         var features = annotationService.listSupportedFeatures(aLayer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
+        var rankerCache = new HashMap<Long, Boolean>();
+
         for (var group : groupedPredictions) {
             for (var suggestion : group.bestSuggestions(pref)) {
-
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
                     continue;
@@ -118,9 +120,19 @@ public class RecommendationRelationRenderer
                         ? Map.of(suggestion.getFeature(), annotation)
                         : Map.of();
 
+                var isRanker = rankerCache.computeIfAbsent(suggestion.getRecommenderId(), id -> {
+                    var recommender = recommendationService.getRecommender(id);
+                    if (recommender != null) {
+                        var factory = recommendationService.getRecommenderFactory(recommender);
+                        return factory.map(f -> f.isRanker(recommender)).orElse(false);
+                    }
+                    return false;
+                });
+
                 var arc = new VArc(aLayer, suggestion.getVID(), VID.of(source), VID.of(target),
                         "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
                 arc.setScore(suggestion.getScore());
+                arc.setHideScore(isRanker);
 
                 aVDoc.add(arc);
             }
