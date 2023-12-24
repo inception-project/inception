@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
-import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)

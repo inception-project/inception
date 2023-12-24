@@ -76,9 +76,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.service.ExtractionContext;
-import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -463,10 +462,8 @@ public class SpanSuggestionSupport
 
     public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
     {
-        var autoAcceptMode = SuggestionExtraction.getAutoAcceptMode(predictedFS,
-                ctx.getModeFeature());
-        var labels = SuggestionExtraction.getPredictedLabels(predictedFS, ctx.getLabelFeature(),
-                ctx.isMultiLabels());
+        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
         var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
         var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
 

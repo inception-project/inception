@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)

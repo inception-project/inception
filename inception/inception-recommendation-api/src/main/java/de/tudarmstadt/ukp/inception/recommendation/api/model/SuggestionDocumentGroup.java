@@ -77,8 +77,8 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
      *            the list to retrieve suggestions from
      * @return a SuggestionDocumentGroup where only suggestions of type V are added
      */
-    public static Map<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<? extends AnnotationSuggestion>> groupByType(
-            List<AnnotationSuggestion> aSuggestions)
+    public static Map<Class<? extends AnnotationSuggestion>, SuggestionDocumentGroup<? extends AnnotationSuggestion>> //
+            groupByType(List<AnnotationSuggestion> aSuggestions)
     {
         if (aSuggestions == null || aSuggestions.isEmpty()) {
             return Collections.emptyMap();

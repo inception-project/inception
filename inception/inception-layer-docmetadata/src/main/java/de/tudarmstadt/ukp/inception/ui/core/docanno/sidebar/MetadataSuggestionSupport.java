@@ -33,6 +33,7 @@ import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.cas.AnnotationBase;
+import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -276,5 +278,28 @@ public class MetadataSuggestionSupport
     public Optional<SuggestionRenderer> getRenderer()
     {
         return Optional.empty();
+    }
+
+    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    {
+        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
+        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+        for (var label : labels) {
+            var suggestion = MetadataSuggestion.builder() //
+                    .withId(MetadataSuggestion.NEW_ID) //
+                    .withGeneration(ctx.getGeneration()) //
+                    .withRecommender(ctx.getRecommender()) //
+                    .withDocumentName(ctx.getDocument().getName()) //
+                    .withLabel(label) //
+                    .withUiLabel(label) //
+                    .withScore(score) //
+                    .withScoreExplanation(scoreExplanation) //
+                    .withAutoAcceptMode(autoAcceptMode) //
+                    .build();
+            ctx.getResult().add(suggestion);
+        }
     }
 }
