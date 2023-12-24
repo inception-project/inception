@@ -43,7 +43,7 @@ public class Fixtures
     private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
     private final static String COVERED_TEXT = "TestText";
 
-    static <T extends AnnotationSuggestion> List<T> getInvisibleSuggestions(
+    public static <T extends AnnotationSuggestion> List<T> getInvisibleSuggestions(
             Collection<SuggestionGroup<T>> aSuggestions)
     {
         return aSuggestions.stream() //
@@ -52,7 +52,7 @@ public class Fixtures
                 .collect(toList());
     }
 
-    static <T extends AnnotationSuggestion> List<T> getVisibleSuggestions(
+    public static <T extends AnnotationSuggestion> List<T> getVisibleSuggestions(
             Collection<SuggestionGroup<T>> aSuggestions)
     {
         return aSuggestions.stream() //
@@ -61,8 +61,8 @@ public class Fixtures
                 .collect(toList());
     }
 
-    static SuggestionDocumentGroup<SpanSuggestion> makeSpanSuggestionGroup(SourceDocument doc,
-            AnnotationFeature aFeat, int[][] vals)
+    public static SuggestionDocumentGroup<SpanSuggestion> makeSpanSuggestionGroup(
+            SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
         List<SpanSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
@@ -74,7 +74,7 @@ public class Fixtures
         return new SuggestionDocumentGroup<>(suggestions);
     }
 
-    static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
+    public static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
             SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
         List<RelationSuggestion> suggestions = new ArrayList<>();

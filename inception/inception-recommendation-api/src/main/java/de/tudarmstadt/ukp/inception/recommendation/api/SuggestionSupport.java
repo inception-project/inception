@@ -60,5 +60,5 @@ public interface SuggestionSupport<S extends AnnotationSuggestion>
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
-    Optional<RecommendationTypeRenderer<?>> getRenderer();
+    Optional<SuggestionRenderer> getRenderer();
 }

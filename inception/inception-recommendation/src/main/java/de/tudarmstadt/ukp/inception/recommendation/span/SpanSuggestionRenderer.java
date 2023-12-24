@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.render;
+package de.tudarmstadt.ukp.inception.recommendation.span;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -25,9 +25,8 @@ import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationTypeRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
@@ -39,15 +38,15 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
-public class RecommendationSpanRenderer
-    implements RecommendationTypeRenderer<SpanAdapter>
+public class SpanSuggestionRenderer
+    implements SuggestionRenderer
 {
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService annotationService;
     private final FeatureSupportRegistry fsRegistry;
     private final RecommenderProperties recommenderProperties;
 
-    public RecommendationSpanRenderer(RecommendationService aRecommendationService,
+    public SpanSuggestionRenderer(RecommendationService aRecommendationService,
             AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
             RecommenderProperties aRecommenderProperties)
     {

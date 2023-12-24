@@ -251,7 +251,7 @@ public class SuggestionExtraction
         }
     }
 
-    static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
+    public static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
             CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
     {
         var ctx = new ExtractionContext(aGeneration, aRecommender, aDocument, aOriginalCas,
@@ -378,7 +378,7 @@ public class SuggestionExtraction
         return Optional.of(new Offset(begin, end));
     }
 
-    static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
+    public static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
             Annotation aPredictedAnnotation)
     {
         var tokens = aOriginalCas.select(Token.class) //

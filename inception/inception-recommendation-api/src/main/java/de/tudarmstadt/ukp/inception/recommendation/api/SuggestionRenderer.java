@@ -22,12 +22,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations
  */
-public interface RecommendationTypeRenderer<T extends TypeAdapter>
+public interface SuggestionRenderer
 {
     String COLOR = "#cccccc";
 
