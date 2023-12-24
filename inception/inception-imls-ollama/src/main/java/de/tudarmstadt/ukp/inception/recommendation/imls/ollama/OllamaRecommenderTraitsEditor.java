@@ -18,8 +18,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
+import static java.lang.String.format;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,17 +45,26 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.validator.UrlValidator;
+
+import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaModel;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.Option;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class OllamaRecommenderTraitsEditor
@@ -99,8 +112,23 @@ public class OllamaRecommenderTraitsEditor
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         form.add(presetSelect);
 
-        form.add(new TextField<String>("url"));
-        form.add(new TextField<String>("model"));
+        var modelsModel = LoadableDetachableModel.of(this::listModels);
+        var model = new ComboBox<String>("model", modelsModel);
+        model.add(LambdaBehavior.onConfigure(() -> {
+            // Trigger a re-loading of the tagset from the server as constraints may have
+            // changed the ordering
+            modelsModel.detach();
+            var target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target.isPresent()) {
+                target.get().appendJavaScript(wrapInTryCatch(format( //
+                        "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
+            }
+        }));
+        model.setOutputMarkupId(true);
+        form.add(model);
+        form.add(new TextField<String>("url").add(new LambdaAjaxFormComponentUpdatingBehavior(
+                CHANGE_EVENT, _target -> _target.add(model))));
         form.add(new TextArea<String>("prompt"));
         form.add(new CheckBox("raw").setOutputMarkupPlaceholderTag(true));
         var markdownLabel = new MarkdownLabel("promptHints",
@@ -188,5 +216,21 @@ public class OllamaRecommenderTraitsEditor
     private String getPromptHints()
     {
         return traits.getObject().getPromptingMode().getHints();
+    }
+
+    private List<String> listModels()
+    {
+        var url = traits.map(OllamaRecommenderTraits::getUrl).orElse(null).getObject();
+        if (!new UrlValidator(new String[] { "http", "https" }).isValid(url)) {
+            return Collections.emptyList();
+        }
+
+        var client = new OllamaClientImpl();
+        try {
+            return client.listModels(url).stream().map(OllamaModel::getName).toList();
+        }
+        catch (IOException e) {
+            return Collections.emptyList();
+        }
     }
 }

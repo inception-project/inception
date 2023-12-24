@@ -36,8 +36,8 @@ import com.hubspot.jinjava.loader.ResourceNotFoundException;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt.PerAnnotationContextGenerator;
@@ -86,7 +86,7 @@ public class OllamaRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         var responseExtractor = getResponseExtractor();
@@ -103,6 +103,8 @@ public class OllamaRecommender
                 responseExtractor.extract(this, aCas, promptContext, response);
             }
             catch (IOException e) {
+                aContext.error("Ollama [%s] failed to respond: %s", traits.getModel(),
+                        ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Ollama [{}] failed to respond: {}", traits.getModel(),
                         ExceptionUtils.getRootCauseMessage(e));
             }

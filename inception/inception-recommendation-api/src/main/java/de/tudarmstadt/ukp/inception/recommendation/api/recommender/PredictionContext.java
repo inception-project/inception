@@ -19,40 +19,29 @@ package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
-public class RecommenderContext
+public class PredictionContext
 {
-    private final Map<String, Object> store;
+    private RecommenderContext modelContext;
     private List<LogMessage> messages;
-    private Optional<User> user;
     private boolean closed = false;
+    private Optional<User> user;
 
-    public RecommenderContext()
+    public PredictionContext(RecommenderContext aCtx)
     {
-        store = new HashMap<>();
+        modelContext = aCtx;
         messages = new ArrayList<>();
     }
 
-    @SuppressWarnings("unchecked")
     synchronized public <T> Optional<T> get(Key<T> aKey)
     {
-        return Optional.ofNullable((T) store.get(aKey.name));
-    }
-
-    synchronized public <T> void put(Key<T> aKey, T aValue)
-    {
-        if (closed) {
-            throw new IllegalStateException("Adding data to a closed context is not permitted.");
-        }
-
-        store.put(aKey.name, aValue);
+        return modelContext.get(aKey);
     }
 
     synchronized public void info(String aFormat, Object... aValues)
@@ -106,16 +95,6 @@ public class RecommenderContext
         return closed;
     }
 
-    public static class Key<T>
-    {
-        private final String name;
-
-        public Key(String aName)
-        {
-            name = aName;
-        }
-    }
-
     public Optional<User> getUser()
     {
         return user;
@@ -124,15 +103,5 @@ public class RecommenderContext
     public void setUser(User aUser)
     {
         user = Optional.ofNullable(aUser);
-    }
-
-    /**
-     * Empty context which starts out being closed.
-     */
-    public static RecommenderContext emptyContext()
-    {
-        var ctx = new RecommenderContext();
-        ctx.close();
-        return ctx;
     }
 }

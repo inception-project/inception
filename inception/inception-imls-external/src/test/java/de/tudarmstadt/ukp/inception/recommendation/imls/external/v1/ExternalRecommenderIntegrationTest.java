@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderPropertiesImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
@@ -133,7 +134,7 @@ public class ExternalRecommenderIntegrationTest
 
         var cas = casses.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         var predictions = getPredictions(cas, NamedEntity.class);
 
@@ -180,7 +181,7 @@ public class ExternalRecommenderIntegrationTest
 
         var cas = casses.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         var request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 

@@ -126,6 +126,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -1451,9 +1452,6 @@ public class RecommendationServiceImpl
             return;
         }
 
-        RecommenderContext ctx = context.get();
-        ctx.setUser(aSessionOwner);
-
         Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(recommender);
 
         if (maybeFactory.isEmpty()) {
@@ -1485,7 +1483,7 @@ public class RecommendationServiceImpl
         try {
             RecommendationEngine engine = factory.build(recommender);
 
-            if (!engine.isReadyForPrediction(ctx)) {
+            if (!engine.isReadyForPrediction(context.get())) {
                 aPredictions.log(LogMessage.info(recommender.getName(),
                         "Recommender context is not ready... skipping"));
                 LOG.info("Recommender context {} for user {} in project {} is not ready for " //
@@ -1514,8 +1512,11 @@ public class RecommendationServiceImpl
                         engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
             }
             else {
+                var ctx = new PredictionContext(context.get());
+                ctx.setUser(aSessionOwner);
                 generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
                         originalCas, predictionCas, predictionBegin, predictionEnd);
+                ctx.getMessages().forEach(aPredictions::log);
             }
         }
         // Catching Throwable is intentional here as we want to continue the
@@ -1716,7 +1717,7 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(Predictions aIncomingPredictions, RecommenderContext aCtx,
+    void generateSuggestions(Predictions aIncomingPredictions, PredictionContext aCtx,
             RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
             CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
@@ -1729,6 +1730,7 @@ public class RecommendationServiceImpl
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
         LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
                 recommender.getName(), recommender.getLayer().getUiName());
+
         var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
                 aPredictionEnd);
 
