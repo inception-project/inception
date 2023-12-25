@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +34,6 @@ import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.cas.AnnotationBase;
-import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -280,26 +280,35 @@ public class MetadataSuggestionSupport
         return Optional.empty();
     }
 
-    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
-        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
-        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
-        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
-        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
 
-        for (var label : labels) {
-            var suggestion = MetadataSuggestion.builder() //
-                    .withId(MetadataSuggestion.NEW_ID) //
-                    .withGeneration(ctx.getGeneration()) //
-                    .withRecommender(ctx.getRecommender()) //
-                    .withDocument(ctx.getDocument()) //
-                    .withLabel(label) //
-                    .withUiLabel(label) //
-                    .withScore(score) //
-                    .withScoreExplanation(scoreExplanation) //
-                    .withAutoAcceptMode(autoAcceptMode) //
-                    .build();
-            ctx.getResult().add(suggestion);
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+            for (var label : labels) {
+                var suggestion = MetadataSuggestion.builder() //
+                        .withId(MetadataSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocument(ctx.getDocument()) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
         }
+        return result;
     }
 }

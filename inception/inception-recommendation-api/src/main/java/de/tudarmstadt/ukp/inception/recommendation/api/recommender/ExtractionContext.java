@@ -21,12 +21,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -35,7 +30,6 @@ import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public final class ExtractionContext
@@ -56,16 +50,12 @@ public final class ExtractionContext
     private final Type predictedType;
 
     private final Feature labelFeature;
-    private final Feature sourceFeature;
-    private final Feature targetFeature;
     private final Feature scoreFeature;
     private final Feature scoreExplanationFeature;
     private final Feature modeFeature;
     private final Feature predictionFeature;
 
     private final boolean isMultiLabels;
-
-    private final List<AnnotationSuggestion> result;
 
     public ExtractionContext(int aGeneration, Recommender aRecommender, SourceDocument aDocument,
             CAS aOriginalCas, CAS aPredictionCas)
@@ -84,8 +74,6 @@ public final class ExtractionContext
 
         predictedType = CasUtil.getType(aPredictionCas, typeName);
         labelFeature = predictedType.getFeatureByBaseName(featureName);
-        sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
         scoreFeature = predictedType.getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
         scoreExplanationFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
@@ -93,8 +81,6 @@ public final class ExtractionContext
                 .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
         predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
         isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
-
-        result = new ArrayList<AnnotationSuggestion>();
     }
 
     public int getGeneration()
@@ -152,16 +138,6 @@ public final class ExtractionContext
         return labelFeature;
     }
 
-    public Feature getSourceFeature()
-    {
-        return sourceFeature;
-    }
-
-    public Feature getTargetFeature()
-    {
-        return targetFeature;
-    }
-
     public Feature getScoreFeature()
     {
         return scoreFeature;
@@ -185,10 +161,5 @@ public final class ExtractionContext
     public boolean isMultiLabels()
     {
         return isMultiLabels;
-    }
-
-    public List<AnnotationSuggestion> getResult()
-    {
-        return result;
     }
 }

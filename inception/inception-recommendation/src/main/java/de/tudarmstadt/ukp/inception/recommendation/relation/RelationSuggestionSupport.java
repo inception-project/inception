@@ -39,7 +39,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.cas.TOP;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -377,40 +376,52 @@ public class RelationSuggestionSupport
                 featureSupportRegistry));
     }
 
-    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
-        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
-        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
-        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
-        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+        // TODO Use adapter instead - once the method is no longer static
+        var sourceFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_SOURCE);
+        var targetFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_TARGET);
 
-        var source = (AnnotationFS) predictedFS.getFeatureValue(ctx.getSourceFeature());
-        var target = (AnnotationFS) predictedFS.getFeatureValue(ctx.getTargetFeature());
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
 
-        var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
-        var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
-        if (originalSource.isEmpty() || originalTarget.isEmpty()) {
-            LOG.debug("Unable to find source or target of predicted relation in original CAS");
-            return;
+            var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
+            var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
+
+            var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
+            var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
+            if (originalSource.isEmpty() || originalTarget.isEmpty()) {
+                LOG.debug("Unable to find source or target of predicted relation in original CAS");
+                continue;
+            }
+
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var position = new RelationPosition(originalSource.get(), originalTarget.get());
+
+            for (var label : labels) {
+                var suggestion = RelationSuggestion.builder() //
+                        .withId(RelationSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocumentName(ctx.getDocument().getName()) //
+                        .withPosition(position) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
         }
-
-        var position = new RelationPosition(originalSource.get(), originalTarget.get());
-
-        for (var label : labels) {
-            var suggestion = RelationSuggestion.builder() //
-                    .withId(RelationSuggestion.NEW_ID) //
-                    .withGeneration(ctx.getGeneration()) //
-                    .withRecommender(ctx.getRecommender()) //
-                    .withDocumentName(ctx.getDocument().getName()) //
-                    .withPosition(position) //
-                    .withLabel(label) //
-                    .withUiLabel(label) //
-                    .withScore(score) //
-                    .withScoreExplanation(scoreExplanation) //
-                    .withAutoAcceptMode(autoAcceptMode) //
-                    .build();
-            ctx.getResult().add(suggestion);
-        }
+        return result;
     }
 
     /**

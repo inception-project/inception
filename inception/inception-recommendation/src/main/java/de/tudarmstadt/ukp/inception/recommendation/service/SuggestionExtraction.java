@@ -40,30 +40,19 @@ public class SuggestionExtraction
         var ctx = new ExtractionContext(aGeneration, aRecommender, aDocument, aOriginalCas,
                 aPredictionCas);
 
-        for (var predictedFS : aPredictionCas.select(ctx.getPredictedType())) {
-            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
-                continue;
-            }
-
-            switch (ctx.getLayer().getType()) {
-            case SpanLayerSupport.TYPE: {
-                SpanSuggestionSupport.extractSuggestion(ctx, predictedFS);
-                break;
-            }
-            case RelationLayerSupport.TYPE: {
-                RelationSuggestionSupport.extractSuggestion(ctx, predictedFS);
-                break;
-            }
-            case DocumentMetadataLayerSupport.TYPE: {
-                MetadataSuggestionSupport.extractSuggestion(ctx, predictedFS);
-                break;
-            }
-            default:
-                throw new IllegalStateException(
-                        "Unsupported layer type [" + ctx.getLayer().getType() + "]");
-            }
+        switch (ctx.getLayer().getType()) {
+        case SpanLayerSupport.TYPE: {
+            return SpanSuggestionSupport.extractSuggestions(ctx);
         }
-
-        return ctx.getResult();
+        case RelationLayerSupport.TYPE: {
+            return RelationSuggestionSupport.extractSuggestions(ctx);
+        }
+        case DocumentMetadataLayerSupport.TYPE: {
+            return MetadataSuggestionSupport.extractSuggestions(ctx);
+        }
+        default:
+            throw new IllegalStateException(
+                    "Unsupported layer type [" + ctx.getLayer().getType() + "]");
+        }
     }
 }

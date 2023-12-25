@@ -48,7 +48,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.cas.TOP;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -460,42 +459,47 @@ public class SpanSuggestionSupport
                 featureSupportRegistry, recommenderProperties));
     }
 
-    public static void extractSuggestion(ExtractionContext ctx, TOP predictedFS)
+    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
-        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
-        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
-        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
-        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().<Annotation> select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
 
-        var predictedAnnotation = (Annotation) predictedFS;
-        var targetOffsets = getOffsets(ctx.getLayer().getAnchoringMode(), ctx.getOriginalCas(),
-                predictedAnnotation);
+            var anchoringMode = ctx.getLayer().getAnchoringMode();
+            var targetOffsets = getOffsets(anchoringMode, ctx.getOriginalCas(), predictedFS);
+            if (targetOffsets.isEmpty()) {
+                LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, predictedFS);
+                continue;
+            }
 
-        if (targetOffsets.isEmpty()) {
-            LOG.debug("Prediction cannot be anchored to [{}]: {}",
-                    ctx.getLayer().getAnchoringMode(), predictedAnnotation);
-            return;
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var offsets = targetOffsets.get();
+            var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
+
+            for (var label : labels) {
+                var suggestion = SpanSuggestion.builder() //
+                        .withId(RelationSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocument(ctx.getDocument()) //
+                        .withPosition(offsets) //
+                        .withCoveredText(coveredText) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
         }
-
-        var offsets = targetOffsets.get();
-        var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
-
-        for (var label : labels) {
-            var suggestion = SpanSuggestion.builder() //
-                    .withId(RelationSuggestion.NEW_ID) //
-                    .withGeneration(ctx.getGeneration()) //
-                    .withRecommender(ctx.getRecommender()) //
-                    .withDocument(ctx.getDocument()) //
-                    .withPosition(offsets) //
-                    .withCoveredText(coveredText) //
-                    .withLabel(label) //
-                    .withUiLabel(label) //
-                    .withScore(score) //
-                    .withScoreExplanation(scoreExplanation) //
-                    .withAutoAcceptMode(autoAcceptMode) //
-                    .build();
-            ctx.getResult().add(suggestion);
-        }
+        return result;
     }
 
     /**
