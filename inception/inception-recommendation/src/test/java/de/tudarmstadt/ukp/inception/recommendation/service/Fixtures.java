@@ -72,7 +72,7 @@ public class Fixtures
             suggestions.add(suggestion);
         }
 
-        return new SuggestionDocumentGroup<>(suggestions);
+        return SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class, suggestions);
     }
 
     public static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
@@ -90,6 +90,6 @@ public class Fixtures
             suggestions.add(suggestion);
         }
 
-        return new SuggestionDocumentGroup<>(suggestions);
+        return SuggestionDocumentGroup.groupsOfType(RelationSuggestion.class, suggestions);
     }
 }

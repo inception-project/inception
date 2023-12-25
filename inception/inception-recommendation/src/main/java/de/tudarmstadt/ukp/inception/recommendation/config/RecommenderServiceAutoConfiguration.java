@@ -230,7 +230,7 @@ public class RecommenderServiceAutoConfiguration
 
     @Bean
     public SuggestionSupportRegistry layerRecommendtionSupportRegistry(
-            @Lazy @Autowired(required = false) List<SuggestionSupport<?>> aExtensions)
+            @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new LayerRecommendtionSupportRegistryImpl(aExtensions);
     }

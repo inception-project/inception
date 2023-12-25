@@ -25,24 +25,23 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 public class LayerRecommendtionSupportRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationSuggestion, SuggestionSupport<?>>
+    extends ExtensionPoint_ImplBase<Recommender, SuggestionSupport>
     implements SuggestionSupportRegistry
 {
     @Autowired
     public LayerRecommendtionSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<SuggestionSupport<?>> aExtensions)
+            @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         super(aExtensions);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X extends SuggestionSupport<?>> Optional<X> findGenericExtension(
-            AnnotationSuggestion aKey)
+    public <X extends SuggestionSupport> Optional<X> findGenericExtension(Recommender aKey)
     {
         return getExtensions().stream() //
                 .filter(e -> e.accepts(aKey)) //

@@ -235,7 +235,8 @@ public class SpanSuggestionVisibilityCalculationTest
                 .withLabel("blah") //
                 .withPosition(1, 2) //
                 .build();
-        var suggestions = new SuggestionDocumentGroup<>(asList(suggestion1, suggestion2));
+        var suggestions = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
+                asList(suggestion1, suggestion2));
 
         sut.calculateSuggestionVisibility(TEST_USER, doc, cas.getCas(), TEST_USER, layer,
                 suggestions, 0, 2);

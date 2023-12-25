@@ -19,13 +19,20 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupByType;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
+
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
@@ -102,6 +109,10 @@ public class RecommendationRenderer
         var suggestionsByLayer = suggestions.stream()
                 .collect(groupingBy(AnnotationSuggestion::getLayerId));
 
+        var recommenderCache = recommendationService.listRecommenders(aRequest.getProject())
+                .stream().collect(Collectors.toMap(Recommender::getId, identity()));
+        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+
         for (var layer : aRequest.getVisibleLayers()) {
             if (!layer.isEnabled() || layer.isReadonly()) {
                 continue;
@@ -113,23 +124,20 @@ public class RecommendationRenderer
             }
 
             for (var suggestionGroup : suggestionsByType.entrySet()) {
-                var maybeSuggestion = suggestionGroup.getValue().stream()
-                        .filter(group -> !group.isEmpty()) //
-                        .flatMap(group -> group.stream()) //
-                        .findAny();
+                var suggestion = suggestionGroup.getValue().iterator().next().iterator().next();
 
-                if (!maybeSuggestion.isPresent()) {
+                var recommender = recommenderCache.get(suggestion.getRecommenderId());
+                if (recommender == null) {
                     continue;
                 }
 
-                var maybeSupport = suggestionSupportRegistry
-                        .findGenericExtension(maybeSuggestion.get());
-
-                if (!maybeSupport.isPresent()) {
+                var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+                        suggestionSupportRegistry::findGenericExtension);
+                if (suggestionSupport.isEmpty()) {
                     continue;
                 }
 
-                maybeSupport.get().getRenderer().ifPresent(renderer -> renderer.render(aVDoc,
+                suggestionSupport.get().getRenderer().ifPresent(renderer -> renderer.render(aVDoc,
                         aRequest, suggestionGroup.getValue(), layer));
             }
         }

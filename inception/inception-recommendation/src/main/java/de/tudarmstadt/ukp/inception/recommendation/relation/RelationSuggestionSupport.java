@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -69,7 +71,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class RelationSuggestionSupport
-    extends SuggestionSupport_ImplBase<RelationSuggestion>
+    extends SuggestionSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -88,9 +90,18 @@ public class RelationSuggestionSupport
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof RelationSuggestion;
+        if (!RelationLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

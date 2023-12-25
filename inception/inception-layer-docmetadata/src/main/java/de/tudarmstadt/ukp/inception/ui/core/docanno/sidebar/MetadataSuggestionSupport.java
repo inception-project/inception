@@ -51,16 +51,18 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 public class MetadataSuggestionSupport
-    extends SuggestionSupport_ImplBase<MetadataSuggestion>
+    extends SuggestionSupport_ImplBase
 
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -77,9 +79,18 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof MetadataSuggestion;
+        if (!DocumentMetadataLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

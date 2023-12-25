@@ -400,6 +400,14 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         return new SuggestionGroupCollector<T>();
     }
 
+    /**
+     * @param <T>
+     *            type that all of the suggestions must have
+     * @param aSuggestions
+     *            the suggestions
+     * @return suggestions grouped by {@code [layer, feature, position]}. There will be no empty
+     *         groups.
+     */
     public static <T extends AnnotationSuggestion> Collection<SuggestionGroup<T>> group(
             Collection<T> aSuggestions)
     {

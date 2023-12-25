@@ -30,13 +30,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public interface SuggestionSupport<S extends AnnotationSuggestion>
-    extends Extension<AnnotationSuggestion>
+public interface SuggestionSupport
+    extends Extension<Recommender>
 {
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,

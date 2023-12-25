@@ -157,7 +157,7 @@ public class Predictions
             Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
             int aWindowEnd)
     {
-        return new SuggestionDocumentGroup<>(
+        return SuggestionDocumentGroup.groupsOfType(type,
                 getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 

@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -84,7 +86,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class SpanSuggestionSupport
-    extends SuggestionSupport_ImplBase<SpanSuggestion>
+    extends SuggestionSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -106,9 +108,18 @@ public class SpanSuggestionSupport
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof SpanSuggestion;
+        if (!SpanLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

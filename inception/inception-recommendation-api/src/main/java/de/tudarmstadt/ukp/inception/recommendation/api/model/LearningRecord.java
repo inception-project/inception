@@ -249,11 +249,16 @@ public class LearningRecord
         suggestionType = aSuggestionType;
     }
 
-    public void setTokenText(String tokenText)
+    public void setTokenText(String aTokenText)
     {
+        if (aTokenText == null) {
+            tokenText = null;
+            return;
+        }
+
         // Truncate the token text if it is too long
-        int targetLength = Math.min(tokenText.length(), TOKEN_TEXT_LENGTH);
-        this.tokenText = tokenText.substring(0, targetLength);
+        int targetLength = Math.min(aTokenText.length(), TOKEN_TEXT_LENGTH);
+        tokenText = aTokenText.substring(0, targetLength);
     }
 
     /**
@@ -268,6 +273,12 @@ public class LearningRecord
 
     public void setAnnotation(String aAnnotation)
     {
+        if (aAnnotation == null) {
+            annotation = null;
+            return;
+        }
+
+        // Truncate the label if it is too long
         int targetLength = Math.min(aAnnotation.length(), LABEL_LENGTH);
         annotation = aAnnotation.substring(0, targetLength);
     }

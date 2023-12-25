@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
-    implements SuggestionSupport<S>, BeanNameAware
+public abstract class SuggestionSupport_ImplBase
+    implements SuggestionSupport, BeanNameAware
 {
     protected final RecommendationService recommendationService;
     protected final LearningRecordService learningRecordService;
