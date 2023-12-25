@@ -78,11 +78,12 @@ public class Fixtures
     public static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
             SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
+        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
+                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
+
         List<RelationSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
-            var suggestion = RelationSuggestion.builder().withId(val[0])
-                    .withRecommenderId(RECOMMENDER_ID).withRecommenderName(RECOMMENDER_NAME)
-                    .withFeature(aFeat.getName()).withLayerId(aFeat.getLayer().getId())
+            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
                     .withDocument(doc)
                     .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
                     .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();

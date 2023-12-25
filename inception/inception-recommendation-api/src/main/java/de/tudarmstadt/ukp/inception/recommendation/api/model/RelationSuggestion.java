@@ -41,21 +41,6 @@ public class RelationSuggestion
         this.position = builder.position;
     }
 
-    /**
-     * @deprecated Use builder instead
-     */
-    @Deprecated
-    public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
-            String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,
-            int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aScore,
-            String aScoreExplanation, AutoAcceptMode aAutoAcceptMode)
-    {
-        super(aId, 0, 0, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName,
-                aLabel, aUiLabel, aScore, aScoreExplanation, aAutoAcceptMode, 0);
-
-        position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
-    }
-
     // Getter and setter
 
     @Override
@@ -184,25 +169,29 @@ public class RelationSuggestion
             return this;
         }
 
-        public Builder withRecommenderId(long aRecommenderId)
+        @Deprecated
+        Builder withRecommenderId(long aRecommenderId)
         {
             this.recommenderId = aRecommenderId;
             return this;
         }
 
-        public Builder withRecommenderName(String aRecommenderName)
+        @Deprecated
+        Builder withRecommenderName(String aRecommenderName)
         {
             this.recommenderName = aRecommenderName;
             return this;
         }
 
-        public Builder withLayerId(long aLayerId)
+        @Deprecated
+        Builder withLayerId(long aLayerId)
         {
             this.layerId = aLayerId;
             return this;
         }
 
-        public Builder withFeature(String aFeature)
+        @Deprecated
+        Builder withFeature(String aFeature)
         {
             this.feature = aFeature;
             return this;
@@ -268,5 +257,4 @@ public class RelationSuggestion
             return new RelationSuggestion(this);
         }
     }
-
 }

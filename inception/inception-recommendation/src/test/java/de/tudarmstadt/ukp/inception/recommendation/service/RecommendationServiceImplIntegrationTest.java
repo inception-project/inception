@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -397,10 +397,13 @@ public class RecommendationServiceImplIntegrationTest
         var sourceDoc = createSourceDocument("doc");
         var layer = createAnnotationLayer("layer");
         var feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var rec = Recommender.builder().withId(1337l).withName("testRecommender").withLayer(layer)
+                .withFeature(feature).build();
 
-        var suggestion = new RelationSuggestion(42, 1337, "testRecommender", layer.getId(),
-                feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel", "testUiLabel",
-                0.42, "Test confidence", NEVER);
+        var suggestion = RelationSuggestion.builder().withId(42).withRecommender(rec)
+                .withDocument(sourceDoc).withPosition(new RelationPosition(7, 14, 21, 28))
+                .withLabel("testLabel").withUiLabel("testUiLabel").withScore(0.42)
+                .withScoreExplanation("Test confidence").build();
 
         sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature,
                 LearningRecordUserAction.REJECTED, DETAIL_EDITOR);

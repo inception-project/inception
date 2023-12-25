@@ -292,7 +292,7 @@ public class MetadataSuggestionSupport
                     .withId(MetadataSuggestion.NEW_ID) //
                     .withGeneration(ctx.getGeneration()) //
                     .withRecommender(ctx.getRecommender()) //
-                    .withDocumentName(ctx.getDocument().getName()) //
+                    .withDocument(ctx.getDocument()) //
                     .withLabel(label) //
                     .withUiLabel(label) //
                     .withScore(score) //
