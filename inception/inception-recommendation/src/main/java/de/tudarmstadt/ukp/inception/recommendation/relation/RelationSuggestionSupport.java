@@ -387,7 +387,8 @@ public class RelationSuggestionSupport
                 featureSupportRegistry));
     }
 
-    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
         // TODO Use adapter instead - once the method is no longer static
         var sourceFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_SOURCE);

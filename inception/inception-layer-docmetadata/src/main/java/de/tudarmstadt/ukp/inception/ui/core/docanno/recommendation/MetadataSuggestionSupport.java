@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
@@ -291,7 +291,8 @@ public class MetadataSuggestionSupport
         return Optional.empty();
     }
 
-    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
         var result = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {

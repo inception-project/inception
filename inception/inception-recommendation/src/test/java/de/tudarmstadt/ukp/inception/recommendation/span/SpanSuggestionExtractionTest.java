@@ -36,6 +36,10 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -45,19 +49,34 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
+@ExtendWith(MockitoExtension.class)
 class SpanSuggestionExtractionTest
 {
+    private @Mock RecommendationService recommendationService;
+    private @Mock LearningRecordService learningRecordService;
+    private @Mock ApplicationEventPublisher applicationEventPublisher;
+    private @Mock AnnotationSchemaService schemaService;
+    private @Mock FeatureSupportRegistry featureSupportRegistry;
+    private @Mock RecommenderProperties recommenderProperties;
+
     private TokenBuilder<Token, Sentence> tokenBuilder;
     private Project project;
     private SourceDocument document;
     private CAS originalCas;
+
+    private SpanSuggestionSupport sut;
 
     @BeforeEach
     void setup() throws Exception
@@ -78,6 +97,10 @@ class SpanSuggestionExtractionTest
 
         SegmentationUtils.splitSentences(originalCas);
         SegmentationUtils.tokenize(originalCas);
+
+        sut = new SpanSuggestionSupport(recommendationService, learningRecordService,
+                applicationEventPublisher, schemaService, featureSupportRegistry,
+                recommenderProperties);
     }
 
     @Test
@@ -109,8 +132,8 @@ class SpanSuggestionExtractionTest
                 .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
                 .buildAndAddToIndexes();
 
-        var suggestions = SuggestionExtraction.extractSuggestions(1, originalCas, predictionCas,
-                document, recommender);
+        var ctx = new ExtractionContext(0, recommender, document, originalCas, predictionCas);
+        var suggestions = sut.extractSuggestions(ctx);
 
         assertThat(suggestions) //
                 .filteredOn(a -> a instanceof SpanSuggestion) //

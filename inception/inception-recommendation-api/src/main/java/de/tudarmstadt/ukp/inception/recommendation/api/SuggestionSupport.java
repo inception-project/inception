@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
@@ -62,4 +64,6 @@ public interface SuggestionSupport
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
     Optional<SuggestionRenderer> getRenderer();
+
+    List<AnnotationSuggestion> extractSuggestions(ExtractionContext aCtx);
 }

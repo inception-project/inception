@@ -28,7 +28,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -129,6 +128,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -1736,6 +1736,15 @@ public class RecommendationServiceImpl
         var sessionOwner = aIncomingPredictions.getSessionOwner();
         var recommender = aEngine.getRecommender();
 
+        // Extract the suggestions from the data which the recommender has written into the CAS
+        var maybeSupportRegistry = suggestionSupportRegistry.findGenericExtension(recommender);
+        if (maybeSupportRegistry.isEmpty()) {
+            LOG.debug("There is no comparible suggestion support for {} - skipping prediction");
+            aIncomingPredictions.log(LogMessage.warn(recommender.getName(), //
+                    "Prediction skipped since there is no compatible suggestion support."));
+            return;
+        }
+
         // Perform the actual prediction
         aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
@@ -1745,9 +1754,9 @@ public class RecommendationServiceImpl
         var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
                 aPredictionEnd);
 
-        // Extract the suggestions from the data which the recommender has written into the CAS
-        var generatedSuggestions = extractSuggestions(aIncomingPredictions.getGeneration(),
-                aOriginalCas, aPredictionCas, aDocument, recommender);
+        var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
+                recommender, aDocument, aOriginalCas, aPredictionCas);
+        var generatedSuggestions = maybeSupportRegistry.get().extractSuggestions(extractionContext);
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,

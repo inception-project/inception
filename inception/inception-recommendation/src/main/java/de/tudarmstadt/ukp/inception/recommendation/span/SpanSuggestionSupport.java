@@ -470,7 +470,8 @@ public class SpanSuggestionSupport
                 featureSupportRegistry, recommenderProperties));
     }
 
-    public static List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
         var result = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().<Annotation> select(ctx.getPredictedType())) {
