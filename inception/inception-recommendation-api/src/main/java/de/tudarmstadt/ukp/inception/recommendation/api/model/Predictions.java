@@ -335,6 +335,11 @@ public class Predictions
         }
     }
 
+    public List<AnnotationSuggestion> getPredictionsByDocument(SourceDocument aDocument)
+    {
+        return getPredictionsByDocument(aDocument.getName());
+    }
+
     public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName)
     {
         synchronized (predictionsLock) {

@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
 public class RelationSuggestion
     extends AnnotationSuggestion
     implements Serializable
@@ -206,6 +208,13 @@ public class RelationSuggestion
             return this;
         }
 
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            this.documentName = aDocument.getName();
+            return this;
+        }
+
+        @Deprecated
         public Builder withDocumentName(String aDocumentName)
         {
             this.documentName = aDocumentName;

@@ -90,15 +90,15 @@ class RecommendationServiceImplTest
         var existingSuggestions = Arrays.<AnnotationSuggestion> asList( //
                 SpanSuggestion.builder() //
                         .withId(0) //
-                        .withPosition(new Offset(0, 10)) //
-                        .withDocumentName(doc.getName()) //
+                        .withPosition(0, 10) //
+                        .withDocument(doc) //
                         .withLabel("aged") //
                         .withRecommender(rec) //
                         .build(),
                 SpanSuggestion.builder() //
                         .withId(1) //
-                        .withPosition(new Offset(0, 10)) //
-                        .withDocumentName(doc.getName()) //
+                        .withPosition(0, 10) //
+                        .withDocument(doc) //
                         .withLabel("removed") //
                         .withRecommender(rec) //
                         .build());
@@ -108,15 +108,15 @@ class RecommendationServiceImplTest
         var newSuggestions = Arrays.<AnnotationSuggestion> asList( //
                 SpanSuggestion.builder() //
                         .withId(2) //
-                        .withPosition(new Offset(0, 10)) //
-                        .withDocumentName(doc.getName()) //
+                        .withPosition(0, 10) //
+                        .withDocument(doc) //
                         .withLabel("aged") //
                         .withRecommender(rec) //
                         .build(),
                 SpanSuggestion.builder() //
                         .withId(3) //
                         .withPosition(new Offset(0, 10)) //
-                        .withDocumentName(doc.getName()) //
+                        .withDocument(doc) //
                         .withLabel("added") //
                         .withRecommender(rec) //
                         .build());

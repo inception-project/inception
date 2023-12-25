@@ -354,21 +354,19 @@ public class RecommendationServiceImplIntegrationTest
         var sourceDoc = createSourceDocument("doc");
         var layer = createAnnotationLayer("layer");
         var feature = createAnnotationFeature(layer, FEATURE_NAME);
+        var rec = Recommender.builder().withId(1337l).withName("testRecommender").withLayer(layer)
+                .withFeature(feature).build();
 
         var suggestion = SpanSuggestion.builder() //
                 .withId(42) //
-                .withRecommenderId(1337) //
-                .withRecommenderName("testRecommender") //
-                .withLayerId(layer.getId()) //
-                .withFeature(feature.getName()) //
-                .withDocumentName(sourceDoc.getName()) //
-                .withPosition(new Offset(7, 14)) //
+                .withRecommender(rec) //
+                .withDocument(sourceDoc) //
+                .withPosition(7, 14) //
                 .withCoveredText("aCoveredText") //
                 .withLabel("testLabel") //
                 .withUiLabel("testUiLabel") //
                 .withScore(0.42) //
                 .withScoreExplanation("Test confidence") //
-                .withAutoAcceptMode(NEVER) //
                 .build();
 
         sut.logRecord(USER_NAME, sourceDoc, USER_NAME, suggestion, feature, ACCEPTED, MAIN_EDITOR);
@@ -437,28 +435,34 @@ public class RecommendationServiceImplIntegrationTest
         var feature1 = createAnnotationFeature(layer1, "feat1");
         var feature2 = createAnnotationFeature(layer2, "feat1");
 
+        var rec1 = Recommender.builder().withId(1337l).withName("testRecommender").withLayer(layer1)
+                .withFeature(feature1).build();
+        var rec2 = Recommender.builder().withId(1337l).withName("testRecommender2")
+                .withLayer(layer2).withFeature(feature2).build();
+
+        Offset position = new Offset(7, 14);
         sut.logRecord(USER_NAME, sourceDoc1, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
-                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec1).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature1, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc1, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
-                        sourceDoc1.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec2).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature2, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc2, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender", layer1.getId(), feature1.getName(),
-                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec1).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature1, ACCEPTED, MAIN_EDITOR);
 
         sut.logRecord(USER_NAME, sourceDoc2, USER_NAME,
-                new SpanSuggestion(42, 1337, "testRecommender2", layer2.getId(), feature2.getName(),
-                        sourceDoc2.getName(), 7, 14, "aCoveredText", "testLabel", "testUiLabel",
-                        0.42, "Test confidence", NEVER),
+                SpanSuggestion.builder().withRecommender(rec2).withDocument(sourceDoc1)
+                        .withPosition(position).withLabel("testLabel")
+                        .withCoveredText("aCoveredText").build(),
                 feature2, ACCEPTED, MAIN_EDITOR);
 
         assertThat(sut.listLearningRecords(USER_NAME, sourceDoc1, USER_NAME, feature1)).hasSize(1);
@@ -473,9 +477,7 @@ public class RecommendationServiceImplIntegrationTest
 
     private SourceDocument createSourceDocument(String aName)
     {
-        var doc = new SourceDocument();
-        doc.setProject(project);
-        doc.setName(aName);
+        var doc = SourceDocument.builder().withProject(project).withName(aName).build();
         return testEntityManager.persist(doc);
     }
 

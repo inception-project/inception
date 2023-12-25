@@ -485,7 +485,7 @@ public class SpanSuggestionSupport
                     .withId(RelationSuggestion.NEW_ID) //
                     .withGeneration(ctx.getGeneration()) //
                     .withRecommender(ctx.getRecommender()) //
-                    .withDocumentName(ctx.getDocument().getName()) //
+                    .withDocument(ctx.getDocument()) //
                     .withPosition(offsets) //
                     .withCoveredText(coveredText) //
                     .withLabel(label) //

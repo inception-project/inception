@@ -22,9 +22,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeSpanSuggestionGroup;
-import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeSuggestion;
 import static de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport.hideSuggestionsRejectedOrSkipped;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -212,28 +212,28 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void thatOverlappingSuggestionsAreNotHiddenWhenStackingIsEnabled() throws Exception
     {
-        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
-                TEST_USER, layer);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
 
         layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        var rec = Recommender.builder().withId(123l).withName("rec").withLayer(layer)
+                .withFeature(feature).build();
 
         var cas = JCasFactory.createText("a b", "de");
 
         var suggestion1 = SpanSuggestion.builder() //
                 .withId(1) //
-                .withDocumentName(doc.getName()) //
-                .withLayerId(layer.getId()) //
-                .withFeature(NamedEntity._FeatName_value) //
+                .withDocument(doc) //
+                .withRecommender(rec) //
                 .withLabel("blah") //
-                .withPosition(new Offset(0, 1)) //
+                .withPosition(0, 1) //
                 .build();
         var suggestion2 = SpanSuggestion.builder() //
                 .withId(2) //
-                .withDocumentName(doc.getName()) //
-                .withLayerId(layer.getId()) //
-                .withFeature(NamedEntity._FeatName_value) //
+                .withDocument(doc) //
+                .withRecommender(rec) //
                 .withLabel("blah") //
-                .withPosition(new Offset(1, 2)) //
+                .withPosition(1, 2) //
                 .build();
         var suggestions = new SuggestionDocumentGroup<>(asList(suggestion1, suggestion2));
 
@@ -278,17 +278,23 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     void thatRejectedSuggestionIsHidden()
     {
+        var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(1l).withLayer(layer2).withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature2).build();
+        var label = "x";
+
         var records = asList(LearningRecord.builder() //
                 .withSourceDocument(doc) //
                 .withLayer(layer) //
                 .withAnnotationFeature(feature) //
                 .withOffsetBegin(0) //
                 .withOffsetEnd(10) //
-                .withAnnotation("x") //
+                .withAnnotation(label) //
                 .withUserAction(REJECTED) //
                 .build());
 
-        var docSuggestion = makeSuggestion(0, 10, "x", doc, layer, feature);
+        var docSuggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(docSuggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(docSuggestion, records);
         assertThat(docSuggestion.isVisible()) //
@@ -296,21 +302,24 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isFalse();
         assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("rejected");
 
-        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer, feature);
+        var doc2Suggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc2)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(doc2Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
         assertThat(doc2Suggestion.isVisible()) //
                 .as("Suggestion in other document should not be hidden") //
                 .isTrue();
 
-        var doc3Suggestion = makeSuggestion(0, 10, "x", doc, layer2, feature);
+        var doc3Suggestion = SpanSuggestion.builder().withRecommender(rec2).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(doc3Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
         assertThat(doc3Suggestion.isVisible()) //
                 .as("Suggestion in other layer should not be hidden") //
                 .isTrue();
 
-        var doc4Suggestion = makeSuggestion(0, 10, "x", doc, layer, feature2);
+        var doc4Suggestion = SpanSuggestion.builder().withRecommender(rec3).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(doc4Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
         assertThat(doc4Suggestion.isVisible()) //
@@ -321,17 +330,23 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     void thatSkippedSuggestionIsHidden()
     {
+        var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(1l).withLayer(layer2).withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature2).build();
+        var label = "x";
+
         var records = asList(LearningRecord.builder() //
                 .withSourceDocument(doc) //
                 .withLayer(layer) //
                 .withAnnotationFeature(feature) //
                 .withOffsetBegin(0) //
                 .withOffsetEnd(10) //
-                .withAnnotation("x") //
+                .withAnnotation(label) //
                 .withUserAction(SKIPPED) //
                 .build());
 
-        var docSuggestion = makeSuggestion(0, 10, "x", doc, layer, feature);
+        var docSuggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(docSuggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(docSuggestion, records);
         assertThat(docSuggestion.isVisible()) //
@@ -339,21 +354,23 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isFalse();
         assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("skipped");
 
-        var doc2Suggestion = makeSuggestion(0, 10, "x", doc2, layer, feature);
+        var doc2Suggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc2)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(doc2Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
         assertThat(doc2Suggestion.isVisible()) //
                 .as("Suggestion in other document should not be hidden") //
                 .isTrue();
 
-        var doc3Suggestion = makeSuggestion(0, 10, "x", doc, layer2, feature);
-        assertThat(doc3Suggestion.isVisible()).isTrue();
+        var doc3Suggestion = SpanSuggestion.builder().withRecommender(rec2).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
         assertThat(doc3Suggestion.isVisible()) //
                 .as("Suggestion in other layer should not be hidden") //
                 .isTrue();
 
-        var doc4Suggestion = makeSuggestion(0, 10, "x", doc, layer, feature2);
+        var doc4Suggestion = SpanSuggestion.builder().withRecommender(rec3).withDocument(doc)
+                .withLabel(label).withPosition(0, 10).build();
         assertThat(doc4Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc3Suggestion, records);
         assertThat(doc4Suggestion.isVisible()) //
