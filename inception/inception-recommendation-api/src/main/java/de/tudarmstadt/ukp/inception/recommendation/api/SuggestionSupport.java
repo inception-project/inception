@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
@@ -29,13 +31,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public interface SuggestionSupport<S extends AnnotationSuggestion>
-    extends Extension<AnnotationSuggestion>
+public interface SuggestionSupport
+    extends Extension<Recommender>
 {
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
@@ -58,4 +62,8 @@ public interface SuggestionSupport<S extends AnnotationSuggestion>
     LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
+
+    Optional<SuggestionRenderer> getRenderer();
+
+    List<AnnotationSuggestion> extractSuggestions(ExtractionContext aCtx);
 }

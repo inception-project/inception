@@ -17,17 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
@@ -38,72 +36,60 @@ public class Fixtures
     // AnnotationSuggestion
     private final static long RECOMMENDER_ID = 1;
     private final static String RECOMMENDER_NAME = "TestEntityRecommender";
-    private final static String UI_LABEL = "TestUiLabel";
     private final static double CONFIDENCE = 0.2;
     private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
     private final static String COVERED_TEXT = "TestText";
 
-    static <T extends AnnotationSuggestion> List<T> getInvisibleSuggestions(
+    public static <T extends AnnotationSuggestion> List<T> getInvisibleSuggestions(
             Collection<SuggestionGroup<T>> aSuggestions)
     {
         return aSuggestions.stream() //
                 .flatMap(SuggestionGroup::stream) //
                 .filter(s -> !s.isVisible()) //
-                .collect(toList());
+                .toList();
     }
 
-    static <T extends AnnotationSuggestion> List<T> getVisibleSuggestions(
+    public static <T extends AnnotationSuggestion> List<T> getVisibleSuggestions(
             Collection<SuggestionGroup<T>> aSuggestions)
     {
         return aSuggestions.stream() //
                 .flatMap(SuggestionGroup::stream) //
                 .filter(s -> s.isVisible()) //
-                .collect(toList());
+                .toList();
     }
 
-    static SuggestionDocumentGroup<SpanSuggestion> makeSpanSuggestionGroup(SourceDocument doc,
-            AnnotationFeature aFeat, int[][] vals)
-    {
-        List<SpanSuggestion> suggestions = new ArrayList<>();
-        for (int[] val : vals) {
-            suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
-                    aFeat.getLayer().getId(), aFeat.getName(), doc.getName(), val[1], val[2],
-                    COVERED_TEXT, null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION, NEVER));
-        }
-
-        return new SuggestionDocumentGroup<>(suggestions);
-    }
-
-    static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
+    public static SuggestionDocumentGroup<SpanSuggestion> makeSpanSuggestionGroup(
             SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
-        List<RelationSuggestion> suggestions = new ArrayList<>();
+        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
+                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
+
+        List<SpanSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
-            suggestions.add(new RelationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
-                    aFeat.getLayer().getId(), aFeat.getName(), doc.getName(), val[1], val[2],
-                    val[3], val[4], null, UI_LABEL, CONFIDENCE, CONFIDENCE_EXPLANATION, NEVER));
+            var suggestion = SpanSuggestion.builder().withId(val[0]).withRecommender(rec)
+                    .withDocument(doc).withPosition(val[1], val[2]).withCoveredText(COVERED_TEXT)
+                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
+            suggestions.add(suggestion);
         }
 
-        return new SuggestionDocumentGroup<>(suggestions);
+        return SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class, suggestions);
     }
 
-    public static SpanSuggestion makeSuggestion(int aBegin, int aEnd, String aLabel,
-            SourceDocument aDoc, AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
+            SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
-        return new SpanSuggestion(0, // aId,
-                0, // aRecommenderId,
-                "", // aRecommenderName
-                aLayer.getId(), // aLayerId,
-                aFeature.getName(), // aFeature,
-                aDoc.getName(), // aDocumentName
-                aBegin, // aBegin
-                aEnd, // aEnd
-                "", // aCoveredText,
-                aLabel, // aLabel
-                aLabel, // aUiLabel
-                0.0, // aScore
-                "", // aScoreExplanation,
-                NEVER // autoAccept
-        );
+        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
+                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
+
+        List<RelationSuggestion> suggestions = new ArrayList<>();
+        for (int[] val : vals) {
+            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
+                    .withDocument(doc)
+                    .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
+                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
+            suggestions.add(suggestion);
+        }
+
+        return SuggestionDocumentGroup.groupsOfType(RelationSuggestion.class, suggestions);
     }
 }

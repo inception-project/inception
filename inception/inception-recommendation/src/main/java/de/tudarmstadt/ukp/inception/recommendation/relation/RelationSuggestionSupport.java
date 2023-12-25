@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.service;
+package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
@@ -32,12 +32,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,41 +49,59 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class RelationSuggestionSupport
-    extends SuggestionSupport_ImplBase<RelationSuggestion>
+    extends SuggestionSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String TYPE = "RELATION";
 
+    private final FeatureSupportRegistry featureSupportRegistry;
+
     public RelationSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof RelationSuggestion;
+        if (!RelationLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -358,5 +378,79 @@ public class RelationSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<SuggestionRenderer> getRenderer()
+    {
+        return Optional.of(new RelationSuggestionRenderer(recommendationService, schemaService,
+                featureSupportRegistry));
+    }
+
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    {
+        // TODO Use adapter instead - once the method is no longer static
+        var sourceFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_SOURCE);
+        var targetFeature = ctx.getPredictedType().getFeatureByBaseName(FEAT_REL_TARGET);
+
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
+
+            var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
+            var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
+
+            var originalSource = findEquivalentSpan(ctx.getOriginalCas(), source);
+            var originalTarget = findEquivalentSpan(ctx.getOriginalCas(), target);
+            if (originalSource.isEmpty() || originalTarget.isEmpty()) {
+                LOG.debug("Unable to find source or target of predicted relation in original CAS");
+                continue;
+            }
+
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var position = new RelationPosition(originalSource.get(), originalTarget.get());
+
+            for (var label : labels) {
+                var suggestion = RelationSuggestion.builder() //
+                        .withId(RelationSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocumentName(ctx.getDocument().getName()) //
+                        .withPosition(position) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Locates an annotation in the given CAS which is equivalent of the provided annotation.
+     *
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aAnnotation
+     *            an annotation in the prediction CAS. return the equivalent in the original CAS.
+     */
+    private static Optional<Annotation> findEquivalentSpan(CAS aOriginalCas,
+            AnnotationFS aAnnotation)
+    {
+        return aOriginalCas.<Annotation> select(aAnnotation.getType()) //
+                .at(aAnnotation) //
+                .filter(candidate -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(candidate,
+                        aAnnotation, null))
+                .findFirst();
     }
 }

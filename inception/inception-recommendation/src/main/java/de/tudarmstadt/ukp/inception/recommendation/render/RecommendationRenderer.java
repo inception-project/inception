@@ -18,15 +18,21 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupByType;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
@@ -47,19 +53,16 @@ public class RecommendationRenderer
     public static final String ID = "RecommendationRenderer";
 
     private final AnnotationSchemaService annotationService;
-    private final RecommendationSpanRenderer recommendationSpanRenderer;
-    private final RecommendationRelationRenderer recommendationRelationRenderer;
     private final RecommendationService recommendationService;
+    private final SuggestionSupportRegistry suggestionSupportRegistry;
 
     public RecommendationRenderer(AnnotationSchemaService aAnnotationService,
-            RecommendationSpanRenderer aRecommendationSpanRenderer,
-            RecommendationRelationRenderer aRecommendationRelationRenderer,
-            RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService,
+            SuggestionSupportRegistry aSuggestionSupportRegistry)
     {
         annotationService = aAnnotationService;
-        recommendationSpanRenderer = aRecommendationSpanRenderer;
-        recommendationRelationRenderer = aRecommendationRelationRenderer;
         recommendationService = aRecommendationService;
+        suggestionSupportRegistry = aSuggestionSupportRegistry;
     }
 
     @Override
@@ -100,24 +103,42 @@ public class RecommendationRenderer
             return;
         }
 
-        // Add the suggestions to the visual document
+        var suggestions = predictions.getPredictionsByDocument(
+                aRequest.getSourceDocument().getName(), aRequest.getWindowBeginOffset(),
+                aRequest.getWindowEndOffset());
+        var suggestionsByLayer = suggestions.stream()
+                .collect(groupingBy(AnnotationSuggestion::getLayerId));
+
+        var recommenderCache = recommendationService.listRecommenders(aRequest.getProject())
+                .stream().collect(Collectors.toMap(Recommender::getId, identity()));
+        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+
         for (var layer : aRequest.getVisibleLayers()) {
-            if (Token.class.getName().equals(layer.getName())
-                    || Sentence.class.getName().equals(layer.getName())
-                    || CHAIN_TYPE.equals(layer.getType())
-                    || !layer.isEnabled()) { /* Hide layer if not enabled */
+            if (!layer.isEnabled() || layer.isReadonly()) {
                 continue;
             }
 
-            var adapter = annotationService.getAdapter(layer);
-            if (adapter instanceof SpanAdapter) {
-                recommendationSpanRenderer.render(aVDoc, aRequest, predictions,
-                        (SpanAdapter) adapter);
+            var suggestionsByType = groupByType(suggestionsByLayer.get(layer.getId()));
+            if (suggestionsByType.isEmpty()) {
+                continue;
             }
 
-            if (adapter instanceof RelationAdapter) {
-                recommendationRelationRenderer.render(aVDoc, aRequest, predictions,
-                        (RelationAdapter) adapter);
+            for (var suggestionGroup : suggestionsByType.entrySet()) {
+                var suggestion = suggestionGroup.getValue().iterator().next().iterator().next();
+
+                var recommender = recommenderCache.get(suggestion.getRecommenderId());
+                if (recommender == null) {
+                    continue;
+                }
+
+                var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+                        suggestionSupportRegistry::findGenericExtension);
+                if (suggestionSupport.isEmpty()) {
+                    continue;
+                }
+
+                suggestionSupport.get().getRenderer().ifPresent(renderer -> renderer.render(aVDoc,
+                        aRequest, suggestionGroup.getValue(), layer));
             }
         }
     }

@@ -15,102 +15,104 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.render;
+package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.uima.fit.util.CasUtil;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link RecommenderServiceAutoConfiguration#recommendationSpanRenderer}.
- * </p>
- */
-public class RecommendationSpanRenderer
-    implements RecommendationTypeRenderer<SpanAdapter>
+public class RelationSuggestionRenderer
+    implements SuggestionRenderer
 {
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService annotationService;
     private final FeatureSupportRegistry fsRegistry;
-    private final RecommenderProperties recommenderProperties;
 
-    public RecommendationSpanRenderer(RecommendationService aRecommendationService,
-            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-            RecommenderProperties aRecommenderProperties)
+    public RelationSuggestionRenderer(RecommendationService aRecommendationService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         recommendationService = aRecommendationService;
         annotationService = aAnnotationService;
         fsRegistry = aFsRegistry;
-        recommenderProperties = aRecommenderProperties;
     }
 
-    /**
-     * Add annotations from the CAS, which is controlled by the window size, to the VDocument
-     * {@link VDocument}
-     *
-     * @param vdoc
-     *            A VDocument containing annotations for the given layer
-     * @param aPredictions
-     *            the predictions to render
-     */
     @Override
-    public void render(VDocument vdoc, RenderRequest aRequest, Predictions aPredictions,
-            SpanAdapter aTypeAdapter)
+    public void render(VDocument aVDoc, RenderRequest aRequest,
+            SuggestionDocumentGroup<? extends AnnotationSuggestion> aSuggestions,
+            AnnotationLayer aLayer)
     {
         var cas = aRequest.getCas();
-        var layer = aTypeAdapter.getLayer();
-        var groups = aPredictions.getGroupedPredictions(SpanSuggestion.class,
-                aRequest.getSourceDocument().getName(), layer, aRequest.getWindowBeginOffset(),
-                aRequest.getWindowEndOffset());
+
+        // TODO #176 use the document Id once it it available in the CAS
+        var groupedPredictions = (SuggestionDocumentGroup<RelationSuggestion>) aSuggestions;
 
         // No recommendations to render for this layer
-        if (groups.isEmpty()) {
+        if (groupedPredictions.isEmpty()) {
             return;
         }
 
         recommendationService.calculateSuggestionVisibility(
                 aRequest.getSessionOwner().getUsername(), aRequest.getSourceDocument(), cas,
-                aRequest.getAnnotationUser().getUsername(), layer, groups,
+                aRequest.getAnnotationUser().getUsername(), aLayer, groupedPredictions,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
         var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
-                layer.getProject());
+                aLayer.getProject());
+
+        var attachType = CasUtil.getType(cas, aLayer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        var features = annotationService.listSupportedFeatures(layer).stream()
+        var features = annotationService.listSupportedFeatures(aLayer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
         var rankerCache = new HashMap<Long, Boolean>();
 
-        for (var suggestionGroup : groups) {
-            // Render annotations for each label
-            for (var suggestion : suggestionGroup.bestSuggestions(pref)) {
-                var range = VRange.clippedRange(vdoc, suggestion.getBegin(), suggestion.getEnd());
-                if (!range.isPresent()) {
+        for (var group : groupedPredictions) {
+            for (var suggestion : group.bestSuggestions(pref)) {
+                // Skip rendering AnnotationObjects that should not be rendered
+                if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
                     continue;
                 }
 
-                var feature = features.get(suggestion.getFeature());
+                var position = suggestion.getPosition();
+                int sourceBegin = position.getSourceBegin();
+                int sourceEnd = position.getSourceEnd();
+                int targetBegin = position.getTargetBegin();
+                int targetEnd = position.getTargetEnd();
+
+                // FIXME: We get the first match for the (begin, end) span. With stacking, there can
+                // be more than one and we need to get the right one then which does not need to be
+                // the first. We wait for #2135 for a maybe fix.
+                var source = selectAt(cas, attachType, sourceBegin, sourceEnd) //
+                        .stream().findFirst().orElse(null);
+
+                var target = selectAt(cas, attachType, targetBegin, targetEnd) //
+                        .stream().findFirst().orElse(null);
 
                 // Retrieve the UI display label for the given feature value
-                var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
+                var feature = features.get(suggestion.getFeature());
+
+                FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                 var annotation = featureSupport.renderFeatureValue(feature, suggestion.getLabel());
 
                 Map<String, String> featureAnnotation = annotation != null
@@ -126,13 +128,12 @@ public class RecommendationSpanRenderer
                     return false;
                 });
 
-                var v = new VSpan(layer, suggestion.getVID(), range.get(), featureAnnotation,
-                        COLOR);
-                v.setScore(suggestion.getScore());
-                v.setHideScore(isRanker);
-                v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
+                var arc = new VArc(aLayer, suggestion.getVID(), VID.of(source), VID.of(target),
+                        "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
+                arc.setScore(suggestion.getScore());
+                arc.setHideScore(isRanker);
 
-                vdoc.add(v);
+                aVDoc.add(arc);
             }
         }
     }

@@ -23,6 +23,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -30,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -37,8 +41,8 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
-public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
-    implements SuggestionSupport<S>, BeanNameAware
+public abstract class SuggestionSupport_ImplBase
+    implements SuggestionSupport, BeanNameAware
 {
     protected final RecommendationService recommendationService;
     protected final LearningRecordService learningRecordService;
@@ -94,5 +98,30 @@ public abstract class SuggestionSupport_ImplBase<S extends AnnotationSuggestion>
             aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
                     annotation, aFeature, aSuggestion.getLabel()));
         }
+    }
+
+    private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";
+
+    public static AutoAcceptMode getAutoAcceptMode(FeatureStructure aFS, Feature aModeFeature)
+    {
+        var autoAcceptMode = AutoAcceptMode.NEVER;
+        var autoAcceptFeatureValue = aFS.getStringValue(aModeFeature);
+        if (autoAcceptFeatureValue != null) {
+            switch (autoAcceptFeatureValue) {
+            case AUTO_ACCEPT_ON_FIRST_ACCESS:
+                autoAcceptMode = AutoAcceptMode.ON_FIRST_ACCESS;
+            }
+        }
+        return autoAcceptMode;
+    }
+
+    public static String[] getPredictedLabels(FeatureStructure predictedFS,
+            Feature predictedFeature, boolean isStringMultiValue)
+    {
+        if (isStringMultiValue) {
+            return FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
+        }
+
+        return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
     }
 }

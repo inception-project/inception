@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ContextLookupExtensionPoint;
 
 public interface SuggestionSupportRegistry
-    extends ContextLookupExtensionPoint<AnnotationSuggestion, SuggestionSupport<?>>
+    extends ContextLookupExtensionPoint<Recommender, SuggestionSupport>
 {
 
 }

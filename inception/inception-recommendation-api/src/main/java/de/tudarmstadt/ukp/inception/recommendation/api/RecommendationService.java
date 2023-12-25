@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -304,7 +305,9 @@ public interface RecommendationService
      * @param aLayer
      *            the layer to which the suggestions belong.
      * @param aRecommendations
-     *            the suggestions.
+     *            the suggestions which must all be of the same type, e.g. all
+     *            {@link SpanSuggestion}s. Use e.g.
+     *            {@link SuggestionDocumentGroup#groupsOfType(Class, List)} to generate them.
      * @param aWindowBegin
      *            the range of the document for which to update the suggestions.
      * @param aWindowEnd

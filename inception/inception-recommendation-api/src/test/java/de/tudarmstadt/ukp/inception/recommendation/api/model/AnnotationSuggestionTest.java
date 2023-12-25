@@ -17,31 +17,44 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class AnnotationSuggestionTest
 {
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
-        SpanSuggestion rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a",
-                "A", "#A", 0.1, "E1", NEVER);
-        SpanSuggestion rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b",
-                "B", "#B", 0.2, "E2", NEVER);
-        SpanSuggestion rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c",
-                "C", "#C", 0.1, "E1", NEVER);
-        SpanSuggestion rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d",
-                "D", "#D", 0.3, "E3", NEVER);
+        var doc = SourceDocument.builder().withName("doc1").build();
+        var layer = AnnotationLayer.builder().withId(1l).build();
+        var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
+        var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(2l).withLayer(layer).withFeature(feature).build();
 
-        List<SpanSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-        for (SpanSuggestion x : all) {
-            for (SpanSuggestion y : all) {
+        var builder = SpanSuggestion.builder().withLayerId(1).withFeature("value").withDocument(doc)
+                .withPosition(0, 1);
+
+        builder.withRecommender(rec1);
+        var rec1Sug1 = builder.withId(1).withCoveredText("a").withLabel("A").withUiLabel("#A")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec1Sug2 = builder.withId(2).withCoveredText("b").withLabel("B").withUiLabel("#B")
+                .withScore(0.2).withScoreExplanation("E2").build();
+
+        builder.withRecommender(rec2);
+        var rec2Sug1 = builder.withId(3).withCoveredText("c").withLabel("C").withUiLabel("#C")
+                .withScore(0.1).withScoreExplanation("E1").build();
+        var rec2Sug2 = builder.withId(4).withCoveredText("d").withLabel("D").withUiLabel("#D")
+                .withScore(0.3).withScoreExplanation("E3").build();
+
+        var all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
+        for (var x : all) {
+            for (var y : all) {
                 if (x == y) {
                     assertThat(x).isEqualTo(y);
                     assertThat(y).isEqualTo(x);
