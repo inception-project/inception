@@ -1053,23 +1053,25 @@ public class RecommendationServiceImpl
         var layer = schemaService.getLayer(aOriginalSuggestion.getLayerId());
         var feature = schemaService.getFeature(aOriginalSuggestion.getFeature(), layer);
 
-        var originalRls = suggestionSupportRegistry
+        var originalSuggestionSupport = suggestionSupportRegistry
                 .findGenericExtension(getRecommender(aOriginalSuggestion));
-        if (originalRls.isPresent()) {
+        if (originalSuggestionSupport.isPresent()) {
             // If the action was a correction (i.e. suggestion label != annotation value) then
             // generate a rejection for the original value - we do not want the original value to
             // re-appear
-            logRecord(aSessionOwner, aDocument, aDataOwner, aOriginalSuggestion, feature, REJECTED,
-                    aLocation);
+            var record = originalSuggestionSupport.get().toLearningRecord(aDocument, aDataOwner,
+                    aOriginalSuggestion, feature, REJECTED, aLocation);
+            logRecord(aSessionOwner, record);
         }
 
-        var correctedRls = suggestionSupportRegistry
+        var correctedSuggestionSupport = suggestionSupportRegistry
                 .findGenericExtension(getRecommender(aCorrectedSuggestion));
-        if (correctedRls.isPresent()) {
+        if (correctedSuggestionSupport.isPresent()) {
             var adapter = schemaService.getAdapter(layer);
 
-            return (AnnotationFS) originalRls.get().acceptSuggestion(aSessionOwner, aDocument,
-                    aDataOwner, aCas, adapter, feature, aCorrectedSuggestion, aLocation, CORRECTED);
+            return (AnnotationFS) originalSuggestionSupport.get().acceptSuggestion(aSessionOwner,
+                    aDocument, aDataOwner, aCas, adapter, feature, aCorrectedSuggestion, aLocation,
+                    CORRECTED);
         }
 
         return null;
@@ -2045,6 +2047,7 @@ public class RecommendationServiceImpl
 
     @Transactional
     @Override
+    @Deprecated
     public void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
@@ -2063,16 +2066,23 @@ public class RecommendationServiceImpl
                     "Unsupported suggestion type [" + aSuggestion.getClass().getName() + "]");
         }
 
+        logRecord(aSessionOwner, record);
+    }
+
+    @Transactional
+    @Override
+    public void logRecord(String aSessionOwner, LearningRecord aRecord)
+    {
         if (aSessionOwner != null) {
-            var state = getState(aSessionOwner, aDocument.getProject());
+            var state = getState(aSessionOwner, aRecord.getSourceDocument().getProject());
             synchronized (state) {
-                state.removeLearningRecords(record);
-                state.logRecord(record);
+                state.removeLearningRecords(aRecord);
+                state.logRecord(aRecord);
             }
         }
 
-        deleteLearningRecords(record);
-        createLearningRecord(record);
+        deleteLearningRecords(aRecord);
+        createLearningRecord(aRecord);
     }
 
     private void deleteLearningRecords(LearningRecord aRecord)

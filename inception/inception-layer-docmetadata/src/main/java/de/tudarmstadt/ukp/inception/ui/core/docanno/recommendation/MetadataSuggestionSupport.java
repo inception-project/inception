@@ -149,8 +149,9 @@ public class MetadataSuggestionSupport
         var recommender = recommendationService.getRecommender(suggestion);
         var feature = recommender.getFeature();
         // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
-                REJECTED, aAction);
+        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
+                aAction);
+        learningRecordService.logRecord(aSessionOwner, aDocument, record);
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,

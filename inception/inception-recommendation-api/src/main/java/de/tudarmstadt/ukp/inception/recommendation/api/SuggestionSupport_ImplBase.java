@@ -91,8 +91,9 @@ public abstract class SuggestionSupport_ImplBase
 
         // Log the action to the learning record
         if (!aAdapter.isSilenced()) {
-            learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, aSuggestion,
-                    aFeature, aAction, aLocation);
+            var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, aFeature, aAction,
+                    aLocation);
+            learningRecordService.logRecord(aSessionOwner, record);
 
             // Send an application event that the suggestion has been accepted
             aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,

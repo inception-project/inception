@@ -176,7 +176,7 @@ public class SpanSuggestionSupport
 
     @Override
     public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
     {
         var suggestion = (SpanSuggestion) aSuggestion;
 
@@ -187,8 +187,9 @@ public class SpanSuggestionSupport
         var recommender = recommendationService.getRecommender(suggestion);
         var feature = recommender.getFeature();
         // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
-                REJECTED, aAction);
+        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
+                aLocation);
+        learningRecordService.logRecord(aSessionOwner, record);
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
@@ -199,7 +200,7 @@ public class SpanSuggestionSupport
 
     @Override
     public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
         // Hide the suggestion. This is faster than having to recalculate the visibility status
@@ -210,14 +211,9 @@ public class SpanSuggestionSupport
         var feature = recommender.getFeature();
 
         // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, aSuggestion, feature,
-                SKIPPED, aAction);
-
-        // // Send an application event that the suggestion has been rejected
-        // applicationEventPublisher.publishEvent(new RecommendationSkippedEvent(this,
-        // aDocument,
-        // aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-        // spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, SKIPPED,
+                aLocation);
+        learningRecordService.logRecord(aSessionOwner, record);
     }
 
     @Override
