@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -43,7 +41,6 @@ public class RecommenderContext
     }
 
     @SuppressWarnings("unchecked")
-    @Nullable
     synchronized public <T> Optional<T> get(Key<T> aKey)
     {
         return Optional.ofNullable((T) store.get(aKey.name));

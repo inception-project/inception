@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.lang.invoke.MethodHandles;
@@ -34,12 +33,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.yaml.YamlUtil;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class OllamaRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OllamaRecommenderTraits>
@@ -87,7 +88,8 @@ public class OllamaRecommenderFactory
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return SPAN_TYPE.equals(aFeature.getLayer().getType())
+        return (SpanLayerSupport.TYPE.equals(aFeature.getLayer().getType())
+                || DocumentMetadataLayerSupport.TYPE.equals(aFeature.getLayer().getType()))
                 && TYPE_NAME_STRING.equals(aFeature.getType());
     }
 

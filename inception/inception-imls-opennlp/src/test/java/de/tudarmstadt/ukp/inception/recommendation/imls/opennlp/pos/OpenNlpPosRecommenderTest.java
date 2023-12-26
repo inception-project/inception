@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
@@ -97,7 +98,7 @@ public class OpenNlpPosRecommenderTest
 
         sut.train(context, asList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<POS> predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
 

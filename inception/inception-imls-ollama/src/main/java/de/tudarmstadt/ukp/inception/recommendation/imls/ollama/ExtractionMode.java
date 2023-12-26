@@ -19,11 +19,24 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+
 public enum ExtractionMode
 {
     @JsonProperty("response-as-label")
     RESPONSE_AS_LABEL, //
 
     @JsonProperty("mentions-from-json")
-    MENTIONS_FROM_JSON
+    MENTIONS_FROM_JSON;
+
+    public boolean accepts(AnnotationLayer aLayer)
+    {
+        if (this == MENTIONS_FROM_JSON) {
+            // Mention extraction only makes sense for span layers
+            return SpanLayerSupport.TYPE.equals(aLayer.getType());
+        }
+
+        return true;
+    }
 }

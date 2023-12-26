@@ -147,6 +147,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         var availableLayers = LoadableDetachableModel.of(this::listCreatableMetadataLayers);
 
         var content = new WebMarkupContainer("content");
+        content.add(visibleWhenNot(layers.map(List::isEmpty).orElse(true)));
         add(content);
 
         var layer = new DropDownChoice<AnnotationLayer>(CID_LAYER);
@@ -164,11 +165,10 @@ public class DocumentMetadataAnnotationSelectionPanel
         layersContainer = new WebMarkupContainer(CID_LAYERS_CONTAINER);
         layersContainer.setOutputMarkupPlaceholderTag(true);
         layersContainer.add(createLayerGroupList());
-        layersContainer.add(visibleWhenNot(availableLayers.map(List::isEmpty).orElse(true)));
         content.add(layersContainer);
 
         add(new WebMarkupContainer(CID_NO_LAYERS_WARNING)
-                .add(visibleWhen(availableLayers.map(List::isEmpty).orElse(true))));
+                .add(visibleWhen(layers.map(List::isEmpty).orElse(true))));
     }
 
     private void actionAccept(AjaxRequestTarget aTarget, AnnotationListItem aItem)
@@ -314,8 +314,6 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private ListView<LayerGroup> createLayerGroupList()
     {
-        var availableLayers = listCreatableMetadataLayers();
-
         return new ListView<LayerGroup>(CID_LAYERS, layers)
         {
             private static final long serialVersionUID = 1L;
@@ -331,7 +329,6 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var container = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
                 container.setOutputMarkupPlaceholderTag(true);
                 container.add(createAnnotationList(annotations));
-                container.add(visibleWhen(() -> !availableLayers.isEmpty()));
                 aItem.add(container);
 
             }
@@ -521,8 +518,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                     var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                     var annotation = featureSupport.renderFeatureValue(feature,
                             suggestion.getLabel());
-                    items.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer,
-                            singleton, suggestion.getScore()));
+                    items.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer, false,
+                            suggestion.getScore()));
                 }
             }
         }

@@ -106,7 +106,7 @@ public abstract class AnnotationSuggestion
         scoreExplanation = aScoreExplanation;
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
-        autoAcceptMode = aAutoAcceptMode;
+        autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
         hidingFlags = aHidingFlags;
     }
 

@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
@@ -116,7 +117,7 @@ public class StringMatchingRecommenderTest
 
         sut.train(context, Collections.singletonList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -141,7 +142,7 @@ public class StringMatchingRecommenderTest
 
         sut.train(context, Collections.singletonList(cas));
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -170,7 +171,7 @@ public class StringMatchingRecommenderTest
 
         sut.pretrain(gazeteer, context);
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -198,7 +199,7 @@ public class StringMatchingRecommenderTest
 
         sut.pretrain(gazeteer, context);
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -242,7 +243,7 @@ public class StringMatchingRecommenderTest
 
         sut.train(context, emptyList());
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -275,7 +276,7 @@ public class StringMatchingRecommenderTest
 
         sut.train(context, emptyList());
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 

@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.render;
+package de.tudarmstadt.ukp.inception.recommendation.api;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 
 /**
  * Type Adapters for span, arc, and chain annotations
  */
-public interface RecommendationTypeRenderer<T extends TypeAdapter>
+public interface SuggestionRenderer
 {
     String COLOR = "#cccccc";
 
@@ -35,8 +36,12 @@ public interface RecommendationTypeRenderer<T extends TypeAdapter>
      *
      * @param aVdoc
      *            a {@link VDocument} containing annotations for the given layer
+     * @param aSuggestions
+     *            the suggestions to render
      * @param aRequest
      *            a render request
      */
-    void render(VDocument aVdoc, RenderRequest aRequest, Predictions aPredictions, T aAdapter);
+    void render(VDocument aVdoc, RenderRequest aRequest,
+            SuggestionDocumentGroup<? extends AnnotationSuggestion> aSuggestions,
+            AnnotationLayer aLayer);
 }

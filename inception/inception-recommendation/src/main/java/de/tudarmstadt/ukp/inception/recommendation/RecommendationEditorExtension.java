@@ -389,7 +389,7 @@ public class RecommendationEditorExtension
         var details = new VLazyDetailGroup();
         for (var ao : sortedByScore) {
             var items = new ArrayList<String>();
-            if (ao.getScore() != -1) {
+            if (ao.getScore() > 0.0d) {
                 items.add(String.format("Score: %.2f", ao.getScore()));
             }
             if (ao.getScoreExplanation().isPresent()) {

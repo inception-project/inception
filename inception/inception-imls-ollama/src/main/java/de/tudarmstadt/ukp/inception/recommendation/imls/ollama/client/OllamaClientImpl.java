@@ -156,8 +156,8 @@ public class OllamaClientImpl
     private void handleError(HttpResponse<InputStream> response) throws IOException
     {
         if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
+            var responseBody = getResponseBody(response);
+            var msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
                     responseBody);
             throw new IOException(msg);
         }

@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
 public class MetadataSuggestion
     extends AnnotationSuggestion
     implements Serializable
@@ -129,31 +131,42 @@ public class MetadataSuggestion
             return this;
         }
 
-        public Builder withRecommenderId(long aRecommenderId)
+        @Deprecated
+        Builder withRecommenderId(long aRecommenderId)
         {
             this.recommenderId = aRecommenderId;
             return this;
         }
 
-        public Builder withRecommenderName(String aRecommenderName)
+        @Deprecated
+        Builder withRecommenderName(String aRecommenderName)
         {
             this.recommenderName = aRecommenderName;
             return this;
         }
 
-        public Builder withLayerId(long aLayerId)
+        @Deprecated
+        Builder withLayerId(long aLayerId)
         {
             this.layerId = aLayerId;
             return this;
         }
 
-        public Builder withFeature(String aFeature)
+        @Deprecated
+        Builder withFeature(String aFeature)
         {
             this.feature = aFeature;
             return this;
         }
 
-        public Builder withDocumentName(String aDocumentName)
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            this.documentName = aDocument.getName();
+            return this;
+        }
+
+        @Deprecated
+        Builder withDocumentName(String aDocumentName)
         {
             this.documentName = aDocumentName;
             return this;

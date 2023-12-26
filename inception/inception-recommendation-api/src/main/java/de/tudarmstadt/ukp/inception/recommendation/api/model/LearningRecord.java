@@ -50,6 +50,7 @@ public class LearningRecord
 {
     private static final long serialVersionUID = -8487663728083806672L;
     private static final int TOKEN_TEXT_LENGTH = 255;
+    private static final int LABEL_LENGTH = 255;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -248,11 +249,16 @@ public class LearningRecord
         suggestionType = aSuggestionType;
     }
 
-    public void setTokenText(String tokenText)
+    public void setTokenText(String aTokenText)
     {
+        if (aTokenText == null) {
+            tokenText = null;
+            return;
+        }
+
         // Truncate the token text if it is too long
-        int targetLength = Math.min(tokenText.length(), TOKEN_TEXT_LENGTH);
-        this.tokenText = tokenText.substring(0, targetLength);
+        int targetLength = Math.min(aTokenText.length(), TOKEN_TEXT_LENGTH);
+        tokenText = aTokenText.substring(0, targetLength);
     }
 
     /**
@@ -267,7 +273,14 @@ public class LearningRecord
 
     public void setAnnotation(String aAnnotation)
     {
-        annotation = aAnnotation;
+        if (aAnnotation == null) {
+            annotation = null;
+            return;
+        }
+
+        // Truncate the label if it is too long
+        int targetLength = Math.min(aAnnotation.length(), LABEL_LENGTH);
+        annotation = aAnnotation.substring(0, targetLength);
     }
 
     public LearningRecordUserAction getUserAction()

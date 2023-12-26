@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
@@ -23,9 +23,11 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -41,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -48,15 +51,18 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 public class MetadataSuggestionSupport
-    extends SuggestionSupport_ImplBase<MetadataSuggestion>
+    extends SuggestionSupport_ImplBase
 
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -73,9 +79,18 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof MetadataSuggestion;
+        if (!DocumentMetadataLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -268,5 +283,44 @@ public class MetadataSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<SuggestionRenderer> getRenderer()
+    {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    {
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
+
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+
+            for (var label : labels) {
+                var suggestion = MetadataSuggestion.builder() //
+                        .withId(MetadataSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocument(ctx.getDocument()) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
+        }
+        return result;
     }
 }

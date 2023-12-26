@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.service;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
@@ -30,25 +30,42 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation.MetadataSuggestionSupport;
 
+@ExtendWith(MockitoExtension.class)
 class MetadataSuggestionExtractionTest
 {
+    private @Mock RecommendationService recommendationService;
+    private @Mock LearningRecordService learningRecordService;
+    private @Mock ApplicationEventPublisher applicationEventPublisher;
+    private @Mock AnnotationSchemaService schemaService;
+
     private Project project;
     private SourceDocument document;
     private TypeSystemDescription tsd;
     private CAS originalCas;
     private TypeDescription metadataType;
     private FeatureDescription metadataLabelFeature;
+
+    private MetadataSuggestionSupport sut;
 
     @BeforeEach
     void setup() throws Exception
@@ -73,6 +90,9 @@ class MetadataSuggestionExtractionTest
 
         SegmentationUtils.splitSentences(originalCas);
         SegmentationUtils.tokenize(originalCas);
+
+        sut = new MetadataSuggestionSupport(recommendationService, learningRecordService,
+                applicationEventPublisher, schemaService);
     }
 
     @Test
@@ -103,8 +123,8 @@ class MetadataSuggestionExtractionTest
                 .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
                 .buildAndAddToIndexes();
 
-        var suggestions = SuggestionExtraction.extractSuggestions(1, originalCas, predictionCas,
-                document, recommender);
+        var ctx = new ExtractionContext(0, recommender, document, originalCas, predictionCas);
+        var suggestions = sut.extractSuggestions(ctx);
 
         assertThat(suggestions) //
                 .filteredOn(a -> a instanceof MetadataSuggestion) //

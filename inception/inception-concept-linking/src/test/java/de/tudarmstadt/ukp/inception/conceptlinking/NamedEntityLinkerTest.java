@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -146,7 +147,7 @@ public class NamedEntityLinkerTest
         sut.train(context, Collections.singletonList(cas));
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        sut.predict(context, cas);
+        sut.predict(new PredictionContext(context), cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 

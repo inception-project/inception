@@ -28,6 +28,7 @@ export class Span implements Annotation {
   color?: string
   label?: string
   score?: number
+  hideScore: boolean
   comments?: Comment[]
 
   /**
@@ -45,6 +46,7 @@ export class Span implements Annotation {
       this.label = other.label
       this.comments = other.comments
       this.clippingFlags = other.clippingFlags
+      this.hideScore = other.hideScore
     }
   }
 }

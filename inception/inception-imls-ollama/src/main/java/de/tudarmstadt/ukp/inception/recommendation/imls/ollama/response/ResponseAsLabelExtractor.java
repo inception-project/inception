@@ -48,12 +48,22 @@ public class ResponseAsLabelExtractor
         var predictedFeature = aEngine.getPredictedFeature(aCas);
         var isPredictionFeature = aEngine.getIsPredictionFeature(aCas);
 
-        var prediction = aCas.createAnnotation(predictedType, candidate.getBegin(),
-                candidate.getEnd());
-        prediction.setFeatureValueFromString(predictedFeature, aResponse);
-        prediction.setBooleanValue(isPredictionFeature, true);
-        aCas.addFsToIndexes(prediction);
+        if (aCas.getAnnotationType().subsumes(predictedType)) {
+            var prediction = aCas.createAnnotation(predictedType, candidate.getBegin(),
+                    candidate.getEnd());
+            prediction.setFeatureValueFromString(predictedFeature, aResponse);
+            prediction.setBooleanValue(isPredictionFeature, true);
+            aCas.addFsToIndexes(prediction);
 
-        LOG.debug("Prediction generated [{}] -> [{}]", prediction.getCoveredText(), aResponse);
+            LOG.debug("Prediction generated: [{}] -> [{}]", prediction.getCoveredText(), aResponse);
+        }
+        else {
+            var prediction = aCas.createFS(predictedType);
+            prediction.setFeatureValueFromString(predictedFeature, aResponse);
+            prediction.setBooleanValue(isPredictionFeature, true);
+            aCas.addFsToIndexes(prediction);
+
+            LOG.debug("Prediction generated: doc -> [{}]", aResponse);
+        }
     }
 }

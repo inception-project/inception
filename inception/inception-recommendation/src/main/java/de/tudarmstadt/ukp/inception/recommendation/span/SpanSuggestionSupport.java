@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.service;
+package de.tudarmstadt.ukp.inception.recommendation.span;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.lang.invoke.MethodHandles;
@@ -34,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -50,12 +54,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -63,33 +73,53 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class SpanSuggestionSupport
-    extends SuggestionSupport_ImplBase<SpanSuggestion>
+    extends SuggestionSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String TYPE = "SPAN";
 
+    private final FeatureSupportRegistry featureSupportRegistry;
+    private final RecommenderProperties recommenderProperties;
+
     public SpanSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
+            RecommenderProperties aRecommenderProperties)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
+        featureSupportRegistry = aFeatureSupportRegistry;
+        recommenderProperties = aRecommenderProperties;
     }
 
     @Override
-    public boolean accepts(AnnotationSuggestion aContext)
+    public boolean accepts(Recommender aContext)
     {
-        return aContext instanceof SpanSuggestion;
+        if (!SpanLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+            return false;
+        }
+
+        var feature = aContext.getFeature();
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -431,5 +461,196 @@ public class SpanSuggestionSupport
         record.setChangeLocation(aLocation);
         record.setAnnotationFeature(aFeature);
         return record;
+    }
+
+    @Override
+    public Optional<SuggestionRenderer> getRenderer()
+    {
+        return Optional.of(new SpanSuggestionRenderer(recommendationService, schemaService,
+                featureSupportRegistry, recommenderProperties));
+    }
+
+    @Override
+    public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
+    {
+        var result = new ArrayList<AnnotationSuggestion>();
+        for (var predictedFS : ctx.getPredictionCas().<Annotation> select(ctx.getPredictedType())) {
+            if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+                continue;
+            }
+
+            var anchoringMode = ctx.getLayer().getAnchoringMode();
+            var targetOffsets = getOffsets(anchoringMode, ctx.getOriginalCas(), predictedFS);
+            if (targetOffsets.isEmpty()) {
+                LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, predictedFS);
+                continue;
+            }
+
+            var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
+            var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(),
+                    ctx.isMultiLabels());
+            var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
+            var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var offsets = targetOffsets.get();
+            var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
+
+            for (var label : labels) {
+                var suggestion = SpanSuggestion.builder() //
+                        .withId(RelationSuggestion.NEW_ID) //
+                        .withGeneration(ctx.getGeneration()) //
+                        .withRecommender(ctx.getRecommender()) //
+                        .withDocument(ctx.getDocument()) //
+                        .withPosition(offsets) //
+                        .withCoveredText(coveredText) //
+                        .withLabel(label) //
+                        .withUiLabel(label) //
+                        .withScore(score) //
+                        .withScoreExplanation(scoreExplanation) //
+                        .withAutoAcceptMode(autoAcceptMode) //
+                        .build();
+                result.add(suggestion);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Calculates the offsets of the given predicted annotation in the original CAS .
+     *
+     * @param aMode
+     *            the anchoring mode of the target layer
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aPredictedAnnotation
+     *            the predicted annotation.
+     * @return the proper offsets.
+     */
+    static Optional<Offset> getOffsets(AnchoringMode aMode, CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        switch (aMode) {
+        case CHARACTERS: {
+            return getOffsetsAnchoredOnCharacters(aOriginalCas, aPredictedAnnotation);
+        }
+        case SINGLE_TOKEN: {
+            return getOffsetsAnchoredOnSingleTokens(aOriginalCas, aPredictedAnnotation);
+        }
+        case TOKENS: {
+            return getOffsetsAnchoredOnTokens(aOriginalCas, aPredictedAnnotation);
+        }
+        case SENTENCES: {
+            return getOffsetsAnchoredOnSentences(aOriginalCas, aPredictedAnnotation);
+        }
+        default:
+            throw new IllegalStateException("Unsupported anchoring mode: [" + aMode + "]");
+        }
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnCharacters(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        int[] offsets = { max(aPredictedAnnotation.getBegin(), 0),
+                min(aOriginalCas.getDocumentText().length(), aPredictedAnnotation.getEnd()) };
+        TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
+        var begin = offsets[0];
+        var end = offsets[1];
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSentences(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var sentences = aOriginalCas.select(Sentence.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (sentences.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping sentences instead of covered sentences.
+            LOG.trace("Discarding suggestion because no covered sentences were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = sentences.get(0).getBegin();
+        var end = sentences.get(sentences.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    private static Optional<Offset> getOffsetsAnchoredOnSingleTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        Type tokenType = getType(aOriginalCas, Token.class);
+        var tokens = aOriginalCas.<Annotation> select(tokenType) //
+                .coveredBy(aPredictedAnnotation) //
+                .limit(2).asList();
+
+        if (tokens.isEmpty()) {
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of contained tokens.
+            LOG.trace("Discarding suggestion because no covering token was found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        if (tokens.size() > 1) {
+            // We only want to accept single-token suggestions
+            LOG.trace("Discarding suggestion because only single-token suggestions are "
+                    + "accepted: {}", aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        AnnotationFS token = tokens.get(0);
+        var begin = token.getBegin();
+        var end = token.getEnd();
+        return Optional.of(new Offset(begin, end));
+    }
+
+    public static Optional<Offset> getOffsetsAnchoredOnTokens(CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        var tokens = aOriginalCas.select(Token.class) //
+                .coveredBy(aPredictedAnnotation) //
+                .asList();
+
+        if (tokens.isEmpty()) {
+            if (aPredictedAnnotation.getBegin() == aPredictedAnnotation.getEnd()) {
+                var pos = aPredictedAnnotation.getBegin();
+                var allTokens = aOriginalCas.select(Token.class).asList();
+                Token prevToken = null;
+                for (var token : allTokens) {
+                    if (prevToken == null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(token.getBegin(), token.getBegin()));
+                    }
+
+                    if (token.covering(aPredictedAnnotation)) {
+                        return Optional.of(new Offset(pos, pos));
+                    }
+
+                    if (prevToken != null && pos < token.getBegin()) {
+                        return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                    }
+
+                    prevToken = token;
+                }
+
+                if (prevToken != null && pos >= prevToken.getEnd()) {
+                    return Optional.of(new Offset(prevToken.getEnd(), prevToken.getEnd()));
+                }
+            }
+
+            // This can happen if a recommender uses different token boundaries (e.g. if a
+            // remote service performs its own tokenization). We might be smart here by
+            // looking for overlapping tokens instead of covered tokens.
+            LOG.trace("Discarding suggestion because no covered tokens were found: {}",
+                    aPredictedAnnotation);
+            return Optional.empty();
+        }
+
+        var begin = tokens.get(0).getBegin();
+        var end = tokens.get(tokens.size() - 1).getEnd();
+        return Optional.of(new Offset(begin, end));
     }
 }

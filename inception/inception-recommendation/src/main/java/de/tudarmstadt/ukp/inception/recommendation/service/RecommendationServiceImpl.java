@@ -28,9 +28,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.service.SuggestionExtraction.extractSuggestions;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static java.util.Collections.emptyList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -40,6 +40,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -51,6 +52,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -92,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
@@ -107,6 +108,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
@@ -122,6 +124,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -177,7 +181,7 @@ public class RecommendationServiceImpl
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PreferencesService preferencesService;
-    private final SuggestionSupportRegistry layerRecommendtionSupportRegistry;
+    private final SuggestionSupportRegistry suggestionSupportRegistry;
 
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -219,7 +223,7 @@ public class RecommendationServiceImpl
         projectService = aProjectService;
         entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
-        layerRecommendtionSupportRegistry = aLayerRecommendtionSupportRegistry;
+        suggestionSupportRegistry = aLayerRecommendtionSupportRegistry;
 
         trainingTaskCounter = new ConcurrentHashMap<>();
         states = new ConcurrentHashMap<>();
@@ -601,14 +605,13 @@ public class RecommendationServiceImpl
         }
 
         var page = (AnnotationPage) aTarget.getPage();
+        if (!page.isEditable()) {
+            return;
+        }
 
         var predictions = getPredictions(aUser, aDocument.getProject());
         if (predictions == null || predictions.isEmpty()) {
             LOG.trace("Not auto-accepting because no predictions are available");
-            return;
-        }
-
-        if (!page.isEditable()) {
             return;
         }
 
@@ -621,7 +624,10 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var count = 0;
+        var accepted = 0;
+        var recommenderCache = listRecommenders(aDocument.getProject()).stream()
+                .collect(Collectors.toMap(Recommender::getId, identity()));
+        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
         for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
                 continue;
@@ -634,30 +640,35 @@ public class RecommendationServiceImpl
                 prediction.clearAutoAccept();
             }
 
-            var layer = schemaService.getLayer(prediction.getLayerId());
-            var feature = schemaService.getFeature(prediction.getFeature(), layer);
-            var adapter = schemaService.getAdapter(layer);
+            var recommender = recommenderCache.get(prediction.getRecommenderId());
+            if (recommender == null) {
+                continue;
+            }
+
+            var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+                    suggestionSupportRegistry::findGenericExtension);
+            if (suggestionSupport.isEmpty()) {
+                continue;
+            }
+
+            var feature = recommender.getFeature();
+            var adapter = schemaService.getAdapter(recommender.getLayer());
             adapter.silenceEvents();
 
             try {
-                var rls = layerRecommendtionSupportRegistry.findGenericExtension(prediction);
-                if (rls.isPresent()) {
-                    rls.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas, adapter,
-                            feature, prediction, AUTO_ACCEPT, ACCEPTED);
-                    rls.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
-                            (SpanAdapter) adapter, feature, prediction, AUTO_ACCEPT, ACCEPTED);
-                    count++;
-                }
+                suggestionSupport.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
+                        adapter, feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                accepted++;
             }
             catch (AnnotationException e) {
                 LOG.debug("Not auto-accepting suggestion: {}", e.getMessage());
             }
         }
 
-        predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", count));
-        LOG.debug("Auto-accepted [{}] suggestions", count);
+        predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
+        LOG.debug("Auto-accepted [{}] suggestions", accepted);
 
-        if (count > 0) {
+        if (accepted > 0) {
             try {
                 page.writeEditorCas(cas);
             }
@@ -1041,8 +1052,8 @@ public class RecommendationServiceImpl
         var layer = schemaService.getLayer(aOriginalSuggestion.getLayerId());
         var feature = schemaService.getFeature(aOriginalSuggestion.getFeature(), layer);
 
-        var originalRls = layerRecommendtionSupportRegistry
-                .findGenericExtension(aOriginalSuggestion);
+        var originalRls = suggestionSupportRegistry
+                .findGenericExtension(getRecommender(aOriginalSuggestion));
         if (originalRls.isPresent()) {
             // If the action was a correction (i.e. suggestion label != annotation value) then
             // generate a rejection for the original value - we do not want the original value to
@@ -1051,8 +1062,8 @@ public class RecommendationServiceImpl
                     aLocation);
         }
 
-        var correctedRls = layerRecommendtionSupportRegistry
-                .findGenericExtension(aCorrectedSuggestion);
+        var correctedRls = suggestionSupportRegistry
+                .findGenericExtension(getRecommender(aCorrectedSuggestion));
         if (correctedRls.isPresent()) {
             var adapter = schemaService.getAdapter(layer);
 
@@ -1073,8 +1084,9 @@ public class RecommendationServiceImpl
         var layer = schemaService.getLayer(aSuggestion.getLayerId());
         var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
         var adapter = schemaService.getAdapter(layer);
+        var recommender = getRecommender(aSuggestion);
 
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
+        var rls = suggestionSupportRegistry.findGenericExtension(recommender);
 
         if (rls.isPresent()) {
             return rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, adapter,
@@ -1450,9 +1462,6 @@ public class RecommendationServiceImpl
             return;
         }
 
-        RecommenderContext ctx = context.get();
-        ctx.setUser(aSessionOwner);
-
         Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(recommender);
 
         if (maybeFactory.isEmpty()) {
@@ -1484,7 +1493,7 @@ public class RecommendationServiceImpl
         try {
             RecommendationEngine engine = factory.build(recommender);
 
-            if (!engine.isReadyForPrediction(ctx)) {
+            if (!engine.isReadyForPrediction(context.get())) {
                 aPredictions.log(LogMessage.info(recommender.getName(),
                         "Recommender context is not ready... skipping"));
                 LOG.info("Recommender context {} for user {} in project {} is not ready for " //
@@ -1513,8 +1522,11 @@ public class RecommendationServiceImpl
                         engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
             }
             else {
+                var ctx = new PredictionContext(context.get());
+                ctx.setUser(aSessionOwner);
                 generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
                         originalCas, predictionCas, predictionBegin, predictionEnd);
+                ctx.getMessages().forEach(aPredictions::log);
             }
         }
         // Catching Throwable is intentional here as we want to continue the
@@ -1715,7 +1727,7 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    void generateSuggestions(Predictions aIncomingPredictions, RecommenderContext aCtx,
+    void generateSuggestions(Predictions aIncomingPredictions, PredictionContext aCtx,
             RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
             CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
         throws RecommendationException
@@ -1723,17 +1735,27 @@ public class RecommendationServiceImpl
         var sessionOwner = aIncomingPredictions.getSessionOwner();
         var recommender = aEngine.getRecommender();
 
+        // Extract the suggestions from the data which the recommender has written into the CAS
+        var maybeSupportRegistry = suggestionSupportRegistry.findGenericExtension(recommender);
+        if (maybeSupportRegistry.isEmpty()) {
+            LOG.debug("There is no comparible suggestion support for {} - skipping prediction");
+            aIncomingPredictions.log(LogMessage.warn(recommender.getName(), //
+                    "Prediction skipped since there is no compatible suggestion support."));
+            return;
+        }
+
         // Perform the actual prediction
         aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                 "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
         LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
                 recommender.getName(), recommender.getLayer().getUiName());
+
         var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
                 aPredictionEnd);
 
-        // Extract the suggestions from the data which the recommender has written into the CAS
-        var generatedSuggestions = extractSuggestions(aIncomingPredictions.getGeneration(),
-                aOriginalCas, aPredictionCas, aDocument, recommender);
+        var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
+                recommender, aDocument, aOriginalCas, aPredictionCas);
+        var generatedSuggestions = maybeSupportRegistry.get().extractSuggestions(extractionContext);
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,
@@ -1848,7 +1870,11 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(maybeSuggestion.get());
+        // All suggestions in the group must be of the same type. Even if they come from different
+        // recommenders, the recommenders must all be producing the same type of suggestion, so we
+        // can happily just take one of them in order to locate the suggestion support.
+        var recommender = getRecommender(maybeSuggestion.get());
+        var rls = suggestionSupportRegistry.findGenericExtension(recommender);
 
         if (rls.isPresent()) {
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
@@ -1994,7 +2020,7 @@ public class RecommendationServiceImpl
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(suggestion);
+        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(suggestion));
 
         if (rls.isPresent()) {
             rls.get().rejectSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
@@ -2007,7 +2033,7 @@ public class RecommendationServiceImpl
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(suggestion);
+        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(suggestion));
 
         if (rls.isPresent()) {
             rls.get().skipSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
@@ -2022,7 +2048,7 @@ public class RecommendationServiceImpl
     {
         LearningRecord record = null;
 
-        var rls = layerRecommendtionSupportRegistry.findGenericExtension(aSuggestion);
+        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(aSuggestion));
 
         if (rls.isPresent()) {
             record = rls.get().toLearningRecord(aDocument, aDataOwner, aSuggestion, aFeature,

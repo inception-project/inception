@@ -19,32 +19,55 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
+
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
+
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class ExtractionModeSelect
     extends DropDownChoice<ExtractionMode>
 {
     private static final long serialVersionUID = 1789605828488016006L;
 
-    public ExtractionModeSelect(String aId)
-    {
-        super(aId);
-    }
+    private IModel<Recommender> recommender;
 
-    public ExtractionModeSelect(String aId, IModel<ExtractionMode> aModel)
+    public ExtractionModeSelect(String aId, IModel<ExtractionMode> aModel,
+            IModel<Recommender> aRecommender)
     {
         super(aId);
         setModel(aModel);
+        recommender = aRecommender;
     }
 
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
-
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(ExtractionMode.values()));
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        if (!recommender.isPresent().getObject()) {
+            setChoices(Collections.emptyList());
+            return;
+        }
+
+        var validChoices = asList(ExtractionMode.values()).stream() //
+                .filter(e -> e.accepts(recommender.getObject().getLayer())) //
+                .toList();
+        setChoices(validChoices);
+
+        if (validChoices.size() == 1) {
+            setModelObject(validChoices.get(0));
+        }
+
+        setVisible(validChoices.size() > 1);
     }
 }

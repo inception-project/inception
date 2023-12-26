@@ -30,6 +30,7 @@ public class ExternalRecommenderTraits
     private String remoteUrl;
     private boolean trainable;
     private boolean verifyCertificates = true;
+    private boolean ranker;
 
     public String getRemoteUrl()
     {
@@ -59,5 +60,15 @@ public class ExternalRecommenderTraits
     public boolean isVerifyCertificates()
     {
         return verifyCertificates;
+    }
+
+    public void setRanker(boolean aRanker)
+    {
+        ranker = aRanker;
+    }
+
+    public boolean isRanker()
+    {
+        return ranker;
     }
 }

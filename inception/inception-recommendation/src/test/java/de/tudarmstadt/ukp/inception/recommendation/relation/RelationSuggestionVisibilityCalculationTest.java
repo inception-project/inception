@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.service;
+package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
@@ -76,7 +76,7 @@ public class RelationSuggestionVisibilityCalculationTest
 
         when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
 
-        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService);
+        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService, null);
     }
 
     @Test

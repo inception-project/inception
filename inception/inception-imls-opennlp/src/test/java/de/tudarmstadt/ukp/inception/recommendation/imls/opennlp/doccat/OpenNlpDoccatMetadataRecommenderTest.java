@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -107,7 +108,7 @@ public class OpenNlpDoccatMetadataRecommenderTest
         sut.train(context, casList);
 
         var predictionCas = makePredictionCas("I like cars.", feature);
-        sut.predict(context, predictionCas);
+        sut.predict(new PredictionContext(context), predictionCas);
 
         var predictions = getPredictionFSes(predictionCas, layer.getName());
 
