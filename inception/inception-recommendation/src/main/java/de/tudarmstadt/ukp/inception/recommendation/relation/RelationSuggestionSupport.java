@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.stream.Collectors.toList;
@@ -204,33 +202,6 @@ public class RelationSuggestionSupport
                 aSuggestion.getLabel(), annotation, aLocation, aAction);
 
         return annotation;
-    }
-
-    @Override
-    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-    {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_TRANSIENT_REJECTED);
-
-        // TODO: See span recommendation support...
-
-    }
-
-    @Override
-    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_SKIPPED);
-
-        // TODO: Log rejection
-        // TODO: Publish rejection event
     }
 
     @Override

@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -45,7 +42,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -133,37 +129,6 @@ public class MetadataSuggestionSupport
                 aValue, annotation, aLocation, aAction);
 
         return annotation;
-    }
-
-    @Override
-    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        var suggestion = (MetadataSuggestion) aSuggestion;
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
-
-        var recommender = recommendationService.getRecommender(suggestion);
-        var feature = recommender.getFeature();
-        // Log the action to the learning record
-        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
-                aAction);
-        learningRecordService.logRecord(aSessionOwner, aDocument, record);
-
-        // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                aDataOwner, feature, suggestion.getLabel()));
-    }
-
-    @Override
-    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        throw new NotImplementedException("Not yet implemented");
     }
 
     @Override

@@ -86,7 +86,7 @@ public interface SuggestionSupport
      *             if there was a problem rejecting the annotation.
      */
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**

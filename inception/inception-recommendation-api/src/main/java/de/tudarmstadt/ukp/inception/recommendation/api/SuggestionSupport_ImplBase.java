@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
@@ -32,10 +36,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -124,5 +130,47 @@ public abstract class SuggestionSupport_ImplBase
         }
 
         return new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
+    }
+
+    @Override
+    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException
+    {
+        var suggestion = (SpanSuggestion) aSuggestion;
+
+        // Hide the suggestion. This is faster than having to recalculate the visibility status
+        // for the entire document or even for the part visible on screen.
+        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+
+        var recommender = recommendationService.getRecommender(suggestion);
+        var feature = recommender.getFeature();
+        // Log the action to the learning record
+        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
+                aLocation);
+        learningRecordService.logRecord(aSessionOwner, record);
+
+        // Send an application event that the suggestion has been rejected
+        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
+                aDataOwner, suggestion.getBegin(), suggestion.getEnd(), suggestion.getCoveredText(),
+                feature, suggestion.getLabel()));
+    }
+
+    @Override
+    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
+        throws AnnotationException
+    {
+        // Hide the suggestion. This is faster than having to recalculate the visibility status
+        // for the entire document or even for the part visible on screen.
+        aSuggestion.hide(FLAG_SKIPPED);
+
+        var recommender = recommendationService.getRecommender(aSuggestion);
+        var feature = recommender.getFeature();
+
+        // Log the action to the learning record
+        var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, SKIPPED,
+                aLocation);
+        learningRecordService.logRecord(aSessionOwner, record);
     }
 }
