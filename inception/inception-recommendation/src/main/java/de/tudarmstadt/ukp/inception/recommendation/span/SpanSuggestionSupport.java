@@ -441,13 +441,13 @@ public class SpanSuggestionSupport
     }
 
     @Override
-    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var pos = ((SpanSuggestion) aSuggestion).getPosition();
         var record = new LearningRecord();
-        record.setUser(aUsername);
+        record.setUser(aDataOwner);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
         record.setOffsetBegin(pos.getBegin());

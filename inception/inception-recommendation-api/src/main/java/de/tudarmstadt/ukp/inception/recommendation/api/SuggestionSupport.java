@@ -41,29 +41,70 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 public interface SuggestionSupport
     extends Extension<Recommender>
 {
+    /**
+     * @param aCtx
+     *            the extraction context containing all important information.
+     * @return the suggestions extracted from the prediction CAS provided in the context.
+     */
+    List<AnnotationSuggestion> extractSuggestions(ExtractionContext aCtx);
+
+    /**
+     * @return the renderer used to render suggestions provided by this suggestion support.
+     */
+    Optional<SuggestionRenderer> getRenderer();
+
+    /**
+     * Calculate the visibility for the given suggestions. The suggestions must have been produced
+     * by this suggestion support. Also, they must all be from the same layer - be sure to process
+     * one layer at a time. The suggestions may come from different recommenders though.
+     */
+    <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
+            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
+
+    /**
+     * Accept the given suggestion.
+     * 
+     * @param aSuggestion
+     *            the suggestion to accept.
+     * @return the annotation created from the suggestion.
+     * @throws AnnotationException
+     *             if there was a problem creating the annotation.
+     */
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
             LearningRecordUserAction aAction)
         throws AnnotationException;
 
+    /**
+     * Reject the given suggestion.
+     * 
+     * @param aSuggestion
+     *            the suggestion to reject.
+     * @throws AnnotationException
+     *             if there was a problem rejecting the annotation.
+     */
     void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException;
 
+    /**
+     * Skip the given suggestion.
+     * 
+     * @param aSuggestion
+     *            the suggestion to skip.
+     * @throws AnnotationException
+     *             if there was a problem skipping the annotation.
+     */
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
+            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException;
 
-    <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
-            SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
-
-    LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+    /**
+     * Create a learning record from the given suggestion.
+     */
+    LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
-
-    Optional<SuggestionRenderer> getRenderer();
-
-    List<AnnotationSuggestion> extractSuggestions(ExtractionContext aCtx);
 }

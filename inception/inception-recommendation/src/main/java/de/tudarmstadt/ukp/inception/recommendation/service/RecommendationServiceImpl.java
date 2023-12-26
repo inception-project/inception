@@ -1831,7 +1831,7 @@ public class RecommendationServiceImpl
                             s.getScore() == newSuggestion.getScore() && //
                             Objects.equals(s.getScoreExplanation(),
                                     newSuggestion.getScoreExplanation()))
-                    .collect(toList());
+                    .toList();
 
             if (existingSuggestions.isEmpty()) {
                 addedSuggestions.add(newSuggestion);
@@ -1864,8 +1864,10 @@ public class RecommendationServiceImpl
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
-        var maybeSuggestion = aRecommendations.stream().filter(group -> !group.isEmpty())
-                .flatMap(group -> group.stream()).findAny();
+        var maybeSuggestion = aRecommendations.stream() //
+                .filter(group -> !group.isEmpty()) //
+                .flatMap(group -> group.stream()) //
+                .findAny();
 
         if (maybeSuggestion.isEmpty()) {
             return;

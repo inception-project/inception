@@ -422,7 +422,7 @@ public class RelationSuggestionSupport
                         .withId(RelationSuggestion.NEW_ID) //
                         .withGeneration(ctx.getGeneration()) //
                         .withRecommender(ctx.getRecommender()) //
-                        .withDocumentName(ctx.getDocument().getName()) //
+                        .withDocument(ctx.getDocument()) //
                         .withPosition(position) //
                         .withLabel(label) //
                         .withUiLabel(label) //

@@ -172,15 +172,15 @@ public class MetadataSuggestionSupport
     {
         LOG.trace("calculateSuggestionVisibility() for layer {} on document {}", aLayer, aDocument);
 
-        var type = aCas.getTypeSystem().getType(aLayer.getName());
-        if (type == null) {
+        var predictedType = aCas.getTypeSystem().getType(aLayer.getName());
+        if (predictedType == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
             // been upgraded to the latest version of the type system yet. If this is the case,
             // we'll just skip.
             return;
         }
 
-        var annotations = aCas.<AnnotationBase> select(type).asList();
+        var annotations = aCas.<AnnotationBase> select(predictedType).asList();
 
         var suggestionsForLayer = aRecommendations.stream()
                 // Only suggestions for the given layer
@@ -194,7 +194,7 @@ public class MetadataSuggestionSupport
         var adapter = schemaService.getAdapter(aLayer);
         var traits = adapter.getTraits(DocumentMetadataLayerTraits.class).get();
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = type.getFeatureByBaseName(feature.getName());
+            var feat = predictedType.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
@@ -267,14 +267,16 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
-        record.setUser(aUsername);
+        record.setUser(aDataOwner);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
+        record.setOffsetBegin(-1);
+        record.setOffsetEnd(-1);
         record.setOffsetBegin2(-1);
         record.setOffsetEnd2(-1);
         record.setAnnotation(aSuggestion.getLabel());
