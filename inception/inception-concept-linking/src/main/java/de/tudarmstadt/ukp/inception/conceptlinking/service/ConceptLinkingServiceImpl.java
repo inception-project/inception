@@ -24,13 +24,13 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_BEST_MATCH_TERM_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentenceCovering;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokensCovered;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toCollection;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -47,6 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
@@ -512,5 +515,32 @@ public class ConceptLinkingServiceImpl
     public List<KBHandle> searchItems(KnowledgeBase aKB, String aQuery)
     {
         return disambiguate(aKB, null, ConceptFeatureValueType.ANY_OBJECT, aQuery, null, 0, null);
+    }
+
+    /**
+     * Get the sentence based on the annotation begin offset
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aBegin
+     *            the begin offset.
+     * @return the sentence.
+     */
+    private static AnnotationFS selectSentenceCovering(CAS aCas, int aBegin)
+    {
+        AnnotationFS currentSentence = null;
+        for (AnnotationFS sentence : select(aCas, getType(aCas, Sentence.class))) {
+            if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin) {
+                currentSentence = sentence;
+                break;
+            }
+        }
+        return currentSentence;
+    }
+
+    private static Collection<AnnotationFS> selectTokensCovered(AnnotationFS aCover)
+    {
+        return CasUtil.selectCovered(aCover.getCAS(), getType(aCover.getCAS(), Token.class),
+                aCover);
     }
 }

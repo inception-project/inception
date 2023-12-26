@@ -21,13 +21,12 @@ import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getIn
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeRelationSuggestionGroup;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -82,8 +81,8 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
-                TEST_USER, layer);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,
@@ -105,8 +104,8 @@ public class RelationSuggestionVisibilityCalculationTest
     @Test
     public void thatVisibilityIsRestoredWhenOverlappingAnnotationIsRemoved() throws Exception
     {
-        doReturn(new ArrayList<>()).when(learningRecordService).listLearningRecords(TEST_USER,
-                TEST_USER, layer);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
 
         var cas = getTestCas();
         var suggestions = makeRelationSuggestionGroup(doc, feature,

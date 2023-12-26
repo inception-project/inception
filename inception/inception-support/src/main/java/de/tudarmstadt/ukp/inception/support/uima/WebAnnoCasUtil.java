@@ -26,7 +26,6 @@ import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.CasUtil.selectSingle;
 
@@ -39,9 +38,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.Validate;
@@ -222,22 +219,6 @@ public class WebAnnoCasUtil
                 .findFirst().isPresent();
     }
 
-    /**
-     * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
-     * transform sentence address in one CAS to other sentence address for different CAS
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aBegin
-     *            the begin offset.
-     * @return the sentence.
-     */
-    public static AnnotationFS selectSentenceAt(CAS aCas, int aBegin)
-    {
-        return CasUtil.select(aCas, getType(aCas, Sentence.class)).stream()
-                .filter(s -> s.getBegin() == aBegin).findFirst().orElse(null);
-    }
-
     public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
     {
         return aCas.createAnnotation(getType(aCas, Token.class), aBegin, aEnd);
@@ -272,9 +253,8 @@ public class WebAnnoCasUtil
      */
     public static List<AnnotationFS> selectOverlapping(CAS aCas, Type aType, int aBegin, int aEnd)
     {
-
-        List<AnnotationFS> annotations = new ArrayList<>();
-        for (AnnotationFS t : select(aCas, aType)) {
+        var annotations = new ArrayList<AnnotationFS>();
+        for (var t : select(aCas, aType)) {
             if (t.getBegin() >= aEnd) {
                 break;
             }
@@ -286,90 +266,6 @@ public class WebAnnoCasUtil
         }
 
         return annotations;
-    }
-
-    /**
-     * Get the internal address of the first sentence annotation from CAS. This will be used as a
-     * reference for moving forward/backward sentences positions
-     *
-     * @param aCas
-     *            The CAS object assumed to contains some sentence annotations
-     * @return the sentence number or -1 if aCas don't have sentence annotation
-     */
-    public static AnnotationFS getFirstSentence(CAS aCas)
-    {
-        AnnotationFS firstSentence = null;
-        for (AnnotationFS s : select(aCas, getType(aCas, Sentence.class))) {
-            firstSentence = s;
-            break;
-        }
-        return firstSentence;
-    }
-
-    /**
-     * Get the current sentence based on the annotation begin/end offset
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aBegin
-     *            the begin offset.
-     * @param aEnd
-     *            the end offset.
-     * @return the sentence.
-     */
-    public static AnnotationFS getCurrentSentence(CAS aCas, int aBegin, int aEnd)
-    {
-        AnnotationFS currentSentence = null;
-        for (AnnotationFS sentence : selectSentences(aCas)) {
-            if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin
-                    && sentence.getEnd() <= aEnd) {
-                currentSentence = sentence;
-                break;
-            }
-        }
-        return currentSentence;
-    }
-
-    /**
-     * Get the sentence based on the annotation begin offset
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aBegin
-     *            the begin offset.
-     * @return the sentence.
-     */
-    public static AnnotationFS selectSentenceCovering(CAS aCas, int aBegin)
-    {
-        AnnotationFS currentSentence = null;
-        for (AnnotationFS sentence : select(aCas, getType(aCas, Sentence.class))) {
-            if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin) {
-                currentSentence = sentence;
-                break;
-            }
-        }
-        return currentSentence;
-    }
-
-    public static AnnotationFS getNextToken(CAS aCas, int aBegin, int aEnd)
-    {
-        Type tokenType = getType(aCas, Token.class);
-
-        AnnotationFS currentToken = selectAt(aCas, tokenType, aBegin, aEnd).stream().findFirst()
-                .orElse(null);
-        // this happens when tokens such as Dr. OR Ms. selected with double
-        // click, which make seletected text as Dr OR Ms
-        if (currentToken == null) {
-            currentToken = selectAt(aCas, tokenType, aBegin, aEnd + 1).stream().findFirst()
-                    .orElse(null);
-        }
-        AnnotationFS nextToken = null;
-
-        for (AnnotationFS token : CasUtil.selectFollowing(aCas, tokenType, currentToken, 1)) {
-            nextToken = token;
-        }
-
-        return nextToken;
     }
 
     @SuppressWarnings("unchecked")
@@ -491,42 +387,6 @@ public class WebAnnoCasUtil
         return CasUtil.select(aCas, getType(aCas, Token.class));
     }
 
-    public static Collection<AnnotationFS> selectTokensCovered(CAS aCas, int aBegin, int aEnd)
-    {
-        return CasUtil.selectCovered(aCas, getType(aCas, Token.class), aBegin, aEnd);
-    }
-
-    public static Collection<AnnotationFS> selectTokensCovered(AnnotationFS aCover)
-    {
-        return CasUtil.selectCovered(aCover.getCAS(), getType(aCover.getCAS(), Token.class),
-                aCover);
-    }
-
-    /**
-     * For a span annotation, if a sub-token is selected, display the whole text so that the user is
-     * aware of what is being annotated, based on
-     * {@link WebAnnoCasUtil#selectOverlapping(CAS, Type, int, int)} ISSUE - Affected text not
-     * correctly displayed in annotation dialog (Bug #272)
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aBeginOffset
-     *            the begin offset.
-     * @param aEndOffset
-     *            the end offset.
-     * @return the selected text.
-     */
-    public static String getSelectedText(CAS aCas, int aBeginOffset, int aEndOffset)
-    {
-        List<AnnotationFS> tokens = selectOverlapping(aCas, getType(aCas, Token.class),
-                aBeginOffset, aEndOffset);
-        StringBuilder seletedTextSb = new StringBuilder();
-        for (AnnotationFS token : tokens) {
-            seletedTextSb.append(token.getCoveredText()).append(" ");
-        }
-        return seletedTextSb.toString();
-    }
-
     public static boolean isNativeUimaType(String aType)
     {
         Validate.notNull(aType, "Type must not be null");
@@ -572,18 +432,6 @@ public class WebAnnoCasUtil
         }
 
         return false;
-    }
-
-    public static boolean isPrimitiveFeature(FeatureStructure aFS, String aFeatureName)
-    {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);
-
-        if (feature == null) {
-            throw new IllegalArgumentException("Type [" + aFS.getType().getName()
-                    + "] has no feature called [" + aFeatureName + "]");
-        }
-
-        return isPrimitiveType(feature.getRange());
     }
 
     public static boolean isPrimitiveType(Type aType)
@@ -729,13 +577,6 @@ public class WebAnnoCasUtil
         catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
-    {
-        Set<FeatureStructure> allFSes = new LinkedHashSet<>();
-        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
-        return allFSes;
     }
 
     public static byte[] casToByteArray(CASCompleteSerializer aSer) throws IOException

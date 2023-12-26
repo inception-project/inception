@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.relation;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -243,8 +242,8 @@ public class RelationSuggestionSupport
         // Collect all suggestions of the given layer
         var groupedSuggestions = aRecommendations.stream()
                 .filter(group -> group.getLayerId() == aLayer.getId()) //
-                .map(group -> (SuggestionGroup) group) //
-                .collect(toList());
+                .map(group -> (SuggestionGroup<RelationSuggestion>) group) //
+                .toList();
 
         // Get previously rejected suggestions
         var groupedRecordedAnnotations = new ArrayListValuedHashMap<Position, LearningRecord>();
@@ -267,7 +266,7 @@ public class RelationSuggestionSupport
                 return;
             }
 
-            for (SuggestionGroup<RelationSuggestion> group : groupedSuggestions) {
+            for (var group : groupedSuggestions) {
                 if (!feature.getName().equals(group.getFeature())) {
                     continue;
                 }
