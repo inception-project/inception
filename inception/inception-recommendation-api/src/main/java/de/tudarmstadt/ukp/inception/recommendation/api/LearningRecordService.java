@@ -44,6 +44,8 @@ public interface LearningRecordService
      *         used, e.g. for loading only a reduced part of the history in the active learning
      *         sidebar. Learning records with the action {@link LearningRecordUserAction#SHOWN} are
      *         <b>not</b> returned by this method.
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
@@ -61,6 +63,8 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      * 
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDocument
      *            the document
      * @param aDataOwner
@@ -73,12 +77,28 @@ public interface LearningRecordService
      *            the annotators reaction to the suggestion
      * @param aLocation
      *            where the action on the suggestion was triggered
+     * @deprecated Use {@link #logRecord(String, LearningRecord)} instead.
      */
+    @Deprecated
     void logRecord(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
+     * Updates the learning log with an entry for the given suggestion. Any entries which are
+     * duplicates of the new action are removed as part of this action. Note that the actual action
+     * the user performed is not taken into account to determine redundance.
+     * 
+     * @param aSessionOwner
+     *            the user performing the action
+     * @param aRecord
+     *            the record
+     */
+    void logRecord(String aSessionOwner, LearningRecord aRecord);
+
+    /**
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
@@ -93,6 +113,8 @@ public interface LearningRecordService
      * Removes all records of type {@link LearningRecordUserAction#SKIPPED} in the history of the
      * given layer for the given user.
      * 
+     * @param aSessionOwner
+     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer

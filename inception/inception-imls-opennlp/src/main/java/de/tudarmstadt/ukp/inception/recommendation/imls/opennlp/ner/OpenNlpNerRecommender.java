@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import opennlp.tools.ml.BeamSearch;
@@ -95,7 +96,8 @@ public class OpenNlpNerRecommender
         var nameSamples = extractNameSamples(aCasses);
 
         if (nameSamples.size() < 2) {
-            aContext.warn("Not enough training data: [%d] items", nameSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Not enough training data: [%d] items", nameSamples.size()));
             return;
         }
 
@@ -104,10 +106,10 @@ public class OpenNlpNerRecommender
         // OpenNLP
         int beamSize = Math.max(maxRecommendations, NameFinderME.DEFAULT_BEAM_SIZE);
 
-        TrainingParameters params = traits.getParameters();
+        var params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
 
-        TokenNameFinderModel model = train(nameSamples, params);
+        var model = train(nameSamples, params);
 
         aContext.put(KEY_MODEL, model);
     }
@@ -304,7 +306,7 @@ public class OpenNlpNerRecommender
         return label;
     }
 
-    private List<NameSample> extractNameSamples(List<CAS> aCasses)
+    private List<NameSample> extractNameSamples(Iterable<CAS> aCasses)
     {
         var nameSamples = new ArrayList<NameSample>();
 
@@ -402,8 +404,8 @@ public class OpenNlpNerRecommender
             TrainingParameters aParameters)
         throws RecommendationException
     {
-        try (NameSampleStream stream = new NameSampleStream(aNameSamples)) {
-            TokenNameFinderFactory finderFactory = new TokenNameFinderFactory();
+        try (var stream = new NameSampleStream(aNameSamples)) {
+            var finderFactory = new TokenNameFinderFactory();
             return NameFinderME.train("unknown", null, stream, aParameters, finderFactory);
         }
         catch (IOException e) {

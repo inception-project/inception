@@ -53,9 +53,9 @@ import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMe
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.service.LayerRecommendtionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
+import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -231,6 +231,6 @@ public class RecommenderServiceAutoConfiguration
     public SuggestionSupportRegistry layerRecommendtionSupportRegistry(
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
-        return new LayerRecommendtionSupportRegistryImpl(aExtensions);
+        return new SuggestionSupportRegistryImpl(aExtensions);
     }
 }

@@ -24,10 +24,13 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.resource.ResourceInitializationException;
 
@@ -93,8 +96,15 @@ public class UnreachableAnnotationsCheck
 
     public static Map<String, Long> countFeatureStructures(CASImpl casImpl)
     {
-        return WebAnnoCasUtil.findAllFeatureStructures(casImpl).stream() //
+        return findAllFeatureStructures(casImpl).stream() //
                 .map(fs -> fs.getType().getName()) //
                 .collect(groupingBy(identity(), counting()));
+    }
+
+    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
+    {
+        Set<FeatureStructure> allFSes = new LinkedHashSet<>();
+        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
+        return allFSes;
     }
 }

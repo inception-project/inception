@@ -18,10 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.span;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Comparator.comparingInt;
@@ -67,7 +63,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -172,52 +167,6 @@ public class SpanSuggestionSupport
                 aValue, annotation, aLocation, aAction);
 
         return annotation;
-    }
-
-    @Override
-    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-    {
-        var suggestion = (SpanSuggestion) aSuggestion;
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
-
-        var recommender = recommendationService.getRecommender(suggestion);
-        var feature = recommender.getFeature();
-        // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
-                REJECTED, aAction);
-
-        // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                aDataOwner, suggestion.getBegin(), suggestion.getEnd(), suggestion.getCoveredText(),
-                feature, suggestion.getLabel()));
-
-    }
-
-    @Override
-    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_SKIPPED);
-
-        var recommender = recommendationService.getRecommender(aSuggestion);
-        var feature = recommender.getFeature();
-
-        // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, aSuggestion, feature,
-                SKIPPED, aAction);
-
-        // // Send an application event that the suggestion has been rejected
-        // applicationEventPublisher.publishEvent(new RecommendationSkippedEvent(this,
-        // aDocument,
-        // aDataOwner, spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-        // spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
     }
 
     @Override
@@ -441,13 +390,13 @@ public class SpanSuggestionSupport
     }
 
     @Override
-    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var pos = ((SpanSuggestion) aSuggestion).getPosition();
         var record = new LearningRecord();
-        record.setUser(aUsername);
+        record.setUser(aDataOwner);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
         record.setOffsetBegin(pos.getBegin());

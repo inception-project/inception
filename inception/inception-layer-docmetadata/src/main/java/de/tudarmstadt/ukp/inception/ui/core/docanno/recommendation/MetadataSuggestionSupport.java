@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -45,7 +42,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
@@ -136,51 +132,21 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        var suggestion = (MetadataSuggestion) aSuggestion;
-
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
-
-        var recommender = recommendationService.getRecommender(suggestion);
-        var feature = recommender.getFeature();
-        // Log the action to the learning record
-        learningRecordService.logRecord(aSessionOwner, aDocument, aDataOwner, suggestion, feature,
-                REJECTED, aAction);
-
-        // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, aDocument,
-                aDataOwner, feature, suggestion.getLabel()));
-    }
-
-    @Override
-    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        throw new NotImplementedException("Not yet implemented");
-    }
-
-    @Override
     public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
         LOG.trace("calculateSuggestionVisibility() for layer {} on document {}", aLayer, aDocument);
 
-        var type = aCas.getTypeSystem().getType(aLayer.getName());
-        if (type == null) {
+        var predictedType = aCas.getTypeSystem().getType(aLayer.getName());
+        if (predictedType == null) {
             // The type does not exist in the type system of the CAS. Probably it has not
             // been upgraded to the latest version of the type system yet. If this is the case,
             // we'll just skip.
             return;
         }
 
-        var annotations = aCas.<AnnotationBase> select(type).asList();
+        var annotations = aCas.<AnnotationBase> select(predictedType).asList();
 
         var suggestionsForLayer = aRecommendations.stream()
                 // Only suggestions for the given layer
@@ -194,7 +160,7 @@ public class MetadataSuggestionSupport
         var adapter = schemaService.getAdapter(aLayer);
         var traits = adapter.getTraits(DocumentMetadataLayerTraits.class).get();
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = type.getFeatureByBaseName(feature.getName());
+            var feat = predictedType.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
@@ -267,14 +233,16 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public LearningRecord toLearningRecord(SourceDocument aDocument, String aUsername,
+    public LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,
             LearningRecordUserAction aUserAction, LearningRecordChangeLocation aLocation)
     {
         var record = new LearningRecord();
-        record.setUser(aUsername);
+        record.setUser(aDataOwner);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
+        record.setOffsetBegin(-1);
+        record.setOffsetEnd(-1);
         record.setOffsetBegin2(-1);
         record.setOffsetEnd2(-1);
         record.setAnnotation(aSuggestion.getLabel());
