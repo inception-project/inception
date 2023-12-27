@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetails
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentDetailsPage.PAGE_PARAM_REPOSITORY_ID;
 
-import java.io.IOException;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -95,7 +93,7 @@ public class DocumentDetailsPage
         try {
             return externalSearchService.getDocumentText(repo, collectionId, documentId);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
     }
@@ -105,7 +103,7 @@ public class DocumentDetailsPage
         try {
             return externalSearchService.getDocumentResult(repo, collectionId, documentId);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             return new ExternalSearchResult(repo, collectionId, documentId);
         }
     }
