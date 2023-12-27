@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import opennlp.tools.doccat.DoccatFactory;
 import opennlp.tools.doccat.DoccatModel;
 import opennlp.tools.doccat.DocumentCategorizerME;
@@ -108,13 +109,14 @@ public class OpenNlpDoccatRecommender
         var docSamples = extractSamples(aCasses);
 
         if (docSamples.size() < 2) {
-            aContext.warn("Not enough training data: [%d] items", docSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Not enough training data: [%d] items", docSamples.size()));
             return;
         }
 
         if (docSamples.stream().map(DocumentSample::getCategory).distinct().count() <= 1) {
-            aContext.warn("Training data requires at least two different labels",
-                    docSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Training data requires at least two different labels", docSamples.size()));
             return;
         }
 
