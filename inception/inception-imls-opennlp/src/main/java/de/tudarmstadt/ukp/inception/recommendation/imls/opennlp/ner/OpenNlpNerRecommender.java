@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import opennlp.tools.ml.BeamSearch;
@@ -97,7 +98,8 @@ public class OpenNlpNerRecommender
         var nameSamples = extractNameSamples(aCasses);
 
         if (nameSamples.size() < 2) {
-            aContext.warn("Not enough training data: [%d] items", nameSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Not enough training data: [%d] items", nameSamples.size()));
             return;
         }
 

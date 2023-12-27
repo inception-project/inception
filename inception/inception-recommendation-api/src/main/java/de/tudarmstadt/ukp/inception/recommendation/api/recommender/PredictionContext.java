@@ -44,31 +44,13 @@ public class PredictionContext
         return modelContext.get(aKey);
     }
 
-    synchronized public void info(String aFormat, Object... aValues)
+    synchronized public void log(LogMessage aMessage)
     {
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
 
-        messages.add(LogMessage.info(this, aFormat, aValues));
-    }
-
-    synchronized public void warn(String aFormat, Object... aValues)
-    {
-        if (closed) {
-            throw new IllegalStateException("Adding data to a closed context is not permitted.");
-        }
-
-        messages.add(LogMessage.warn(this, aFormat, aValues));
-    }
-
-    synchronized public void error(String aFormat, Object... aValues)
-    {
-        if (closed) {
-            throw new IllegalStateException("Adding data to a closed context is not permitted.");
-        }
-
-        messages.add(LogMessage.error(this, aFormat, aValues));
+        messages.add(aMessage);
     }
 
     public List<LogMessage> getMessages()

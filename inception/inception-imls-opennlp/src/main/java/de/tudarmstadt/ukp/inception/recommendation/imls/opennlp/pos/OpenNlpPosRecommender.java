@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
@@ -97,7 +98,8 @@ public class OpenNlpPosRecommender
         var posSamples = extractPosSamples(aCasses);
 
         if (posSamples.size() < 2) {
-            aContext.warn("Not enough training data: [%d] items", posSamples.size());
+            aContext.log(LogMessage.warn(getRecommender().getName(),
+                    "Not enough training data: [%d] items", posSamples.size()));
             return;
         }
 

@@ -19,11 +19,11 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-h-container">
-      <div class="fs-1 me-4">
-        <i wicket:id="icon"/>
+    <div class="d-flex">
+      <div class="fs-1 mx-2">
+        <i wicket:id="icon" class="text-muted"/>
       </div>
-      <a wicket:id="titleLink" class="flex-content text-decoration-none text-reset">
+      <a wicket:id="titleLink" class="flex-grow-1 text-decoration-none text-reset mx-2">
         <h5>
           <wicket:container wicket:id="title"/>
         </h5>
@@ -33,12 +33,12 @@
           </li>
         </ul>
       </a>
-      <div class="flex-v-container">
-        <a wicket:id="importLink" class="btn btn-secondary">
+      <div class="flex-v-container mx-2 flex-shrink-0">
+        <a wicket:id="importLink" class="btn btn-outline-secondary">
           <i class="fas fa-plus"></i>
           <wicket:message key="import"/>
         </a>
-        <a wicket:id="openLink" class="btn btn-secondary">
+        <a wicket:id="openLink" class="btn btn-outline-secondary">
           <i class="fas fa-folder-open"></i>
           <wicket:message key="open"/>
         </a>
