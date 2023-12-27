@@ -23,13 +23,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.exporter;
 
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -256,15 +256,36 @@ public class OverlapIteratorTest
         test(a, b, true);
     }
 
+    @Test
+    public void testStep11a()
+    {
+        var a = asList(new Offset(28, 71), new Offset(36, 39));
+        var b = asList(new Offset(66, 95), new Offset(68, 73));
+
+        test(a, b, true);
+    }
+
+    @Test
+    public void testStep12()
+    {
+        var b = asList(new Offset(0, 14), new Offset(7, 14), new Offset(114, 116),
+                new Offset(114, 124), new Offset(135, 154), new Offset(160, 167));
+        var a = asList(new Offset(0, 14), new Offset(114, 124), new Offset(135, 154),
+                new Offset(160, 167));
+
+        test(a, b, true);
+    }
+
     private void test(final List<Offset> a, final List<Offset> b, final boolean debug)
     {
-        List<Offset> r1 = overlappingRef(a, b);
-        List<Offset> r2 = overlapping(a, b, debug, false);
+        var r1 = overlappingRef(a, b);
+        var r2 = overlapping(a, b, debug, false);
 
-        r1 = r1.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
-                .distinct().collect(toList());
-        r2 = r2.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
-                .distinct().collect(toList());
+        r1 = r1.stream().sorted().distinct().toList();
+        r2 = r2.stream().sorted().distinct().toList();
+
+        System.out.println("Expected overlapping pairs: " + r1);
+        System.out.println("Actual overlapping pairs  : " + r2);
 
         if (!r1.equals(r2)) {
             System.out.println("Comparing... Mismatch!");
@@ -279,14 +300,14 @@ public class OverlapIteratorTest
         }
     }
 
-    private List<Offset> overlappingRef(final List<Offset> a, final List<Offset> b)
+    private List<Pair<Offset, Offset>> overlappingRef(final List<Offset> a, final List<Offset> b)
     {
-        final ArrayList<Offset> result = new ArrayList<>();
+        var result = new ArrayList<Pair<Offset, Offset>>();
 
-        for (final Offset ia : a) {
-            for (final Offset ib : b) {
+        for (var ia : a) {
+            for (var ib : b) {
                 if (ia.overlaps(ib)) {
-                    result.add(ia);
+                    result.add(Pair.of(ia, ib));
                 }
             }
         }
@@ -294,29 +315,15 @@ public class OverlapIteratorTest
         return result;
     }
 
-    private List<Offset> overlapping(final List<Offset> a, final List<Offset> b,
+    private List<Pair<Offset, Offset>> overlapping(final List<Offset> a, final List<Offset> b,
             final boolean debug, final boolean showSteps)
     {
-        final List<Offset> result = new ArrayList<>();
+        var result = new ArrayList<Pair<Offset, Offset>>();
 
-        final OverlapIterator it = new OverlapIterator(a, b);
+        var it = new OverlapIterator(a, b);
 
         while (it.hasNext()) {
-            final boolean overlaps = it.getA().overlaps(it.getB());
-
-            if (debug) {
-                System.out.println("   ->A:" + it.getA() + " B:" + it.getB() + " :: " + overlaps);
-            }
-
-            if (overlaps) {
-                result.add(it.getA());
-                it.ignoreA();
-            }
-            it.step();
-        }
-
-        if (showSteps) {
-            System.out.println("- Steps  : " + it.getStepCount());
+            result.add(it.next());
         }
 
         return result;
