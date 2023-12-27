@@ -28,15 +28,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
@@ -48,8 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -81,20 +75,21 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
         sut.train(context, casList);
 
-        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)).as("Model has been set")
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
                 .isPresent();
     }
 
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
@@ -106,7 +101,7 @@ public class OpenNlpNerRecommenderTest
 
         sut.predict(new PredictionContext(context), cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        var predictions = cas.select(NamedEntity.class).asList();
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
@@ -114,44 +109,44 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatEvaluationWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
-        EvaluationResult result = sut.evaluate(casList, splitStrategy);
+        var result = sut.evaluate(casList, splitStrategy);
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        var fscore = result.computeF1Score();
+        var accuracy = result.computeAccuracyScore();
+        var precision = result.computePrecisionScore();
+        var recall = result.computeRecallScore();
 
         System.out.printf("F1-Score: %f%n", fscore);
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
 
-        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadAllData();
+        var splitStrategy = new IncrementalSplitter(0.8, 250, 10);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadAllData();
 
-        int i = 0;
+        var i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
 
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
-            assertThat(score).isStrictlyBetween(0.0, 1.0);
+            assertThat(score).isBetween(0.0, 1.0);
 
             i++;
         }
@@ -160,7 +155,7 @@ public class OpenNlpNerRecommenderTest
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDataFiles());
         }
         catch (Exception e) {
@@ -173,7 +168,7 @@ public class OpenNlpNerRecommenderTest
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
         }
         catch (Exception e) {
@@ -185,7 +180,7 @@ public class OpenNlpNerRecommenderTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader( //
+        var reader = createReader( //
                 Conll2002Reader.class, //
                 Conll2002Reader.PARAM_PATTERNS, files, //
                 Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
@@ -194,9 +189,9 @@ public class OpenNlpNerRecommenderTest
                 Conll2002Reader.PARAM_HAS_HEADER, true, //
                 Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> casList = new ArrayList<>();
+        var casList = new ArrayList<CAS>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
         }
@@ -205,13 +200,13 @@ public class OpenNlpNerRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
+        var layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
 

@@ -27,7 +27,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -219,7 +218,7 @@ public class OpenNlpNerRecommender
             return result;
         }
 
-        LOG.info("Training on [{}] sentences, predicting on [{}] of total [{}]", trainingSet.size(),
+        LOG.info("Training on [{}] samples, predicting on [{}] of total [{}]", trainingSet.size(),
                 testSet.size(), data.size());
 
         // Train model
@@ -236,11 +235,11 @@ public class OpenNlpNerRecommender
             nameFinder.clearAdaptiveData();
 
             // Span contains one NE, Array of them all in one sentence
-            var sentence = sample.getSentence();
-            var predictedNames = nameFinder.find(sentence);
+            var sampleTokens = sample.getSentence();
+            var predictedNames = nameFinder.find(sampleTokens);
             var goldNames = sample.getNames();
 
-            labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames, goldNames));
+            labelPairs.addAll(determineLabelsForSample(sampleTokens, predictedNames, goldNames));
         }
 
         return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
@@ -251,7 +250,7 @@ public class OpenNlpNerRecommender
      * Extract AnnotatedTokenPairs with info on predicted and gold label for each token of the given
      * sentence.
      */
-    private List<LabelPair> determineLabelsForASentence(String[] sentence, Span[] predictedNames,
+    private List<LabelPair> determineLabelsForSample(String[] sentence, Span[] predictedNames,
             Span[] goldNames)
     {
         int predictedNameIdx = 0;
@@ -266,7 +265,7 @@ public class OpenNlpNerRecommender
 
             var predictedLabel = NO_NE_TAG;
             if (predictedNameIdx < predictedNames.length) {
-                Span predictedName = predictedNames[predictedNameIdx];
+                var predictedName = predictedNames[predictedNameIdx];
                 predictedLabel = determineLabel(predictedName, i);
 
                 if (i > predictedName.getEnd()) {
@@ -306,9 +305,14 @@ public class OpenNlpNerRecommender
 
     private List<NameSample> extractNameSamples(Iterable<CAS> aCasses)
     {
+        return extractNameSamplesSlidingWindow(aCasses);
+    }
+
+    private List<NameSample> extractNameSamplesSentences(Iterable<CAS> aCasses)
+    {
         var nameSamples = new ArrayList<NameSample>();
 
-        nextCas: for (CAS cas : aCasses) {
+        nextCas: for (var cas : aCasses) {
             var sampleUnitType = getType(cas, SAMPLE_UNIT);
             var tokenType = getType(cas, Token.class);
 
@@ -325,7 +329,7 @@ public class OpenNlpNerRecommender
                 var tokens = cas.<Annotation> select(tokenType).coveredBy(sampleUnit).asList();
                 var tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
                         .toArray(String[]::new);
-                var annotatedSpans = extractAnnotatedSpans(cas, sampleUnit, tokens);
+                var annotatedSpans = extractAnnotatedSpans(cas, tokens);
                 if (annotatedSpans.length == 0) {
                     continue;
                 }
@@ -339,14 +343,77 @@ public class OpenNlpNerRecommender
         return nameSamples;
     }
 
-    private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSampleUnit,
-            Collection<? extends AnnotationFS> aTokens)
+    private List<NameSample> extractNameSamplesSlidingWindow(Iterable<CAS> aCasses)
     {
-        // Create spans from target annotations
+        var nameSamples = new ArrayList<NameSample>();
+
+        var maxSize = 500;
+        nextCas: for (var cas : aCasses) {
+            var firstSampleInCas = true;
+            var tokens = makeSample(cas, 0, maxSize);
+
+            while (!tokens.isEmpty()) {
+                if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break nextCas;
+                }
+
+                var tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
+                        .toArray(String[]::new);
+                var annotatedSpans = extractAnnotatedSpans(cas, tokens);
+                if (annotatedSpans.length == 0) {
+                    continue;
+                }
+
+                var nameSample = new NameSample(tokenTexts, annotatedSpans, firstSampleInCas);
+                nameSamples.add(nameSample);
+                firstSampleInCas = false;
+
+                var firstTokenBegin = tokens.get(0).getBegin();
+                var lastTokenEnd = tokens.get(tokens.size() - 1).getEnd();
+                tokens = makeSample(cas, (lastTokenEnd - firstTokenBegin) / 2, maxSize);
+            }
+        }
+
+        return nameSamples;
+    }
+
+    private List<Token> makeSample(CAS aCas, int aBegin, int aMaxLength)
+    {
+        var result = new ArrayList<Token>();
+        var size = 0;
+        var i = aCas.select(Token.class).startAt(aBegin).iterator();
+
+        while (i.hasNext()) {
+            var token = i.next();
+            var tokenText = token.getCoveredText();
+
+            if (isBlank(tokenText)) {
+                continue;
+            }
+
+            size += tokenText.length();
+            if (size >= aMaxLength && !result.isEmpty()) {
+                // Maximum unit size reached
+                break;
+            }
+            result.add(token);
+        }
+
+        return result;
+    }
+
+    private Span[] extractAnnotatedSpans(CAS aCas, List<? extends AnnotationFS> aTokens)
+    {
+        if (aTokens.isEmpty()) {
+            return new Span[0];
+        }
+
+        // Collect relevant annotations
         var annotationType = getType(aCas, layerName);
         var feature = annotationType.getFeatureByBaseName(featureName);
-        var annotations = selectCovered(annotationType, aSampleUnit);
-
+        var annotations = aCas.<Annotation> select(annotationType)
+                .coveredBy(aTokens.get(0).getBegin(), aTokens.get(aTokens.size() - 1).getEnd())
+                .asList();
         if (annotations.isEmpty()) {
             return new Span[0];
         }
@@ -356,10 +423,10 @@ public class OpenNlpNerRecommender
         var idxTokenEndOffset = new Int2ObjectOpenHashMap<AnnotationFS>();
         var idxToken = new Object2IntOpenHashMap<AnnotationFS>();
         var idx = 0;
-        for (AnnotationFS t : aTokens) {
-            idxTokenBeginOffset.put(t.getBegin(), t);
-            idxTokenEndOffset.put(t.getEnd(), t);
-            idxToken.put(t, idx);
+        for (var token : aTokens) {
+            idxTokenBeginOffset.put(token.getBegin(), token);
+            idxTokenEndOffset.put(token.getEnd(), token);
+            idxToken.put(token, idx);
             idx++;
         }
 
