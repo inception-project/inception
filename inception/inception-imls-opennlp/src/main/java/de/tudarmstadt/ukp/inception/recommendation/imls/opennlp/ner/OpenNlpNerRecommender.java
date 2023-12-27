@@ -21,12 +21,14 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.Evaluat
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -66,6 +68,7 @@ public class OpenNlpNerRecommender
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
 
     private static final String NO_NE_TAG = "O";
+    private static final String BLANK_LABEL = "__BLANK_LABEL__";
 
     private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
     private static final Class<Token> DATAPOINT_UNIT = Token.class;
@@ -150,12 +153,14 @@ public class OpenNlpNerRecommender
 
             for (var prediction : finder.find(tokens)) {
                 var label = prediction.getType();
-                if (NameSample.DEFAULT_TYPE.equals(label)) {
-                    continue;
+                if (NameSample.DEFAULT_TYPE.equals(label) || BLANK_LABEL.equals(label)) {
+                    label = null;
                 }
+
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
+
                 annotation.setStringValue(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
@@ -347,44 +352,69 @@ public class OpenNlpNerRecommender
     {
         var nameSamples = new ArrayList<NameSample>();
 
-        var maxSize = 500;
+        var maxSize = 100;
         nextCas: for (var cas : aCasses) {
             var firstSampleInCas = true;
-            var tokens = makeSample(cas, 0, maxSize);
+            var tokenIterator = cas.select(Token.class).iterator();
+            var tokens = makeSample(tokenIterator, new LinkedList<Token>(), maxSize, maxSize / 2);
 
             while (!tokens.isEmpty()) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    // Generated maximum number of samples
                     break nextCas;
                 }
 
-                var tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
+                var tokenTexts = tokens.stream() //
+                        .map(AnnotationFS::getCoveredText) //
                         .toArray(String[]::new);
                 var annotatedSpans = extractAnnotatedSpans(cas, tokens);
-                if (annotatedSpans.length == 0) {
-                    continue;
+                if (annotatedSpans.length > 0) {
+                    var nameSample = new NameSample(tokenTexts, annotatedSpans, firstSampleInCas);
+                    nameSamples.add(nameSample);
+                    firstSampleInCas = false;
                 }
 
-                var nameSample = new NameSample(tokenTexts, annotatedSpans, firstSampleInCas);
-                nameSamples.add(nameSample);
-                firstSampleInCas = false;
-
-                var firstTokenBegin = tokens.get(0).getBegin();
-                var lastTokenEnd = tokens.get(tokens.size() - 1).getEnd();
-                tokens = makeSample(cas, (lastTokenEnd - firstTokenBegin) / 2, maxSize);
+                tokens = makeSample(tokenIterator, tokens, maxSize, maxSize / 2);
             }
         }
 
         return nameSamples;
     }
 
-    private List<Token> makeSample(CAS aCas, int aBegin, int aMaxLength)
+    private List<Token> makeSample(Iterator<Token> aFreshTokenIterator, List<Token> aTokens,
+            int aMaxLength, int aOverlap)
     {
-        var result = new ArrayList<Token>();
-        var size = 0;
-        var i = aCas.select(Token.class).startAt(aBegin).iterator();
+        if (!aFreshTokenIterator.hasNext()) {
+            return Collections.emptyList();
+        }
 
-        while (i.hasNext()) {
-            var token = i.next();
+        var result = new LinkedList<Token>();
+
+        // Add tokens overlapping with previous sample
+        var size = 0;
+        if (aOverlap > 0) {
+            var overlapIterator = result.descendingIterator();
+            while (overlapIterator.hasNext()) {
+                var token = overlapIterator.next();
+                var tokenText = token.getCoveredText();
+
+                if (isBlank(tokenText)) {
+                    continue;
+                }
+
+                size += tokenText.length();
+                if (size >= aOverlap && !result.isEmpty()) {
+                    // Overlap size reached
+                    break;
+                }
+                result.add(0, token);
+            }
+        }
+
+        // Add fresh tokens
+        var freshTokenAdded = false;
+        while (aFreshTokenIterator.hasNext()) {
+            var token = aFreshTokenIterator.next();
             var tokenText = token.getCoveredText();
 
             if (isBlank(tokenText)) {
@@ -392,11 +422,17 @@ public class OpenNlpNerRecommender
             }
 
             size += tokenText.length();
-            if (size >= aMaxLength && !result.isEmpty()) {
-                // Maximum unit size reached
+            if (size >= aMaxLength && freshTokenAdded) {
+                // Maximum sample size reached
                 break;
             }
+
             result.add(token);
+            freshTokenAdded = true;
+        }
+
+        if (!freshTokenAdded) {
+            return Collections.emptyList();
         }
 
         return result;
@@ -411,8 +447,10 @@ public class OpenNlpNerRecommender
         // Collect relevant annotations
         var annotationType = getType(aCas, layerName);
         var feature = annotationType.getFeatureByBaseName(featureName);
-        var annotations = aCas.<Annotation> select(annotationType)
-                .coveredBy(aTokens.get(0).getBegin(), aTokens.get(aTokens.size() - 1).getEnd())
+        var windowBegin = aTokens.get(0).getBegin();
+        var windowEnd = aTokens.get(aTokens.size() - 1).getEnd();
+        var annotations = aCas.<Annotation> select(annotationType) //
+                .coveredBy(windowBegin, windowEnd) //
                 .asList();
         if (annotations.isEmpty()) {
             return new Span[0];
@@ -431,11 +469,14 @@ public class OpenNlpNerRecommender
         }
 
         var result = new ArrayList<Span>();
-        var highestEndTokenPositionObserved = 0;
+        var highestEndTokenPositionObserved = -1;
         var numberOfAnnotations = annotations.size();
         for (int i = 0; i < numberOfAnnotations; i++) {
             var annotation = annotations.get(i);
             var label = annotation.getFeatureValueAsString(feature);
+            if (isBlank(label)) {
+                label = BLANK_LABEL;
+            }
 
             var beginToken = idxTokenBeginOffset.get(annotation.getBegin());
             var endToken = idxTokenEndOffset.get(annotation.getEnd());
@@ -456,10 +497,8 @@ public class OpenNlpNerRecommender
                 continue;
             }
 
-            if (isNotBlank(label)) {
-                result.add(new Span(begin, end + 1, label));
-                highestEndTokenPositionObserved = end + 1;
-            }
+            result.add(new Span(begin, end + 1, label));
+            highestEndTokenPositionObserved = end + 1;
         }
 
         return result.toArray(new Span[result.size()]);
