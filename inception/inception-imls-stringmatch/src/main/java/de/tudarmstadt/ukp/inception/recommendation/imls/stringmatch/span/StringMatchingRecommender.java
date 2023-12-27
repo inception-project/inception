@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class StringMatchingRecommender
     extends RecommendationEngine
@@ -138,7 +139,9 @@ public class StringMatchingRecommender
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
-            aContext.info("Loaded [%d] entries from gazeteer", aData.size());
+
+            aContext.log(LogMessage.info(getRecommender().getName(),
+                    "Loaded [%d] entries from gazeteer", aData.size()));
         }
 
         aContext.put(KEY_MODEL, dict);
@@ -159,8 +162,8 @@ public class StringMatchingRecommender
                     pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
-                    aContext.error("Unable to load gazeteer [%s]: %s", gaz.getName(),
-                            e.getMessage());
+                    aContext.log(LogMessage.error(getRecommender().getName(),
+                            "Unable to load gazeteer [%s]: %s", gaz.getName(), e.getMessage()));
                     log.error(
                             "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
                             gaz.getName(), gaz.getRecommender().getName(),
@@ -192,8 +195,9 @@ public class StringMatchingRecommender
             }
         }
 
-        aContext.info("Learned dictionary model with %d entries on %d documents", dict.size(),
-                aCasses.size());
+        aContext.log(LogMessage.info(getRecommender().getName(),
+                "Learned dictionary model with %d entries on %d documents", dict.size(),
+                aCasses.size()));
 
         aContext.put(KEY_MODEL, dict);
     }

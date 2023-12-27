@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.Mentions
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseAsLabelExtractor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.response.ResponseExtractor;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class OllamaRecommender
     extends NonTrainableRecommenderEngineImplBase
@@ -103,8 +104,9 @@ public class OllamaRecommender
                 responseExtractor.extract(this, aCas, promptContext, response);
             }
             catch (IOException e) {
-                aContext.error("Ollama [%s] failed to respond: %s", traits.getModel(),
-                        ExceptionUtils.getRootCauseMessage(e));
+                aContext.log(LogMessage.warn(getRecommender().getName(),
+                        "Ollama [%s] failed to respond: %s", traits.getModel(),
+                        ExceptionUtils.getRootCauseMessage(e)));
                 LOG.error("Ollama [{}] failed to respond: {}", traits.getModel(),
                         ExceptionUtils.getRootCauseMessage(e));
             }
