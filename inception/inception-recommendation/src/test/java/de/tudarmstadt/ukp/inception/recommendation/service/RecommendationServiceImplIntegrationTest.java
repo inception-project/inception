@@ -106,7 +106,7 @@ public class RecommendationServiceImplIntegrationTest
     private RecommendationServiceImpl sut;
 
     private FeatureSupportRegistryImpl featureSupportRegistry;
-    private LayerRecommendtionSupportRegistryImpl layerRecommendtionSupportRegistry;
+    private SuggestionSupportRegistryImpl layerRecommendtionSupportRegistry;
     private Project project;
     private AnnotationLayer spanLayer;
     private Recommender spanLayerRecommender;
@@ -115,7 +115,7 @@ public class RecommendationServiceImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        layerRecommendtionSupportRegistry = new LayerRecommendtionSupportRegistryImpl(asList( //
+        layerRecommendtionSupportRegistry = new SuggestionSupportRegistryImpl(asList( //
                 new SpanSuggestionSupport(sut, sut, null, schemaService, null, null),
                 new RelationSuggestionSupport(sut, sut, null, schemaService, null)));
         layerRecommendtionSupportRegistry.init();

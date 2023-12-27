@@ -28,12 +28,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public class LayerRecommendtionSupportRegistryImpl
+public class SuggestionSupportRegistryImpl
     extends ExtensionPoint_ImplBase<Recommender, SuggestionSupport>
     implements SuggestionSupportRegistry
 {
     @Autowired
-    public LayerRecommendtionSupportRegistryImpl(
+    public SuggestionSupportRegistryImpl(
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         super(aExtensions);

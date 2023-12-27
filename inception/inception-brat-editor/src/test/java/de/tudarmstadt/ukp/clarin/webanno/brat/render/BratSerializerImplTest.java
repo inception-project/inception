@@ -23,6 +23,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,6 +34,7 @@ import java.io.File;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
@@ -59,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
@@ -76,7 +80,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class BratSerializerImplTest
@@ -180,7 +183,7 @@ public class BratSerializerImplTest
         state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
+        state.setFirstVisibleUnit(getFirstSentence(cas));
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
@@ -219,7 +222,7 @@ public class BratSerializerImplTest
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setPagingStrategy(new LineOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
+        state.setFirstVisibleUnit(getFirstSentence(cas));
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
@@ -258,7 +261,7 @@ public class BratSerializerImplTest
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setPagingStrategy(new TokenWrappingPagingStrategy(80));
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
+        state.setFirstVisibleUnit(getFirstSentence(cas));
         state.setProject(project);
         state.setDocument(sourceDocument, asList(sourceDocument));
 
@@ -280,5 +283,23 @@ public class BratSerializerImplTest
 
         assertThat(contentOf(new File("src/test/resources/longlines.json"), UTF_8))
                 .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+    }
+
+    /**
+     * Get the internal address of the first sentence annotation from CAS. This will be used as a
+     * reference for moving forward/backward sentences positions
+     *
+     * @param aCas
+     *            The CAS object assumed to contains some sentence annotations
+     * @return the sentence number or -1 if aCas don't have sentence annotation
+     */
+    private static AnnotationFS getFirstSentence(CAS aCas)
+    {
+        AnnotationFS firstSentence = null;
+        for (AnnotationFS s : select(aCas, getType(aCas, Sentence.class))) {
+            firstSentence = s;
+            break;
+        }
+        return firstSentence;
     }
 }

@@ -18,11 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -207,33 +204,6 @@ public class RelationSuggestionSupport
     }
 
     @Override
-    public void rejectSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-    {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_TRANSIENT_REJECTED);
-
-        // TODO: See span recommendation support...
-
-    }
-
-    @Override
-    public void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aAction)
-        throws AnnotationException
-    {
-        // Hide the suggestion. This is faster than having to recalculate the visibility status
-        // for
-        // the entire document or even for the part visible on screen.
-        aSuggestion.hide(FLAG_SKIPPED);
-
-        // TODO: Log rejection
-        // TODO: Publish rejection event
-    }
-
-    @Override
     public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
             SourceDocument aDocument, CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd)
@@ -272,8 +242,8 @@ public class RelationSuggestionSupport
         // Collect all suggestions of the given layer
         var groupedSuggestions = aRecommendations.stream()
                 .filter(group -> group.getLayerId() == aLayer.getId()) //
-                .map(group -> (SuggestionGroup) group) //
-                .collect(toList());
+                .map(group -> (SuggestionGroup<RelationSuggestion>) group) //
+                .toList();
 
         // Get previously rejected suggestions
         var groupedRecordedAnnotations = new ArrayListValuedHashMap<Position, LearningRecord>();
@@ -296,7 +266,7 @@ public class RelationSuggestionSupport
                 return;
             }
 
-            for (SuggestionGroup<RelationSuggestion> group : groupedSuggestions) {
+            for (var group : groupedSuggestions) {
                 if (!feature.getName().equals(group.getFeature())) {
                     continue;
                 }
@@ -422,7 +392,7 @@ public class RelationSuggestionSupport
                         .withId(RelationSuggestion.NEW_ID) //
                         .withGeneration(ctx.getGeneration()) //
                         .withRecommender(ctx.getRecommender()) //
-                        .withDocumentName(ctx.getDocument().getName()) //
+                        .withDocument(ctx.getDocument()) //
                         .withPosition(position) //
                         .withLabel(label) //
                         .withUiLabel(label) //
