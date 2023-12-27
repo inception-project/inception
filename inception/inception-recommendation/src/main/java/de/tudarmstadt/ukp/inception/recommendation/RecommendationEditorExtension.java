@@ -24,7 +24,6 @@ package de.tudarmstadt.ukp.inception.recommendation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -388,22 +387,24 @@ public class RecommendationEditorExtension
         var sortedByScore = group.get().bestSuggestionsByFeatureAndLabel(pref, aFeature.getName(),
                 label);
 
-        var details = new VLazyDetailGroup();
+        var detailGroups = new ArrayList<VLazyDetailGroup>();
         for (var ao : sortedByScore) {
-            var items = new ArrayList<String>();
+            var detailGroup = new VLazyDetailGroup(ao.getRecommenderName());
+            // detailGroup.addDetail(new VLazyDetail("Age", String.valueOf(ao.getAge())));
             if (ao.getScore() > 0.0d) {
-                items.add(String.format("Score: %.2f", ao.getScore()));
+                detailGroup
+                        .addDetail(new VLazyDetail("Score", String.format("%.2f", ao.getScore())));
             }
             if (ao.getScoreExplanation().isPresent()) {
-                items.add("Explanation: " + ao.getScoreExplanation().get());
+                detailGroup
+                        .addDetail(new VLazyDetail("Explanation", ao.getScoreExplanation().get()));
             }
             if (pref.isShowAllPredictions() && !ao.isVisible()) {
-                items.add("Hidden: " + ao.getReasonForHiding());
+                detailGroup.addDetail(new VLazyDetail("Hidden", ao.getReasonForHiding()));
             }
-            details.addDetail(
-                    new VLazyDetail(ao.getRecommenderName(), "\n" + String.join("\n", items)));
+            detailGroups.add(detailGroup);
         }
 
-        return asList(details);
+        return detailGroups;
     }
 }
