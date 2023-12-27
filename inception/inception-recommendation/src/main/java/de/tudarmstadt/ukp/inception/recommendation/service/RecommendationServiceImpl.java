@@ -1435,7 +1435,7 @@ public class RecommendationServiceImpl
 
         // Make sure we have the latest recommender config from the DB - the one
         // from the active recommenders list may be outdated
-        Recommender recommender = aEvaluatedRecommender.getRecommender();
+        var recommender = aEvaluatedRecommender.getRecommender();
         try {
             recommender = getRecommender(recommender.getId());
         }
@@ -1454,7 +1454,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Optional<RecommenderContext> context = getContext(aSessionOwner.getUsername(), recommender);
+        var context = getContext(aSessionOwner.getUsername(), recommender);
 
         if (!context.isPresent()) {
             aPredictions.log(LogMessage.info(recommender.getName(),
@@ -1465,7 +1465,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(recommender);
+        var maybeFactory = getRecommenderFactory(recommender);
 
         if (maybeFactory.isEmpty()) {
             LOG.warn("{}[{}]: No factory found - skipping recommender", aSessionOwner,
@@ -1473,7 +1473,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        RecommendationEngineFactory<?> factory = maybeFactory.get();
+        var factory = maybeFactory.get();
 
         // Check that configured layer and feature are accepted
         // by this type of recommender
@@ -1488,13 +1488,13 @@ public class RecommendationServiceImpl
         // We lazily load the CAS only at this point because that allows us to skip
         // loading the CAS entirely if there is no enabled layer or recommender.
         // If the CAS cannot be loaded, then we skip to the next document.
-        CAS originalCas = aOriginalCas.get();
+        var originalCas = aOriginalCas.get();
         predictionBegin = aPredictionBegin < 0 ? 0 : aPredictionBegin;
         predictionEnd = aPredictionEnd < 0 ? originalCas.getDocumentText().length()
                 : aPredictionEnd;
 
         try {
-            RecommendationEngine engine = factory.build(recommender);
+            var engine = factory.build(recommender);
 
             if (!engine.isReadyForPrediction(context.get())) {
                 aPredictions.log(LogMessage.info(recommender.getName(),
@@ -1808,11 +1808,11 @@ public class RecommendationServiceImpl
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
             Recommender recommender, Range predictedRange,
-            List<AnnotationSuggestion> aNewProtoSuggesitons)
+            List<AnnotationSuggestion> aNewProtoSuggestions)
     {
         if (aActivePredictions == null) {
-            return new ReconciliationResult(aNewProtoSuggesitons.size(), 0, 0,
-                    aNewProtoSuggesitons);
+            return new ReconciliationResult(aNewProtoSuggestions.size(), 0, 0,
+                    aNewProtoSuggestions);
         }
 
         var reconciledSuggestions = new LinkedHashSet<AnnotationSuggestion>();
@@ -1826,7 +1826,7 @@ public class RecommendationServiceImpl
                 .filter(s -> s.coveredBy(predictedRange)) //
                 .collect(groupingBy(AnnotationSuggestion::getPosition));
 
-        for (var newSuggestion : aNewProtoSuggesitons) {
+        for (var newSuggestion : aNewProtoSuggestions) {
             var existingSuggestions = existingSuggestionsByPosition
                     .getOrDefault(newSuggestion.getPosition(), emptyList()).stream() //
                     .filter(s -> Objects.equals(s.getLabel(), newSuggestion.getLabel()) && //
@@ -1837,7 +1837,6 @@ public class RecommendationServiceImpl
 
             if (existingSuggestions.isEmpty()) {
                 addedSuggestions.add(newSuggestion);
-                reconciledSuggestions.add(newSuggestion);
                 continue;
             }
 
@@ -1847,18 +1846,22 @@ public class RecommendationServiceImpl
             }
 
             var existingSuggestion = existingSuggestions.get(0);
-            existingSuggestion.incrementAge();
-            agedSuggestionsCount++;
-            reconciledSuggestions.add(existingSuggestion);
+            if (!reconciledSuggestions.contains(existingSuggestion)) {
+                existingSuggestion.incrementAge();
+                agedSuggestionsCount++;
+                reconciledSuggestions.add(existingSuggestion);
+            }
         }
 
         var removedSuggestions = predictionsByRecommenderAndDocument.stream() //
                 .filter(s -> s.coveredBy(predictedRange)) //
                 .filter(s -> !reconciledSuggestions.contains(s)) //
-                .collect(toList());
+                .toList();
 
+        var finalSuggestions = new ArrayList<>(reconciledSuggestions);
+        finalSuggestions.addAll(addedSuggestions);
         return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
-                agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
+                agedSuggestionsCount, finalSuggestions);
     }
 
     @Override
