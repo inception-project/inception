@@ -25,7 +25,8 @@ support for the BioC format used by this repository connector.
 link:https://www.ncbi.nlm.nih.gov/pmc/[PubMed Central]® (PMC) is a free full-text archive of biomedical and life sciences journal literature at the U.S. National Institutes of Health's National Library of Medicine (NIH/NLM). It can be added as an external document repository by
 selecting the **PubMed Central** repository type.
 
-NOTE: {product-name} uses the BioC version of the PMC documents for import. The search tries to
-      consider only documents that have full text available, but the BioC version of these texts may be
-      available only with a delay. Thus, if you cannot import a recently uploaded document from PMC into
-      {product-name}, you may try it again a day later and have more success.
+NOTE: {product-name} uses the BioC version of the PMC documents for import. This is only available for 
+      Open Access texts. {product-name} automatically adds a filter for open access results (`"open access"[filter]`) 
+      to the query. The BioC version of these texts may be available only with a delay {product-name} automatically 
+      excludes results that were published in the last 24h to try to keep the number of non-importable results low. 
+      If you are still unable to import a result, try a bit later.
