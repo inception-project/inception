@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator2;
+import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -261,7 +261,7 @@ public class SpanSuggestionSupport
         // This iterator gives us pairs of annotations and suggestions. Note that both lists
         // must be sorted in the same way. The suggestion offsets are sorted because they are
         // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
-        var oi = new OverlapIterator2(new ArrayList<>(suggestions.keySet()), sortedAnnotationKeys);
+        var oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()), sortedAnnotationKeys);
 
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
@@ -277,7 +277,7 @@ public class SpanSuggestionSupport
                 for (var suggestion : group) {
                     // The suggestion would just create an annotation and not set any
                     // feature
-                    boolean colocated = colocated(annotation, suggestion.getBegin(),
+                    var colocated = colocated(annotation, suggestion.getBegin(),
                             suggestion.getEnd());
                     if (suggestion.getLabel() == null) {
                         // If there is already an annotation, then we hide any suggestions
