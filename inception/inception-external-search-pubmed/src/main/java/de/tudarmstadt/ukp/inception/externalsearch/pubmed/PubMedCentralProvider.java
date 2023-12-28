@@ -73,7 +73,7 @@ public class PubMedCentralProvider
             PubMedProviderTraits aTraits, String aQuery)
     {
         var date = Instant.now().atZone(ZoneOffset.UTC).minus(Duration.ofHours(24));
-        var query = aQuery + " AND \"free full text\"[filter] AND (\"0001/01/01\"[PubDate] : \""
+        var query = aQuery + " AND \"open access\"[filter] AND (\"0001/01/01\"[PubDate] : \""
                 + date.get(YEAR) + "/" + date.get(MONTH_OF_YEAR) + "/" + date.get(DAY_OF_MONTH)
                 + "\"[PubDate])";
 

@@ -132,6 +132,34 @@ public class OpenNlpNerRecommenderTest
     }
 
     @Test
+    public void thatEvaluationWorksNoLabels() throws Exception
+    {
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
+        for (var cas : casList) {
+            cas.select(NamedEntity.class).forEach(ne -> ne.setValue(null));
+        }
+
+        var result = sut.evaluate(casList, splitStrategy);
+
+        var fscore = result.computeF1Score();
+        var accuracy = result.computeAccuracyScore();
+        var precision = result.computePrecisionScore();
+        var recall = result.computeRecallScore();
+
+        System.out.printf("F1-Score: %f%n", fscore);
+        System.out.printf("Accuracy: %f%n", accuracy);
+        System.out.printf("Precision: %f%n", precision);
+        System.out.printf("Recall: %f%n", recall);
+
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
+    }
+
+    @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         var splitStrategy = new IncrementalSplitter(0.8, 250, 10);
