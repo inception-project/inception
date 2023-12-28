@@ -277,7 +277,7 @@ public class SpanSuggestionSupport
                 for (var suggestion : group) {
                     // The suggestion would just create an annotation and not set any
                     // feature
-                    boolean colocated = colocated(annotation, suggestion.getBegin(),
+                    var colocated = colocated(annotation, suggestion.getBegin(),
                             suggestion.getEnd());
                     if (suggestion.getLabel() == null) {
                         // If there is already an annotation, then we hide any suggestions
