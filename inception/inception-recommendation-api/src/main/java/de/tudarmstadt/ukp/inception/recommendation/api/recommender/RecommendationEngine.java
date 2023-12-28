@@ -38,6 +38,8 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public abstract class RecommendationEngine
 {
+    protected static final String BLANK_LABEL = "__NO_LABEL__";
+
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
