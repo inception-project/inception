@@ -85,7 +85,7 @@ class RecommendationServiceImplTest
                         .withRecommender(rec) //
                         .build());
         var activePredictions = new Predictions(sessionOwner, sessionOwner.getUsername(), project);
-        activePredictions.putPredictions(existingSuggestions);
+        activePredictions.inheritSuggestions(existingSuggestions);
 
         var newSuggestions = Arrays.<AnnotationSuggestion> asList( //
                 SpanSuggestion.builder() //
