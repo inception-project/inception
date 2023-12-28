@@ -108,7 +108,8 @@ public class PredictionTask
                 appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                         .builder(this, project, sessionOwner.getUsername()) //
                         .withMessage(LogMessage.info(this,
-                                predictions.getNewSuggestionCount() + " new predictions available")) //
+                                predictions.getNewSuggestionCount() + " new predictions available" //
+                                        + " (some may be hidden/merged)")) //
                         .build());
             }
             else {

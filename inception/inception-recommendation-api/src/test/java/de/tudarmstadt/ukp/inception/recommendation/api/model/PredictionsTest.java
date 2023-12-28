@@ -76,7 +76,7 @@ class PredictionsTest
         var winBegin = sentences.get(Math.round(sentences.size() * 0.25f)).getBegin();
         var winEnd = sentences.get(Math.round(sentences.size() * 0.75f)).getEnd();
 
-        sut.putPredictions(generatePredictions(100, 1, 100));
+        sut.inheritSuggestions(generatePredictions(100, 1, 100));
         assertThat(sut.size()).isEqualTo(10000);
 
         var groups = sut.getGroupedPredictions(SpanSuggestion.class, "doc10", layer, winBegin,
@@ -93,7 +93,7 @@ class PredictionsTest
 
         sut = new Predictions(user, user.getUsername(), project);
         var generatedPredictions = generatePredictions(10_000, 1, 1_000);
-        sut.putPredictions(generatedPredictions);
+        sut.inheritSuggestions(generatedPredictions);
         var documents = generatedPredictions.stream() //
                 .map(AnnotationSuggestion::getDocumentName) //
                 .distinct() //
@@ -114,7 +114,7 @@ class PredictionsTest
     {
         var doc = "doc";
         sut = new Predictions(user, user.getUsername(), project);
-        sut.putPredictions(asList( //
+        sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocumentName(doc) //
@@ -126,12 +126,12 @@ class PredictionsTest
 
         var inheritedPredictions = sut.getPredictionsByDocument(doc);
         sut = new Predictions(sut);
-        sut.putPredictions(asList( //
+        sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocumentName(doc) //
                         .build()));
-        sut.putPredictions(inheritedPredictions);
+        sut.inheritSuggestions(inheritedPredictions);
 
         assertThat(sut.getPredictionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
