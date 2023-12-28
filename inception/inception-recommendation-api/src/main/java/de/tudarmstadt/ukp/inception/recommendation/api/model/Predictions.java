@@ -21,9 +21,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +35,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.text.AnnotationPredicates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -52,6 +54,8 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 public class Predictions
     implements Serializable
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -1598768729246662885L;
 
     private final int generation;
@@ -69,7 +73,9 @@ public class Predictions
     // session, the pool of IDs of positive integer values is never exhausted.
     private int nextId;
 
-    private int newSuggestionCount = 0;
+    private int addedSuggestionCount = 0;
+    private int agedSuggestionCount = 0;
+    private int removedSuggestionCount = 0;
 
     public Predictions(User aSessionOwner, String aDataOwner, Project aProject)
     {
@@ -183,7 +189,7 @@ public class Predictions
                             f.getValue().getWindowEnd(), windowBegin, windowEnd))
                     .sorted(comparingInt(e2 -> e2.getValue().getWindowBegin())) //
                     .map(Map.Entry::getValue) //
-                    .collect(toList());
+                    .toList();
         }
     }
 
@@ -206,17 +212,19 @@ public class Predictions
         }
     }
 
-    /**
-     * @param aPredictions
-     *            list of sentences containing recommendations
-     */
-    public void putPredictions(List<AnnotationSuggestion> aPredictions)
+    public void putSuggestions(int aAdded, int aRemoved, int aAged,
+            List<AnnotationSuggestion> aSuggestions)
     {
         synchronized (predictionsLock) {
-            for (var prediction : aPredictions) {
+            addedSuggestionCount += aAdded;
+            agedSuggestionCount += aAged;
+            removedSuggestionCount += aRemoved;
+
+            var ageZeroSuggestions = 0;
+            for (var suggestion : aSuggestions) {
                 // Assign ID to predictions that do not have an ID yet
-                if (prediction.getId() == AnnotationSuggestion.NEW_ID) {
-                    prediction = prediction.assignId(nextId);
+                if (suggestion.getId() == AnnotationSuggestion.NEW_ID) {
+                    suggestion = suggestion.assignId(nextId);
                     nextId++;
                     if (nextId < 0) {
                         throw new IllegalStateException(
@@ -224,14 +232,36 @@ public class Predictions
                     }
                 }
 
+                var xid = new ExtendedId(suggestion);
+                var byDocument = idxDocuments.computeIfAbsent(suggestion.getDocumentName(),
+                        $ -> new HashMap<>());
+                byDocument.put(xid, suggestion);
+
+                if (suggestion.getAge() == 0) {
+                    ageZeroSuggestions++;
+                }
+            }
+
+            if (aAdded != ageZeroSuggestions) {
+                LOG.warn("Expected [{}] age-zero suggestions but found [{}]", aAdded,
+                        ageZeroSuggestions);
+            }
+        }
+    }
+
+    public void inheritSuggestions(List<AnnotationSuggestion> aPredictions)
+    {
+        synchronized (predictionsLock) {
+            for (var prediction : aPredictions) {
+                if (prediction.getId() == AnnotationSuggestion.NEW_ID) {
+                    throw new IllegalStateException(
+                            "Inherited suggestions must already have an ID");
+                }
+
                 var xid = new ExtendedId(prediction);
                 var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, prediction);
-
-                if (prediction.getAge() == 0) {
-                    newSuggestionCount++;
-                }
             }
         }
     }
@@ -250,12 +280,12 @@ public class Predictions
 
     public boolean hasNewSuggestions()
     {
-        return newSuggestionCount > 0;
+        return addedSuggestionCount > 0;
     }
 
     public int getNewSuggestionCount()
     {
-        return newSuggestionCount;
+        return addedSuggestionCount;
     }
 
     public int size()
@@ -286,7 +316,7 @@ public class Predictions
                     .filter(f -> f.getValue().getEnd() == aSuggestion.getEnd()) //
                     .filter(f -> f.getValue().getFeature().equals(aSuggestion.getFeature())) //
                     .map(Map.Entry::getValue) //
-                    .collect(toList());
+                    .toList();
         }
     }
 
@@ -321,7 +351,7 @@ public class Predictions
                     .filter(f -> f.getValue().getEnd() == aEnd) //
                     .filter(f -> f.getValue().getFeature().equals(aFeature)) //
                     .map(Map.Entry::getValue) //
-                    .collect(toList());
+                    .toList();
         }
     }
 
@@ -333,7 +363,7 @@ public class Predictions
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
                     .map(Map.Entry::getValue) //
-                    .collect(toList());
+                    .toList();
         }
     }
 
@@ -343,7 +373,7 @@ public class Predictions
             var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
             return byDocument.entrySet().stream() //
                     .map(Map.Entry::getValue) //
-                    .collect(toList());
+                    .toList();
         }
     }
 
@@ -351,6 +381,13 @@ public class Predictions
     {
         synchronized (seenDocumentsForPrediction) {
             seenDocumentsForPrediction.add(aDocument.getName());
+        }
+    }
+
+    public int getDocumentsSeenCount()
+    {
+        synchronized (seenDocumentsForPrediction) {
+            return seenDocumentsForPrediction.size();
         }
     }
 

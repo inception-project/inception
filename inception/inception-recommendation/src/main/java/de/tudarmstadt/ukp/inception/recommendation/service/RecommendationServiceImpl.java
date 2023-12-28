@@ -1829,7 +1829,7 @@ public class RecommendationServiceImpl
         predictions.log(LogMessage.info(aRecommender.getName(),
                 "Inherited [%d] predictions from previous run", suggestions.size()));
 
-        predictions.putPredictions(suggestions);
+        predictions.inheritSuggestions(suggestions);
     }
 
     /**
@@ -1848,7 +1848,7 @@ public class RecommendationServiceImpl
         LOG.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions",
                 "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions.size());
 
-        aNewPredictions.putPredictions(suggestions);
+        aNewPredictions.inheritSuggestions(suggestions);
         aNewPredictions.markDocumentAsPredictionCompleted(aDocument);
     }
 
@@ -1888,6 +1888,9 @@ public class RecommendationServiceImpl
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged));
         var suggestions = reconciliationResult.suggestions;
+        var added = reconciliationResult.added;
+        var removed = reconciliationResult.removed;
+        var aged = reconciliationResult.aged;
 
         // Inherit suggestions that are outside the range which was predicted. Note that the engine
         // might actually predict a different range from what was requested. If the prediction
@@ -1906,6 +1909,10 @@ public class RecommendationServiceImpl
             aIncomingPredictions.log(LogMessage.info(recommender.getName(),
                     "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
 
+            for (var suggestion : inheritableSuggestions) {
+                aged++;
+                suggestion.incrementAge();
+            }
             suggestions.addAll(inheritableSuggestions);
         }
 
@@ -1917,7 +1924,7 @@ public class RecommendationServiceImpl
                 groupedSuggestions, 0, aOriginalCas.getDocumentText().length());
         // FIXME calculateRelationSuggestionVisibility?
 
-        aIncomingPredictions.putPredictions(suggestions);
+        aIncomingPredictions.putSuggestions(added, removed, aged, suggestions);
     }
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
@@ -1943,11 +1950,9 @@ public class RecommendationServiceImpl
         for (var newSuggestion : aNewProtoSuggestions) {
             var existingSuggestions = existingSuggestionsByPosition
                     .getOrDefault(newSuggestion.getPosition(), emptyList()).stream() //
-                    .filter(s -> Objects.equals(s.getLabel(), newSuggestion.getLabel()) && //
-                            s.getScore() == newSuggestion.getScore() && //
-                            Objects.equals(s.getScoreExplanation(),
-                                    newSuggestion.getScoreExplanation()))
-                    .collect(toList());
+                    .filter(s -> matchesForReconciliation(newSuggestion, s)) //
+                    .limit(2) // One to use, the second to warn that there was more than one
+                    .toList();
 
             if (existingSuggestions.isEmpty()) {
                 addedSuggestions.add(newSuggestion);
@@ -1976,6 +1981,13 @@ public class RecommendationServiceImpl
         finalSuggestions.addAll(addedSuggestions);
         return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
                 agedSuggestionsCount, finalSuggestions);
+    }
+
+    private static boolean matchesForReconciliation(AnnotationSuggestion aNew,
+            AnnotationSuggestion aExisting)
+    {
+        return aNew.getRecommenderId() == aExisting.getRecommenderId() && //
+                Objects.equals(aExisting.getLabel(), aNew.getLabel());
     }
 
     static List<AnnotationSuggestion> extractSuggestions(int aGeneration, CAS aOriginalCas,
