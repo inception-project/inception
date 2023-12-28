@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -50,7 +51,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 public class PubMedCentralProviderFactory
     implements BeanNameAware, ExternalSearchProviderFactory<PubMedProviderTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EntrezClient entrezClient;
     private final PmcOaClient pmcOaClient;
@@ -81,7 +82,7 @@ public class PubMedCentralProviderFactory
     @Override
     public String getDisplayName()
     {
-        return "PubMed Central (experimental)";
+        return "PubMed Central Open Access (experimental)";
     }
 
     @Override
@@ -105,7 +106,7 @@ public class PubMedCentralProviderFactory
                     aDocumentRepository.getProperties());
         }
         catch (IOException e) {
-            log.error("Error while reading traits", e);
+            LOG.error("Error while reading traits", e);
         }
 
         if (traits == null) {
@@ -124,7 +125,7 @@ public class PubMedCentralProviderFactory
             aDocumentRepository.setProperties(json);
         }
         catch (IOException e) {
-            log.error("Error while writing traits", e);
+            LOG.error("Error while writing traits", e);
         }
     }
 }

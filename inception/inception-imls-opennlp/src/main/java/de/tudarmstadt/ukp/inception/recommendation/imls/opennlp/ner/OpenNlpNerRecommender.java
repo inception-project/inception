@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.Evaluat
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -153,12 +152,14 @@ public class OpenNlpNerRecommender
 
             for (var prediction : finder.find(tokens)) {
                 var label = prediction.getType();
-                if (NameSample.DEFAULT_TYPE.equals(label)) {
-                    continue;
+                if (NameSample.DEFAULT_TYPE.equals(label) || BLANK_LABEL.equals(label)) {
+                    label = null;
                 }
+
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
+
                 annotation.setStringValue(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
@@ -221,7 +222,7 @@ public class OpenNlpNerRecommender
             return result;
         }
 
-        LOG.info("Training on [{}] sentences, predicting on [{}] of total [{}]", trainingSet.size(),
+        LOG.info("Training on [{}] samples, predicting on [{}] of total [{}]", trainingSet.size(),
                 testSet.size(), data.size());
 
         // Train model
@@ -238,11 +239,11 @@ public class OpenNlpNerRecommender
             nameFinder.clearAdaptiveData();
 
             // Span contains one NE, Array of them all in one sentence
-            var sentence = sample.getSentence();
-            var predictedNames = nameFinder.find(sentence);
+            var sampleTokens = sample.getSentence();
+            var predictedNames = nameFinder.find(sampleTokens);
             var goldNames = sample.getNames();
 
-            labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames, goldNames));
+            labelPairs.addAll(determineLabelsForASentence(sampleTokens, predictedNames, goldNames));
         }
 
         return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
@@ -268,7 +269,7 @@ public class OpenNlpNerRecommender
 
             var predictedLabel = NO_NE_TAG;
             if (predictedNameIdx < predictedNames.length) {
-                Span predictedName = predictedNames[predictedNameIdx];
+                var predictedName = predictedNames[predictedNameIdx];
                 predictedLabel = determineLabel(predictedName, i);
 
                 if (i > predictedName.getEnd()) {
@@ -310,7 +311,7 @@ public class OpenNlpNerRecommender
     {
         var nameSamples = new ArrayList<NameSample>();
 
-        nextCas: for (CAS cas : aCasses) {
+        nextCas: for (var cas : aCasses) {
             var sampleUnitType = getType(cas, SAMPLE_UNIT);
             var tokenType = getType(cas, Token.class);
 
@@ -344,6 +345,10 @@ public class OpenNlpNerRecommender
     private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSampleUnit,
             Collection<? extends AnnotationFS> aTokens)
     {
+        if (aTokens.isEmpty()) {
+            return new Span[0];
+        }
+        
         // Create spans from target annotations
         var annotationType = getType(aCas, layerName);
         var feature = annotationType.getFeatureByBaseName(featureName);
@@ -358,19 +363,22 @@ public class OpenNlpNerRecommender
         var idxTokenEndOffset = new Int2ObjectOpenHashMap<AnnotationFS>();
         var idxToken = new Object2IntOpenHashMap<AnnotationFS>();
         var idx = 0;
-        for (AnnotationFS t : aTokens) {
-            idxTokenBeginOffset.put(t.getBegin(), t);
-            idxTokenEndOffset.put(t.getEnd(), t);
-            idxToken.put(t, idx);
+        for (var token : aTokens) {
+            idxTokenBeginOffset.put(token.getBegin(), token);
+            idxTokenEndOffset.put(token.getEnd(), token);
+            idxToken.put(token, idx);
             idx++;
         }
 
         var result = new ArrayList<Span>();
-        var highestEndTokenPositionObserved = 0;
+        var highestEndTokenPositionObserved = -1;
         var numberOfAnnotations = annotations.size();
         for (int i = 0; i < numberOfAnnotations; i++) {
             var annotation = annotations.get(i);
             var label = annotation.getFeatureValueAsString(feature);
+            if (isBlank(label)) {
+                label = BLANK_LABEL;
+            }
 
             var beginToken = idxTokenBeginOffset.get(annotation.getBegin());
             var endToken = idxTokenEndOffset.get(annotation.getEnd());
@@ -391,10 +399,8 @@ public class OpenNlpNerRecommender
                 continue;
             }
 
-            if (isNotBlank(label)) {
-                result.add(new Span(begin, end + 1, label));
-                highestEndTokenPositionObserved = end + 1;
-            }
+            result.add(new Span(begin, end + 1, label));
+            highestEndTokenPositionObserved = end + 1;
         }
 
         return result.toArray(new Span[result.size()]);
