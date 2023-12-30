@@ -127,7 +127,7 @@ class SpanSuggestionExtractionTest
         var predictionCas = RecommenderTypeSystemUtils.makePredictionCas(originalCas, aFeatures);
 
         buildAnnotation(predictionCas, feature.getLayer().getName()) //
-                .on("\\bis\\b") //
+                .onMatch("\\bis\\b") //
                 .withFeature(feature.getName(), "verb") //
                 .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
                 .buildAndAddToIndexes();

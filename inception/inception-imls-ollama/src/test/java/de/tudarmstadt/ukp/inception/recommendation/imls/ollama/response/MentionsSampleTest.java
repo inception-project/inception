@@ -78,7 +78,7 @@ class MentionsSampleTest
     {
         String text = "John likes Mary.";
         cas.setDocumentText(text);
-        buildAnnotation(cas, Sentence.class).on(text) //
+        buildAnnotation(cas, Sentence.class).onMatch(text) //
                 .buildAndAddToIndexes();
         buildAnnotation(cas, NamedEntity.class).on("John") //
                 .withFeature(NamedEntity._FeatName_value, "PER") //

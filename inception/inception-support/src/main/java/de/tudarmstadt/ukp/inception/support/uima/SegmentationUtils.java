@@ -36,6 +36,12 @@ public abstract class SegmentationUtils
         // No instances
     }
 
+    public static void segment(CAS aCas)
+    {
+        splitSentences(aCas, null);
+        tokenize(aCas);
+    }
+
     public static void splitSentences(CAS aCas)
     {
         splitSentences(aCas, null);

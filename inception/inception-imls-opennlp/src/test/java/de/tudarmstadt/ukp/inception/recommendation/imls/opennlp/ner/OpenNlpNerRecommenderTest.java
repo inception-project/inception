@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 public class OpenNlpNerRecommenderTest
 {
@@ -78,6 +81,50 @@ public class OpenNlpNerRecommenderTest
         var sut = new OpenNlpNerRecommender(recommender, traits);
         var casList = loadDevelopmentData();
 
+        sut.train(context, casList);
+
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
+                .isPresent();
+    }
+
+    @Test
+    public void thatTrainingWorksCrossSentenceWithSimpleExample() throws Exception
+    {
+        var cas = JCasFactory.createJCas();
+        cas.setDocumentText("""
+                I like noodles.
+                I guess St. John is good.
+                Does St. John like noodles?
+                """);
+
+        SegmentationUtils.segment(cas.getCas());
+
+        assertThat(cas.select(Token.class).asList()) //
+                .map(Token::getCoveredText) //
+                .containsAll(asList("St", ".", "John")) //
+                .doesNotContain("St.", "St. John");
+
+        buildAnnotation(cas, NamedEntity.class).onAll("St. John").buildAllAndAddToIndexes();
+        var casList = asList(cas.getCas());
+
+        recommender.getLayer().setCrossSentence(true);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+
+        sut.train(context, casList);
+
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
+                .isPresent();
+    }
+
+    @Test
+    public void thatTrainingWorksCrossSentence() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+
+        var casList = loadDevelopmentData();
         sut.train(context, casList);
 
         assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
@@ -228,15 +275,12 @@ public class OpenNlpNerRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        var layer = new AnnotationLayer();
-        layer.setName(NamedEntity.class.getName());
+        var layer = AnnotationLayer.builder().forJCasClass(NamedEntity.class).build();
 
-        var feature = new AnnotationFeature();
-        feature.setName("value");
+        var feature = AnnotationFeature.builder().withLayer(layer)
+                .withName(NamedEntity._FeatName_value).build();
 
-        var recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
+        var recommender = Recommender.builder().withLayer(layer).withFeature(feature).build();
 
         return recommender;
     }

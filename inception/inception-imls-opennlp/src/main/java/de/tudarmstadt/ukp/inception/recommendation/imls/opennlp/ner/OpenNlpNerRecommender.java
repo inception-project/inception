@@ -66,13 +66,16 @@ public class OpenNlpNerRecommender
     extends RecommendationEngine
 {
     public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
+
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
 
     private static final String NO_NE_TAG = "O";
-    private static final String BLANK_LABEL = "__BLANK_LABEL__";
 
     private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
     private static final Class<Token> DATAPOINT_UNIT = Token.class;
+
+    private static final int DEFAULT_WINDOW_SIZE = 300;
+    private static final int MIN_WINDOW_SIZE = 30;
 
     private static final int MIN_TRAINING_SET_SIZE = 2;
     private static final int MIN_TEST_SET_SIZE = 2;
@@ -95,7 +98,7 @@ public class OpenNlpNerRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        var nameSamples = extractNameSamples(aCasses);
+        var nameSamples = extractSamples(aCasses);
 
         if (nameSamples.size() < 2) {
             aContext.log(LogMessage.warn(getRecommender().getName(),
@@ -143,9 +146,11 @@ public class OpenNlpNerRecommender
         var predictionCount = 0;
 
         for (var unit : units) {
-            if (predictionCount >= traits.getPredictionLimit()) {
+            int predictionsLimit = traits.getPredictionLimit();
+            if (predictionsLimit > 0 && predictionCount >= predictionsLimit) {
                 break;
             }
+
             predictionCount++;
 
             var tokenAnnotations = selectCovered(tokenType, unit);
@@ -181,14 +186,17 @@ public class OpenNlpNerRecommender
     @Override
     public int estimateSampleCount(List<CAS> aCasses)
     {
-        return extractNameSamples(aCasses).size();
+        return extractSamples(aCasses).size();
     }
 
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        var data = extractNameSamples(aCasses);
+        // We use sentence-based samples here even if the layer allows cross-sentence annotations
+        // because with the overlapping sliding window, the evaluation would otherwise train on test
+        // data.
+        var data = extractSamplesFromSentences(aCasses);
         var trainingSet = new ArrayList<NameSample>();
         var testSet = new ArrayList<NameSample>();
 
@@ -212,7 +220,7 @@ public class OpenNlpNerRecommender
         var trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingSetSize < MIN_TRAINING_SET_SIZE || testSetSize < MIN_TEST_SET_SIZE) {
-            String msg = String.format(
+            var msg = String.format(
                     "Not enough evaluation data: training set size [%d] (min. %d), test set size [%d] (min. %d) of total [%d] (min. %d)",
                     trainingSetSize, MIN_TRAINING_SET_SIZE, testSetSize, MIN_TEST_SET_SIZE,
                     data.size(), (MIN_TRAINING_SET_SIZE + MIN_TEST_SET_SIZE));
@@ -310,12 +318,17 @@ public class OpenNlpNerRecommender
         return label;
     }
 
-    private List<NameSample> extractNameSamples(Iterable<CAS> aCasses)
+    private List<NameSample> extractSamples(Iterable<CAS> aCasses)
     {
-        return extractNameSamplesSlidingWindow(aCasses);
+        if (getRecommender().getLayer().isCrossSentence()) {
+            return extractSamplesUsingSlidingWindow(aCasses);
+        }
+        else {
+            return extractSamplesFromSentences(aCasses);
+        }
     }
 
-    private List<NameSample> extractNameSamplesSentences(Iterable<CAS> aCasses)
+    private List<NameSample> extractSamplesFromSentences(Iterable<CAS> aCasses)
     {
         var nameSamples = new ArrayList<NameSample>();
 
@@ -325,7 +338,8 @@ public class OpenNlpNerRecommender
 
             var firstSampleInCas = true;
             for (var sampleUnit : cas.<Annotation> select(sampleUnitType)) {
-                if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                int trainingSetSizeLimit = traits.getTrainingSetSizeLimit();
+                if (trainingSetSizeLimit > 0 && nameSamples.size() >= trainingSetSizeLimit) {
                     break nextCas;
                 }
 
@@ -350,18 +364,22 @@ public class OpenNlpNerRecommender
         return nameSamples;
     }
 
-    private List<NameSample> extractNameSamplesSlidingWindow(Iterable<CAS> aCasses)
+    private List<NameSample> extractSamplesUsingSlidingWindow(Iterable<CAS> aCasses)
     {
         var nameSamples = new ArrayList<NameSample>();
 
-        var maxSize = 100;
         nextCas: for (var cas : aCasses) {
+            var windowSize = getWindowSize(cas);
+            var windowOverlap = windowSize / 2;
+
             var firstSampleInCas = true;
             var tokenIterator = cas.select(Token.class).iterator();
-            var tokens = makeSample(tokenIterator, new LinkedList<Token>(), maxSize, maxSize / 2);
+            var tokens = makeSample(tokenIterator, new LinkedList<Token>(), windowSize,
+                    windowOverlap);
 
             while (!tokens.isEmpty()) {
-                if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                int trainingSetSizeLimit = traits.getTrainingSetSizeLimit();
+                if (trainingSetSizeLimit > 0 && nameSamples.size() >= trainingSetSizeLimit) {
                     // Generated maximum number of samples
                     break nextCas;
                 }
@@ -376,11 +394,40 @@ public class OpenNlpNerRecommender
                     firstSampleInCas = false;
                 }
 
-                tokens = makeSample(tokenIterator, tokens, maxSize, maxSize / 2);
+                tokens = makeSample(tokenIterator, tokens, windowSize, windowOverlap);
             }
         }
 
         return nameSamples;
+    }
+
+    private int getWindowSize(CAS aCas)
+    {
+        int textLengh = aCas.getDocumentText().length();
+
+        int windowSize = traits.getWindowSize();
+        if (windowSize <= 0) {
+            windowSize = DEFAULT_WINDOW_SIZE;
+        }
+
+        // If the document is short try scaling down the window size to get a
+        // few more samples.
+        int minDesiredSamples = 10;
+        if (windowSize * minDesiredSamples > textLengh) {
+            windowSize = textLengh / minDesiredSamples;
+        }
+
+        // If the document is too short to accommodate the minimum training set size
+        // with the current window size, scale the window size down.
+        if (windowSize * MIN_TRAINING_SET_SIZE > textLengh) {
+            windowSize = textLengh / MIN_TRAINING_SET_SIZE;
+        }
+
+        if (windowSize < MIN_WINDOW_SIZE) {
+            windowSize = MIN_WINDOW_SIZE;
+        }
+
+        return windowSize;
     }
 
     private List<Token> makeSample(Iterator<Token> aFreshTokenIterator, List<Token> aTokens,
