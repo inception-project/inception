@@ -271,9 +271,9 @@ public class WebAnnoCasUtil
     @SuppressWarnings("unchecked")
     public static <T extends AnnotationFS> T getNext(T aRef)
     {
-        CAS cas = aRef.getCAS();
-        AnnotationIndex<AnnotationFS> idx = cas.getAnnotationIndex(aRef.getType());
-        FSIterator<AnnotationFS> it = idx.iterator(aRef);
+        var cas = aRef.getCAS();
+        var idx = cas.getAnnotationIndex(aRef.getType());
+        var it = idx.iterator(aRef);
 
         if (!it.isValid()) {
             return null;
@@ -287,7 +287,7 @@ public class WebAnnoCasUtil
         }
 
         // Seek left until we hit the last FS that is no longer equal to the current
-        boolean moved = false;
+        var moved = false;
         while (it.isValid() && idx.compare(it.get(), aRef) == 0) {
             it.moveToPrevious();
             moved = true;

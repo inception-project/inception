@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import opennlp.tools.util.TrainingParameters;
 
@@ -30,8 +32,9 @@ public class OpenNlpNerRecommenderTraits
 {
     private static final long serialVersionUID = 7717316701623340670L;
 
-    private int trainingSetSizeLimit = Integer.MAX_VALUE;
-    private int predictionLimit = Integer.MAX_VALUE;
+    private @JsonInclude(Include.NON_DEFAULT) int trainingSetSizeLimit = 0;
+    private @JsonInclude(Include.NON_DEFAULT) int predictionLimit = 0;
+    private @JsonInclude(Include.NON_DEFAULT) int windowSize = 0;
 
     private int numThreads = 1;
 
@@ -63,6 +66,16 @@ public class OpenNlpNerRecommenderTraits
     public void setPredictionLimit(int aPredictionLimit)
     {
         predictionLimit = aPredictionLimit;
+    }
+
+    public void setWindowSize(int aWindowSize)
+    {
+        windowSize = aWindowSize;
+    }
+
+    public int getWindowSize()
+    {
+        return windowSize;
     }
 
     @JsonIgnore

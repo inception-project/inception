@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,15 +29,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
@@ -47,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
@@ -55,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
+import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 public class OpenNlpNerRecommenderTest
 {
@@ -79,20 +78,65 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
         sut.train(context, casList);
 
-        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)).as("Model has been set")
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
+                .isPresent();
+    }
+
+    @Test
+    public void thatTrainingWorksCrossSentenceWithSimpleExample() throws Exception
+    {
+        var cas = JCasFactory.createJCas();
+        cas.setDocumentText("""
+                I like noodles.
+                I guess St. John is good.
+                Does St. John like noodles?
+                """);
+
+        SegmentationUtils.segment(cas.getCas());
+
+        assertThat(cas.select(Token.class).asList()) //
+                .map(Token::getCoveredText) //
+                .containsAll(asList("St", ".", "John")) //
+                .doesNotContain("St.", "St. John");
+
+        buildAnnotation(cas, NamedEntity.class).onAll("St. John").buildAllAndAddToIndexes();
+        var casList = asList(cas.getCas());
+
+        recommender.getLayer().setCrossSentence(true);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+
+        sut.train(context, casList);
+
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
+                .isPresent();
+    }
+
+    @Test
+    public void thatTrainingWorksCrossSentence() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+
+        var casList = loadDevelopmentData();
+        sut.train(context, casList);
+
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)) //
+                .as("Model has been set") //
                 .isPresent();
     }
 
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
 
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
@@ -104,7 +148,7 @@ public class OpenNlpNerRecommenderTest
 
         sut.predict(new PredictionContext(context), cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        var predictions = cas.select(NamedEntity.class).asList();
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
@@ -128,10 +172,10 @@ public class OpenNlpNerRecommenderTest
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
 
-        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
     @Test
@@ -165,19 +209,19 @@ public class OpenNlpNerRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
-        OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
-        List<CAS> casList = loadAllData();
+        var splitStrategy = new IncrementalSplitter(0.8, 250, 10);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadAllData();
 
-        int i = 0;
+        var i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
 
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
-            assertThat(score).isStrictlyBetween(0.0, 1.0);
+            assertThat(score).isBetween(0.0, 1.0);
 
             i++;
         }
@@ -186,7 +230,7 @@ public class OpenNlpNerRecommenderTest
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDataFiles());
         }
         catch (Exception e) {
@@ -199,7 +243,7 @@ public class OpenNlpNerRecommenderTest
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
         }
         catch (Exception e) {
@@ -211,7 +255,7 @@ public class OpenNlpNerRecommenderTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader( //
+        var reader = createReader( //
                 Conll2002Reader.class, //
                 Conll2002Reader.PARAM_PATTERNS, files, //
                 Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
@@ -220,9 +264,9 @@ public class OpenNlpNerRecommenderTest
                 Conll2002Reader.PARAM_HAS_HEADER, true, //
                 Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> casList = new ArrayList<>();
+        var casList = new ArrayList<CAS>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
         }
@@ -231,15 +275,12 @@ public class OpenNlpNerRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(NamedEntity.class.getName());
+        var layer = AnnotationLayer.builder().forJCasClass(NamedEntity.class).build();
 
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName("value");
+        var feature = AnnotationFeature.builder().withLayer(layer)
+                .withName(NamedEntity._FeatName_value).build();
 
-        Recommender recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
+        var recommender = Recommender.builder().withLayer(layer).withFeature(feature).build();
 
         return recommender;
     }

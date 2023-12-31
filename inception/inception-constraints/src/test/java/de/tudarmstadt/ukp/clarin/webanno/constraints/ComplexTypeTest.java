@@ -68,14 +68,14 @@ public class ComplexTypeTest
             .withFeature("links", asList(
                     buildFS(cas, "webanno.custom.ComplexLinkType")
                         .withFeature("target", buildAnnotation(cas, "webanno.custom.Span")
-                                .on("ACME")
-                                .withFeature("value", "PER")
+                                .on("ACME") //
+                                .withFeature("value", "PER") //
                                 .buildAndAddToIndexes())
                         .buildWithoutAddingToIndexes(),
                     buildFS(cas, "webanno.custom.ComplexLinkType")
                         .withFeature("target", buildAnnotation(cas, "webanno.custom.Span")
-                                .on("Foobar")
-                                .withFeature("value", "LOC")
+                                .on("Foobar") //
+                                .withFeature("value", "LOC") //
                                 .buildAndAddToIndexes())
                         .buildWithoutAddingToIndexes()))
             .buildAndAddToIndexes();

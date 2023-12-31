@@ -71,4 +71,9 @@ public abstract class RecommendationTask_ImplBase
     {
         logMessages.add(LogMessage.error(this, aFormat, aValues));
     }
+
+    public void log(LogMessage aMessage)
+    {
+        logMessages.add(aMessage);
+    }
 }

@@ -406,8 +406,9 @@ public class TrainingTask
         log.debug("[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
                 getId(), user.getUsername(), recommender.getName(), cassesForTraining.size(),
                 casses.get().size(), duration);
-        info("Training successful on [%d] out of [%d] documents (%d ms)", cassesForTraining.size(),
-                casses.get().size(), duration);
+        log(LogMessage.info(recommender.getName(),
+                "Training successful on [%d] out of [%d] documents (%d ms)",
+                cassesForTraining.size(), casses.get().size(), duration));
     }
 
     private void logTrainingOverallStart(User user)
@@ -426,8 +427,9 @@ public class TrainingTask
         log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...", getId(),
                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                 casses.get().size());
-        info("Training model for [%s] on [%d] out of [%d] documents ...", layer.getUiName(),
-                cassesForTraining.size(), casses.get().size());
+        log(LogMessage.info(recommender.getName(),
+                "Training model for [%s] on [%d] out of [%d] documents ...", layer.getUiName(),
+                cassesForTraining.size(), casses.get().size()));
     }
 
     private void handleError(User user, Recommender recommender, long startTime, Throwable e)
@@ -436,7 +438,8 @@ public class TrainingTask
         log.error("[{}][{}][{}]: Training failed ({} ms)", getId(), user.getUsername(),
                 recommender.getName(), (currentTimeMillis() - startTime), e);
 
-        error("Training failed (%d ms): %s", duration, getRootCauseMessage(e));
+        log(LogMessage.error(recommender.getName(), "Training failed (%d ms): %s", duration,
+                getRootCauseMessage(e)));
 
         appEventPublisher.publishEvent(
                 RecommenderTaskNotificationEvent.builder(this, getProject(), user.getUsername()) //
