@@ -19,31 +19,19 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.DETAIL_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
-import static org.apache.uima.fit.factory.JCasFactory.createText;
-import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +45,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,7 +54,6 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -121,7 +107,7 @@ public class RecommendationServiceImplIntegrationTest
         layerRecommendtionSupportRegistry.init();
 
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
-                schemaService, null, layerRecommendtionSupportRegistry,
+                schemaService, layerRecommendtionSupportRegistry,
                 testEntityManager.getEntityManager());
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport()));
@@ -208,38 +194,6 @@ public class RecommendationServiceImplIntegrationTest
         var enabledRecommenders = sut.getEnabledRecommender(otherId);
 
         assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
-    }
-
-    @Test
-    public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
-    {
-        try (CasStorageSession session = CasStorageSession.open()) {
-            JCas jCas = createText("I am text CAS", "de");
-            session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
-
-            when(schemaService.getFullProjectTypeSystem(project))
-                    .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-            when(schemaService.listAnnotationFeature(project)).thenReturn(asList(spanLayerFeature));
-            doCallRealMethod().when(schemaService).upgradeCas(any(CAS.class), any(CAS.class),
-                    any(TypeSystemDescription.class));
-
-            sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
-
-            Type type = CasUtil.getType(jCas.getCas(), spanLayer.getName());
-
-            assertThat(type.getFeatures()) //
-                    .extracting(Feature::getShortName) //
-                    .containsExactlyInAnyOrder( //
-                            "sofa", //
-                            "begin", //
-                            "end", //
-                            "value", //
-                            spanLayerFeature.getName() + FEATURE_NAME_SCORE_SUFFIX, //
-                            spanLayerFeature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, //
-                            spanLayerFeature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, //
-                            "identifier", //
-                            FEATURE_NAME_IS_PREDICTION);
-        }
     }
 
     @Test

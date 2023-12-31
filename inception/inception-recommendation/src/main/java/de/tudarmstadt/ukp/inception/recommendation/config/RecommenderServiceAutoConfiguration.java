@@ -80,14 +80,12 @@ public class RecommenderServiceAutoConfiguration
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, ProjectService aProjectService,
-            ApplicationEventPublisher aApplicationEventPublisher,
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
             SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
-                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
-                aProjectService, entityManager, aApplicationEventPublisher,
-                aLayerRecommendtionSupportRegistry);
+                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aProjectService,
+                entityManager, aApplicationEventPublisher, aLayerRecommendtionSupportRegistry);
     }
 
     @Bean
