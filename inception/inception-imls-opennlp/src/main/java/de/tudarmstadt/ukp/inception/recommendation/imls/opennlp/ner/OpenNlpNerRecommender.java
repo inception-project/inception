@@ -98,7 +98,7 @@ public class OpenNlpNerRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        var nameSamples = extractSamples(aCasses);
+        var nameSamples = extractSamples(aContext, aCasses);
 
         if (nameSamples.size() < 2) {
             aContext.log(LogMessage.warn(getRecommender().getName(),
@@ -186,7 +186,7 @@ public class OpenNlpNerRecommender
     @Override
     public int estimateSampleCount(List<CAS> aCasses)
     {
-        return extractSamples(aCasses).size();
+        return extractSamples(null, aCasses).size();
     }
 
     @Override
@@ -318,14 +318,17 @@ public class OpenNlpNerRecommender
         return label;
     }
 
-    private List<NameSample> extractSamples(Iterable<CAS> aCasses)
+    private List<NameSample> extractSamples(RecommenderContext aContext, Iterable<CAS> aCasses)
     {
         if (getRecommender().getLayer().isCrossSentence()) {
+            if (aContext != null) {
+                aContext.log(LogMessage.info(getRecommender().getName(),
+                        "Training using sliding-window since layer permits cross-sentence annotations."));
+            }
             return extractSamplesUsingSlidingWindow(aCasses);
         }
-        else {
-            return extractSamplesFromSentences(aCasses);
-        }
+
+        return extractSamplesFromSentences(aCasses);
     }
 
     private List<NameSample> extractSamplesFromSentences(Iterable<CAS> aCasses)
