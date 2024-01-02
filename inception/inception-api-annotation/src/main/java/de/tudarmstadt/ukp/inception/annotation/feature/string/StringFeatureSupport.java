@@ -236,7 +236,7 @@ public class StringFeatureSupport
         if (aValue instanceof String) {
             var value = (String) aValue;
             var tag = schemaService.getTag(value, aFeature.getTagset());
-            if (aFeature.getTagset() != null && !tag.isEmpty()) {
+            if (isNotBlank(value) && aFeature.getTagset() != null && tag.isEmpty()) {
                 return asList(new VLazyDetailGroup(new VLazyDetail(value, "Tag not in tagset")));
             }
 
