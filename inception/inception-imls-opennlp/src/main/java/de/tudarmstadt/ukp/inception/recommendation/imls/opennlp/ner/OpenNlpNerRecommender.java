@@ -135,6 +135,11 @@ public class OpenNlpNerRecommender
 
         Iterable<List<Token>> unitProvider;
         if (getRecommender().getLayer().isCrossSentence()) {
+            if (aContext != null) {
+                aContext.log(LogMessage.info(getRecommender().getName(),
+                        "Predicting using sliding-window since layer permits cross-sentence annotations."));
+            }
+
             var windowSize = getWindowSize(aCas);
             var windowOverlap = windowSize / 2;
             unitProvider = new SlidingWindow<>(aCas, Token.class, windowSize, windowOverlap,
