@@ -38,9 +38,8 @@ class TokensBySentence
     @Override
     public Iterator<List<Token>> iterator()
     {
-        return cas
-                .select(Sentence.class).map(sentence -> cas
-                        .select(OpenNlpNerRecommender.DATAPOINT_UNIT).coveredBy(sentence).asList())
+        return cas.select(Sentence.class) //
+                .map(s -> cas.select(Token.class).coveredBy(s).asList()) //
                 .iterator();
     }
 }
