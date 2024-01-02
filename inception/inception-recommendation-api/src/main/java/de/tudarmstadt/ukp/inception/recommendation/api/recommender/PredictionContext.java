@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -31,7 +30,6 @@ public class PredictionContext
     private RecommenderContext modelContext;
     private List<LogMessage> messages;
     private boolean closed = false;
-    private Optional<User> user;
 
     public PredictionContext(RecommenderContext aCtx)
     {
@@ -75,15 +73,5 @@ public class PredictionContext
     synchronized public boolean isClosed()
     {
         return closed;
-    }
-
-    public Optional<User> getUser()
-    {
-        return user;
-    }
-
-    public void setUser(User aUser)
-    {
-        user = Optional.ofNullable(aUser);
     }
 }
