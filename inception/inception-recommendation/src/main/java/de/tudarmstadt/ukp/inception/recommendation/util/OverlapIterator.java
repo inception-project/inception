@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class OverlapIterator
 
     private List<Offset> openB;
     private List<Offset> nextOpenB;
-    private Iterator<Offset> iob;
+    private ListIterator<Offset> iob;
 
     private Offset a;
     private Offset b;
@@ -51,7 +52,7 @@ public class OverlapIterator
         ib = bList.iterator();
         openB = Collections.emptyList();
         nextOpenB = new ArrayList<>();
-        iob = openB.iterator();
+        iob = openB.listIterator();
         done = aList.isEmpty() || bList.isEmpty();
         step();
     }
@@ -66,27 +67,34 @@ public class OverlapIterator
         }
         a = ia.next();
 
-        LOG.trace("Resetting B");
         b = null;
         // When moving to the next A, we can forget all open intervals
         // that end before the new A
         openB = nextOpenB;
+        var beforePrune = openB.size();
         openB.removeIf(o -> o.getEnd() < a.getBegin());
-        iob = openB.iterator();
+        LOG.trace("Reset B (open {}, {} pruned)", openB.size(), beforePrune - openB.size());
+        iob = openB.listIterator();
         nextOpenB = new ArrayList<>();
     }
 
     private void stepB()
     {
         if (iob.hasNext()) {
-            LOG.trace("Stepping B from open Bs");
             // Step to the next B from open intervals list
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Stepping B from open Bs: {}", iob.nextIndex());
+            }
             b = iob.next();
         }
         else if (ib.hasNext()) {
-            LOG.trace("Stepping B from source Bs");
             // Step to the next B from the source list
+            LOG.trace("Stepping B from source Bs");
             b = ib.next();
+            if (b.getBegin() > a.getEnd()) {
+                // All remaining b's are beyond the end of the a's and won't overlap
+                a = null;
+            }
         }
         else {
             // Prepare to step to the next A
@@ -104,6 +112,7 @@ public class OverlapIterator
             stepB();
 
             if (b != null) {
+                // openB is pruned in stepA
                 nextOpenB.add(b);
             }
 
