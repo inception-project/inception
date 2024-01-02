@@ -199,7 +199,7 @@ public class OpenNlpNerRecommender
         return new Range(predictedRangeBegin, predictedRangeEnd);
     }
 
-    private void whenSuggestionsOverlapKeepLongest(CAS aCas, Type predictedType,
+    static void whenSuggestionsOverlapKeepLongest(CAS aCas, Type predictedType,
             Feature isPredictionFeature, Feature scoreFeature)
     {
         var offsetsMap = new LinkedHashMap<Offset, List<AnnotationFS>>();
@@ -219,24 +219,35 @@ public class OpenNlpNerRecommender
             var offsetB = overlappingAnnotations.getRight();
 
             var candidates = new ArrayList<AnnotationFS>();
+
+            // Remove the shorter ones immediately
             if (offsetA.length() < offsetB.length()) {
+                offsetsMap.get(offsetA).forEach(aCas::removeFsFromIndexes);
                 candidates.addAll(offsetsMap.get(offsetB));
             }
-
-            if (offsetA.length() > offsetB.length()) {
+            else if (offsetA.length() > offsetB.length()) {
                 candidates.addAll(offsetsMap.get(offsetA));
+                offsetsMap.get(offsetB).forEach(aCas::removeFsFromIndexes);
+            }
+            else if (offsetA.equals(offsetB)) {
+                candidates.addAll(offsetsMap.get(offsetA));
+            }
+            else {
+                candidates.addAll(offsetsMap.get(offsetA));
+                candidates.addAll(offsetsMap.get(offsetB));
             }
 
             if (candidates.isEmpty()) {
                 continue;
             }
 
+            // Sort the longer ones by score
             if (scoreFeature != null) {
                 candidates.sort(comparing(ann -> ann.getDoubleValue(scoreFeature)));
             }
 
-            candidates.subList(0, candidates.size() - 1)
-                    .forEach(ann -> aCas.removeFsFromIndexes(ann));
+            // Keeping only the longer one with the highest score
+            candidates.subList(0, candidates.size() - 1).forEach(aCas::removeFsFromIndexes);
         }
     }
 

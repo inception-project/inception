@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommender.whenSuggestionsOverlapKeepLongest;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -35,6 +37,7 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
@@ -159,8 +162,10 @@ public class OpenNlpNerRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> ne.getBooleanValue(isPredictionFeature)).toList();
 
-        LOG.debug("Found {} named entities: {}", predictions.size(), predictions.stream()
-                .map(p -> String.format("%s %s\n", p.getCoveredText(), p.getValue())).toList());
+        LOG.info("Found {} named entities (cross sentence: {})", predictions.size(),
+                recommender.getLayer().isCrossSentence());
+        LOG.debug("{}", predictions.stream().map(p -> String.format("[%d-%d] %s %s\n", p.getBegin(),
+                p.getEnd(), p.getCoveredText(), p.getValue())).toList());
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
@@ -188,8 +193,10 @@ public class OpenNlpNerRecommenderTest
         var predictions = cas.select(NamedEntity.class)
                 .filter(ne -> ne.getBooleanValue(isPredictionFeature)).toList();
 
-        LOG.debug("Found {} named entities: {}", predictions.size(), predictions.stream()
-                .map(p -> String.format("%s %s\n", p.getCoveredText(), p.getValue())).toList());
+        LOG.info("Found {} named entities (cross sentence: {})", predictions.size(),
+                recommender.getLayer().isCrossSentence());
+        LOG.debug("{}", predictions.stream().map(p -> String.format("[%d-%d] %s %s\n", p.getBegin(),
+                p.getEnd(), p.getCoveredText(), p.getValue())).toList());
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
@@ -266,6 +273,38 @@ public class OpenNlpNerRecommenderTest
 
             i++;
         }
+    }
+
+    @Test
+    void thatWhenSuggestionsOverlapKeepLongestWorks() throws Exception
+    {
+        var cas = CasFactory.createCas();
+        try (var session = CasStorageSession.open()) {
+            session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
+                    NamedEntity._FeatName_value);
+        }
+
+        cas.setDocumentText("I am St. John.");
+
+        buildAnnotation(cas, NamedEntity.class).on("St.") //
+                .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
+                .buildAndAddToIndexes();
+
+        buildAnnotation(cas, NamedEntity.class).on("St. John") //
+                .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
+                .buildAndAddToIndexes();
+
+        var neType = cas.getCasType(NamedEntity.class);
+        var isPredictionFeature = neType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var scoreFeature = neType.getFeatureByBaseName(
+                NamedEntity._FeatName_value + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+
+        whenSuggestionsOverlapKeepLongest(cas, neType, isPredictionFeature, scoreFeature);
+
+        assertThat(cas.select(NamedEntity.class).asList()) //
+                .extracting(NamedEntity::getCoveredText) //
+                .containsExactly("St. John");
     }
 
     private List<CAS> loadAllData() throws IOException, UIMAException
