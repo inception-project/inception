@@ -63,12 +63,12 @@ class SlidingWindow<T extends Annotation>
     {
         private final Iterator<T> tokenIterator;
 
-        private List<T> nextWindow;
+        private LinkedList<T> nextWindow;
 
         public SlidingWindowIterator(Iterator<T> aTokenIterator)
         {
             tokenIterator = aTokenIterator;
-            nextWindow = makeSample(tokenIterator, new LinkedList<T>(), windowSize, windowOverlap);
+            nextWindow = makeSample(tokenIterator, new LinkedList<T>());
         }
 
         @Override
@@ -81,24 +81,29 @@ class SlidingWindow<T extends Annotation>
         public List<T> next()
         {
             var currentWindow = nextWindow;
-            nextWindow = makeSample(tokenIterator, nextWindow, windowSize, windowOverlap);
+            nextWindow = makeSample(tokenIterator, nextWindow);
             return currentWindow;
         }
 
-        private List<T> makeSample(Iterator<T> aFreshTokenIterator, List<T> aTokens, int aMaxLength,
-                int aOverlap)
+        private LinkedList<T> makeSample(Iterator<T> aFreshTokenIterator, LinkedList<T> aPrevWindow)
         {
-            if (!aFreshTokenIterator.hasNext()) {
-                return Collections.emptyList();
-            }
-
             var result = new LinkedList<T>();
+
+            if (!aFreshTokenIterator.hasNext()) {
+                return result;
+            }
 
             // Add tokens overlapping with previous sample
             var size = 0;
-            if (aOverlap > 0) {
-                var overlapIterator = result.descendingIterator();
+            if (windowOverlap > 0) {
+                var overlapIterator = aPrevWindow.descendingIterator();
+
                 while (overlapIterator.hasNext()) {
+                    if (size >= windowOverlap && !result.isEmpty()) {
+                        // Overlap size reached
+                        break;
+                    }
+
                     var token = overlapIterator.next();
                     var tokenText = token.getCoveredText();
 
@@ -107,17 +112,21 @@ class SlidingWindow<T extends Annotation>
                     }
 
                     size += tokenText.length();
-                    if (size >= aOverlap && !result.isEmpty()) {
-                        // Overlap size reached
-                        break;
-                    }
-                    result.add(0, token);
+
+                    result.add(token);
                 }
+
+                Collections.reverse(result);
             }
 
             // Add fresh tokens
             var freshTokenAdded = false;
             while (aFreshTokenIterator.hasNext()) {
+                if (size >= windowSize && freshTokenAdded) {
+                    // Maximum sample size reached
+                    break;
+                }
+
                 var token = aFreshTokenIterator.next();
                 var tokenText = token.getCoveredText();
 
@@ -126,17 +135,13 @@ class SlidingWindow<T extends Annotation>
                 }
 
                 size += tokenText.length();
-                if (size >= aMaxLength && freshTokenAdded) {
-                    // Maximum sample size reached
-                    break;
-                }
 
                 result.add(token);
                 freshTokenAdded = true;
             }
 
             if (!freshTokenAdded) {
-                return Collections.emptyList();
+                return new LinkedList<T>();
             }
 
             return result;

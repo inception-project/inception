@@ -161,9 +161,12 @@ public class OpenNlpNerRecommender
                 break;
             }
 
+            var firstToken = tokens.get(0);
+            var lastToken = tokens.get(tokens.size() - 1);
+
             predictionCount++;
-            predictedRangeBegin = Math.min(predictedRangeBegin, tokens.get(0).getBegin());
-            predictedRangeEnd = Math.max(predictedRangeEnd, tokens.get(tokens.size() - 1).getEnd());
+            predictedRangeBegin = Math.min(predictedRangeBegin, firstToken.getBegin());
+            predictedRangeEnd = Math.max(predictedRangeEnd, lastToken.getEnd());
 
             var tokenTexts = tokens.stream() //
                     .map(AnnotationFS::getCoveredText) //
