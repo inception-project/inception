@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 public class RecommenderTestHelper
 {
 
-    public static void addScoreFeature(CAS aCas, String aTypeName, String aFeatureName)
+    public static void addPredictionFeatures(CAS aCas, String aTypeName, String aFeatureName)
         throws IOException, UIMAException
     {
         String scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
@@ -64,11 +64,11 @@ public class RecommenderTestHelper
         schemaService.upgradeCas(aCas, tsd);
     }
 
-    public static <T extends Annotation> void addScoreFeature(CAS aCas, Class<T> aClass,
+    public static <T extends Annotation> void addPredictionFeatures(CAS aCas, Class<T> aClass,
             String aFeatureName)
         throws IOException, UIMAException
     {
-        addScoreFeature(aCas, aClass.getName(), aFeatureName);
+        addPredictionFeatures(aCas, aClass.getName(), aFeatureName);
     }
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)

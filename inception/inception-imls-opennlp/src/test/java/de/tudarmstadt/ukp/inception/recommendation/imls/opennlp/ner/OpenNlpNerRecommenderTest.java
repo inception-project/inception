@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -28,6 +29,7 @@ import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +42,8 @@ import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -57,6 +61,8 @@ import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 public class OpenNlpNerRecommenderTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final File cache = DkproTestHelper.getCacheFolder();
     private static final DatasetFactory loader = new DatasetFactory(cache);
 
@@ -138,17 +144,52 @@ public class OpenNlpNerRecommenderTest
         var sut = new OpenNlpNerRecommender(recommender, traits);
         var casList = loadDevelopmentData();
 
-        CAS cas = casList.get(0);
-        try (CasStorageSession session = CasStorageSession.open()) {
+        var cas = casList.get(0);
+        try (var session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+            RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         }
 
         sut.train(context, asList(cas));
 
         sut.predict(new PredictionContext(context), cas);
 
-        var predictions = cas.select(NamedEntity.class).asList();
+        var isPredictionFeature = cas.getCasType(NamedEntity.class)
+                .getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var predictions = cas.select(NamedEntity.class)
+                .filter(ne -> ne.getBooleanValue(isPredictionFeature)).toList();
+
+        LOG.debug("Found {} named entities: {}", predictions.size(), predictions.stream()
+                .map(p -> String.format("%s %s\n", p.getCoveredText(), p.getValue())).toList());
+
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+    }
+
+    @Test
+    public void thatPredictionWorksCrossSentence() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        var sut = new OpenNlpNerRecommender(recommender, traits);
+        var casList = loadDevelopmentData();
+
+        var cas = casList.get(0);
+        try (var session = CasStorageSession.open()) {
+            session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
+                    NamedEntity._FeatName_value);
+        }
+
+        sut.train(context, asList(cas));
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var isPredictionFeature = cas.getCasType(NamedEntity.class)
+                .getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var predictions = cas.select(NamedEntity.class)
+                .filter(ne -> ne.getBooleanValue(isPredictionFeature)).toList();
+
+        LOG.debug("Found {} named entities: {}", predictions.size(), predictions.stream()
+                .map(p -> String.format("%s %s\n", p.getCoveredText(), p.getValue())).toList());
 
         assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }

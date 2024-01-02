@@ -18,21 +18,21 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
+import de.tudarmstadt.ukp.inception.recommendation.api.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -67,15 +69,14 @@ public class OpenNlpNerRecommender
 {
     public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
 
-    private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String NO_NE_TAG = "O";
 
-    private static final Class<Sentence> SAMPLE_UNIT = Sentence.class;
-    private static final Class<Token> DATAPOINT_UNIT = Token.class;
+    static final Class<Token> DATAPOINT_UNIT = Token.class;
 
     private static final int DEFAULT_WINDOW_SIZE = 300;
-    private static final int MIN_WINDOW_SIZE = 30;
+    private static final int MIN_TRAIN_WINDOW_SIZE = 30;
 
     private static final int MIN_TRAINING_SET_SIZE = 2;
     private static final int MIN_TEST_SET_SIZE = 2;
@@ -132,55 +133,108 @@ public class OpenNlpNerRecommender
         var model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
+        Iterable<List<Token>> unitProvider;
+        if (getRecommender().getLayer().isCrossSentence()) {
+            var windowSize = getWindowSize(aCas);
+            var windowOverlap = windowSize / 2;
+            unitProvider = new SlidingWindow<>(aCas, Token.class, windowSize, windowOverlap,
+                    new Range(aBegin, aEnd));
+        }
+        else {
+            unitProvider = new TokensBySentence(aCas);
+        }
+
         var finder = new NameFinderME(model);
 
-        var sampleUnitType = getType(aCas, SAMPLE_UNIT);
-        var tokenType = getType(aCas, Token.class);
         var predictedType = getPredictedType(aCas);
-
         var predictedFeature = getPredictedFeature(aCas);
         var isPredictionFeature = getIsPredictionFeature(aCas);
         var scoreFeature = getScoreFeature(aCas);
 
-        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         var predictionCount = 0;
+        var predictedRangeBegin = aBegin;
+        var predictedRangeEnd = aEnd;
 
-        for (var unit : units) {
+        for (var tokens : unitProvider) {
             int predictionsLimit = traits.getPredictionLimit();
             if (predictionsLimit > 0 && predictionCount >= predictionsLimit) {
                 break;
             }
 
             predictionCount++;
+            predictedRangeBegin = Math.min(predictedRangeBegin, tokens.get(0).getBegin());
+            predictedRangeEnd = Math.max(predictedRangeEnd, tokens.get(tokens.size() - 1).getEnd());
 
-            var tokenAnnotations = selectCovered(tokenType, unit);
-            var tokens = tokenAnnotations.stream() //
+            var tokenTexts = tokens.stream() //
                     .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
-            for (var prediction : finder.find(tokens)) {
+            for (var prediction : finder.find(tokenTexts)) {
                 var label = prediction.getType();
                 if (NameSample.DEFAULT_TYPE.equals(label) || BLANK_LABEL.equals(label)) {
                     label = null;
                 }
 
-                int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
-                int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
+                var begin = tokens.get(prediction.getStart()).getBegin();
+                var end = tokens.get(prediction.getEnd() - 1).getEnd();
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
 
                 annotation.setStringValue(predictedFeature, label);
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
                 }
-                if (isPredictionFeature != null) {
-                    annotation.setBooleanValue(isPredictionFeature, true);
-                }
+
+                annotation.setBooleanValue(isPredictionFeature, true);
 
                 aCas.addFsToIndexes(annotation);
             }
         }
 
-        return rangeCoveringAnnotations(units);
+        whenSuggestionsOverlapKeepLongest(aCas, predictedType, isPredictionFeature, scoreFeature);
+
+        assert predictedRangeBegin <= predictedRangeEnd : "Begin of predicted range cannot be beyond its end";
+        return new Range(predictedRangeBegin, predictedRangeEnd);
+    }
+
+    private void whenSuggestionsOverlapKeepLongest(CAS aCas, Type predictedType,
+            Feature isPredictionFeature, Feature scoreFeature)
+    {
+        var offsetsMap = new LinkedHashMap<Offset, List<AnnotationFS>>();
+        for (var candidate : aCas.<Annotation> select(predictedType)) {
+            if (candidate.getBooleanValue(isPredictionFeature)) {
+                var offset = new Offset(candidate.getBegin(), candidate.getEnd());
+                var list = offsetsMap.computeIfAbsent(offset, $ -> new ArrayList<>());
+                list.add(candidate);
+            }
+        }
+
+        var offsets = new ArrayList<>(offsetsMap.keySet());
+        var overlapIterator = new OverlapIterator(offsets, offsets);
+        while (overlapIterator.hasNext()) {
+            var overlappingAnnotations = overlapIterator.next();
+            var offsetA = overlappingAnnotations.getLeft();
+            var offsetB = overlappingAnnotations.getRight();
+
+            var candidates = new ArrayList<AnnotationFS>();
+            if (offsetA.length() < offsetB.length()) {
+                candidates.addAll(offsetsMap.get(offsetB));
+            }
+
+            if (offsetA.length() > offsetB.length()) {
+                candidates.addAll(offsetsMap.get(offsetA));
+            }
+
+            if (candidates.isEmpty()) {
+                continue;
+            }
+
+            if (scoreFeature != null) {
+                candidates.sort(comparing(ann -> ann.getDoubleValue(scoreFeature)));
+            }
+
+            candidates.subList(0, candidates.size() - 1)
+                    .forEach(ann -> aCas.removeFsFromIndexes(ann));
+        }
     }
 
     @Override
@@ -196,26 +250,12 @@ public class OpenNlpNerRecommender
         // We use sentence-based samples here even if the layer allows cross-sentence annotations
         // because with the overlapping sliding window, the evaluation would otherwise train on test
         // data.
-        var data = extractSamplesFromSentences(aCasses);
-        var trainingSet = new ArrayList<NameSample>();
-        var testSet = new ArrayList<NameSample>();
+        var sampleUnit = Sentence.class.getSimpleName();
+        var data = extractSamples(aCasses, this::extractSamplesFromSentences);
+        var splits = aDataSplitter.apply(data);
 
-        for (var nameSample : data) {
-            switch (aDataSplitter.getTargetSet(nameSample)) {
-            case TRAIN:
-                trainingSet.add(nameSample);
-                break;
-            case TEST:
-                testSet.add(nameSample);
-                break;
-            default:
-                // Do nothing
-                break;
-            }
-        }
-
-        var testSetSize = testSet.size();
-        var trainingSetSize = trainingSet.size();
+        var testSetSize = splits.testSet().size();
+        var trainingSetSize = splits.trainingSet().size();
         var overallTrainingSize = data.size() - testSetSize;
         var trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
@@ -226,23 +266,23 @@ public class OpenNlpNerRecommender
                     data.size(), (MIN_TRAINING_SET_SIZE + MIN_TEST_SET_SIZE));
             LOG.info(msg);
 
-            var result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
-                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
+            var result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(), sampleUnit,
+                    trainingSetSize, testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(msg);
             return result;
         }
 
-        LOG.info("Training on [{}] samples, predicting on [{}] of total [{}]", trainingSet.size(),
-                testSet.size(), data.size());
+        LOG.info("Training on [{}] samples, predicting on [{}] of total [{}]", trainingSetSize,
+                testSetSize, data.size());
 
         // Train model
-        var model = train(trainingSet, traits.getParameters());
+        var model = train(splits.trainingSet(), traits.getParameters());
         var nameFinder = new NameFinderME(model);
 
         // Evaluate
         var labelPairs = new ArrayList<LabelPair>();
-        for (var sample : testSet) {
+        for (var sample : splits.testSet()) {
             // During evaluation, we sample data across documents and shuffle them into training and
             // tests sets. Thus, we consider every sample as coming from a unique document and
             // always clear the adaptive data between samples. clear adaptive data from feature
@@ -258,7 +298,7 @@ public class OpenNlpNerRecommender
         }
 
         return labelPairs.stream().collect(toEvaluationResult(DATAPOINT_UNIT.getSimpleName(),
-                SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
+                sampleUnit, trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**
@@ -320,88 +360,77 @@ public class OpenNlpNerRecommender
 
     private List<NameSample> extractSamples(RecommenderContext aContext, Iterable<CAS> aCasses)
     {
+        BiFunction<CAS, List<NameSample>, Boolean> extractor;
+
         if (getRecommender().getLayer().isCrossSentence()) {
             if (aContext != null) {
                 aContext.log(LogMessage.info(getRecommender().getName(),
                         "Training using sliding-window since layer permits cross-sentence annotations."));
             }
-            return extractSamplesUsingSlidingWindow(aCasses);
+            extractor = this::extractSamplesUsingSlidingWindow;
+        }
+        else {
+            extractor = this::extractSamplesFromSentences;
         }
 
-        return extractSamplesFromSentences(aCasses);
+        return extractSamples(aCasses, extractor);
     }
 
-    private List<NameSample> extractSamplesFromSentences(Iterable<CAS> aCasses)
+    private List<NameSample> extractSamples(Iterable<CAS> aCasses,
+            BiFunction<CAS, List<NameSample>, Boolean> aExtractor)
     {
         var nameSamples = new ArrayList<NameSample>();
 
-        nextCas: for (var cas : aCasses) {
-            var sampleUnitType = getType(cas, SAMPLE_UNIT);
-            var tokenType = getType(cas, Token.class);
+        for (var cas : aCasses) {
+            var processNext = aExtractor.apply(cas, nameSamples);
+            if (!processNext) {
+                break;
+            }
+        }
 
-            var firstSampleInCas = true;
-            for (var sampleUnit : cas.<Annotation> select(sampleUnitType)) {
-                int trainingSetSizeLimit = traits.getTrainingSetSizeLimit();
-                if (trainingSetSizeLimit > 0 && nameSamples.size() >= trainingSetSizeLimit) {
-                    break nextCas;
-                }
+        return nameSamples;
+    }
 
-                if (isBlank(sampleUnit.getCoveredText())) {
-                    continue;
-                }
+    private boolean extractSamplesFromSentences(CAS aCas, List<NameSample> aSamples)
+    {
+        return generateSamples(aCas, new TokensBySentence(aCas), aSamples);
+    }
 
-                var tokens = cas.<Annotation> select(tokenType).coveredBy(sampleUnit).asList();
-                var tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
+    private boolean extractSamplesUsingSlidingWindow(CAS aCas, List<NameSample> aSamples)
+    {
+        var windowSize = getWindowSize(aCas);
+        var windowOverlap = windowSize / 2;
+
+        return generateSamples(aCas,
+                new SlidingWindow<>(aCas, DATAPOINT_UNIT, windowSize, windowOverlap), aSamples);
+    }
+
+    private boolean generateSamples(CAS aCas, Iterable<List<Token>> aUnitProvider,
+            List<NameSample> aSamples)
+    {
+        var trainingSetSizeLimit = traits.getTrainingSetSizeLimit();
+
+        var firstSampleInCas = true;
+
+        for (var tokens : aUnitProvider) {
+            if (trainingSetSizeLimit > 0 && aSamples.size() >= trainingSetSizeLimit) {
+                // Generated maximum number of samples
+                return false;
+            }
+
+            var annotatedSpans = extractAnnotatedSpans(aCas, tokens);
+
+            if (annotatedSpans.length > 0) {
+                var tokenTexts = tokens.stream() //
+                        .map(AnnotationFS::getCoveredText) //
                         .toArray(String[]::new);
-                var annotatedSpans = extractAnnotatedSpans(cas, tokens);
-                if (annotatedSpans.length == 0) {
-                    continue;
-                }
-
                 var nameSample = new NameSample(tokenTexts, annotatedSpans, firstSampleInCas);
-                nameSamples.add(nameSample);
+                aSamples.add(nameSample);
                 firstSampleInCas = false;
             }
         }
 
-        return nameSamples;
-    }
-
-    private List<NameSample> extractSamplesUsingSlidingWindow(Iterable<CAS> aCasses)
-    {
-        var nameSamples = new ArrayList<NameSample>();
-
-        nextCas: for (var cas : aCasses) {
-            var windowSize = getWindowSize(cas);
-            var windowOverlap = windowSize / 2;
-
-            var firstSampleInCas = true;
-            var tokenIterator = cas.select(Token.class).iterator();
-            var tokens = makeSample(tokenIterator, new LinkedList<Token>(), windowSize,
-                    windowOverlap);
-
-            while (!tokens.isEmpty()) {
-                int trainingSetSizeLimit = traits.getTrainingSetSizeLimit();
-                if (trainingSetSizeLimit > 0 && nameSamples.size() >= trainingSetSizeLimit) {
-                    // Generated maximum number of samples
-                    break nextCas;
-                }
-
-                var tokenTexts = tokens.stream() //
-                        .map(AnnotationFS::getCoveredText) //
-                        .toArray(String[]::new);
-                var annotatedSpans = extractAnnotatedSpans(cas, tokens);
-                if (annotatedSpans.length > 0) {
-                    var nameSample = new NameSample(tokenTexts, annotatedSpans, firstSampleInCas);
-                    nameSamples.add(nameSample);
-                    firstSampleInCas = false;
-                }
-
-                tokens = makeSample(tokenIterator, tokens, windowSize, windowOverlap);
-            }
-        }
-
-        return nameSamples;
+        return true;
     }
 
     private int getWindowSize(CAS aCas)
@@ -426,68 +455,11 @@ public class OpenNlpNerRecommender
             windowSize = textLengh / MIN_TRAINING_SET_SIZE;
         }
 
-        if (windowSize < MIN_WINDOW_SIZE) {
-            windowSize = MIN_WINDOW_SIZE;
+        if (windowSize < MIN_TRAIN_WINDOW_SIZE) {
+            windowSize = MIN_TRAIN_WINDOW_SIZE;
         }
 
         return windowSize;
-    }
-
-    private List<Token> makeSample(Iterator<Token> aFreshTokenIterator, List<Token> aTokens,
-            int aMaxLength, int aOverlap)
-    {
-        if (!aFreshTokenIterator.hasNext()) {
-            return Collections.emptyList();
-        }
-
-        var result = new LinkedList<Token>();
-
-        // Add tokens overlapping with previous sample
-        var size = 0;
-        if (aOverlap > 0) {
-            var overlapIterator = result.descendingIterator();
-            while (overlapIterator.hasNext()) {
-                var token = overlapIterator.next();
-                var tokenText = token.getCoveredText();
-
-                if (isBlank(tokenText)) {
-                    continue;
-                }
-
-                size += tokenText.length();
-                if (size >= aOverlap && !result.isEmpty()) {
-                    // Overlap size reached
-                    break;
-                }
-                result.add(0, token);
-            }
-        }
-
-        // Add fresh tokens
-        var freshTokenAdded = false;
-        while (aFreshTokenIterator.hasNext()) {
-            var token = aFreshTokenIterator.next();
-            var tokenText = token.getCoveredText();
-
-            if (isBlank(tokenText)) {
-                continue;
-            }
-
-            size += tokenText.length();
-            if (size >= aMaxLength && freshTokenAdded) {
-                // Maximum sample size reached
-                break;
-            }
-
-            result.add(token);
-            freshTokenAdded = true;
-        }
-
-        if (!freshTokenAdded) {
-            return Collections.emptyList();
-        }
-
-        return result;
     }
 
     private Span[] extractAnnotatedSpans(CAS aCas, List<? extends AnnotationFS> aTokens)

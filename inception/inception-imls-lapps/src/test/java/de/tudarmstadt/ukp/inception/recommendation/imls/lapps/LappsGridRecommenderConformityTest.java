@@ -134,7 +134,7 @@ public class LappsGridRecommenderConformityTest
         CAS cas = loadData(path.toFile());
         casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         return cas;
     }
