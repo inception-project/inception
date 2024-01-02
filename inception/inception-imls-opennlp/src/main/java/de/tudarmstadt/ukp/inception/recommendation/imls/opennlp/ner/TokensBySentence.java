@@ -20,41 +20,26 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 import java.util.Iterator;
 import java.util.List;
 
-import opennlp.tools.namefind.NameSample;
-import opennlp.tools.util.ObjectStream;
+import org.apache.uima.cas.CAS;
 
-class NameSampleStream
-    implements ObjectStream<NameSample>, AutoCloseable
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+
+class TokensBySentence
+    implements Iterable<List<Token>>
 {
-    private List<NameSample> samples;
-    private Iterator<NameSample> iterator;
+    private final CAS cas;
 
-    public NameSampleStream(List<NameSample> aSamples)
+    public TokensBySentence(CAS aCas)
     {
-        samples = aSamples;
-        iterator = samples.iterator();
+        cas = aCas;
     }
 
     @Override
-    public NameSample read()
+    public Iterator<List<Token>> iterator()
     {
-        if (iterator != null && iterator.hasNext()) {
-            return iterator.next();
-        }
-
-        return null;
-    }
-
-    @Override
-    public void reset() throws UnsupportedOperationException
-    {
-        iterator = samples.iterator();
-    }
-
-    @Override
-    public void close()
-    {
-        samples = null;
-        iterator = null;
+        return cas.select(Sentence.class) //
+                .map(s -> cas.select(Token.class).coveredBy(s).asList()) //
+                .iterator();
     }
 }

@@ -21,7 +21,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.exporter;
+package de.tudarmstadt.ukp.inception.recommendation.api.util;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +33,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
-import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 
 public class OverlapIteratorTest
 {
@@ -138,8 +137,6 @@ public class OverlapIteratorTest
     @Test
     public void testStep8()
     {
-        // Expected: 63-109, 63,63
-
         final ArrayList<Offset> a = new ArrayList<Offset>();
         final ArrayList<Offset> b = new ArrayList<Offset>();
 

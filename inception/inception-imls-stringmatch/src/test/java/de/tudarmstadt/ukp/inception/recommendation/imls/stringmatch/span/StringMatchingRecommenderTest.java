@@ -113,7 +113,7 @@ public class StringMatchingRecommenderTest
         var casList = loadDevelopmentData();
 
         var cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         sut.train(context, Collections.singletonList(cas));
 
@@ -138,7 +138,7 @@ public class StringMatchingRecommenderTest
     {
         var sut = new StringMatchingRecommender(recommender, traits);
         var cas = getTestCasNoLabelLabels();
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         sut.train(context, Collections.singletonList(cas));
 
@@ -163,7 +163,7 @@ public class StringMatchingRecommenderTest
         var cas = jcas.getCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         var gazeteer = asList( //
                 new GazeteerEntry("John Smith", "ORG"), //
@@ -193,7 +193,7 @@ public class StringMatchingRecommenderTest
         var cas = jcas.getCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         var gazeteer = asList(new GazeteerEntry("Smith . Peter", "ORG"));
 
@@ -232,7 +232,7 @@ public class StringMatchingRecommenderTest
         var casList = loadDevelopmentData();
 
         var cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         var gazeteer = asList( //
                 new GazeteerEntry("Toyota", "ORG"), //
@@ -265,7 +265,7 @@ public class StringMatchingRecommenderTest
         var casList = loadDevelopmentData();
 
         var cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         var gazeteer = asList( //
                 new GazeteerEntry("Toyota", "ORG"), //

@@ -145,7 +145,7 @@ public class NamedEntityLinkerTest
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
 
         sut.train(context, Collections.singletonList(cas));
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
         sut.predict(new PredictionContext(context), cas);
 

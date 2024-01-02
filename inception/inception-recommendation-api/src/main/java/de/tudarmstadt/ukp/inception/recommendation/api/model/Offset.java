@@ -64,6 +64,11 @@ public class Offset
         return end;
     }
 
+    public int length()
+    {
+        return end - begin;
+    }
+
     public boolean overlaps(final Offset i)
     {
         return AnnotationPredicates.overlapping(getBegin(), getEnd(), i.getBegin(), i.getEnd());

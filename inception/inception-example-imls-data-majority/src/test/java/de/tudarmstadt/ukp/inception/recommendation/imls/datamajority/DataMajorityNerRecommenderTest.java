@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addPredictionFeatures;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -100,7 +100,7 @@ public class DataMajorityNerRecommenderTest
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            addScoreFeature(cas, NamedEntity.class.getName(), "value");
+            addPredictionFeatures(cas, NamedEntity.class.getName(), "value");
         }
 
         sut.train(context, asList(cas));

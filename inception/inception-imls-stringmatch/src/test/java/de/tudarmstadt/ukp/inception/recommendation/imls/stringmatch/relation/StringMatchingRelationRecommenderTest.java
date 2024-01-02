@@ -158,7 +158,7 @@ public class StringMatchingRelationRecommenderTest
         try (InputStream is = Files.newInputStream(root.resolve("relation_test.xmi"))) {
             XmlCasDeserializer.deserialize(is, cas);
             casStorageSession.add("testDataCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            RecommenderTestHelper.addScoreFeature(cas, RELATION_LAYER, "value");
+            RecommenderTestHelper.addPredictionFeatures(cas, RELATION_LAYER, "value");
 
             return cas;
         }

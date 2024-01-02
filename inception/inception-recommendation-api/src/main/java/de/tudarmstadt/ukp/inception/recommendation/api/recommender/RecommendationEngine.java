@@ -223,7 +223,14 @@ public abstract class RecommendationEngine
 
     public Feature getIsPredictionFeature(CAS aCas)
     {
-        return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        var type = getPredictedType(aCas);
+        var feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+        if (feature == null) {
+            throw new IllegalArgumentException(
+                    "CAS has not been prepared for prediction. Type [" + type.getName()
+                            + "] does not have the feature [" + FEATURE_NAME_IS_PREDICTION + "]");
+        }
+        return feature;
     }
 
     public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
