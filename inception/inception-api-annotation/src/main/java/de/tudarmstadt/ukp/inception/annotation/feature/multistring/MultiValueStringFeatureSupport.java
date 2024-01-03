@@ -238,11 +238,10 @@ public class MultiValueStringFeatureSupport
         if (aValue instanceof Iterable) {
             var values = (Iterable<?>) aValue;
             for (var v : values) {
-                if (v instanceof String) {
-                    var value = (String) v;
+                if (v instanceof String value) {
                     var tag = schemaService.getTag(value, aFeature.getTagset());
 
-                    if (aFeature.getTagset() != null && !tag.isEmpty()) {
+                    if (isNotBlank(value) && aFeature.getTagset() != null && tag.isEmpty()) {
                         results.addDetail(new VLazyDetail(value, "Tag not in tagset"));
                     }
 
