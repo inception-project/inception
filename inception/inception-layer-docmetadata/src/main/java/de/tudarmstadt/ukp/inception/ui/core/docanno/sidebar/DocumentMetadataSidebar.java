@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.model.IModel;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class DocumentMetadataSidebar
@@ -38,5 +40,11 @@ public class DocumentMetadataSidebar
 
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
                 aAnnotationPage, aActionHandler, aModel));
+    }
+
+    @OnEvent
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
+    {
+        aEvent.getRequestTarget().ifPresent(target -> target.add(this));
     }
 }
