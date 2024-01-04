@@ -26,6 +26,7 @@ import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.jinjava.CasWrapper;
 
 public class PerSentenceContextGenerator
     implements PromptContextGenerator
@@ -40,6 +41,7 @@ public class PerSentenceContextGenerator
 
         return candidates.stream().map(candidate -> {
             var context = new PromptContext(candidate);
+            context.set(VAR_CAS, new CasWrapper(aCas));
             context.set(VAR_TEXT, candidate.getCoveredText());
             return context;
         });

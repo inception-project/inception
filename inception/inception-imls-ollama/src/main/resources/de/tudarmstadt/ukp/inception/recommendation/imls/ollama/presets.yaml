@@ -42,7 +42,7 @@
     {{ text }}
     ```
 
-- name: Summarize text
+- name: Summarize document
   promptingMode: per-document
   extractionMode: response-as-label
   prompt: |-
@@ -50,6 +50,18 @@
 
     ```
     {{ text }}
+    ```
+
+- name: Summarize annotated spans
+  promptingMode: per-document
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly summarize the following text.
+
+    ```
+    {% for x in cas.select('custom.Span') %}
+    {{ x }}
+    {% endfor %}
     ```
 
 - name: Disambiguate in sentence
