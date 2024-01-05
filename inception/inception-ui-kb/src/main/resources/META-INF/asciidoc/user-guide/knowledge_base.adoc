@@ -41,6 +41,7 @@ The same is true for the object of a statement: After choosing the property for 
 
 4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities. This includes the subclass and instances of the range specified for the property.
 
+[[sect_concept_features]]
 === Concept features
 
 Concept features are features that allow referencing concepts in the knowledge base during annotation.
