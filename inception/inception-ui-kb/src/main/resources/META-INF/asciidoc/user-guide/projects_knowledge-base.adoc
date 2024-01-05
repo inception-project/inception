@@ -225,7 +225,14 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 
 === Root Concepts
 
-In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
+The knowledge base browser displays a class tree. By default, it tries to automatically determine the root classes of
+this tree. However, for very large KBs this can be slow. Also you might not be interested in browsing the entire KB
+but would rather focus on specific subtrees. In such cases, you can define the root concepts explicitly here.
+
+NOTE: This setting currently affects **only class tree in the knowledge base browser**. You can still search for concepts
+      that are outside of the subtrees induced by the root concepts using the search field on the knowledge-base page and you
+      can also still link concept features. to concepts outside the subtrees. In order to limit a concept feature to a particular
+      subtree, use the **Scope** setting in the <<sect_concept_features,concept feature settings>>.
 
 
 === Additional Matching Properties

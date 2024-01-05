@@ -381,8 +381,7 @@ public class ConceptLinkingServiceImpl
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
             int aMentionBeginOffset, CAS aCas)
     {
-        Set<KBHandle> candidates = generateCandidates(aKB, aConceptScope, aValueType, aQuery,
-                aMention);
+        var candidates = generateCandidates(aKB, aConceptScope, aValueType, aQuery, aMention);
         return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
