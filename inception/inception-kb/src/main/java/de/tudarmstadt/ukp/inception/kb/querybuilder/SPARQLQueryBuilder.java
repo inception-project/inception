@@ -1622,7 +1622,10 @@ public class SPARQLQueryBuilder
         String value = aValue;
         // Escape metacharacters
         // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
-        value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".+");
+        // Replace metacharacters with a match for any single char (.+ would be too slow)
+        value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".");
+        // Drop metacharacters
+        // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", " ");
         // Replace consecutive whitespace or control chars with a whitespace matcher
         value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\s+");
         return value;
@@ -1980,8 +1983,13 @@ public class SPARQLQueryBuilder
             results = evaluateListQuery(tupleQuery, aAll);
             results.sort(comparing(KBObject::getUiLabel, CASE_INSENSITIVE_ORDER));
 
-            LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
-                    currentTimeMillis() - startTime);
+            long duration = currentTimeMillis() - startTime;
+            LOG.debug("[{}] Query returned {} results in {}ms {}", queryId, results.size(),
+                    duration, duration > 1000 ? "-- SLOW QUERY!" : "");
+
+            if (duration > 1000 && !LOG.isTraceEnabled()) {
+                LOG.debug("[{}] Slow query: {}", queryId, queryString);
+            }
 
             return results;
         }
@@ -2026,8 +2034,13 @@ public class SPARQLQueryBuilder
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             boolean result = !evaluateListQuery(tupleQuery, aAll).isEmpty();
 
-            LOG.debug("[{}] Query returned {} in {}ms", queryId, result,
-                    currentTimeMillis() - startTime);
+            long duration = currentTimeMillis() - startTime;
+            LOG.debug("[{}] Query returned {} in {}ms {}", queryId, result, duration,
+                    duration > 1000 ? "-- SLOW QUERY!" : "");
+
+            if (duration > 1000 && !LOG.isTraceEnabled()) {
+                LOG.debug("[{}] Slow query: {}", queryId, queryString);
+            }
 
             return result;
         }
@@ -2060,8 +2073,14 @@ public class SPARQLQueryBuilder
             tupleQuery.setIncludeInferred(includeInferred);
             result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
 
-            LOG.debug("[{}] Query returned a result in {}ms", queryId,
-                    currentTimeMillis() - startTime);
+            long duration = currentTimeMillis() - startTime;
+            LOG.debug("[{}] Query returned a result in {}ms {}", queryId, duration,
+                    duration > 1000 ? "-- SLOW QUERY!" : "");
+
+            if (duration > 1000 && !LOG.isTraceEnabled()) {
+                LOG.debug("[{}] Slow query: {}", queryId, queryString);
+            }
+
             return result;
         }
         catch (QueryEvaluationException e) {
