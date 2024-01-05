@@ -15,21 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.prompt;
+package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.jinjava;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-
-public interface PromptContextGenerator
+public class CasWrapper
 {
-    static final String VAR_TEXT = "text";
-    static final String VAR_SENTENCE = "sentence";
-    static final String VAR_DOCUMENT = "document";
-    static final String VAR_EXAMPLES = "examples";
-    static final String VAR_CAS = "cas";
+    private final CAS cas;
 
-    Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin, int aEnd);
+    public CasWrapper(CAS aCas)
+    {
+        cas = aCas;
+    }
+
+    public List<AnnotationWrapper> select(String aTypeName)
+    {
+        var type = getType(aTypeName);
+
+        return cas.<Annotation> select(type).map(AnnotationWrapper::new).toList();
+    }
+
+    private Type getType(String aName)
+    {
+        var type = cas.getTypeSystem().getType(aName);
+        if (type != null) {
+            return type;
+        }
+
+        for (var t : cas.getTypeSystem()) {
+            if (t.getShortName().equals(aName)) {
+                return t;
+            }
+        }
+
+        return null;
+    }
 }

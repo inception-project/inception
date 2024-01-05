@@ -25,6 +25,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.jinjava.CasWrapper;
 
 public class PerAnnotationContextGenerator
     implements PromptContextGenerator
@@ -40,6 +41,7 @@ public class PerAnnotationContextGenerator
                     .map(Sentence::getCoveredText) //
                     .findFirst().orElse("");
             var context = new PromptContext(candidate);
+            context.set(VAR_CAS, new CasWrapper(aCas));
             context.set(VAR_TEXT, candidate.getCoveredText());
             context.set(VAR_SENTENCE, sentence);
             return context;
