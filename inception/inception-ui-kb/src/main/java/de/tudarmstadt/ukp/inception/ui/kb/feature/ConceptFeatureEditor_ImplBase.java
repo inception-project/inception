@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -131,7 +130,7 @@ public abstract class ConceptFeatureEditor_ImplBase
             AnnotationFeature feat = getModelObject().feature;
 
             var traits = readFeatureTraits(feat);
-            String repoId = traits.getRepositoryId();
+            var repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
             if (!(repoId == null || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId))) {
                 return Collections.emptyList();
@@ -140,12 +139,23 @@ public abstract class ConceptFeatureEditor_ImplBase
             // If there is a selection, we try obtaining its text from the CAS and use it as an
             // additional item in the query. Note that there is not always a mention, e.g. when the
             // feature is used in a document-level annotations.
-            CAS cas = aHandler != null ? aHandler.getEditorCas() : null;
-            String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
-                    : null;
-            int mentionBegin = aStateModel != null
-                    ? aStateModel.getObject().getSelection().getBegin()
-                    : -1;
+            var cas = aHandler != null ? aHandler.getEditorCas() : null;
+
+            String mention = null;
+            int mentionBegin = -1;
+
+            if (aStateModel != null) {
+                var selection = aStateModel.getObject().getSelection();
+                if (selection.isSpan()) {
+                    mention = selection.getText();
+                    mentionBegin = selection.getBegin();
+                }
+
+                if (selection.isArc()) {
+                    mention = selection.getOriginText() + " " + selection.getTargetText();
+                    mentionBegin = selection.getBegin();
+                }
+            }
 
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), finalInput, mention,
