@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.inception.scheduling.controller;
 
 import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
 
-public interface SchedulerController
+public interface SchedulerWebsocketController
 {
     String BASE_URL = BASE_API_URL + "/scheduler";
-    String CANCEL = "cancel";
-    String TASKS = "/tasks";
-    String PARAM_TASK_ID = "taskId";
+    String BASE_TOPIC = "/scheduler";
+    String TASKS_TOPIC = "/tasks";
 }

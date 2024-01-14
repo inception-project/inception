@@ -107,16 +107,24 @@ public class MTaskStateUpdate
         if (!(other instanceof MTaskStateUpdate)) {
             return false;
         }
+
         MTaskStateUpdate castOther = (MTaskStateUpdate) other;
-        return new EqualsBuilder().append(timestamp / 1000, castOther.timestamp / 1000)
-                .append(progress, castOther.progress).append(maxProgress, castOther.maxProgress)
-                .append(state, castOther.state).isEquals();
+        return new EqualsBuilder() //
+                .append(timestamp / 1000, castOther.timestamp / 1000) //
+                .append(progress, castOther.progress) //
+                .append(maxProgress, castOther.maxProgress) //
+                .append(state, castOther.state) //
+                .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(timestamp / 1000).append(progress).append(maxProgress)
-                .append(state).toHashCode();
+        return new HashCodeBuilder() //
+                .append(timestamp / 1000) //
+                .append(progress) //
+                .append(maxProgress) //
+                .append(state) //
+                .toHashCode();
     }
 }
