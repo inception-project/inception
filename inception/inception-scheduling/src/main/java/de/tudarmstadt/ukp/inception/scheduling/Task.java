@@ -44,26 +44,29 @@ public abstract class Task
     private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
 
     private final TaskHandle handle;
-    private final User user;
+    private final User sessionOwner;
     private final Project project;
     private final String trigger;
     private final int id;
 
     private TaskMonitor monitor;
+    private Task parentTask;
+
+    private boolean cancelled;
 
     public Task(Project aProject, String aTrigger)
     {
         this(null, aProject, aTrigger);
     }
 
-    public Task(User aUser, Project aProject, String aTrigger)
+    public Task(User aSessionOwner, Project aProject, String aTrigger)
     {
         notNull(aProject, "Project must be specified");
         notNull(aTrigger, "Trigger must be specified");
 
         id = nextId.getAndIncrement();
         handle = new TaskHandle(id);
-        user = aUser;
+        sessionOwner = aSessionOwner;
         project = aProject;
         trigger = aTrigger;
     }
@@ -71,12 +74,30 @@ public abstract class Task
     @Override
     public void afterPropertiesSet()
     {
-        if (msgTemplate != null && user != null) {
-            monitor = new NotifyingTaskMonitor(handle, user.getUsername(), getTitle(), msgTemplate);
+        // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not report
+        // such subtasks ia the SchedulerControllerImpl - they are internal.
+        if (msgTemplate != null && sessionOwner != null && parentTask == null) {
+            monitor = new NotifyingTaskMonitor(handle, sessionOwner.getUsername(), getTitle(),
+                    msgTemplate);
         }
         else {
-            monitor = new TaskMonitor(handle, user != null ? user.getUsername() : null, getTitle());
+            monitor = new TaskMonitor(handle,
+                    sessionOwner != null ? sessionOwner.getUsername() : null, getTitle());
         }
+    }
+
+    /**
+     * @param aParentTask
+     *            parent task for this task.
+     */
+    public void setParentTask(Task aParentTask)
+    {
+        parentTask = aParentTask;
+    }
+
+    public Task getParentTask()
+    {
+        return parentTask;
     }
 
     public String getTitle()
@@ -91,7 +112,7 @@ public abstract class Task
 
     public Optional<User> getUser()
     {
-        return Optional.ofNullable(user);
+        return Optional.ofNullable(sessionOwner);
     }
 
     public Project getProject()
@@ -117,6 +138,16 @@ public abstract class Task
     public boolean isReadyToStart()
     {
         return true;
+    }
+
+    public void cancel()
+    {
+        cancelled = true;
+    }
+
+    public boolean isCancelled()
+    {
+        return cancelled;
     }
 
     void destroy()
@@ -162,7 +193,7 @@ public abstract class Task
     {
         StringBuilder sb = new StringBuilder(getName());
         sb.append('{');
-        sb.append("user=").append(user != null ? user.getUsername() : "<SYSTEM>");
+        sb.append("user=").append(sessionOwner != null ? sessionOwner.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
         sb.append("\"}");
@@ -179,12 +210,12 @@ public abstract class Task
             return false;
         }
         Task task = (Task) o;
-        return Objects.equals(user, task.user) && project.equals(task.project);
+        return Objects.equals(sessionOwner, task.sessionOwner) && project.equals(task.project);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(user, project);
+        return Objects.hash(sessionOwner, project);
     }
 }

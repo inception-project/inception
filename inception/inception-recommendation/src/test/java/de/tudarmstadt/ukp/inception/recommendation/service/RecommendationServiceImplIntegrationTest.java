@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -88,11 +89,12 @@ public class RecommendationServiceImplIntegrationTest
     private @Mock RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Mock AnnotationSchemaServiceImpl schemaService;
     private @Mock LayerSupportRegistry layerSupportRegistry;
+    private @Mock LearningRecordService learningRecordService;
 
     private RecommendationServiceImpl sut;
 
     private FeatureSupportRegistryImpl featureSupportRegistry;
-    private SuggestionSupportRegistryImpl layerRecommendtionSupportRegistry;
+    private SuggestionSupportRegistryImpl suggestionSupportRegistry;
     private Project project;
     private AnnotationLayer spanLayer;
     private Recommender spanLayerRecommender;
@@ -101,14 +103,16 @@ public class RecommendationServiceImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        layerRecommendtionSupportRegistry = new SuggestionSupportRegistryImpl(asList( //
-                new SpanSuggestionSupport(sut, sut, null, schemaService, null, null),
-                new RelationSuggestionSupport(sut, sut, null, schemaService, null)));
-        layerRecommendtionSupportRegistry.init();
+        suggestionSupportRegistry = new SuggestionSupportRegistryImpl(asList( //
+                new SpanSuggestionSupport(null, learningRecordService, null, schemaService, null,
+                        null),
+                new RelationSuggestionSupport(null, learningRecordService, null, schemaService,
+                        null)));
 
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
-                schemaService, layerRecommendtionSupportRegistry,
-                testEntityManager.getEntityManager());
+                schemaService, suggestionSupportRegistry, testEntityManager.getEntityManager());
+
+        suggestionSupportRegistry.init();
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport()));
         featureSupportRegistry.init();

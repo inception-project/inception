@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -515,7 +514,8 @@ public class RecommendationServiceImpl
         // suggestions that need to be processed (in particular ones that may have been generated
         // by the non-trainable recommenders triggered above or from already existing predictions
         if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
-            autoAccept(aEvent.getRequestTarget().orElse(null), sessionOwner, doc, ON_FIRST_ACCESS);
+            autoAcceptOnDocumentOpen(aEvent.getRequestTarget().orElse(null), sessionOwner, doc,
+                    ON_FIRST_ACCESS);
         }
 
         // Trigger a training and prediction run if there is no prediction state yet
@@ -562,8 +562,8 @@ public class RecommendationServiceImpl
         return true;
     }
 
-    private void autoAccept(AjaxRequestTarget aTarget, User aUser, SourceDocument aDocument,
-            AutoAcceptMode aAutoAcceptMode)
+    private void autoAcceptOnDocumentOpen(AjaxRequestTarget aTarget, User aSessionOwner,
+            SourceDocument aDocument, AutoAcceptMode aAutoAcceptMode)
     {
         if (aTarget == null) {
             LOG.trace("Not auto-accepting outside AJAX requests");
@@ -580,7 +580,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var predictions = getPredictions(aUser, aDocument.getProject());
+        var predictions = getPredictions(aSessionOwner, aDocument.getProject());
         if (predictions == null || predictions.isEmpty()) {
             LOG.trace("Not auto-accepting because no predictions are available");
             return;
@@ -595,10 +595,26 @@ public class RecommendationServiceImpl
             return;
         }
 
+        var accepted = autoAccept(aSessionOwner, aDocument, aAutoAcceptMode, predictions, cas);
+
+        if (accepted > 0) {
+            try {
+                page.writeEditorCas(cas);
+            }
+            catch (Exception e) {
+                WicketExceptionUtil.handleException(LOG, page, aTarget, e);
+            }
+        }
+    }
+
+    private int autoAccept(User aSessionOwner, SourceDocument aDocument,
+            AutoAcceptMode aAutoAcceptMode, Predictions predictions, CAS cas)
+    {
         var accepted = 0;
         var recommenderCache = listRecommenders(aDocument.getProject()).stream()
-                .collect(Collectors.toMap(Recommender::getId, identity()));
+                .collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+
         for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
                 continue;
@@ -607,7 +623,7 @@ public class RecommendationServiceImpl
             // We do not clear auto-accept for on-first-access predictions because these should be
             // restored after a document reset but they won't be re-generated after a document
             // reset.
-            if (prediction.getAutoAcceptMode() != AutoAcceptMode.ON_FIRST_ACCESS) {
+            if (prediction.getAutoAcceptMode() != ON_FIRST_ACCESS) {
                 prediction.clearAutoAccept();
             }
 
@@ -627,8 +643,9 @@ public class RecommendationServiceImpl
             adapter.silenceEvents();
 
             try {
-                suggestionSupport.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
-                        adapter, feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                suggestionSupport.get().acceptSuggestion(null, aDocument,
+                        aSessionOwner.getUsername(), cas, adapter, feature, prediction, AUTO_ACCEPT,
+                        ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -638,15 +655,7 @@ public class RecommendationServiceImpl
 
         predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
         LOG.debug("Auto-accepted [{}] suggestions", accepted);
-
-        if (accepted > 0) {
-            try {
-                page.writeEditorCas(cas);
-            }
-            catch (Exception e) {
-                WicketExceptionUtil.handleException(LOG, page, aTarget, e);
-            }
-        }
+        return accepted;
     }
 
     /*

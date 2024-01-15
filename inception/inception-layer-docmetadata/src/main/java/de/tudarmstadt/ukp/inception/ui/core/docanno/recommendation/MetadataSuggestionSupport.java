@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -107,28 +108,43 @@ public class MetadataSuggestionSupport
                 .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
                 .findFirst();
 
-        AnnotationBaseFS annotation;
-        if (candidateWithEmptyLabel.isPresent()) {
-            // If there is an annotation where the predicted feature is unset, use it ...
-            annotation = candidateWithEmptyLabel.get();
-        }
-        else if (candidates.isEmpty() || !aAdapter.getTraits(DocumentMetadataLayerTraits.class)
-                .map(DocumentMetadataLayerTraits::isSingleton).orElse(false)) {
-            // ... if not or if stacking is allowed, then we create a new annotation - this also
-            // takes care of attaching to an annotation if necessary
-            var newAnnotation = adapter.add(aDocument, aDataOwner, aCas);
-            annotation = newAnnotation;
-        }
-        else {
-            // ... if yes and stacking is not allowed, then we update the feature on the existing
-            // annotation
-            annotation = candidates.get(0);
-        }
+        try (var eventBatch = adapter.batchEvents()) {
+            var annotationCreated = false;
+            AnnotationBaseFS annotation;
+            if (candidateWithEmptyLabel.isPresent()) {
+                // If there is an annotation where the predicted feature is unset, use it ...
+                annotation = candidateWithEmptyLabel.get();
+            }
+            else if (candidates.isEmpty() || !aAdapter.getTraits(DocumentMetadataLayerTraits.class)
+                    .map(DocumentMetadataLayerTraits::isSingleton).orElse(false)) {
+                // ... if not or if stacking is allowed, then we create a new annotation - this also
+                // takes care of attaching to an annotation if necessary
+                var newAnnotation = adapter.add(aDocument, aDataOwner, aCas);
+                annotation = newAnnotation;
+            }
+            else {
+                // ... if yes and stacking is not allowed, then we update the feature on the
+                // existing annotation
+                annotation = candidates.get(0);
+            }
 
-        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
-                aValue, annotation, aLocation, aAction);
+            try {
+                commitLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aValue, annotation);
+            }
+            catch (Exception e) {
+                if (annotationCreated) {
+                    aAdapter.delete(aDocument, aDataOwner, aCas, VID.of(annotation));
+                }
+                throw e;
+            }
 
-        return annotation;
+            hideSuggestion(aSuggestion, aAction);
+            recordAndPublishAcceptance(aSessionOwner, aDocument, aDataOwner, aAdapter, aFeature,
+                    aSuggestion, annotation, aLocation, aAction);
+
+            eventBatch.commit();
+            return annotation;
+        }
     }
 
     @Override

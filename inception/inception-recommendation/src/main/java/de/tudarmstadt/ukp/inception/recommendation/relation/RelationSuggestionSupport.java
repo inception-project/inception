@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -165,42 +166,59 @@ public class RelationSuggestionSupport
             }
         }
 
-        AnnotationFS annotation = null;
-        if (candidates.size() == 1) {
-            // One candidate, we just return it
-            annotation = candidates.get(0);
-        }
-        else if (candidates.size() > 1) {
-            LOG.warn(
-                    "Found multiple candidates for upserting relation from suggestion, using first one");
-            annotation = candidates.get(0);
-        }
-
-        // We did not find a relation for this suggestion, so we create a new one
-        if (annotation == null) {
-            // FIXME: We get the first match for the (begin, end) span. With stacking, there can
-            // be more than one and we need to get the right one then which does not need to be
-            // the first. We wait for #2135 to fix this. When stacking is enabled, then also
-            // consider creating a new relation instead of upserting an existing one.
-
-            var source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream().findFirst()
-                    .orElse(null);
-            var target = selectAt(aCas, attachType, targetBegin, targetEnd).stream().findFirst()
-                    .orElse(null);
-
-            if (source == null || target == null) {
-                String msg = "Cannot find source or target annotation for upserting relation";
-                LOG.error(msg);
-                throw new IllegalStateException(msg);
+        try (var eventBatch = adapter.batchEvents()) {
+            var annotationCreated = false;
+            AnnotationFS annotation = null;
+            if (candidates.size() == 1) {
+                // One candidate, we just return it
+                annotation = candidates.get(0);
+            }
+            else if (candidates.size() > 1) {
+                LOG.warn(
+                        "Found multiple candidates for upserting relation from suggestion, using first one");
+                annotation = candidates.get(0);
             }
 
-            annotation = adapter.add(aDocument, aDataOwner, source, target, aCas);
+            // We did not find a relation for this suggestion, so we create a new one
+            if (annotation == null) {
+                // FIXME: We get the first match for the (begin, end) span. With stacking, there can
+                // be more than one and we need to get the right one then which does not need to be
+                // the first. We wait for #2135 to fix this. When stacking is enabled, then also
+                // consider creating a new relation instead of upserting an existing one.
+
+                var source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream().findFirst()
+                        .orElse(null);
+                var target = selectAt(aCas, attachType, targetBegin, targetEnd).stream().findFirst()
+                        .orElse(null);
+
+                if (source == null || target == null) {
+                    String msg = "Cannot find source or target annotation for upserting relation";
+                    LOG.error(msg);
+                    throw new IllegalStateException(msg);
+                }
+
+                annotation = adapter.add(aDocument, aDataOwner, source, target, aCas);
+                annotationCreated = true;
+            }
+
+            try {
+                commitLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion.getLabel(),
+                        annotation);
+            }
+            catch (Exception e) {
+                if (annotationCreated) {
+                    aAdapter.delete(aDocument, aDataOwner, aCas, VID.of(annotation));
+                }
+                throw e;
+            }
+
+            hideSuggestion(aSuggestion, aAction);
+            recordAndPublishAcceptance(aSessionOwner, aDocument, aDataOwner, aAdapter, aFeature,
+                    aSuggestion, annotation, aLocation, aAction);
+
+            eventBatch.commit();
+            return annotation;
         }
-
-        commmitLabel(aSessionOwner, aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion,
-                aSuggestion.getLabel(), annotation, aLocation, aAction);
-
-        return annotation;
     }
 
     @Override

@@ -93,12 +93,14 @@ public class SchedulingServiceImpl
 
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
+        Validate.notNull(aRunnable, "Task cannot be null");
         runningTasks.add((Task) aRunnable);
         LOG.debug("Starting task [{}]", aRunnable);
     }
 
     private void afterExecute(Runnable aRunnable, Throwable aThrowable)
     {
+        Validate.notNull(aRunnable, "Task cannot be null");
         runningTasks.remove(aRunnable);
         LOG.debug("Completed task [{}]", aRunnable);
         scheduleEligibleTasks();
@@ -173,6 +175,8 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void enqueue(Task aTask)
     {
+        Validate.notNull(aTask, "Task cannot be null");
+
         if (aTask.getProject() != null && deletionPending.contains(aTask.getProject())) {
             LOG.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
                     aTask.getProject());
@@ -332,7 +336,11 @@ public class SchedulingServiceImpl
             return false;
         });
 
-        // TODO: Stop the running tasks as well
+        runningTasks.forEach(task -> {
+            if (aPredicate.test(task)) {
+                task.cancel();
+            }
+        });
     }
 
     @EventListener

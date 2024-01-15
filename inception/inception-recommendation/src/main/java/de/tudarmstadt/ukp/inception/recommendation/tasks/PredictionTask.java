@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -62,6 +63,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
@@ -89,8 +91,12 @@ public class PredictionTask
     private final int predictionEnd;
     private final String dataOwner;
 
+    private boolean isolated = false;
+    private Predictions predictions;
+    private Recommender recommender;
+
     /**
-     * Create a new training task.
+     * Create a new prediction task.
      * 
      * @param aSessionOwner
      *            the user owning the training session.
@@ -120,6 +126,33 @@ public class PredictionTask
     }
 
     /**
+     * Whether to use the recommender session data from the recommender service or to run the
+     * prediction task in isolation from the session. Running in isolation is useful when
+     * predictions should be generated outside the normal automatically triggered recommender runs.
+     * After the isolated run has completed, the results can be picked up using
+     * {@link #getPredictions()}.
+     * 
+     * @param aIsolated
+     *            whether to run the task in isolation.
+     */
+    public void setIsolated(boolean aIsolated)
+    {
+        isolated = aIsolated;
+    }
+
+    /**
+     * Generate predictions only for the specified recommender. If this is not set, then predictions
+     * will be run for all active recommenders.
+     * 
+     * @param aRecommender
+     *            the one recommender to run.
+     */
+    public void setRecommender(Recommender aRecommender)
+    {
+        recommender = aRecommender;
+    }
+
+    /**
      * For testing.
      * 
      * @param aSchemaService
@@ -144,28 +177,36 @@ public class PredictionTask
             var sessionOwner = getSessionOwner();
 
             var startTime = System.currentTimeMillis();
-            var predictions = generatePredictions();
+            predictions = generatePredictions();
             predictions.inheritLog(getLogMessages());
             logPredictionComplete(predictions, startTime);
 
-            recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
+            if (!isolated) {
+                recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
 
-            if (predictions.hasNewSuggestions()) {
-                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                        .builder(this, project, sessionOwner.getUsername()) //
-                        .withMessage(LogMessage.info(this,
-                                predictions.getNewSuggestionCount() + " new predictions available" //
-                                        + " (some may be hidden/merged)")) //
-                        .build());
-            }
-            else {
-                appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                        .builder(this, project, sessionOwner.getUsername()) //
-                        .withMessage(
-                                LogMessage.info(this, "Prediction run produced no new suggestions")) //
-                        .build());
+                if (predictions.hasNewSuggestions()) {
+                    appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                            .builder(this, project, sessionOwner.getUsername()) //
+                            .withMessage(LogMessage.info(this,
+                                    predictions.getNewSuggestionCount()
+                                            + " new predictions available" //
+                                            + " (some may be hidden/merged)")) //
+                            .build());
+                }
+                else {
+                    appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                            .builder(this, project, sessionOwner.getUsername()) //
+                            .withMessage(LogMessage.info(this,
+                                    "Prediction run produced no new suggestions")) //
+                            .build());
+                }
             }
         }
+    }
+
+    public Predictions getPredictions()
+    {
+        return predictions;
     }
 
     private User getSessionOwner()
@@ -179,10 +220,10 @@ public class PredictionTask
         var docs = documentService.listSourceDocuments(project);
 
         // Do we need to predict ALL documents (e.g. in active learning mode)
-        if (recommendationService.isPredictForAllDocuments(getSessionOwner().getUsername(),
-                project)) {
+        if (!isolated && recommendationService
+                .isPredictForAllDocuments(getSessionOwner().getUsername(), project)) {
             try {
-                return generatePredictionsOnAllDocuments(docs, getMonitor());
+                return generatePredictionsOnAllDocuments(docs);
             }
             finally {
                 // We reset this in case the state was not properly cleared, e.g. the AL session
@@ -203,32 +244,38 @@ public class PredictionTask
      *            the documents to compute the predictions for.
      * @return the new predictions.
      */
-    private Predictions generatePredictionsOnAllDocuments(List<SourceDocument> aDocuments,
-            TaskMonitor aMonitor)
+    private Predictions generatePredictionsOnAllDocuments(List<SourceDocument> aDocuments)
     {
         logPredictionStartedForAllDocuments(aDocuments);
 
+        var monitor = getMonitor();
         var sessionOwner = getSessionOwner();
         var project = getProject();
-        var activePredictions = recommendationService.getPredictions(sessionOwner, project);
-        var predictions = activePredictions != null ? new Predictions(activePredictions)
+        var activePredictions = isolated ? null
+                : recommendationService.getPredictions(sessionOwner, project);
+        var incomingPredictions = activePredictions != null ? new Predictions(activePredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
-        try (var casHolder = new PredictionCasHolder()) {
-            aMonitor.setMaxProgress(aDocuments.size());
+        var maxProgress = aDocuments.size();
+        var progress = 0;
 
+        try (var casHolder = new PredictionCasHolder()) {
             for (var document : aDocuments) {
-                aMonitor.addMessage(LogMessage.info(this, "%s", document.getName()));
-                aMonitor.incrementProgress();
-                applyAllRecommendersToDocument(activePredictions, predictions, casHolder.cas,
+                monitor.setProgressWithMessage(progress, maxProgress,
+                        LogMessage.info(this, "%s", document.getName()));
+                applyRecommendersToDocument(activePredictions, incomingPredictions, casHolder.cas,
                         document, -1, -1);
+                progress++;
             }
 
-            return predictions;
+            monitor.setProgressWithMessage(progress, maxProgress,
+                    LogMessage.info(this, "%d documents processed", progress));
+
+            return incomingPredictions;
         }
         catch (ResourceInitializationException e) {
-            logErrorCreationPredictionCas(predictions);
-            return predictions;
+            logErrorCreationPredictionCas(incomingPredictions);
+            return incomingPredictions;
         }
     }
 
@@ -247,8 +294,9 @@ public class PredictionTask
     {
         var sessionOwner = getSessionOwner();
         var project = getProject();
-        var activePredictions = recommendationService.getPredictions(sessionOwner, project);
-        var predictions = activePredictions != null ? new Predictions(activePredictions)
+        var activePredictions = isolated ? null
+                : recommendationService.getPredictions(sessionOwner, project);
+        var incomingPredictions = activePredictions != null ? new Predictions(activePredictions)
                 : new Predictions(sessionOwner, dataOwner, project);
 
         aMonitor.setMaxProgress(1);
@@ -263,7 +311,7 @@ public class PredictionTask
 
             for (var document : documentsToInheritSuggestionsFor) {
                 inheritSuggestionsAtDocumentLevel(project, document, activePredictions,
-                        predictions);
+                        incomingPredictions);
             }
         }
         else {
@@ -273,16 +321,49 @@ public class PredictionTask
         try (var casHolder = new PredictionCasHolder()) {
 
             final CAS predictionCas = casHolder.cas;
-            applyAllRecommendersToDocument(activePredictions, predictions, predictionCas,
+            applyRecommendersToDocument(activePredictions, incomingPredictions, predictionCas,
                     aCurrentDocument, predictionBegin, predictionEnd);
         }
         catch (ResourceInitializationException e) {
-            logErrorCreationPredictionCas(predictions);
+            logErrorCreationPredictionCas(incomingPredictions);
         }
 
         aMonitor.setProgress(1);
 
-        return predictions;
+        return incomingPredictions;
+    }
+
+    /**
+     * @param aPredictions
+     *            the predictions to populate
+     * @param aPredictionCas
+     *            the re-usable buffer CAS to use when calling recommenders
+     * @param aDocument
+     *            the current document
+     * @param aPredictionBegin
+     *            begin of the prediction range (negative to predict from 0)
+     * @param aPredictionEnd
+     *            end of the prediction range (negative to predict until the end of the document)
+     */
+    private void applyRecommendersToDocument(Predictions aActivePredictions,
+            Predictions aPredictions, CAS aPredictionCas, SourceDocument aDocument,
+            int aPredictionBegin, int aPredictionEnd)
+    {
+        if (recommender == null) {
+            applyAllRecommendersToDocument(aActivePredictions, aPredictions, aPredictionCas,
+                    aDocument, aPredictionBegin, aPredictionEnd);
+        }
+        else {
+            try {
+                var originalCas = new LazyCas(aDocument);
+                applySingleRecomenderToDocument(originalCas, recommender, aActivePredictions,
+                        aPredictions, aPredictionCas, aDocument, aPredictionBegin, aPredictionEnd);
+            }
+            catch (IOException e) {
+                logUnableToReadAnnotations(aPredictions, aDocument, e);
+                return;
+            }
+        }
     }
 
     /**
@@ -319,22 +400,22 @@ public class PredictionTask
 
                 // Make sure we have the latest recommender config from the DB - the one
                 // from the active recommenders list may be outdated
-                var recommender = activeRecommender.getRecommender();
+                var rec = activeRecommender.getRecommender();
                 try {
-                    recommender = recommendationService.getRecommender(recommender.getId());
+                    rec = recommendationService.getRecommender(rec.getId());
                 }
                 catch (NoResultException e) {
-                    logRecommenderNotAvailable(aPredictions, recommender);
+                    logRecommenderNotAvailable(aPredictions, rec);
                     continue;
                 }
 
-                if (!recommender.isEnabled()) {
-                    logRecommenderDisabled(aPredictions, recommender);
+                if (!rec.isEnabled()) {
+                    logRecommenderDisabled(aPredictions, rec);
                     continue;
                 }
 
-                applyRecomenderToDocument(originalCas, recommender, aActivePredictions,
-                        aPredictions, aPredictionCas, aDocument, aPredictionBegin, aPredictionEnd);
+                applySingleRecomenderToDocument(originalCas, rec, aActivePredictions, aPredictions,
+                        aPredictionCas, aDocument, aPredictionBegin, aPredictionEnd);
             }
         }
         catch (IOException e) {
@@ -346,13 +427,14 @@ public class PredictionTask
         aPredictions.markDocumentAsPredictionCompleted(aDocument);
     }
 
-    private void applyRecomenderToDocument(LazyCas aOriginalCas, Recommender aRecommender,
+    private void applySingleRecomenderToDocument(LazyCas aOriginalCas, Recommender aRecommender,
             Predictions activePredictions, Predictions aPredictions, CAS predictionCas,
             SourceDocument aDocument, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
         var sessionOwner = getSessionOwner();
-        var context = recommendationService.getContext(sessionOwner.getUsername(), aRecommender);
+        var context = isolated ? Optional.of(RecommenderContext.emptyContext())
+                : recommendationService.getContext(sessionOwner.getUsername(), aRecommender);
         if (!context.isPresent()) {
             logRecommenderHasNoContext(aPredictions, aDocument, aRecommender);
             return;
@@ -442,15 +524,15 @@ public class PredictionTask
             CAS aOriginalCas, CAS aPredictionCas, Range aPredictionRange)
         throws RecommendationException
     {
-        var recommender = aEngine.getRecommender();
+        var rec = aEngine.getRecommender();
 
         // Extract the suggestions from the data which the recommender has written into the CAS
         // We need this only for the extraction, but there is no point in investing the time for
         // the prediction if we cannot extract the data afterwards - hence we obtain it now and
         // skip the prediciton if it is not available
-        var maybeSuggestionSupport = suggestionSupportRegistry.findGenericExtension(recommender);
+        var maybeSuggestionSupport = suggestionSupportRegistry.findGenericExtension(rec);
         if (maybeSuggestionSupport.isEmpty()) {
-            logNoSuggestionSupportAvailable(aIncomingPredictions, recommender);
+            logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
             return;
         }
         var supportRegistry = maybeSuggestionSupport.get();
@@ -460,13 +542,13 @@ public class PredictionTask
                 aPredictionRange);
 
         var generatedSuggestions = extractSuggestions(aIncomingPredictions, aDocument, aOriginalCas,
-                aPredictionCas, recommender, supportRegistry);
+                aPredictionCas, rec, supportRegistry);
 
         // Reconcile new suggestions with suggestions from previous run
-        var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,
-                predictedRange, generatedSuggestions);
+        var reconciliationResult = reconcile(aActivePredictions, aDocument, rec, predictedRange,
+                generatedSuggestions);
 
-        logGeneratedPredictions(aIncomingPredictions, aDocument, recommender, predictedRange,
+        logGeneratedPredictions(aIncomingPredictions, aDocument, rec, predictedRange,
                 generatedSuggestions, reconciliationResult);
 
         // Inherit suggestions that are outside the range which was predicted. Note that the engine
@@ -477,7 +559,7 @@ public class PredictionTask
         if (aActivePredictions != null
                 && !predictedRange.equals(rangeCoveringDocument(aOriginalCas))) {
             aged = inheritOutOfRangeSuggestions(aIncomingPredictions, aActivePredictions, aDocument,
-                    recommender, predictedRange, suggestions, aged);
+                    rec, predictedRange, suggestions, aged);
         }
 
         // Calculate the visibility of the suggestions. This happens via the original CAS which
@@ -492,20 +574,20 @@ public class PredictionTask
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private void inheritSuggestionsAtRecommenderLevel(Predictions predictions, CAS aOriginalCas,
+    private void inheritSuggestionsAtRecommenderLevel(Predictions aPredictions, CAS aOriginalCas,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document)
     {
         var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
                 document.getName());
 
         if (suggestions.isEmpty()) {
-            logNoInheritablePredictions(predictions, aRecommender, document);
+            logNoInheritablePredictions(aPredictions, aRecommender, document);
             return;
         }
 
-        logInheritedPredictions(predictions, aRecommender, document, suggestions);
+        logInheritedPredictions(aPredictions, aRecommender, document, suggestions);
 
-        predictions.inheritSuggestions(suggestions);
+        aPredictions.inheritSuggestions(suggestions);
     }
 
     /**
@@ -528,15 +610,15 @@ public class PredictionTask
     }
 
     private int inheritOutOfRangeSuggestions(Predictions aIncomingPredictions,
-            Predictions aActivePredictions, SourceDocument aDocument, Recommender recommender,
+            Predictions aActivePredictions, SourceDocument aDocument, Recommender aRecommender,
             Range predictedRange, List<AnnotationSuggestion> suggestions, int aged)
     {
         var inheritableSuggestions = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName()).stream() //
+                .getPredictionsByRecommenderAndDocument(aRecommender, aDocument.getName()).stream() //
                 .filter(s -> !s.coveredBy(predictedRange)) //
                 .collect(toList());
 
-        logInheritedPredictions(aIncomingPredictions, recommender, aDocument,
+        logInheritedPredictions(aIncomingPredictions, aRecommender, aDocument,
                 inheritableSuggestions);
 
         for (var suggestion : inheritableSuggestions) {
@@ -548,11 +630,11 @@ public class PredictionTask
     }
 
     private List<AnnotationSuggestion> extractSuggestions(Predictions aIncomingPredictions,
-            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas, Recommender recommender,
-            SuggestionSupport supportRegistry)
+            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas,
+            Recommender aRecommender, SuggestionSupport supportRegistry)
     {
         var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
-                recommender, aDocument, aOriginalCas, aPredictionCas);
+                aRecommender, aDocument, aOriginalCas, aPredictionCas);
         return supportRegistry.extractSuggestions(extractionContext);
     }
 
@@ -642,16 +724,16 @@ public class PredictionTask
     }
 
     private void logNoSuggestionSupportAvailable(Predictions aIncomingPredictions,
-            Recommender recommender)
+            Recommender aRecommender)
     {
         LOG.debug("There is no comparible suggestion support for {} - skipping prediction");
-        aIncomingPredictions.log(LogMessage.warn(recommender.getName(), //
+        aIncomingPredictions.log(LogMessage.warn(aRecommender.getName(), //
                 "Prediction skipped since there is no compatible suggestion support."));
     }
 
-    private void logErrorCreationPredictionCas(Predictions predictions)
+    private void logErrorCreationPredictionCas(Predictions aPredictions)
     {
-        predictions
+        aPredictions
                 .log(LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
         LOG.error("Cannot create prediction CAS, stopping predictions!");
     }
@@ -665,21 +747,21 @@ public class PredictionTask
     }
 
     private void logErrorExecutingRecommender(Predictions aPredictions, SourceDocument aDocument,
-            Recommender recommender, Throwable e)
+            Recommender aRecommender, Throwable e)
     {
-        aPredictions.log(LogMessage.error(recommender.getName(), "Failed: %s", e.getMessage()));
+        aPredictions.log(LogMessage.error(aRecommender.getName(), "Failed: %s", e.getMessage()));
         LOG.error("Error applying recommender {} for user {} to document {} in project {} - " //
-                + "skipping recommender", recommender, getSessionOwner(), aDocument,
+                + "skipping recommender", aRecommender, getSessionOwner(), aDocument,
                 aDocument.getProject(), e);
     }
 
     private void logStartGeneratingPredictions(Predictions aIncomingPredictions,
-            Recommender recommender)
+            Recommender aRecommender)
     {
-        aIncomingPredictions.log(LogMessage.info(recommender.getName(),
-                "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
+        aIncomingPredictions.log(LogMessage.info(aRecommender.getName(),
+                "Generating predictions for layer [%s]...", aRecommender.getLayer().getUiName()));
         LOG.trace("{}[{}]: Generating predictions for layer [{}]", getSessionOwner(),
-                recommender.getName(), recommender.getLayer().getUiName());
+                aRecommender.getName(), aRecommender.getLayer().getUiName());
     }
 
     private void logUnableToReadAnnotations(Predictions aPredictions, SourceDocument aDocument,
@@ -699,23 +781,23 @@ public class PredictionTask
         LOG.trace("[{}]: No active recommenders", getSessionOwner());
     }
 
-    private void logInheritedPredictions(Predictions predictions, Recommender aRecommender,
+    private void logInheritedPredictions(Predictions aPredictions, Recommender aRecommender,
             SourceDocument document, List<AnnotationSuggestion> suggestions)
     {
         LOG.debug("[{}][{}]: {} on document {} in project {} inherited {} predictions", getId(),
                 getSessionOwner().getUsername(), aRecommender, document, aRecommender.getProject(),
                 suggestions.size());
-        predictions.log(LogMessage.info(aRecommender.getName(),
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Inherited [%d] predictions from previous run", suggestions.size()));
     }
 
-    private void logNoInheritablePredictions(Predictions predictions, Recommender aRecommender,
+    private void logNoInheritablePredictions(Predictions aPredictions, Recommender aRecommender,
             SourceDocument document)
     {
         LOG.debug("[{}][{}]: {} on document {} in project {} there " //
                 + "are no inheritable predictions", getId(), getSessionOwner().getUsername(),
                 aRecommender, document, aRecommender.getProject());
-        predictions.log(LogMessage.info(aRecommender.getName(),
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "No inheritable suggestions from previous run"));
     }
 
@@ -755,71 +837,71 @@ public class PredictionTask
     }
 
     private void logGeneratedPredictions(Predictions aIncomingPredictions, SourceDocument aDocument,
-            Recommender recommender, Range predictedRange,
+            Recommender aRecommender, Range predictedRange,
             List<AnnotationSuggestion> generatedSuggestions,
             ReconciliationResult reconciliationResult)
     {
         LOG.debug(
                 "{} for user {} on document {} in project {} generated {} predictions within range {} (+{}/-{}/={})",
-                recommender, getSessionOwner(), aDocument, recommender.getProject(),
+                aRecommender, getSessionOwner(), aDocument, aRecommender.getProject(),
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged);
-        aIncomingPredictions.log(LogMessage.info(recommender.getName(), //
+        aIncomingPredictions.log(LogMessage.info(aRecommender.getName(), //
                 "Generated [%d] predictions within range %s (+%d/-%d/=%d)",
                 generatedSuggestions.size(), predictedRange, reconciliationResult.added,
                 reconciliationResult.removed, reconciliationResult.aged));
     }
 
     private void logRecommenderContextNoReady(Predictions aPredictions, SourceDocument aDocument,
-            Recommender recommender)
+            Recommender aRecommender)
     {
-        aPredictions.log(LogMessage.info(recommender.getName(),
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender context is not ready... skipping"));
         LOG.info("Recommender context {} for user {} in project {} is not ready for " //
-                + "prediction - skipping recommender", recommender, getSessionOwner(),
+                + "prediction - skipping recommender", aRecommender, getSessionOwner(),
                 aDocument.getProject());
     }
 
     private void logInvalidRecommenderConfiguration(Predictions aPredictions,
-            Recommender recommender)
+            Recommender aRecommender)
     {
-        aPredictions.log(LogMessage.info(recommender.getName(),
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender configured with invalid layer or feature... skipping"));
         LOG.info(
                 "[{}][{}]: Recommender configured with invalid layer or feature "
                         + "- skipping recommender",
-                getSessionOwner().getUsername(), recommender.getName());
+                getSessionOwner().getUsername(), aRecommender.getName());
     }
 
-    private void logNoRecommenderFactory(Recommender recommender)
+    private void logNoRecommenderFactory(Recommender aRecommender)
     {
         LOG.warn("[{}][{}]: No factory found - skipping recommender",
-                getSessionOwner().getUsername(), recommender.getName());
+                getSessionOwner().getUsername(), aRecommender.getName());
     }
 
     private void logRecommenderHasNoContext(Predictions aPredictions, SourceDocument aDocument,
-            Recommender recommender)
+            Recommender aRecommender)
     {
         aPredictions.log(
-                LogMessage.info(recommender.getName(), "Recommender has no context... skipping"));
+                LogMessage.info(aRecommender.getName(), "Recommender has no context... skipping"));
         LOG.info("No context available for recommender {} for user {} on document {} in " //
-                + "project {} - skipping recommender", recommender, getSessionOwner(), aDocument,
+                + "project {} - skipping recommender", aRecommender, getSessionOwner(), aDocument,
                 aDocument.getProject());
     }
 
-    private void logRecommenderDisabled(Predictions aPredictions, Recommender recommender)
+    private void logRecommenderDisabled(Predictions aPredictions, Recommender aRecommender)
     {
         aPredictions
-                .log(LogMessage.info(recommender.getName(), "Recommender disabled... skipping"));
-        LOG.debug("{}[{}]: Disabled - skipping", getSessionOwner(), recommender.getName());
+                .log(LogMessage.info(aRecommender.getName(), "Recommender disabled... skipping"));
+        LOG.debug("{}[{}]: Disabled - skipping", getSessionOwner(), aRecommender.getName());
     }
 
-    private void logRecommenderNotAvailable(Predictions aPredictions, Recommender recommender)
+    private void logRecommenderNotAvailable(Predictions aPredictions, Recommender aRecommender)
     {
-        aPredictions.log(LogMessage.info(recommender.getName(),
+        aPredictions.log(LogMessage.info(aRecommender.getName(),
                 "Recommender no longer available... skipping"));
         LOG.info("{}[{}]: Recommender no longer available... skipping", getSessionOwner(),
-                recommender.getName());
+                aRecommender.getName());
     }
 
     /**
