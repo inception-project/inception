@@ -501,8 +501,11 @@ public class RecommendationServiceImpl
         var trigger = aEvent.getClass().getSimpleName();
         if (!predictionSessionExistedOnOpen) {
             // Activate all non-trainable recommenders - execute synchronously - blocking
-            schedulingService.executeSync(
-                    new NonTrainableRecommenderActivationTask(sessionOwner, project, trigger));
+            schedulingService.executeSync(NonTrainableRecommenderActivationTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withProject(project) //
+                    .withTrigger(trigger) //
+                    .build());
         }
 
         // Check if we need to wait for the initial recommender run before displaying the document
@@ -556,7 +559,12 @@ public class RecommendationServiceImpl
         }
 
         LOG.trace("Running sync prediction for non-trainable recommenders");
-        schedulingService.executeSync(new PredictionTask(aSessionOwner, trigger, doc, aDataOwner));
+        schedulingService.executeSync(PredictionTask.builder() //
+                .withSessionOwner(aSessionOwner) //
+                .withTrigger(trigger) //
+                .withCurrentDocument(doc) //
+                .withDataOwner(aDataOwner) //
+                .build());
         switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
         return true;
@@ -795,7 +803,12 @@ public class RecommendationServiceImpl
             return;
         }
 
-        schedulingService.enqueue(new PredictionTask(user, aEventName, aDocument, aDataOwner));
+        schedulingService.enqueue(PredictionTask.builder() //
+                .withSessionOwner(user) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
     }
 
     @Override
@@ -839,8 +852,13 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            schedulingService.enqueue(
-                    new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
+            schedulingService.enqueue(SelectionTask.builder() //
+                    .withSessionOwner(user) //
+                    .withProject(aProject) //
+                    .withTrigger(aEventName) //
+                    .withCurrentDocument(aCurrentDocument) //
+                    .withDataOwner(aDataOwner) //
+                    .build());
 
             var state = getState(aSessionOwner, aProject);
             synchronized (state) {
@@ -851,8 +869,13 @@ public class RecommendationServiceImpl
             return;
         }
 
-        schedulingService.enqueue(
-                new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
+        schedulingService.enqueue(TrainingTask.builder() //
+                .withSessionOwner(user) //
+                .withProject(aProject) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aCurrentDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
 
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {

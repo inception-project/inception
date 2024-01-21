@@ -35,17 +35,17 @@ public interface DiffAdapter
      */
     String getType();
 
-    Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
+    Collection<? extends Position> generateSubPositions(AnnotationFS aFs,
             LinkCompareBehavior aLinkCompareBehavior);
 
     LinkFeatureDecl getLinkFeature(String aFeature);
 
     Set<String> getLabelFeatures();
 
-    Position getPosition(int aCasId, FeatureStructure aFS);
+    Position getPosition(FeatureStructure aFS);
 
-    Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
+    Position getPosition(FeatureStructure aFS, String aFeature, String aRole, int aLinkTargetBegin,
+            int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
 
     List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd);
 }

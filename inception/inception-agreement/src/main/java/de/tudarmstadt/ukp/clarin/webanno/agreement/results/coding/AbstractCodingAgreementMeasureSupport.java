@@ -23,13 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
@@ -42,8 +37,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
 public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgreementTraits>
-    extends
-    AgreementMeasureSupport_ImplBase<T, PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy>
+    extends AgreementMeasureSupport_ImplBase<T, FullCodingAgreementResult, ICodingAnnotationStudy>
 {
     @Override
     public boolean accepts(AnnotationFeature aFeature)
@@ -59,10 +53,8 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     }
 
     @Override
-    public Panel createResultsPanel(String aId,
-            IModel<PairwiseAnnotationResult<CodingAgreementResult>> aResults,
-            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier)
+    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
     {
-        return new PairwiseCodingAgreementTable(aId, aResults, aCasMapSupplier);
+        return new PairwiseCodingAgreementTable(aId, aResults);
     }
 }

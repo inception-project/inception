@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Fragment;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
@@ -35,13 +36,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
@@ -52,12 +51,11 @@ import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PairwiseUnitizingAgreementTable
-    extends Panel
+    extends GenericPanel<PairwiseAnnotationResult>
 {
     private static final long serialVersionUID = 571396822546125376L;
 
-    private final static Logger LOG = LoggerFactory
-            .getLogger(PairwiseUnitizingAgreementTable.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
@@ -66,15 +64,14 @@ public class PairwiseUnitizingAgreementTable
 
     private final RefreshingView<String> rows;
 
-    public PairwiseUnitizingAgreementTable(String aId,
-            IModel<PairwiseAnnotationResult<UnitizingAgreementResult>> aModel)
+    public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
     {
         super(aId, aModel);
 
         setOutputMarkupId(true);
 
-        PopoverConfig config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
-        WebMarkupContainer legend = new WebMarkupContainer("legend");
+        var config = new PopoverConfig().withPlacement(Placement.left).withHtml(true);
+        var legend = new WebMarkupContainer("legend");
         legend.add(new PopoverBehavior(new ResourceModel("legend"),
                 new StringResourceModel("legend.content", legend), config));
         add(legend);
@@ -82,7 +79,7 @@ public class PairwiseUnitizingAgreementTable
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
         // of the table.
         final IModel<List<String>> ratersAdapter = LoadableDetachableModel.of(() -> {
-            List<String> raters = new ArrayList<>();
+            var raters = new ArrayList<String>();
             if (getModelObject() != null) {
                 raters.add(null);
                 raters.addAll(getModelObject().getRaters());
@@ -167,107 +164,54 @@ public class PairwiseUnitizingAgreementTable
 
     private Label makeLowerDiagonalCellLabel(String aRater1, String aRater2)
     {
-        // UnitizingAgreementResult result = getModelObject().getStudy(aRater1,
-        // aRater2);
-
-        // String label = String.format("%d/%d", result.getCompleteSetCount(),
-        // result.getRelevantSetCount());
-        //
-        // String tooltipTitle = "Details about annotations excluded from agreement calculation";
-
-        // StringBuilder tooltipContent = new StringBuilder();
-        // if (result.isExcludeIncomplete()) {
-        // tooltipContent.append(String.format("- Incomplete (missing): %d%n",
-        // result.getIncompleteSetsByPosition().size()));
-        // tooltipContent.append(String.format(
-        // "- Incomplete (not labeled): %d%n", result
-        // .getIncompleteSetsByLabel().size()));
-        // }
-        // tooltipContent.append(String.format("- Plurality: %d", result
-        // .getPluralitySets().size()));
-
-        // Label l = new Label("label", Model.of(label));
-        // DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-        // tooltipTitle, tooltipContent.toString());
-        // tooltip.setOption("position", (Object) null);
-        // l.add(tooltip);
-        // l.add(new AttributeAppender("style", "cursor: help", ";"));
-        // return l;
-
         return new Label("label");
     }
 
     private Label makeUpperDiagonalCellLabel(String aRater1, String aRater2)
     {
-        UnitizingAgreementResult result = getModelObject().getStudy(aRater1, aRater2);
+        var result = getModelObject().getStudy(aRater1, aRater2);
 
-        boolean noDataRater0 = isAllNull(result, 0);
-        boolean noDataRater1 = isAllNull(result, 1);
+        if (result == null) {
+            return new Label("label", "no data");
+        }
+
+        var casGroupId1 = result.getCasGroupIds().get(0);
+        var casGroupId2 = result.getCasGroupIds().get(1);
+        var noDataRater1 = result.isAllNull(casGroupId1);
+        var noDataRater2 = result.isAllNull(casGroupId2);
 
         String label;
-        if (result.getStudy().getUnitCount() == 0) {
+        if (result.isEmpty()) {
             label = "no positions";
         }
-        else if (noDataRater0 && noDataRater1) {
+        else if (noDataRater1 && noDataRater2) {
             label = "no labels";
         }
-        else if (noDataRater0) {
-            label = "no labels from " + result.getCasGroupIds().get(0);
-        }
         else if (noDataRater1) {
-            label = "no labels from " + result.getCasGroupIds().get(1);
+            label = "no labels from " + casGroupId1;
         }
-        // else if (incPos == result.getRelevantSetCount()) {
-        // label = "positions disjunct";
-        // }
-        // else if (incLabel == result.getRelevantSetCount()) {
-        // label = "labels disjunct";
-        // }
-        // else if ((incLabel + incPos) == result.getRelevantSetCount()) {
-        // label = "labels/positions disjunct";
-        // }
+        else if (noDataRater2) {
+            label = "no labels from " + casGroupId2;
+        }
         else {
             label = String.format("%.2f", result.getAgreement());
         }
 
-        String tooltipTitle = result.getCasGroupIds().get(0) + '/' + result.getCasGroupIds().get(1);
+        var tooltipTitle = casGroupId1 + '/' + casGroupId2;
 
-        String tooltipContent = "Positions annotated:\n"
-                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(0),
-                        getNonNullCount(result, 0), result.getStudy().getUnitCount(0))
-                + String.format("- %s: %d/%d%n", result.getCasGroupIds().get(1),
-                        getNonNullCount(result, 1), result.getStudy().getUnitCount(1))
-                + String.format("Distinct labels: %d%n", result.getStudy().getCategoryCount());
+        var tooltipContent = "Positions annotated:\n"
+                + String.format("- %s: %d/%d%n", casGroupId1, result.getNonNullCount(casGroupId1),
+                        result.getItemCount(casGroupId1))
+                + String.format("- %s: %d/%d%n", casGroupId2, result.getNonNullCount(casGroupId2),
+                        result.getItemCount(casGroupId2))
+                + String.format("Distinct labels: %d%n", result.getCategoryCount());
 
-        Label l = new Label("label", Model.of(label));
-        DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(tooltipTitle,
-                tooltipContent);
+        var l = new Label("label", Model.of(label));
+        var tooltip = new DescriptionTooltipBehavior(tooltipTitle, tooltipContent);
         tooltip.setOption("position", (Object) null);
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: help", ";"));
 
         return l;
-    }
-
-    public boolean isAllNull(AgreementResult<IUnitizingAnnotationStudy> aResult, int aRaterIdx)
-    {
-        return !aResult.getStudy().getUnits().stream()
-                .anyMatch(u -> u.getRaterIdx() == aRaterIdx && u.getCategory() != null);
-    }
-
-    public long getNonNullCount(AgreementResult<IUnitizingAnnotationStudy> aResult, int aRaterIdx)
-    {
-        return aResult.getStudy().getUnits().stream()
-                .filter(u -> u.getRaterIdx() == aRaterIdx && u.getCategory() != null).count();
-    }
-
-    public PairwiseAnnotationResult<UnitizingAgreementResult> getModelObject()
-    {
-        return (PairwiseAnnotationResult<UnitizingAgreementResult>) getDefaultModelObject();
-    }
-
-    public void setModelObject(PairwiseAnnotationResult<IUnitizingAnnotationStudy> aAgreements2)
-    {
-        setDefaultModelObject(aAgreements2);
     }
 }

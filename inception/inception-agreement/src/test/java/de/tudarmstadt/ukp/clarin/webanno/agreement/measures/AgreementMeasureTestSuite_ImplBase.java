@@ -37,7 +37,6 @@ import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,6 +51,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -104,7 +104,7 @@ public class AgreementMeasureTestSuite_ImplBase
         layerRegistry.init();
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
@@ -133,16 +133,16 @@ public class AgreementMeasureTestSuite_ImplBase
         jcasB.setDocumentText("This is a test.");
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
         AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
 
         return measure.getAgreement(casByUser);
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         AnnotationLayer layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
@@ -177,11 +177,11 @@ public class AgreementMeasureTestSuite_ImplBase
         AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
 
         return measure.getAgreement(Map.of( //
-                "user1", asList(user1), //
-                "user2", asList(user2)));
+                "user1", user1, //
+                "user2", user2));
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         var layer = new AnnotationLayer(Lemma.class.getName(), Lemma.class.getSimpleName(),
@@ -202,17 +202,17 @@ public class AgreementMeasureTestSuite_ImplBase
 
         CAS user2Cas = JCasFactory.createText(text).getCas();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas));
-        casByUser.put("user2", asList(user2Cas));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", user1Cas);
+        casByUser.put("user2", user2Cas);
 
         AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
 
         return measure.getAgreement(casByUser);
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R singleNoDifferencesWithAdditionalCasTest(AgreementMeasureSupport<T, R, S> aSupport)
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    R threeCasesWithAnnotationOnlyInThird(AgreementMeasureSupport<T, R, S> aSupport)
         throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
@@ -220,7 +220,7 @@ public class AgreementMeasureTestSuite_ImplBase
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, POS._FeatName_PosValue,
+        var feature = new AnnotationFeature(project, layer, POS._FeatName_PosValue,
                 POS._FeatName_PosValue, TYPE_NAME_STRING);
         feature.setId(1l);
         features.add(feature);
@@ -235,12 +235,12 @@ public class AgreementMeasureTestSuite_ImplBase
         AgreementMeasure<R> measure = aSupport.createMeasure(feature, aSupport.createTraits());
 
         return measure.getAgreement(Map.of( //
-                "user1", asList(user1), //
-                "user2", asList(user2), //
-                "user3", asList(user3)));
+                "user1", user1, //
+                "user2", user2, //
+                "user3", user3));
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
@@ -269,20 +269,20 @@ public class AgreementMeasureTestSuite_ImplBase
         p2.setPosValue("B");
         p2.addToIndexes();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", user1.getCas());
+        casByUser.put("user2", user2.getCas());
 
         AgreementMeasure<R> measure = aSupport.createMeasure(feature, aTraits);
 
         return measure.getAgreement(casByUser);
     }
 
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R fullSingleCategoryAgreementWithTagset(AgreementMeasureSupport<T, R, S> aSupport, T aTraits)
         throws Exception
     {
-        TagSet tagset = new TagSet(project, "tagset");
+        var tagset = new TagSet(project, "tagset");
 
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -295,55 +295,20 @@ public class AgreementMeasureTestSuite_ImplBase
         feature.setTagset(tagset);
         features.add(feature);
 
-        CAS user1 = createText("test");
+        var user1 = createText("test");
 
         buildAnnotation(user1, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //
                 .buildAndAddToIndexes();
 
-        CAS user2 = createText("test");
+        var user2 = createText("test");
 
         buildAnnotation(user2, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //
                 .buildAndAddToIndexes();
 
         return aSupport.createMeasure(feature, aTraits).getAgreement(Map.of( //
-                "user1", asList(user1), //
-                "user2", asList(user2)));
-    }
-
-    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R twoDocumentsNoOverlap(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
-    {
-        TagSet tagset = new TagSet(project, "tagset");
-
-        var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
-                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
-        layer.setId(1l);
-        layers.add(layer);
-
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
-                CAS.TYPE_NAME_STRING);
-        feature.setId(1l);
-        feature.setTagset(tagset);
-        features.add(feature);
-
-        CAS user1a = createText("test");
-        CAS user1b = createText("test");
-
-        buildAnnotation(user1a, POS.class).at(0, 1) //
-                .withFeature(POS._FeatName_PosValue, "+") //
-                .buildAndAddToIndexes();
-
-        CAS user2a = createText("test");
-        CAS user2b = createText("test");
-
-        buildAnnotation(user2b, POS.class).at(0, 1) //
-                .withFeature(POS._FeatName_PosValue, "+") //
-                .buildAndAddToIndexes();
-
-        return aSupport.createMeasure(feature, aTraits).getAgreement(Map.of( //
-                "user1", asList(user1a, user1b), //
-                "user2", asList(user2a, user2b)));
+                "user1", user1, //
+                "user2", user2));
     }
 }

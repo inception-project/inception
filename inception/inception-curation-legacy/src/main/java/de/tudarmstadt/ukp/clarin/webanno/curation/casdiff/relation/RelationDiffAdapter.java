@@ -80,7 +80,7 @@ public class RelationDiffAdapter
     }
 
     @Override
-    public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
             int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         Type type = aFS.getType();
@@ -107,7 +107,7 @@ public class RelationDiffAdapter
                     aLinkTargetEnd);
         }
 
-        return new RelationPosition(collectionId, documentId, aCasId, getType(),
+        return new RelationPosition(collectionId, documentId, getType(),
                 sourceFS != null ? sourceFS.getBegin() : -1,
                 sourceFS != null ? sourceFS.getEnd() : -1,
                 sourceFS != null ? sourceFS.getCoveredText() : null,

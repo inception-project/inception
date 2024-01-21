@@ -838,24 +838,37 @@ public class SearchServiceImpl
 
     private void enqueueReindexTask(Project aProject, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, null, aTrigger));
+        enqueue(ReindexTask.builder() //
+                .withProject(aProject) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     @Override
     @Transactional
-    public void enqueueReindexTask(Project aProject, String aUser, String aTrigger)
+    public void enqueueReindexTask(Project aProject, User aUser, String aTrigger)
     {
-        enqueue(new ReindexTask(aProject, aUser, aTrigger));
+        enqueue(ReindexTask.builder() //
+                .withProject(aProject) //
+                .withSessionOwner(aUser) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)
     {
-        enqueue(new IndexSourceDocumentTask(aSourceDocument, aTrigger));
+        enqueue(IndexSourceDocumentTask.builder() //
+                .withSourceDocument(aSourceDocument) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
-        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aTrigger));
+        enqueue(IndexAnnotationDocumentTask.builder() //
+                .withAnnotationDocument(aAnnotationDocument) //
+                .withTrigger(aTrigger) //
+                .build());
     }
 
     /**

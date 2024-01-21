@@ -24,6 +24,7 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -48,6 +49,7 @@ public class TaskMonitorPanel
 
     private boolean popupMode = true;
     private boolean keepRemovedTasks = false;
+    private String typePattern = "";
 
     public TaskMonitorPanel(String aId)
     {
@@ -67,6 +69,18 @@ public class TaskMonitorPanel
         return this;
     }
 
+    public TaskMonitorPanel setTypePattern(String aTypePattern)
+    {
+        if (StringUtils.isBlank(aTypePattern)) {
+            typePattern = "";
+        }
+        else {
+            typePattern = aTypePattern;
+        }
+
+        return this;
+    }
+
     @Override
     protected void onConfigure()
     {
@@ -76,6 +90,7 @@ public class TaskMonitorPanel
                 "csrfToken", getCsrfTokenFromSession(), //
                 "popupMode", popupMode, //
                 "keepRemovedTasks", keepRemovedTasks, //
+                "typePattern", typePattern, //
                 "endpointUrl", constructEndpointUrl(), //
                 "wsEndpointUrl", constructWsEndpointUrl(), //
                 "topicChannel", SchedulerWebsocketController.BASE_TOPIC)));

@@ -28,7 +28,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,63 +39,54 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.dkpro.statistics.agreement.IAnnotationUnit;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 
 public class AgreementUtils
 {
-    public static CodingAgreementResult makeCodingStudy(CasDiff aDiff, String aType,
+    public static FullCodingAgreementResult makeCodingStudy(CasDiff aDiff, String aType,
             String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
-            Map<String, List<CAS>> aCasMap)
+            Map<String, CAS> aCasMap)
     {
         return makeCodingStudy(aDiff, aCasMap.keySet(), aType, aFeature, aTagSet,
                 aExcludeIncomplete, true, aCasMap);
     }
 
-    private static CAS findSomeCas(Map<String, List<CAS>> aCasMap)
+    private static CAS findSomeCas(Map<String, CAS> aCasMap)
     {
-        for (List<CAS> l : aCasMap.values()) {
-            if (l != null) {
-                for (CAS cas : l) {
-                    if (cas != null) {
-                        return cas;
-                    }
-                }
+        for (var cas : aCasMap.values()) {
+            if (cas != null) {
+                return cas;
             }
         }
 
         return null;
     }
 
-    private static CodingAgreementResult makeCodingStudy(CasDiff aDiff, Collection<String> aUsers,
+    private static FullCodingAgreementResult makeCodingStudy(CasDiff aDiff, Collection<String> aUsers,
             String aType, String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
-            boolean aNullLabelsAsEmpty, Map<String, List<CAS>> aCasMap)
+            boolean aNullLabelsAsEmpty, Map<String, CAS> aCasMap)
     {
-        List<String> users = new ArrayList<>(aUsers);
-        Collections.sort(users);
+        var users = aUsers.stream().sorted().toList();
 
-        List<ConfigurationSet> completeSets = new ArrayList<>();
-        List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
-        List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
-        List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
-        List<ConfigurationSet> pluralitySets = new ArrayList<>();
-        List<ConfigurationSet> irrelevantSets = new ArrayList<>();
-        CodingAnnotationStudy study = new CodingAnnotationStudy(users.size());
+        var completeSets = new ArrayList<ConfigurationSet>();
+        var setsWithDifferences = new ArrayList<ConfigurationSet>();
+        var incompleteSetsByPosition = new ArrayList<ConfigurationSet>();
+        var incompleteSetsByLabel = new ArrayList<ConfigurationSet>();
+        var pluralitySets = new ArrayList<ConfigurationSet>();
+        var irrelevantSets = new ArrayList<ConfigurationSet>();
+        var study = new CodingAnnotationStudy(users.size());
 
         if (aTagSet != null) {
             aTagSet.forEach(study::addCategory);
@@ -105,17 +95,18 @@ public class AgreementUtils
         // Check if the feature we are looking at is a primitive feature or a link feature
         // We do this by looking it up in the first available CAS. Mind that at this point all
         // CASes should have exactly the same typesystem.
-        CAS someCas = findSomeCas(aCasMap);
+        var someCas = findSomeCas(aCasMap);
         if (someCas == null) {
             // Well... there is NOTHING here!
             // All positions are irrelevant
             aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
 
-            return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
+            return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
         }
-        TypeSystem ts = someCas.getTypeSystem();
+
+        var ts = someCas.getTypeSystem();
 
         // This happens in our test cases when we feed the process with uninitialized CASes.
         // We should just do the right thing here which is: do nothing
@@ -123,7 +114,7 @@ public class AgreementUtils
             // All positions are irrelevant
             aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurationSet(p)));
 
-            return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
+            return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
         }
@@ -134,11 +125,11 @@ public class AgreementUtils
                     "Type [" + aType + "] has no feature called [" + aFeature + "]");
         }
 
-        boolean isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
+        var isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive();
 
-        nextPosition: for (Position p : aDiff.getPositions()) {
-            ConfigurationSet cfgSet = aDiff.getConfigurationSet(p);
+        nextPosition: for (var p : aDiff.getPositions()) {
+            var cfgSet = aDiff.getConfigurationSet(p);
 
             // Only calculate agreement for the given layer
             if (!cfgSet.getPosition().getType().equals(aType)) {
@@ -147,7 +138,7 @@ public class AgreementUtils
             }
 
             // If the feature on a position is set, then it is a subposition
-            boolean isSubPosition = p.getFeature() != null;
+            var isSubPosition = p.getFeature() != null;
 
             // Check if this position is irrelevant:
             // - if we are looking for a primitive type and encounter a subposition
@@ -171,9 +162,9 @@ public class AgreementUtils
                 continue nextPosition;
             }
 
-            Object[] values = new Object[users.size()];
-            int i = 0;
-            for (String user : users) {
+            var values = new Object[users.size()];
+            var i = 0;
+            for (var user : users) {
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
@@ -202,15 +193,13 @@ public class AgreementUtils
                 Configuration cfg = cfgs.get(0);
 
                 // Check if source and/or targets of a relation are stacked
-                if (cfg.getPosition() instanceof RelationPosition) {
-                    RelationPosition pos = (RelationPosition) cfg.getPosition();
-                    FeatureStructure arc = cfg.getFs(user, pos.getCasId(), aCasMap);
+                if (cfg.getPosition() instanceof RelationPosition pos) {
+                    var arc = cfg.getFs(user, aCasMap);
 
-                    RelationDiffAdapter adapter = (RelationDiffAdapter) aDiff.getTypeAdapters()
-                            .get(pos.getType());
+                    var adapter = (RelationDiffAdapter) aDiff.getTypeAdapters().get(pos.getType());
 
                     // Check if the source of the relation is stacked
-                    AnnotationFS source = FSUtil.getFeature(arc, adapter.getSourceFeature(),
+                    var source = FSUtil.getFeature(arc, adapter.getSourceFeature(),
                             AnnotationFS.class);
                     List<AnnotationFS> sourceCandidates = CasUtil.selectAt(arc.getCAS(),
                             source.getType(), source.getBegin(), source.getEnd());
@@ -220,7 +209,7 @@ public class AgreementUtils
                     }
 
                     // Check if the target of the relation is stacked
-                    AnnotationFS target = FSUtil.getFeature(arc, adapter.getTargetFeature(),
+                    var target = FSUtil.getFeature(arc, adapter.getTargetFeature(),
                             AnnotationFS.class);
                     List<AnnotationFS> targetCandidates = CasUtil.selectAt(arc.getCAS(),
                             target.getType(), target.getBegin(), target.getEnd());
@@ -231,7 +220,7 @@ public class AgreementUtils
                 }
 
                 // Only calculate agreement for the given feature
-                FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);
+                FeatureStructure fs = cfg.getFs(user, aCasMap);
 
                 values[i] = extractValueForAgreement(fs, aFeature, cfg.getAID(user).index,
                         cfg.getPosition().getLinkCompareBehavior());
@@ -266,7 +255,7 @@ public class AgreementUtils
             study.addItemAsArray(values);
         }
 
-        return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
+        return new FullCodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                 completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                 incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
     }
@@ -274,11 +263,11 @@ public class AgreementUtils
     private static Object extractValueForAgreement(FeatureStructure aFs, String aFeature,
             int aLinkIndex, LinkCompareBehavior aLCB)
     {
-        boolean isPrimitiveFeature = aFs.getType().getFeatureByBaseName(aFeature).getRange()
+        var isPrimitiveFeature = aFs.getType().getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive();
 
         // If the feature on a position is set, then it is a subposition
-        boolean isSubPosition = aLinkIndex != -1;
+        var isSubPosition = aLinkIndex != -1;
 
         // BEGIN PARANOIA
         assert aFs.getType().getFeatureByBaseName(aFeature).getRange()
@@ -309,32 +298,27 @@ public class AgreementUtils
         @SuppressWarnings("unchecked")
         var links = (ArrayFS<FeatureStructure>) aFs
                 .getFeatureValue(aFs.getType().getFeatureByBaseName(aFeature));
-        FeatureStructure link = links.get(aLinkIndex);
+        var link = links.get(aLinkIndex);
 
         switch (aLCB) {
         case LINK_TARGET_AS_LABEL:
-            // FIXME The target feature name should be obtained from the feature
-            // definition!
-            AnnotationFS target = (AnnotationFS) link
+            // FIXME The target feature name should be obtained from the feature definition!
+            var target = (AnnotationFS) link
                     .getFeatureValue(link.getType().getFeatureByBaseName("target"));
 
             return target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText() + "]";
         case LINK_ROLE_AS_LABEL:
-            // FIXME The role feature name should be obtained from the feature
-            // definition!
-            String role = link.getStringValue(link.getType().getFeatureByBaseName("role"));
-
-            return role;
+            // FIXME The role feature name should be obtained from the feature definition!
+            return link.getStringValue(link.getType().getFeatureByBaseName("role"));
         default:
             throw new IllegalStateException("Unknown link target comparison mode [" + aLCB + "]");
         }
     }
 
-    private static void toCSV(CSVPrinter aOut, CodingAgreementResult aAgreement) throws IOException
+    private static void toCSV(CSVPrinter aOut, FullCodingAgreementResult aAgreement) throws IOException
     {
         try {
-            aOut.printComment(String.format("Category count: %d%n",
-                    aAgreement.getStudy().getCategoryCount()));
+            aOut.printComment(String.format("Category count: %d%n", aAgreement.getCategoryCount()));
         }
         catch (Throwable e) {
             aOut.printComment(
@@ -368,10 +352,10 @@ public class AgreementUtils
         // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
     }
 
-    public static void dumpAgreementStudy(PrintStream aOut, CodingAgreementResult aAgreement)
+    public static void dumpAgreementStudy(PrintStream aOut, FullCodingAgreementResult aAgreement)
     {
         try {
-            aOut.printf("Category count: %d%n", aAgreement.getStudy().getCategoryCount());
+            aOut.printf("Category count: %d%n", aAgreement.getCategoryCount());
         }
         catch (Throwable e) {
             aOut.printf("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e));
@@ -401,7 +385,7 @@ public class AgreementUtils
     }
 
     private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
-            AgreementResult<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
         throws IOException
     {
         List<String> headers = new ArrayList<>(
@@ -410,16 +394,16 @@ public class AgreementUtils
         aOut.printRecord(headers);
 
         int i = 0;
-        for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
-            Position pos = aSets.get(i).getPosition();
-            List<String> values = new ArrayList<>();
+        for (var item : aAgreement.getStudy().getItems()) {
+            var pos = aSets.get(i).getPosition();
+            var values = new ArrayList<String>();
             values.add(pos.getClass().getSimpleName());
             values.add(pos.getCollectionId());
             values.add(pos.getDocumentId());
             values.add(pos.getType());
             values.add(aAgreement.getFeature());
             values.add(aSets.get(i).getPosition().toMinimalString());
-            for (IAnnotationUnit unit : item.getUnits()) {
+            for (var unit : item.getUnits()) {
                 values.add(String.valueOf(unit.getCategory()));
             }
             aOut.printRecord(values);
@@ -428,13 +412,13 @@ public class AgreementUtils
     }
 
     private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
-            AgreementResult<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
     {
         int i = 0;
-        for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
-            StringBuilder sb = new StringBuilder();
+        for (var item : aAgreement.getStudy().getItems()) {
+            var sb = new StringBuilder();
             sb.append(aSets.get(i).getPosition());
-            for (IAnnotationUnit unit : item.getUnits()) {
+            for (var unit : item.getUnits()) {
                 if (sb.length() > 0) {
                     sb.append(" \t");
                 }
@@ -446,7 +430,7 @@ public class AgreementUtils
     }
 
     private static void dumpAgreementConfigurationSets(PrintStream aOut,
-            AgreementResult<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
     {
         for (ConfigurationSet cfgSet : aSets) {
             StringBuilder sb = new StringBuilder();
@@ -461,7 +445,7 @@ public class AgreementUtils
         }
     }
 
-    public static InputStream generateCsvReport(CodingAgreementResult aResult) throws IOException
+    public static InputStream generateCsvReport(FullCodingAgreementResult aResult) throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),

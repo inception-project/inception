@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isPrimitiveType;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectTokens;
-import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +166,7 @@ public class CasMerge
     }
 
     private List<Configuration> chooseConfigurationToMerge(AnnotationLayer aLayer, DiffResult aDiff,
-            ConfigurationSet cfgs, Map<String, List<CAS>> aCasMap)
+            ConfigurationSet cfgs)
     {
         return mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, aLayer);
     }
@@ -197,14 +195,14 @@ public class CasMerge
      *            the annotator user owning the target annotation document
      * @param aTargetCas
      *            the target CAS for the annotation document
-     * @param aCases
+     * @param aCasMap
      *            a map of {@code CAS}s for each users and the random merge
      * @return a list of messages representing the result of the merge operation
      * @throws UIMAException
      *             if there was an UIMA-level exception
      */
     public Set<LogMessage> reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
-            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCases)
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCasMap)
         throws UIMAException
     {
         silenceEvents = true;
@@ -217,12 +215,9 @@ public class CasMerge
         clearAnnotations(aTargetDocument.getProject(), aTargetCas);
 
         // If there is nothing to merge, bail out
-        if (aCases.isEmpty()) {
+        if (aCasMap.isEmpty()) {
             return Collections.emptySet();
         }
-
-        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-        aCases.forEach((k, v) -> casMap.put(k, asList(v)));
 
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
         // position
@@ -269,11 +264,10 @@ public class CasMerge
             // Slots are also excluded for the moment
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                AnnotationLayer layer = type2layer.get(position.getType());
-                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
+                var layer = type2layer.get(position.getType());
+                var cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
-                        casMap);
+                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
@@ -281,7 +275,8 @@ public class CasMerge
 
                 for (Configuration cfgToMerge : cfgsToMerge) {
                     try {
-                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
+                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge
+                                .getRepresentative(aCasMap);
                         CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                                 aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                                 sourceFS, layer.isAllowStacking());
@@ -322,19 +317,19 @@ public class CasMerge
 
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                AnnotationLayer layer = type2layer.get(position.getType());
-                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
+                var layer = type2layer.get(position.getType());
+                var cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
-                        casMap);
+                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
                 }
 
-                for (Configuration cfgToMerge : cfgsToMerge) {
+                for (var cfgToMerge : cfgsToMerge) {
                     try {
-                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
+                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge
+                                .getRepresentative(aCasMap);
                         AID sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
                         mergeSlotFeature(aTargetDocument, aTargetUsername,
                                 type2layer.get(position.getType()), aTargetCas, sourceFS,
@@ -366,22 +361,21 @@ public class CasMerge
 
             for (RelationPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
-                AnnotationLayer layer = type2layer.get(position.getType());
-                ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
+                var layer = type2layer.get(position.getType());
+                var cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
-                        casMap);
+                var cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
                 }
 
-                for (Configuration cfgToMerge : cfgsToMerge) {
+                for (var cfgToMerge : cfgsToMerge) {
                     try {
-                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
-                        CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
-                                aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                                sourceFS, layer.isAllowStacking());
+                        var sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(aCasMap);
+                        var result = mergeRelationAnnotation(aTargetDocument, aTargetUsername,
+                                type2layer.get(position.getType()), aTargetCas, sourceFS,
+                                layer.isAllowStacking());
                         LOG.trace(" `-> merged annotation with agreement");
 
                         switch (result.getState()) {

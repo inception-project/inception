@@ -45,6 +45,7 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
@@ -54,7 +55,6 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -71,11 +71,11 @@ public class CasDiffTest
     @Test
     public void noDataTest() throws Exception
     {
-        List<DiffAdapter> diffAdapters = new ArrayList<>();
+        var diffAdapters = new ArrayList<DiffAdapter>();
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        var casByUser = new LinkedHashMap<String, CAS>();
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // result.print(System.out);
 
@@ -89,15 +89,14 @@ public class CasDiffTest
     {
         String text = "";
 
-        CAS user1Cas = JCasFactory.createJCas().getCas();
+        var user1Cas = CasFactory.createCas();
         user1Cas.setDocumentText(text);
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas));
+        var casByUser = Map.of("user1", user1Cas);
 
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
+        var diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
 
-        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // result.print(System.out);
 
@@ -111,22 +110,16 @@ public class CasDiffTest
         String text = "";
 
         CAS user1Cas1 = null;
-        CAS user1Cas2 = null;
-        CAS user1Cas3 = createText(text);
-        CAS user1Cas4 = createText(text);
         CAS user2Cas1 = createText(text);
-        CAS user2Cas2 = null;
-        CAS user2Cas3 = null;
-        CAS user2Cas4 = createText(text);
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
-        casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", user1Cas1);
+        casByUser.put("user2", user2Cas1);
 
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
+        var diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -144,13 +137,14 @@ public class CasDiffTest
     @Test
     public void noDifferencesPosTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
+        var casByUser = load( //
+                "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
+        var diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -168,13 +162,14 @@ public class CasDiffTest
     @Test
     public void noDifferencesDependencyTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
+        Map<String, CAS> casByUser = load( //
+                "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
+        var diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -192,14 +187,14 @@ public class CasDiffTest
     @Test
     public void noDifferencesPosDependencyTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/noDifferences/data.conll",
+        var casByUser = load( //
+                "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER,
-                DEPENDENCY_DIFF_ADAPTER);
+        var diffAdapters = asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -219,13 +214,14 @@ public class CasDiffTest
     @Test
     public void singleDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/singleSpanDifference/user1.conll",
+        var casByUser = load( //
+                "casdiff/singleSpanDifference/user1.conll", //
                 "casdiff/singleSpanDifference/user2.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
+        var diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -243,13 +239,14 @@ public class CasDiffTest
     @Test
     public void someDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/someDifferences/user1.conll",
+        var casByUser = load( //
+                "casdiff/someDifferences/user1.conll", //
                 "casdiff/someDifferences/user2.conll");
 
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
+        var diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -267,14 +264,14 @@ public class CasDiffTest
     @Test
     public void singleNoDifferencesTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/singleSpanNoDifference/data.conll",
+        var casByUser = load( //
+                "casdiff/singleSpanNoDifference/data.conll", //
                 "casdiff/singleSpanNoDifference/data.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"));
+        var diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(), "PosValue"));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -292,14 +289,15 @@ public class CasDiffTest
     @Test
     public void relationDistanceTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/relationDistance/user1.conll",
+        var casByUser = load( //
+                "casdiff/relationDistance/user1.conll", //
                 "casdiff/relationDistance/user2.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
-                Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
+        var diffAdapters = asList(new RelationDiffAdapter(Dependency.class.getName(), "Dependent",
+                "Governor", "DependencyType"));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -317,14 +315,14 @@ public class CasDiffTest
     @Test
     public void spanLabelLabelTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = load("casdiff/spanLabel/user1.conll",
+        var casByUser = load( //
+                "casdiff/spanLabel/user1.conll", //
                 "casdiff/spanLabel/user2.conll");
 
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"));
+        var diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(), "PosValue"));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -342,17 +340,15 @@ public class CasDiffTest
     @Test
     public void relationLabelTest() throws Exception
     {
-        Map<String, List<CAS>> casByUser = new HashMap<>();
-        casByUser.put("user1",
-                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user1.tsv").getCas()));
-        casByUser.put("user2",
-                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user2.tsv").getCas()));
+        var casByUser = new HashMap<String, CAS>();
+        casByUser.put("user1", loadWebAnnoTsv3("casdiff/relationLabelTest/user1.tsv").getCas());
+        casByUser.put("user2", loadWebAnnoTsv3("casdiff/relationLabelTest/user2.tsv").getCas());
 
-        List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
-                Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
+        var diffAdapters = asList(new RelationDiffAdapter(Dependency.class.getName(), "Dependent",
+                "Governor", "DependencyType"));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -428,16 +424,15 @@ public class CasDiffTest
             casB.addFsToIndexes(fs1B);
         }
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        List<? extends DiffAdapter> diffAdapters = asList(
-                new RelationDiffAdapter("webanno.custom.Relation", WebAnnoConst.FEAT_REL_TARGET,
-                        WebAnnoConst.FEAT_REL_SOURCE, "value"));
+        var diffAdapters = asList(new RelationDiffAdapter("webanno.custom.Relation",
+                WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE, "value"));
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -469,13 +464,13 @@ public class CasDiffTest
                 .buildAndAddToIndexes();
 
         var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
+                "user1", cas1, //
+                "user2", cas2);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+        var adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
 
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -498,13 +493,13 @@ public class CasDiffTest
                 .buildAndAddToIndexes();
 
         var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
+                "user1", cas1, //
+                "user2", cas2);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+        var adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
 
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -527,13 +522,13 @@ public class CasDiffTest
                 .buildAndAddToIndexes();
 
         var casByUser = Map.of( //
-                "user1", asList(cas1), //
-                "user2", asList(cas2));
+                "user1", cas1, //
+                "user2", cas2);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
+        var adapter = new SpanDiffAdapter("webanno.custom.SpanMultiValue", "values");
 
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -553,14 +548,14 @@ public class CasDiffTest
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
         makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        CasDiff diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -588,16 +583,16 @@ public class CasDiffTest
         JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+        var diffAdapters = asList(adapter);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_ROLE_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_ROLE_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -619,22 +614,22 @@ public class CasDiffTest
     @Test
     public void multiLinkWithRoleTargetDifferenceTest() throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+        var diffAdapters = asList(adapter);
 
-        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        var result = diff.toResult();
 
         // result.print(System.out);
 
@@ -656,22 +651,22 @@ public class CasDiffTest
     @Test
     public void multiLinkWithRoleMultiTargetDifferenceTest() throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0),
                 makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+        var diffAdapters = asList(adapter);
 
-        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // diff.print(System.out);
 
@@ -694,22 +689,22 @@ public class CasDiffTest
     @Test
     public void multiLinkWithRoleMultiTargetDifferenceTest2() throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0),
                 makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
+        var jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 10, 10));
 
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", jcasA.getCas());
+        casByUser.put("user2", jcasB.getCas());
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
+        var diffAdapters = asList(adapter);
 
-        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // diff.print(System.out);
 

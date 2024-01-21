@@ -17,41 +17,36 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import java.time.Duration;
-
-public abstract class DebouncingTask
-    extends Task
+public enum TaskScope
 {
-    private final long runnableAfter;
+    /**
+     * Task can be cleared as soon as it has ended.
+     */
+    EPHEMERAL,
 
-    protected DebouncingTask(Builder<? extends Builder<?>> aBuilder)
+    /**
+     * Task can be cleared when the last session of the user is cleared or when the system is
+     * restarted.
+     */
+    LAST_USER_SESSION,
+
+    /**
+     * Task can be cleared when the project is deleted or when the system is restarted.
+     */
+    PROJECT;
+
+    boolean isKeepAfterEnded()
     {
-        super(aBuilder);
-
-        runnableAfter = System.currentTimeMillis() + aBuilder.debounceMillis;
+        return this != EPHEMERAL;
     }
 
-    @Override
-    public boolean isReadyToStart()
+    boolean isRemoveWhenUserSessionEnds()
     {
-        return System.currentTimeMillis() > runnableAfter;
+        return this == EPHEMERAL;
     }
 
-    public static abstract class Builder<T extends Builder<?>>
-        extends Task.Builder<T>
+    boolean isRemoveWhenLastUserSessionEnds()
     {
-        private long debounceMillis;
-
-        public T withDebounceMillis(Duration aDebounceDelay)
-        {
-            debounceMillis = aDebounceDelay.toMillis();
-            return (T) this;
-        }
-
-        public T withDebounceMillis(long aDebounceMillis)
-        {
-            debounceMillis = aDebounceMillis;
-            return (T) this;
-        }
+        return this == LAST_USER_SESSION || this == EPHEMERAL;
     }
 }

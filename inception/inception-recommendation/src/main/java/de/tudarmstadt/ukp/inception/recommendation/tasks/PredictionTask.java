@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -76,6 +77,8 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class PredictionTask
     extends RecommendationTask_ImplBase
 {
+    public static final String TYPE = "PredictionTask";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String PREDICTION_CAS = "predictionCas";
@@ -90,66 +93,21 @@ public class PredictionTask
     private final int predictionBegin;
     private final int predictionEnd;
     private final String dataOwner;
+    private final boolean isolated;
+    private final Recommender recommender;
 
-    private boolean isolated = false;
     private Predictions predictions;
-    private Recommender recommender;
 
-    /**
-     * Create a new prediction task.
-     * 
-     * @param aSessionOwner
-     *            the user owning the training session.
-     * @param aTrigger
-     *            the trigger that caused the selection to be scheduled.
-     * @param aCurrentDocument
-     *            the document currently open in the editor.
-     * @param aDataOwner
-     *            the user owning the annotations currently shown in the editor (this can differ
-     *            from the user owning the session e.g. if a manager views another users annotations
-     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
-     */
-    public PredictionTask(User aSessionOwner, String aTrigger, SourceDocument aCurrentDocument,
-            String aDataOwner)
+    public PredictionTask(Builder<? extends Builder<?>> aBuilder)
     {
-        this(aSessionOwner, aTrigger, aCurrentDocument, -1, -1, aDataOwner);
-    }
+        super(aBuilder.withType(TYPE));
 
-    public PredictionTask(User aSessionOwner, String aTrigger, SourceDocument aCurrentDocument,
-            int aBegin, int aEnd, String aDataOwner)
-    {
-        super(aSessionOwner, aCurrentDocument.getProject(), aTrigger);
-        currentDocument = aCurrentDocument;
-        predictionBegin = aBegin;
-        predictionEnd = aEnd;
-        dataOwner = aDataOwner;
-    }
-
-    /**
-     * Whether to use the recommender session data from the recommender service or to run the
-     * prediction task in isolation from the session. Running in isolation is useful when
-     * predictions should be generated outside the normal automatically triggered recommender runs.
-     * After the isolated run has completed, the results can be picked up using
-     * {@link #getPredictions()}.
-     * 
-     * @param aIsolated
-     *            whether to run the task in isolation.
-     */
-    public void setIsolated(boolean aIsolated)
-    {
-        isolated = aIsolated;
-    }
-
-    /**
-     * Generate predictions only for the specified recommender. If this is not set, then predictions
-     * will be run for all active recommenders.
-     * 
-     * @param aRecommender
-     *            the one recommender to run.
-     */
-    public void setRecommender(Recommender aRecommender)
-    {
-        recommender = aRecommender;
+        currentDocument = aBuilder.currentDocument;
+        dataOwner = aBuilder.dataOwner;
+        predictionBegin = aBuilder.predictionBegin;
+        predictionEnd = aBuilder.predictionEnd;
+        isolated = aBuilder.isolated;
+        recommender = aBuilder.recommender;
     }
 
     /**
@@ -978,4 +936,93 @@ public class PredictionTask
     final record ReconciliationResult(int added, int removed, int aged,
             List<AnnotationSuggestion> suggestions)
     {}
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends RecommendationTask_ImplBase.Builder<T>
+    {
+        private Recommender recommender;
+        private SourceDocument currentDocument;
+        private String dataOwner;
+        private int predictionBegin = -1;
+        private int predictionEnd = -1;
+        private boolean isolated = false;
+
+        /**
+         * Generate predictions only for the specified recommender. If this is not set, then
+         * predictions will be run for all active recommenders.
+         * 
+         * @param aRecommender
+         *            the one recommender to run.
+         */
+        @SuppressWarnings("unchecked")
+        public T withRecommender(Recommender aRecommender)
+        {
+            recommender = aRecommender;
+            return (T) this;
+        }
+
+        /**
+         * @param aCurrentDocuemnt
+         *            the document currently open in the editor of the user triggering the task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
+        {
+            currentDocument = aCurrentDocuemnt;
+            return (T) this;
+        }
+
+        /**
+         * @param aDataOwner
+         *            the user owning the annotations currently shown in the editor (this can differ
+         *            from the user owning the session e.g. if a manager views another users
+         *            annotations or a curator is performing curation to the
+         *            {@link WebAnnoConst#CURATION_USER})
+         */
+        @SuppressWarnings("unchecked")
+        public T withDataOwner(String aDataOwner)
+        {
+            dataOwner = aDataOwner;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withRange(int aBegin, int aEnd)
+        {
+            predictionBegin = aBegin;
+            predictionEnd = aEnd;
+            return (T) this;
+        }
+
+        /**
+         * Whether to use the recommender session data from the recommender service or to run the
+         * prediction task in isolation from the session. Running in isolation is useful when
+         * predictions should be generated outside the normal automatically triggered recommender
+         * runs. After the isolated run has completed, the results can be picked up using
+         * {@link #getPredictions()}.
+         * 
+         * @param aIsolated
+         *            whether to run the task in isolation.
+         */
+        @SuppressWarnings("unchecked")
+        public T withIsolated(boolean aIsolated)
+        {
+            isolated = aIsolated;
+            return (T) this;
+        }
+
+        public PredictionTask build()
+        {
+            Validate.notNull(sessionOwner, "SelectionTask requires a user");
+
+            withProject(currentDocument.getProject());
+
+            return new PredictionTask(this);
+        }
+    }
 }

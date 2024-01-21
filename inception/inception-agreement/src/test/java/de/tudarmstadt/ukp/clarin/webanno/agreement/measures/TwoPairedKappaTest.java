@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
@@ -38,9 +37,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -116,8 +115,8 @@ public class TwoPairedKappaTest
         // Check against new impl
         CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
-        AgreementResult agreement = getCohenKappaAgreement(diff, POS.class.getName(), "PosValue",
-                convert(userCases));
+        FullAgreementResult_ImplBase agreement = getCohenKappaAgreement(diff, POS.class.getName(),
+                "PosValue", convert(userCases));
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -129,11 +128,11 @@ public class TwoPairedKappaTest
         assertEquals(0, result.getIncompleteConfigurationSets().size());
     }
 
-    private Map<String, List<CAS>> convert(Map<User, CAS> aMap)
+    private Map<String, CAS> convert(Map<User, CAS> aMap)
     {
-        Map<String, List<CAS>> map = new LinkedHashMap<>();
-        for (Entry<User, CAS> e : aMap.entrySet()) {
-            map.put(e.getKey().getUsername(), asList(e.getValue()));
+        var map = new LinkedHashMap<String, CAS>();
+        for (var e : aMap.entrySet()) {
+            map.put(e.getKey().getUsername(), e.getValue());
         }
         return map;
     }
@@ -156,8 +155,8 @@ public class TwoPairedKappaTest
         CasDiff diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
                 convert(userCases));
         DiffResult result = diff.toResult();
-        AgreementResult agreement = getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", convert(userCases));
+        FullAgreementResult_ImplBase agreement = getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", convert(userCases));
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -186,8 +185,8 @@ public class TwoPairedKappaTest
         // Check against new impl
         CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
-        AgreementResult agreement = getCohenKappaAgreement(diff, POS.class.getName(), "PosValue",
-                convert(userCases));
+        FullAgreementResult_ImplBase agreement = getCohenKappaAgreement(diff, POS.class.getName(),
+                "PosValue", convert(userCases));
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -217,8 +216,8 @@ public class TwoPairedKappaTest
         CasDiff diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
                 convert(userCases));
         DiffResult result = diff.toResult();
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", convert(userCases));
+        FullCodingAgreementResult agreement = getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", convert(userCases));
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -239,7 +238,7 @@ public class TwoPairedKappaTest
         userDocs.put(user2, asList(document));
         userDocs.put(user3, asList(document));
 
-        Map<User, CAS> userCases = new HashMap<>();
+        var userCases = new HashMap<User, CAS>();
         userCases.put(user1, kappatestCas);
         userCases.put(user2, kappaspandiff);
         userCases.put(user3, kappaspanarcdiff);
@@ -252,20 +251,20 @@ public class TwoPairedKappaTest
                 LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
 
-        Map<String, List<CAS>> user1and2 = convert(userCases);
+        var user1and2 = convert(userCases);
         user1and2.remove("user3");
-        AgreementResult agreement12 = getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", user1and2);
+        FullAgreementResult_ImplBase agreement12 = getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", user1and2);
 
-        Map<String, List<CAS>> user2and3 = convert(userCases);
+        var user2and3 = convert(userCases);
         user2and3.remove("user1");
-        AgreementResult agreement23 = getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", user2and3);
+        FullAgreementResult_ImplBase agreement23 = getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", user2and3);
 
-        Map<String, List<CAS>> user1and3 = convert(userCases);
+        var user1and3 = convert(userCases);
         user1and3.remove("user2");
-        AgreementResult agreement13 = getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", user1and3);
+        FullAgreementResult_ImplBase agreement13 = getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", user1and3);
 
         // Asserts
         result.print(System.out);

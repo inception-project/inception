@@ -50,10 +50,9 @@ import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.xmi.XmiReader;
-import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.InsufficientDataException;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
@@ -345,27 +344,27 @@ public class AgreementTestUtils
     }
 
     @Deprecated
-    public static CodingAgreementResult getCohenKappaAgreement(CasDiff aDiff, String aType,
-            String aFeature, Map<String, List<CAS>> aCasMap)
+    public static FullCodingAgreementResult getCohenKappaAgreement(CasDiff aDiff, String aType,
+            String aFeature, Map<String, CAS> aCasMap)
     {
         return getAgreement(COHEN_KAPPA_AGREEMENT, true, aDiff, aType, aFeature, aCasMap);
     }
 
     @Deprecated
-    public static CodingAgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
+    public static FullCodingAgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
             boolean aExcludeIncomplete, CasDiff aDiff, String aType, String aFeature,
-            Map<String, List<CAS>> aCasMap)
+            Map<String, CAS> aCasMap)
     {
         if (aCasMap.size() != 2) {
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
 
-        CodingAgreementResult agreementResult = makeCodingStudy(aDiff, aType, aFeature, emptySet(),
+        var agreementResult = makeCodingStudy(aDiff, aType, aFeature, emptySet(),
                 aExcludeIncomplete, aCasMap);
         try {
-            IAgreementMeasure agreement = aMeasure.make(agreementResult.getStudy());
+            var agreement = aMeasure.make(agreementResult.getStudy());
 
-            if (agreementResult.getStudy().getItemCount() > 0) {
+            if (!agreementResult.isEmpty()) {
                 agreementResult.setAgreement(agreement.calculateAgreement());
             }
             else {

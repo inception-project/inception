@@ -15,22 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
+package de.tudarmstadt.ukp.inception.workload.dynamic.event;
 
-import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
+import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class UnitizingAgreementResult
-    extends AgreementResult<IUnitizingAnnotationStudy>
+class DynamicWorkloadUpdateDocumentStateTaskTest
 {
-    private static final long serialVersionUID = 2092691057728349705L;
-
-    public UnitizingAgreementResult(String aType, String aFeature, IUnitizingAnnotationStudy aStudy,
-            List<String> aCasGroupIds, boolean aExcludeIncomplete)
+    @Test
+    void testBuilder()
     {
-        super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
+        var project = Project.builder().withName("My Project").build();
+        var doc = SourceDocument.builder().withProject(project).withName("My Document").build();
+        var task = DynamicWorkloadUpdateDocumentStateTask.builder().withDocument(doc)
+                .withTrigger("Test").build();
+
+        assertThat(task.getProject()).isEqualTo(project);
+        assertThat(task.getDocument()).isEqualTo(doc);
     }
+
 }

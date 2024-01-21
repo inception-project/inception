@@ -77,13 +77,13 @@ public class CurationTestUtils
         return jcas;
     }
 
-    public static Map<String, List<CAS>> load(String... aPaths) throws UIMAException, IOException
+    public static Map<String, CAS> load(String... aPaths) throws UIMAException, IOException
     {
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        var casByUser = new LinkedHashMap<String, CAS>();
         int n = 1;
-        for (String path : aPaths) {
-            CAS cas = readConll2006(path);
-            casByUser.put("user" + n, asList(cas));
+        for (var path : aPaths) {
+            var cas = readConll2006(path);
+            casByUser.put("user" + n, cas);
             n++;
         }
         return casByUser;

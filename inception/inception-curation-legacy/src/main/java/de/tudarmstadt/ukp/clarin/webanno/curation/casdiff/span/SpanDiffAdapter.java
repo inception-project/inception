@@ -49,8 +49,8 @@ public class SpanDiffAdapter
     public static final SpanDiffAdapter SENTENCE_DIFF_ADAPTER = new SpanDiffAdapter(
             Sentence.class.getName());
 
-    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapter(POS.class.getName(),
-            "PosValue", "coarseValue");
+    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapter(
+            POS.class.getName(), "PosValue", "coarseValue");
 
     public static final SpanDiffAdapter NER_DIFF_ADAPTER = new SpanDiffAdapter(
             NamedEntity.class.getName(), "value", "identifier");
@@ -78,7 +78,7 @@ public class SpanDiffAdapter
     }
 
     @Override
-    public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
             int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         AnnotationFS annoFS = (AnnotationFS) aFS;
@@ -101,7 +101,7 @@ public class SpanDiffAdapter
                     aLinkTargetEnd);
         }
 
-        return new SpanPosition(collectionId, documentId, aCasId, getType(), annoFS.getBegin(),
+        return new SpanPosition(collectionId, documentId, getType(), annoFS.getBegin(),
                 annoFS.getEnd(), annoFS.getCoveredText(), aFeature, aRole, aLinkTargetBegin,
                 aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
     }
