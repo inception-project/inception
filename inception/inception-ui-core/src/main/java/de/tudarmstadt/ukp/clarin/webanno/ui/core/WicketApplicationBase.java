@@ -94,6 +94,7 @@ import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponent
 import de.tudarmstadt.ukp.inception.support.kendo.KendoResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
@@ -142,6 +143,8 @@ public abstract class WicketApplicationBase
 
         installSpringSecurityContextPropagationRequestCycleListener();
 
+        installTimingListener();
+
         // Enforce COEP while inheriting any exemptions that might already have been set e.g. via
         // WicketApplicationInitConfiguration beans
         getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING,
@@ -152,6 +155,18 @@ public abstract class WicketApplicationBase
         initStatelessChecker();
 
         initOnce();
+    }
+
+    private void installTimingListener()
+    {
+        var settings = SettingsUtil.getSettings();
+        if (!DEVELOPMENT.equals(getConfigurationType())
+                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+            return;
+        }
+
+        WicketUtil.installTimingListeners(this);
+
     }
 
     @Override

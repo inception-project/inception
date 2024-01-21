@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
-import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
-
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.Component;
@@ -30,14 +29,16 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.Response;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.response.filter.IResponseFilter;
+import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 public final class WicketUtil
 {
@@ -101,32 +102,46 @@ public final class WicketUtil
             return;
         }
 
-        Properties settings = SettingsUtil.getSettings();
-        if (!DEVELOPMENT.equals(app.getConfigurationType())
-                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
-            return;
-        }
-
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
         if (requestCycle == null) {
             return;
         }
 
-        Response response = requestCycle.getResponse();
-        if (response instanceof WebResponse) {
-            WebResponse webResponse = (WebResponse) response;
-            StringBuilder sb = new StringBuilder();
-            sb.append(aKey);
-            if (aDescription != null) {
-                sb.append(";desc=\"");
-                sb.append(aDescription);
-                sb.append("\"");
-            }
-            sb.append(";dur=");
-            sb.append(aTime);
-
-            webResponse.addHeader("Server-Timing", sb.toString());
+        var thl = getTimingListener(requestCycle);
+        if (thl != null) {
+            thl.add(aKey, aDescription, aTime);
         }
+    }
+
+    public static void installTimingListener(RequestCycle requestCycle)
+    {
+        TimingHeaderListener thl = null;
+        var i = requestCycle.getListeners().iterator();
+        while (i.hasNext()) {
+            var listener = i.next();
+            if (listener instanceof TimingHeaderListener foundThl) {
+                thl = foundThl;
+            }
+        }
+
+        if (thl == null) {
+            thl = new TimingHeaderListener();
+            requestCycle.getListeners().add(thl);
+        }
+    }
+
+    private static TimingHeaderListener getTimingListener(RequestCycle requestCycle)
+    {
+        TimingHeaderListener thl = null;
+        var i = requestCycle.getListeners().iterator();
+        while (i.hasNext()) {
+            var listener = i.next();
+            if (listener instanceof TimingHeaderListener foundThl) {
+                thl = foundThl;
+            }
+        }
+
+        return thl;
     }
 
     public static void refreshPage(AjaxRequestTarget aTarget, Page aPage)
@@ -146,5 +161,86 @@ public final class WicketUtil
     public static String wrapInTryCatch(CharSequence aJsCall)
     {
         return " tryCatch(() => {" + aJsCall + "}); ";
+    }
+
+    private record TimingRecord(String key, String description, long time) {}
+
+    public static final class TimingHeaderListener
+        implements IRequestCycleListener
+    {
+        private List<TimingRecord> records = new ArrayList<>();
+
+        void add(String aKey, String aDescription, long aTime)
+        {
+            records.add(new TimingRecord(aKey, aDescription, aTime));
+        }
+
+        @Override
+        public void onRequestHandlerExecuted(RequestCycle aCycle, IRequestHandler aHandler)
+        {
+            renderTimingHeaders(aCycle);
+        }
+
+        private void renderTimingHeaders(RequestCycle aCycle)
+        {
+            Response response = aCycle.getResponse();
+            if (response instanceof WebResponse) {
+                var webResponse = (WebResponse) response;
+
+                for (var rec : records) {
+                    var sb = new StringBuilder();
+                    sb.append(rec.key);
+                    if (rec.description != null) {
+                        sb.append(";desc=\"");
+                        sb.append(rec.description);
+                        sb.append("\"");
+                    }
+                    sb.append(";dur=");
+                    sb.append(rec.time);
+
+                    webResponse.addHeader("Server-Timing", sb.toString());
+                }
+            }
+            records.clear();
+        }
+    }
+
+    public static final class TimingResponseFilter
+        implements IResponseFilter
+    {
+
+        @Override
+        public AppendingStringBuffer filter(AppendingStringBuffer aResponseBuffer)
+        {
+            var requestCycle = RequestCycle.get();
+            if (requestCycle != null) {
+                var thl = getTimingListener(requestCycle);
+                if (thl != null) {
+                    thl.renderTimingHeaders(requestCycle);
+
+                }
+            }
+
+            return aResponseBuffer;
+        }
+    }
+
+    public static void installTimingListeners(Application aApplication)
+    {
+        // Register a timing listener early in the request cycle so we can buffer timing information
+        // inside that listener
+        aApplication.getRequestCycleListeners().add(new IRequestCycleListener()
+        {
+            @Override
+            public void onBeginRequest(RequestCycle aCycle)
+            {
+                WicketUtil.installTimingListener(aCycle);
+            }
+        });
+
+        // Register a timing listener late in the rendering process such that we can render the
+        // timing headers latest then
+        aApplication.getRequestCycleSettings()
+                .addResponseFilter(new WicketUtil.TimingResponseFilter());
     }
 }
