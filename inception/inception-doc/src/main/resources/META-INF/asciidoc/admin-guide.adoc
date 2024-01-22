@@ -50,6 +50,16 @@ include::{include-dir}installation_kubernetes.adoc[leveloffset=+1]
 
 include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
 
+include::{include-dir}security-authentication.adoc[]
+
+include::{include-dir}security-authentication-oauth2.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-saml2.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+1]
+
+include::{include-dir}security-authentication-preauth.adoc[leveloffset=+1]
+
 <<<
 
 include::{include-dir}logging.adoc[]
@@ -80,16 +90,11 @@ include::{include-dir}settings.adoc[]
 
 include::{include-dir}settings_general.adoc[leveloffset=+1]
 
+include::{include-dir}settings_security-policy.adoc[leveloffset=+1]
+
 include::{include-dir}settings_database.adoc[leveloffset=+1]
 
 include::{include-dir}settings_server.adoc[leveloffset=+1]
-
-include::{include-dir}security-authentication.adoc[leveloffset=+1]
-include::{include-dir}security-authentication-oauth2.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-saml2.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-preauth.adoc[leveloffset=+2]
-include::{include-dir}security-authentication-policy.adoc[leveloffset=+2]
 
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
