@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_security_authentication_policy]]
-= Policy
+= Security policies
 
 You have several options of configuring which types of usernames and passwords are accepted.
 Note that these values are only enforced when creating new users or updating passwords. They
