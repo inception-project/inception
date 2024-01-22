@@ -275,8 +275,8 @@ class ExportServiceControllerImplTest
                         public void handleFrame(StompHeaders aHeaders, Object aPayload)
                         {
                             LOG.info("GOT MESSAGE: {}", aPayload);
-                            responseRecievedLatch.countDown();
                             messageRecieved.set(true);
+                            responseRecievedLatch.countDown();
                         }
                     });
         }
