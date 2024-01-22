@@ -117,6 +117,13 @@ public class LogoutPanel
     public static void actionLogout(Component aOwner,
             PreauthenticationProperties aPreauthProperties, LoginProperties aSecProperties)
     {
+        // It would be nicer if we could just use the default Spring Security logout
+        // mechanism by making the logout button a link to `/logout`, but since
+        // we want to perform extra stuff afterwards, we currently use this way.
+        //
+        // The alternative would be to register a custom LogoutSuccessHandler with
+        // Spring Security which would do our special logout redirection behavior
+
         ApplicationSession.get().signOut();
 
         if (aPreauthProperties.getLogoutUrl().isPresent()) {
