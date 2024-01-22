@@ -488,8 +488,8 @@ public class UserDaoImpl
         }
 
         // Do not allow space
-        if (containsAnyCharacterMatching(aName, Character::isWhitespace)) {
-            errors.add(new ValidationError("Username cannot contain a space character") //
+        if (containsAnyCharacterMatching(aName, this::isWhitespaceIllegalInUsername)) {
+            errors.add(new ValidationError("Username cannot contain whitespace") //
                     .addKey(MSG_USERNAME_ERROR_ILLEGAL_SPACE));
             return errors;
         }
@@ -550,6 +550,15 @@ public class UserDaoImpl
         }
 
         return errors;
+    }
+
+    private boolean isWhitespaceIllegalInUsername(char ch)
+    {
+        if (securityProperties.isSpaceAllowedInUsername() && ch == ' ') {
+            return false;
+        }
+
+        return Character.isWhitespace((int) ch);
     }
 
     @Override
