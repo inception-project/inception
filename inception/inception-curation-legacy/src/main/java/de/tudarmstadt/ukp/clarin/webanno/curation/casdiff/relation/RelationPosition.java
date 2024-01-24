@@ -36,13 +36,13 @@ public class RelationPosition
     private final int targetEnd;
     private final String targetText;
 
-    public RelationPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
+    public RelationPosition(String aCollectionId, String aDocumentId, String aType,
             int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin, int aTargetEnd,
             String aTargetText, String aFeature, String aRole, int aLinkTargetBegin,
             int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
-        super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
-                aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
+        super(aCollectionId, aDocumentId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd,
+                aLinkTargetText, aLinkCompareBehavior);
         sourceBegin = aSourceBegin;
         sourceEnd = aSourceEnd;
         sourceText = aSourceText;

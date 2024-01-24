@@ -25,20 +25,15 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toCollection;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.InsufficientDataException;
 import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
 import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -56,22 +51,42 @@ public class KrippendorffAlphaAgreementMeasure
     }
 
     @Override
-    public CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
+    public FullCodingAgreementResult getAgreement(Map<String, CAS> aCasMap)
     {
-        AnnotationFeature feature = getFeature();
-        KrippendorffAlphaAgreementTraits traits = getTraits();
+        var feature = getFeature();
+        var traits = getTraits();
 
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
+        var adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
-        CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
+        var diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
-        Set<String> tagset = annotationService.listTags(feature.getTagset()).stream()
-                .map(Tag::getName).collect(toCollection(LinkedHashSet::new));
+        var tagset = annotationService.listTags(feature.getTagset()).stream() //
+                .map(Tag::getName) //
+                .collect(toCollection(LinkedHashSet::new));
 
-        CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
-                feature.getName(), tagset, traits.isExcludeIncomplete(), aCasMap);
+        var agreementResult = makeCodingStudy(diff, feature.getLayer().getName(), feature.getName(),
+                tagset, traits.isExcludeIncomplete(), aCasMap);
 
-        IAgreementMeasure agreement = new KrippendorffAlphaAgreement(agreementResult.getStudy(),
+        var measure = createMeasure(agreementResult);
+
+        if (agreementResult.isEmpty()) {
+            agreementResult.setAgreement(NaN);
+        }
+        else {
+            try {
+                agreementResult.setAgreement(measure.calculateAgreement());
+            }
+            catch (InsufficientDataException e) {
+                agreementResult.setAgreement(NaN);
+            }
+        }
+
+        return agreementResult;
+    }
+
+    private KrippendorffAlphaAgreement createMeasure(FullCodingAgreementResult agreementResult)
+    {
+        return new KrippendorffAlphaAgreement(agreementResult.getStudy(),
                 new NominalDistanceFunction())
         {
             @Override
@@ -91,19 +106,5 @@ public class KrippendorffAlphaAgreementMeasure
                 return 1.0 - (D_O / D_E);
             }
         };
-
-        if (agreementResult.getStudy().getItemCount() > 0) {
-            try {
-                agreementResult.setAgreement(agreement.calculateAgreement());
-            }
-            catch (InsufficientDataException e) {
-                agreementResult.setAgreement(NaN);
-            }
-        }
-        else {
-            agreementResult.setAgreement(NaN);
-        }
-
-        return agreementResult;
     }
 }

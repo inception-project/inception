@@ -48,7 +48,10 @@ public class DynamicWorkloadStateWatcher
 
     private void recalculateDocumentState(AnnotationDocument aAnnotationDocument)
     {
-        schedulingService.enqueue(new DynamicWorkloadUpdateDocumentStateTask(
-                aAnnotationDocument.getDocument(), getClass().getSimpleName()));
+        var task = DynamicWorkloadUpdateDocumentStateTask.builder() //
+                .withDocument(aAnnotationDocument.getDocument()) //
+                .withTrigger(getClass().getSimpleName()) //
+                .build();
+        schedulingService.enqueue(task);
     }
 }

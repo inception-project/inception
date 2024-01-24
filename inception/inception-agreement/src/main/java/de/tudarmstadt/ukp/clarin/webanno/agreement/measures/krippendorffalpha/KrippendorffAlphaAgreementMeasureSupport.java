@@ -21,10 +21,9 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -47,8 +46,8 @@ public class KrippendorffAlphaAgreementMeasureSupport
     }
 
     @Override
-    public AgreementMeasure<PairwiseAnnotationResult<CodingAgreementResult>> createMeasure(
-            AnnotationFeature aFeature, KrippendorffAlphaAgreementTraits aTraits)
+    public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationFeature aFeature,
+            KrippendorffAlphaAgreementTraits aTraits)
     {
         return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
     }

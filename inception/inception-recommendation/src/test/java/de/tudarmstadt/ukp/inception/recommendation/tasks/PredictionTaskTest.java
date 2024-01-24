@@ -88,7 +88,12 @@ class PredictionTaskTest
     {
         var schemaService = Mockito.mock(AnnotationSchemaServiceImpl.class);
 
-        var sut = new PredictionTask(sessionOwner, TRIGGER, document, DATA_OWNER);
+        var sut = PredictionTask.builder() //
+                .withSessionOwner(sessionOwner) //
+                .withTrigger(TRIGGER) //
+                .withCurrentDocument(document) //
+                .withDataOwner(DATA_OWNER) //
+                .build();
         sut.setSchemaService(schemaService);
 
         var jCas = createText("I am text CAS", "de");

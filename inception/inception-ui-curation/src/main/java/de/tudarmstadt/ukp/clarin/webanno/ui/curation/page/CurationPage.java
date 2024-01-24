@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
@@ -726,7 +726,7 @@ public class CurationPage
                 LOG.debug("Processing differences: {} of {} units...", unitIndex, units.size());
             }
 
-            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, unit.getBegin(),
+            DiffResult diff = doDiff(adapters, LINK_ROLE_AS_LABEL, casses, unit.getBegin(),
                     unit.getEnd()).toResult();
 
             CurationUnit curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);

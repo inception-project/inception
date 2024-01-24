@@ -17,14 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.danekja.java.util.function.serializable.SerializableSupplier;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
+import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
@@ -32,12 +27,10 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 
 public abstract class AbstractUnitizingAgreementMeasureSupport<T extends DefaultAgreementTraits>
     extends
-    AgreementMeasureSupport_ImplBase<T, PairwiseAnnotationResult<UnitizingAgreementResult>, ICodingAnnotationStudy>
+    AgreementMeasureSupport_ImplBase<T, FullUnitizingAgreementResult, IUnitizingAnnotationStudy>
 {
     @Override
-    public Panel createResultsPanel(String aId,
-            IModel<PairwiseAnnotationResult<UnitizingAgreementResult>> aResults,
-            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier)
+    public Panel createResultsPanel(String aId, IModel<PairwiseAnnotationResult> aResults)
     {
         return new PairwiseUnitizingAgreementTable(aId, aResults);
     }

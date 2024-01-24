@@ -28,7 +28,6 @@ public abstract class Position_ImplBase
     private static final long serialVersionUID = -1237180459049008357L;
 
     private final String type;
-    private final int casId;
     private final String feature;
 
     private final String role;
@@ -42,12 +41,11 @@ public abstract class Position_ImplBase
     private final String collectionId;
     private final String documentId;
 
-    public Position_ImplBase(String aCollectionId, String aDocumentId, int aCasId, String aType,
+    public Position_ImplBase(String aCollectionId, String aDocumentId, String aType,
             String aFeature, String aRole, int aLinkTargetBegin, int aLinkTargetEnd,
             String aLinkTargetText, LinkCompareBehavior aBehavior)
     {
         type = aType;
-        casId = aCasId;
         feature = aFeature;
 
         linkCompareBehavior = aBehavior;
@@ -65,12 +63,6 @@ public abstract class Position_ImplBase
     public String getType()
     {
         return type;
-    }
-
-    @Override
-    public int getCasId()
-    {
-        return casId;
     }
 
     @Override
@@ -123,10 +115,6 @@ public abstract class Position_ImplBase
     @Override
     public int compareTo(Position aOther)
     {
-        if (casId != aOther.getCasId()) {
-            return casId - aOther.getCasId();
-        }
-
         int typeCmp = type.compareTo(aOther.getType());
         if (typeCmp != 0) {
             return typeCmp;
@@ -173,8 +161,6 @@ public abstract class Position_ImplBase
 
     protected void toStringFragment(StringBuilder builder)
     {
-        builder.append("cas=");
-        builder.append(getCasId());
         if (getCollectionId() != null) {
             builder.append(", coll=");
             builder.append(getCollectionId());

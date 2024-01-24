@@ -28,12 +28,12 @@ import org.dkpro.statistics.agreement.IAnnotationUnit;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 
-public class CodingAgreementResult
-    extends AgreementResult<ICodingAnnotationStudy>
+public class FullCodingAgreementResult
+    extends FullAgreementResult_ImplBase<ICodingAnnotationStudy>
 {
     private static final long serialVersionUID = -1262324752699430461L;
 
@@ -45,7 +45,7 @@ public class CodingAgreementResult
     protected final List<ConfigurationSet> incompleteSetsByLabel;
     protected final List<ConfigurationSet> pluralitySets;
 
-    public CodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
+    public FullCodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
             List<ConfigurationSet> aComplete, List<ConfigurationSet> aIrrelevantSets,
             List<ConfigurationSet> aSetsWithDifferences,
@@ -118,7 +118,7 @@ public class CodingAgreementResult
                 + pluralitySets.size();
     }
 
-    public Object getCompleteSetCount()
+    public int getCompleteSetCount()
     {
         return completeSets.size();
     }
@@ -141,7 +141,7 @@ public class CodingAgreementResult
     public Set<Object> getObservedCategories()
     {
         Set<Object> observedCategories = new HashSet<>();
-        for (ICodingAnnotationItem item : getStudy().getItems()) {
+        for (ICodingAnnotationItem item : study.getItems()) {
             for (IAnnotationUnit unit : item.getUnits()) {
                 Object category = unit.getCategory();
                 if (category != null) {
@@ -150,6 +150,41 @@ public class CodingAgreementResult
             }
         }
         return observedCategories;
+    }
+
+    @Override
+    public boolean isAllNull(String aCasGroupId)
+    {
+        for (ICodingAnnotationItem item : study.getItems()) {
+            if (item.getUnit(getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public long getNonNullCount(String aCasGroupId)
+    {
+        long i = 0;
+        for (var item : study.getItems()) {
+            if (item.getUnit(getCasGroupIds().indexOf(aCasGroupId)).getCategory() != null) {
+                i++;
+            }
+        }
+        return i;
+    }
+
+    @Override
+    public boolean isEmpty()
+    {
+        return study.getItemCount() == 0;
+    }
+
+    @Override
+    public long getItemCount(String aRater)
+    {
+        return study.getItemCount();
     }
 
     @Override

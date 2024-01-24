@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
@@ -159,7 +159,7 @@ public class CurationSidebarRenderer
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
                 aRequest.getVisibleLayers());
-        CasDiff casDiff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+        CasDiff casDiff = doDiff(adapters, LINK_ROLE_AS_LABEL, casses,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
         DiffResult diff = casDiff.toResult();
 

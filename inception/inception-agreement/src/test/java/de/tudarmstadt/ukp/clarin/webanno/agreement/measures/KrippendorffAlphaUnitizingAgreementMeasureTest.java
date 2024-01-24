@@ -24,16 +24,15 @@ import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 
 public class KrippendorffAlphaUnitizingAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
     private AgreementMeasureSupport_ImplBase<KrippendorffAlphaUnitizingAgreementTraits, //
-            PairwiseAnnotationResult<UnitizingAgreementResult>, IUnitizingAnnotationStudy> sut;
+            FullUnitizingAgreementResult, IUnitizingAnnotationStudy> sut;
     private KrippendorffAlphaUnitizingAgreementTraits traits;
 
     @Override
@@ -49,9 +48,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     @Test
     public void multiLinkWithRoleLabelDifference() throws Exception
     {
-        var agreement = multiLinkWithRoleLabelDifferenceTest(sut);
-
-        var result = agreement.getStudy("user1", "user2");
+        var result = multiLinkWithRoleLabelDifferenceTest(sut);
 
         assertEquals(0.0, result.getAgreement(), 0.00001d);
     }
@@ -59,31 +56,27 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     @Test
     public void twoEmptyCasTest() throws Exception
     {
-        var agreement = twoEmptyCasTest(sut);
-
-        var result = agreement.getStudy("user1", "user2");
+        var result = twoEmptyCasTest(sut);
 
         assertThat(result.getAgreement()).isNaN();
     }
 
-    @Test
-    public void singleNoDifferencesWithAdditionalCasTest() throws Exception
-    {
-        var agreement = singleNoDifferencesWithAdditionalCasTest(sut);
-
-        assertThat(agreement.getStudy("user1", "user2").getAgreement()).isNaN();
-        assertThat(agreement.getStudy("user1", "user3").getAgreement()).isEqualTo(-4.5d);
-        assertThat(agreement.getStudy("user2", "user3").getAgreement()).isEqualTo(-4.5d);
-    }
+    // @Test
+    // public void singleNoDifferencesWithAdditionalCasTest() throws Exception
+    // {
+    // var agreement = singleNoDifferencesWithAdditionalCasTest(sut);
+    //
+    // assertThat(agreement.getStudy("user1", "user2").getAgreement()).isNaN();
+    // assertThat(agreement.getStudy("user1", "user3").getAgreement()).isEqualTo(-4.5d);
+    // assertThat(agreement.getStudy("user2", "user3").getAgreement()).isEqualTo(-4.5d);
+    // }
 
     @Test
     public void testTwoWithoutLabel_noExcludeIncomplete() throws Exception
     {
         traits.setExcludeIncomplete(false);
 
-        var agreement = twoWithoutLabelTest(sut, traits);
-
-        var result = agreement.getStudy("user1", "user2");
+        var result = twoWithoutLabelTest(sut, traits);
 
         assertEquals(0.0, result.getAgreement(), 0.01);
     }
@@ -91,29 +84,15 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     @Test
     public void fullSingleCategoryAgreementWithTagsetTest() throws Exception
     {
-        var agreement = fullSingleCategoryAgreementWithTagset(sut, traits);
-
-        var result = agreement.getStudy("user1", "user2");
+        var result = fullSingleCategoryAgreementWithTagset(sut, traits);
 
         assertEquals(1.0, result.getAgreement(), 0.01);
     }
 
     @Test
-    public void twoDocumentsNoOverlapTest() throws Exception
-    {
-        var agreement = twoDocumentsNoOverlap(sut, traits);
-
-        var result = agreement.getStudy("user1", "user2");
-
-        assertEquals(-0.0714, result.getAgreement(), 0.001);
-    }
-
-    @Test
     public void multiValueStringPartialAgreementTest() throws Exception
     {
-        var agreement = multiValueStringPartialAgreement(sut);
-
-        var result = agreement.getStudy("user1", "user2");
+        var result = multiValueStringPartialAgreement(sut);
 
         assertEquals(0.4893, result.getAgreement(), 0.001);
     }

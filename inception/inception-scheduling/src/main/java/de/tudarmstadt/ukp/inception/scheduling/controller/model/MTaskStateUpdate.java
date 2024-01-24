@@ -31,11 +31,15 @@ public class MTaskStateUpdate
 {
     private final long timestamp;
     private final int id;
+    private final String type;
     private final int progress;
     private final int maxProgress;
     private final TaskState state;
     private final String title;
     private final int messageCount;
+
+    @JsonInclude(Include.NON_DEFAULT)
+    private final boolean cancellable;
 
     @JsonInclude(Include.NON_DEFAULT)
     private final boolean removed;
@@ -53,12 +57,14 @@ public class MTaskStateUpdate
         timestamp = System.currentTimeMillis();
         title = aMonitor.getTitle();
         id = aMonitor.getHandle().getId();
+        type = aMonitor.getType();
         progress = aMonitor.getProgress();
         maxProgress = aMonitor.getMaxProgress();
         state = aMonitor.getState();
         messageCount = aMonitor.getMessages().size();
         latestMessage = aMonitor.getMessages().peekLast();
         removed = aRemoved;
+        cancellable = aMonitor.isCancellable();
     }
 
     public String getTitle()
@@ -86,6 +92,11 @@ public class MTaskStateUpdate
         return state;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
     public LogMessage getLatestMessage()
     {
         return latestMessage;
@@ -99,6 +110,11 @@ public class MTaskStateUpdate
     public boolean isRemoved()
     {
         return removed;
+    }
+
+    public boolean isCancellable()
+    {
+        return cancellable;
     }
 
     @Override

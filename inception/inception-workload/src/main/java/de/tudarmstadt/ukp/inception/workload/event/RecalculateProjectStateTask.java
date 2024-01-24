@@ -34,12 +34,14 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 public class RecalculateProjectStateTask
     extends DebouncingTask
 {
+    public static final String TYPE = "RecalculateProjectStateTask";
+
     private @Autowired ProjectService projectService;
     private @Autowired WorkloadManagementService workloadService;
 
-    public RecalculateProjectStateTask(Project aProject, String aTrigger)
+    public RecalculateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aTrigger, ofSeconds(3));
+        super(aBuilder.withType(TYPE));
     }
 
     @Override
@@ -83,5 +85,24 @@ public class RecalculateProjectStateTask
     public int hashCode()
     {
         return Objects.hash(getProject());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends DebouncingTask.Builder<T>
+    {
+        protected Builder()
+        {
+            withDebounceMillis(ofSeconds(3));
+        }
+
+        public RecalculateProjectStateTask build()
+        {
+            return new RecalculateProjectStateTask(this);
+        }
     }
 }

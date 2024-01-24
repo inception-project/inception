@@ -22,13 +22,14 @@
     import { Client, Stomp, IFrame } from "@stomp/stompjs"
 
     export let csrfToken: string
-    export let endpointUrl: string // should this be full ws://... url
+    export let endpointUrl: string // should this be full http://... url
     export let wsEndpointUrl: string // should this be full ws://... url
     export let topicChannel: string
     export let tasks: MTaskStateUpdate[] = []
     export let connected = false
     export let popupMode = true
     export let keepRemovedTasks = false
+    export let typePattern: string = null
 
     let socket: WebSocket = null
     let stompClient: Client = null
@@ -63,7 +64,12 @@
             stompClient.subscribe(
                 "/user/queue" + topicChannel + "/tasks",
                 function (msg) {
-                    var msgBody = JSON.parse(msg.body);
+                    var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
+
+                    if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
+                        return;
+                    }
+
                     var index = tasks.findIndex(
                         (item) => item.id === msgBody.id
                     );
@@ -190,7 +196,10 @@
                                 {:else}
                                     <progress class="flex-grow-1" />
                                 {/if}
-                                <i class="fas fa-times-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {#if item.cancellable && endpointUrl}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <i class="fas fa-times-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {/if}
                             </div>
                         {/if}
                         {#if item.latestMessage}

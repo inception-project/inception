@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
@@ -50,11 +50,14 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class BulkPredictionTask
     extends RecommendationTask_ImplBase
 {
+    public static final String TYPE = "BulkPredictionTask";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final String dataOwner;
@@ -66,12 +69,12 @@ public class BulkPredictionTask
     private @Autowired SuggestionSupportRegistry suggestionSupportRegistry;
     private @Autowired AnnotationSchemaService schemaService;
 
-    public BulkPredictionTask(User aSessionOwner, Recommender aRecommender, String aTrigger,
-            String aDataOwner)
+    public BulkPredictionTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aSessionOwner, aRecommender.getProject(), aTrigger);
-        dataOwner = aDataOwner;
-        recommender = aRecommender;
+        super(aBuilder.withType(TYPE).withCancellable(true));
+
+        recommender = aBuilder.recommender;
+        dataOwner = aBuilder.dataOwner;
     }
 
     @Override
@@ -105,12 +108,12 @@ public class BulkPredictionTask
 
             var maxProgress = annotatableDocuments.size();
             var progress = maxProgress - processableDocuments.size();
-            if (processableDocuments.isEmpty() || isCancelled()) {
+            if (processableDocuments.isEmpty() || monitor.isCancelled()) {
                 monitor.setProgressWithMessage(progress, maxProgress,
                         LogMessage.info(this,
                                 "%d annotations generated from %d suggestions in %d documents",
                                 annotationsCount, suggestionsCount, processedDocumentsCount));
-                if (isCancelled()) {
+                if (monitor.isCancelled()) {
                     monitor.setState(TaskState.CANCELLED);
                 }
                 break;
@@ -146,10 +149,15 @@ public class BulkPredictionTask
 
     private Predictions generatePredictions(SourceDocument doc)
     {
-        var predictionTask = new PredictionTask(getUser().get(), "Bulk prediction", doc, dataOwner);
-        predictionTask.setParentTask(this);
-        predictionTask.setIsolated(true);
-        predictionTask.setRecommender(recommender);
+        var predictionTask = PredictionTask.builder() //
+                .withSessionOwner(getUser().get()) //
+                .withTrigger("Bulk prediction") //
+                .withCurrentDocument(doc) //
+                .withDataOwner(dataOwner) //
+                .withParentTask(this) //
+                .withIsolated(true) //
+                .withRecommender(recommender) //
+                .build();
         schedulingService.executeSync(predictionTask);
         return predictionTask.getPredictions();
     }
@@ -187,5 +195,45 @@ public class BulkPredictionTask
         predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
         LOG.debug("Auto-accepted [{}] suggestions", accepted);
         return accepted;
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends RecommendationTask_ImplBase.Builder<T>
+    {
+        private Recommender recommender;
+        private String dataOwner;
+
+        @SuppressWarnings("unchecked")
+        public T withRecommender(Recommender aRecommender)
+        {
+            recommender = aRecommender;
+            return (T) this;
+        }
+
+        /**
+         * @param aDataOwner
+         *            the user owning the annotations currently shown in the editor (this can differ
+         *            from the user owning the session e.g. if a manager views another users
+         *            annotations or a curator is performing curation to the
+         *            {@link WebAnnoConst#CURATION_USER})
+         */
+        @SuppressWarnings("unchecked")
+        public T withDataOwner(String aDataOwner)
+        {
+            dataOwner = aDataOwner;
+            return (T) this;
+        }
+
+        public BulkPredictionTask build()
+        {
+            Validate.notNull(sessionOwner, "BulkPredictionTask requires a user");
+
+            return new BulkPredictionTask(this);
+        }
     }
 }

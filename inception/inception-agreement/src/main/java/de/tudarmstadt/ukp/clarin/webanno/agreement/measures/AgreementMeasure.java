@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
@@ -27,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public interface AgreementMeasure<R extends Serializable>
 {
-    R getAgreement(Map<String, List<CAS>> aCasMap);
+    R getAgreement(Map<String, CAS> aCasMap);
 
     AnnotationFeature getFeature();
 

@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupPr
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
@@ -114,7 +114,7 @@ public class DocumentImportExportServiceImplTest
 
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-        var repositoryProperties = new RepositoryProperties();
+        var repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());

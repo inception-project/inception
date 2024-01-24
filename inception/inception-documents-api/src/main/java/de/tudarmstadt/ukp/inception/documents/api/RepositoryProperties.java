@@ -19,43 +19,10 @@ package de.tudarmstadt.ukp.inception.documents.api;
 
 import java.io.File;
 
-import org.slf4j.MDC;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.jmx.export.annotation.ManagedResource;
-
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
-import de.tudarmstadt.ukp.inception.support.logging.Logging;
-
-/**
- * <p>
- * This class is exposed as a Spring Component via {@link RepositoryAutoConfiguration}.
- * </p>
- */
-@ConfigurationProperties("repository")
-@ManagedResource
-public class RepositoryProperties
+public interface RepositoryProperties
 {
-    private File path;
+    File getPath();
 
-    public File getPath()
-    {
-        if (path != null) {
-            return path;
-        }
-
-        return new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
-                System.getProperty("user.home") + "/"
-                        + SettingsUtil.getApplicationUserHomeSubdir()),
-                "repository");
-    }
-
-    public void setPath(File aPath)
-    {
-        path = aPath;
-
-        // This is mainly a convenience for unit tests. For production environments, it must be made
-        // sure that the MDC is configured e.g. on the worker threads for incoming requests and
-        // such.
-        MDC.put(Logging.KEY_REPOSITORY_PATH, aPath.getPath().toString());
-    }
+    @Deprecated
+    void setPath(File aPath);
 }
