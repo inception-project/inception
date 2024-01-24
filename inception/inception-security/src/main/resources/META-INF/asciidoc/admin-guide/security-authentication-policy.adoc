@@ -64,6 +64,10 @@ NOTE: In addition to the restrictions imposed here, {product-name} may impose ad
 | `.*`
 | `(?=.\*[a-z])(?=.*[A-Z])(?=.\*[0-9])(?=.*\p{Punct}).*`
 
+| `security.space-allowed-in-username`
+| Whether simple space characters are permitted in usernames. Enable this option only when necessary to restore access to existing accounts in certain scenarios such as when using external authentication. Usernames with spaces may lead to problems e.g. when exporting/importing projects or documents or when constructing certain URLs.
+| `false`
+| `true`
 |===
 
       

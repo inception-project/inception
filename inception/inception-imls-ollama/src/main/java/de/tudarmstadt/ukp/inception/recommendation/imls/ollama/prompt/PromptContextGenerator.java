@@ -29,6 +29,7 @@ public interface PromptContextGenerator
     static final String VAR_SENTENCE = "sentence";
     static final String VAR_DOCUMENT = "document";
     static final String VAR_EXAMPLES = "examples";
+    static final String VAR_CAS = "cas";
 
     Stream<PromptContext> generate(RecommendationEngine aEngine, CAS aCas, int aBegin, int aEnd);
 }

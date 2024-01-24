@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.jinjava.CasWrapper;
 
 public class PerDocumentContextGenerator
     implements PromptContextGenerator
@@ -33,6 +34,7 @@ public class PerDocumentContextGenerator
     {
         var candidate = aCas.getDocumentAnnotation();
         var context = new PromptContext(candidate);
+        context.set(VAR_CAS, new CasWrapper(aCas));
         context.set(VAR_TEXT, aCas.getDocumentText());
         return Stream.of(context);
     }

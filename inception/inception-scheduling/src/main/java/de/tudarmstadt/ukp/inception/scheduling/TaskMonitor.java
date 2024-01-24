@@ -152,6 +152,14 @@ public class TaskMonitor
         }
     }
 
+    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
+            LogMessage aMessage)
+    {
+        setProgress(aProgress);
+        setMaxProgress(aMaxProgress);
+        addMessage(aMessage);
+    }
+
     public Deque<LogMessage> getMessages()
     {
         return messages;

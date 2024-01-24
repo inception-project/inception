@@ -17,22 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
-import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
@@ -43,7 +34,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -60,11 +49,9 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -94,8 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.inception.documents.event.AfterDocumentResetEvent;
@@ -107,7 +92,6 @@ import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -122,33 +106,23 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -168,8 +142,6 @@ public class RecommendationServiceImpl
 
     private static final int TRAININGS_PER_SELECTION = 5;
 
-    private static final String PREDICTION_CAS = "predictionCas";
-
     private final EntityManager entityManager;
 
     private final SessionRegistry sessionRegistry;
@@ -177,7 +149,6 @@ public class RecommendationServiceImpl
     private final RecommenderFactoryRegistry recommenderFactoryRegistry;
     private final SchedulingService schedulingService;
     private final AnnotationSchemaService schemaService;
-    private final DocumentService documentService;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PreferencesService preferencesService;
@@ -209,8 +180,8 @@ public class RecommendationServiceImpl
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, ProjectService aProjectService,
-            EntityManager aEntityManager, ApplicationEventPublisher aApplicationEventPublisher,
+            ProjectService aProjectService, EntityManager aEntityManager,
+            ApplicationEventPublisher aApplicationEventPublisher,
             SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         preferencesService = aPreferencesService;
@@ -219,7 +190,6 @@ public class RecommendationServiceImpl
         recommenderFactoryRegistry = aRecommenderFactoryRegistry;
         schedulingService = aSchedulingService;
         schemaService = aAnnoService;
-        documentService = aDocumentService;
         projectService = aProjectService;
         entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
@@ -233,13 +203,12 @@ public class RecommendationServiceImpl
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService,
             SuggestionSupportRegistry aLayerRecommendtionSupportRegistry,
             EntityManager aEntityManager)
     {
         this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
-                aSchedulingService, aAnnoService, aDocumentService, (ProjectService) null,
-                aEntityManager, null, aLayerRecommendtionSupportRegistry);
+                aSchedulingService, aAnnoService, (ProjectService) null, aEntityManager, null,
+                aLayerRecommendtionSupportRegistry);
     }
 
     @Override
@@ -544,7 +513,8 @@ public class RecommendationServiceImpl
         // suggestions that need to be processed (in particular ones that may have been generated
         // by the non-trainable recommenders triggered above or from already existing predictions
         if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
-            autoAccept(aEvent.getRequestTarget().orElse(null), sessionOwner, doc, ON_FIRST_ACCESS);
+            autoAcceptOnDocumentOpen(aEvent.getRequestTarget().orElse(null), sessionOwner, doc,
+                    ON_FIRST_ACCESS);
         }
 
         // Trigger a training and prediction run if there is no prediction state yet
@@ -591,8 +561,8 @@ public class RecommendationServiceImpl
         return true;
     }
 
-    private void autoAccept(AjaxRequestTarget aTarget, User aUser, SourceDocument aDocument,
-            AutoAcceptMode aAutoAcceptMode)
+    private void autoAcceptOnDocumentOpen(AjaxRequestTarget aTarget, User aSessionOwner,
+            SourceDocument aDocument, AutoAcceptMode aAutoAcceptMode)
     {
         if (aTarget == null) {
             LOG.trace("Not auto-accepting outside AJAX requests");
@@ -609,7 +579,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var predictions = getPredictions(aUser, aDocument.getProject());
+        var predictions = getPredictions(aSessionOwner, aDocument.getProject());
         if (predictions == null || predictions.isEmpty()) {
             LOG.trace("Not auto-accepting because no predictions are available");
             return;
@@ -624,10 +594,26 @@ public class RecommendationServiceImpl
             return;
         }
 
+        var accepted = autoAccept(aSessionOwner, aDocument, aAutoAcceptMode, predictions, cas);
+
+        if (accepted > 0) {
+            try {
+                page.writeEditorCas(cas);
+            }
+            catch (Exception e) {
+                WicketExceptionUtil.handleException(LOG, page, aTarget, e);
+            }
+        }
+    }
+
+    private int autoAccept(User aSessionOwner, SourceDocument aDocument,
+            AutoAcceptMode aAutoAcceptMode, Predictions predictions, CAS cas)
+    {
         var accepted = 0;
         var recommenderCache = listRecommenders(aDocument.getProject()).stream()
-                .collect(Collectors.toMap(Recommender::getId, identity()));
+                .collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+
         for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
                 continue;
@@ -636,7 +622,7 @@ public class RecommendationServiceImpl
             // We do not clear auto-accept for on-first-access predictions because these should be
             // restored after a document reset but they won't be re-generated after a document
             // reset.
-            if (prediction.getAutoAcceptMode() != AutoAcceptMode.ON_FIRST_ACCESS) {
+            if (prediction.getAutoAcceptMode() != ON_FIRST_ACCESS) {
                 prediction.clearAutoAccept();
             }
 
@@ -656,8 +642,9 @@ public class RecommendationServiceImpl
             adapter.silenceEvents();
 
             try {
-                suggestionSupport.get().acceptSuggestion(null, aDocument, aUser.getUsername(), cas,
-                        adapter, feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                suggestionSupport.get().acceptSuggestion(null, aDocument,
+                        aSessionOwner.getUsername(), cas, adapter, feature, prediction, AUTO_ACCEPT,
+                        ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -667,15 +654,7 @@ public class RecommendationServiceImpl
 
         predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
         LOG.debug("Auto-accepted [{}] suggestions", accepted);
-
-        if (accepted > 0) {
-            try {
-                page.writeEditorCas(cas);
-            }
-            catch (Exception e) {
-                WicketExceptionUtil.handleException(LOG, page, aTarget, e);
-            }
-        }
+        return accepted;
     }
 
     /*
@@ -1041,7 +1020,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    @Deprecated
     @Override
     @Transactional
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -1364,10 +1342,9 @@ public class RecommendationServiceImpl
             // Remove from evaluatedRecommenders map.
             // We have to do this, otherwise training and prediction continues for the
             // recommender when a new task is triggered.
-            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> newEvaluatedRecommenders = //
-                    new HashSetValuedHashMap<>();
-            MapIterator<AnnotationLayer, EvaluatedRecommender> it = evaluatedRecommenders
-                    .mapIterator();
+            var newEvaluatedRecommenders = //
+                    new HashSetValuedHashMap<AnnotationLayer, EvaluatedRecommender>();
+            var it = evaluatedRecommenders.mapIterator();
 
             while (it.hasNext()) {
                 AnnotationLayer layer = it.next();
@@ -1422,444 +1399,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void computePredictions(LazyCas aOriginalCas,
-            EvaluatedRecommender aEvaluatedRecommender, Predictions activePredictions,
-            Predictions aPredictions, CAS predictionCas, SourceDocument aDocument,
-            User aSessionOwner, int aPredictionBegin, int aPredictionEnd)
-        throws IOException
-    {
-        var project = aDocument.getProject();
-        var predictionBegin = aPredictionBegin;
-        var predictionEnd = aPredictionEnd;
-
-        // Make sure we have the latest recommender config from the DB - the one
-        // from the active recommenders list may be outdated
-        Recommender recommender = aEvaluatedRecommender.getRecommender();
-        try {
-            recommender = getRecommender(recommender.getId());
-        }
-        catch (NoResultException e) {
-            aPredictions.log(LogMessage.info(recommender.getName(),
-                    "Recommender no longer available... skipping"));
-            LOG.info("{}[{}]: Recommender no longer available... skipping", aSessionOwner,
-                    recommender.getName());
-            return;
-        }
-
-        if (!recommender.isEnabled()) {
-            aPredictions.log(
-                    LogMessage.info(recommender.getName(), "Recommender disabled... skipping"));
-            LOG.debug("{}[{}]: Disabled - skipping", aSessionOwner, recommender.getName());
-            return;
-        }
-
-        Optional<RecommenderContext> context = getContext(aSessionOwner.getUsername(), recommender);
-
-        if (!context.isPresent()) {
-            aPredictions.log(LogMessage.info(recommender.getName(),
-                    "Recommender has no context... skipping"));
-            LOG.info("No context available for recommender {} for user {} on document {} in " //
-                    + "project {} - skipping recommender", recommender, aSessionOwner, aDocument,
-                    aDocument.getProject());
-            return;
-        }
-
-        Optional<RecommendationEngineFactory<?>> maybeFactory = getRecommenderFactory(recommender);
-
-        if (maybeFactory.isEmpty()) {
-            LOG.warn("{}[{}]: No factory found - skipping recommender", aSessionOwner,
-                    recommender.getName());
-            return;
-        }
-
-        RecommendationEngineFactory<?> factory = maybeFactory.get();
-
-        // Check that configured layer and feature are accepted
-        // by this type of recommender
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-            aPredictions.log(LogMessage.info(recommender.getName(),
-                    "Recommender configured with invalid layer or feature... skipping"));
-            LOG.info("{}[{}]: Recommender configured with invalid layer or feature "
-                    + "- skipping recommender", aSessionOwner, recommender.getName());
-            return;
-        }
-
-        // We lazily load the CAS only at this point because that allows us to skip
-        // loading the CAS entirely if there is no enabled layer or recommender.
-        // If the CAS cannot be loaded, then we skip to the next document.
-        CAS originalCas = aOriginalCas.get();
-        predictionBegin = aPredictionBegin < 0 ? 0 : aPredictionBegin;
-        predictionEnd = aPredictionEnd < 0 ? originalCas.getDocumentText().length()
-                : aPredictionEnd;
-
-        try {
-            RecommendationEngine engine = factory.build(recommender);
-
-            if (!engine.isReadyForPrediction(context.get())) {
-                aPredictions.log(LogMessage.info(recommender.getName(),
-                        "Recommender context is not ready... skipping"));
-                LOG.info("Recommender context {} for user {} in project {} is not ready for " //
-                        + "prediction - skipping recommender", recommender, aSessionOwner,
-                        aDocument.getProject());
-
-                // If possible, we inherit recommendations from a previous run while
-                // the recommender is still busy
-                if (activePredictions != null) {
-                    inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, recommender,
-                            activePredictions, aDocument, aSessionOwner);
-                }
-
-                return;
-            }
-
-            cloneAndMonkeyPatchCAS(project, originalCas, predictionCas);
-
-            // If the recommender is not trainable and not sensitive to annotations,
-            // we can actually re-use the predictions.
-            if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
-                    && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
-                    && activePredictions != null
-                    && activePredictions.hasRunPredictionOnDocument(aDocument)) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas,
-                        engine.getRecommender(), activePredictions, aDocument, aSessionOwner);
-            }
-            else {
-                var ctx = new PredictionContext(context.get());
-                ctx.setUser(aSessionOwner);
-                generateSuggestions(aPredictions, ctx, engine, activePredictions, aDocument,
-                        originalCas, predictionCas, predictionBegin, predictionEnd);
-                ctx.getMessages().forEach(aPredictions::log);
-            }
-        }
-        // Catching Throwable is intentional here as we want to continue the
-        // execution even if a particular recommender fails.
-        catch (Throwable e) {
-            aPredictions.log(LogMessage.error(recommender.getName(), "Failed: %s", e.getMessage()));
-            LOG.error("Error applying recommender {} for user {} to document {} in project {} - " //
-                    + "skipping recommender", recommender, aSessionOwner, aDocument,
-                    aDocument.getProject(), e);
-
-            applicationEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                    .builder(this, project, aSessionOwner.getUsername()) //
-                    .withMessage(LogMessage.error(this, "Recommender [%s] failed: %s",
-                            recommender.getName(), e.getMessage())) //
-                    .build());
-
-            // If there was a previous successful run of the recommender, inherit
-            // its suggestions to avoid that all the suggestions of the recommender
-            // simply disappear.
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, originalCas, recommender,
-                        activePredictions, aDocument, aSessionOwner);
-            }
-
-            return;
-        }
-    }
-
-    /**
-     * @param aPredictions
-     *            the predictions to populate
-     * @param aPredictionCas
-     *            the re-usable buffer CAS to use when calling recommenders
-     * @param aDocument
-     *            the current document
-     * @param aPredictionBegin
-     *            begin of the prediction window (&lt; 0 for 0)
-     * @param aPredictionEnd
-     *            end of the prediction window (&lt; 0 for document-end)
-     * @param aDataOwner
-     *            the annotation data owner
-     */
-    private void computePredictions(Predictions aActivePredictions, Predictions aPredictions,
-            CAS aPredictionCas, SourceDocument aDocument, String aDataOwner, int aPredictionBegin,
-            int aPredictionEnd)
-    {
-        var aSessionOwner = aPredictions.getSessionOwner();
-
-        try {
-            var recommenders = getActiveRecommenders(aSessionOwner, aDocument.getProject());
-            if (recommenders.isEmpty()) {
-                aPredictions.log(LogMessage.info(this, "No active recommenders"));
-                LOG.trace("[{}]: No active recommenders", aSessionOwner);
-                return;
-            }
-
-            LazyCas originalCas = new LazyCas(aDocument, aDataOwner);
-            for (var recommender : recommenders) {
-                var layer = schemaService.getLayer(recommender.getRecommender().getLayer().getId());
-                if (!layer.isEnabled()) {
-                    continue;
-                }
-
-                computePredictions(originalCas, recommender, aActivePredictions, aPredictions,
-                        aPredictionCas, aDocument, aSessionOwner, aPredictionBegin, aPredictionEnd);
-            }
-        }
-        catch (IOException e) {
-            aPredictions.log(LogMessage.error(this, "Cannot read annotation CAS... skipping"));
-            LOG.error(
-                    "Cannot read annotation CAS for user {} of document "
-                            + "[{}]({}) in project [{}]({}) - skipping document",
-                    aSessionOwner, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId(), e);
-            return;
-        }
-
-        // When all recommenders have completed on the document, we mark it as "complete"
-        aPredictions.markDocumentAsPredictionCompleted(aDocument);
-    }
-
-    @Override
-    public Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor)
-    {
-        var activePredictions = getPredictions(aSessionOwner, aProject);
-        var predictions = activePredictions != null ? new Predictions(activePredictions)
-                : new Predictions(aSessionOwner, aDataOwner, aProject);
-
-        try (var casHolder = new PredictionCasHolder()) {
-            // Generate new predictions or inherit at the recommender level
-            aMonitor.setMaxProgress(aDocuments.size());
-            for (SourceDocument document : aDocuments) {
-                aMonitor.addMessage(LogMessage.info(this, "%s", document.getName()));
-                aMonitor.incrementProgress();
-                computePredictions(activePredictions, predictions, casHolder.cas, document,
-                        aDataOwner, -1, -1);
-            }
-
-            return predictions;
-        }
-        catch (ResourceInitializationException e) {
-            predictions.log(
-                    LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
-            LOG.error("Cannot create prediction CAS, stopping predictions!");
-            return predictions;
-        }
-    }
-
-    @Override
-    public Predictions computePredictions(User aSessionOwner, Project aProject,
-            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor)
-    {
-        aMonitor.setMaxProgress(1);
-
-        var activePredictions = getPredictions(aSessionOwner, aProject);
-        var predictions = activePredictions != null ? new Predictions(activePredictions)
-                : new Predictions(aSessionOwner, aDataOwner, aProject);
-
-        // Inherit at the document level. If inheritance at a recommender level is possible,
-        // this is done below.
-        if (activePredictions != null) {
-            for (var document : aInherit) {
-                inheritSuggestionsAtDocumentLevel(aProject, document, aSessionOwner,
-                        activePredictions, predictions);
-            }
-        }
-
-        try (var casHolder = new PredictionCasHolder()) {
-            final CAS predictionCas = casHolder.cas;
-
-            // Generate new predictions or inherit at the recommender level
-            computePredictions(activePredictions, predictions, predictionCas, aCurrentDocument,
-                    aDataOwner, aPredictionBegin, aPredictionEnd);
-        }
-        catch (ResourceInitializationException e) {
-            predictions.log(
-                    LogMessage.error(this, "Cannot create prediction CAS, stopping predictions!"));
-            LOG.error("Cannot create prediction CAS, stopping predictions!");
-        }
-
-        aMonitor.setProgress(1);
-
-        return predictions;
-    }
-
-    /**
-     * Extracts existing predictions from the last prediction run so we do not have to recalculate
-     * them. This is useful when the engine is not trainable.
-     */
-    private void inheritSuggestionsAtRecommenderLevel(Predictions predictions, CAS aOriginalCas,
-            Recommender aRecommender, Predictions activePredictions, SourceDocument document,
-            User aUser)
-    {
-        var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
-                document.getName());
-
-        if (suggestions.isEmpty()) {
-            LOG.debug("{} for user {} on document {} in project {} there " //
-                    + "are no inheritable predictions", aRecommender, aUser, document,
-                    aRecommender.getProject());
-            predictions.log(LogMessage.info(aRecommender.getName(),
-                    "No inheritable suggestions from previous run"));
-            return;
-        }
-
-        LOG.debug("{} for user {} on document {} in project {} inherited {} " //
-                + "predictions", aRecommender, aUser, document, aRecommender.getProject(),
-                suggestions.size());
-
-        predictions.log(LogMessage.info(aRecommender.getName(),
-                "Inherited [%d] predictions from previous run", suggestions.size()));
-
-        predictions.putPredictions(suggestions);
-    }
-
-    /**
-     * Extracts existing predictions from the last prediction run so we do not have to recalculate
-     * them. This is useful when the engine is not trainable.
-     */
-    private void inheritSuggestionsAtDocumentLevel(Project aProject, SourceDocument aDocument,
-            User aUser, Predictions aOldPredictions, Predictions aNewPredictions)
-    {
-        if (!aOldPredictions.hasRunPredictionOnDocument(aDocument)) {
-            return;
-        }
-
-        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getName());
-
-        LOG.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions",
-                "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions.size());
-
-        aNewPredictions.putPredictions(suggestions);
-        aNewPredictions.markDocumentAsPredictionCompleted(aDocument);
-    }
-
-    /**
-     * Invokes the engine to produce new suggestions.
-     */
-    void generateSuggestions(Predictions aIncomingPredictions, PredictionContext aCtx,
-            RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
-            CAS aOriginalCas, CAS aPredictionCas, int aPredictionBegin, int aPredictionEnd)
-        throws RecommendationException
-    {
-        var sessionOwner = aIncomingPredictions.getSessionOwner();
-        var recommender = aEngine.getRecommender();
-
-        // Extract the suggestions from the data which the recommender has written into the CAS
-        var maybeSupportRegistry = suggestionSupportRegistry.findGenericExtension(recommender);
-        if (maybeSupportRegistry.isEmpty()) {
-            LOG.debug("There is no comparible suggestion support for {} - skipping prediction");
-            aIncomingPredictions.log(LogMessage.warn(recommender.getName(), //
-                    "Prediction skipped since there is no compatible suggestion support."));
-            return;
-        }
-
-        // Perform the actual prediction
-        aIncomingPredictions.log(LogMessage.info(recommender.getName(),
-                "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
-        LOG.trace("{}[{}]: Generating predictions for layer [{}]", sessionOwner,
-                recommender.getName(), recommender.getLayer().getUiName());
-
-        var predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
-                aPredictionEnd);
-
-        var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
-                recommender, aDocument, aOriginalCas, aPredictionCas);
-        var generatedSuggestions = maybeSupportRegistry.get().extractSuggestions(extractionContext);
-
-        // Reconcile new suggestions with suggestions from previous run
-        var reconciliationResult = reconcile(aActivePredictions, aDocument, recommender,
-                predictedRange, generatedSuggestions);
-        LOG.debug(
-                "{} for user {} on document {} in project {} generated {} predictions within range {} (+{}/-{}/={})",
-                recommender, sessionOwner, aDocument, recommender.getProject(),
-                generatedSuggestions.size(), predictedRange, reconciliationResult.added,
-                reconciliationResult.removed, reconciliationResult.aged);
-        aIncomingPredictions.log(LogMessage.info(recommender.getName(), //
-                "Generated [%d] predictions within range %s (+%d/-%d/=%d)",
-                generatedSuggestions.size(), predictedRange, reconciliationResult.added,
-                reconciliationResult.removed, reconciliationResult.aged));
-        var suggestions = reconciliationResult.suggestions;
-
-        // Inherit suggestions that are outside the range which was predicted. Note that the engine
-        // might actually predict a different range from what was requested. If the prediction
-        // covers the entire document, we can skip this.
-        if (aActivePredictions != null
-                && !predictedRange.equals(rangeCoveringDocument(aOriginalCas))) {
-            var inheritableSuggestions = aActivePredictions
-                    .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName())
-                    .stream() //
-                    .filter(s -> !s.coveredBy(predictedRange)) //
-                    .collect(toList());
-
-            LOG.debug("{} for user {} on document {} in project {} inherited {} " //
-                    + "predictions", recommender, sessionOwner, aDocument, recommender.getProject(),
-                    inheritableSuggestions.size());
-            aIncomingPredictions.log(LogMessage.info(recommender.getName(),
-                    "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
-
-            suggestions.addAll(inheritableSuggestions);
-        }
-
-        // Calculate the visibility of the suggestions. This happens via the original CAS which
-        // contains only the manually created annotations and *not* the suggestions.
-        var groupedSuggestions = SuggestionDocumentGroup.groupByType(suggestions);
-        for (var groupEntry : groupedSuggestions.entrySet()) {
-            calculateSuggestionVisibility(sessionOwner.getUsername(), aDocument, aOriginalCas,
-                    aIncomingPredictions.getDataOwner(), aEngine.getRecommender().getLayer(),
-                    groupEntry.getValue(), 0, aOriginalCas.getDocumentText().length());
-        }
-
-        aIncomingPredictions.putPredictions(suggestions);
-    }
-
-    static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
-            Recommender recommender, Range predictedRange,
-            List<AnnotationSuggestion> aNewProtoSuggesitons)
-    {
-        if (aActivePredictions == null) {
-            return new ReconciliationResult(aNewProtoSuggesitons.size(), 0, 0,
-                    aNewProtoSuggesitons);
-        }
-
-        var reconciledSuggestions = new LinkedHashSet<AnnotationSuggestion>();
-        var addedSuggestions = new ArrayList<AnnotationSuggestion>();
-        int agedSuggestionsCount = 0;
-
-        var predictionsByRecommenderAndDocument = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
-
-        var existingSuggestionsByPosition = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
-                .collect(groupingBy(AnnotationSuggestion::getPosition));
-
-        for (var newSuggestion : aNewProtoSuggesitons) {
-            var existingSuggestions = existingSuggestionsByPosition
-                    .getOrDefault(newSuggestion.getPosition(), emptyList()).stream() //
-                    .filter(s -> Objects.equals(s.getLabel(), newSuggestion.getLabel()) && //
-                            s.getScore() == newSuggestion.getScore() && //
-                            Objects.equals(s.getScoreExplanation(),
-                                    newSuggestion.getScoreExplanation()))
-                    .toList();
-
-            if (existingSuggestions.isEmpty()) {
-                addedSuggestions.add(newSuggestion);
-                reconciledSuggestions.add(newSuggestion);
-                continue;
-            }
-
-            if (existingSuggestions.size() > 1) {
-                LOG.debug("Recommender produced more than one suggestion with the same "
-                        + "label, score and score explanation - reconciling with first one");
-            }
-
-            var existingSuggestion = existingSuggestions.get(0);
-            existingSuggestion.incrementAge();
-            agedSuggestionsCount++;
-            reconciledSuggestions.add(existingSuggestion);
-        }
-
-        var removedSuggestions = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
-                .filter(s -> !reconciledSuggestions.contains(s)) //
-                .collect(toList());
-
-        return new ReconciliationResult(addedSuggestions.size(), removedSuggestions.size(),
-                agedSuggestionsCount, new ArrayList<>(reconciledSuggestions));
-    }
-
     @Override
     public <T extends AnnotationSuggestion> void calculateSuggestionVisibility(String aSessionOwner,
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
@@ -1884,37 +1423,6 @@ public class RecommendationServiceImpl
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
                     aLayer, aRecommendations, aWindowBegin, aWindowEnd);
         }
-    }
-
-    /**
-     * Clones the source CAS to the target CAS while adding the features required for encoding
-     * predictions to the respective types.
-     * 
-     * @param aProject
-     *            the project to which the CASes belong.
-     * @param aSourceCas
-     *            the source CAS.
-     * @param aTargetCas
-     *            the target CAS which is meant to be sent off to a recommender.
-     * @return the target CAS which is meant to be sent off to a recommender.
-     * @throws UIMAException
-     *             if there was a CAS-related error.
-     * @throws IOException
-     *             if there was a serialization-related errror.
-     */
-    CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
-        throws UIMAException, IOException
-    {
-        try (var watch = new StopWatch(LOG, "adding score features")) {
-            var tsd = schemaService.getFullProjectTypeSystem(aProject);
-            var features = schemaService.listAnnotationFeature(aProject);
-
-            RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, features);
-
-            schemaService.upgradeCas(aSourceCas, aTargetCas, tsd);
-        }
-
-        return aTargetCas;
     }
 
     private class TriggerTrainingTaskListener
@@ -2259,50 +1767,4 @@ public class RecommendationServiceImpl
                 .setParameter("action", SKIPPED) //
                 .executeUpdate();
     }
-
-    private class LazyCas
-    {
-        private final SourceDocument document;
-        private final String dataOwner;
-
-        private CAS originalCas;
-
-        public LazyCas(SourceDocument aDocument, String aDataOwner)
-        {
-            document = aDocument;
-            dataOwner = aDataOwner;
-        }
-
-        public CAS get() throws IOException
-        {
-            if (originalCas == null) {
-                originalCas = documentService.readAnnotationCas(document, dataOwner,
-                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-            }
-
-            return originalCas;
-        }
-    }
-
-    private static class PredictionCasHolder
-        implements AutoCloseable
-    {
-        private final CAS cas;
-
-        public PredictionCasHolder() throws ResourceInitializationException
-        {
-            cas = WebAnnoCasUtil.createCas();
-            CasStorageSession.get().add(PREDICTION_CAS, EXCLUSIVE_WRITE_ACCESS, cas);
-        }
-
-        @Override
-        public void close()
-        {
-            CasStorageSession.get().remove(cas);
-        }
-    }
-
-    final record ReconciliationResult(int added, int removed, int aged,
-            List<AnnotationSuggestion> suggestions)
-    {}
 }

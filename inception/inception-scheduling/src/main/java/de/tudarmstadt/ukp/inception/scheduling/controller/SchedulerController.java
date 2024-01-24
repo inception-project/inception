@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebU
 public interface SchedulerController
 {
     String BASE_URL = BASE_API_URL + "/scheduler";
-    String BASE_TOPIC = "/scheduler";
-    String TASKS_TOPIC = "/tasks";
+    String CANCEL = "cancel";
+    String TASKS = "/tasks";
+    String PARAM_TASK_ID = "taskId";
 }

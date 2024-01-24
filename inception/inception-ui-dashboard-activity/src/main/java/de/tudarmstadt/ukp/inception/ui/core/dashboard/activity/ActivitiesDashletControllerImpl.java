@@ -112,7 +112,6 @@ public class ActivitiesDashletControllerImpl
             AnnotationPageMenuItem aAnnotationPageMenuItem,
             CurationPageMenuItem aCurationPageMenuItem, ServletContext aServletContext)
     {
-        super();
         eventRepository = aEventRepository;
         documentService = aDocumentService;
         curationService = aCurationService;

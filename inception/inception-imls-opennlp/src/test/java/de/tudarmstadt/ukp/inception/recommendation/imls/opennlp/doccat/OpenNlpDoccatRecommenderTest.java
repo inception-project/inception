@@ -99,7 +99,7 @@ public class OpenNlpDoccatRecommenderTest
         var cas = casList.get(0);
         try (var session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+            RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         }
 
         sut.train(context, asList(cas));

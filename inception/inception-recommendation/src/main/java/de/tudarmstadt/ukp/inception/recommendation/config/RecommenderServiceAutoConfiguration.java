@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
+import de.tudarmstadt.ukp.inception.recommendation.processor.BulkProcessingPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
@@ -63,6 +64,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * Provides all back-end Spring beans for the recommendation functionality.
@@ -79,14 +81,12 @@ public class RecommenderServiceAutoConfiguration
             SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, ProjectService aProjectService,
-            ApplicationEventPublisher aApplicationEventPublisher,
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
             SuggestionSupportRegistry aLayerRecommendtionSupportRegistry)
     {
         return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
-                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
-                aProjectService, entityManager, aApplicationEventPublisher,
-                aLayerRecommendtionSupportRegistry);
+                aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aProjectService,
+                entityManager, aApplicationEventPublisher, aLayerRecommendtionSupportRegistry);
     }
 
     @Bean
@@ -232,5 +232,13 @@ public class RecommenderServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new SuggestionSupportRegistryImpl(aExtensions);
+    }
+
+    @ConditionalOnWebApplication
+    @Bean
+    public BulkProcessingPageMenuItem bulkProcessingPageMenuItem(UserDao aUserRepo,
+            ProjectService aProjectService, ServletContext aServletContext)
+    {
+        return new BulkProcessingPageMenuItem(aUserRepo, aProjectService, aServletContext);
     }
 }

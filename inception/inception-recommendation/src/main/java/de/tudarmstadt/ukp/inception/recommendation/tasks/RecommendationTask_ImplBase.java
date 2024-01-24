@@ -37,9 +37,9 @@ public abstract class RecommendationTask_ImplBase
         super(aProject, aTrigger);
     }
 
-    public RecommendationTask_ImplBase(User aUser, Project aProject, String aTrigger)
+    public RecommendationTask_ImplBase(User aSessionOwner, Project aProject, String aTrigger)
     {
-        super(aUser, aProject, aTrigger);
+        super(aSessionOwner, aProject, aTrigger);
     }
 
     public void inheritLog(List<LogMessage> aLogMessages)
@@ -70,5 +70,10 @@ public abstract class RecommendationTask_ImplBase
     public void error(String aFormat, Object... aValues)
     {
         logMessages.add(LogMessage.error(this, aFormat, aValues));
+    }
+
+    public void log(LogMessage aMessage)
+    {
+        logMessages.add(aMessage);
     }
 }

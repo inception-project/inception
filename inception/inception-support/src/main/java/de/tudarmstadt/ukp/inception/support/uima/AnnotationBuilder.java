@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,11 +28,15 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
 public class AnnotationBuilder<T extends AnnotationFS>
     extends FeatureStructureBuilder<T>
 {
+    private record Range(int begin, int end) {}
+
+    private final Set<Range> ranges = new LinkedHashSet<>();
 
     public AnnotationBuilder(CAS aCas, Type aType)
     {
@@ -37,19 +45,80 @@ public class AnnotationBuilder<T extends AnnotationFS>
 
     public AnnotationBuilder<T> at(AnnotationFS aAnnotation)
     {
-        withFeature(CAS.FEATURE_BASE_NAME_BEGIN, aAnnotation.getBegin());
-        withFeature(CAS.FEATURE_BASE_NAME_END, aAnnotation.getEnd());
+        ranges.add(new Range(aAnnotation.getBegin(), aAnnotation.getEnd()));
         return this;
     }
 
     public AnnotationBuilder<T> at(int aBegin, int aEnd)
     {
-        withFeature(CAS.FEATURE_BASE_NAME_BEGIN, aBegin);
-        withFeature(CAS.FEATURE_BASE_NAME_END, aEnd);
+        ranges.add(new Range(aBegin, aEnd));
         return this;
     }
 
-    public AnnotationBuilder<T> on(String aPattern)
+    public List<T> buildAllAndAddToIndexes()
+    {
+        var annotations = buildAllWithoutAddingToIndexes();
+        annotations.forEach(getCas()::addFsToIndexes);
+        return annotations;
+    }
+
+    public List<T> buildAllWithoutAddingToIndexes()
+    {
+        var annotations = new ArrayList<T>();
+
+        for (var range : ranges) {
+            var ann = super.buildWithoutAddingToIndexes();
+            ann.setBegin(range.begin);
+            ann.setEnd(range.end);
+            annotations.add(ann);
+        }
+
+        return annotations;
+    }
+
+    @Override
+    public T buildAndAddToIndexes()
+    {
+        if (ranges.size() > 1) {
+            throw new IllegalStateException(
+                    "Use buildAllAndAddToIndexes() when multiple ranges have been specified.");
+        }
+
+        ranges.forEach(range -> {
+            withFeature(CAS.FEATURE_BASE_NAME_BEGIN, range.begin);
+            withFeature(CAS.FEATURE_BASE_NAME_END, range.end);
+        });
+
+        return super.buildAndAddToIndexes();
+    }
+
+    @Override
+    public T buildWithoutAddingToIndexes()
+    {
+        if (ranges.size() > 1) {
+            throw new IllegalStateException(
+                    "Use buildAllWithoutAddingToIndexes() when multiple ranges have been specified.");
+        }
+
+        ranges.forEach(range -> {
+            withFeature(CAS.FEATURE_BASE_NAME_BEGIN, range.begin);
+            withFeature(CAS.FEATURE_BASE_NAME_END, range.end);
+        });
+
+        return super.buildWithoutAddingToIndexes();
+    }
+
+    public AnnotationBuilder<T> on(String aText)
+    {
+        return onMatch(Pattern.quote(aText));
+    }
+
+    public AnnotationBuilder<T> onAll(String aText)
+    {
+        return onAllMatches(Pattern.quote(aText));
+    }
+
+    public AnnotationBuilder<T> onMatch(String aPattern)
     {
         Matcher m = Pattern.compile(aPattern).matcher(getCas().getDocumentText());
         if (m.find()) {
@@ -58,9 +127,24 @@ public class AnnotationBuilder<T extends AnnotationFS>
         return this;
     }
 
+    public AnnotationBuilder<T> onAllMatches(String aPattern)
+    {
+        Matcher m = Pattern.compile(aPattern).matcher(getCas().getDocumentText());
+        while (m.find()) {
+            at(m.start(), m.end());
+        }
+        return this;
+    }
+
     public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(CAS aCas, Type aType)
     {
         return new AnnotationBuilder<X>(aCas, aType);
+    }
+
+    public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(JCas aCas,
+            Class<X> aType)
+    {
+        return new AnnotationBuilder<X>(aCas.getCas(), aCas.getCasType(aType));
     }
 
     public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(CAS aCas,

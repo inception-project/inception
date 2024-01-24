@@ -133,7 +133,7 @@ public class ExternalRecommenderIntegrationTest
         sut.train(context, casses);
 
         var cas = casses.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         sut.predict(new PredictionContext(context), cas);
 
         var predictions = getPredictions(cas, NamedEntity.class);
@@ -180,7 +180,7 @@ public class ExternalRecommenderIntegrationTest
         sut.train(context, casses);
 
         var cas = casses.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         sut.predict(new PredictionContext(context), cas);
 
         var request = fromJsonString(PredictionRequest.class, requestBodies.get(1));

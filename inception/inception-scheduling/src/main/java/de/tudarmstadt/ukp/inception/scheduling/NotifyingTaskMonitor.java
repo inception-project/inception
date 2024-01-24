@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController.BASE_TOPIC;
-import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController.TASKS_TOPIC;
+import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController.BASE_TOPIC;
+import static de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController.TASKS_TOPIC;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -54,6 +54,14 @@ public class NotifyingTaskMonitor
     }
 
     @Override
+    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
+            LogMessage aMessage)
+    {
+        super.setProgressWithMessage(aProgress, aMaxProgress, aMessage);
+        sendNotification();
+    }
+
+    @Override
     public synchronized void setState(TaskState aState)
     {
         super.setState(aState);
@@ -65,6 +73,15 @@ public class NotifyingTaskMonitor
     {
         super.setState(aState);
         super.setProgress(aProgress);
+        sendNotification();
+    }
+
+    @Override
+    public synchronized void setStateAndProgress(TaskState aState, int aProgress, int aMaxProgress)
+    {
+        super.setState(aState);
+        super.setProgress(aProgress);
+        super.setMaxProgress(aMaxProgress);
         sendNotification();
     }
 

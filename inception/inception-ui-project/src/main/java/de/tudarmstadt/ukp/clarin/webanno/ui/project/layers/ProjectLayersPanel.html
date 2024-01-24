@@ -150,30 +150,24 @@
                 <a wicket:id="propertiesHelpLink"/>
               </div>
               <div class="card-body">
-                <div class="row form-row">
-                  <label wicket:for="uiName" class="col-sm-4 col-form-label">
+                <div class="form-row form-floating">
+                  <input wicket:id="uiName" class="form-control" wicket:message="placeholder:name"/>
+                  <label wicket:for="uiName">
                     <wicket:label key="name"/>
                   </label>
-                  <div class="col-sm-8">
-                    <input wicket:id="uiName" class="form-control"/>
-                  </div>
                 </div>
-                <div class="row form-row">
-                  <label wicket:for="description" class="col-sm-4 col-form-label">
+                <div class="form-row form-floating">
+                  <textarea wicket:id="description" rows="4" class="form-control" wicket:message="placeholder:description"/>
+                  <label wicket:for="description">
                     <wicket:label key="description"/>
                   </label>
-                  <div class="col-sm-8">
-                    <textarea wicket:id="description" rows="4" class="form-control"></textarea>
-                  </div>
                 </div>
-                <div class="row form-row">
-                  <div class="offset-sm-4 col-sm-8">
-                    <div class="form-check">
-                      <input wicket:id="enabled" class="form-check-input" type="checkbox"> 
-                      <label wicket:for="enabled" class="form-check-label" >
-                        <wicket:label key="enabled"/>
-                      </label>
-                    </div>
+                <div class="form-row">
+                  <div class="form-check form-switch">
+                    <input wicket:id="enabled" class="form-check-input" type="checkbox"> 
+                    <label wicket:for="enabled" class="form-check-label" >
+                      <wicket:label key="enabled"/>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -185,39 +179,29 @@
                 <a wicket:id="technicalPropertiesHelpLink"/>
               </div>
               <div class="card-body">
-                <div class="row form-row">
-                  <label class="col-sm-4 col-form-label"> <wicket:message
-                      key="internalName" />
+                <div class="form-row form-floating">
+                  <span wicket:id="name" class="form-control" readonly/>
+                  <label> 
+                    <wicket:message key="internalName" />
                   </label>
-                  <div class="col-sm-8">
-                    <span class="form-control-plaintext" style="word-break: break-all;">
-                      <wicket:container wicket:id="name" />
-                    </span>
-                  </div>
                 </div>
-                <div class="row form-row">
-                  <label wicket:for="type" class="col-sm-4 col-form-label"> <wicket:label
-                      key="type" />
+                <div class="form-row form-floating">
+                  <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
+                  <label wicket:for="type">
+                    <wicket:label key="type" />
                   </label>
-                  <div class="col-sm-8">
-                    <select wicket:id="type" class="form-select" data-container="body"/>
-                  </div>
                 </div>
-                <div class="row form-row" wicket:enclosure="attachType">
-                  <label wicket:for="attachType" class="col-sm-4 col-form-label"> <wicket:label
-                      key="attachToLayer" />
+                <div class="form-row form-floating" wicket:enclosure="attachType">
+                  <select wicket:id="attachType" class="form-select" wicket:message="placeholder:attachToLayer"/>
+                  <label wicket:for="attachType">
+                    <wicket:label key="attachToLayer" />
                   </label>
-                  <div class="col-sm-8">
-                    <select wicket:id="attachType" class="form-select" data-container="body"/>
-                  </div>
                 </div>
-                <div class="row form-row" wicket:enclosure="effectiveAttachType">
-                  <label class="col-sm-4 col-form-label"> 
+                <div class="form-row form-floating" wicket:enclosure="effectiveAttachType">
+                  <span wicket:id="effectiveAttachType" class="form-control" readonly/>
+                  <label> 
                     <wicket:message key="attachToLayer" />
                   </label>
-                  <div class="col-sm-8">
-                    <span wicket:id="effectiveAttachType" class="form-control" readonly/>
-                  </div>
                 </div>
               </div>
             </div>
@@ -229,14 +213,12 @@
               </div>
               <div class="card-body">
                 <div class="col-sm-12">
-                  <div class="row form-row" wicket:enclosure="readonly">
-                    <div class="offset-sm-4 col-sm-8">
-                      <div class="form-check">
-                        <input wicket:id="readonly" class="form-check-input" type="checkbox">
-                        <label wicket:for="readonly" class="form-check-label">
-                          <wicket:label key="readonly"/>
-                        </label>
-                      </div>
+                  <div class="form-row" wicket:enclosure="readonly">
+                    <div class="form-check form-switch">
+                      <input wicket:id="readonly" class="form-check-input" type="checkbox">
+                      <label wicket:for="readonly" class="form-check-label">
+                        <wicket:label key="readonly"/>
+                      </label>
                     </div>
                   </div>
                   <div wicket:id="traitsContainer">

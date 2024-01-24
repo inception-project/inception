@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="d-flex flex-row flex-grow-1 overflow-hidden">
+    <div class="d-flex flex-grow-1 flex-column scrolling">
+      <form wicket:id="form" class="card m-3">
+        <div class="card-header">
+          <wicket:message key="applyRecommender"/>
+        </div>
+        <div class="card-body">
+          <p>
+            <wicket:message key="applyRecommenderDescription"/>
+          </p>
+          <div class="container">
+            <div class="row form-row form-floating">
+              <select wicket:id="user" class="form-select" wicket:message="placeholder:user"/>
+              <label wicket:for="user">
+                <wicket:label key="user"/>
+              </label>
+            </div>
+            <div class="row form-row form-floating">
+              <select wicket:id="recommender" class="form-select" wicket:message="placeholder:recommender"/>
+              <label wicket:for="recommender">
+                <wicket:label key="recommender"/>
+              </label>
+            </div>
+          </div>
+        
+          <div class="text-end">
+            <button wicket:id="startProcessing" type="button" class="btn btn-primary text-nowrap">
+              <i class="fas fa-play"></i>&nbsp;
+              <wicket:message key="startProcessing"/>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="d-flex flex-sidebar flex-column border-start scrolling" style="min-width: 30rem;">
+      <div class="d-flex flex-grow-1 flex-column" wicket:id="runningProcesses"/>
+    </div>
+  </div>
+</wicket:panel>
+</html>

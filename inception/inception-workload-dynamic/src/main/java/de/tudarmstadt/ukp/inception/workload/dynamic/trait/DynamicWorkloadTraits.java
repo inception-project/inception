@@ -47,7 +47,7 @@ public class DynamicWorkloadTraits
     public DynamicWorkloadTraits()
     {
         workflowType = DefaultWorkflowExtension.DEFAULT_WORKFLOW;
-        defaultNumberOfAnnotations = 6;
+        defaultNumberOfAnnotations = 3;
     }
 
     public DynamicWorkloadTraits(String aWorkflowType, int aDefaultNumberOfAnnotations)

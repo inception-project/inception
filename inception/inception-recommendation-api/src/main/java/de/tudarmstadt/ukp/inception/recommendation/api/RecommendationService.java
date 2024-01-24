@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentG
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
@@ -249,45 +248,6 @@ public interface RecommendationService
     void skipSuggestion(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException;
-
-    /**
-     * Compute predictions.
-     *
-     * @param aSessionOwner
-     *            the user to compute the predictions for.
-     * @param aProject
-     *            the project to compute the predictions for.
-     * @param aDocuments
-     *            the documents to compute the predictions for.
-     * @param aDataOwner
-     *            the owner of the annotations.
-     * @return the new predictions.
-     */
-    Predictions computePredictions(User aSessionOwner, Project aProject,
-            List<SourceDocument> aDocuments, String aDataOwner, TaskMonitor aMonitor);
-
-    /**
-     * Compute predictions.
-     *
-     * @param aSessionOwner
-     *            the user to compute the predictions for.
-     * @param aProject
-     *            the project to compute the predictions for.
-     * @param aCurrentDocument
-     *            the document to compute the predictions for.
-     * @param aDataOwner
-     *            the owner of the annotations.
-     * @param aInherit
-     *            any documents for which to inherit the predictions from a previous run
-     * @param aPredictionBegin
-     *            begin of the prediction range (negative to predict from 0)
-     * @param aPredictionEnd
-     *            end of the prediction range (negative to predict until the end of the document)
-     * @return the new predictions.
-     */
-    Predictions computePredictions(User aSessionOwner, Project aProject,
-            SourceDocument aCurrentDocument, String aDataOwner, List<SourceDocument> aInherit,
-            int aPredictionBegin, int aPredictionEnd, TaskMonitor aMonitor);
 
     /**
      * Determine the visibility of suggestions.

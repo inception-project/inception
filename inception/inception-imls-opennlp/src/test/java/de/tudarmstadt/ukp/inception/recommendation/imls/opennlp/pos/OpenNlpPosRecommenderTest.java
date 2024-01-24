@@ -93,7 +93,7 @@ public class OpenNlpPosRecommenderTest
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
-            RecommenderTestHelper.addScoreFeature(cas, POS.class, "PosValue");
+            RecommenderTestHelper.addPredictionFeatures(cas, POS.class, "PosValue");
         }
 
         sut.train(context, asList(cas));

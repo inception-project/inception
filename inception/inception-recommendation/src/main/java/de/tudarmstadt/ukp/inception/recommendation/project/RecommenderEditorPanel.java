@@ -60,8 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -73,7 +72,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -408,11 +406,9 @@ public class RecommenderEditorPanel
     private List<AnnotationLayer> listLayers()
     {
         return annotationSchemaService.listAnnotationLayer(projectModel.getObject()).stream() //
-                .filter(layer -> (SpanLayerSupport.TYPE.equals(layer.getType())
-                        || RelationLayerSupport.TYPE.equals(layer.getType()) //
-                        || DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) //
-                        && !(Token._TypeName.equals(layer.getName())
-                                || Sentence._TypeName.equals(layer.getName())))
+                .filter(layer -> !ChainLayerSupport.TYPE.equals(layer.getType()) && //
+                        !Token._TypeName.equals(layer.getName()) && //
+                        !Sentence._TypeName.equals(layer.getName()))
                 .toList();
     }
 

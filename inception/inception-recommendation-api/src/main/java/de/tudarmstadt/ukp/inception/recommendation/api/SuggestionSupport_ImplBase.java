@@ -80,21 +80,21 @@ public abstract class SuggestionSupport_ImplBase
         return id;
     }
 
-    protected void commmitLabel(String aSessionOwner, SourceDocument aDocument, String aDataOwner,
-            CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, String aValue, AnnotationBaseFS annotation,
-            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+    protected void commitLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            TypeAdapter aAdapter, AnnotationFeature aFeature, String aValue,
+            AnnotationBaseFS annotation)
         throws AnnotationException
     {
         // Update the feature value
         aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
                 aFeature, aValue);
+    }
 
-        // Hide the suggestion. This is faster than having to recalculate the visibility status for
-        // the entire document or even for the part visible on screen.
-        aSuggestion
-                .hide((aAction == ACCEPTED) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
-
+    protected void recordAndPublishAcceptance(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, TypeAdapter aAdapter, AnnotationFeature aFeature,
+            AnnotationSuggestion aSuggestion, AnnotationBaseFS annotation,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
+    {
         // Log the action to the learning record
         if (!aAdapter.isSilenced()) {
             var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, aFeature, aAction,
@@ -105,6 +105,15 @@ public abstract class SuggestionSupport_ImplBase
             aAdapter.publishEvent(() -> new RecommendationAcceptedEvent(this, aDocument, aDataOwner,
                     annotation, aFeature, aSuggestion.getLabel()));
         }
+    }
+
+    protected void hideSuggestion(AnnotationSuggestion aSuggestion,
+            LearningRecordUserAction aAction)
+    {
+        // Hide the suggestion. This is faster than having to recalculate the visibility status for
+        // the entire document or even for the part visible on screen.
+        aSuggestion
+                .hide((aAction == ACCEPTED) ? FLAG_TRANSIENT_ACCEPTED : FLAG_TRANSIENT_CORRECTED);
     }
 
     private static final String AUTO_ACCEPT_ON_FIRST_ACCESS = "on-first-access";

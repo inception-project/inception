@@ -212,7 +212,7 @@ public interface FeatureSupport<T>
      */
     default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         if (labelFeature == null) {
             return null;
         }

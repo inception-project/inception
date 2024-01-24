@@ -372,7 +372,7 @@ public class InviteServiceImpl
         u.setUsername(generateRandomUsername());
         u.setUiName(aUsername);
         u.setPassword(EMPTY_PASSWORD);
-        u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+        u.setRealm(realm);
         u.setEnabled(true);
         u.setRoles(Set.of(ROLE_USER));
         userRepository.create(u);
