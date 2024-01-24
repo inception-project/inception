@@ -17,21 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -49,19 +62,31 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskScope;
@@ -73,6 +98,9 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/agreement")
 public class AgreementPage
@@ -92,10 +120,12 @@ public class AgreementPage
     private @SpringBean UserDao userRepository;
     private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
     private @SpringBean SchedulingService schedulingService;
+    private @SpringBean RepositoryProperties repositoryProperties;
 
     private AgreementForm agreementForm;
     private WebMarkupContainer resultsContainer;
     private LambdaAjaxBehavior refreshResultsBehavior;
+    private AjaxDownloadBehavior downloadBehavior;
 
     public AgreementPage(final PageParameters aPageParameters)
     {
@@ -116,6 +146,9 @@ public class AgreementPage
         add(resultsContainer = new WebMarkupContainer("resultsContainer"));
         resultsContainer.setOutputMarkupPlaceholderTag(true);
         resultsContainer.add(new EmptyPanel(MID_RESULTS));
+
+        downloadBehavior = new AjaxDownloadBehavior();
+        add(downloadBehavior);
 
         // add(new TaskMonitorPanel("runningProcesses") //
         // .setPopupMode(false) //
@@ -330,6 +363,129 @@ public class AgreementPage
         }
     }
 
+    @OnEvent
+    public void onPairwiseAgreementScoreClicked(PairwiseAgreementScoreClickedEvent aEvent)
+    {
+        // Copy the relevant information from the event to avoid having to pass the event into the
+        // lambda which would cause problems here since the event is not serializable
+        var annotator1 = aEvent.getAnnotator1();
+        var annotator2 = aEvent.getAnnotator2();
+        var currentUser = userRepository.getCurrentUser();
+
+        var measure = createSelectedMeasure(getTraits());
+        if (!(measure instanceof CodingAgreementMeasure_ImplBase)) {
+            aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+            warn("Aggreement report currently only supported for coding measures.");
+            return;
+        }
+
+        downloadBehavior.initiate(aEvent.getTarget(), "agreement.csv",
+                new PipedStreamResource((os) -> {
+                    // PipedStreamResource runs the lambda in a separate thread, so we need to make
+                    // sure the MDC is correctly set up here.
+                    try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(),
+                            currentUser)) {
+                        exportAgreement(os, annotator1, annotator2, currentUser);
+                    }
+                }));
+    }
+
+    private void exportAgreement(OutputStream aOut, String aAnnotator1, String aAnnotator2,
+            User aCurrentUser)
+    {
+        var traits = getTraits();
+        var measure = createSelectedMeasure(traits);
+
+        var states = new ArrayList<AnnotationDocumentState>();
+        states.add(AnnotationDocumentState.FINISHED);
+        if (!traits.isLimitToFinishedDocuments()) {
+            states.add(AnnotationDocumentState.IN_PROGRESS);
+        }
+
+        var allAnnDocs = documentService.listAnnotationDocumentsInState(getProject(), //
+                states.toArray(AnnotationDocumentState[]::new)).stream() //
+                .collect(groupingBy(AnnotationDocument::getDocument));
+
+        var docs = allAnnDocs.keySet().stream() //
+                .sorted(comparing(SourceDocument::getName)) //
+                .toList();
+        var countWritten = 0;
+        for (var doc : docs) {
+            try (var session = CasStorageSession.openNested()) {
+                var maybeCas1 = loadCas(doc, aAnnotator1, allAnnDocs);
+                var maybeCas2 = loadCas(doc, aAnnotator1, allAnnDocs);
+                var cas1 = maybeCas1.isPresent() ? maybeCas1.get() : loadInitialCas(doc);
+                var cas2 = maybeCas2.isPresent() ? maybeCas2.get() : loadInitialCas(doc);
+
+                var casMap = new LinkedHashMap<String, CAS>();
+                casMap.put(aAnnotator1, cas1);
+                casMap.put(aAnnotator2, cas2);
+                var res = measure.getAgreement(casMap);
+                AgreementUtils.generateCsvReport(aOut, (FullCodingAgreementResult) res,
+                        countWritten == 0);
+                countWritten++;
+            }
+            catch (Exception e) {
+                LOG.error("Unable to load data", e);
+            }
+        }
+    }
+
+    private DefaultAgreementTraits getTraits()
+    {
+        return (DefaultAgreementTraits) agreementForm.traitsContainer.get(MID_TRAITS)
+                .getDefaultModelObject();
+    }
+
+    private AgreementMeasure createSelectedMeasure(DefaultAgreementTraits traits)
+    {
+        AgreementMeasureSupport ams = agreementRegistry.getAgreementMeasureSupport(
+                agreementForm.measureDropDown.getModelObject().getKey());
+
+        var measure = ams.createMeasure(agreementForm.featureList.getModelObject(), traits);
+        return measure;
+    }
+
+    private CAS loadInitialCas(SourceDocument aDocument) throws IOException
+    {
+        var cas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
+                SHARED_READ_ONLY_ACCESS);
+
+        // Set the CAS name in the DocumentMetaData so that we can pick it
+        // up in the Diff position for the purpose of debugging / transparency.
+        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
+        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
+        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
+
+        return cas;
+    }
+
+    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
+        throws IOException
+    {
+        var annDocs = aAllAnnDocs.get(aDocument);
+
+        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+            return Optional.empty();
+        }
+
+        if (!documentService.existsCas(aDocument, aDataOwner)) {
+            Optional.empty();
+        }
+
+        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+                SHARED_READ_ONLY_ACCESS);
+
+        // Set the CAS name in the DocumentMetaData so that we can pick it
+        // up in the Diff position for the purpose of debugging / transparency.
+        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
+        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
+        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
+
+        return Optional.of(cas);
+    }
+
     static class AgreementFormModel
         implements Serializable
     {
@@ -338,6 +494,37 @@ public class AgreementPage
         AnnotationFeature feature;
 
         Pair<String, String> measure;
+    }
+
+    // FIXME: Would be good to move this somewhere else to make it properly reusable
+    static class DefaultMdcSetup
+        implements AutoCloseable
+    {
+
+        public DefaultMdcSetup(RepositoryProperties repositoryProperties, Project aProject,
+                User aUser)
+        {
+            // We are in a new thread. Set up thread-specific MDC
+            if (repositoryProperties != null) {
+                MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            }
+
+            if (aUser != null) {
+                MDC.put(KEY_USERNAME, aUser.getUsername());
+            }
+
+            if (aProject != null) {
+                MDC.put(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+            }
+        }
+
+        @Override
+        public void close()
+        {
+            MDC.remove(KEY_REPOSITORY_PATH);
+            MDC.remove(KEY_USERNAME);
+            MDC.remove(KEY_PROJECT_ID);
+        }
     }
 
     // private final DropDownChoice<AgreementReportExportFormat> formatField;

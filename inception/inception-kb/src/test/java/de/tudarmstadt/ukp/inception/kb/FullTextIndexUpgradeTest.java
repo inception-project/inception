@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -104,7 +105,7 @@ public class FullTextIndexUpgradeTest
         project = new Project("test");
         entityManager.persist(project);
 
-        repoProperties = new RepositoryProperties();
+        repoProperties = new RepositoryPropertiesImpl();
         kbProperties = new KnowledgeBasePropertiesImpl();
         repoProperties.setPath(new File(WORK_DIR));
     }

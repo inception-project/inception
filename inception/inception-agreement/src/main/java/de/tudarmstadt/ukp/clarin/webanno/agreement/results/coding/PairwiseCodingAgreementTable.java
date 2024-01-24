@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -42,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.PairwiseAgreementScoreClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
@@ -168,7 +173,7 @@ public class PairwiseCodingAgreementTable
 
     private Label makeLowerDiagonalCellLabel(User aRater1, User aRater2)
     {
-        var result = getModelObject().getStudy(aRater1.getUsername(), aRater2.getUsername());
+        var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
         if (result == null) {
             return new Label("label", "-");
@@ -198,7 +203,7 @@ public class PairwiseCodingAgreementTable
 
     private Label makeUpperDiagonalCellLabel(User aRater1, User aRater2)
     {
-        var result = getModelObject().getStudy(aRater1.getUsername(), aRater2.getUsername());
+        var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
         if (result == null) {
             return new Label("label", "no data");
@@ -252,6 +257,15 @@ public class PairwiseCodingAgreementTable
         l.add(tooltip);
         l.add(new AttributeAppender("style", "cursor: pointer", ";"));
 
+        l.add(AjaxEventBehavior.onEvent(CLICK,
+                _target -> actionScoreClicked(_target, aRater1, aRater2)));
+
         return l;
+    }
+
+    private void actionScoreClicked(AjaxRequestTarget aTarget, User aRater1, User aRater2)
+    {
+        send(this, BUBBLE, new PairwiseAgreementScoreClickedEvent(aTarget, aRater1.getUsername(),
+                aRater2.getUsername()));
     }
 }

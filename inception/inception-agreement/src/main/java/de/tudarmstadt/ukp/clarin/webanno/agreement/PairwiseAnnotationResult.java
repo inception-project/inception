@@ -32,7 +32,7 @@ public class PairwiseAnnotationResult
     private static final long serialVersionUID = -6943850667308982795L;
 
     private final Set<String> raters = new TreeSet<>();
-    private final Map<String, BasicAgreementResult> results = new HashMap<>();
+    private final Map<String, AgreementSummary> results = new HashMap<>();
 
     private final AnnotationFeature feature;
     private final DefaultAgreementTraits traits;
@@ -58,16 +58,23 @@ public class PairwiseAnnotationResult
         return raters;
     }
 
-    public BasicAgreementResult getStudy(String aAnnotator1, String aAnnotator2)
+    public AgreementSummary getResult(String aAnnotator1, String aAnnotator2)
     {
         return results.get(makeKey(aAnnotator1, aAnnotator2));
     }
 
-    public void add(String aAnnotator1, String aAnnotator2, BasicAgreementResult aRes)
+    public void mergeResult(String aAnnotator1, String aAnnotator2, AgreementSummary aRes)
     {
         raters.add(aAnnotator1);
         raters.add(aAnnotator2);
-        results.put(makeKey(aAnnotator1, aAnnotator2), aRes);
+
+        var existingRes = getResult(aAnnotator1, aAnnotator2);
+        if (existingRes != null) {
+            existingRes.merge(aRes);
+        }
+        else {
+            results.put(makeKey(aAnnotator1, aAnnotator2), aRes);
+        }
     }
 
     private String makeKey(String aKey1, String aKey2)

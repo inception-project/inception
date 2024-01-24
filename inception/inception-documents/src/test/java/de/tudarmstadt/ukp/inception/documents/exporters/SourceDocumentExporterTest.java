@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,7 +69,7 @@ public class SourceDocumentExporterTest
                 .withName("Test Project") //
                 .build();
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
 
         when(documentService.listSourceDocuments(any())).then(invocation -> {
             return sourceDocuments();

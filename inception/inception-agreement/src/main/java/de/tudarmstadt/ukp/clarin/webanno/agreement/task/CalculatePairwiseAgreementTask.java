@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
@@ -33,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.BasicAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -62,7 +63,7 @@ public class CalculatePairwiseAgreementTask
     private final AgreementMeasure<?> measure;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-    private PairwiseAnnotationResult result;
+    private PairwiseAnnotationResult summary;
 
     public CalculatePairwiseAgreementTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -78,7 +79,7 @@ public class CalculatePairwiseAgreementTask
     @Override
     public void execute()
     {
-        result = new PairwiseAnnotationResult(feature, traits);
+        summary = new PairwiseAnnotationResult(feature, traits);
 
         var maxProgress = allAnnDocs.size();
         var progress = 0;
@@ -86,46 +87,55 @@ public class CalculatePairwiseAgreementTask
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
+
         for (var doc : docs) {
             var monitor = getMonitor();
             if (monitor.isCancelled()) {
                 break;
             }
 
-            var annDocs = allAnnDocs.get(doc);
-
             monitor.setProgressWithMessage(progress, maxProgress,
                     LogMessage.info(this, doc.getName()));
 
             try (var session = CasStorageSession.openNested()) {
+                AgreementSummary initialAgreementResult = null;
+
                 for (int m = 0; m < annotators.size(); m++) {
                     var annotator1 = annotators.get(m).getUsername();
-                    if (annDocs.stream().noneMatch(a -> annotator1.equals(a.getUser()))) {
-                        continue;
-                    }
-
-                    var cas1 = loadCas(doc, annotator1);
+                    var maybeCas1 = loadCas(doc, annotator1, allAnnDocs);
 
                     for (int n = 0; n < annotators.size(); n++) {
                         var annotator2 = annotators.get(n).getUsername();
-
-                        var cas2 = loadCas(doc, annotator2);
+                        var maybeCas2 = loadCas(doc, annotator2, allAnnDocs);
 
                         // Triangle matrix mirrored
                         if (n < m) {
-                            var casMap = new LinkedHashMap<String, CAS>();
-                            casMap.put(annotator1, cas1);
-                            casMap.put(annotator2, cas2);
-                            var res = BasicAgreementResult.of(measure.getAgreement(casMap));
-
-                            var existingRes = result.getStudy(annotators.get(m).getUsername(),
-                                    annotators.get(n).getUsername());
-                            if (existingRes != null) {
-                                existingRes.merge(res);
+                            // So, theoretically, if cas1 and cas2 are both empty, then both are
+                            // the initial CAS - so there must be full agreement. However, we
+                            // would still need to count the units, categories, etc.
+                            if (maybeCas1.isEmpty() && maybeCas2.isEmpty()) {
+                                if (initialAgreementResult == null) {
+                                    var casMap = new LinkedHashMap<String, CAS>();
+                                    casMap.put("INITIAL1", loadInitialCas(doc));
+                                    casMap.put("INITIAL2", loadInitialCas(doc));
+                                    initialAgreementResult = AgreementSummary
+                                            .of(measure.getAgreement(casMap));
+                                }
+                                var res = initialAgreementResult.remap(
+                                        Map.of("INITIAL1", annotator1, "INITIAL2", annotator2));
+                                summary.mergeResult(annotator1, annotator2, res);
                             }
                             else {
-                                result.add(annotators.get(m).getUsername(),
-                                        annotators.get(n).getUsername(), res);
+                                var cas1 = maybeCas1.isPresent() ? maybeCas1.get()
+                                        : loadInitialCas(doc);
+                                var cas2 = maybeCas2.isPresent() ? maybeCas2.get()
+                                        : loadInitialCas(doc);
+
+                                var casMap = new LinkedHashMap<String, CAS>();
+                                casMap.put(annotator1, cas1);
+                                casMap.put(annotator2, cas2);
+                                var res = AgreementSummary.of(measure.getAgreement(casMap));
+                                summary.mergeResult(annotator1, annotator2, res);
                             }
                         }
                     }
@@ -139,23 +149,49 @@ public class CalculatePairwiseAgreementTask
         }
     }
 
-    private CAS loadCas(SourceDocument doc, String annotator1) throws IOException
+    private CAS loadInitialCas(SourceDocument aDocument) throws IOException
     {
-        var cas = documentService.readAnnotationCas(doc, annotator1, AUTO_CAS_UPGRADE,
+        var cas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it
         // up in the Diff position for the purpose of debugging / transparency.
         var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-        FSUtil.setFeature(dmd, "documentId", doc.getName());
-        FSUtil.setFeature(dmd, "collectionId", doc.getProject().getName());
+        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
+        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
 
         return cas;
     }
 
+    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
+        throws IOException
+    {
+        var annDocs = aAllAnnDocs.get(aDocument);
+
+        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+            return Optional.empty();
+        }
+
+        if (!documentService.existsCas(aDocument, aDataOwner)) {
+            Optional.empty();
+        }
+
+        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+                SHARED_READ_ONLY_ACCESS);
+
+        // Set the CAS name in the DocumentMetaData so that we can pick it
+        // up in the Diff position for the purpose of debugging / transparency.
+        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
+        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
+        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
+
+        return Optional.of(cas);
+    }
+
     public PairwiseAnnotationResult getResult()
     {
-        return result;
+        return summary;
     }
 
     public static Builder<Builder<?>> builder()

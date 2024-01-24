@@ -15,14 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.documents.api;
+package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event;
 
-import java.io.File;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-public interface RepositoryProperties
+/**
+ * Fired when a user clicks on a pairwise agreement score.
+ */
+public class PairwiseAgreementScoreClickedEvent
+    extends AbstractAjaxAwareEvent
 {
-    File getPath();
+    private final String annotator1;
+    private final String annotator2;
 
-    @Deprecated
-    void setPath(File aPath);
+    public PairwiseAgreementScoreClickedEvent(AjaxRequestTarget aTarget, String aAnnotator1,
+            String aAnnotator2)
+    {
+        super(aTarget);
+
+        annotator1 = aAnnotator1;
+        annotator2 = aAnnotator2;
+    }
+
+    public String getAnnotator1()
+    {
+        return annotator1;
+    }
+
+    public String getAnnotator2()
+    {
+        return annotator2;
+    }
 }

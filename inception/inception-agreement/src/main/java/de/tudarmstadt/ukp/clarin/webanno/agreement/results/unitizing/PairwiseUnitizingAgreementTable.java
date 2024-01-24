@@ -43,6 +43,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -62,7 +63,7 @@ public class PairwiseUnitizingAgreementTable
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
-    private final RefreshingView<String> rows;
+    private final RefreshingView<User> rows;
 
     public PairwiseUnitizingAgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
     {
@@ -78,29 +79,34 @@ public class PairwiseUnitizingAgreementTable
 
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
         // of the table.
-        final IModel<List<String>> ratersAdapter = LoadableDetachableModel.of(() -> {
-            var raters = new ArrayList<String>();
+        final IModel<List<User>> ratersAdapter = LoadableDetachableModel.of(() -> {
+            var raters = new ArrayList<User>();
             if (getModelObject() != null) {
                 raters.add(null);
-                raters.addAll(getModelObject().getRaters());
+                for (var rater : getModelObject().getRaters()) {
+                    var user = userRepository.get(rater);
+                    if (user != null) {
+                        raters.add(user);
+                    }
+                }
             }
             return raters;
         });
 
-        rows = new DefaultRefreshingView<String>("rows", ratersAdapter)
+        rows = new DefaultRefreshingView<User>("rows", ratersAdapter)
         {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(final Item<String> aRowItem)
+            protected void populateItem(final Item<User> aRowItem)
             {
                 // Render regular row
-                aRowItem.add(new DefaultRefreshingView<String>("cells", ratersAdapter)
+                aRowItem.add(new DefaultRefreshingView<User>("cells", ratersAdapter)
                 {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    protected void populateItem(Item<String> aCellItem)
+                    protected void populateItem(Item<User> aCellItem)
                     {
                         aCellItem.setRenderBodyOnly(true);
 
@@ -125,13 +131,11 @@ public class PairwiseUnitizingAgreementTable
                         }
                         // Raters header horizontally
                         else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
-                            cell.add(new Label("label",
-                                    userRepository.get(aCellItem.getModelObject()).getUiName()));
+                            cell.add(new Label("label", aCellItem.getModelObject().getUiName()));
                         }
                         // Raters header vertically
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell.add(new Label("label",
-                                    userRepository.get(aRowItem.getModelObject()).getUiName()));
+                            cell.add(new Label("label", aRowItem.getModelObject().getUiName()));
                         }
                         // Upper diagonal
                         else if (aCellItem.getIndex() > aRowItem.getIndex()) {
@@ -162,14 +166,14 @@ public class PairwiseUnitizingAgreementTable
         add(rows);
     }
 
-    private Label makeLowerDiagonalCellLabel(String aRater1, String aRater2)
+    private Label makeLowerDiagonalCellLabel(User aRater1, User aRater2)
     {
         return new Label("label");
     }
 
-    private Label makeUpperDiagonalCellLabel(String aRater1, String aRater2)
+    private Label makeUpperDiagonalCellLabel(User aRater1, User aRater2)
     {
-        var result = getModelObject().getStudy(aRater1, aRater2);
+        var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
         if (result == null) {
             return new Label("label", "no data");
@@ -188,22 +192,22 @@ public class PairwiseUnitizingAgreementTable
             label = "no labels";
         }
         else if (noDataRater1) {
-            label = "no labels from " + casGroupId1;
+            label = "no labels from " + aRater1.getUiName();
         }
         else if (noDataRater2) {
-            label = "no labels from " + casGroupId2;
+            label = "no labels from " + aRater2.getUiName();
         }
         else {
             label = String.format("%.2f", result.getAgreement());
         }
 
-        var tooltipTitle = casGroupId1 + '/' + casGroupId2;
+        var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
         var tooltipContent = "Positions annotated:\n"
-                + String.format("- %s: %d/%d%n", casGroupId1, result.getNonNullCount(casGroupId1),
-                        result.getItemCount(casGroupId1))
-                + String.format("- %s: %d/%d%n", casGroupId2, result.getNonNullCount(casGroupId2),
-                        result.getItemCount(casGroupId2))
+                + String.format("- %s: %d/%d%n", aRater1.getUiName(),
+                        result.getNonNullCount(casGroupId1), result.getItemCount(casGroupId1))
+                + String.format("- %s: %d/%d%n", aRater2.getUiName(),
+                        result.getNonNullCount(casGroupId2), result.getItemCount(casGroupId2))
                 + String.format("Distinct labels: %d%n", result.getCategoryCount());
 
         var l = new Label("label", Model.of(label));

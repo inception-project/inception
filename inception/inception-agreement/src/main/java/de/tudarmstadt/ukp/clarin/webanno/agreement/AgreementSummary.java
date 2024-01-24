@@ -28,7 +28,7 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 
-public class BasicAgreementResult
+public class AgreementSummary
     implements Serializable
 {
     private static final long serialVersionUID = 5994827594084192896L;
@@ -52,37 +52,77 @@ public class BasicAgreementResult
     private int relevantSetCount;
     private int completeSetCount;
 
-    public void merge(BasicAgreementResult aResult)
+    public AgreementSummary remap(Map<String, String> aMapping)
+    {
+        return new AgreementSummary(this, aMapping);
+    }
+
+    private AgreementSummary(AgreementSummary aSummary, Map<String, String> aMapping)
+    {
+        type = aSummary.type;
+        feature = aSummary.feature;
+        excludeIncomplete = aSummary.excludeIncomplete;
+
+        aSummary.casGroupIds.stream().map(aMapping::get).sorted().forEach(casGroupIds::add);
+
+        agreements.addAll(aSummary.agreements);
+        categories.addAll(aSummary.categories);
+
+        for (var e : aSummary.itemCounts.entrySet()) {
+            itemCounts.put(aMapping.get(e.getKey()), e.getValue());
+        }
+
+        for (var e : aSummary.nonNullContentCounts.entrySet()) {
+            nonNullContentCounts.put(aMapping.get(e.getKey()), e.getValue());
+        }
+
+        for (var e : aSummary.allNull.entrySet()) {
+            allNull.put(aMapping.get(e.getKey()), e.getValue());
+        }
+
+        empty = aSummary.empty;
+
+        incompleteSetsByPosition = aSummary.incompleteSetsByPosition;
+        incompleteSetsByLabel = aSummary.incompleteSetsByLabel;
+        pluralitySets = aSummary.pluralitySets;
+        relevantSetCount = aSummary.relevantSetCount;
+        completeSetCount = aSummary.completeSetCount;
+    }
+
+    public void merge(AgreementSummary aResult)
     {
         if (!type.equals(aResult.type)) {
             throw new IllegalArgumentException("All merged results must have the same type [" + type
-                    + "] but encounterd [" + aResult.type + "]");
+                    + "] but encountered [" + aResult.type + "]");
         }
 
         if (!feature.equals(aResult.feature)) {
             throw new IllegalArgumentException("All merged results must have the same feature ["
-                    + feature + "] but encounterd [" + aResult.feature + "]");
+                    + feature + "] but encountered [" + aResult.feature + "]");
         }
 
         if (excludeIncomplete != aResult.excludeIncomplete) {
             throw new IllegalArgumentException(
                     "All merged results must have the same excludeIncomplete [" + excludeIncomplete
-                            + "] but encounterd [" + aResult.excludeIncomplete + "]");
+                            + "] but encountered [" + aResult.excludeIncomplete + "]");
         }
 
         if (!casGroupIds.equals(aResult.casGroupIds)) {
             throw new IllegalArgumentException("All merged results must have the same casGroupIds "
-                    + casGroupIds + " but encounterd " + aResult.casGroupIds);
+                    + casGroupIds + " but encountered " + aResult.casGroupIds);
         }
 
         agreements.addAll(aResult.agreements);
         categories.addAll(aResult.categories);
+
         for (var e : aResult.itemCounts.entrySet()) {
             itemCounts.merge(e.getKey(), e.getValue(), Long::sum);
         }
+
         for (var e : aResult.nonNullContentCounts.entrySet()) {
             nonNullContentCounts.merge(e.getKey(), e.getValue(), Long::sum);
         }
+
         for (var e : aResult.allNull.entrySet()) {
             allNull.merge(e.getKey(), e.getValue(), Boolean::logicalOr);
         }
@@ -110,21 +150,21 @@ public class BasicAgreementResult
         }
     }
 
-    public static BasicAgreementResult of(Serializable aResult)
+    public static AgreementSummary of(Serializable aResult)
     {
         if (aResult instanceof FullCodingAgreementResult result) {
-            return new BasicAgreementResult(result);
+            return new AgreementSummary(result);
         }
 
         if (aResult instanceof FullUnitizingAgreementResult result) {
-            return new BasicAgreementResult(result);
+            return new AgreementSummary(result);
         }
 
         throw new IllegalArgumentException(
                 "Unsupported result type: [" + aResult.getClass().getName() + "]");
     }
 
-    public BasicAgreementResult(FullUnitizingAgreementResult aResult)
+    public AgreementSummary(FullUnitizingAgreementResult aResult)
     {
         this((FullAgreementResult_ImplBase<?>) aResult);
 
@@ -135,7 +175,7 @@ public class BasicAgreementResult
         pluralitySets = -1;
     }
 
-    public BasicAgreementResult(FullCodingAgreementResult aResult)
+    public AgreementSummary(FullCodingAgreementResult aResult)
     {
         this((FullAgreementResult_ImplBase<?>) aResult);
 
@@ -146,12 +186,12 @@ public class BasicAgreementResult
         completeSetCount = aResult.getCompleteSetCount();
     }
 
-    private BasicAgreementResult(FullAgreementResult_ImplBase<?> aResult)
+    private AgreementSummary(FullAgreementResult_ImplBase<?> aResult)
     {
         type = aResult.getType();
         feature = aResult.getFeature();
-        excludeIncomplete = isExcludeIncomplete();
-        casGroupIds.addAll(aResult.casGroupIds);
+        excludeIncomplete = aResult.isExcludeIncomplete();
+        aResult.casGroupIds.stream().sorted().forEach(casGroupIds::add);
         agreements.add(aResult.agreement);
         aResult.getCategories().forEach(categories::add);
         empty = aResult.isEmpty();

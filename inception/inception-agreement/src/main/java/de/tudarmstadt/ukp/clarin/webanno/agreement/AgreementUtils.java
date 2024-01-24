@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getFeature;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static org.apache.commons.csv.CSVFormat.RFC4180;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -74,9 +74,9 @@ public class AgreementUtils
         return null;
     }
 
-    private static FullCodingAgreementResult makeCodingStudy(CasDiff aDiff, Collection<String> aUsers,
-            String aType, String aFeature, Set<String> aTagSet, boolean aExcludeIncomplete,
-            boolean aNullLabelsAsEmpty, Map<String, CAS> aCasMap)
+    private static FullCodingAgreementResult makeCodingStudy(CasDiff aDiff,
+            Collection<String> aUsers, String aType, String aFeature, Set<String> aTagSet,
+            boolean aExcludeIncomplete, boolean aNullLabelsAsEmpty, Map<String, CAS> aCasMap)
     {
         var users = aUsers.stream().sorted().toList();
 
@@ -315,7 +315,9 @@ public class AgreementUtils
         }
     }
 
-    private static void toCSV(CSVPrinter aOut, FullCodingAgreementResult aAgreement) throws IOException
+    private static void toCSV(CSVPrinter aOut, FullCodingAgreementResult aAgreement,
+            boolean aAddHeader)
+        throws IOException
     {
         try {
             aOut.printComment(String.format("Category count: %d%n", aAgreement.getCategoryCount()));
@@ -337,7 +339,7 @@ public class AgreementUtils
                 String.format("Relevant position count: %d%n", aAgreement.getRelevantSetCount()));
 
         // aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
-        configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets());
+        configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets(), aAddHeader);
         //
         // aOut.printf("%n== Incomplete sets (by position): %d == %n",
         // aAgreement.getIncompleteSetsByPosition().size());
@@ -385,13 +387,16 @@ public class AgreementUtils
     }
 
     private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
+            List<ConfigurationSet> aSets, boolean aIncludeHeader)
         throws IOException
     {
-        List<String> headers = new ArrayList<>(
-                asList("Type", "Collection", "Document", "Layer", "Feature", "Position"));
-        headers.addAll(aAgreement.getCasGroupIds());
-        aOut.printRecord(headers);
+        if (aIncludeHeader) {
+            var headers = new ArrayList<>(
+                    asList("Type", "Collection", "Document", "Layer", "Feature", "Position"));
+            headers.addAll(aAgreement.getCasGroupIds());
+            aOut.printRecord(headers);
+        }
 
         int i = 0;
         for (var item : aAgreement.getStudy().getItems()) {
@@ -412,7 +417,8 @@ public class AgreementUtils
     }
 
     private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
+            List<ConfigurationSet> aSets)
     {
         int i = 0;
         for (var item : aAgreement.getStudy().getItems()) {
@@ -430,9 +436,10 @@ public class AgreementUtils
     }
 
     private static void dumpAgreementConfigurationSets(PrintStream aOut,
-            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
+            FullAgreementResult_ImplBase<ICodingAnnotationStudy> aAgreement,
+            List<ConfigurationSet> aSets)
     {
-        for (ConfigurationSet cfgSet : aSets) {
+        for (var cfgSet : aSets) {
             StringBuilder sb = new StringBuilder();
             sb.append(cfgSet.getPosition());
             for (Configuration cfg : cfgSet.getConfigurations()) {
@@ -445,14 +452,13 @@ public class AgreementUtils
         }
     }
 
-    public static InputStream generateCsvReport(FullCodingAgreementResult aResult) throws IOException
+    public static void generateCsvReport(OutputStream aOut, FullCodingAgreementResult aResult,
+            boolean aIncludeHeader)
+        throws IOException
     {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
-                CSVFormat.RFC4180)) {
-            toCSV(printer, aResult);
+        try (var printer = new CSVPrinter(
+                new OutputStreamWriter(CloseShieldOutputStream.wrap(aOut), UTF_8), RFC4180)) {
+            toCSV(printer, aResult, aIncludeHeader);
         }
-
-        return new ByteArrayInputStream(buf.toByteArray());
     }
 }
