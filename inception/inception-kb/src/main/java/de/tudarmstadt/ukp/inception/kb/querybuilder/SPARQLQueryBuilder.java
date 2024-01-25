@@ -88,7 +88,6 @@ import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.TupleQuery;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
@@ -870,10 +869,12 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            projections.add(VAR_SCORE);
+
             valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(sanitizedValue)).andHas(LUCENE_PROPERTY,
-                                    VAR_MATCH_TERM_PROPERTY))
+                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
+                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
+                            .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                     .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
@@ -902,6 +903,8 @@ public class SPARQLQueryBuilder
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
+
+            projections.add(VAR_SCORE);
 
             valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
@@ -1140,6 +1143,8 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            projections.add(VAR_SCORE);
+
             valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(getLimit()));
         }
@@ -1167,6 +1172,8 @@ public class SPARQLQueryBuilder
             labelFilterExpressions.add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
             labelFilterExpressions.add(matchKbLanguage(VAR_MATCH_TERM));
 
+            projections.add(VAR_SCORE);
+
             // If a KB item has multiple labels, we want to return only the ones which actually
             // match the query term such that the user is not confused that the results contain
             // items that don't match the query (even though they do through a label that is not
@@ -1175,7 +1182,8 @@ public class SPARQLQueryBuilder
             // out as part of the query.
             valuePatterns.add(VAR_SUBJECT //
                     .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
-                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY)
+                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
+                            .andHas(LUCENE_SCORE, VAR_SCORE) //
                             .andHas(LUCENE_SNIPPET, var("snippet")))
                     .and(bind(
                             function(REPLACE,
@@ -1267,10 +1275,12 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            projections.add(VAR_SCORE);
+
             valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
-                                    .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
+                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*")) //
+                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
+                            .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                     .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
@@ -1298,6 +1308,8 @@ public class SPARQLQueryBuilder
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
+
+            projections.add(VAR_SCORE);
 
             valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
@@ -1560,14 +1572,15 @@ public class SPARQLQueryBuilder
             queryString += "*";
         }
 
+        projections.add(VAR_SCORE);
+
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                VAR_SUBJECT
-                        .has(FTS_LUCENE,
-                                bNode(LUCENE_QUERY, literalOf(queryString)).andHas(LUCENE_PROPERTY,
-                                        VAR_MATCH_TERM_PROPERTY))
+                VAR_SUBJECT.has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
+                        .andHas(LUCENE_SCORE, VAR_SCORE)
+                        .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
                         .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
@@ -1596,6 +1609,8 @@ public class SPARQLQueryBuilder
         if (!aPrefixQuery.endsWith(" ")) {
             queryString += "*";
         }
+
+        projections.add(VAR_SCORE);
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
@@ -2101,28 +2116,29 @@ public class SPARQLQueryBuilder
     private List<KBHandle> evaluateListQuery(TupleQuery tupleQuery, boolean aAll)
         throws QueryEvaluationException
     {
-        try (TupleQueryResult result = tupleQuery.evaluate()) {
-            List<KBHandle> handles = new ArrayList<>();
+        try (var result = tupleQuery.evaluate()) {
+            var handles = new ArrayList<KBHandle>();
             while (result.hasNext()) {
-                BindingSet bindings = result.next();
+                var bindings = result.next();
                 if (bindings.size() == 0) {
                     continue;
                 }
 
                 // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
 
-                String id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
+                var id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
                 if (!id.contains(":") || (!aAll && hasImplicitNamespace(kb, id))) {
                     continue;
                 }
 
-                KBHandle handle = new KBHandle(id);
+                var handle = new KBHandle(id);
                 handle.setKB(kb);
 
                 extractLabel(handle, bindings);
                 extractDescription(handle, bindings);
                 extractRange(handle, bindings);
                 extractDomain(handle, bindings);
+                extractScore(handle, bindings);
 
                 handles.add(handle);
             }
@@ -2240,6 +2256,14 @@ public class SPARQLQueryBuilder
         Binding range = aSourceBindings.getBinding(VAR_RANGE_NAME);
         if (range != null) {
             aTargetHandle.setRange(range.getValue().stringValue());
+        }
+    }
+
+    private void extractScore(KBHandle aTargetHandle, BindingSet aSourceBindings)
+    {
+        Binding score = aSourceBindings.getBinding(VAR_SCORE_NAME);
+        if (score != null) {
+            aTargetHandle.setScore(Double.valueOf(score.getValue().stringValue()));
         }
     }
 

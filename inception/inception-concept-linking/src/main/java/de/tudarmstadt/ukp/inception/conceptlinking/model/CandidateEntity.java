@@ -126,6 +126,11 @@ public class CandidateEntity
     public static final Key<Double> KEY_ID_RANK = new Key<>("idRank", 0.0d);
 
     /**
+     * FTS score - score assigned by the KB FTS (if any)
+     */
+    public static final Key<Double> KEY_FTS_SCORE = new Key<>("ftsScore", 0.0d);
+
+    /**
      * in-link count of wikipedia article of IRI
      */
     public static final Key<Integer> KEY_FREQUENCY = new Key<>("frequency", 0);
