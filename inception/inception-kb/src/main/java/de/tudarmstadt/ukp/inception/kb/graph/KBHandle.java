@@ -335,6 +335,9 @@ public class KBHandle
         if (range != null) {
             builder.append("range", range);
         }
+        if (score != 0.0) {
+            builder.append("score", score);
+        }
         return builder.toString();
     }
 }
