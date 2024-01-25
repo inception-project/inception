@@ -23,13 +23,14 @@ import static java.lang.String.format;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.authorization.Action;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -48,7 +49,7 @@ public class TaskMonitorPanel
     private @SpringBean ServletContext servletContext;
 
     private boolean popupMode = true;
-    private boolean keepRemovedTasks = false;
+    private boolean showFinishedTasks = true;
     private String typePattern = "";
 
     public TaskMonitorPanel(String aId)
@@ -63,9 +64,9 @@ public class TaskMonitorPanel
         return this;
     }
 
-    public TaskMonitorPanel setKeepRemovedTasks(boolean aKeepRemovedTasks)
+    public TaskMonitorPanel setShowFinishedTasks(boolean aKeepRemovedTasks)
     {
-        keepRemovedTasks = aKeepRemovedTasks;
+        showFinishedTasks = aKeepRemovedTasks;
         return this;
     }
 
@@ -89,7 +90,7 @@ public class TaskMonitorPanel
         setDefaultModel(Model.ofMap(Map.of( //
                 "csrfToken", getCsrfTokenFromSession(), //
                 "popupMode", popupMode, //
-                "keepRemovedTasks", keepRemovedTasks, //
+                "showFinishedTasks", showFinishedTasks, //
                 "typePattern", typePattern, //
                 "endpointUrl", constructEndpointUrl(), //
                 "wsEndpointUrl", constructWsEndpointUrl(), //
@@ -114,12 +115,16 @@ public class TaskMonitorPanel
 
     public String getCsrfTokenFromSession()
     {
+        var httpRequest = (HttpServletRequest) RequestCycle.get().getRequest()
+                .getContainerRequest();
+        var httpResponse = (HttpServletResponse) RequestCycle.get().getResponse()
+                .getContainerResponse();
+
         var csrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        var csrfToken = csrfTokenRepository.loadToken(
-                ((ServletWebRequest) RequestCycle.get().getRequest()).getContainerRequest());
+        var csrfToken = csrfTokenRepository.loadDeferredToken(httpRequest, httpResponse);
 
         if (csrfToken != null) {
-            return csrfToken.getToken();
+            return csrfToken.get().getToken();
         }
         else {
             return "";

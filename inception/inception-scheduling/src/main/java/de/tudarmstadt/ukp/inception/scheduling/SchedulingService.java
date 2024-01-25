@@ -43,7 +43,7 @@ public interface SchedulingService
     /**
      * @return tasks which are no longer running (completed, failed).
      */
-    List<Task> getEndedTasks();
+    List<Task> getTasksPendingAcknowledgment();
 
     List<Task> getScheduledAndRunningTasks();
 

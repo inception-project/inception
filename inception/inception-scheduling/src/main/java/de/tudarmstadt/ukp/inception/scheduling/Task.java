@@ -173,7 +173,6 @@ public abstract class Task
             runSync();
         }
         finally {
-            destroy();
             MDC.remove(KEY_REPOSITORY_PATH);
             MDC.remove(KEY_USERNAME);
             MDC.remove(KEY_PROJECT_ID);
