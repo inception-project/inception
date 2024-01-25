@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -71,7 +72,7 @@ public class BulkPredictionTask
 
     public BulkPredictionTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aBuilder.withType(TYPE).withCancellable(true));
+        super(aBuilder.withType(TYPE).withCancellable(true).withScope(PROJECT));
 
         recommender = aBuilder.recommender;
         dataOwner = aBuilder.dataOwner;
@@ -231,7 +232,12 @@ public class BulkPredictionTask
 
         public BulkPredictionTask build()
         {
-            Validate.notNull(sessionOwner, "BulkPredictionTask requires a user");
+            withProject(recommender.getProject());
+
+            Validate.notNull(sessionOwner, "BulkPredictionTask requires a session owner");
+            Validate.notNull(dataOwner, "BulkPredictionTask requires a data owner");
+            Validate.notNull(recommender, "BulkPredictionTask requires a recommender");
+            Validate.notNull(project, "BulkPredictionTask requires a project");
 
             return new BulkPredictionTask(this);
         }
