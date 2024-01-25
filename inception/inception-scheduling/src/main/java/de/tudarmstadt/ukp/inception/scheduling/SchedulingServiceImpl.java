@@ -74,7 +74,7 @@ public class SchedulingServiceImpl
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
-    private final List<Task> endedTasks;
+    private final List<Task> pendingAcknowledgement;
     private final Set<Project> deletionPending;
 
     @Autowired
@@ -87,7 +87,7 @@ public class SchedulingServiceImpl
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
-        endedTasks = Collections.synchronizedList(new ArrayList<>());
+        pendingAcknowledgement = Collections.synchronizedList(new ArrayList<>());
         deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
@@ -106,12 +106,22 @@ public class SchedulingServiceImpl
         Validate.notNull(aRunnable, "Task cannot be null");
 
         var task = (Task) aRunnable;
-        runningTasks.remove(aRunnable);
+
         LOG.debug("Ended task [{}]: {}", task, task.getMonitor().getState());
-        if (!task.getMonitor().isCancelled() && task.getScope().isKeepAfterEnded()) {
-            endedTasks.add(task);
-        }
+        handleTaskEnded(task);
+
         scheduleEligibleTasks();
+    }
+
+    private void handleTaskEnded(Task aTask)
+    {
+        runningTasks.remove(aTask);
+        if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
+            pendingAcknowledgement.add(aTask);
+        }
+        else {
+            aTask.destroy();
+        }
     }
 
     /**
@@ -148,20 +158,21 @@ public class SchedulingServiceImpl
     }
 
     /**
-     * @return tasks which are no longer running (completed, failed).
+     * @return tasks which are no longer running (completed, failed) and which require the user to
+     *         acknowledge the result.
      */
     @Override
-    public List<Task> getEndedTasks()
+    public List<Task> getTasksPendingAcknowledgment()
     {
         // We return copy here, as else the list the receiver sees might be updated
         // when new tasks are running or existing ones stopped.
-        return new ArrayList<>(endedTasks);
+        return new ArrayList<>(pendingAcknowledgement);
     }
 
     @Override
     public List<Task> getScheduledAndRunningTasks()
     {
-        List<Task> result = new ArrayList<>();
+        var result = new ArrayList<Task>();
         result.addAll(getScheduledTasks());
         result.addAll(getRunningTasks());
         return result;
@@ -170,10 +181,11 @@ public class SchedulingServiceImpl
     @Override
     public List<Task> getAllTasks()
     {
-        List<Task> result = new ArrayList<>();
+        var result = new ArrayList<Task>();
         result.addAll(getEnqueuedTasks());
         result.addAll(getScheduledTasks());
         result.addAll(getRunningTasks());
+        result.addAll(getTasksPendingAcknowledgment());
         return result;
     }
 
@@ -376,7 +388,7 @@ public class SchedulingServiceImpl
                 .or(() -> executor.getQueue().stream().map(Task.class::cast).filter(aPredicate)
                         .findFirst())
                 .or(() -> runningTasks.stream().filter(aPredicate).findFirst())
-                .or(() -> endedTasks.stream().filter(aPredicate).findFirst());
+                .or(() -> pendingAcknowledgement.stream().filter(aPredicate).findFirst());
     }
 
     @Override
@@ -402,12 +414,14 @@ public class SchedulingServiceImpl
         runningTasks.forEach(task -> {
             if (aPredicate.test(task)) {
                 task.getMonitor().cancel();
+                // The task will be destroyed if necessary by the afterExecute callback
             }
         });
 
-        endedTasks.removeIf(runnable -> {
+        pendingAcknowledgement.removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                task.destroy();
                 return true;
             }
             return false;
@@ -495,15 +509,15 @@ public class SchedulingServiceImpl
         executor.getQueue().clear();
         watchdog.shutdownNow();
         executor.shutdownNow();
-        endedTasks.clear();
+        pendingAcknowledgement.clear();
     }
 
     private void logState()
     {
-        getEnqueuedTasks().forEach(t -> LOG.debug("Queued   : {}", t));
-        getScheduledTasks().forEach(t -> LOG.debug("Scheduled: {}", t));
-        getRunningTasks().forEach(t -> LOG.debug("Running  : {}", t));
-        getEndedTasks().forEach(t -> LOG.debug("Ended    : {}", t));
+        getEnqueuedTasks().forEach(t -> LOG.debug("Queued      : {}", t));
+        getScheduledTasks().forEach(t -> LOG.debug("Scheduled   : {}", t));
+        getRunningTasks().forEach(t -> LOG.debug("Running     : {}", t));
+        getTasksPendingAcknowledgment().forEach(t -> LOG.debug("Pending ack : {}", t));
     }
 
     @Override
@@ -519,12 +533,8 @@ public class SchedulingServiceImpl
             aTask.runSync();
         }
         finally {
-            runningTasks.remove(aTask);
             LOG.debug("Ended task (sync) [{}]: {}", aTask, aTask.getMonitor().getState());
-            if (!aTask.getMonitor().isCancelled() && aTask.getScope().isKeepAfterEnded()) {
-                endedTasks.add(aTask);
-            }
-            aTask.destroy();
+            handleTaskEnded(aTask);
         }
     }
 }

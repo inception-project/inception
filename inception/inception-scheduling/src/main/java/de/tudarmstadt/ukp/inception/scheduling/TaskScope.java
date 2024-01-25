@@ -35,9 +35,9 @@ public enum TaskScope
      */
     PROJECT;
 
-    boolean isKeepAfterEnded()
+    boolean isDestroyOnEnd()
     {
-        return this != EPHEMERAL;
+        return this == EPHEMERAL;
     }
 
     boolean isRemoveWhenUserSessionEnds()
