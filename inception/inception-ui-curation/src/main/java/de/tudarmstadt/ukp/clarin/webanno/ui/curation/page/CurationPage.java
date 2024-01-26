@@ -28,11 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.AGREE;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.CURATED;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.DISAGREE;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.INCOMPLETE;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState.STACKED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -44,7 +39,6 @@ import static java.lang.System.currentTimeMillis;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedP
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -96,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
@@ -719,59 +712,13 @@ public class CurationPage
                     .toResult();
 
             var curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);
-            curationUnit.setState(calculateState(diff));
+            curationUnit.setState(CasDiffSummaryState.calculateState(diff));
 
             curationUnitList.add(curationUnit);
         }
         LOG.debug("Difference calculation completed in {}ms", (currentTimeMillis() - diffStart));
 
         return curationUnitList;
-    }
-
-    private CurationUnitState calculateState(DiffResult diff)
-    {
-        var differingSets = diff.getDifferingConfigurationSetsWithExceptions(CURATION_USER);
-
-        // CURATED:
-        // The curation user participates in every configuration set
-        var allCurated = diff.getConfigurationSets().stream() //
-                .allMatch(set -> set.getCasGroupIds().contains(CURATION_USER));
-        if (!diff.getConfigurationSets().isEmpty() && allCurated) {
-            return CURATED;
-        }
-
-        // AGREE:
-        // - there are no differences between the annotators
-        // - the annotations are complete
-        if (differingSets.isEmpty()
-                && diff.getIncompleteConfigurationSetsWithExceptions(CURATION_USER).isEmpty()) {
-            return AGREE;
-        }
-
-        // Is this confSet a diff due to stacked annotations (with same configuration)?
-        var stackedDiff = false;
-        stackedDiffSet: for (var set : differingSets.values()) {
-            for (var user : set.getCasGroupIds()) {
-                if (set.getConfigurations(user).size() > 1) {
-                    stackedDiff = true;
-                    break stackedDiffSet;
-                }
-            }
-        }
-
-        if (stackedDiff) {
-            return STACKED;
-        }
-
-        var usersExceptCurator = new HashSet<>(diff.getCasGroupIds());
-        usersExceptCurator.remove(CURATION_USER);
-        for (var set : diff.getIncompleteConfigurationSets().values()) {
-            if (!set.getCasGroupIds().containsAll(usersExceptCurator)) {
-                return INCOMPLETE;
-            }
-        }
-
-        return DISAGREE;
     }
 
     /**

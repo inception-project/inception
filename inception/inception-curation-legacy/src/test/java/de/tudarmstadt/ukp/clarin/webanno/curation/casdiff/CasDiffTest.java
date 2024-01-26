@@ -18,6 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.INCOMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.STACKED;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.load;
@@ -39,19 +44,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 
@@ -79,9 +79,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
@@ -89,8 +90,7 @@ public class CasDiffTest
     {
         String text = "";
 
-        var user1Cas = CasFactory.createCas();
-        user1Cas.setDocumentText(text);
+        var user1Cas = createText(text);
 
         var casByUser = Map.of("user1", user1Cas);
 
@@ -100,8 +100,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
@@ -109,12 +111,9 @@ public class CasDiffTest
     {
         String text = "";
 
-        CAS user1Cas1 = null;
-        CAS user2Cas1 = createText(text);
-
         var casByUser = new LinkedHashMap<String, CAS>();
-        casByUser.put("user1", user1Cas1);
-        casByUser.put("user2", user2Cas1);
+        casByUser.put("user1", null);
+        casByUser.put("user2", createText(text));
 
         var diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
@@ -123,9 +122,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(0);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -148,9 +148,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(26, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -162,7 +163,7 @@ public class CasDiffTest
     @Test
     public void noDifferencesDependencyTest() throws Exception
     {
-        Map<String, CAS> casByUser = load( //
+        var casByUser = load( //
                 "casdiff/noDifferences/data.conll", //
                 "casdiff/noDifferences/data.conll");
 
@@ -173,9 +174,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(26, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -198,11 +200,12 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(52, result.size());
-        assertEquals(26, result.size(POS.class.getName()));
-        assertEquals(26, result.size(Dependency.class.getName()));
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(52);
+        assertThat(result.size(POS.class.getName())).isEqualTo(26);
+        assertThat(result.size(Dependency.class.getName())).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -229,6 +232,11 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
+
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
         // entryTypes.get(0), "PosValue", casByUser);
@@ -250,9 +258,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(26, result.size());
-        assertEquals(4, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(4);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
@@ -275,9 +284,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(1, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
@@ -301,9 +311,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(27, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(2, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(27);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).hasSize(2);
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
@@ -326,9 +337,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(26, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
@@ -352,9 +364,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(26, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(26);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
@@ -366,35 +379,33 @@ public class CasDiffTest
     @Test
     public void relationStackedSpansTest() throws Exception
     {
-        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        TypeSystemDescription local = TypeSystemDescriptionFactory
-                .createTypeSystemDescriptionFromPath(
-                        "src/test/resources/desc/type/webannoTestTypes.xml");
+        var global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
+                "src/test/resources/desc/type/webannoTestTypes.xml");
 
-        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        var merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
 
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
+        var tb = new TokenBuilder<>(Token.class, Sentence.class);
 
-        JCas jcasA = JCasFactory.createJCas(merged);
+        var jcasA = JCasFactory.createJCas(merged);
         {
-            CAS casA = jcasA.getCas();
+            var casA = jcasA.getCas();
             tb.buildTokens(jcasA, "This is a test .");
 
-            List<Token> tokensA = new ArrayList<>(select(jcasA, Token.class));
-            Token t1A = tokensA.get(0);
-            Token t2A = tokensA.get(tokensA.size() - 1);
+            var tokensA = new ArrayList<>(select(jcasA, Token.class));
+            var t1A = tokensA.get(0);
+            var t2A = tokensA.get(tokensA.size() - 1);
 
-            NamedEntity govA = new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd());
+            var govA = new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd());
             govA.addToIndexes();
             // Here we add a stacked named entity!
             new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd()).addToIndexes();
 
-            NamedEntity depA = new NamedEntity(jcasA, t2A.getBegin(), t2A.getEnd());
+            var depA = new NamedEntity(jcasA, t2A.getBegin(), t2A.getEnd());
             depA.addToIndexes();
 
-            Type relationTypeA = casA.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(),
-                    depA.getEnd());
+            var relationTypeA = casA.getTypeSystem().getType("webanno.custom.Relation");
+            var fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(), depA.getEnd());
             FSUtil.setFeature(fs1A, "Governor", govA);
             FSUtil.setFeature(fs1A, "Dependent", depA);
             FSUtil.setFeature(fs1A, "value", "REL");
@@ -403,21 +414,20 @@ public class CasDiffTest
 
         JCas jcasB = JCasFactory.createJCas(merged);
         {
-            CAS casB = jcasB.getCas();
+            var casB = jcasB.getCas();
             tb.buildTokens(jcasB, "This is a test .");
 
-            List<Token> tokensB = new ArrayList<>(select(jcasB, Token.class));
+            var tokensB = new ArrayList<>(select(jcasB, Token.class));
             Token t1B = tokensB.get(0);
             Token t2B = tokensB.get(tokensB.size() - 1);
 
-            NamedEntity govB = new NamedEntity(jcasB, t1B.getBegin(), t1B.getEnd());
+            var govB = new NamedEntity(jcasB, t1B.getBegin(), t1B.getEnd());
             govB.addToIndexes();
-            NamedEntity depB = new NamedEntity(jcasB, t2B.getBegin(), t2B.getEnd());
+            var depB = new NamedEntity(jcasB, t2B.getBegin(), t2B.getEnd());
             depB.addToIndexes();
 
-            Type relationTypeB = casB.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(),
-                    depB.getEnd());
+            var relationTypeB = casB.getTypeSystem().getType("webanno.custom.Relation");
+            var fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(), depB.getEnd());
             FSUtil.setFeature(fs1B, "Governor", govB);
             FSUtil.setFeature(fs1B, "Dependent", depB);
             FSUtil.setFeature(fs1B, "value", "REL");
@@ -436,9 +446,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(1, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -477,6 +488,7 @@ public class CasDiffTest
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
     }
 
     @Test
@@ -506,6 +518,7 @@ public class CasDiffTest
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
     }
 
     @Test
@@ -535,6 +548,7 @@ public class CasDiffTest
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
@@ -562,6 +576,7 @@ public class CasDiffTest
         assertEquals(4, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(calculateState(result)).isEqualTo(AGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
@@ -596,9 +611,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
@@ -633,9 +649,10 @@ public class CasDiffTest
 
         // result.print(System.out);
 
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(DISAGREE);
 
         // Todo: Agreement has moved to separate project - should create agreement test there
         // CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
@@ -666,13 +683,14 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         var diffAdapters = asList(adapter);
 
-        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // diff.print(System.out);
 
-        assertEquals(2, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(STACKED);
 
         // // Check against new impl
         // AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
@@ -704,13 +722,14 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         var diffAdapters = asList(adapter);
 
-        var diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
+        var result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         // diff.print(System.out);
 
-        assertEquals(3, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(2, diff.getIncompleteConfigurationSets().size());
+        assertThat(result.size()).isEqualTo(3);
+        assertThat(result.getDifferingConfigurationSets()).hasSize(1);
+        assertThat(result.getIncompleteConfigurationSets()).hasSize(2);
+        assertThat(calculateState(result)).isEqualTo(STACKED);
 
         // // Check against new impl
         // AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,

@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
 
 import java.io.Serializable;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
+
 /**
  * A model comprises of Curation Segments comprising of the begin and end of the unit,
- * {@link CurationUnitState} unit number
+ * {@link CasDiffSummaryState} unit number
  */
 public class CurationUnit
     implements Serializable
@@ -33,7 +35,7 @@ public class CurationUnit
     private final int end;
     private final int unitIndex;
 
-    private CurationUnitState state;
+    private CasDiffSummaryState state;
 
     private boolean isCurrentUnit;
 
@@ -54,12 +56,12 @@ public class CurationUnit
         return end;
     }
 
-    public CurationUnitState getState()
+    public CasDiffSummaryState getState()
     {
         return state;
     }
 
-    public void setState(CurationUnitState sentenceState)
+    public void setState(CasDiffSummaryState sentenceState)
     {
         this.state = sentenceState;
     }
