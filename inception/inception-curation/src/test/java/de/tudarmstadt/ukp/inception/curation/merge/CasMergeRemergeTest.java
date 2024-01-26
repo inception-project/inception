@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.INCOMPLETE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState.calculateState;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS._FeatName_PosValue;
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token._FeatName_pos;
@@ -96,6 +99,7 @@ public class CasMergeRemergeTest
                                 -1, -1, null, null));
 
         assertThat(select(curatorCas, POS.class)).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
     /**
@@ -133,6 +137,7 @@ public class CasMergeRemergeTest
                                 -1, -1, null, null));
 
         assertThat(select(curatorCas, POS.class)).hasSize(1);
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
     @Test
@@ -167,6 +172,7 @@ public class CasMergeRemergeTest
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
@@ -200,6 +206,7 @@ public class CasMergeRemergeTest
         assertThat(select(curatorCas.getCas(), hostType).stream()
                 .map(host -> (List) slotSupport.getFeatureValue(slotFeature, host)))
                         .allMatch(Collection::isEmpty);
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
     @Test
@@ -233,6 +240,7 @@ public class CasMergeRemergeTest
         assertThat(select(curatorCas.getCas(), hostType).stream()
                 .map(host -> (List) slotSupport.getFeatureValue(slotFeature, host)))
                         .allMatch(Collection::isEmpty);
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
     @Test
@@ -263,6 +271,7 @@ public class CasMergeRemergeTest
         sut.reMergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
 
         assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE))).isEmpty();
+        assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 
     @Test
@@ -293,6 +302,7 @@ public class CasMergeRemergeTest
         Type hostType = curatorCas.getTypeSystem().getType(HOST_TYPE);
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
+        assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
     }
 
     private AnnotationFS createTokenAndOptionalPos(CAS aCas, int aBegin, int aEnd, String aPos)

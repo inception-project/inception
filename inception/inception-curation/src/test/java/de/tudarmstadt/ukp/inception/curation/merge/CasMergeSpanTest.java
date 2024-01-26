@@ -52,10 +52,10 @@ public class CasMergeSpanTest
     @Test
     public void simpleCopyToEmptyTest() throws Exception
     {
-        CAS sourceCas = createCas();
-        AnnotationFS clickedFs = createNEAnno(sourceCas, "NN", 0, 0);
+        var sourceCas = createCas();
+        var clickedFs = createNEAnno(sourceCas, "NN", 0, 0);
 
-        CAS targetCas = createCas();
+        var targetCas = createCas();
         createToken(targetCas, 0, 0);
 
         sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas, clickedFs, false);
