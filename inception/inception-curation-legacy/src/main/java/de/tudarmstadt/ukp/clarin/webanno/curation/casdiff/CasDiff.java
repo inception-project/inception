@@ -903,6 +903,11 @@ public class CasDiff
             return cachedHasDifferences;
         }
 
+        public boolean hasDifferencesWithExceptions(String... aCasGroupIDsToIgnore)
+        {
+            return !getDifferingConfigurationSetsWithExceptions(aCasGroupIDsToIgnore).isEmpty();
+        }
+
         public Collection<Position> getPositions()
         {
             return data.keySet();
@@ -1044,13 +1049,12 @@ public class CasDiff
             }
 
             // Short-cut: the common use-case is to ignore a single exception, usually the curator
-            if (aCasGroupIDsToIgnore.length == 1) {
-                return unseenGroupCasIDs.size() == 1
-                        && unseenGroupCasIDs.contains(aCasGroupIDsToIgnore[0]);
+            if (aCasGroupIDsToIgnore.length == 1 && unseenGroupCasIDs.size() == 1) {
+                return unseenGroupCasIDs.contains(aCasGroupIDsToIgnore[0]);
             }
 
             // The set is complete if the unseen CAS group IDs match exactly the exceptions.
-            return unseenGroupCasIDs.containsAll(asList(aCasGroupIDsToIgnore));
+            return subtract(unseenGroupCasIDs, asList(aCasGroupIDsToIgnore)).isEmpty();
         }
 
         public Map<Position, ConfigurationSet> getDifferingConfigurationSets()
