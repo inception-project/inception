@@ -39,11 +39,23 @@
       </label>
       <label wicket:id="authorName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
     </div>
-    <div class="row form-row" wicket:enclosure="websiteURL">
+    <div class="row form-row" wicket:enclosure="websiteUrl">
       <label class="col-form-label col-sm-3">
         <wicket:message key="kb.wizard.steps.accessSpecific.homepage" />
       </label>
-      <a wicket:id="websiteURL" class="col-sm-9" target="_blank"></a>
+      <div class="col-sm-9">
+        <a wicket:id="websiteUrl" target="_blank"></a>
+        <i class="fas fa-external-link-alt text-secondary"></i>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="licenseUrl">
+      <label class="col-form-label col-sm-3">
+        <wicket:message key="kb.wizard.steps.accessSpecific.license" />
+      </label>
+      <div class="col-sm-9">
+        <a wicket:id="licenseUrl" target="_blank"></a>
+        <i class="fas fa-external-link-alt text-secondary"></i>
+      </div>
     </div>
   </wicket:panel>
 </body>

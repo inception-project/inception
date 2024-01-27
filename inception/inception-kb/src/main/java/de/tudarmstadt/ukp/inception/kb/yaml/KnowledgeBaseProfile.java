@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,9 +216,9 @@ public class KnowledgeBaseProfile
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(
+        try (var r = new InputStreamReader(
                 KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
-                StandardCharsets.UTF_8)) {
+                UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {
