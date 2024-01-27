@@ -340,3 +340,42 @@ hpo-2024-01-16:
     host-institution-name: The Jackson Laboratory 
     website-url: https://hpo.jax.org/app/
     license-url: https://hpo.jax.org/app/license
+
+snomed-ct:
+  name: SNOMED Clinical Terms (manual steps required!)
+  type: LOCAL
+  default-language: en
+  reification: NONE
+  access:
+    full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  mapping:
+    class: http://www.w3.org/2002/07/owl#Class
+    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    description: http://www.w3.org/2004/02/skos/core#definition
+    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+  root-concepts:
+    - http://snomed.info/id/138875005
+  additional-matching-properties:
+    - http://www.w3.org/2004/02/skos/core#altLabel
+    - http://www.w3.org/2000/01/rdf-schema#label
+  info:
+    description: |
+      SNOMED CT is a systematically organized collection of medical terms providing codes, terms, synonyms and 
+      definitions used in clinical documentation and reporting.
+
+      **Note: Manual steps are required.** Choosing this profile will **not automatically download** and install the resources. 
+
+      Here is what you need to do to obtain and load the actual SNOMED CT data:
+      
+      - Download SNOMED CT RD2 data files, e.g. from the [National Library of Medicine](https://www.nlm.nih.gov/healthit/snomedct/international.html)
+      - Convert the _RD2_ data to _OWL Functional Syntax_ using the [snomed-owl-toolkil](https://github.com/IHTSDO/snomed-owl-toolkit)
+      - Convert the _OWL Functional Syntax_ data to _RDF/XML_ e.g. using [Protégé](https://protege.stanford.edu)
+      - Import the _RDF/XML_ file into the knowledge base created from this profile (this may take a while)
+    host-institution-name: SNOMED International
+    website-url: https://www.snomed.org
+    license-url: https://www.snomed.org/get-snomed
