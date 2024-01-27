@@ -256,6 +256,8 @@ include::{include-dir}formats-html.adoc[leveloffset=+2]
 
 include::{include-dir}formats-htmldoc.adoc[leveloffset=+2]
 
+include::{include-dir}formats-mhtml.adoc[leveloffset=+2]
+
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
 // include::{include-dir}formats-lif.adoc[leveloffset=+2]

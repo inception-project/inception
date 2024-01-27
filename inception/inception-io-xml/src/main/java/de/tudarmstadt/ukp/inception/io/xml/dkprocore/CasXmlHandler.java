@@ -175,6 +175,13 @@ public class CasXmlHandler
     @Override
     public void characters(char[] aCh, int aStart, int aLength) throws SAXException
     {
+        if (stack.isEmpty()) {
+            // We ignore any characters outside the root elements. These could include e.g.
+            // whitespace in the context of a doctype before the root element or trailing whitespace
+            // after the root element.
+            return;
+        }
+
         XmlTextNode textNode = new XmlTextNode(jcas);
         textNode.setBegin(text.length());
 
@@ -296,7 +303,7 @@ public class CasXmlHandler
             return element;
         }
 
-        void addChild(XmlNode aChild)
+        public void addChild(XmlNode aChild)
         {
             children.add(aChild);
         }

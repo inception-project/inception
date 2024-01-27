@@ -189,7 +189,11 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         css.onload = null
         resolve()
       }
-      document.getElementsByTagName('head')[0].appendChild(css)
+
+      const headElements = document.getElementsByTagName('head')
+      if (headElements.length > 0) {
+        headElements[0].appendChild(css)
+      }
     })
   }
 
@@ -204,7 +208,11 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         script.onload = null
         resolve()
       }
-      document.getElementsByTagName('head')[0].appendChild(script)
+
+      const headElements = document.getElementsByTagName('head')
+      if (headElements.length > 0) {
+        document.getElementsByTagName('head')[0].appendChild(script)
+      }
     })
   }
 

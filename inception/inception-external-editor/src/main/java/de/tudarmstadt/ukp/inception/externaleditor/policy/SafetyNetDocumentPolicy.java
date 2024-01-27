@@ -35,6 +35,10 @@ public class SafetyNetDocumentPolicy
 {
     static final String SAFETY_NET_POLICY_OVERRIDE_YAML = "safety-net.yaml";
 
+    private static final String[] JAVASCRIPT_ACTIVE_ATTRIBUTES = { "href", "src", "codebase",
+            "cite", "background", "action", "longdesc", "profile", "classid", "data", "usemap",
+            "formaction", "icon", "manifest", "poster", "srcset", "archive" };
+
     private static final String[] JAVASCRIPT_EVENT_ATTRIBUTES = { "onafterprint", "onbeforeprint",
             "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage", "onoffline",
             "ononline", "onpagehide", "onpageshow", "onpopstate", "onresize", "onstorage",
@@ -95,9 +99,8 @@ public class SafetyNetDocumentPolicy
             builder.disallowElements("video");
         }
 
-        builder.disallowAttributes("href", "src", "codebase", "cite", "background", "action",
-                "longdesc", "profile", "classid", "data", "usemap", "formaction", "icon",
-                "manifest", "poster", "srcset", "archive").matching(compile("\\s*javascript:.*"))
+        builder.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
+                .matching(compile("\\s*javascript:.*")) //
                 .globally();
 
         builder.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();

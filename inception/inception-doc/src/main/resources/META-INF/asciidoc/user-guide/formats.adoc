@@ -75,6 +75,10 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `htmldoc`
 | `format.html.enabled`
 
+| <<sect_formats_mhtml>>
+| `mhtml`
+| `format.mhtml.enabled`
+
 | <<sect_formats_html>>
 | `html`
 | `format.html-legacy.enabled`

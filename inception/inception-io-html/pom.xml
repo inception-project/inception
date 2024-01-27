@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -45,16 +47,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
@@ -63,7 +61,7 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-html-asl</artifactId>
@@ -88,7 +86,7 @@
       <groupId>eu.openminted.share.annotations</groupId>
       <artifactId>omtd-share-annotations-api</artifactId>
     </dependency>
-    
+
 
     <dependency>
       <groupId>org.jsoup</groupId>
@@ -100,6 +98,15 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.james</groupId>
+      <artifactId>apache-mime4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.james</groupId>
+      <artifactId>apache-mime4j-dom</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
@@ -107,7 +114,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
-    
+
     <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
       <groupId>junit</groupId>

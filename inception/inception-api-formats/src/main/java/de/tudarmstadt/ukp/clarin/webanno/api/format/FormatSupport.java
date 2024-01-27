@@ -30,14 +30,12 @@ import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -57,6 +55,7 @@ import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
@@ -110,50 +109,14 @@ public interface FormatSupport
         return false;
     }
 
-    default boolean isAccessibelResource(File aDocFile, String aResourcePath)
+    default boolean isAccessibleResource(File aDocFile, String aResourcePath)
     {
         return DEFAULT_PERMITTED_RESOURCE_EXTENSIONS.contains(getExtension(aResourcePath));
     }
 
     default InputStream openResourceStream(File aDocFile, String aResourcePath) throws IOException
     {
-        if (!hasResources() || !isAccessibelResource(aDocFile, aResourcePath)) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        if (aResourcePath.contains("..") || aResourcePath.contains("//")) {
-            throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-        }
-
-        // var path = prependIfMissing(normalize(aResourcePath, true), "/");
-
-        ZipFile zipFile = null;
-        var success = false;
-        try {
-            zipFile = new ZipFile(aDocFile);
-            var entry = zipFile.getEntry(aResourcePath);
-            if (entry == null) {
-                throw new FileNotFoundException("Resource not found [" + aResourcePath + "]");
-            }
-
-            var finalZipFile = zipFile;
-            var is = new FilterInputStream(zipFile.getInputStream(entry))
-            {
-                @Override
-                public void close() throws IOException
-                {
-                    super.close();
-                    finalZipFile.close();
-                }
-            };
-            success = true;
-            return is;
-        }
-        finally {
-            if (!success && zipFile != null) {
-                zipFile.close();
-            }
-        }
+        return ZipUtils.openResourceStream(aDocFile, aResourcePath);
     }
 
     /**
