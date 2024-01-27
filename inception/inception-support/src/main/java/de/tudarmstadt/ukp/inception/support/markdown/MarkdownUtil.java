@@ -17,9 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.support.markdown;
 
+import static java.util.Arrays.asList;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.HtmlStreamEventProcessor;
+import org.owasp.html.HtmlStreamEventReceiver;
+import org.owasp.html.HtmlStreamEventReceiverWrapper;
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 
@@ -27,14 +36,17 @@ import com.github.rjeschke.txtmark.Processor;
 
 public class MarkdownUtil
 {
-    public static final PolicyFactory TERSE_POLICY = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
+    public static final PolicyFactory STYLED_EXTERNAL_LINKS = new HtmlPolicyBuilder() //
+            .withPostprocessor(new Postprocessor()) //
+            .toFactory();
+
+    public static final PolicyFactory TERSE_POLICY = Sanitizers.FORMATTING //
+            .and(Sanitizers.LINKS) //
+            .and(STYLED_EXTERNAL_LINKS);
 
     public static final PolicyFactory DEFAULT_POLICY = new HtmlPolicyBuilder() //
-            .allowStandardUrlProtocols() //
             // Allow title="..." on any element.
             .allowAttributes("title").globally() //
-            // Allow href="..." on <a> elements.
-            .allowAttributes("href").onElements("a") //
             // Defeat link spammers.
             .requireRelNofollowOnLinks() //
             // Allow lang= with an alphabetic value on any element.
@@ -48,9 +60,11 @@ public class MarkdownUtil
             .allowCommonBlockElements() //
             .allowCommonInlineFormattingElements() //
             .allowElements("table", "th", "td", "tr", "tbody", "thead", "col", "colgroup",
-                    "caption")
+                    "caption") //
             .toFactory() //
-            .and(Sanitizers.IMAGES);
+            .and(Sanitizers.LINKS) //
+            .and(Sanitizers.IMAGES) //
+            .and(STYLED_EXTERNAL_LINKS);
 
     public static String markdownToTerseHtml(String aMarkdown)
     {
@@ -70,5 +84,68 @@ public class MarkdownUtil
 
         var html = Processor.process(aMarkdown, true);
         return DEFAULT_POLICY.sanitize(html);
+    }
+
+    private static final class Postprocessor
+        implements HtmlStreamEventProcessor
+    {
+
+        @Override
+        public HtmlStreamEventReceiver wrap(HtmlStreamEventReceiver sink)
+        {
+            return new OpenExternalLinksInNewWindow(sink);
+        }
+    }
+
+    static class OpenExternalLinksInNewWindow
+        extends HtmlStreamEventReceiverWrapper
+    {
+        private Stack<Boolean> stack = new Stack<>();
+
+        OpenExternalLinksInNewWindow(HtmlStreamEventReceiver underlying)
+        {
+            super(underlying);
+        }
+
+        @Override
+        public void openTag(String elementName, List<String> attribs)
+        {
+            var externalLink = false;
+            var attribsCopy = new ArrayList<>(attribs);
+            for (int i = attribsCopy.size() - 2; i >= 0; i -= 2) {
+                if ("href".equalsIgnoreCase(attribs.get(i))) {
+                    var link = attribs.get(i + 1);
+                    if (StringUtils.contains(link, "://")) {
+                        externalLink = true;
+                        break;
+                    }
+                }
+
+                if ("target".equalsIgnoreCase(attribs.get(i))) {
+                    attribs.remove(i + 1);
+                    attribs.remove(i);
+                }
+            }
+
+            if (externalLink) {
+                attribs.add("target");
+                attribs.add("_blank");
+            }
+            stack.push(externalLink);
+
+            underlying.openTag(elementName, attribs);
+        }
+
+        @Override
+        public void closeTag(String elementName)
+        {
+            underlying.closeTag(elementName);
+            var externalLink = stack.pop();
+            if (externalLink) {
+                underlying.openTag("i",
+                        asList("class", "ms-1 small fas fa-external-link-alt text-muted"));
+                underlying.closeTag("i");
+            }
+        }
     }
 }
