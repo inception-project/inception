@@ -242,7 +242,7 @@ public class KBHandle
 
     public static KBHandle of(KBObject aObject)
     {
-        return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
+        return aObject.toKBHandle();
     }
 
     @SuppressWarnings("unchecked")

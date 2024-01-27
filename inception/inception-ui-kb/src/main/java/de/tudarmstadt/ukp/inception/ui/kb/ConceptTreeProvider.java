@@ -99,7 +99,7 @@ public class ConceptTreeProvider
                 // To avoid having to send a query to the KB for every child node, just assume
                 // that there might be child nodes and show the expander until we have actually
                 // loaded the children, cached them and can show the true information.
-                List<KBHandle> children = childrensCache.get(aNode);
+                var children = childrensCache.get(aNode);
                 if (children == null) {
                     return true;
                 }
@@ -135,7 +135,7 @@ public class ConceptTreeProvider
         try {
             // If the KB is read-only, then we cache the values and re-use the cached values.
             if (kbModel.getObject().isReadOnly()) {
-                List<KBHandle> children = childrensCache.get(aNode);
+                var children = childrensCache.get(aNode);
                 if (children == null) {
                     children = kbService.listChildConcepts(kbModel.getObject(),
                             aNode.getIdentifier(), options.getObject().isShowAllConcepts());

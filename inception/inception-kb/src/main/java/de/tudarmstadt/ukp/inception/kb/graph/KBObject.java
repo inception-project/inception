@@ -122,6 +122,7 @@ public interface KBObject
         handle.setName(getName());
         handle.setLanguage(getLanguage());
         handle.setDescription(getDescription());
+        handle.setKB(getKB());
         return handle;
     }
 }
