@@ -15,43 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.html.dkprocore;
+package de.tudarmstadt.ukp.inception.io.html;
 
-import static org.dkpro.core.api.parameter.ComponentParameters.DEFAULT_ENCODING;
-
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.uima.UimaContext;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.dom.TextBody;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.MimeTypeCapability;
 import org.apache.uima.fit.descriptor.ResourceMetaData;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
-import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
-import org.dkpro.core.api.resources.CompressionUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.NodeTraversor;
 
-import com.ibm.icu.text.CharsetDetector;
-
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
-import eu.openminted.share.annotations.api.DocumentationResource;
+import de.tudarmstadt.ukp.inception.io.html.dkprocore.CasXmlNodeVisitor;
 
 /**
  * Reads the contents of a given URL and strips the HTML. Returns the textual contents. Also
  * recognizes headings and paragraphs.
  */
-@ResourceMetaData(name = "HTML Reader")
-@DocumentationResource("${docbase}/format-reference.html#format-${command}")
+@ResourceMetaData(name = "MHTML Reader")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
 @TypeCapability(outputs = { //
         "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
@@ -60,23 +49,9 @@ import eu.openminted.share.annotations.api.DocumentationResource;
         "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
         "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
         "org.dkpro.core.api.xml.type.XmlTextNode" })
-public class HtmlDocumentReader
+public class MHtmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase
 {
-    /**
-     * Automatically detect encoding.
-     *
-     * @see CharsetDetector
-     */
-    public static final String ENCODING_AUTO = "auto";
-
-    /**
-     * Name of configuration parameter that contains the character encoding used by the input files.
-     */
-    public static final String PARAM_SOURCE_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
-    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, defaultValue = DEFAULT_ENCODING)
-    private String sourceEncoding;
-
     /**
      * Normalize whitespace.
      */
@@ -84,46 +59,48 @@ public class HtmlDocumentReader
     @ConfigurationParameter(name = PARAM_NORMALIZE_WHITESPACE, defaultValue = "true")
     private boolean normalizeWhitespace;
 
-    private Map<String, Integer> mappings = new HashMap<>();
-
-    @Override
-    public void initialize(UimaContext aContext) throws ResourceInitializationException
-    {
-        super.initialize(aContext);
-
-        mappings.put("h1", Heading.type);
-        mappings.put("h2", Heading.type);
-        mappings.put("h3", Heading.type);
-        mappings.put("h4", Heading.type);
-        mappings.put("h5", Heading.type);
-        mappings.put("h6", Heading.type);
-        mappings.put("p", Paragraph.type);
-    }
-
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);
 
-        String html;
-        try (var is = new BufferedInputStream(
-                CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
+        try (var is = res.getInputStream()) {
+            var builder = new DefaultMessageBuilder();
+            var message = builder.parseMessage(is);
+            var htmlDocument = getDocument(message);
+            try (var docIs = htmlDocument.getInputStream()) {
+                var charset = htmlDocument.getMimeCharset();
+                if ("US-ASCII".equals(charset)) {
+                    // mime4j uses US_ASCII as default and we cannot override it. While it may be
+                    // technically correct, e.g. Chrome seems to use UTF-8 by default but does not
+                    // provide an encoding the MHTML files... *sigh*
+                    charset = "UTF-8";
+                }
+                var doc = Jsoup.parse(docIs, charset, "");
 
-            if (ENCODING_AUTO.equals(sourceEncoding)) {
-                CharsetDetector detector = new CharsetDetector();
-                html = IOUtils.toString(detector.getReader(is, null));
+                var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
+
+                NodeTraversor.traverse(visitor, doc);
             }
-            else {
-                html = IOUtils.toString(is, sourceEncoding);
+        }
+    }
+
+    private static TextBody getDocument(Message message) throws IOException
+    {
+        var documentUrl = message.getHeader().getField("Snapshot-Content-Location").getBody();
+
+        if (message.getBody() instanceof Multipart body) {
+            var documentPart = body.getBodyParts().stream() //
+                    .filter(e -> documentUrl
+                            .equals(e.getHeader().getField("Content-Location").getBody()))
+                    .findFirst().get();
+
+            if (documentPart.getBody() instanceof TextBody documentBody) {
+                return documentBody;
             }
         }
 
-        var doc = Jsoup.parse(html);
-
-        var visitor = new CasXmlNodeVisitor(aJCas, normalizeWhitespace);
-        visitor.setMappings(mappings);
-
-        NodeTraversor.traverse(visitor, doc);
+        throw new IOException("Unable to locate embedded HTML document");
     }
 }

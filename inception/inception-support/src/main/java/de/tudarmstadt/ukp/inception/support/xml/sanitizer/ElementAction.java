@@ -39,5 +39,4 @@ public enum ElementAction
      * marked to pass.
      */
     PRUNE;
-
 }
