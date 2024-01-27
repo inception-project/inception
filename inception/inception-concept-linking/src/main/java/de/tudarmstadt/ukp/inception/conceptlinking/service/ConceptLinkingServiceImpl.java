@@ -434,10 +434,10 @@ public class ConceptLinkingServiceImpl
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
     {
-        long startTime = currentTimeMillis();
+        var startTime = currentTimeMillis();
 
         // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.stream() //
+        var candidates = aCandidates.stream() //
                 .map(CandidateEntity::new) //
                 .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
@@ -452,7 +452,7 @@ public class ConceptLinkingServiceImpl
         // Sort candidates by multiple keys.
         candidates.sort(BaselineRankingStrategy.getInstance());
 
-        List<KBHandle> results = candidates.stream() //
+        var results = candidates.stream() //
                 .map(candidate -> {
                     KBHandle handle = candidate.getHandle();
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
@@ -463,13 +463,13 @@ public class ConceptLinkingServiceImpl
                 }) //
                 .collect(Collectors.toList());
 
-        int rank = 1;
-        for (KBHandle handle : results) {
+        var rank = 1;
+        for (var handle : results) {
             handle.setRank(rank);
             rank++;
         }
 
-        long duration = currentTimeMillis() - startTime;
+        var duration = currentTimeMillis() - startTime;
         log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
                 results.size(), aMention, aQuery, duration);
 

@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -151,16 +150,16 @@ public class KnowledgeBasePanel
     private KnowledgeBaseItemAutoCompleteField createSearchField(String aId,
             IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
-        KnowledgeBaseItemAutoCompleteField field = new KnowledgeBaseItemAutoCompleteField(aId,
-                aHandleModel, _query -> listSearchResults(aProjectModel.getObject(), _query))
+        var field = new KnowledgeBaseItemAutoCompleteField(aId, aHandleModel,
+                _query -> listSearchResults(aProjectModel.getObject(), _query))
         {
             private static final long serialVersionUID = 3188821013226116770L;
 
             @Override
             protected void onSelected(AjaxRequestTarget aTarget)
             {
-                KBHandle selectedResource = this.getModelObject();
-                Optional<KBObject> optKbObject = kbService.readItem(kbModel.getObject(),
+                var selectedResource = this.getModelObject();
+                var optKbObject = kbService.readItem(kbModel.getObject(),
                         selectedResource.getIdentifier());
 
                 if (!optKbObject.isPresent()) {
@@ -186,12 +185,10 @@ public class KnowledgeBasePanel
      */
     private List<KBHandle> listSearchResults(Project aProject, String aTypedString)
     {
-        List<KBHandle> results;
-        KnowledgeBase kb = kbModel.getObject();
-        results = conceptLinkingService.searchItems(kb, aTypedString).stream()
-                .limit(entityLinkingProperties.getCandidateDisplayLimit())
-                .collect(Collectors.toList());
-        return results;
+        var kb = kbModel.getObject();
+        return conceptLinkingService.searchItems(kb, aTypedString).stream() //
+                .limit(entityLinkingProperties.getCandidateDisplayLimit()) //
+                .toList();
     }
 
     /**
@@ -204,8 +201,8 @@ public class KnowledgeBasePanel
                     new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
         }
         else if (aKbObject instanceof KBInstance) {
-            List<KBHandle> conceptsForInstance = kbService
-                    .getConceptForInstance(kbModel.getObject(), aKbObject.getIdentifier(), true);
+            var conceptsForInstance = kbService.getConceptForInstance(kbModel.getObject(),
+                    aKbObject.getIdentifier(), true);
 
             if (!conceptsForInstance.isEmpty()) {
                 send(getPage(), Broadcast.BREADTH,
