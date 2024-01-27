@@ -38,7 +38,7 @@ babel_net:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       BabelNet is a multilingual lexicalized semantic network and ontology that was automatically 
       created by linking Wikipedia to WordNet.
     host-institution-name: Linguistic Computing Laboratory at Sapienza University of Rome
@@ -64,7 +64,7 @@ db_pedia:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       DBpedia is a crowd-sourced community effort to extract structured content from the information 
       created in various Wikimedia projects.
     host-institution-name: Leipzig University, University of Mannheim, OpenLink Software
@@ -92,7 +92,7 @@ wikidata:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.wikidata.org/prop/direct/P1647
   info:
-    description: > 
+    description: |
       Wikidata is a free and open knowledge base and acts as central storage for the structured data
       of its Wikimedia sister projects including Wikipedia, Wikivoyage, Wikisource, and others.
     host-institution-name: Wikimedia Foundation, Inc.
@@ -147,7 +147,7 @@ zbw-stw-economics:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       Thesaurus that provides vocabulary on any economic subject. Almost 6,000 standardized subject
       headings and about 20,000 additional entry terms to support individual keywords.
     host-institution-name: ZBW - Leibniz Information Centre for Economics
@@ -173,7 +173,7 @@ zbw-gnd:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       Mapping Integrated Authority File (GND).The Integrated Authority File (GND) is a controlled 
       keyword system, that is mainly used for indexing in German libraries.
     host-institution-name: ZBW - Leibniz Information Centre for Economics
@@ -251,7 +251,7 @@ wine_ontology:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       An example OWL ontology. Derived from the DAML Wine ontology at 
       http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml
     host-institution-name: "-"
@@ -277,9 +277,66 @@ olia_penn.owl:
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: >
+    description: |
       Ontologies of Linguistic Annotation (OLiA)
     host-institution-name: Applied Computational Linguistics (ACoLi) Lab at the Goethe University Frankfurt, Germany
     author-name: Christian Chiarcos and Maria Sukhareva
     website-url: http://www.acoli.informatik.uni-frankfurt.de/resources/olia/
     
+iao:
+  name: Information Artifact Ontology (IAO) (v2022-11-07)
+  type: LOCAL
+  default-language: en
+  reification: NONE
+  access:
+    access-url: https://raw.githubusercontent.com/information-artifact-ontology/IAO/v2022-11-07/iao.owl
+    full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  mapping:
+    class: http://www.w3.org/2000/01/rdf-schema#Class
+    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2000/01/rdf-schema#label
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    description: http://www.w3.org/2000/01/rdf-schema#comment
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: |
+      The Information Artifact Ontology (IAO) is a new ontology of information entities, originally driven by work by 
+      the OBI digital entity and realizable information entity branch.
+
+      For more information, please refer to the project's website.
+    website-url: https://github.com/information-artifact-ontology/IAO/
+    
+hpo-2024-01-16:
+  name: Human Phenotype Ontology (v2024-01-16)
+  type: LOCAL
+  default-language: en
+  reification: NONE
+  access:
+    access-url: https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-01-16/hp-full.owl
+    full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  mapping:
+    class: http://www.w3.org/2002/07/owl#Class
+    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    description: http://purl.obolibrary.org/obo/IAO_0000115
+    label: http://www.w3.org/2000/01/rdf-schema#label
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+  additional-matching-properties:
+    - http://www.geneontology.org/formats/oboInOwl#hasExactSynonym
+  info:
+    description: |
+      The Human Phenotype Ontology (HPO) project provides an ontology of medically relevant phenotypes, 
+      disease-phenotype annotations, and the algorithms that operate on these. 
+
+      This resources is quite large. Downloading and importing it may take some time.
+
+       Find out more at [http://www.human-phenotype-ontology.org](http://www.human-phenotype-ontology.org).
+    host-institution-name: The Jackson Laboratory 
+    website-url: https://hpo.jax.org/app/
+    license-url: https://hpo.jax.org/app/license

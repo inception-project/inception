@@ -87,7 +87,7 @@ public class KnowledgeBaseProfileDeserializationTest
         referenceInfo.setDescription(description);
         referenceInfo.setAuthorName(author);
         referenceInfo.setHostInstitutionName(host);
-        referenceInfo.setWebsiteURL(website);
+        referenceInfo.setWebsiteUrl(website);
         return referenceInfo;
     }
 
