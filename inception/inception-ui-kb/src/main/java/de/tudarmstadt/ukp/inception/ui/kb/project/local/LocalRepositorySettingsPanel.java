@@ -393,13 +393,16 @@ public class LocalRepositorySettingsPanel
 
                 var fileUploadDownloadHelper = new FileUploadDownloadHelper(getApplication());
 
-                if (accessUrl.startsWith(CLASSPATH_PREFIX)) {
+                if (accessUrl == null) {
+                    // Nothing to do
+                }
+                else if (accessUrl.startsWith(CLASSPATH_PREFIX)) {
                     // import from classpath
                     var kbFile = fileUploadDownloadHelper
                             .writeClasspathResourceToTemporaryFile(accessUrl, getModel());
                     getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
-                else if (accessUrl != null) {
+                else {
                     var tmpFile = fileUploadDownloadHelper
                             .writeFileDownloadToTemporaryFile(accessUrl, getModel());
                     getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
@@ -429,11 +432,14 @@ public class LocalRepositorySettingsPanel
 
     private String getAccessTypeLabel(KnowledgeBaseProfile aProfile)
     {
+        if (aProfile.getAccess().getAccessUrl() == null) {
+            return "MANUAL";
+        }
+
         if (aProfile.getAccess().getAccessUrl().startsWith(CLASSPATH_PREFIX)) {
             return "CLASSPATH";
         }
-        else {
-            return "DOWNLOAD";
-        }
+
+        return "DOWNLOAD";
     }
 }
