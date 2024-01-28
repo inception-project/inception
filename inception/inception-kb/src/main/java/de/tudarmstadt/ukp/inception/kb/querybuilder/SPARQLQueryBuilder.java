@@ -145,6 +145,7 @@ public class SPARQLQueryBuilder
     public static final String VAR_DESCRIPTION_CANDIDATE_NAME = "dc";
     public static final String VAR_RANGE_NAME = "range";
     public static final String VAR_DOMAIN_NAME = "domain";
+    public static final String VAR_DEPRECATION_NAME = "dp";
 
     public static final Variable VAR_SUBJECT = var(VAR_SUBJECT_NAME);
     public static final Variable VAR_SCORE = var(VAR_SCORE_NAME);
@@ -158,6 +159,7 @@ public class SPARQLQueryBuilder
     public static final Variable VAR_MATCH_TERM_PROPERTY = var(VAR_MATCH_TERM_PROPERTY_NAME);
     public static final Variable VAR_DESCRIPTION = var(VAR_DESCRIPTION_NAME);
     public static final Variable VAR_DESC_CANDIDATE = var(VAR_DESCRIPTION_CANDIDATE_NAME);
+    public static final Variable VAR_DEPRECATION = var(VAR_DEPRECATION_NAME);
 
     public static final Prefix PREFIX_LUCENE_SEARCH = prefix("search",
             iri("http://www.openrdf.org/contrib/lucenesail#"));
@@ -301,13 +303,13 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern descendentsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri typeOfProperty = iri(aKB.getTypeIri());
-            Iri subClassProperty = iri(aKB.getSubclassIri());
-            Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
+            var typeOfProperty = iri(aKB.getTypeIri());
+            var subClassProperty = iri(aKB.getSubclassIri());
+            var subPropertyProperty = iri(aKB.getSubPropertyIri());
 
             switch (this) {
             case ITEM: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(VAR_SUBJECT.has(
                         PropertyPathBuilder.of(subClassProperty).oneOrMore().build(), aContext));
                 classPatterns.add(VAR_SUBJECT.has(PropertyPathBuilder.of(typeOfProperty)
@@ -319,7 +321,7 @@ public class SPARQLQueryBuilder
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case CLASS: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(VAR_SUBJECT.has(
                         PropertyPathBuilder.of(subClassProperty).oneOrMore().build(), aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
@@ -344,15 +346,15 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern ancestorsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri typeOfProperty = iri(aKB.getTypeIri());
-            Iri subClassProperty = iri(aKB.getSubclassIri());
-            Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
+            var typeOfProperty = iri(aKB.getTypeIri());
+            var subClassProperty = iri(aKB.getSubclassIri());
+            var subPropertyProperty = iri(aKB.getSubPropertyIri());
 
             switch (this) {
             case ITEM:
             case CLASS:
             case INSTANCE: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
+                var classPatterns = new ArrayList<GraphPattern>();
                 classPatterns.add(aContext.has(
                         PropertyPathBuilder.of(subClassProperty).oneOrMore().build(), VAR_SUBJECT));
                 classPatterns.add(aContext.has(PropertyPathBuilder.of(typeOfProperty)
@@ -486,6 +488,19 @@ public class SPARQLQueryBuilder
                 throw new IllegalStateException("Can only query for root classes");
             }
         }
+
+        protected Iri getDeprecationProperty(KnowledgeBase aKb)
+        {
+            switch (this) {
+            case ITEM: // fall-through
+            case CLASS: // fall-through
+            case INSTANCE: // fall-through
+            case PROPERTY:
+                return iri(aKb.getDeprecationPropertyIri());
+            default:
+                throw new IllegalStateException("Unsupported mode: " + this);
+            }
+        }
     }
 
     /**
@@ -591,6 +606,11 @@ public class SPARQLQueryBuilder
     private Projectable getDescriptionProjection()
     {
         return VAR_DESC_CANDIDATE;
+    }
+
+    private Projectable getDeprecationProjection()
+    {
+        return VAR_DEPRECATION;
     }
 
     @Override
@@ -1888,15 +1908,27 @@ public class SPARQLQueryBuilder
         // Retain only the first description
         projections.add(getDescriptionProjection());
 
-        Iri descProperty = mode.getDescriptionProperty(kb);
+        var descProperty = mode.getDescriptionProperty(kb);
         retrieveOptionalWithLanguage(descProperty, VAR_DESC_CANDIDATE);
+
+        return this;
+    }
+
+    @Override
+    public SPARQLQueryOptionalElements retrieveDeprecation()
+    {
+        // Retain only the first deprecation statement
+        projections.add(getDeprecationProjection());
+
+        var deprecationProperty = mode.getDeprecationProperty(kb);
+        retrieveOptionalWithLanguage(deprecationProperty, VAR_DEPRECATION);
 
         return this;
     }
 
     private void retrieveOptionalWithLanguage(RdfPredicate aProperty, Variable aVariable)
     {
-        GraphPattern pattern = VAR_SUBJECT.has(aProperty, aVariable) //
+        var pattern = VAR_SUBJECT.has(aProperty, aVariable) //
                 .filter(matchKbLanguage(aVariable));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
@@ -2139,6 +2171,7 @@ public class SPARQLQueryBuilder
                 extractRange(handle, bindings);
                 extractDomain(handle, bindings);
                 extractScore(handle, bindings);
+                extractDeprecation(handle, bindings);
 
                 handles.add(handle);
             }
@@ -2223,8 +2256,7 @@ public class SPARQLQueryBuilder
 
     private Optional<String> extractLanguage(Binding aBinding)
     {
-        if (aBinding != null && aBinding.getValue() instanceof Literal) {
-            Literal literal = (Literal) aBinding.getValue();
+        if (aBinding != null && aBinding.getValue() instanceof Literal literal) {
             return literal.getLanguage();
         }
 
@@ -2233,8 +2265,8 @@ public class SPARQLQueryBuilder
 
     private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
-        Binding descCandidate = aSourceBindings.getBinding(VAR_DESCRIPTION_CANDIDATE_NAME);
+        var description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
+        var descCandidate = aSourceBindings.getBinding(VAR_DESCRIPTION_CANDIDATE_NAME);
         if (description != null) {
             aTargetHandle.setDescription(description.getValue().stringValue());
         }
@@ -2245,7 +2277,7 @@ public class SPARQLQueryBuilder
 
     private void extractDomain(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding domain = aSourceBindings.getBinding(VAR_DOMAIN_NAME);
+        var domain = aSourceBindings.getBinding(VAR_DOMAIN_NAME);
         if (domain != null) {
             aTargetHandle.setDomain(domain.getValue().stringValue());
         }
@@ -2253,7 +2285,7 @@ public class SPARQLQueryBuilder
 
     private void extractRange(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding range = aSourceBindings.getBinding(VAR_RANGE_NAME);
+        var range = aSourceBindings.getBinding(VAR_RANGE_NAME);
         if (range != null) {
             aTargetHandle.setRange(range.getValue().stringValue());
         }
@@ -2261,9 +2293,28 @@ public class SPARQLQueryBuilder
 
     private void extractScore(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding score = aSourceBindings.getBinding(VAR_SCORE_NAME);
+        var score = aSourceBindings.getBinding(VAR_SCORE_NAME);
         if (score != null) {
             aTargetHandle.setScore(Double.valueOf(score.getValue().stringValue()));
+        }
+    }
+
+    private void extractDeprecation(KBHandle aTargetHandle, BindingSet aSourceBindings)
+    {
+        var deprecation = aSourceBindings.getBinding(VAR_DEPRECATION_NAME);
+        if (deprecation != null) {
+            if (deprecation.getValue() instanceof Literal literal) {
+                try {
+                    aTargetHandle.setDeprecated(literal.booleanValue());
+                }
+                catch (IllegalArgumentException e) {
+                    // Anything other than a falsy value is considered to be true
+                    aTargetHandle.setDeprecated(true);
+                }
+            }
+            else {
+                aTargetHandle.setDeprecated(true);
+            }
         }
     }
 

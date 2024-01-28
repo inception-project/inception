@@ -98,6 +98,7 @@ public class IriConstants
     public static final List<IRI> PROPERTY_TYPE_IRIS;
     public static final List<IRI> PROPERTY_LABEL_IRIS;
     public static final List<IRI> PROPERTY_DESCRIPTION_IRIS;
+    public static final List<IRI> DEPRECATION_PROPERTY_IRIS;
     public static final List<IRI> FTS_IRIS;
 
     static {
@@ -126,6 +127,7 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
+        DEPRECATION_PROPERTY_IRIS = asList(OWL.DEPRECATED);
         FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE, FTS_STARDOG);
     }
 

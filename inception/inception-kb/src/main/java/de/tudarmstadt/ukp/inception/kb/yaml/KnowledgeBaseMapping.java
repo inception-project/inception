@@ -55,6 +55,9 @@ public class KnowledgeBaseMapping
     @JsonProperty("property-description")
     private String propertyDescriptionIri;
 
+    @JsonProperty("deprecation-property")
+    private String deprecationPropertyIri;
+
     @JsonCreator
     public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
             @JsonProperty("subclass-of") String aSubclassIri,
@@ -64,7 +67,8 @@ public class KnowledgeBaseMapping
             @JsonProperty("label") String aLabelIri,
             @JsonProperty("property-type") String aPropertyTypeIri,
             @JsonProperty("property-label") String aPropertyLabelIri,
-            @JsonProperty("property-description") String aPropertyDescriptionIri)
+            @JsonProperty("property-description") String aPropertyDescriptionIri,
+            @JsonProperty("deprecation-property") String aDeprecationPropertyIri)
 
     {
         classIri = aClassIri;
@@ -76,6 +80,7 @@ public class KnowledgeBaseMapping
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
+        deprecationPropertyIri = aDeprecationPropertyIri;
     }
 
     public KnowledgeBaseMapping()
@@ -171,5 +176,15 @@ public class KnowledgeBaseMapping
     public void setPropertyDescriptionIri(String aPropertyDescriptionIri)
     {
         propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public void setDeprecationPropertyIri(String aDeprecationPropertyIri)
+    {
+        deprecationPropertyIri = aDeprecationPropertyIri;
+    }
+
+    public String getDeprecationPropertyIri()
+    {
+        return deprecationPropertyIri;
     }
 }

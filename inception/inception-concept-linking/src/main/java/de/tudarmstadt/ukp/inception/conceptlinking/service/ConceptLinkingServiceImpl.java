@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -166,8 +165,8 @@ public class ConceptLinkingServiceImpl
     public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
-        long startTime = currentTimeMillis();
-        Set<KBHandle> result = new HashSet<>();
+        var startTime = currentTimeMillis();
+        var result = new HashSet<KBHandle>();
         try {
             // If the query of the user is smaller or equal to this threshold, then we only use it
             // for exact matching. If it is longer, we look for concepts which start with or which
@@ -211,7 +210,7 @@ public class ConceptLinkingServiceImpl
             // Finally, we use the query and mention also for a "containing" search - but only if
             // they are longer than the threshold. Again, for very short query/mention, we'd
             // otherwise get way too many matches, being slow and not accurate.
-            String[] longLabels = asList(aQuery, aMention).stream() //
+            var longLabels = asList(aQuery, aMention).stream() //
                     .filter(Objects::nonNull) //
                     .map(s -> s.trim()) //
                     .filter(s -> s.length() >= threshold) //
@@ -236,7 +235,7 @@ public class ConceptLinkingServiceImpl
         var startTime = currentTimeMillis();
 
         // Collect containing matches
-        SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+        var containingBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -250,7 +249,7 @@ public class ConceptLinkingServiceImpl
             containingBuilder.withLabelContainingAnyOf(aLongLabels);
         }
 
-        containingBuilder.retrieveLabel().retrieveDescription();
+        containingBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
         List<KBHandle> containingMatches;
         if (aKB.isReadOnly()) {
@@ -275,7 +274,7 @@ public class ConceptLinkingServiceImpl
     {
         var startTime = currentTimeMillis();
 
-        SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
+        var startingWithBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -286,7 +285,7 @@ public class ConceptLinkingServiceImpl
         // auto-complete functionality
         startingWithBuilder.withLabelStartingWith(aQuery);
 
-        startingWithBuilder.retrieveLabel().retrieveDescription();
+        startingWithBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
         List<KBHandle> startingWithMatches;
         if (aKB.isReadOnly()) {
@@ -310,7 +309,7 @@ public class ConceptLinkingServiceImpl
     {
         var startTime = currentTimeMillis();
 
-        SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
+        var exactBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -319,7 +318,7 @@ public class ConceptLinkingServiceImpl
 
         exactBuilder.withLabelMatchingExactlyAnyOf(aExactLabels);
 
-        exactBuilder.retrieveLabel().retrieveDescription();
+        exactBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
         List<KBHandle> exactMatches;
         if (aKB.isReadOnly()) {
@@ -354,14 +353,13 @@ public class ConceptLinkingServiceImpl
             return;
         }
 
-        SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
-                .withIdentifier(aQuery);
+        var iriMatchBuilder = newQueryBuilder(aValueType, aKB).withIdentifier(aQuery);
 
         if (aConceptScope != null) {
             iriMatchBuilder.descendantsOf(aConceptScope);
         }
 
-        iriMatchBuilder.retrieveLabel().retrieveDescription();
+        iriMatchBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
         List<KBHandle> iriMatches;
         if (aKB.isReadOnly()) {
@@ -403,10 +401,10 @@ public class ConceptLinkingServiceImpl
         candidate.put(KEY_LABEL_NC, candidate.getLabel().toLowerCase(candidate.getLocale()));
 
         if (aCas != null && aMention != null) {
-            AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
+            var sentence = selectSentenceCovering(aCas, aBegin);
             if (sentence != null) {
-                List<String> mentionContext = new ArrayList<>();
-                Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
+                var mentionContext = new ArrayList<String>();
+                var tokens = selectTokensCovered(sentence);
                 // Collect left context
                 tokens.stream().filter(t -> t.getEnd() <= aBegin)
                         .sorted(comparingInt(AnnotationFS::getBegin).reversed())
@@ -454,14 +452,14 @@ public class ConceptLinkingServiceImpl
 
         var results = candidates.stream() //
                 .map(candidate -> {
-                    KBHandle handle = candidate.getHandle();
+                    var handle = candidate.getHandle();
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
                     candidate.get(KEY_QUERY_BEST_MATCH_TERM_NC)
                             .filter(t -> !t.equalsIgnoreCase(handle.getUiLabel()))
                             .ifPresent(handle::setQueryBestMatchTerm);
                     return handle;
                 }) //
-                .collect(Collectors.toList());
+                .toList();
 
         var rank = 1;
         for (var handle : results) {
@@ -487,7 +485,7 @@ public class ConceptLinkingServiceImpl
         String query = aQuery.replaceAll("[*?]", "").trim();
 
         // Determine which knowledge bases to query
-        List<KnowledgeBase> knowledgeBases = new ArrayList<>();
+        var knowledgeBases = new ArrayList<KnowledgeBase>();
         if (aRepositoryId != null) {
             kbService.getKnowledgeBaseById(aProject, aRepositoryId) //
                     .filter(KnowledgeBase::isEnabled) //
@@ -498,8 +496,8 @@ public class ConceptLinkingServiceImpl
         }
 
         // Query the knowledge bases for candidates
-        Set<KBHandle> candidates = new HashSet<>();
-        for (KnowledgeBase kb : knowledgeBases) {
+        var candidates = new HashSet<KBHandle>();
+        for (var kb : knowledgeBases) {
             candidates.addAll(generateCandidates(kb, aConceptScope, aValueType, query, aMention));
         }
 
@@ -527,14 +525,12 @@ public class ConceptLinkingServiceImpl
      */
     private static AnnotationFS selectSentenceCovering(CAS aCas, int aBegin)
     {
-        AnnotationFS currentSentence = null;
-        for (AnnotationFS sentence : select(aCas, getType(aCas, Sentence.class))) {
+        for (var sentence : select(aCas, getType(aCas, Sentence.class))) {
             if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin) {
-                currentSentence = sentence;
-                break;
+                return sentence;
             }
         }
-        return currentSentence;
+        return null;
     }
 
     private static Collection<AnnotationFS> selectTokensCovered(AnnotationFS aCover)
