@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitia
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.config.InceptionSentenceLabelingProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -48,12 +49,18 @@ public class SentenceLabelingProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "SentenceLabelingProjectInitializer.svg");
 
     @Override
     public String getName()
     {
         return "Sentence classification";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("sentence-labeling-project.description"));
     }
 
     @Override
@@ -86,11 +93,5 @@ public class SentenceLabelingProjectInitializer
                 // Empty line to avoid the this text showing up in the short description of the
                 // project overview
                 "\n" + IOUtils.toString(descriptionUrl, UTF_8));
-    }
-
-    @Override
-    public Optional<String> getDescription()
-    {
-        return Optional.of("Annotate documents at the sentence level.");
     }
 }

@@ -21,9 +21,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -45,9 +49,12 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 public class CoreferenceLayerInitializer
     implements LayerInitializer
 {
-    private final AnnotationSchemaService annotationSchemaService;
+    private static final String COREFERENCE_LAYER_NAME = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
 
-    private final String COREFERENCE_LAYER_NAME = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "CoreferenceLayerInitializer.svg");
+
+    private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
     public CoreferenceLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
@@ -59,6 +66,12 @@ public class CoreferenceLayerInitializer
     public String getName()
     {
         return "Co-reference annotation";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

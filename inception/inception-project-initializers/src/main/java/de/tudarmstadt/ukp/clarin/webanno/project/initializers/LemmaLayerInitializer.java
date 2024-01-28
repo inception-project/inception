@@ -23,9 +23,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -48,6 +52,9 @@ public class LemmaLayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
 
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "LemmaLayerInitializer.svg");
+
     @Autowired
     public LemmaLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -58,6 +65,12 @@ public class LemmaLayerInitializer
     public String getName()
     {
         return "Lemmatization";
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

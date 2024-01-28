@@ -29,7 +29,7 @@
     }
     .template-card {
       transition: box-shadow .3s;
-      border-color: var(--bs-secondary-color);
+      border-color: var(--bs-secondary-color) !important;
     }
 
     .template-card:hover {
@@ -47,7 +47,7 @@
   <div class="modal-body overflow-auto pt-0">
     <div wicket:id="container" class="row m-0 g-3">
       <div wicket:id="templates" class="d-flex">
-        <button wicket:id="create" class="card template-card d-flex flex-row flex-grow-1 p-0">
+        <button wicket:id="create" class="card template-card d-flex flex-row flex-grow-1 p-0 overflow-hidden">
           <div class="bg-light d-flex flex-grow-0 align-content-center justify-content-center thumbnail-wrapper">
             <img wicket:id="thumbnail" type="button" class="thumbnail">
           </div>
