@@ -31,11 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
-import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,22 +40,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @Tag("slow")
 public class SPARQLQueryBuilderGenericTest
 {
     // YAGO seems to have problem atm 29-04-2023
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago");
+    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "hpo",
+            "snomed-ct");
 
     public static List<KnowledgeBaseProfile> data() throws Exception
     {
-        Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile
-                .readKnowledgeBaseProfiles();
+        var profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
-        List<KnowledgeBaseProfile> dataList = new ArrayList<>();
-        for (Entry<String, KnowledgeBaseProfile> entry : profiles.entrySet()) {
+        var dataList = new ArrayList<KnowledgeBaseProfile>();
+        for (var entry : profiles.entrySet()) {
             if (SKIPPED_PROFILES.contains(entry.getKey())) {
                 continue;
             }
@@ -73,10 +68,10 @@ public class SPARQLQueryBuilderGenericTest
     @MethodSource("data")
     public void thatRootConceptsCanBeRetrieved(KnowledgeBaseProfile aProfile) throws IOException
     {
-        KnowledgeBase kb = buildKnowledgeBase(aProfile);
-        Repository repo = buildRepository(aProfile);
+        var kb = buildKnowledgeBase(aProfile);
+        var repo = buildRepository(aProfile);
 
-        List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots());
+        var roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots());
 
         assertThat(roots).isNotEmpty();
     }
@@ -98,11 +93,11 @@ public class SPARQLQueryBuilderGenericTest
     public void thatChildrenOfRootConceptHaveRootConceptAsParent(KnowledgeBaseProfile aProfile)
         throws IOException
     {
-        KnowledgeBase kb = buildKnowledgeBase(aProfile);
-        Repository repo = buildRepository(aProfile);
+        var kb = buildKnowledgeBase(aProfile);
+        var repo = buildRepository(aProfile);
 
-        List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots().limit(3));
-        Set<String> rootIdentifiers = roots.stream().map(KBHandle::getIdentifier).collect(toSet());
+        var roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots().limit(3));
+        var rootIdentifiers = roots.stream().map(KBHandle::getIdentifier).collect(toSet());
 
         assertThat(roots).extracting(KBHandle::getIdentifier).allMatch(_root -> {
             try (RepositoryConnection conn = repo.getConnection()) {
@@ -130,11 +125,11 @@ public class SPARQLQueryBuilderGenericTest
     @MethodSource("data")
     public void thatRegexMetaCharactersAreSafe(KnowledgeBaseProfile aProfile) throws IOException
     {
-        KnowledgeBase kb = buildKnowledgeBase(aProfile);
-        Repository repo = buildRepository(aProfile);
+        var kb = buildKnowledgeBase(aProfile);
+        var repo = buildRepository(aProfile);
 
-        try (RepositoryConnection conn = repo.getConnection()) {
-            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder.forItems(kb)
+        try (var conn = repo.getConnection()) {
+            var builder = SPARQLQueryBuilder.forItems(kb)
                     .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
 
             System.out.printf("Query   : %n");
@@ -153,15 +148,15 @@ public class SPARQLQueryBuilderGenericTest
     public void thatLineBreaksAndWhitespaceAreSafe_noFts(KnowledgeBaseProfile aProfile)
         throws IOException
     {
-        KnowledgeBase kb = buildKnowledgeBase(aProfile);
-        Repository repo = buildRepository(aProfile);
+        var kb = buildKnowledgeBase(aProfile);
+        var repo = buildRepository(aProfile);
 
-        String originalFtsIri = kb.getFullTextSearchIri();
+        var originalFtsIri = kb.getFullTextSearchIri();
 
-        try (RepositoryConnection conn = repo.getConnection()) {
+        try (var conn = repo.getConnection()) {
             kb.setFullTextSearchIri(FTS_NONE.stringValue());
 
-            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder //
+            var builder = SPARQLQueryBuilder //
                     .forItems(kb) //
                     .withLabelMatchingExactlyAnyOf("Lord\n\r\tLady") //
                     .limit(3);

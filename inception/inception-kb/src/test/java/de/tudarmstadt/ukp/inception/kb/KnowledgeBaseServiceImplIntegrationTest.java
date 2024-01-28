@@ -42,8 +42,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -63,9 +61,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -119,10 +115,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public void setUp(Reification reification) throws Exception
     {
-        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
+        var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        EntityManager entityManager = testEntityManager.getEntityManager();
+        var kbProperties = new KnowledgeBasePropertiesImpl();
+        var entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);

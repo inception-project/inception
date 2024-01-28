@@ -66,7 +66,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -339,7 +338,7 @@ public class KnowledgeBaseServiceImpl
             var readOnly = aKB.isReadOnly();
             aKB.setReadOnly(false);
             try {
-                ValueFactory vf = SimpleValueFactory.getInstance();
+                var vf = SimpleValueFactory.getInstance();
 
                 createBaseProperty(aKB, new KBProperty(aKB.getSubclassIri(),
                         vf.createIRI(aKB.getSubclassIri()).getLocalName()));

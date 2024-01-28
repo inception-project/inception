@@ -77,7 +77,8 @@ public class SPARQLQueryBuilderTest
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
             "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .", //
             "@prefix so: <http://schema.org/> .", //
-            "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
+            "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .", //
+            "@prefix owl: <http://www.w3.org/2002/07/owl#> .");
 
     static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = contentOf(
             new File("src/test/resources/turtle/data_labels_and_descriptions_with_language.ttl"),
@@ -181,6 +182,37 @@ public class SPARQLQueryBuilderTest
             "    rdf:type rdfs:Class ;", //
             "    rdfs:subClassOf <#explicitRoot> ;", //
             "    <#implicit-property-1> 'value1' .");
+
+    static final String DATA_DEPRECATED = """
+            <#class-1>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 1' ;
+                owl:deprecated true .
+            <#class-2>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 2' ;
+                owl:deprecated false .
+            <#class-3>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 3' ;
+                owl:deprecated 'lala' .
+            <#class-4>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 4' ;
+                owl:deprecated 0 .
+            <#class-5>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 5' ;
+                owl:deprecated 1 .
+            <#instance-1>
+                rdf:type <#class-1> ;
+                rdfs:label 'Instance 1' ;
+                owl:deprecated true .
+            <#property-1>
+                rdf:type rdf:Property ;
+                rdfs:label 'Property 1' ;
+                owl:deprecated true .
+            """;
 
     private KnowledgeBase kb;
     private Repository ukpVirtuosoRepo;
@@ -293,6 +325,8 @@ public class SPARQLQueryBuilderTest
                         SPARQLQueryBuilderTest::thatCanRetrieveItemInfoForIdentifier),
                 new Scenario("thatAllPropertiesCanBeRetrieved",
                         SPARQLQueryBuilderTest::thatAllPropertiesCanBeRetrieved),
+                new Scenario("thatDeprecationStatusCanBeRetrieved",
+                        SPARQLQueryBuilderTest::thatDeprecationStatusCanBeRetrieved),
                 new Scenario("thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
                         SPARQLQueryBuilderTest::thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
                 new Scenario("thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults",
@@ -656,6 +690,37 @@ public class SPARQLQueryBuilderTest
                                 "Property One-One-One"));
     }
 
+    static void thatDeprecationStatusCanBeRetrieved(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_DEPRECATED);
+
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .retrieveLabel() //
+                .retrieveDeprecation());
+
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "deprecated")
+                .containsExactlyInAnyOrder(
+                        KBHandle.builder().withIdentifier("http://example.org/#class-1")
+                                .withName("Class 1").withDeprecated(true).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#class-2")
+                                .withName("Class 2").withDeprecated(false).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#class-3")
+                                .withName("Class 3").withDeprecated(true).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#class-4")
+                                .withName("Class 4").withDeprecated(false).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#class-5")
+                                .withName("Class 5").withDeprecated(true).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#instance-1")
+                                .withName("Instance 1").withDeprecated(true).build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#property-1")
+                                .withName("Property 1").withDeprecated(true).build());
+    }
+
     static void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults(
             Repository aRepository, KnowledgeBase aKB)
         throws Exception
@@ -675,7 +740,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void thatPropertyQueryListWorks_Wikidata()
+    void thatPropertyQueryListWorks_Wikidata()
     {
         assertIsReachable(wikidata);
 
@@ -692,7 +757,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void thatPropertyQueryLabelStartingWith_Wikidata()
+    void thatPropertyQueryLabelStartingWith_Wikidata()
     {
         assertIsReachable(wikidata);
 
@@ -882,8 +947,7 @@ public class SPARQLQueryBuilderTest
      */
     @Tag("slow")
     @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata()
-        throws Exception
+    void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
     {
         assertIsReachable(wikidata);
 
@@ -1077,7 +1141,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
+    void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
 
@@ -1096,7 +1160,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
+    void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
     {
         assertIsReachable(wikidata);
 
@@ -1116,7 +1180,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
+    void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
         assertIsReachable(zbwGnd);
 
@@ -1137,7 +1201,7 @@ public class SPARQLQueryBuilderTest
 
     @Tag("slow")
     @Test
-    public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
+    void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
     {
         assertIsReachable(hucit);
 
@@ -1869,6 +1933,7 @@ public class SPARQLQueryBuilderTest
         // and property description separately
         aKB.setPropertyDescriptionIri("http://schema.org/description");
         aKB.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        aKB.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
     }
 
     static void initOwlMapping(KnowledgeBase aKB)
@@ -1882,6 +1947,7 @@ public class SPARQLQueryBuilderTest
         aKB.setPropertyLabelIri(RDF.PROPERTY.stringValue());
         aKB.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         aKB.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        aKB.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
     }
 
     private void initWikidataMapping()

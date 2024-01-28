@@ -26,9 +26,7 @@ import java.io.Serializable;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
- * A {@code KnowledgeGraphItem} represents any element (entity, type, relation, etc.) in the
- * knowledge graph. {@code KnowledgeGraphItem}s can be identified by a {@code String} identifier.
- * {@code KnowledgeGraphItem}s feature a label, a human-readable {@code String}.
+ * Represents any element (class, instance, property, etc.) in the knowledge base.
  */
 public interface KBObject
     extends Serializable

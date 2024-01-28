@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators.I
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -65,44 +64,45 @@ public class KnowledgeBaseIriPanel
 
         kbModel = aModel;
 
-        DropDownChoice<Reification> reificationChoice = selectReificationStrategy("reification",
-                "kb.reification");
+        var reificationChoice = selectReificationStrategy("reification", "kb.reification");
         add(reificationChoice);
 
         // The Kendo comboboxes do not redraw properly when added directly to an
         // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
         // Instead, wrap all of them in a WMC and redraw that.
-        WebMarkupContainer comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
+        var comboBoxWrapper = new WebMarkupContainer("comboBoxWrapper");
         comboBoxWrapper.setOutputMarkupId(true);
         add(comboBoxWrapper);
 
         // Add comboboxes for classIri, subclassIri, typeIri and descriptionIri
-        ComboBox<String> classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
+        var classField = buildComboBox("classIri", kbModel.bind("kb.classIri"),
                 IriConstants.CLASS_IRIS);
-        ComboBox<String> subclassField = buildComboBox("subclassIri",
-                kbModel.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
-        ComboBox<String> typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
+        var subclassField = buildComboBox("subclassIri", kbModel.bind("kb.subclassIri"),
+                IriConstants.SUBCLASS_IRIS);
+        var typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
                 IriConstants.TYPE_IRIS);
-        ComboBox<String> subPropertyField = buildComboBox("subPropertyIri",
-                kbModel.bind("kb.subPropertyIri"), IriConstants.SUBPROPERTY_IRIS);
-        ComboBox<String> descriptionField = buildComboBox("descriptionIri",
-                kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
-        ComboBox<String> labelField = buildComboBox("labelIri", kbModel.bind("kb.labelIri"),
+        var subPropertyField = buildComboBox("subPropertyIri", kbModel.bind("kb.subPropertyIri"),
+                IriConstants.SUBPROPERTY_IRIS);
+        var descriptionField = buildComboBox("descriptionIri", kbModel.bind("kb.descriptionIri"),
+                IriConstants.DESCRIPTION_IRIS);
+        var labelField = buildComboBox("labelIri", kbModel.bind("kb.labelIri"),
                 IriConstants.LABEL_IRIS);
-        ComboBox<String> propertyTypeField = buildComboBox("propertyTypeIri",
-                kbModel.bind("kb.propertyTypeIri"), IriConstants.PROPERTY_TYPE_IRIS);
-        ComboBox<String> propertyLabelField = buildComboBox("propertyLabelIri",
+        var propertyTypeField = buildComboBox("propertyTypeIri", kbModel.bind("kb.propertyTypeIri"),
+                IriConstants.PROPERTY_TYPE_IRIS);
+        var propertyLabelField = buildComboBox("propertyLabelIri",
                 kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
-        ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
+        var propertyDescriptionField = buildComboBox("propertyDescriptionIri",
                 kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
+        var deprecationPropertyField = buildComboBox("deprecationPropertyIri",
+                kbModel.bind("kb.deprecationPropertyIri"), IriConstants.DEPRECATION_PROPERTY_IRIS);
+
         comboBoxWrapper.add(classField, subclassField, typeField, subPropertyField,
                 descriptionField, labelField, propertyTypeField, propertyLabelField,
-                propertyDescriptionField);
+                propertyDescriptionField, deprecationPropertyField);
 
         // RadioGroup to select the IriSchemaType
-        DropDownChoice<SchemaProfile> iriSchemaChoice = new DropDownChoice<SchemaProfile>(
-                "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
-                new EnumChoiceRenderer<>(this))
+        var iriSchemaChoice = new DropDownChoice<SchemaProfile>("iriSchema", selectedSchemaProfile,
+                asList(SchemaProfile.values()), new EnumChoiceRenderer<>(this))
         {
             private static final long serialVersionUID = 3863260896285332033L;
 
@@ -133,6 +133,7 @@ public class KnowledgeBaseIriPanel
                 propertyTypeField.setModelObject(profile.getPropertyTypeIri());
                 propertyLabelField.setModelObject(profile.getPropertyLabelIri());
                 propertyDescriptionField.setModelObject(profile.getPropertyDescriptionIri());
+                deprecationPropertyField.setModelObject(profile.getDeprecationPropertyIri());
             }
             _target.add(comboBoxWrapper, iriSchemaChoice, reificationChoice);
         }));

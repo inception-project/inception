@@ -37,6 +37,7 @@ babel_net:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       BabelNet is a multilingual lexicalized semantic network and ontology that was automatically 
@@ -63,6 +64,7 @@ db_pedia:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       DBpedia is a crowd-sourced community effort to extract structured content from the information 
@@ -91,6 +93,7 @@ wikidata:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.wikidata.org/prop/direct/P1647
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       Wikidata is a free and open knowledge base and acts as central storage for the structured data
@@ -120,6 +123,7 @@ yago:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames.
     host-institution-name: Max-Planck-Institute Saarbrücken
@@ -146,6 +150,7 @@ zbw-stw-economics:
     property-label: http://www.w3.org/2004/02/skos/core#prefLabel
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       Thesaurus that provides vocabulary on any economic subject. Almost 6,000 standardized subject
@@ -172,6 +177,7 @@ zbw-gnd:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       Mapping Integrated Authority File (GND).The Integrated Authority File (GND) is a controlled 
@@ -200,6 +206,7 @@ agrovoc:
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
     property-label: http://www.w3.org/2004/02/skos/core#prefLabel
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   additional-matching-properties:
     - http://www.w3.org/2004/02/skos/core#altLabel
   info:
@@ -250,6 +257,7 @@ wine_ontology:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       An example OWL ontology. Derived from the DAML Wine ontology at 
@@ -276,6 +284,7 @@ olia_penn.owl:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       Ontologies of Linguistic Annotation (OLiA)
@@ -301,6 +310,7 @@ iao:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   info:
     description: |
       The Information Artifact Ontology (IAO) is a new ontology of information entities, originally driven by work by 
@@ -309,7 +319,7 @@ iao:
       For more information, please refer to the project's website.
     website-url: https://github.com/information-artifact-ontology/IAO/
     
-hpo-2024-01-16:
+hpo:
   name: Human Phenotype Ontology (v2024-01-16)
   type: LOCAL
   default-language: en
@@ -327,6 +337,7 @@ hpo-2024-01-16:
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   additional-matching-properties:
     - http://www.geneontology.org/formats/oboInOwl#hasExactSynonym
   info:
@@ -358,6 +369,7 @@ snomed-ct:
     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   root-concepts:
     - http://snomed.info/id/138875005
   additional-matching-properties:

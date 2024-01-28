@@ -31,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
@@ -104,24 +103,22 @@ public class KnowledgeBaseExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
-                false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(sourceProject, null,
-                "test");
-        ExportedProject exportedProject = new ExportedProject();
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
         // Import the project again
-        ArgumentCaptor<KnowledgeBase> exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
+        var exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
         doNothing().when(kbService).registerKnowledgeBase(exportKbCaptor.capture(), any());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Check how many localKBs have been exported
-        List<KnowledgeBase> exportedKbs = exportKbCaptor.getAllValues();
+        var exportedKbs = exportKbCaptor.getAllValues();
         int numOfLocalKBs = exportedKbs.stream()
                 .filter(kb -> kb.getType().equals(RepositoryType.LOCAL))
                 .collect(Collectors.toList()).size();
@@ -139,11 +136,9 @@ public class KnowledgeBaseExporterTest
     public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
-                false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(sourceProject, null,
-                "test");
-        ExportedProject exportedProject = new ExportedProject();
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
         // Mock that the KB ID changes during import when registerKnowledgeBase is called
@@ -158,13 +153,12 @@ public class KnowledgeBaseExporterTest
                 .thenReturn(features(targetProject));
 
         // Capture remapped features
-        ArgumentCaptor<AnnotationFeature> importedAnnotationFeatureCaptor = ArgumentCaptor
-                .forClass(AnnotationFeature.class);
+        var importedAnnotationFeatureCaptor = ArgumentCaptor.forClass(AnnotationFeature.class);
         doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
 
         // Import the project again
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = new ProjectImportRequest(true);
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         // Verify that features were actually processed
@@ -182,38 +176,37 @@ public class KnowledgeBaseExporterTest
 
     private List<KnowledgeBase> knowledgeBases() throws Exception
     {
-        KnowledgeBase kb1 = buildKnowledgeBase("kb1");
+        var kb1 = buildKnowledgeBase("kb1");
         kb1.setType(RepositoryType.LOCAL);
         kb1.setClassIri(WIKIDATA_CLASS.stringValue());
 
-        KnowledgeBase kb2 = buildKnowledgeBase("kb2");
+        var kb2 = buildKnowledgeBase("kb2");
         kb2.setType(RepositoryType.REMOTE);
         kb2.setClassIri(OWL.CLASS.stringValue());
 
-        KnowledgeBase kb3 = buildKnowledgeBase("kb3");
+        var kb3 = buildKnowledgeBase("kb3");
         kb3.setType(RepositoryType.REMOTE);
         kb3.setClassIri(RDFS.CLASS.stringValue());
 
-        KnowledgeBase kb4 = buildKnowledgeBase("kb4");
+        var kb4 = buildKnowledgeBase("kb4");
         kb4.setType(RepositoryType.LOCAL);
         kb4.setClassIri(RDFS.CLASS.stringValue());
 
-        return Arrays.asList(kb1, kb2, kb3);
+        return asList(kb1, kb2, kb3);
     }
 
     private List<AnnotationFeature> features(Project aProject) throws Exception
     {
-        AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
-                aProject, false, TOKENS, NO_OVERLAP);
+        var layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE, aProject, false,
+                TOKENS, NO_OVERLAP);
 
-        AnnotationFeature feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");
-        ConceptFeatureTraits traits1 = new ConceptFeatureTraits();
+        var feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");
+        var traits1 = new ConceptFeatureTraits();
         traits1.setRepositoryId("id-kb1");
         feat1.setTraits(JSONUtil.toJsonString(traits1));
 
-        AnnotationFeature feat2 = new AnnotationFeature(1, layer1, "conceptFeature",
-                "kb-multi:conceptA");
-        ConceptFeatureTraits traits2 = new ConceptFeatureTraits();
+        var feat2 = new AnnotationFeature(1, layer1, "conceptFeature", "kb-multi:conceptA");
+        var traits2 = new ConceptFeatureTraits();
         traits2.setRepositoryId("id-kb1");
         feat2.setTraits(JSONUtil.toJsonString(traits1));
 
@@ -222,7 +215,7 @@ public class KnowledgeBaseExporterTest
 
     private KnowledgeBase buildKnowledgeBase(String name) throws Exception
     {
-        KnowledgeBase kb = new KnowledgeBase();
+        var kb = new KnowledgeBase();
         kb.setRepositoryId("id-" + name);
         kb.setName(name);
         kb.setProject(sourceProject);
@@ -234,6 +227,7 @@ public class KnowledgeBaseExporterTest
         kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setMaxResults(1000);
         kb.setRootConcepts(asList("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation",
                 "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"));
