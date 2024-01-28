@@ -152,7 +152,7 @@ public class ProjectsOverviewPage
         currentUser = LoadableDetachableModel.of(userRepository::getCurrentUser);
         allAccessibleProjects = LoadableDetachableModel.of(this::loadProjects);
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
         sortStrategy = new LambdaModelAdapter.Builder<ProjectListSortStrategy>() //
                 .getting(() -> userPrefService.loadTraitsForUser(KEY_PROJECT_LIST_SORT_MODE,
                         user).strategy)
@@ -186,7 +186,7 @@ public class ProjectsOverviewPage
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
 
-        DropDownChoice<ProjectListSortStrategy> sortOrder = new DropDownChoice<>("sortOrder");
+        var sortOrder = new DropDownChoice<ProjectListSortStrategy>("sortOrder");
         sortOrder.setModel(sortStrategy);
         sortOrder.setChoiceRenderer(new EnumChoiceRenderer<>(sortOrder));
         sortOrder.setChoices(asList(ProjectListSortStrategy.values()));
@@ -313,10 +313,10 @@ public class ProjectsOverviewPage
             return;
         }
 
-        List<ProjectEntry> projects = allAccessibleProjects.getObject();
+        var projects = allAccessibleProjects.getObject();
         if (projects.size() == 1) {
-            Project soleAccessibleProject = projects.get(0).getProject();
-            PageParameters pageParameters = new PageParameters();
+            var soleAccessibleProject = projects.get(0).getProject();
+            var pageParameters = new PageParameters();
             ProjectPageBase.setProjectPageParameter(pageParameters, soleAccessibleProject);
             throw new RestartResponseException(ProjectDashboardPage.class, pageParameters);
         }
@@ -324,10 +324,7 @@ public class ProjectsOverviewPage
 
     private LambdaAjaxLink createNewProjectLink()
     {
-        LambdaAjaxLink newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT,
-                this::actionCreateProject);
-
-        add(newProjectLink);
+        var newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT, this::actionCreateProject);
 
         authorize(newProjectLink, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
@@ -337,8 +334,7 @@ public class ProjectsOverviewPage
 
     private LambdaAjaxLink createStartTutorialLink()
     {
-        LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
-                this::startTutorial);
+        var startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL, this::startTutorial);
         startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
         startTutorialLink.add(visibleWhen(() -> {
             return userRepository.isAdministrator(currentUser.getObject())
@@ -376,9 +372,9 @@ public class ProjectsOverviewPage
             @Override
             protected void populateItem(Item<ProjectEntry> aItem)
             {
-                Project project = aItem.getModelObject().getProject();
+                var project = aItem.getModelObject().getProject();
 
-                PageParameters pageParameters = new PageParameters();
+                var pageParameters = new PageParameters();
                 ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
@@ -390,13 +386,13 @@ public class ProjectsOverviewPage
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
 
-                Label createdLabel = new Label(MID_CREATED,
+                var createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
                 createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
                 aItem.add(createdLabel);
 
-                Label projectId = new Label(MID_ID, () -> project.getId());
+                var projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
                 aItem.add(projectId);
@@ -422,12 +418,12 @@ public class ProjectsOverviewPage
 
     private void addActionsDropdown(ListItem<ProjectEntry> aItem)
     {
-        ProjectEntry projectEntry = aItem.getModelObject();
-        Project project = projectEntry.getProject();
+        var projectEntry = aItem.getModelObject();
+        var project = projectEntry.getProject();
 
-        WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
+        var container = new WebMarkupContainer("actionDropdown");
 
-        LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
+        var leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
                 _target -> actionConfirmLeaveProject(_target, project));
         leaveProjectLink.add(visibleWhen(() -> !projectEntry.getLevels().isEmpty()
                 && !projectEntry.getLevels().contains(MANAGER)));

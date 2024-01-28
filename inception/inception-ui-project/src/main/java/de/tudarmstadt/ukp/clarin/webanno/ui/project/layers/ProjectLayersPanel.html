@@ -23,6 +23,7 @@
       <div class="flex-v-container flex-gutter min-content-height" style="flex-basis: 25%;">
         <div wicket:id="layerSelectionPane" class="flex-content card">
           <div class="card-header">
+            <div wicket:id="dialog"/>
             <wicket:message key="layers"/>
             <span>
               <a wicket:id="helpLinkLayers"/>
@@ -57,28 +58,14 @@
                   </form>
                 </div>
               </span>
-              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="btn-group" role="group">
-                  <button wicket:id="create" class="btn btn-primary btn-action">
-                    <i class="fas fa-plus-square"></i>&nbsp;
-                    <wicket:message key="create"/>
-                  </button>
-                  <button class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
-                  <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
-                    <div class="dropdown-header">Select a task below to set up appropriate layers.</div>
-                    <div wicket:id="initializersContainer">
-                      <div wicket:id="initializers" class="flex-content flex-v-container">
-                        <button wicket:id="applyInitializer" class="dropdown-item">
-                          <wicket:container wicket:id="name"/>
-                        </button>
-                      </div>
-                      <div wicket:id="noInitializersInfo" class="flex-content flex-h-container no-data-notice p-0 m-0">
-                        <small>All pre-configured layers have already been set up.</small>
-                      </div>
-                    </div>
-                  </div>
-                </span>
-              </span>
+              <button wicket:id="create" class="btn btn-primary btn-action">
+                <i class="fas fa-plus-square"></i>&nbsp;
+                <wicket:message key="create"/>
+              </button>
+              <button wicket:id="add" class="btn btn-primary btn-action">
+                <i class="fas fa-list"></i>&nbsp;
+                <wicket:message key="add"/>
+              </button>
             </div>
           </div>
           <div class="card-body fit-child-snug">
@@ -179,13 +166,13 @@
                 <a wicket:id="technicalPropertiesHelpLink"/>
               </div>
               <div class="card-body">
-                <div class="form-row form-floating">
+                <div class="form-row form-floating" wicket:enclosure="name">
                   <span wicket:id="name" class="form-control" readonly/>
                   <label> 
                     <wicket:message key="internalName" />
                   </label>
                 </div>
-                <div class="form-row form-floating">
+                <div class="form-row form-floating" wicket:enclosure="type">
                   <select wicket:id="type" class="form-select" wicket:message="placeholder:type"/>
                   <label wicket:for="type">
                     <wicket:label key="type" />

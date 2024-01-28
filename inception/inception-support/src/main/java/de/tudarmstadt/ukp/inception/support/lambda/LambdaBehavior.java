@@ -29,6 +29,20 @@ import org.danekja.java.util.function.serializable.SerializableConsumer;
 
 public class LambdaBehavior
 {
+    public static Behavior onDetach(SerializableRunnable aAction)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -6144591383577622961L;
+
+            @Override
+            public void detach(Component aComponent)
+            {
+                aAction.run();
+            }
+        };
+    }
+
     public static Behavior onConfigure(SerializableRunnable aAction)
     {
         return new Behavior()

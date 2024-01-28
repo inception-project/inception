@@ -15,24 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import java.util.Optional;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import org.apache.wicket.request.resource.ResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 
-import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
-
-public interface LayerInitializer
-    extends ProjectInitializer
+public class LayerTemplateSelectedEvent
+    extends AbstractAjaxAwareEvent
 {
-    default Optional<String> getDescription()
+    private final LayerInitializer layerInitializer;
+
+    public LayerTemplateSelectedEvent(AjaxRequestTarget aTarget, LayerInitializer aLayerInitializer)
     {
-        return Optional.empty();
+        super(aTarget);
+
+        layerInitializer = aLayerInitializer;
     }
 
-    default Optional<ResourceReference> getThumbnail()
+    public LayerInitializer getLayerInitializer()
     {
-        return Optional.empty();
+        return layerInitializer;
     }
 }
