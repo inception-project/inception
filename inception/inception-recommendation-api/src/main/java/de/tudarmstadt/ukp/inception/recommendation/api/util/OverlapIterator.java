@@ -91,7 +91,7 @@ public class OverlapIterator
             // Step to the next B from the source list
             LOG.trace("Stepping B from source Bs");
             b = ib.next();
-            if (b.getBegin() > a.getEnd()) {
+            if (a != null && b.getBegin() > a.getEnd()) {
                 // All remaining b's are beyond the end of the a's and won't overlap
                 a = null;
             }
