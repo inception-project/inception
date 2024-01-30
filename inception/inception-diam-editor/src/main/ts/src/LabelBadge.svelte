@@ -26,6 +26,8 @@
 
     $: backgroundColor = annotation.color || "var(--bs-secondary)";
     $: textColor = bgToFgColor(backgroundColor);
+    $: hasError = annotation.comments?.find(comment => comment.type === 'error')
+    $: hasInfo = annotation.comments?.find(comment => comment.type === 'info')
 
     function handleSelect(ev: MouseEvent) {
         ajaxClient.selectAnnotation(annotation.vid, { scrollTo: true });
@@ -97,7 +99,13 @@
         {/if}
     </button>
 {:else}
-    <div class="btn-group mb-0 ms-1 bg-body" role="group">
+    <div class="input-group mb-0 ms-1 bg-body" role="group">
+        {#if hasError || hasInfo}
+            <span class="input-group-text py-0 px-1">
+                {#if hasError}<i class="fas fa-exclamation-circle" style="color: var(--i7n-error-color)"></i>{/if}
+                {#if hasInfo}<i class="fas fa-exclamation-circle" style="color: var(--i7n-info-color)"></i>{/if}
+            </span>
+        {/if}
         <button
             type="button"
             class="btn-select btn btn-colored btn-sm py-0 px-1 border-dark"
