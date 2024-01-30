@@ -67,6 +67,8 @@ public interface KBObject
 
     void setDescription(String label);
 
+    boolean isDeprecated();
+
     /**
      * @return the language (e.g. of label and description) of this element.
      */
@@ -120,6 +122,7 @@ public interface KBObject
         handle.setName(getName());
         handle.setLanguage(getLanguage());
         handle.setDescription(getDescription());
+        handle.setDeprecated(isDeprecated());
         handle.setKB(getKB());
         return handle;
     }

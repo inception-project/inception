@@ -443,8 +443,9 @@ public class SPARQLQueryBuilderTest
         assertThat(results)
                 .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
                         "description", "language")
-                .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
-                        "Green Goblin", "Little green monster"));
+                .containsExactlyInAnyOrder(KBHandle.builder()
+                        .withIdentifier("http://example.org/#green-goblin").withName("Green Goblin")
+                        .withDescription("Little green monster").build());
     }
 
     /**
@@ -652,11 +653,11 @@ public class SPARQLQueryBuilderTest
                 .retrieveDescription());
 
         assertThat(results).isNotEmpty();
-        assertThat(results)
-                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
-                        "description", "language")
-                .containsExactlyInAnyOrder(new KBHandle("http://example.org/#red-goblin",
-                        "Red Goblin", "Little red monster"));
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "description", "language")
+                .containsExactlyInAnyOrder(KBHandle.builder()
+                        .withIdentifier("http://example.org/#red-goblin").withName("Red Goblin")
+                        .withDescription("Little red monster").build());
     }
 
     @SuppressWarnings("deprecation")
@@ -682,12 +683,14 @@ public class SPARQLQueryBuilderTest
                         new KBHandle("http://example.org/#property-2", "Property 2", "Property Two",
                                 null, "http://example.org/#subclass1",
                                 "http://www.w3.org/2001/XMLSchema#Integer"),
-                        new KBHandle("http://example.org/#property-3", "Property 3",
-                                "Property Three"),
-                        new KBHandle("http://example.org/#subproperty-1-1", "Subproperty 1-1",
-                                "Property One-One"),
-                        new KBHandle("http://example.org/#subproperty-1-1-1", "Subproperty 1-1-1",
-                                "Property One-One-One"));
+                        KBHandle.builder().withIdentifier("http://example.org/#property-3")
+                                .withName("Property 3").withDescription("Property Three").build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#subproperty-1-1")
+                                .withName("Subproperty 1-1").withDescription("Property One-One")
+                                .build(),
+                        KBHandle.builder().withIdentifier("http://example.org/#subproperty-1-1-1")
+                                .withName("Subproperty 1-1-1")
+                                .withDescription("Property One-One-One").build());
     }
 
     static void thatDeprecationStatusCanBeRetrieved(Repository aRepository, KnowledgeBase aKB)

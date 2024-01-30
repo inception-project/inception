@@ -195,6 +195,11 @@ public class CandidateEntity
         return handle.getLanguage();
     }
 
+    public boolean isDeprecated()
+    {
+        return handle.isDeprecated();
+    }
+
     @SuppressWarnings("unchecked")
     public <T> Optional<T> get(Key<T> aKey)
     {

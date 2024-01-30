@@ -41,6 +41,7 @@ public class KBInstance
     private String identifier;
     private String name;
     private String description;
+    private boolean deprecated;
     private URI type;
     private List<Statement> originalStatements = new ArrayList<>();
     private String language;
@@ -113,6 +114,17 @@ public class KBInstance
     public void setDescription(String aDescription)
     {
         description = aDescription;
+    }
+
+    public void setDeprecated(boolean aDeprecated)
+    {
+        deprecated = aDeprecated;
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return deprecated;
     }
 
     public List<Statement> getOriginalStatements()

@@ -168,7 +168,8 @@ public class ConceptFeatureSupport
             String identifier = (String) aValue;
             ConceptFeatureTraits traits = readTraits(aFeature);
             KBHandle chbk = getConceptHandle(aFeature, identifier, traits);
-            var clone = new KBHandle(identifier, chbk.getUiLabel(), chbk.getDescription());
+            // Clone the cached original so we can override the KB
+            var clone = new KBHandle(chbk);
             clone.setKB(chbk.getKB());
             return clone;
         }
