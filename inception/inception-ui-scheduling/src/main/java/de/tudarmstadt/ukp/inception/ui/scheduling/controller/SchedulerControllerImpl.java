@@ -54,7 +54,7 @@ public class SchedulerControllerImpl
     {
         return schedulingService.getAllTasks().stream() //
                 .map(t -> t.getMonitor()) //
-                .filter(t -> t.getUser().equals(user.getName())) //
+                .filter(t -> user != null && t.getUser().equals(user.getName())) //
                 .map(MTaskStateUpdate::new) //
                 .collect(toList());
     }
