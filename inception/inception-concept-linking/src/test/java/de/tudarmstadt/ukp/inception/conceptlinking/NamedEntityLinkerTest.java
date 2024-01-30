@@ -112,14 +112,23 @@ public class NamedEntityLinkerTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        List<KBHandle> mockResult = asList(
-                new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
-                        "44th President of the United States of America"),
-                new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
-                        "Japanese Family Name"),
-                new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama", "genus of worms"),
-                new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
-                        "city in Fukui prefecture, Japan"));
+        var mockResult = asList(
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q76") //
+                        .withName("Barack Obama") //
+                        .withDescription("44th President of the United States of America") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q26446735") //
+                        .withName("Obama") //
+                        .withDescription("Japanese Family Name") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q18355807") //
+                        .withName("Obama") //
+                        .withDescription("genus of worms") //
+                        .build(),
+                KBHandle.builder().withIdentifier("https://www.wikidata.org/wiki/Q41773") //
+                        .withName("Obama") //
+                        .withDescription("city in Fukui prefecture, Japan") //
+                        .build());
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();

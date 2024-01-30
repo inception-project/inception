@@ -83,6 +83,7 @@ public class ConceptFeatureEditor
     private @SpringBean KnowledgeBaseService knowledgeBaseService;
 
     private AutoCompleteField focusComponent;
+    private WebMarkupContainer deprecationMarker;
     private WebMarkupContainer descriptionContainer;
     private Label description;
     private IriInfoBadge iriBadge;
@@ -109,6 +110,11 @@ public class ConceptFeatureEditor
         openIriLink.setOutputMarkupPlaceholderTag(true);
         openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(openIriLink);
+
+        deprecationMarker = new WebMarkupContainer("deprecationMarker");
+        deprecationMarker.setOutputMarkupPlaceholderTag(true);
+        deprecationMarker.add(visibleWhen(this::isDeprecated));
+        add(deprecationMarker);
 
         descriptionContainer = new WebMarkupContainer("descriptionContainer");
         descriptionContainer.setOutputMarkupPlaceholderTag(true);
@@ -162,12 +168,22 @@ public class ConceptFeatureEditor
         dialog.open(content, aTarget);
     }
 
-    private String descriptionValue()
+    private boolean isDeprecated()
     {
         return getModel().map(FeatureState::getValue)//
                 .map(value -> (KBHandle) value)//
-                .map(KBHandle::getDescription)//
-                .map(value -> StringUtils.abbreviate(value, 130))//
+                .map(KBHandle::isDeprecated) //
+                .orElse(false)//
+                .getObject();
+
+    }
+
+    private String descriptionValue()
+    {
+        return getModel().map(FeatureState::getValue) //
+                .map(value -> (KBHandle) value) //
+                .map(KBHandle::getDescription) //
+                .map(value -> StringUtils.abbreviate(value, 1000)) //
                 .orElse("no description")//
                 .getObject();
     }
@@ -184,7 +200,7 @@ public class ConceptFeatureEditor
     @OnEvent
     public void onFeatureEditorValueChanged(FeatureEditorValueChangedEvent aEvent)
     {
-        aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink);
+        aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink, deprecationMarker);
     }
 
     @OnEvent

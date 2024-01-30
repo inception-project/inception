@@ -696,7 +696,8 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .excludeInferred() //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -750,6 +751,7 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .excludeInferred();
 
             List<KBHandle> result;
@@ -786,7 +788,7 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
-                    .retrieveDomainAndRange() //
+                    .retrieveDeprecation().retrieveDomainAndRange() //
                     .excludeInferred();
 
             Optional<KBHandle> result;
@@ -835,6 +837,7 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forProperties(aKB) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .includeInferred(aIncludeInferred);
 
@@ -873,7 +876,7 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
-                    .excludeInferred();
+                    .retrieveDeprecation().excludeInferred();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -926,7 +929,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forInstances(aKB) //
                     .childrenOf(aConceptIri) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1034,6 +1038,7 @@ public class KnowledgeBaseServiceImpl
                     .matchingDomain(aDomain) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .includeInferred(aIncludeInferred);
 
@@ -1056,7 +1061,8 @@ public class KnowledgeBaseServiceImpl
     {
         try (var watch = new StopWatch(LOG, "listRootConcepts()")) {
             var query = SPARQLQueryBuilder.forClasses(aKB).roots().retrieveLabel()
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1095,7 +1101,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .parentsOf(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1117,7 +1124,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .ancestorsOf(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1141,6 +1149,7 @@ public class KnowledgeBaseServiceImpl
                     .childrenOf(aParentIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .limit(aLimit);
 
             List<KBHandle> result;
@@ -1264,7 +1273,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forItems(aKB) //
                     .withIdentifier(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {

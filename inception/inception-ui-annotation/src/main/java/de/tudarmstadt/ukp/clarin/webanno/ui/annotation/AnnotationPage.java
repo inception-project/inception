@@ -390,7 +390,7 @@ public class AnnotationPage
             documentService
                     .verifyAnnotationCasTimestamp(state.getDocument(),
                             state.getUser().getUsername(),
-                            state.getAnnotationDocumentTimestamp().get(), "reading")
+                            state.getAnnotationDocumentTimestamp().get(), "reading the editor CAS")
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
 

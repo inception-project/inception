@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -96,6 +97,7 @@ public class WikiDataReificationTest
         kb.setDescriptionIri("http://schema.org/description");
         kb.setPropertyLabelIri("http://www.w3.org/2000/01/rdf-schema#label");
         kb.setPropertyDescriptionIri("http://www.w3.org/2000/01/rdf-schema#comment");
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setSubPropertyIri("http://www.wikidata.org/prop/direct/P1647");
 
         // Local in-memory store - this should be used for most tests because we can

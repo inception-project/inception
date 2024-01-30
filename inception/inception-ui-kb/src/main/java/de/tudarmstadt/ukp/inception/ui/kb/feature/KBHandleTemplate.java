@@ -40,7 +40,7 @@ final class KBHandleTemplate
         // the if clauses...
         sb.append("  # if (data.deprecated != 'false') { #");
         sb.append(
-                "    <span class=\"ms-1 float-end badge rounded-pill text-secondary border border-seecondary\">deprecated</span>");
+                "    <span class=\"ms-1 float-end badge rounded-pill text-secondary border border-secondary\">deprecated</span>");
         sb.append("  # } #");
         sb.append("  # if (data.rank) { if (data.rank != '0') { #");
         sb.append("    <span class=\"item-rank\">[${ data.rank }]</span>");

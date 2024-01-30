@@ -75,22 +75,42 @@ public class KBHandle
         range = builder.range;
     }
 
+    public KBHandle(KBHandle aOther)
+    {
+        identifier = aOther.identifier;
+        name = aOther.name;
+        queryBestMatchTerm = aOther.queryBestMatchTerm;
+        matchTerms = aOther.matchTerms;
+        description = aOther.description;
+        kb = aOther.kb;
+        language = aOther.language;
+        deprecated = aOther.deprecated;
+        rank = aOther.rank;
+        score = aOther.score;
+        debugInfo = aOther.debugInfo;
+        domain = aOther.domain;
+        range = aOther.range;
+    }
+
+    @Deprecated
     public KBHandle()
     {
         this(null, null);
     }
 
+    @Deprecated
     public KBHandle(String aIdentifier)
     {
         this(aIdentifier, null);
     }
 
+    @Deprecated
     public KBHandle(String aIdentifier, String aLabel)
     {
-        this(aIdentifier, aLabel, null);
+        this(aIdentifier, aLabel, null, null);
     }
 
-    public KBHandle(String aIdentifier, String aLabel, String aDescription)
+    protected KBHandle(String aIdentifier, String aLabel, String aDescription)
     {
         identifier = aIdentifier;
         name = aLabel;
@@ -122,6 +142,7 @@ public class KBHandle
         deprecated = aDeprecated;
     }
 
+    @Override
     public boolean isDeprecated()
     {
         return deprecated;
@@ -283,6 +304,7 @@ public class KBHandle
             concept.setKB(aHandle.getKB());
             concept.setLanguage(aHandle.getLanguage());
             concept.setDescription(aHandle.getDescription());
+            concept.setDeprecated(aHandle.isDeprecated());
             concept.setName(aHandle.getName());
             return (T) concept;
         }
@@ -292,6 +314,7 @@ public class KBHandle
             instance.setKB(aHandle.getKB());
             instance.setLanguage(aHandle.getLanguage());
             instance.setDescription(aHandle.getDescription());
+            instance.setDeprecated(aHandle.isDeprecated());
             instance.setName(aHandle.getName());
             return (T) instance;
         }
@@ -301,6 +324,7 @@ public class KBHandle
             property.setKB(aHandle.getKB());
             property.setLanguage(aHandle.getLanguage());
             property.setDescription(aHandle.getDescription());
+            property.setDeprecated(aHandle.isDeprecated());
             property.setName(aHandle.getName());
             property.setRange(aHandle.getRange());
             property.setDomain(aHandle.getDomain());
