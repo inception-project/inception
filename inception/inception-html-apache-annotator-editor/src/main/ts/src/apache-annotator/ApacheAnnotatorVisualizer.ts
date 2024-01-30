@@ -21,10 +21,13 @@ import { CompactAnnotatedText } from '@inception-project/inception-js-api/src/mo
 import { highlightText } from '@apache-annotator/dom'
 import { showEmptyHighlights, showLabels } from './ApacheAnnotatorState'
 import { ResizeManager } from './ResizeManager'
+import { bgToFgColor } from '@inception-project/inception-js-api/src/util/Coloring'
 
 export const CLASS_RELATED = 'iaa-related'
 
 export const NO_LABEL = '◌'
+export const ERROR_LABEL = '🔴'
+export const INFO_LABEL = 'ℹ️'
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
@@ -305,14 +308,31 @@ export class ApacheAnnotatorVisualizer {
 
     if (begin === end) classList.push('iaa-zero-width')
 
+    var decorations = ''
+
+    const hasError = span.comments?.find(comment => comment.type === 'error')
+    if (hasError) {
+      classList.push('iaa-error-marker')
+      decorations += ERROR_LABEL
+    }
+
+    const hasInfo = span.comments?.find(comment => comment.type === 'info')
+    if (hasInfo) {
+      classList.push('iaa-info-marker')
+      decorations += INFO_LABEL
+    }
+
     const styleList = [
+      `--iaa-color: ${bgToFgColor(span.color || '#000000')}`,
       `--iaa-background-color: ${span.color || '#000000'}${this.alpha}`,
       `--iaa-border-color: ${span.color || '#000000'}`
     ]
 
+    decorations += ' '
+
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${span.label || `[${span.layer.name}]` || NO_LABEL}`,
+      'data-iaa-label': `${decorations}${span.label || `[${span.layer.name}]` || NO_LABEL}`,
       class: classList.join(' '),
       style: styleList.join('; ')
     }

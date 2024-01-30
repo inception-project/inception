@@ -54,13 +54,13 @@ html > body {
   border-right-width: 0px;
 
   &.iaa-first-highlight {
-    padding-left: 5px;
-    margin-left: var(--border-width)
+    border-top-left-radius: 0.25em;
+    border-bottom-left-radius: 0.25em;
   }
   
   &.iaa-last-highlight {
-    padding-right: 5px;
-    margin-right: var(--border-width)
+    border-top-right-radius: 0.25em;
+    border-bottom-right-radius: 0.25em;
   }
 
   &.iaa-zero-width {
@@ -76,6 +76,8 @@ html > body {
     border-style: solid;
   
     &.iaa-first-highlight {
+      padding-left: 5px;
+      margin-left: var(--border-width);
       border-top-left-radius: 0.5em;
       border-bottom-left-radius: 0.5em;
       border-left-width: var(--border-width);
@@ -98,6 +100,7 @@ html > body {
         margin-right: 5px;
         border-top-left-radius: 0.5em;
         border-bottom-left-radius: 0.5em;
+        color: var(--iaa-color);
         background-color: var(--iaa-border-color);
       }
 
@@ -107,6 +110,8 @@ html > body {
     }
   
     &.iaa-last-highlight {
+      padding-right: 5px;
+      margin-right: var(--border-width);
       border-top-right-radius: 0.5em;
       border-bottom-right-radius: 0.5em;
       border-right-width: var(--border-width);
@@ -127,6 +132,11 @@ html > body {
 		background: rgba(255, 165, 0, 0);
 	}
 }
+
+.iaa-error-marker {
+  filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-error-color)) brightness(var(--hover-brightness));
+}
+
 .iaa-ping-marker {
   background: rgba(255, 165, 0, 0);
   animation: iaa-ping-fade-animation 0.3s ease-in-out .2s 3 normal forwards;
@@ -190,25 +200,15 @@ html > body {
   &.iaa-first-highlight {
     border-left-style: solid;
     border-left-color: var(--i7n-focus-bounds-color) !important;
-    border-left-width: calc(2 * var(--border-width)) !important;
   }
 
   &.iaa-last-highlight {
     border-right-style: solid;
     border-right-color: var(--i7n-focus-bounds-color) !important;
-    border-right-width: calc(2 * var(--border-width)) !important;
   }
 
   &:not(.iaa-inline-label) {
     filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
-
-    &.iaa-first-highlight {
-      margin-left: calc(0px - var(--border-width)) !important;
-    }
-
-    &.iaa-last-highlight {
-      margin-right: calc(0px - var(--border-width)) !important;
-    }
   }
 
   &.iaa-inline-label {
@@ -216,19 +216,8 @@ html > body {
     filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--i7n-focus-color)) brightness(var(--hover-brightness));
 
     &.iaa-first-highlight {
-
-      &:not(.iaa-marker-focus) {
-       margin-left: 0px;
-      }
-
       &:before {
         background-color: var(--i7n-focus-color)t;
-      }
-    }
-
-    &.iaa-last-highlight {
-      &:not(.iaa-marker-focus) {
-        margin-right: 0px;
       }
     }
   }

@@ -33,7 +33,7 @@ public class ValidationUtils
             return false;
         }
 
-        if (TYPE_NAME_STRING.equals(aFeature.getType())) {
+        if (TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature()) {
             // Only string features can have null values and be required
             return isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
         }
