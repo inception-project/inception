@@ -22,12 +22,13 @@
   <div class="row form-row" wicket:enclosure="value">
     <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
-      <span class="float-end">
-        <span wicket:id="disabledKBWarning"/>
-      </span>
-      <a wicket:id="openIri" class="float-end" target="_blank">
+      <a wicket:id="openIri" class="float-end ms-2" target="_blank">
         <i class="fas fa-external-link-alt"/>
       </a>
+      <span class="float-end">
+        <span wicket:id="deprecationMarker" class="badge rounded-pill text-secondary border border-secondary">deprecated</span>
+        <span wicket:id="disabledKBWarning"/>
+      </span>
     </label>
     <div class="feature-editor-value">
       <div class="input-group">
@@ -39,8 +40,10 @@
         </button>
         <input class="flex-content" wicket:id="value" type="text"/>
       </div>
-      <div wicket:id="descriptionContainer" class="scrolling border border-top-0 rounded-bottom p-1" style="max-height: 4.5rem; word-wrap: break-word;" readonly>
-        <small class="text-muted" wicket:id="description"/>
+      <div wicket:id="descriptionContainer" class="border border-top-0 rounded-bottom overflow-hidden" readonly>
+        <div class="scrolling p-1 text-muted small" style="max-height: 4.5rem; word-wrap: break-word;">
+          <span wicket:id="description"/>
+        </div>
       </div>
       <div wicket:id="keyBindings" class="col-sm-12"/>
     </div>
