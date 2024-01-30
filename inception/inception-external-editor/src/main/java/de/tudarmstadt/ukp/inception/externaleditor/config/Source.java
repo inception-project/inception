@@ -17,19 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
-public interface ExternalEditorProperties
+public enum Source
 {
-    boolean isBlockStyle();
-
-    boolean isBlockImg();
-
-    Source getAllowImgSource();
-
-    boolean isBlockEmbed();
-
-    boolean isBlockAudio();
-
-    boolean isBlockObject();
-
-    boolean isBlockVideo();
+    NONE, LOCAL, ANY;
 }
