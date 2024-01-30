@@ -31,19 +31,23 @@
       </span>
     </label>
     <div class="feature-editor-value">
-      <div class="input-group">
-        <div class="input-group-text">
-          <span wicket:id="iriInfoBadge"/>
-        </div>
-        <button wicket:id="openBrowseDialog" class="btn btn-outline-secondary" type="button">
-          <i class="fas fa-sitemap"/>
-        </button>
-        <input class="flex-content" wicket:id="value" type="text"/>
-      </div>
-      <div wicket:id="descriptionContainer" class="border border-top-0 rounded-bottom overflow-hidden" readonly>
-        <div class="scrolling p-1 text-muted small" style="max-height: 4.5rem; word-wrap: break-word;">
-          <span wicket:id="description"/>
-        </div>
+      <div class="list-group">
+        <ul class="list-group-item p-0 m-0">
+          <div class="input-group">
+            <div class="input-group-text border-0">
+              <span wicket:id="iriInfoBadge"/>
+            </div>
+            <button wicket:id="openBrowseDialog" class="btn btn-outline-secondary border-secondary-subtle border-top-0 border-bottom-0" type="button">
+              <i class="fas fa-sitemap"/>
+            </button>
+            <input class="flex-content border-0" wicket:id="value" type="text"/>
+          </div>
+        </ul>
+        <ul wicket:id="descriptionContainer" class="list-group-item p-0 m-0 overflow-hidden" readonly>
+          <div class="scrolling p-1 text-muted small" style="max-height: 4.5rem; word-wrap: break-word;">
+            <span wicket:id="description"/>
+          </div>
+        </ul>
       </div>
       <div wicket:id="keyBindings" class="col-sm-12"/>
     </div>

@@ -117,7 +117,6 @@ public class ConceptFeatureEditor
         add(deprecationMarker);
 
         descriptionContainer = new WebMarkupContainer("descriptionContainer");
-        descriptionContainer.setOutputMarkupPlaceholderTag(true);
         descriptionContainer.add(visibleWhen(
                 () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
         add(descriptionContainer);
@@ -200,7 +199,7 @@ public class ConceptFeatureEditor
     @OnEvent
     public void onFeatureEditorValueChanged(FeatureEditorValueChangedEvent aEvent)
     {
-        aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink, deprecationMarker);
+        aEvent.getTarget().add(this);
     }
 
     @OnEvent
@@ -219,7 +218,6 @@ public class ConceptFeatureEditor
     {
         getModelObject().value = aKBObject;
         dialog.close(aTarget);
-        aTarget.add(focusComponent, descriptionContainer, iriBadge, openIriLink);
         send(focusComponent, BUBBLE,
                 new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
     }

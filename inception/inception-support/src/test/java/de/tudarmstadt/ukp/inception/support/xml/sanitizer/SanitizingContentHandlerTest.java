@@ -202,10 +202,10 @@ public class SanitizingContentHandlerTest
     void thatDisallowedAttributesAreDroppped(String aName, PolicyCollectionBuilder aBuilder)
         throws Exception
     {
-        QName root = new QName("root");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
-        QName attr2 = new QName("attr2");
+        var root = new QName("root");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
+        var attr2 = new QName("attr2");
 
         var buffer = new StringWriter();
         var policy = aBuilder //
@@ -258,9 +258,9 @@ public class SanitizingContentHandlerTest
     @Test
     void thatCaseInsensitiveModeWorks() throws Exception
     {
-        QName root = new QName("root");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
+        var root = new QName("root");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseInsensitive() //
@@ -285,9 +285,9 @@ public class SanitizingContentHandlerTest
     @Test
     void thatCaseSensitiveModeWorks() throws Exception
     {
-        QName root = new QName("ROOT");
-        QName child = new QName("child");
-        QName attr1 = new QName("attr1");
+        var root = new QName("ROOT");
+        var child = new QName("child");
+        var attr1 = new QName("attr1");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseSensitive() //
@@ -314,7 +314,7 @@ public class SanitizingContentHandlerTest
     @Test
     void thatSanitizingDefaultXmlParserWorks() throws Exception
     {
-        QName root = new QName("http://namespace.org", "ROOT");
+        var root = new QName("http://namespace.org", "ROOT");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseSensitive() //
@@ -323,7 +323,7 @@ public class SanitizingContentHandlerTest
 
         var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
 
-        String xml = "<ns:ROOT xmlns:ns='http://namespace.org'/>";
+        var xml = "<ns:ROOT xmlns:ns='http://namespace.org'/>";
 
         var parser = newSaxParser();
         parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));
@@ -334,7 +334,7 @@ public class SanitizingContentHandlerTest
     @Test
     void thatNamespaceDeclarationsPass() throws Exception
     {
-        QName root = new QName("http://namespace.org", "ROOT");
+        var root = new QName("http://namespace.org", "ROOT");
 
         var buffer = new StringWriter();
         var policy = PolicyCollectionBuilder.caseSensitive() //
@@ -343,7 +343,7 @@ public class SanitizingContentHandlerTest
 
         var sut = new SanitizingContentHandler(makeXmlSerializer(buffer), policy);
 
-        String xml = "<ns:ROOT xmlns:ns='http://namespace.org' xmlns:other='otherNs' xmlns='default'/>";
+        var xml = "<ns:ROOT xmlns:ns='http://namespace.org' xmlns:other='otherNs' xmlns='default'/>";
 
         var parser = newSaxParser();
         parser.parse(toInputStream(xml, UTF_8), new DefaultHandlerToContentHandlerAdapter<>(sut));

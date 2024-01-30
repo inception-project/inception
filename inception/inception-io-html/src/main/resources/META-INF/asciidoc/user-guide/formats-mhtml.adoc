@@ -18,7 +18,8 @@
 = MHTML (Web archive)
 
 ====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.mhtml.enabled=true` to the `settings.properties` file. In order to load images from MHTML files, it is currently also necessary to disable image blocking in the safety net using `ui.external.block-img=false` - use with care as this will also enable loading images from external sources.
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.mhtml.enabled=true` to the `settings.properties` file. In order to load images from MHTML files, it is currently also necessary to disable image blocking in the safety net using `ui.external.block-img=false` and set `ui.external.allow-img-source=LOCAL` - this will allow loading images
+embedded into documents, but not to load images from remote servers.
 ====
 
 link:https://en.wikipedia.org/wiki/MHTML[MHTML] is a format supported by many browsers which stores the website currently shown in the browser along with most resources required to display the page - including but not limited to images.
