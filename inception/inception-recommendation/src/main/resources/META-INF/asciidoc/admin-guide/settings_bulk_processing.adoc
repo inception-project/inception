@@ -14,29 +14,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_versioning]]
-= Versioning Settings
+[[sect_settings_bulk_processing]]
+= Bulk Processing Settings
 
 ====
 CAUTION: Experimental feature.
 ====
 
-You can enable versioning for projects in your {product-name} instance.
-Project managers can create snapshots of all documents in the project as well as its layer configuration via the versioning panel.
-This is done via a git repository stored in the `+.inception+` folder.
-This git repository can also be used to push to a remote repository, e.g. saving on Github or Gitlab.
+This section describes the global settings related to the bulk processing module.
 
-.Versioning settings
-[cols="4*",options="header"]
+.Recommender settings overview
+[cols="4*", options="header"]
 |===
 | Setting
 | Description
 | Default
 | Example
 
-| `versioning.enabled`
-| enable/disable versioning
+| `bulk-processing.enabled`
+| enable/disable bulk processing
 | `false`
 | `true`
 |===
-
