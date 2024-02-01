@@ -83,10 +83,11 @@ public class EventLoggingListener
         if (!maybeAdapter.isPresent()) {
             return;
         }
+        
 
         var adapter = maybeAdapter.get();
 
-        if (properties.getExcludeEvents().contains(adapter.getEvent(aEvent))) {
+        if (!properties.shouldLogEvent(adapter.getEvent(aEvent))) {
             return;
         }
 

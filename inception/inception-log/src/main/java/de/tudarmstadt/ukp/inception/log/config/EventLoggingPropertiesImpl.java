@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.log.config;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -27,42 +28,54 @@ import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEve
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 
 @ConfigurationProperties("event-logging")
-public class EventLoggingPropertiesImpl
-    implements EventLoggingProperties
-{
-    private boolean enabled;
+public class EventLoggingPropertiesImpl implements EventLoggingProperties {
+	private boolean enabled;
 
-    private Set<String> excludeEvents = Set.of( //
-            // Do not log this by default - hardly any information value
-            AfterCasWrittenEvent.class.getSimpleName(), //
-            AvailabilityChangeEvent.class.getSimpleName(), //
-            "RecommenderTaskNotificationEvent", //
-            BeforeDocumentOpenedEvent.class.getSimpleName(), //
-            PreparingToOpenDocumentEvent.class.getSimpleName(), //
-            "BrokerAvailabilityEvent", //
-            "ShutdownDialogAvailableEvent");
+	private Set<String> includePatterns = Set.of(".*"); // Default include everything
+	
+	private Set<String> excludePatterns = Set.of(
+			AfterCasWrittenEvent.class.getSimpleName(),
+			AvailabilityChangeEvent.class.getSimpleName(),
+			"RecommenderTaskNotificationEvent",
+			BeforeDocumentOpenedEvent.class.getSimpleName(),
+			PreparingToOpenDocumentEvent.class.getSimpleName(),
+			"BrokerAvailabilityEvent",
+			"ShutdownDialogAvailableEvent");
 
-    @Override
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 
-    @Override
-    public void setEnabled(boolean aEnabled)
-    {
-        enabled = aEnabled;
-    }
+	@Override
+	public void setEnabled(boolean aEnabled) {
+		enabled = aEnabled;
+	}
 
-    @Override
-    public Set<String> getExcludeEvents()
-    {
-        return excludeEvents;
-    }
+	@Override
+	public Set<String> getIncludePatterns() {
+		return includePatterns;
+	}
 
-    @Override
-    public void setExcludeEvents(Set<String> aExcludeEvents)
-    {
-        excludeEvents = aExcludeEvents;
-    }
+	@Override
+	public void setIncludePatterns(Set<String> includePatterns) {
+		this.includePatterns = includePatterns;
+	}
+
+	@Override
+	public Set<String> getExcludePatterns() {
+		return excludePatterns;
+	}
+
+	@Override
+	public void setExcludePatterns(Set<String> excludePatterns) {
+		this.excludePatterns = excludePatterns;
+	}
+
+	@Override
+	public boolean shouldLogEvent(String eventName) {
+		return includePatterns.stream().anyMatch(pattern -> Pattern.matches(pattern, eventName))
+				&& excludePatterns.stream().noneMatch(pattern -> Pattern.matches(pattern, eventName));
+	}
+
 }
