@@ -60,9 +60,9 @@ public class EventLoggingPropertiesImpl
     }
 
     @Override
-    public void setIncludePatterns(Set<String> includePatterns)
+    public void setIncludePatterns(Set<String> aIncludePatterns)
     {
-        this.includePatterns = includePatterns;
+        this.includePatterns = aIncludePatterns;
     }
 
     @Override
