@@ -83,7 +83,6 @@ public class EventLoggingListener
         if (!maybeAdapter.isPresent()) {
             return;
         }
-        
 
         var adapter = maybeAdapter.get();
 

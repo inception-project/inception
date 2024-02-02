@@ -31,7 +31,8 @@ public interface EventLoggingProperties
     Set<String> getIncludePatterns();
 
     /**
-     * @param includePatterns Set of regex include patterns
+     * @param includePatterns
+     *            Set of regex include patterns
      */
     void setIncludePatterns(Set<String> includePatterns);
 
@@ -41,14 +42,15 @@ public interface EventLoggingProperties
     Set<String> getExcludePatterns();
 
     /**
-     * @param excludePatterns Set of regex exclude patterns
+     * @param excludePatterns
+     *            Set of regex exclude patterns
      */
     void setExcludePatterns(Set<String> excludePatterns);
 
     /**
-     * @param eventName Name of the event to check.
+     * @param eventName
+     *            Name of the event to check.
      * @return true if the event should be logged, false otherwise.
      */
     boolean shouldLogEvent(String eventName);
 }
-
