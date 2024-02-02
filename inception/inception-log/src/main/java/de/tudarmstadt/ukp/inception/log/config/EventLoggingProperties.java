@@ -46,11 +46,4 @@ public interface EventLoggingProperties
      *            Set of regex exclude patterns
      */
     void setExcludePatterns(Set<String> excludePatterns);
-
-    /**
-     * @param eventName
-     *            Name of the event to check.
-     * @return true if the event should be logged, false otherwise.
-     */
-    boolean shouldLogEvent(String eventName);
 }

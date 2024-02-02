@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.config;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -34,8 +31,6 @@ public class EventLoggingPropertiesImpl
     implements EventLoggingProperties
 {
     private boolean enabled;
-
-    private Map<String, Boolean> eventCache = new HashMap<>();
 
     private Set<String> includePatterns = Set.of(".*"); // Default include everything
 
@@ -79,29 +74,5 @@ public class EventLoggingPropertiesImpl
     public void setExcludePatterns(Set<String> aExcludePatterns)
     {
         this.excludePatterns = aExcludePatterns;
-    }
-
-    @Override
-    public boolean shouldLogEvent(String aEventName)
-    {
-        if (eventCache.containsKey(aEventName)) {
-            return eventCache.get(aEventName);
-        }
-
-        boolean shouldLog = false;
-
-        if (includePatterns != null && !includePatterns.isEmpty()) {
-            shouldLog = includePatterns.stream()
-                    .anyMatch(pattern -> Pattern.matches(pattern, aEventName));
-        }
-
-        if (shouldLog && excludePatterns != null && !excludePatterns.isEmpty()) {
-            shouldLog = excludePatterns.stream()
-                    .noneMatch(pattern -> Pattern.matches(pattern, aEventName));
-        }
-
-        eventCache.put(aEventName, shouldLog);
-
-        return shouldLog;
     }
 }
