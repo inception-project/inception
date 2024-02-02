@@ -1,21 +1,4 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *  
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package de.tudarmstadt.ukp.inception.log.config;
+package de.tudarmstadt.ukp.inception.log;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,22 +11,24 @@ import org.springframework.boot.availability.AvailabilityChangeEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingPropertiesImpl;
 
-class EventLoggingPropertiesImplTest
+class EventLoggingListenerTest
 {
 
+    private EventLoggingListener listener;
     private EventLoggingPropertiesImpl properties;
 
     @BeforeEach
-    public void setUp()
+    void setUp() throws Exception
     {
         properties = new EventLoggingPropertiesImpl();
+        listener = new EventLoggingListener(null, properties, null);
     }
 
     @Test
     public void shouldLogEvent_defaultExcludeInternalList_ReturnsFalse()
     {
-        // Test events
         String eventAfterCasWritten = AfterCasWrittenEvent.class.getSimpleName();
         String eventAvailabilityChange = AvailabilityChangeEvent.class.getSimpleName();
         String eventRecommenderTaskNotification = "RecommenderTaskNotificationEvent";
@@ -52,53 +37,44 @@ class EventLoggingPropertiesImplTest
         String eventBrokerAvailability = "BrokerAvailabilityEvent";
         String eventShutdownDialogAvailable = "ShutdownDialogAvailableEvent";
 
-        // Assert
-        assertThat(properties.shouldLogEvent(eventAfterCasWritten)).isFalse();
-        assertThat(properties.shouldLogEvent(eventAvailabilityChange)).isFalse();
-        assertThat(properties.shouldLogEvent(eventRecommenderTaskNotification)).isFalse();
-        assertThat(properties.shouldLogEvent(eventBeforeDocumentOpened)).isFalse();
-        assertThat(properties.shouldLogEvent(eventPreparingToOpenDocument)).isFalse();
-        assertThat(properties.shouldLogEvent(eventBrokerAvailability)).isFalse();
-        assertThat(properties.shouldLogEvent(eventShutdownDialogAvailable)).isFalse();
+        assertThat(listener.shouldLogEvent(eventAfterCasWritten)).isFalse();
+        assertThat(listener.shouldLogEvent(eventAvailabilityChange)).isFalse();
+        assertThat(listener.shouldLogEvent(eventRecommenderTaskNotification)).isFalse();
+        assertThat(listener.shouldLogEvent(eventBeforeDocumentOpened)).isFalse();
+        assertThat(listener.shouldLogEvent(eventPreparingToOpenDocument)).isFalse();
+        assertThat(listener.shouldLogEvent(eventBrokerAvailability)).isFalse();
+        assertThat(listener.shouldLogEvent(eventShutdownDialogAvailable)).isFalse();
     }
 
     @Test
     public void shouldLogEvent_EventNotInExcludeLists_ReturnsTrue()
     {
-        // Test events
         String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
 
-        // Assert
-        assertThat(properties.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
+        assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
         assertThat(properties.getExcludePatterns()).doesNotContain(eventAfterDocumentOpened);
     }
 
     @Test
     public void shouldLogEvent_setExcludeWorksAndEventsGetExcludedTrue()
     {
-        // Set exclude patterns
         properties.setExcludePatterns(Set.of("AfterDocumentOpenedEvent"));
 
-        // Test events
         String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
 
-        // Assert
-        assertThat(properties.shouldLogEvent(eventAfterDocumentOpened)).isFalse();
+        assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isFalse();
     }
 
     @Test
     public void shouldLogEvent_setIncludeWorksAndOnlyEventsSetIncludedWork()
     {
-        // Set include patterns
         properties.setIncludePatterns(Set.of("AfterDocumentOpenedEvent"));
 
-        // Test events
         String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
         String eventDocumentStateChanged = "DocumentStateChangedEvent";
 
-        // Assert
-        assertThat(properties.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
-        assertThat(properties.shouldLogEvent(eventDocumentStateChanged)).isFalse();
+        assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
+        assertThat(listener.shouldLogEvent(eventDocumentStateChanged)).isFalse();
     }
 
 }
