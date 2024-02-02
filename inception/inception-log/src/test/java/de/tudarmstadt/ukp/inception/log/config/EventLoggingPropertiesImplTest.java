@@ -70,6 +70,7 @@ class EventLoggingPropertiesImplTest
 
         // Assert
         assertThat(properties.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
+        assertThat(properties.getExcludePatterns()).doesNotContain(eventAfterDocumentOpened);
     }
 
     @Test
