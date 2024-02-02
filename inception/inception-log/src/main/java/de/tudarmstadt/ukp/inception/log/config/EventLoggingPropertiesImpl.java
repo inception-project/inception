@@ -76,9 +76,9 @@ public class EventLoggingPropertiesImpl
     }
 
     @Override
-    public void setExcludePatterns(Set<String> excludePatterns)
+    public void setExcludePatterns(Set<String> aExcludePatterns)
     {
-        this.excludePatterns = excludePatterns;
+        this.excludePatterns = aExcludePatterns;
     }
 
     @Override
