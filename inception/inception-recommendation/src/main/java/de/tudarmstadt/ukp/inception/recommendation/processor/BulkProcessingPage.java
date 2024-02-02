@@ -18,14 +18,17 @@
 package de.tudarmstadt.ukp.inception.recommendation.processor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/process")
 public class BulkProcessingPage
     extends ProjectPageBase
 {
@@ -37,7 +40,7 @@ public class BulkProcessingPage
     {
         super(aParameters);
 
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
         requireProjectRole(user, MANAGER);
 
