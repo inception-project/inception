@@ -24,6 +24,7 @@ import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -237,6 +238,7 @@ public class RecommenderServiceAutoConfiguration
 
     @ConditionalOnWebApplication
     @Bean
+    @ConditionalOnExpression("${websocket.enabled:true} and ${bulk-processing.enabled:false}")
     public BulkProcessingPageMenuItem bulkProcessingPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, ServletContext aServletContext)
     {

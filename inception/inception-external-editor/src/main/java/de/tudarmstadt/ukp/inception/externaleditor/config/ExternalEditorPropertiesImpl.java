@@ -26,6 +26,7 @@ public class ExternalEditorPropertiesImpl
     private boolean blockStyle = true;
 
     private boolean blockImg = true;
+    private Source allowImgSource = Source.NONE;
     private boolean blockEmbed = true;
     private boolean blockAudio = true;
     private boolean blockObject = true;
@@ -51,6 +52,17 @@ public class ExternalEditorPropertiesImpl
     public void setBlockImg(boolean aBlockImg)
     {
         blockImg = aBlockImg;
+    }
+
+    @Override
+    public Source getAllowImgSource()
+    {
+        return allowImgSource;
+    }
+
+    public void setAllowImgSource(Source aAllowImgSource)
+    {
+        allowImgSource = aAllowImgSource;
     }
 
     @Override
