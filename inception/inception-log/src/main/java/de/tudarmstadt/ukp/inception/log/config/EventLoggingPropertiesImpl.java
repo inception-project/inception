@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.log.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -32,6 +34,8 @@ public class EventLoggingPropertiesImpl
     implements EventLoggingProperties
 {
     private boolean enabled;
+
+    private Map<String, Boolean> eventCache = new HashMap<>();
 
     private Set<String> includePatterns = Set.of(".*"); // Default include everything
 
@@ -78,10 +82,26 @@ public class EventLoggingPropertiesImpl
     }
 
     @Override
-    public boolean shouldLogEvent(String eventName)
+    public boolean shouldLogEvent(String aEventName)
     {
-        return includePatterns.stream().anyMatch(pattern -> Pattern.matches(pattern, eventName))
-                && excludePatterns.stream()
-                        .noneMatch(pattern -> Pattern.matches(pattern, eventName));
+        if (eventCache.containsKey(aEventName)) {
+            return eventCache.get(aEventName);
+        }
+
+        boolean shouldLog = false;
+
+        if (includePatterns != null && !includePatterns.isEmpty()) {
+            shouldLog = includePatterns.stream()
+                    .anyMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        if (shouldLog && excludePatterns != null && !excludePatterns.isEmpty()) {
+            shouldLog = excludePatterns.stream()
+                    .noneMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        eventCache.put(aEventName, shouldLog);
+
+        return shouldLog;
     }
 }
