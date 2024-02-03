@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 
 public class LayerTemplateSelectionDialogPanel
@@ -72,7 +73,7 @@ public class LayerTemplateSelectionDialogPanel
                 aItem.queue(new LambdaAjaxLink("create",
                         _target -> actionCreateLayer(_target, aItem.getModelObject())));
                 aItem.queue(new Label("name", aItem.getModel().map(ProjectInitializer::getName)));
-                aItem.queue(new Label("description",
+                aItem.queue(new MarkdownLabel("description",
                         aItem.getModel().map(LayerInitializer::getDescription)
                                 .map($ -> $.orElse("No description"))));
                 aItem.queue(new Image("thumbnail", aItem.getModel()

@@ -53,7 +53,9 @@
           </div>
           <div class="card-body w-100">
             <h5 wicket:id="name" class="card-title text-start"/>
-            <p wicket:id="description" class="card-text text-start"/>
+            <div class="card-text text-start">
+              <wicket:container wicket:id="description"/>
+            </div>
           </div>
         </button>
       </div>

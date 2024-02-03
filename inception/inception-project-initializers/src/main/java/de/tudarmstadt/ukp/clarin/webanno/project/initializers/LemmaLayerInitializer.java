@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -65,6 +66,12 @@ public class LemmaLayerInitializer
     public String getName()
     {
         return "Lemmatization";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("lemma-layer.description"));
     }
 
     @Override

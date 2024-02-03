@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -66,6 +67,12 @@ public class DependencyLayerInitializer
     public String getName()
     {
         return "Dependency parsing";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("dependency-layer.description"));
     }
 
     @Override

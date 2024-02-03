@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 
 @Order(100)
 @Component
-public class DocumentHintDashletExtension
+public class LayerHintDashletExtension
     implements ProjectDashboardDashletExtension
 {
     private @SpringBean ProjectAccess projectAccess;
@@ -35,7 +35,7 @@ public class DocumentHintDashletExtension
     @Override
     public String getId()
     {
-        return "noDocuments";
+        return "noLayers";
     }
 
     @Override
@@ -45,8 +45,8 @@ public class DocumentHintDashletExtension
     }
 
     @Override
-    public DocumentHintDashlet createDashlet(String aId, IModel<Project> aModel)
+    public LayerHintDashlet createDashlet(String aId, IModel<Project> aModel)
     {
-        return new DocumentHintDashlet(aId, aModel);
+        return new LayerHintDashlet(aId, aModel);
     }
 }

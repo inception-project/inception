@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -51,6 +53,12 @@ public class ChunkLayerInitializer
     public ChunkLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("chunk-layer.description"));
     }
 
     @Override

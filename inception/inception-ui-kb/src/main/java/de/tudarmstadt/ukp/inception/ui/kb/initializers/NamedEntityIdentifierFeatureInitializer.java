@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -36,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitiali
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -60,6 +62,12 @@ public class NamedEntityIdentifierFeatureInitializer
     public String getName()
     {
         return "Named entity linking";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("entity-linking-layer.description"));
     }
 
     @Override
