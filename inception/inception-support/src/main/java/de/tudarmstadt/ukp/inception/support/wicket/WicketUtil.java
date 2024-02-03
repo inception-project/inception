@@ -49,6 +49,14 @@ public final class WicketUtil
         // No instances
     }
 
+    public static void ajaxFallbackScript(IHeaderResponse aResponse, String aScript)
+    {
+        RequestCycle.get().find(AjaxRequestTarget.class).ifPresentOrElse(
+                target -> target.appendJavaScript(aScript),
+                () -> aResponse.render(OnDomReadyHeaderItem.forScript(aScript)));
+
+    }
+
     /**
      * Focus a component either via the current AJAX request or by adding a focus script as a header
      * item.
@@ -62,10 +70,7 @@ public final class WicketUtil
     {
         var script = "setTimeout(() => document.getElementById('" + aComponent.getMarkupId()
                 + "')?.focus(), 100)";
-        RequestCycle.get().find(AjaxRequestTarget.class).ifPresentOrElse(
-                target -> target.appendJavaScript(script),
-                () -> aResponse.render(OnDomReadyHeaderItem.forScript(script)));
-
+        ajaxFallbackScript(aResponse, script);
     }
 
     public static Optional<Page> getPage()
