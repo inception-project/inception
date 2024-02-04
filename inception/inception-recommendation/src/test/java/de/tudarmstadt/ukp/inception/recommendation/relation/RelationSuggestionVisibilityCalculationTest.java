@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.relation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
-import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.makeRelationSuggestionGroup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -27,6 +26,9 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -42,17 +44,34 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 @ExtendWith(MockitoExtension.class)
 public class RelationSuggestionVisibilityCalculationTest
 {
     private static final String TEST_USER = "Testuser";
 
-    private @Mock AnnotationSchemaService annoService;
+    private final static long RECOMMENDER_ID = 1;
+    private final static String RECOMMENDER_NAME = "TestEntityRecommender";
+    private final static double CONFIDENCE = 0.2;
+    private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
+
+    private @Mock AnnotationSchemaService schemaService;
     private @Mock LearningRecordService learningRecordService;
+    private @Mock LayerBehaviorRegistry layerBehaviorRegistry;
+    private @Mock FeatureSupportRegistry featureSupportRegistry;
 
     private Project project;
     private SourceDocument doc;
@@ -61,10 +80,20 @@ public class RelationSuggestionVisibilityCalculationTest
 
     private RelationSuggestionSupport sut;
 
+    private LayerSupportRegistryImpl layerSupportRegistry;
+
+    private TypeAdapter relationAdapter;
+
     @BeforeEach
     public void setUp() throws Exception
     {
-        layer = AnnotationLayer.builder().withId(42l).forJCasClass(Dependency.class).build();
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+        layerSupportRegistry.init();
+
+        layer = AnnotationLayer.builder().withId(42l).forJCasClass(Dependency.class)
+                .withType(RelationLayerSupport.TYPE).build();
 
         feature = AnnotationFeature.builder().withId(2l).withLayer(layer)
                 .withName(Dependency._FeatName_DependencyType).withType(TYPE_NAME_STRING).build();
@@ -73,9 +102,13 @@ public class RelationSuggestionVisibilityCalculationTest
 
         doc = SourceDocument.builder().withId(12l).withName("doc").withProject(project).build();
 
-        when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
+        when(schemaService.listSupportedFeatures(layer)).thenReturn(asList(feature));
 
-        sut = new RelationSuggestionSupport(null, learningRecordService, null, annoService, null);
+        sut = new RelationSuggestionSupport(null, learningRecordService, null, schemaService, null);
+
+        relationAdapter = layerSupportRegistry.getLayerSupport(layer).createAdapter(layer,
+                () -> asList());
+        when(schemaService.getAdapter(layer)).thenReturn(relationAdapter);
     }
 
     @Test
@@ -153,5 +186,23 @@ public class RelationSuggestionVisibilityCalculationTest
         dep.addToIndexes();
 
         return jcas.getCas();
+    }
+
+    static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
+            SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
+    {
+        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
+                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
+
+        List<RelationSuggestion> suggestions = new ArrayList<>();
+        for (int[] val : vals) {
+            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
+                    .withDocument(doc)
+                    .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
+                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
+            suggestions.add(suggestion);
+        }
+
+        return SuggestionDocumentGroup.groupsOfType(RelationSuggestion.class, suggestions);
     }
 }

@@ -50,8 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
@@ -173,32 +171,6 @@ public class RecommendationEditorExtension
         }
     }
 
-    private void actionAcceptPrediction(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID,
-            Optional<AnnotationSuggestion> prediction, SourceDocument document)
-        throws AnnotationException, IOException
-    {
-        if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
-            actionAcceptSpanRecommendation(aTarget, (SpanSuggestion) prediction.get(), document,
-                    aActionHandler, aState, aCas, aVID);
-        }
-
-        if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
-            actionAcceptRelationRecommendation(aTarget, (RelationSuggestion) prediction.get(),
-                    document, aActionHandler, aState, aCas, aVID);
-        }
-    }
-
-    private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
-    {
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> prediction = predictions //
-                .getPredictionByVID(document, aRecVid);
-        return prediction;
-    }
-
     /**
      * Accept a suggestion.
      * 
@@ -209,52 +181,38 @@ public class RecommendationEditorExtension
      * <li>Sends events to the UI and application informing other components about the action.</li>
      * </ul>
      */
-    private void actionAcceptSpanRecommendation(AjaxRequestTarget aTarget,
-            SpanSuggestion aSuggestion, SourceDocument aSocument,
-            AnnotationActionHandler aActionHandler, AnnotatorState aState, CAS aCas,
-            VID aSuggestionVid)
+    private void actionAcceptPrediction(AnnotationActionHandler aActionHandler,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID,
+            Optional<AnnotationSuggestion> aSuggestion, SourceDocument document)
         throws AnnotationException, IOException
     {
+        var suggestion = aSuggestion.get();
         var page = (AnnotationPage) aTarget.getPage();
         var dataOwner = aState.getUser().getUsername();
         var sessionOwner = userService.getCurrentUsername();
-        var layer = annotationService.getLayer(aSuggestion.getLayerId());
-        var adapter = (SpanAdapter) annotationService.getAdapter(layer);
+        var layer = annotationService.getLayer(suggestion.getLayerId());
+        var adapter = annotationService.getAdapter(layer);
 
-        var span = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aSocument,
-                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
+        var annotation = (Annotation) recommendationService.acceptSuggestion(sessionOwner, document,
+                dataOwner, aCas, suggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        aState.getSelection().set(adapter.select(VID.of(span), span));
-
-        // Send a UI event that the suggestion has been accepted
-        page.send(page, BREADTH,
-                new AjaxRecommendationAcceptedEvent(aTarget, aState, aSuggestionVid));
-    }
-
-    private void actionAcceptRelationRecommendation(AjaxRequestTarget aTarget,
-            RelationSuggestion aSuggestion, SourceDocument aDocument,
-            AnnotationActionHandler aActionHandler, AnnotatorState aState, CAS aCas, VID aVID)
-        throws AnnotationException, IOException
-    {
-        var page = (AnnotationPage) aTarget.getPage();
-        var dataOwner = aState.getUser().getUsername();
-        var sessionOwner = userService.getCurrentUsername();
-        var layer = annotationService.getLayer(aSuggestion.getLayerId());
-        var adapter = (RelationAdapter) annotationService.getAdapter(layer);
-
-        var relation = (Annotation) recommendationService.acceptSuggestion(sessionOwner, aDocument,
-                dataOwner, aCas, aSuggestion, MAIN_EDITOR);
-
-        page.writeEditorCas(aCas);
-
-        // Set selection to the accepted annotation and select it and load it into the detail editor
-        aState.getSelection().set(adapter.select(aVID, relation));
+        aState.getSelection().set(adapter.select(VID.of(annotation), annotation));
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+    }
+
+    private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
+    {
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+                aState.getProject());
+        SourceDocument document = aState.getDocument();
+        Optional<AnnotationSuggestion> prediction = predictions //
+                .getPredictionByVID(document, aRecVid);
+        return prediction;
     }
 
     /**

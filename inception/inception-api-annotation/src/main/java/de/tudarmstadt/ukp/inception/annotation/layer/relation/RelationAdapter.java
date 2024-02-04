@@ -203,9 +203,19 @@ public class RelationAdapter
         return sourceFeatureName;
     }
 
+    public Feature getSourceFeature(CAS aCas)
+    {
+        return getAnnotationType(aCas).getFeatureByBaseName(getSourceFeatureName());
+    }
+
     public String getTargetFeatureName()
     {
         return targetFeatureName;
+    }
+
+    public Feature getTargetFeature(CAS aCas)
+    {
+        return getAnnotationType(aCas).getFeatureByBaseName(getTargetFeatureName());
     }
 
     @Override
