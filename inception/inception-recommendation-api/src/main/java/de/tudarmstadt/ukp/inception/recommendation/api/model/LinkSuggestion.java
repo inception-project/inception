@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
-public class RelationSuggestion
-    extends ArcSuggestion_ImplBase<RelationPosition>
+public class LinkSuggestion
+    extends ArcSuggestion_ImplBase<LinkPosition>
     implements Serializable
 {
-    private static final long serialVersionUID = -1904645143661843249L;
+    private static final long serialVersionUID = -2724884621704905935L;
 
-    public RelationSuggestion(Builder<? extends Builder<?>> aBuilder)
+    public LinkSuggestion(Builder<? extends Builder<?>> aBuilder)
     {
         super(aBuilder);
     }
@@ -57,12 +57,12 @@ public class RelationSuggestion
     }
 
     public static class Builder<T extends Builder<?>>
-        extends ArcSuggestion_ImplBase.Builder<T, RelationPosition>
+        extends ArcSuggestion_ImplBase.Builder<T, LinkPosition>
     {
         @Override
-        public RelationSuggestion build()
+        public LinkSuggestion build()
         {
-            return new RelationSuggestion(this);
+            return new LinkSuggestion(this);
         }
     }
 }

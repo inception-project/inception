@@ -48,6 +48,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -74,8 +75,8 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -88,11 +89,13 @@ import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
+import de.tudarmstadt.ukp.inception.support.wicket.SanitizingHtmlLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -127,6 +130,7 @@ public class ProjectsOverviewPage
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
+    private @SpringBean ProjectAccess projectAccess;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
@@ -143,9 +147,12 @@ public class ProjectsOverviewPage
     private BootstrapModalDialog dialog;
     private Label noProjectsNotice;
     private TextField<String> nameFilter;
+    private LambdaAjaxLink newProjectLink;
 
     private Set<Long> highlightedProjects = new HashSet<>();
     private ProjectListDataProvider dataProvider;
+
+    private LambdaAjaxBehavior openCreateProjectDialogByDefaultBehavior;
 
     public ProjectsOverviewPage()
     {
@@ -174,7 +181,7 @@ public class ProjectsOverviewPage
 
         queue(navigator = createPagingNavigator(MID_PAGING_NAVIGATOR, projectList));
 
-        noProjectsNotice = new Label(MID_EMPTY_LIST_LABEL,
+        noProjectsNotice = new SanitizingHtmlLabel(MID_EMPTY_LIST_LABEL,
                 LoadableDetachableModel.of(this::getNoProjectsMessage));
         noProjectsNotice.add(visibleWhen(() -> dataProvider.size() == 0));
         noProjectsNotice.setOutputMarkupPlaceholderTag(true);
@@ -212,6 +219,10 @@ public class ProjectsOverviewPage
         dialog = new BootstrapModalDialog(MID_DIALOG);
         dialog.trapFocus();
         queue(dialog);
+
+        openCreateProjectDialogByDefaultBehavior = new LambdaAjaxBehavior(
+                this::actionCreateProject);
+        add(openCreateProjectDialogByDefaultBehavior);
     }
 
     @Override
@@ -219,7 +230,28 @@ public class ProjectsOverviewPage
     {
         super.renderHead(aResponse);
 
-        WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
+        if (shouldOpenCreateProjectDialogWhenPageLoads()) {
+            aResponse.render(OnLoadHeaderItem
+                    .forScript(openCreateProjectDialogByDefaultBehavior.getCallbackScript()));
+        }
+        else {
+            WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
+        }
+    }
+
+    private boolean shouldOpenCreateProjectDialogWhenPageLoads()
+    {
+        // If the project is not present or not empty we do not open the dialog
+        if (allAccessibleProjects.map(list -> !list.isEmpty()).orElse(true).getObject()) {
+            return false;
+        }
+
+        // If the user cannot create projects, we do not open the dialog
+        if (!projectAccess.canCreateProjects()) {
+            return false;
+        }
+
+        return true;
     }
 
     @OnEvent
@@ -284,19 +316,13 @@ public class ProjectsOverviewPage
         return projectImportGroup;
     }
 
-    private boolean canCreateProjects(User aCurrentUser)
-    {
-        return aCurrentUser.getRoles().contains(ROLE_PROJECT_CREATOR)
-                || aCurrentUser.getRoles().contains(Role.ROLE_ADMIN);
-    }
-
     private String getNoProjectsMessage()
     {
         if (!allAccessibleProjects.getObject().isEmpty() && dataProvider.size() == 0) {
             return getString("noProjects.noFilterMatch");
         }
 
-        if (canCreateProjects(currentUser.getObject())) {
+        if (projectAccess.canCreateProjects()) {
             return getString("noProjects.projectCreator");
         }
 
@@ -309,7 +335,7 @@ public class ProjectsOverviewPage
      */
     private void fastTrackAnnotatorsToProject()
     {
-        if (canCreateProjects(currentUser.getObject())) {
+        if (projectAccess.canCreateProjects()) {
             return;
         }
 
@@ -324,7 +350,9 @@ public class ProjectsOverviewPage
 
     private LambdaAjaxLink createNewProjectLink()
     {
-        var newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT, this::actionCreateProject);
+        newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT, this::actionCreateProject);
+
+        add(newProjectLink);
 
         authorize(newProjectLink, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));

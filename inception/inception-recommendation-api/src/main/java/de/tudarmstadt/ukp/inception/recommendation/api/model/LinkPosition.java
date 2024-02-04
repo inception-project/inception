@@ -15,35 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log.config;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import java.util.Set;
+import org.apache.uima.cas.text.AnnotationFS;
 
-public interface EventLoggingProperties
+public class LinkPosition
+    extends ArcPosition_ImplBase<LinkPosition>
 {
-    void setEnabled(boolean aEnabled);
+    private static final long serialVersionUID = 4899546086036031468L;
 
-    boolean isEnabled();
+    private final String feature;
 
-    /**
-     * @return Set of regex include patterns
-     */
-    Set<String> getIncludePatterns();
+    public LinkPosition(String aFeature, AnnotationFS aSource, AnnotationFS aTarget)
+    {
+        super(aSource, aTarget);
+        feature = aFeature;
+    }
 
-    /**
-     * @param includePatterns
-     *            Set of regex include patterns
-     */
-    void setIncludePatterns(Set<String> includePatterns);
+    public LinkPosition(String aFeature, int aSourceBegin, int aSourceEnd, int aTargetBegin,
+            int aTargetEnd)
+    {
+        super(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
+        feature = aFeature;
+    }
 
-    /**
-     * @return Set of regex exclude patterns
-     */
-    Set<String> getExcludePatterns();
+    public LinkPosition(LinkPosition aOther)
+    {
+        super(aOther);
+        feature = aOther.feature;
+    }
 
-    /**
-     * @param excludePatterns
-     *            Set of regex exclude patterns
-     */
-    void setExcludePatterns(Set<String> excludePatterns);
 }

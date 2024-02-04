@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import java.io.Serializable;
 
+import org.apache.uima.cas.FeatureStructure;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -49,6 +51,13 @@ public class LinkWithRoleModel
         role = aOther.role;
         label = aOther.label;
         targetAddr = aOther.targetAddr;
+    }
+
+    public LinkWithRoleModel(String aRole, FeatureStructure aFS)
+    {
+        role = aRole;
+        label = aRole;
+        targetAddr = aFS.getAddress();
     }
 
     public LinkWithRoleModel(String aRole, String aLabel, int aTargetAddr)
