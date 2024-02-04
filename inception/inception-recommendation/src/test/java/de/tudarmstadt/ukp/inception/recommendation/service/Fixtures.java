@@ -25,8 +25,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -73,23 +71,5 @@ public class Fixtures
         }
 
         return SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class, suggestions);
-    }
-
-    public static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
-            SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
-    {
-        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
-                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
-
-        List<RelationSuggestion> suggestions = new ArrayList<>();
-        for (int[] val : vals) {
-            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc)
-                    .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
-                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
-            suggestions.add(suggestion);
-        }
-
-        return SuggestionDocumentGroup.groupsOfType(RelationSuggestion.class, suggestions);
     }
 }

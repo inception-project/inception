@@ -63,13 +63,30 @@ public interface SuggestionSupport
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 
     /**
-     * Accept the given suggestion.
+     * Uses the given annotation suggestion to create a new annotation or to update a feature in an
+     * existing annotation.
      * 
+     * @param aSessionOwner
+     *            the user currently logged in
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
+     * @param aCas
+     *            the CAS containing the annotations
+     * @param aAdapter
+     *            an adapter for the layer to upsert
+     * @param aFeature
+     *            the feature on the layer that should be upserted
      * @param aSuggestion
-     *            the suggestion to accept.
-     * @return the annotation created from the suggestion.
+     *            the suggestion
+     * @param aLocation
+     *            the location from where the change was triggered
+     * @param aAction
+     *            whether the annotation was accepted or corrected
+     * @return the created/updated annotation.
      * @throws AnnotationException
-     *             if there was a problem creating the annotation.
+     *             if there was an annotation-level problem
      */
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,

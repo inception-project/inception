@@ -19,23 +19,30 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
-public class RelationPosition
-    extends ArcPosition_ImplBase<RelationPosition>
+public class LinkPosition
+    extends ArcPosition_ImplBase<LinkPosition>
 {
-    private static final long serialVersionUID = -3084534351646334021L;
+    private static final long serialVersionUID = 4899546086036031468L;
 
-    public RelationPosition(AnnotationFS aSource, AnnotationFS aTarget)
+    private final String feature;
+
+    public LinkPosition(String aFeature, AnnotationFS aSource, AnnotationFS aTarget)
     {
         super(aSource, aTarget);
+        feature = aFeature;
     }
 
-    public RelationPosition(int aSourceBegin, int aSourceEnd, int aTargetBegin, int aTargetEnd)
+    public LinkPosition(String aFeature, int aSourceBegin, int aSourceEnd, int aTargetBegin,
+            int aTargetEnd)
     {
         super(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
+        feature = aFeature;
     }
 
-    public RelationPosition(RelationPosition aOther)
+    public LinkPosition(LinkPosition aOther)
     {
         super(aOther);
+        feature = aOther.feature;
     }
+
 }

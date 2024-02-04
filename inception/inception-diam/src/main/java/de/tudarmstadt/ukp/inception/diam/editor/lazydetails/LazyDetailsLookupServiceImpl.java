@@ -35,6 +35,7 @@ import org.apache.wicket.util.string.StringValue;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -183,6 +184,10 @@ public class LazyDetailsLookupServiceImpl
         throws IOException
     {
         if (!aVid.isSynthetic()) {
+            return emptyList();
+        }
+
+        if (aFeature.getLinkMode() == LinkMode.WITH_ROLE) {
             return emptyList();
         }
 
