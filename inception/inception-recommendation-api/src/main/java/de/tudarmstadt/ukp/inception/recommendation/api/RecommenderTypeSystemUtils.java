@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -34,13 +33,13 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCopier;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
-import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 public class RecommenderTypeSystemUtils
 {
@@ -53,8 +52,7 @@ public class RecommenderTypeSystemUtils
         RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, asList(aFeatures));
         var predictionCas = CasFactory.createCas(tsd);
         predictionCas.setDocumentText(aOriginalCas.getDocumentText());
-        SegmentationUtils.splitSentences(predictionCas);
-        SegmentationUtils.tokenize(predictionCas);
+        CasCopier.copyCas(aOriginalCas, predictionCas, false);
         return predictionCas;
     }
 
@@ -83,8 +81,7 @@ public class RecommenderTypeSystemUtils
             td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
         }
 
-        var layers = features.stream().map(AnnotationFeature::getLayer).distinct()
-                .collect(toList());
+        var layers = features.stream().map(AnnotationFeature::getLayer).distinct().toList();
         for (var layer : layers) {
             var td = tsd.getType(layer.getName());
             if (td == null) {

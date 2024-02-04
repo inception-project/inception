@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.relation;
+package de.tudarmstadt.ukp.inception.recommendation.link;
 
 import java.util.Map;
 
@@ -27,24 +27,25 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.relation.ArcSuggestionRenderer_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
-public class RelationSuggestionRenderer
-    extends ArcSuggestionRenderer_ImplBase<RelationSuggestion>
+public class LinkSuggestionRenderer
+    extends ArcSuggestionRenderer_ImplBase<LinkSuggestion>
 {
-    public RelationSuggestionRenderer(RecommendationService aRecommendationService,
+    public LinkSuggestionRenderer(RecommendationService aRecommendationService,
             AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry)
     {
         super(aRecommendationService, aAnnotationService, aFsRegistry);
     }
 
     @Override
-    protected VArc renderArc(AnnotationLayer aLayer, RelationSuggestion suggestion,
-            AnnotationFS source, AnnotationFS target, Map<String, String> featureAnnotation)
+    protected VArc renderArc(AnnotationLayer aLayer, LinkSuggestion suggestion, AnnotationFS source,
+            AnnotationFS target, Map<String, String> featureAnnotation)
     {
         return new VArc(aLayer, suggestion.getVID(), VID.of(source), VID.of(target),
                 "\uD83E\uDD16 " + suggestion.getUiLabel(), featureAnnotation, COLOR);
@@ -53,12 +54,12 @@ public class RelationSuggestionRenderer
     @Override
     protected Type getSourceType(CAS aCas, AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return CasUtil.getType(aCas, aLayer.getAttachType().getName());
+        return CasUtil.getType(aCas, aLayer.getName());
     }
 
     @Override
     protected Type getTargetType(CAS aCas, AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return CasUtil.getType(aCas, aLayer.getAttachType().getName());
+        return CasUtil.getType(aCas, aFeature.getType());
     }
 }
