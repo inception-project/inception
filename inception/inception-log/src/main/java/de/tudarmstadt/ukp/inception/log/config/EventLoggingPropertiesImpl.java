@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.config;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.springframework.boot.availability.AvailabilityChangeEvent;
@@ -32,12 +33,15 @@ public class EventLoggingPropertiesImpl
 {
     private boolean enabled;
 
-    private Set<String> includePatterns = Set.of(".*"); // Default include everything
+    private Set<String> includePatterns = Collections.emptySet(); // Default include everything
 
-    private Set<String> excludePatterns = Set.of(AfterCasWrittenEvent.class.getSimpleName(),
-            AvailabilityChangeEvent.class.getSimpleName(), "RecommenderTaskNotificationEvent",
-            BeforeDocumentOpenedEvent.class.getSimpleName(),
-            PreparingToOpenDocumentEvent.class.getSimpleName(), "BrokerAvailabilityEvent",
+    private Set<String> excludePatterns = Set.of( //
+            AfterCasWrittenEvent.class.getSimpleName(), //
+            AvailabilityChangeEvent.class.getSimpleName(), //
+            "RecommenderTaskNotificationEvent", //
+            BeforeDocumentOpenedEvent.class.getSimpleName(), //
+            PreparingToOpenDocumentEvent.class.getSimpleName(), //
+            "BrokerAvailabilityEvent", //
             "ShutdownDialogAvailableEvent");
 
     @Override

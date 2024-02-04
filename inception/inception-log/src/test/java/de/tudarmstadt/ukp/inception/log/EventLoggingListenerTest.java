@@ -46,27 +46,22 @@ class EventLoggingListenerTest
     @Test
     public void shouldLogEvent_defaultExcludeInternalList_ReturnsFalse()
     {
-        String eventAfterCasWritten = AfterCasWrittenEvent.class.getSimpleName();
-        String eventAvailabilityChange = AvailabilityChangeEvent.class.getSimpleName();
-        String eventRecommenderTaskNotification = "RecommenderTaskNotificationEvent";
-        String eventBeforeDocumentOpened = BeforeDocumentOpenedEvent.class.getSimpleName();
-        String eventPreparingToOpenDocument = PreparingToOpenDocumentEvent.class.getSimpleName();
-        String eventBrokerAvailability = "BrokerAvailabilityEvent";
-        String eventShutdownDialogAvailable = "ShutdownDialogAvailableEvent";
-
-        assertThat(listener.shouldLogEvent(eventAfterCasWritten)).isFalse();
-        assertThat(listener.shouldLogEvent(eventAvailabilityChange)).isFalse();
-        assertThat(listener.shouldLogEvent(eventRecommenderTaskNotification)).isFalse();
-        assertThat(listener.shouldLogEvent(eventBeforeDocumentOpened)).isFalse();
-        assertThat(listener.shouldLogEvent(eventPreparingToOpenDocument)).isFalse();
-        assertThat(listener.shouldLogEvent(eventBrokerAvailability)).isFalse();
-        assertThat(listener.shouldLogEvent(eventShutdownDialogAvailable)).isFalse();
+        assertThat(listener.shouldLogEvent(AfterCasWrittenEvent.class.getSimpleName())).isFalse();
+        assertThat(listener.shouldLogEvent(AvailabilityChangeEvent.class.getSimpleName()))
+                .isFalse();
+        assertThat(listener.shouldLogEvent("RecommenderTaskNotificationEvent")).isFalse();
+        assertThat(listener.shouldLogEvent(BeforeDocumentOpenedEvent.class.getSimpleName()))
+                .isFalse();
+        assertThat(listener.shouldLogEvent(PreparingToOpenDocumentEvent.class.getSimpleName()))
+                .isFalse();
+        assertThat(listener.shouldLogEvent("BrokerAvailabilityEvent")).isFalse();
+        assertThat(listener.shouldLogEvent("ShutdownDialogAvailableEvent")).isFalse();
     }
 
     @Test
     public void shouldLogEvent_EventNotInExcludeLists_ReturnsTrue()
     {
-        String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
+        var eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
 
         assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
         assertThat(properties.getExcludePatterns()).doesNotContain(eventAfterDocumentOpened);
@@ -75,23 +70,22 @@ class EventLoggingListenerTest
     @Test
     public void shouldLogEvent_setExcludeWorksAndEventsGetExcludedTrue()
     {
-        properties.setExcludePatterns(Set.of("AfterDocumentOpenedEvent"));
+        var excludedEvent = "ExcludedEvent";
 
-        String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
+        properties.setExcludePatterns(Set.of(excludedEvent));
 
-        assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isFalse();
+        assertThat(listener.shouldLogEvent(excludedEvent)).isFalse();
     }
 
     @Test
     public void shouldLogEvent_setIncludeWorksAndOnlyEventsSetIncludedWork()
     {
-        properties.setIncludePatterns(Set.of("AfterDocumentOpenedEvent"));
+        var includedEvent = "IncludedEvent";
+        var notIncludedEvent = "NotIncludedEvent";
 
-        String eventAfterDocumentOpened = "AfterDocumentOpenedEvent";
-        String eventDocumentStateChanged = "DocumentStateChangedEvent";
+        properties.setIncludePatterns(Set.of(includedEvent));
 
-        assertThat(listener.shouldLogEvent(eventAfterDocumentOpened)).isTrue();
-        assertThat(listener.shouldLogEvent(eventDocumentStateChanged)).isFalse();
+        assertThat(listener.shouldLogEvent(includedEvent)).isTrue();
+        assertThat(listener.shouldLogEvent(notIncludedEvent)).isFalse();
     }
-
 }

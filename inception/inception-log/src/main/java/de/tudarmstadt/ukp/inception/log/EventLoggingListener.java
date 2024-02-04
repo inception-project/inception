@@ -28,6 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -82,15 +83,17 @@ public class EventLoggingListener
             return eventCache.get(aEventName);
         }
 
-        boolean shouldLog = false;
+        boolean shouldLog;
 
-        if (properties.getIncludePatterns() != null && !properties.getIncludePatterns().isEmpty()) {
+        if (CollectionUtils.isEmpty(properties.getIncludePatterns())) {
+            shouldLog = true;
+        }
+        else {
             shouldLog = properties.getIncludePatterns().stream()
                     .anyMatch(pattern -> Pattern.matches(pattern, aEventName));
         }
 
-        if (shouldLog && properties.getExcludePatterns() != null
-                && !properties.getExcludePatterns().isEmpty()) {
+        if (shouldLog && !CollectionUtils.isEmpty(properties.getExcludePatterns())) {
             shouldLog = properties.getExcludePatterns().stream()
                     .noneMatch(pattern -> Pattern.matches(pattern, aEventName));
         }
