@@ -20,11 +20,15 @@ package de.tudarmstadt.ukp.inception.log;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -55,6 +59,8 @@ public class EventLoggingListener
     private final EventLoggingProperties properties;
     private final EventLoggingAdapterRegistry adapterRegistry;
 
+    private Map<String, Boolean> eventCache = new HashMap<>();
+
     private volatile boolean flushing = false;
 
     @Autowired
@@ -69,6 +75,32 @@ public class EventLoggingListener
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> flush(), 1, 1, TimeUnit.SECONDS);
+    }
+
+    boolean shouldLogEvent(String aEventName)
+    {
+        if (eventCache.containsKey(aEventName)) {
+            return eventCache.get(aEventName);
+        }
+
+        boolean shouldLog;
+
+        if (CollectionUtils.isEmpty(properties.getIncludePatterns())) {
+            shouldLog = true;
+        }
+        else {
+            shouldLog = properties.getIncludePatterns().stream()
+                    .anyMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        if (shouldLog && !CollectionUtils.isEmpty(properties.getExcludePatterns())) {
+            shouldLog = properties.getExcludePatterns().stream()
+                    .noneMatch(pattern -> Pattern.matches(pattern, aEventName));
+        }
+
+        eventCache.put(aEventName, shouldLog);
+
+        return shouldLog;
     }
 
     @EventListener
@@ -86,7 +118,7 @@ public class EventLoggingListener
 
         var adapter = maybeAdapter.get();
 
-        if (properties.getExcludeEvents().contains(adapter.getEvent(aEvent))) {
+        if (!shouldLogEvent(adapter.getEvent(aEvent))) {
             return;
         }
 
