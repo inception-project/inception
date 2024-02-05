@@ -31,6 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -48,6 +49,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
  * {@link InceptionSentenceLabelingProjectInitializersAutoConfiguration#sentenceTagLayerInitializer}.
  * </p>
  */
+@Order(30)
 public class SentenceLabelLayerInitializer
     implements LayerInitializer
 {
@@ -68,7 +70,7 @@ public class SentenceLabelLayerInitializer
     @Override
     public String getName()
     {
-        return "Basic sentence tag";
+        return "Generic sentence classification";
     }
 
     @Override

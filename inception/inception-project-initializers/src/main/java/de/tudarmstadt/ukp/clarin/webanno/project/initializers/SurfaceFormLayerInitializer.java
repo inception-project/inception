@@ -23,10 +23,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -47,6 +50,9 @@ import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 public class SurfaceFormLayerInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "SurfaceFormLayerInitializer.svg");
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
@@ -56,15 +62,21 @@ public class SurfaceFormLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Text normalization";
+    }
+
+    @Override
     public Optional<String> getDescription()
     {
         return Optional.of(Strings.getString("surface-form-layer.description"));
     }
 
     @Override
-    public String getName()
+    public Optional<ResourceReference> getThumbnail()
     {
-        return "Text normalization";
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

@@ -21,11 +21,14 @@ import static de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport.T
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -50,6 +53,9 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
 public class NamedEntityIdentifierFeatureInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "NamedEntityIdentifierFeatureInitializer.svg");
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
@@ -68,6 +74,12 @@ public class NamedEntityIdentifierFeatureInitializer
     public Optional<String> getDescription()
     {
         return Optional.of(Strings.getString("entity-linking-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

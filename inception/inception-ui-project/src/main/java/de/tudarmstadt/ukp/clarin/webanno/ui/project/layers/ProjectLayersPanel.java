@@ -24,10 +24,8 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.BufferedInputStream;
@@ -278,8 +276,7 @@ public class ProjectLayersPanel
                             || annotationEditorProperties.isTokenLayerEditable())
                     .filter(initializer -> !(initializer instanceof SentenceLayerInitializer)
                             || annotationEditorProperties.isSentenceLayerEditable())
-                    .sorted(comparing(LayerInitializer::getName)) //
-                    .collect(toList());
+                    .toList();
         }
 
         @OnEvent

@@ -26,9 +26,14 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -45,9 +51,13 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
  * {@link InceptionBasicProjectInitializersAutoConfiguration#basicRelationLayerInitializer}.
  * </p>
  */
+@Order(20)
 public class BasicRelationLayerInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "BasicRelationLayerInitializer.svg");
+
     public static final String BASIC_RELATION_LAYER_NAME = "custom.Relation";
     public static final String BASIC_RELATION_LABEL_FEATURE_NAME = "label";
 
@@ -62,7 +72,19 @@ public class BasicRelationLayerInitializer
     @Override
     public String getName()
     {
-        return "Basic relation annotation";
+        return "Generic relation annotation";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("basic-relation-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
