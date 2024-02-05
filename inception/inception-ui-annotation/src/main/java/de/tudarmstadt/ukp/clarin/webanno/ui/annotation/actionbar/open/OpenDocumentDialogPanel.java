@@ -100,8 +100,8 @@ public class OpenDocumentDialogPanel
 
     private DropDownChoice<DecoratedObject<User>> createUserListChoice()
     {
-        DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        DecoratedObject<User> viewUser = DecoratedObject.of(state.getObject().getUser());
+        var currentUser = DecoratedObject.of(userRepository.getCurrentUser());
+        var viewUser = DecoratedObject.of(state.getObject().getUser());
 
         var choice = new DropDownChoice<>("user", Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
@@ -111,8 +111,8 @@ public class OpenDocumentDialogPanel
             @Override
             public Object getDisplayValue(DecoratedObject<User> aUser)
             {
-                User user = aUser.get();
-                String username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
+                var user = aUser.get();
+                var username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
                 if (user.equals(currentUser.get())) {
                     username += " (me)";
                 }
@@ -149,21 +149,22 @@ public class OpenDocumentDialogPanel
 
     private List<DecoratedObject<User>> listUsers()
     {
-        List<DecoratedObject<User>> users = new ArrayList<>();
+        var users = new ArrayList<DecoratedObject<User>>();
 
-        Project project = state.getObject().getProject();
-        User currentUser = userRepository.getCurrentUser();
+        var project = state.getObject().getProject();
+        var currentUser = userRepository.getCurrentUser();
+
         // cannot select other user than themselves if curating or not admin
         if (state.getObject().getMode().equals(Mode.CURATION)
                 || !projectService.hasRole(currentUser, project, MANAGER, CURATOR)) {
-            DecoratedObject<User> du = DecoratedObject.of(currentUser);
+            var du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUiName());
             users.add(du);
             return users;
         }
 
-        for (User user : projectService.listProjectUsersWithPermissions(project, ANNOTATOR)) {
-            DecoratedObject<User> du = DecoratedObject.of(user);
+        for (var user : projectService.listProjectUsersWithPermissions(project, ANNOTATOR)) {
+            var du = DecoratedObject.of(user);
             du.setLabel(user.getUiName());
             if (user.equals(currentUser)) {
                 users.add(0, du);
@@ -178,8 +179,8 @@ public class OpenDocumentDialogPanel
 
     private List<AnnotationDocument> listDocuments()
     {
-        Project project = state.getObject().getProject();
-        User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
+        var project = state.getObject().getProject();
+        var user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
 
         if (project == null || user == null) {
             return new ArrayList<>();
@@ -216,7 +217,7 @@ public class OpenDocumentDialogPanel
         // location.
         if (state.getObject().getProject() == null || state.getObject().getDocument() == null) {
             try {
-                ProjectPageBase ppb = findParent(ProjectPageBase.class);
+                var ppb = findParent(ProjectPageBase.class);
                 if (ppb != null) {
                     ((ProjectPageBase) ppb).backToProjectPage();
                 }
