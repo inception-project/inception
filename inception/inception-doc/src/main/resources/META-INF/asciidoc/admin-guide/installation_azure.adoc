@@ -1,0 +1,37 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running on Azure
+
+CAUTION: This section has been compiled from community feedback. If you find that required settings are missing from this section or that any items described here are outdated or inaccurate, please link:https://github.com/inception-project/inception/discussions[help us updating the section].
+
+There are various options for deploying {product-name} in the cloud. This section will not discuss all of them. Instead refer to the other sections regarding running as a JAR (on a VM), via Docker, etc.
+
+However, depending on the cloud you are running on, there may be special considerations to take or options to set. These are described here with respect to the Microsoft Azure cloud.
+
+== Using MySQL on the Azure cloud
+
+NOTE: Please read the generic <<sect_mysql,MySQL>> setup before reading this section.
+
+The default settings of MySQL instances on the Azure cloud may differ from the defauls for local installations.
+
+Make sure that the option link:https://dev.mysql.com/doc/refman/8.0/en/create-table-gipks.html[`sql_generate_invisible_primary_key`] is turned **off**.
+
+== Using a mounted Azure file system
+
+Mounted file systems in the Azure clouds are known to maintain slightly inaccurate timestamps. This can in particular lead to annotators getting an error message the there have been concurrent modifications to a document and that they need to re-open the document before they can continue to annotate.
+
+To compensate for this inaccuracy, you can use the <<sect_settings_cas_storage,`cas-storage.file-system-timestamp-accuracy`>> option in your `settings.properties` file. 

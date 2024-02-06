@@ -30,7 +30,7 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 11 or higher
+| version 17 or higher
 |===
 
 .Requirements run the server version
@@ -40,7 +40,7 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 11 or higher
+| version 17 or higher
 
 | MariaDB Server (or compatible)
 | version 10.5 or higher 

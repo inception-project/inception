@@ -1,7 +1,3 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -24,7 +20,9 @@ For production use of {product-name}, it is highly recommended to use a MariaDB 
 section, we briefly describe how to install a MariaDB server and how to prepare it for use with 
 the application.
 
-NOTE: MariaDB is an open-source drop-in replacement for MySQL. As a matter of fact, most of the commands and configuration files still use `mysql` in many places - so do not be confused if you read a lot about MySQL below despite working with MariaDB.
+NOTE: MariaDB is an open-source drop-in replacement for MySQL. As a matter of fact, most of the 
+      commands and configuration files still use `mysql` in many places - so do not be confused if 
+      you read a lot about MySQL below despite working with MariaDB.
 
 == Prepare database
 
@@ -32,31 +30,59 @@ NOTE: MariaDB is an open-source drop-in replacement for MySQL. As a matter of fa
 +
 [source,bash]
 ----
-$ apt-get install mariadb-server
+$ apt install mariadb-server
 ----
 
 [[character-set-config]]
-* When first setting up your database make sure your MariaDB server is configured for 4 Byte UTF-8 (`utf8mb4`, `utf8mb4_bin`) to ensure that all unicode characters can be represented (e.g. emojis).
+* When setting up your database make sure your MariaDB server is configured for 4-byte UTF-8
+  character set and (`utf8mb4`) and a case sensitive collation (`utf8mb4_bin`) to ensure that all
+  unicode characters can be represented (e.g. emojis).
 +
-NOTE: *Upgrading an existing database installation to 4 Byte UTF-8:* Changing the character-set and collation later can lead to serious trouble, so make sure you have a backup of your database. In that case, you might also need to perform some additional migration steps. We do not provide a database migration guide here, but if you search e.g. for `mariadb convert utf8 to utf8mb4` (or `mysql` for that matter), you should find several.
+[NOTE]
+====
+[%collapsible]
+.Upgrading an existing database installation to 4 Byte UTF-8
+=====
+Changing the character-set and 
+collation later can lead to serious trouble, so make sure you have a backup of your database. 
+In that case, you might also need to perform some additional migration steps. We do not 
+provide a database migration guide here, but if you search e.g. for `mariadb convert utf8 to 
+utf8mb4` (or `mysql` for that matter), you should find several.
+=====
+[%collapsible]
+.Case-sensitive vs insensitive collation (`utf8mb4_bin` vs. `utf8mb4_unicode_ci`)
+=====
+If you search for UTF-8 support in MariaDB, you will generally find the recommendation to use `utf8mb4_unicode_ci` as the collation. This, however,is a *case-insensitive* collation. {product-name} is usually *case-sensitive*. If you used a case-insensitive collation in the database, you could not create two projects, one being
+called `MY PROEJCT` and the other being called `my project`, but instead of a nice error from
+{product-name}, you would get an ugly error from the database. That is why we recommend using
+the case-sensitive `utf8mb4_bin` for the database.
+=====
+====
 +
-NOTE: *`utf8mb4_bin` vs. `utf8mb4_unicode_ci`:* If you search for UTF-8 support in MariaDB, you will generally find the recommendation to use `utf8mb4_unicode_ci` as the collation. This, however, is a *case-insensitive* collation. {product-name} is usually *case-sensitive*. If you used a case-insensitive collation in the database, you could not create two projects, one being called `MY PROEJCT` and the other being called `my project`, but instead of a nice error from INCEpTION, you would get an ugly error from the database. That is why we recommend using the case-sensitive `utf8mb4_bin` for the database.
-+
-Check that `character-set-server`, `default-character-set` are set to `utf8mb4` and `collation-server` is set to `utf8mb4_unicode_ci` by logging into MariaDB with
+Check that the character set and collation are configured properly (in particular the items marked
+with a `*` in the following table).
 +
 [source,bash]
 ----
 $ mysql -u root -p
+mysql> SHOW VARIABLES WHERE Variable_name LIKE 'character\_set\_%' OR Variable_name IN ('collation_database', 'collation_server');
++--------------------------+-------------+
+| Variable_name            | Value       |
++--------------------------+-------------+
+| character_set_client     | utf8mb4     | *
+| character_set_connection | utf8mb4     | 
+| character_set_database   | utf8mb4     | *
+| character_set_filesystem | binary      | 
+| character_set_results    | utf8mb4     |
+| character_set_server     | utf8mb4     | *
+| character_set_system     | utf8mb3     | 
+| collation_database       | utf8mb4_bin | *
+| collation_server         | utf8mb4_bin | *
++--------------------------+-------------+
 ----
 +
-and running
-+
-[source,mysql]
-----
-mysql> SHOW VARIABLES WHERE Variable_name LIKE 'character\_set\_%' OR Variable_name LIKE 'collation%';
-----
-+
-If this is not the case add the following lines to your MariaDB config file (most likely `/etc/mysql/my.cnf` or in `/etc/mysql/mariadb.conf.d`):
+If your settings differ, add following lines to your MariaDB config files (most likely 
+`/etc/mysql/my.cnf` or in `/etc/mysql/mariadb.conf.d`):
 +
 [source,bash]
 ----
@@ -70,11 +96,6 @@ default-character-set = utf8mb4
 character-set-client-handshake = FALSE
 character-set-server = utf8mb4
 collation-server = utf8mb4_bin
-innodb_large_prefix=true
-innodb_file_format=barracuda
-innodb_file_per_table=1
-innodb_strict_mode=1
-innodb_default_row_format='dynamic'
 ----
 * now set up the `inception` database. First login to MariaDB
 +
@@ -99,8 +120,32 @@ mysql> FLUSH PRIVILEGES;
 
 IMPORTANT: For production use, make sure you choose a different, secret, and secure password.
 
+## Older MariaDB versions
 
-== Configuration options
+Depending on the MariaDB version you are running, you might have to make additional settings.
+You can check these settings using the following command. 
+
+[source,bash]
+----
+$ mysql -u root -p
+mysql> * SHOW VARIABLES WHERE Variable_name IN ('innodb_large_prefix', 'innodb_file_format', 'innodb_file_per_table', 'innodb_strict_mode', 'innodb_default_row_format');
+----
+
+Depending on the result, you may have to add these settings to your MariaDB configuration files
+(cf. link:https://mariadb.com/kb/en/innodb-system-variables/[InnoDB System Variables]):
+
+[source,bash]
+----
+[mysqld]
+innodb_large_prefix=true            # Removed in MariaDB 10.6.0
+innodb_file_format=barracuda        # Removed in MariaDB 10.6.0
+innodb_file_per_table=1             # Deprecated in MariaDB 11.0.1
+innodb_strict_mode=1
+innodb_default_row_format='dynamic'
+----
+
+
+== JDBC connection options
 
 This section explains some settings that can be added to the `database.url` in the 
 `settings.properties` file when using MariaDB. Settings are separated from the host name and database name with a `?` character and multiple settings are separated using the `&` character, e.g.:
@@ -143,25 +188,3 @@ NOTE: If you use older versions of MariaDB or MySQL (< 8), you may have to set t
 spring.datasource.hikari.connectionInitSql=SET NAMES utf8mb4 COLLATE utf8mb4_bin;
 ----
 * change the `my.conf` MariaDB database configuration file if necessary to use `utf8mb4` as default character set and `utf8mb4_bin` for collation (see <<character-set-config, Preparing the database>>).
-
-== Using MySQL instead of MariaDB
-
-{product-name} only includes the MariaDB JDBC driver. According to the MariaDB documentation, this driver is also compatible with MySQL servers. However, additional settings may be necessary when connecting to a MySQL server.
-
-If you want to use {product-name} with MySQL instead of MariaDB, you may also have to explicitly define the database driver. The MariaDB driver should also work for MySQL databases, but if you use a `mysql` JDBC URL (like e.g. `dbc:mysql://localhost:3306/inception`), you need to explicitly define the driver in the `settings.properties` file:
-
-----
-database.driver=org.mariadb.jdbc.Driver
-----
-
-In most cases, {product-name} can auto-configure the database dialect to use. However, in some cases, this auto-detection may fail - in particular when using MySQL. For example, when using INCEpTION with MySQL 8, it may be necessary to explicitly add a database dialect configuration to the `settings.properties` file:
-
-----
-database.dialect=org.hibernate.dialect.MySQL8Dialect
-----
-
-Finally, recent versions of MySQL may need this setting to avoid schema validation to fail during startup:
-
-----
-spring.jpa.properties.hibernate.globally_quoted_identifiers=true
-----
