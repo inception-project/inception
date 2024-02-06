@@ -32,6 +32,8 @@ include::{include-dir}installation_database.adoc[leveloffset=+1]
 
 include::{include-dir}installation_database_mariadb.adoc[leveloffset=+2]
 
+include::{include-dir}installation_database_mysql.adoc[leveloffset=+2]
+
 include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
 
 include::{include-dir}installation_jar.adoc[leveloffset=+1]
@@ -47,6 +49,8 @@ include::{include-dir}installation_ssl_caddy.adoc[leveloffset=+2]
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
 include::{include-dir}installation_kubernetes.adoc[leveloffset=+1]
+
+include::{include-dir}installation_azure.adoc[leveloffset=+1]
 
 include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
 
