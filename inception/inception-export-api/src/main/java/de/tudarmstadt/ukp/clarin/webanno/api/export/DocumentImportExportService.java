@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
@@ -50,12 +49,12 @@ public interface DocumentImportExportService
 
     default List<FormatSupport> getReadableFormats()
     {
-        return getFormats().stream().filter(FormatSupport::isReadable).collect(Collectors.toList());
+        return getFormats().stream().filter(FormatSupport::isReadable).toList();
     }
 
     default List<FormatSupport> getWritableFormats()
     {
-        return getFormats().stream().filter(FormatSupport::isWritable).collect(Collectors.toList());
+        return getFormats().stream().filter(FormatSupport::isWritable).toList();
     }
 
     default Optional<FormatSupport> getReadableFormatById(String aFormatId)

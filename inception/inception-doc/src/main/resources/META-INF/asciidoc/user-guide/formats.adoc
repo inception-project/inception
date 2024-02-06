@@ -39,6 +39,11 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `format.bioc.enabled`
 
 
+| <<sect_formats_brat>>
+| `brat`
+| `format.brat.enabled`
+
+
 | <<sect_formats_conll2000>>
 | `conll2000`
 | `format.conll2000.enabled`
