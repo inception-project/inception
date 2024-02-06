@@ -51,10 +51,10 @@ import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 public class LemmaLayerInitializer
     implements LayerInitializer
 {
-    private final AnnotationSchemaService annotationSchemaService;
-
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
             MethodHandles.lookup().lookupClass(), "LemmaLayerInitializer.svg");
+
+    private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
     public LemmaLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
