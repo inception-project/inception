@@ -32,7 +32,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -147,7 +146,7 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     public void testCalculateVisibilityRejected() throws Exception
     {
-        List<LearningRecord> records = new ArrayList<>();
+        var records = new ArrayList<LearningRecord>();
         LearningRecord rejectedRecord = new LearningRecord();
         rejectedRecord.setSourceDocument(doc);
         rejectedRecord.setUserAction(LearningRecordUserAction.REJECTED);
@@ -221,18 +220,16 @@ public class SpanSuggestionVisibilityCalculationTest
 
         var cas = JCasFactory.createText("a b", "de");
 
-        var suggestion1 = SpanSuggestion.builder() //
-                .withId(1) //
+        var suggestionTemplate = SpanSuggestion.builder() //
                 .withDocument(doc) //
                 .withRecommender(rec) //
-                .withLabel("blah") //
+                .withLabel("blah");
+        var suggestion1 = suggestionTemplate //
+                .withId(1) //
                 .withPosition(0, 1) //
                 .build();
-        var suggestion2 = SpanSuggestion.builder() //
+        var suggestion2 = suggestionTemplate //
                 .withId(2) //
-                .withDocument(doc) //
-                .withRecommender(rec) //
-                .withLabel("blah") //
                 .withPosition(1, 2) //
                 .build();
         var suggestions = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
@@ -280,8 +277,8 @@ public class SpanSuggestionVisibilityCalculationTest
     void thatRejectedSuggestionIsHidden()
     {
         var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
-        var rec2 = Recommender.builder().withId(1l).withLayer(layer2).withFeature(feature).build();
-        var rec3 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature2).build();
+        var rec2 = Recommender.builder().withId(2l).withLayer(layer2).withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(3l).withLayer(layer).withFeature(feature2).build();
         var label = "x";
 
         var records = asList(LearningRecord.builder() //
@@ -332,8 +329,8 @@ public class SpanSuggestionVisibilityCalculationTest
     void thatSkippedSuggestionIsHidden()
     {
         var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
-        var rec2 = Recommender.builder().withId(1l).withLayer(layer2).withFeature(feature).build();
-        var rec3 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature2).build();
+        var rec2 = Recommender.builder().withId(2l).withLayer(layer2).withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(3l).withLayer(layer).withFeature(feature2).build();
         var label = "x";
 
         var records = asList(LearningRecord.builder() //
@@ -381,9 +378,8 @@ public class SpanSuggestionVisibilityCalculationTest
 
     private CAS getTestCas() throws Exception
     {
-        var documentText = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen"
-                + " Testtexten.";
-        var jcas = JCasFactory.createText(documentText, "de");
+        var text = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen  Testtexten.";
+        var jcas = JCasFactory.createText(text, "de");
 
         var neLabel = new NamedEntity(jcas, 0, 3);
         neLabel.setValue("LOC");
