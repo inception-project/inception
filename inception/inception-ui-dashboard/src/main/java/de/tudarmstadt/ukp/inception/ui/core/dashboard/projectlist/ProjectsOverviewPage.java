@@ -400,9 +400,9 @@ public class ProjectsOverviewPage
             @Override
             protected void populateItem(Item<ProjectEntry> aItem)
             {
-                Project project = aItem.getModelObject().getProject();
+                var project = aItem.getModelObject().getProject();
 
-                PageParameters pageParameters = new PageParameters();
+                var pageParameters = new PageParameters();
                 ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
@@ -414,13 +414,13 @@ public class ProjectsOverviewPage
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
 
-                Label createdLabel = new Label(MID_CREATED,
+                var createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
                 createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
                 aItem.add(createdLabel);
 
-                Label projectId = new Label(MID_ID, () -> project.getId());
+                var projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
                         () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
                 aItem.add(projectId);
@@ -446,12 +446,12 @@ public class ProjectsOverviewPage
 
     private void addActionsDropdown(ListItem<ProjectEntry> aItem)
     {
-        ProjectEntry projectEntry = aItem.getModelObject();
-        Project project = projectEntry.getProject();
+        var projectEntry = aItem.getModelObject();
+        var project = projectEntry.getProject();
 
-        WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
+        var container = new WebMarkupContainer("actionDropdown");
 
-        LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
+        var leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
                 _target -> actionConfirmLeaveProject(_target, project));
         leaveProjectLink.add(visibleWhen(() -> !projectEntry.getLevels().isEmpty()
                 && !projectEntry.getLevels().contains(MANAGER)));

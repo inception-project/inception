@@ -44,7 +44,7 @@ public class BasicProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "BasicProjectInitializer.svg");
 
     private final ApplicationContext context;
 

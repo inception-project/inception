@@ -21,9 +21,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -36,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -46,6 +51,9 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 public class NamedEntityLayerInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "NamedEntityLayerInitializer.svg");
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
@@ -58,6 +66,18 @@ public class NamedEntityLayerInitializer
     public String getName()
     {
         return "Named entity tagging";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("named-entity-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

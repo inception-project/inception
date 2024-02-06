@@ -22,10 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -35,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 /**
@@ -43,9 +49,13 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
  * {@link InceptionDocumentLabelingProjectInitializersAutoConfiguration#basicDocumentTagLayerInitializer}.
  * </p>
  */
+@Order(40)
 public class BasicDocumentLabelLayerInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "BasicDocumentLabelLayerInitializer.svg");
+
     public static final String BASIC_DOCUMENT_LABEL_LAYER_NAME = "custom.DocumentLabel";
     public static final String BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME = "label";
 
@@ -63,7 +73,19 @@ public class BasicDocumentLabelLayerInitializer
     @Override
     public String getName()
     {
-        return "Basic document tag";
+        return "Generic document classification";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("document-labeling-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
