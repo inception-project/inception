@@ -18,25 +18,35 @@
 -->
 
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .results-table tr:hover {
+      background-color: #f5f5f5;
+    }
+  </style>
+</wicket:head>
 <body>
 <wicket:panel>
-  <div wicket:id="dialog"/>
-
-  <div class="flex-v-container flex-gutter flex-sidebar" style="overflow: auto;">
-    <div class="d-flex">
-      <input wicket:id="searchBar" class="form-control"/>
-      <button wicket:id="query" class="ms-3 btn btn-outline-secondary">SPARQL</button>
-    </div>
-    
-    <div wicket:enclosure="knowledgebases">
-      <select wicket:id="knowledgebases" class="form-select form-select-lg" data-container="body"/>
-    </div>
-
-    <div class="flex-content flex-v-container" wicket:id="concepts"></div>
-    <div class="flex-content flex-v-container" wicket:id="properties"></div>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      SPARQL Query
+    </h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
   </div>
-  <div wicket:id="detailContainer" class="flex-content flex-h-container">
-    <div wicket:id="details" class="flex-content flex-h-container"></div>
+  <div class="modal-body overflow-auto" style="width: 79vw;">
+    <form wicket:id="form" class="container">
+      <div>
+        <textarea wicket:id=query class="w-100" rows="10">
+        </textarea>
+      </div>
+      <button wicket:id="runQuery">Query</button>
+    </form>
+    <div wicket:id="resultsContainer">
+      <table wicket:id="results" class="results-table w-100"/>
+    </div>
+  </div>
+  <div class="modal-footer flex-column small">
+    Great power brings great responsibility.
   </div>
 </wicket:panel>
 </body>
