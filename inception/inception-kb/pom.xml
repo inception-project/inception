@@ -163,7 +163,30 @@
     <dependency>
       <groupId>org.cyberborean</groupId>
       <artifactId>rdfbeans</artifactId>
-      <version>2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-apibinding</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-parsers</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-rio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.owlapi</groupId>
+      <artifactId>owlapi-tools</artifactId>
     </dependency>
 
     <dependency>
@@ -318,6 +341,13 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies>
+              <!-- OWLAPI plugins - used via reflection -->
+              <usedDependency>net.sourceforge.owlapi:owlapi-api</usedDependency>
+              <usedDependency>net.sourceforge.owlapi:owlapi-apibinding</usedDependency>
+              <usedDependency>net.sourceforge.owlapi:owlapi-impl</usedDependency>
+              <usedDependency>net.sourceforge.owlapi:owlapi-parsers</usedDependency>
+              <usedDependency>net.sourceforge.owlapi:owlapi-rio</usedDependency>
+              <usedDependency>net.sourceforge.owlapi:owlapi-tools</usedDependency>
               <!-- RDF4J plugins - used via reflection -->
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-rdfxml</usedDependency>
               <usedDependency>org.eclipse.rdf4j:rdf4j-rio-ntriples</usedDependency>

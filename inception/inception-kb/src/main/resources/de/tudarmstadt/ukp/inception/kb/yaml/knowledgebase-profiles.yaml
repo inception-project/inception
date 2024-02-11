@@ -385,9 +385,8 @@ snomed-ct:
       Here is what you need to do to obtain and load the actual SNOMED CT data:
       
       - Download SNOMED CT RD2 data files, e.g. from the [National Library of Medicine](https://www.nlm.nih.gov/healthit/snomedct/international.html)
-      - Convert the _RD2_ data to _OWL Functional Syntax_ using the [snomed-owl-toolkil](https://github.com/IHTSDO/snomed-owl-toolkit)
-      - Convert the _OWL Functional Syntax_ data to _RDF/XML_ e.g. using [Protégé](https://protege.stanford.edu)
-      - Import the _RDF/XML_ file into the knowledge base created from this profile (this may take a while)
+      - The RD2 package contains a data file in _OWL Functional Syntax_ wiht the ending `.owl` - rename the file to end in `.ofn`
+      - Import the renamed file into the knowledge base created from this profile (this may take a while)
     host-institution-name: SNOMED International
     website-url: https://www.snomed.org
     license-url: https://www.snomed.org/get-snomed
