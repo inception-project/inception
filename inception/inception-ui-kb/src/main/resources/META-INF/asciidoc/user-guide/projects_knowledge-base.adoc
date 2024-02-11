@@ -326,14 +326,17 @@ KBs can be populated by importing RDF files. Several formats are supported. The 
 |====
 | Format | Extension
 
-| RDF
+| RDF (XML)
 | `.rdf`
 
-| RDF Schema
+| RDF Schema (XML)
 | `.rdfs`
 
-| OWL
+| OWL (XML)
 | `.owl`
+
+| OWL Functional Syntax
+| `.ofn`
 
 | N-Triples
 | `.nt`

@@ -137,6 +137,8 @@
     <!-- * 4.6.1    depends on Lucene 8.11.1 -->
     <!--   4.7.0    depends on Lucene 9.4.2 -->
 
+    <owlapi-version>5.5.0</owlapi-version>
+
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
     <asciidoctor.version>2.5.10</asciidoctor.version>
     <asciidoctor-diagram.version>2.2.9</asciidoctor-diagram.version>
