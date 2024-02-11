@@ -332,6 +332,9 @@ KBs can be populated by importing RDF files. Several formats are supported. The 
 | RDF Schema (XML)
 | `.rdfs`
 
+| OBO
+| `.obo`
+
 | OWL (XML)
 | `.owl`
 
