@@ -47,6 +47,7 @@ public class IriConstants
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
+    public static final String PREFIX_BLAZEGRAPH = "http://www.bigdata.com/rdf/search#";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
@@ -87,6 +88,7 @@ public class IriConstants
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_WIKIDATA;
     public static final IRI FTS_STARDOG;
+    public static final IRI FTS_BLAZEGRAPH;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -116,6 +118,7 @@ public class IriConstants
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
         FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
         FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
+        FTS_BLAZEGRAPH = vf.createIRI(PREFIX_BLAZEGRAPH, "search");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);

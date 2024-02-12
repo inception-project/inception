@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
-import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.bNode;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 
@@ -28,46 +26,35 @@ import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
-@SuppressWarnings("unused")
-public class StardogEntitySearchService
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
+
+public class BlazegraphFtsQuery
     implements GraphPattern
 {
-    private static final Prefix FTS = prefix("fts", iri(PREFIX_STARDOG));
+    public static final Prefix PREFIX_BLAZEGRAPH_SEARCH = prefix("bds",
+            iri(IriConstants.FTS_BLAZEGRAPH));
+    public static final Iri BLAZEGRAPH_SEARCH = PREFIX_BLAZEGRAPH_SEARCH.iri("search");
+    public static final Iri BLAZEGRAPH_RELEVANCE = PREFIX_BLAZEGRAPH_SEARCH.iri("relevance");
+    public static final Iri BLAZEGRAPH_MAX_RANK = PREFIX_BLAZEGRAPH_SEARCH.iri("maxRank");
 
-    private static final Iri FTS_TEXT_MATCH = FTS.iri("textMatch");
-    private static final Iri FTS_QUERY = FTS.iri("query");
-    private static final Iri FTS_THRESHOLD = FTS.iri("threshold");
-    private static final Iri FTS_LIMIT = FTS.iri("limit");
-    private static final Iri FTS_OFFSET = FTS.iri("offset");
-    private static final Iri FTS_SCORE = FTS.iri("score");
-    private static final Iri FTS_RESULT = FTS.iri("result");
-
-    // service fts:textMatch {
-    // [] fts:query 'Mexico AND city' ;
-    // fts:threshold 0.6 ;
-    // fts:limit 10 ;
-    // fts:offset 5 ;
-    // fts:score ?score ;
-    // fts:result ?res ;
-    private final Variable result;
+    private final Variable subject;
+    private final Variable score;
+    private final Variable matchTerm;
+    private final Variable matchTermProperty;
     private final String query;
     private int limit = 0;
 
-    /**
-     * Provides access to the Stardog search service.
-     * 
-     * @param aResult
-     *            the variable to which the matching values are to be bound.
-     * @param aQuery
-     *            the query term.
-     */
-    public StardogEntitySearchService(Variable aResult, String aQuery)
+    public BlazegraphFtsQuery(Variable aSubject, Variable aScore, Variable aMatchTerm,
+            Variable aMatchTermProperty, String aQuery)
     {
-        result = aResult;
+        subject = aSubject;
+        score = aScore;
+        matchTerm = aMatchTerm;
+        matchTermProperty = aMatchTermProperty;
         query = aQuery;
     }
 
-    public StardogEntitySearchService withLimit(int aLimit)
+    public BlazegraphFtsQuery withLimit(int aLimit)
     {
         limit = aLimit;
         return this;
@@ -78,19 +65,20 @@ public class StardogEntitySearchService
     {
         var sb = new StringBuilder();
         sb.append("SERVICE ");
-        sb.append(FTS_TEXT_MATCH.getQueryString());
+        sb.append(BLAZEGRAPH_SEARCH.getQueryString());
         sb.append(" { \n");
 
-        var pattern = bNode() //
-                .has(FTS_QUERY, literalOf(query)) //
-                .andHas(FTS_RESULT, result);
+        var pattern = matchTerm //
+                .has(BLAZEGRAPH_SEARCH, literalOf(query)) //
+                .andHas(BLAZEGRAPH_RELEVANCE, score);
 
         if (limit > 0) {
-            pattern = pattern.andHas(FTS_LIMIT, literalOf(2 * limit));
+            pattern = pattern.andHas(BLAZEGRAPH_MAX_RANK, literalOf(2 * limit));
         }
 
         sb.append(pattern.getQueryString());
-        sb.append("}");
+        sb.append(" } ");
+        sb.append(subject.has(matchTermProperty, matchTerm).getQueryString());
         return sb.toString();
     }
 

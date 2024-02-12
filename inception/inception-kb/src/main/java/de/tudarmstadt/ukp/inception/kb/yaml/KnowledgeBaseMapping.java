@@ -19,6 +19,10 @@ package de.tudarmstadt.ukp.inception.kb.yaml;
 
 import java.io.Serializable;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -29,34 +33,34 @@ public class KnowledgeBaseMapping
     private static final long serialVersionUID = 8967034943386456692L;
 
     @JsonProperty("class")
-    private String classIri;
+    private String classIri = RDFS.CLASS.stringValue();
 
     @JsonProperty("subclass-of")
-    private String subclassIri;
+    private String subclassIri = RDFS.SUBCLASSOF.stringValue();
 
     @JsonProperty("instance-of")
-    private String typeIri;
+    private String typeIri = RDF.TYPE.stringValue();
 
     @JsonProperty("subproperty-of")
-    private String subPropertyIri;
+    private String subPropertyIri = RDFS.SUBPROPERTYOF.stringValue();
 
     @JsonProperty("description")
-    private String descriptionIri;
+    private String descriptionIri = RDFS.COMMENT.stringValue();
 
     @JsonProperty("label")
-    private String labelIri;
+    private String labelIri = RDFS.LABEL.stringValue();
 
     @JsonProperty("property-type")
-    private String propertyTypeIri;
+    private String propertyTypeIri = RDF.PROPERTY.stringValue();
 
     @JsonProperty("property-label")
-    private String propertyLabelIri;
+    private String propertyLabelIri = RDFS.LABEL.stringValue();
 
     @JsonProperty("property-description")
-    private String propertyDescriptionIri;
+    private String propertyDescriptionIri = RDFS.COMMENT.stringValue();
 
     @JsonProperty("deprecation-property")
-    private String deprecationPropertyIri;
+    private String deprecationPropertyIri = OWL.DEPRECATED.stringValue();
 
     @JsonCreator
     public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
