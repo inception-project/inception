@@ -72,6 +72,7 @@
     <mockito.version>5.7.0</mockito.version>
     <assertj.version>3.24.2</assertj.version>
     <xmlunit.version>2.9.1</xmlunit.version>
+    <testcontainers.version>1.19.5</testcontainers.version>
 
     <awaitility.version>4.2.0</awaitility.version>
 

@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
@@ -49,6 +51,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
@@ -173,6 +176,8 @@ public class SPARQLQueryBuilder
     public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
 
     public static final Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
+
+    public static final Prefix PREFIX_BLAZEGRAPH_SEARCH = prefix("bds", iri(PREFIX_BLAZEGRAPH));
 
     // Some versions of Virtuoso do not like it when we declare the bif prefix.
     // public static final Prefix PREFIX_VIRTUOSO_SEARCH = prefix("bif", iri(PREFIX_VIRTUOSO));
@@ -781,6 +786,9 @@ public class SPARQLQueryBuilder
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(values));
         }
+        else if (FTS_BLAZEGRAPH.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Blazegraph_FTS(values));
+        }
         else if (FTS_FUSEKI.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Fuseki_FTS(values));
         }
@@ -897,6 +905,39 @@ public class SPARQLQueryBuilder
                             .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                     .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
+        }
+
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
+    }
+
+    private GraphPattern withLabelMatchingExactlyAnyOf_Blazegraph_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_BLAZEGRAPH_SEARCH);
+
+        var valuePatterns = new ArrayList<GraphPattern>();
+        for (var value : aValues) {
+            var sanitizedValue = sanitizeQueryString_FTS(value);
+
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            projections.add(VAR_SCORE);
+
+            valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
+                            .withLimit(getLimit()) //
+                            .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
         return and( //
@@ -1025,6 +1066,9 @@ public class SPARQLQueryBuilder
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_RDF4J_FTS(values));
         }
+        else if (FTS_BLAZEGRAPH.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Blazegraph_FTS(values));
+        }
         else if (FTS_FUSEKI.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_Fuseki_FTS(values));
         }
@@ -1070,7 +1114,7 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
 
             if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
@@ -1137,6 +1181,42 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
+    private GraphPattern withLabelMatchingAnyOf_Blazegraph_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_BLAZEGRAPH_SEARCH);
+
+        var valuePatterns = new ArrayList<GraphPattern>();
+        for (var value : aValues) {
+            var sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+
+            var fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "*");
+
+            if (isBlank(fuzzyQuery)) {
+                continue;
+            }
+
+            projections.add(VAR_SCORE);
+
+            valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(getLimit()));
+        }
+
+        return and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
+    }
+
     private GraphPattern withLabelMatchingAnyOf_Fuseki_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
@@ -1157,7 +1237,7 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
 
             if (isBlank(fuzzyQuery)) {
                 continue;
@@ -1177,12 +1257,12 @@ public class SPARQLQueryBuilder
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
 
-        List<GraphPattern> valuePatterns = new ArrayList<>();
-        for (String value : aValues) {
+        var valuePatterns = new ArrayList<GraphPattern>();
+        for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
-            String sanitizedValue = sanitizeQueryString_FTS(value);
+            var sanitizedValue = sanitizeQueryString_FTS(value);
 
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+            var fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
 
             if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
@@ -1237,6 +1317,9 @@ public class SPARQLQueryBuilder
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(values));
+        }
+        else if (FTS_BLAZEGRAPH.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Blazegraph_FTS(values));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Fuseki_FTS(values));
@@ -1303,6 +1386,38 @@ public class SPARQLQueryBuilder
                             .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                     .filter(containsPattern(VAR_MATCH_TERM, value)));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
+    }
+
+    private GraphPattern withLabelContainingAnyOf_Blazegraph_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_BLAZEGRAPH_SEARCH);
+
+        var valuePatterns = new ArrayList<GraphPattern>();
+        for (var value : aValues) {
+            var sanitizedValue = sanitizeQueryString_FTS(value);
+
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            projections.add(VAR_SCORE);
+
+            valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
+                            .withLimit(getLimit()) //
+                            .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1425,6 +1540,9 @@ public class SPARQLQueryBuilder
 
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(value));
+        }
+        else if (FTS_BLAZEGRAPH.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Blazegraph_FTS(value));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(value));
@@ -1605,6 +1723,43 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
+    private GraphPattern withLabelStartingWith_Blazegraph_FTS(String aPrefixQuery)
+    {
+        prefixes.add(PREFIX_BLAZEGRAPH_SEARCH);
+
+        String queryString = aPrefixQuery.trim();
+
+        // We assume that the FTS is case insensitive and found that some FTSes (i.e.
+        // Fuseki) can have trouble matching if they get upper-case query when they
+        // internally lower-case#
+        if (caseInsensitive) {
+            String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+            queryString = queryString.toLowerCase(Locale.forLanguageTag(language));
+        }
+
+        if (queryString.isEmpty()) {
+            returnEmptyResult = true;
+        }
+
+        // If the query string entered by the user does not end with a space character, then
+        // we assume that the user may not yet have finished writing the word and add a
+        // wildcard
+        if (!aPrefixQuery.endsWith(" ")) {
+            queryString += "*";
+        }
+
+        projections.add(VAR_SCORE);
+
+        // Locate all entries where the label contains the prefix (using the FTS) and then
+        // filter them by those which actually start with the prefix.
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                        VAR_MATCH_TERM_PROPERTY, queryString) //
+                                .withLimit(getLimit()) //
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+    }
+
     private GraphPattern withLabelStartingWith_Fuseki_FTS(String aPrefixQuery)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
@@ -1680,7 +1835,8 @@ public class SPARQLQueryBuilder
         String value = "^" + asRegexp(aValue) + "$";
 
         List<Expression<?>> expressions = new ArrayList<>();
-        expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+        expressions.add(
+                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new));
@@ -1712,7 +1868,8 @@ public class SPARQLQueryBuilder
         }
 
         List<Expression<?>> expressions = new ArrayList<>();
-        expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+        expressions.add(
+                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
@@ -2380,15 +2537,15 @@ public class SPARQLQueryBuilder
                 .replaceAll("[\\u00AD]", "").trim();
     }
 
-    public static String convertToFuzzyMatchingQuery(String aQuery)
+    public static String convertToFuzzyMatchingQuery(String aQuery, String aOperator)
     {
-        StringJoiner joiner = new StringJoiner(" ");
-        String[] terms = aQuery.split("\\s");
-        for (String term : terms) {
+        var joiner = new StringJoiner(" ");
+        var terms = aQuery.split("\\s");
+        for (var term : terms) {
             // We only do the fuzzy search if there are few terms because if there are many terms,
             // the search becomes too slow if we do a fuzzy match for each of them.
             if (term.length() > 4 && terms.length <= 3) {
-                joiner.add(term + "~");
+                joiner.add(term + aOperator);
             }
             // REC: excluding terms of 3 or less characters helps reducing the problem that a
             // mention of "Counties of Catherlagh" matches "Anne of Austria", but actually
