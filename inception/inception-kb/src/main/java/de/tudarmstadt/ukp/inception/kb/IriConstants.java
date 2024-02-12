@@ -131,7 +131,8 @@ public class IriConstants
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         DEPRECATION_PROPERTY_IRIS = asList(OWL.DEPRECATED);
-        FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE, FTS_STARDOG);
+        FTS_IRIS = asList(FTS_FUSEKI, FTS_BLAZEGRAPH, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE,
+                FTS_STARDOG);
     }
 
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)

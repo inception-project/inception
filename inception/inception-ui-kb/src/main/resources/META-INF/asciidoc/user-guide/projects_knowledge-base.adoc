@@ -263,6 +263,7 @@ Full text search in knowledge bases enables searching for entities by their text
 
 * `http://www.openrdf.org/contrib/lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
 * `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
+* `http://www.bigdata.com/rdf/search#search`: use with remote link:https://blazegraph.com[Blazegraph] endpoints.
 * `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
 * `tag:stardog:api:search:textMatch`: use with link:https://www.stardog.com[Stardog].
 * `https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
