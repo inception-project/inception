@@ -325,7 +325,7 @@ hpo:
   default-language: en
   reification: NONE
   access:
-    access-url: https://purl.obolibrary.org/obo/hp.owl  
+    access-url: https://purl.obolibrary.org/obo/hp/hp-simple-non-classified.owl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
     class: http://www.w3.org/2002/07/owl#Class
@@ -345,9 +345,7 @@ hpo:
       The Human Phenotype Ontology (HPO) project provides an ontology of medically relevant phenotypes, 
       disease-phenotype annotations, and the algorithms that operate on these. 
 
-      This resources is quite large. Downloading and importing it may take some time.
-
-       Find out more at [http://www.human-phenotype-ontology.org](http://www.human-phenotype-ontology.org).
+      Find out more at [http://www.human-phenotype-ontology.org](http://www.human-phenotype-ontology.org).
     host-institution-name: The Jackson Laboratory 
     website-url: https://hpo.jax.org/app/
     license-url: https://hpo.jax.org/app/license
