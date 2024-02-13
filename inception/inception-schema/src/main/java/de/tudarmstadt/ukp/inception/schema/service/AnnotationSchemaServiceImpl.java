@@ -398,13 +398,26 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(Project aProject)
+    {
+        return entityManager.createQuery(
+                "SELECT COUNT(*) FROM AnnotationLayer WHERE project = :project AND name NOT IN (:excluded)",
+                Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("excluded", asList(Token._TypeName, Sentence._TypeName)) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
             entityManager
                     .createQuery("FROM AnnotationLayer WHERE name = :name AND project = :project",
                             AnnotationLayer.class)
-                    .setParameter("name", aName).setParameter("project", aProject)
+                    .setParameter("name", aName) //
+                    .setParameter("project", aProject) //
                     .getSingleResult();
             return true;
         }
@@ -420,13 +433,15 @@ public class AnnotationSchemaServiceImpl
         try {
             entityManager.createQuery(
                     "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
-                    AnnotationLayer.class).setParameter("name", aName).setParameter("type", aType)
-                    .setParameter("project", aProject).getSingleResult();
+                    AnnotationLayer.class) //
+                    .setParameter("name", aName) //
+                    .setParameter("type", aType) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
