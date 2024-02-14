@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
-public class MultiValueFeatureSuggestionVisibilityCalculationTest
+public class SpanSuggestionMultiValueFeatureSuggestionVisibilityCalculationTest
 {
     private static final String TEST_USER = "Testuser";
 

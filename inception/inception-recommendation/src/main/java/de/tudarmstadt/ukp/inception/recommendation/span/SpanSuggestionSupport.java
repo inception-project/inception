@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -157,7 +158,8 @@ public class SpanSuggestionSupport
                 // If there is an annotation where the predicted feature is unset, use it ...
                 annotation = candidateWithEmptyLabel.get();
             }
-            else if (candidates.isEmpty() || aAdapter.getLayer().isAllowStacking()) {
+            else if (candidates.isEmpty() || (aAdapter.getLayer().isAllowStacking()
+                    && aFeature.getMultiValueMode() == NONE)) {
                 // ... if not or if stacking is allowed, then we create a new annotation - this also
                 // takes care of attaching to an annotation if necessary
                 annotation = aAdapter.add(aDocument, aDataOwner, aCas, aBegin, aEnd);
@@ -283,6 +285,9 @@ public class SpanSuggestionSupport
         // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
         var oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()), sortedAnnotationKeys);
 
+        var stackableSuggestions = feature.getLayer().isAllowStacking()
+                || feature.getMultiValueMode() != MultiValueMode.NONE;
+
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
         var hiddenForOverlap = new ArrayList<AnnotationSuggestion>();
@@ -305,9 +310,6 @@ public class SpanSuggestionSupport
 
                 for (var labelObject : labelObjects) {
                     var label = labelObject != null ? String.valueOf(labelObject) : null;
-
-                    var stackableSuggestions = feature.getLayer().isAllowStacking()
-                            || feature.getMultiValueMode() != MultiValueMode.NONE;
 
                     for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any

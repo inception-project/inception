@@ -96,7 +96,9 @@ public class RelationSuggestionSupport
         }
 
         var feature = aContext.getFeature();
-        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType())
+                || CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getType())
+                || feature.isVirtualFeature()) {
             return true;
         }
 

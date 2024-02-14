@@ -161,7 +161,7 @@ public interface AnnotationSchemaService
      *            the project.
      * @return if a layer exists.
      */
-    boolean existsLayer(Project aModelObject);
+    boolean existsLayer(Project project);
 
     /**
      * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
@@ -187,7 +187,7 @@ public interface AnnotationSchemaService
      */
     boolean existsLayer(String name, String type, Project project);
 
-    boolean existsEnabledLayerOfType(Project aProject, String aType);
+    boolean existsEnabledLayerOfType(Project project, String type);
 
     /**
      * Check if this {@link AnnotationFeature} already exists
