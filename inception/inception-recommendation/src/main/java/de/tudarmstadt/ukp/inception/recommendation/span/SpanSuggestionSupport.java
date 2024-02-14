@@ -306,6 +306,9 @@ public class SpanSuggestionSupport
                 for (var labelObject : labelObjects) {
                     var label = labelObject != null ? String.valueOf(labelObject) : null;
 
+                    var stackableSuggestions = feature.getLayer().isAllowStacking()
+                            || feature.getMultiValueMode() != MultiValueMode.NONE;
+
                     for (var suggestion : group) {
                         // The suggestion would just create an annotation and not set any
                         // feature
@@ -324,7 +327,7 @@ public class SpanSuggestionSupport
 
                             // If stacking is enabled, we do allow suggestions that create an
                             // annotation with no label, but only if the offsets differ
-                            if (!(feature.getLayer().isAllowStacking() && !colocated)) {
+                            if (!(stackableSuggestions && !colocated)) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 hiddenForOverlap.add(suggestion);
                                 continue;
@@ -351,8 +354,7 @@ public class SpanSuggestionSupport
 
                             // Would accepting the suggestion create a new annotation but
                             // stacking is not enabled - then we need to hide
-                            if (!feature.getLayer().isAllowStacking()
-                                    && feature.getMultiValueMode() == MultiValueMode.NONE) {
+                            if (!stackableSuggestions) {
                                 suggestion.hide(FLAG_OVERLAP);
                                 hiddenForOverlap.add(suggestion);
                                 continue;

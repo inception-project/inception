@@ -38,8 +38,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.resource.metadata.FeatureDescription;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -284,63 +288,6 @@ public class SpanSuggestionVisibilityCalculationTest
         assertThat(getInvisibleSuggestions(suggestions)) //
                 .as("Second suggestion is now also no longer visible because annotation with the same label exists") //
                 .containsExactly(suggestion1, suggestion2);
-    }
-
-    @Test
-    public void thatOverlappingSuggestionsAreNotHiddenWhenMultiValueModeIsEnabled() throws Exception
-    {
-        var tsd = new TypeSystemDescription_impl();
-        var spanType = tsd.addType("Span", null, CAS.TYPE_NAME_ANNOTATION);
-        var valuesFeature = spanType.addFeature("values", null, CAS.TYPE_NAME_STRING_ARRAY,
-                CAS.TYPE_NAME_STRING, false);
-
-        var spanLayer = AnnotationLayer.builder().withId(44l).withName(spanType.getName()).build();
-        var multiValueFeature = AnnotationFeature.builder().withId(4l) //
-                .withLayer(spanLayer) //
-                .withName(valuesFeature.getName()) //
-                .withMultiValueMode(MultiValueMode.ARRAY) //
-                .withType(CAS.TYPE_NAME_STRING_ARRAY) //
-                .build();
-
-        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
-                spanLayer);
-        when(annoService.listSupportedFeatures(spanLayer)).thenReturn(asList(multiValueFeature));
-
-        var rec = Recommender.builder().withId(123l).withName("rec").withLayer(spanLayer)
-                .withFeature(multiValueFeature).build();
-
-        var cas = CasFactory.createCas(tsd);
-
-        var suggestionTemplate = SpanSuggestion.builder() //
-                .withDocument(doc) //
-                .withRecommender(rec) //
-                .withLabel("blah");
-        var suggestion = suggestionTemplate //
-                .withId(1) //
-                .withPosition(0, 1) //
-                .build();
-        var suggestions = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
-                asList(suggestion));
-
-        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, spanLayer, suggestions, 0,
-                2);
-
-        var ann = cas.createAnnotation(cas.getTypeSystem().getType(spanType.getName()), 0, 1);
-        cas.addFsToIndexes(ann);
-
-        assertThat(getInvisibleSuggestions(suggestions)) //
-                .as("First suggestion is still visible because as its label does not match the "
-                        + "label of the annotation at the same position") //
-                .isEmpty();
-
-        FSUtil.setFeature(ann, "values", asList("blah"));
-
-        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, spanLayer, suggestions, 0,
-                2);
-
-        assertThat(getInvisibleSuggestions(suggestions)) //
-                .as("First suggestion is no longer visible because annotation with the same label exists") //
-                .containsExactly(suggestion);
     }
 
     @Test
