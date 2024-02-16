@@ -25,6 +25,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class DocumentWrappingXmlInputReader
     extends EventReaderDelegate
 {

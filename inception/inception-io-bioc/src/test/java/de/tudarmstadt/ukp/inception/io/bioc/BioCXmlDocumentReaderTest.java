@@ -29,6 +29,10 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class BioCXmlDocumentReaderTest
 {
     @Test
