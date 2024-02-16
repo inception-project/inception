@@ -22,10 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchem
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LABEL_FEATURE_NAME;
 import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_END;
 import static org.apache.uima.cas.CAS.FEATURE_FULL_NAME_SOFA;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -34,6 +36,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField;
@@ -92,7 +95,7 @@ public interface BioCComponent
                 .findFirst();
     }
 
-    static Type guessBestRelationType(TypeSystem aTypeSystem, Map<String, String> aInfons)
+    static Type guessBestRelationType(TypeSystem aTypeSystem, Map<String, List<String>> aInfons)
     {
         var type = guessBestType(aTypeSystem, aInfons);
         if (type != null && isRelationLayer(type)) {
@@ -107,7 +110,7 @@ public interface BioCComponent
         return null;
     }
 
-    static Type guessBestSpanType(TypeSystem aTypeSystem, Map<String, String> aInfons)
+    static Type guessBestSpanType(TypeSystem aTypeSystem, Map<String, List<String>> aInfons)
     {
         var type = guessBestType(aTypeSystem, aInfons);
         if (type != null && isSpanLayer(type)) {
@@ -122,16 +125,16 @@ public interface BioCComponent
         return null;
     }
 
-    private static Type guessBestType(TypeSystem aTypeSystem, Map<String, String> aInfons)
+    private static Type guessBestType(TypeSystem aTypeSystem, Map<String, List<String>> aInfons)
     {
         var typeInfon = aInfons.get(I_TYPE);
-        if (typeInfon != null) {
-            var type = aTypeSystem.getType(typeInfon);
+        if (isNotEmpty(typeInfon)) {
+            var type = aTypeSystem.getType(typeInfon.get(0));
             if (type != null) {
                 return type;
             }
 
-            type = findTypeByShortName(aTypeSystem, typeInfon);
+            type = findTypeByShortName(aTypeSystem, typeInfon.get(0));
             if (type != null) {
                 return type;
             }
@@ -151,7 +154,7 @@ public interface BioCComponent
         return null;
     }
 
-    public static void transferFeatures(AnnotationFS aAnnotation, Map<String, String> aInfons)
+    public static void transferFeatures(AnnotationFS aAnnotation, Map<String, List<String>> aInfons)
     {
         var anyFeatureSet = false;
         for (var infon : aInfons.entrySet()) {
@@ -164,8 +167,14 @@ public interface BioCComponent
                 continue;
             }
 
-            if (feature.getRange().isPrimitive()) {
-                aAnnotation.setFeatureValueFromString(feature, infon.getValue());
+            if (feature.getRange().isPrimitive() && isNotEmpty(infon.getValue())) {
+                aAnnotation.setFeatureValueFromString(feature, infon.getValue().get(0));
+                anyFeatureSet = true;
+            }
+
+            if (CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getRange().getName())
+                    && isNotEmpty(infon.getValue())) {
+                FSUtil.setFeature(aAnnotation, feature, infon.getValue());
                 anyFeatureSet = true;
             }
         }
@@ -174,7 +183,10 @@ public interface BioCComponent
         var valueFeature = aAnnotation.getType()
                 .getFeatureByBaseName(BASIC_SPAN_LABEL_FEATURE_NAME);
         if (!anyFeatureSet && aInfons.size() == 1 && valueFeature != null) {
-            aAnnotation.setFeatureValueFromString(valueFeature, aInfons.values().iterator().next());
+            var values = aInfons.values().iterator().next();
+            if (isNotEmpty(values)) {
+                aAnnotation.setFeatureValueFromString(valueFeature, values.get(0));
+            }
         }
     }
 }

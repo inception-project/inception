@@ -22,6 +22,10 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class SplittingContentHandler
     implements ContentHandler
 {

@@ -24,6 +24,10 @@ import java.util.Optional;
 
 import org.dkpro.core.api.xml.type.XmlElement;
 
+/**
+ * @deprecated Experimental code that was deprecated.
+ */
+@Deprecated
 public class BioCXmlUtils
 {
     public static Optional<XmlElement> getChildTextElement(XmlElement aContainer)

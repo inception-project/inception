@@ -45,7 +45,9 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.Type;
@@ -58,8 +60,13 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.io.bioc.model.BioCToCas;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
+/**
+ * @deprecated Experimental code that was deprecated in favor of {@link BioCToCas}
+ */
+@Deprecated
 public class BioC2XmlCas
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -82,7 +89,7 @@ public class BioC2XmlCas
             var infons = extractInfons(relationElement);
             var nodes = extractNodes(relationElement);
 
-            Type uimaType = guessBestRelationType(aJCas.getTypeSystem(), infons);
+            var uimaType = guessBestRelationType(aJCas.getTypeSystem(), infons);
             if (uimaType == null || !isRelationLayer(uimaType)) {
                 LOG.debug("Unable to find suitable UIMA type for relation annotation");
                 continue;
@@ -151,7 +158,7 @@ public class BioC2XmlCas
         return id2Span;
     }
 
-    private Map<String, String> extractInfons(XmlElement aElement)
+    private Map<String, List<String>> extractInfons(XmlElement aElement)
     {
         var children = aElement.getChildren();
 
@@ -161,13 +168,14 @@ public class BioC2XmlCas
 
         var infonChildren = children.select(XmlElement.class) //
                 .filter(e -> E_INFON.equals(e.getQName())) //
-                .collect(toList());
+                .toList();
 
-        var infons = new LinkedHashMap<String, String>();
+        var infons = new LinkedHashMap<String, List<String>>();
         for (var infonChild : infonChildren) {
             var key = getMandatoryAttributeValue(infonChild, A_KEY);
             var value = XmlNodeUtils.textContent(infonChild);
-            infons.put(key, value);
+            var list = infons.computeIfAbsent(key, $ -> new ArrayList<>());
+            list.add(value);
         }
 
         return infons;
