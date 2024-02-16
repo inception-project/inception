@@ -80,13 +80,13 @@ public abstract class SuggestionSupport_ImplBase
         return id;
     }
 
-    protected void commitLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
+    protected final void commitLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
             TypeAdapter aAdapter, AnnotationFeature aFeature, String aValue,
             AnnotationBaseFS annotation)
         throws AnnotationException
     {
         // Update the feature value
-        aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
+        aAdapter.pushFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
                 aFeature, aValue);
     }
 

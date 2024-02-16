@@ -6,13 +6,11 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="de.tudarmstadt" level="INFO"/>
-    <!--
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils" level="TRACE"/>
-		<logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl" level="TRACE"/>
-		<Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession" level="TRACE"/>
-		-->
-    <Root level="warn">
+<!--     <Logger name="de.tudarmstadt" level="INFO"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils" level="TRACE"/> -->
+<!-- 		<logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl" level="TRACE"/> -->
+<!-- 		<Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession" level="TRACE"/> -->
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

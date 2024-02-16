@@ -47,6 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.annotation.feature.multistring.MultiValueStringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -55,6 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class SpanSuggestionVisibilityCalculationTest
@@ -93,7 +96,12 @@ public class SpanSuggestionVisibilityCalculationTest
         lenient().when(annoService.listSupportedFeatures(layer)).thenReturn(asList(feature));
         lenient().when(annoService.listSupportedFeatures(layer2)).thenReturn(asList(feature2));
 
-        sut = new SpanSuggestionSupport(null, learningRecordService, null, annoService, null, null);
+        var featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new StringFeatureSupport(), new MultiValueStringFeatureSupport()));
+        featureSupportRegistry.init();
+
+        sut = new SpanSuggestionSupport(null, learningRecordService, null, annoService,
+                featureSupportRegistry, null);
     }
 
     @Test
@@ -147,7 +155,7 @@ public class SpanSuggestionVisibilityCalculationTest
     public void testCalculateVisibilityRejected() throws Exception
     {
         var records = new ArrayList<LearningRecord>();
-        LearningRecord rejectedRecord = new LearningRecord();
+        var rejectedRecord = new LearningRecord();
         rejectedRecord.setSourceDocument(doc);
         rejectedRecord.setUserAction(LearningRecordUserAction.REJECTED);
         rejectedRecord.setLayer(layer);
@@ -269,7 +277,7 @@ public class SpanSuggestionVisibilityCalculationTest
                 suggestions, 0, 2);
 
         assertThat(getInvisibleSuggestions(suggestions)) //
-                .as("Second suggestion is noew also no longer visible because annotation with the same label exists") //
+                .as("Second suggestion is now also no longer visible because annotation with the same label exists") //
                 .containsExactly(suggestion1, suggestion2);
     }
 

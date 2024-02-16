@@ -6,9 +6,9 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="de.tudarmstadt" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge" level="TRACE"/>
-    <Root level="warn">
+<!--     <Logger name="de.tudarmstadt" level="DEBUG"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge" level="TRACE"/> -->
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

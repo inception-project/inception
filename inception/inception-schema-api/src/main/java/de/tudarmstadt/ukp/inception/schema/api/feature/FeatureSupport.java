@@ -274,6 +274,12 @@ public interface FeatureSupport<T>
         setFeature(fs, aFeature, value);
     }
 
+    default void pushFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
+    {
+        setFeatureValue(aCas, aFeature, aAddress, aValue);
+    }
+
     @SuppressWarnings("unchecked")
     default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {

@@ -178,8 +178,11 @@ public class StringMatchingRecommender
 
             for (var ann : select(cas, predictedType)) {
                 if (isMultiValue) {
-                    for (var label : FSUtil.getFeature(ann, predictedFeature, String[].class)) {
-                        learn(dict, ann.getCoveredText(), label);
+                    var labels = FSUtil.getFeature(ann, predictedFeature, String[].class);
+                    if (labels != null) {
+                        for (var label : labels) {
+                            learn(dict, ann.getCoveredText(), label);
+                        }
                     }
                 }
                 else {
@@ -427,9 +430,11 @@ public class StringMatchingRecommender
                     }
 
                     if (isMultiValue) {
-                        Stream.of(FSUtil.getFeature(ann, predictedFeature, String[].class))
-                                .distinct() //
-                                .forEach(l -> spans.add(new Span(ann, l)));
+                        var value = FSUtil.getFeature(ann, predictedFeature, String[].class);
+                        if (value != null) {
+                            Stream.of(value).distinct() //
+                                    .forEach(l -> spans.add(new Span(ann, l)));
+                        }
                     }
                     else {
                         spans.add(new Span(ann, ann.getFeatureValueAsString(predictedFeature)));

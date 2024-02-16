@@ -1399,9 +1399,18 @@ public class RecommendationServiceImpl
             records.add(0, aRecord);
         }
 
-        public List<LearningRecord> listLearningRecords(AnnotationLayer aLayer)
+        public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer)
         {
-            return learningRecords.getOrDefault(aLayer, Collections.emptyList());
+            return learningRecords.computeIfAbsent(aLayer,
+                    $ -> RecommendationServiceImpl.this.loadLearningRecords(aDataOwner, aLayer, 0));
+        }
+
+        public void removeLearningRecords(String aDataOwner, SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getUser(), aDataOwner) && //
+                        Objects.equals(r.getSourceDocument(), aDocument));
+            }
         }
 
         public void removeLearningRecords(LearningRecord aRecord)
@@ -1666,7 +1675,7 @@ public class RecommendationServiceImpl
     {
         var state = getState(aSessionOwner, aDocument.getProject());
         synchronized (state) {
-            return state.listLearningRecords(aFeature.getLayer()).stream()
+            return state.listLearningRecords(aDataOwner, aFeature.getLayer()).stream()
                     .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
@@ -1682,7 +1691,7 @@ public class RecommendationServiceImpl
     {
         var state = getState(aSessionOwner, aLayer.getProject());
         synchronized (state) {
-            var stream = state.listLearningRecords(aLayer).stream()
+            var stream = state.listLearningRecords(aDataOwner, aLayer).stream()
                     .filter(r -> Objects.equals(r.getUser(), aDataOwner)
                             && r.getUserAction() != LearningRecordUserAction.SHOWN);
             if (aLimit > 0) {
@@ -1732,22 +1741,32 @@ public class RecommendationServiceImpl
         entityManager.flush();
     }
 
-    private void deleteLearningRecords(SourceDocument document, String user)
+    private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)
     {
-        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
+        var state = getState(aDataOwner, aDocument.getProject());
+        synchronized (state) {
+            state.removeLearningRecords(aDataOwner, aDocument);
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
                 + "= :user";
         entityManager.createQuery(sql) //
-                .setParameter("document", document) //
-                .setParameter("user", user) //
+                .setParameter("document", aDocument) //
+                .setParameter("user", aDataOwner) //
                 .executeUpdate();
     }
 
     @Override
     @Transactional
-    public void deleteLearningRecord(LearningRecord learningRecord)
+    public void deleteLearningRecord(LearningRecord aRecord)
     {
-        entityManager.remove(entityManager.contains(learningRecord) ? learningRecord
-                : entityManager.merge(learningRecord));
+        var state = getState(aRecord.getUser(), aRecord.getLayer().getProject());
+        synchronized (state) {
+            state.removeLearningRecords(aRecord);
+        }
+
+        entityManager
+                .remove(entityManager.contains(aRecord) ? aRecord : entityManager.merge(aRecord));
     }
 
     @Override
