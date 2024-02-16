@@ -144,17 +144,38 @@ public abstract class TypeAdapter_ImplBase
     }
 
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
-            AnnotationFeature aFeature, Object aValue)
+    public final void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
 
-        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        var fs = selectFsByAddr(aCas, aAddress);
 
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
+
+        var newValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, aFeature, newValue, oldValue));
+        }
+    }
+
+    @Override
+    public final void pushFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aAddress, AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
+    {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+
+        var fs = selectFsByAddr(aCas, aAddress);
+
+        var oldValue = featureSupport.getFeatureValue(aFeature, fs);
+
+        featureSupport.pushFeatureValue(aCas, aFeature, aAddress, aValue);
 
         var newValue = featureSupport.getFeatureValue(aFeature, fs);
 

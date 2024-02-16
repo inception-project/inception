@@ -8,10 +8,10 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile" level="TRACE"/>
-    <Logger name="de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest" level="TRACE"/>
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.support.WatchedResourceFile" level="TRACE"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicyTest" level="TRACE"/> -->
     
-    <Root level="warn">
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

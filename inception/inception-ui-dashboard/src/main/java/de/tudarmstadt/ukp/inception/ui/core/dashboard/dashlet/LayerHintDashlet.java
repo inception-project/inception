@@ -24,7 +24,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.documents.ProjectDocumentsPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.layers.ProjectLayersPage;
 
@@ -33,7 +33,7 @@ public class LayerHintDashlet
 {
     private static final long serialVersionUID = -2039509339561190091L;
 
-    private @SpringBean DocumentService documentService;
+    private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean ProjectAccess projectAccess;
 
     public LayerHintDashlet(String aId, IModel<Project> aProject)
@@ -56,6 +56,6 @@ public class LayerHintDashlet
         super.onConfigure();
 
         setVisible(projectAccess.canManageProject(Long.toString(getModelObject().getId()))
-                && !documentService.existsSourceDocument(getModelObject()));
+                && !schemaService.existsLayer(getModelObject()));
     }
 }

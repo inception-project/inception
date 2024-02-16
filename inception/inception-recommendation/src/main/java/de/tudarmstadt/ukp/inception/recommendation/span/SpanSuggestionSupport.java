@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -52,6 +54,7 @@ import org.springframework.lang.Nullable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -110,7 +113,9 @@ public class SpanSuggestionSupport
         }
 
         var feature = aContext.getFeature();
-        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+        if (CAS.TYPE_NAME_STRING.equals(feature.getType())
+                || CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getType())
+                || feature.isVirtualFeature()) {
             return true;
         }
 
@@ -153,7 +158,8 @@ public class SpanSuggestionSupport
                 // If there is an annotation where the predicted feature is unset, use it ...
                 annotation = candidateWithEmptyLabel.get();
             }
-            else if (candidates.isEmpty() || aAdapter.getLayer().isAllowStacking()) {
+            else if (candidates.isEmpty() || (aAdapter.getLayer().isAllowStacking()
+                    && aFeature.getMultiValueMode() == NONE)) {
                 // ... if not or if stacking is allowed, then we create a new annotation - this also
                 // takes care of attaching to an annotation if necessary
                 annotation = aAdapter.add(aDocument, aDataOwner, aCas, aBegin, aEnd);
@@ -209,7 +215,7 @@ public class SpanSuggestionSupport
                 .filter(group -> group.getLayerId() == aLayer.getId())
                 // ... and in the given window
                 .filter(group -> {
-                    Offset offset = (Offset) group.getPosition();
+                    var offset = (Offset) group.getPosition();
                     return AnnotationPredicates.coveredBy(offset.getBegin(), offset.getEnd(),
                             aWindowBegin, aWindowEnd);
                 }) //
@@ -279,6 +285,9 @@ public class SpanSuggestionSupport
         // the keys in a TreeSet - and the annotation offsets are sorted in the same way manually
         var oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()), sortedAnnotationKeys);
 
+        var stackableSuggestions = feature.getLayer().isAllowStacking()
+                || feature.getMultiValueMode() != MultiValueMode.NONE;
+
         // Bulk-hide any groups that overlap with existing annotations on the current layer
         // and for the current feature
         var hiddenForOverlap = new ArrayList<AnnotationSuggestion>();
@@ -289,56 +298,69 @@ public class SpanSuggestionSupport
             // Fetch the current suggestion and annotation
             var group = suggestions.get(suggestionOffset);
             for (var annotation : annotations.get(annotationOffset)) {
-                var label = annotation.getFeatureValueAsString(feat);
-                for (var suggestion : group) {
-                    // The suggestion would just create an annotation and not set any
-                    // feature
-                    var colocated = colocated(annotation, suggestion.getBegin(),
-                            suggestion.getEnd());
-                    if (suggestion.getLabel() == null) {
-                        // If there is already an annotation, then we hide any suggestions
-                        // that would just trigger the creation of the same annotation and
-                        // not set any new feature. This applies whether stacking is allowed
-                        // or not.
-                        if (colocated) {
-                            suggestion.hide(FLAG_OVERLAP);
-                            hiddenForOverlap.add(suggestion);
-                            continue;
-                        }
+                Iterable<Object> labelObjects;
+                var value = featureSupportRegistry.findExtension(feature).get()
+                        .getFeatureValue(feature, annotation);
+                if (value instanceof Iterable iterableValues) {
+                    labelObjects = iterableValues;
+                }
+                else {
+                    labelObjects = asList(value);
+                }
 
-                        // If stacking is enabled, we do allow suggestions that create an
-                        // annotation with no label, but only if the offsets differ
-                        if (!(feature.getLayer().isAllowStacking() && !colocated)) {
-                            suggestion.hide(FLAG_OVERLAP);
-                            hiddenForOverlap.add(suggestion);
-                            continue;
-                        }
-                    }
-                    // The suggestion would merge the suggested feature value into an
-                    // existing annotation or create a new annotation with the feature if
-                    // stacking were enabled.
-                    else {
-                        // Is the feature still unset in the current annotation - i.e. would
-                        // accepting the suggestion merge the feature into it? If yes, we do
-                        // not hide
-                        if (label == null && suggestion.getLabel() != null && colocated) {
-                            continue;
-                        }
+                for (var labelObject : labelObjects) {
+                    var label = labelObject != null ? String.valueOf(labelObject) : null;
 
-                        // Does the suggested label match the label of an existing annotation
-                        // at the same position then we hide
-                        if (label != null && label.equals(suggestion.getLabel()) && colocated) {
-                            suggestion.hide(FLAG_OVERLAP);
-                            hiddenForOverlap.add(suggestion);
-                            continue;
-                        }
+                    for (var suggestion : group) {
+                        // The suggestion would just create an annotation and not set any
+                        // feature
+                        var colocated = colocated(annotation, suggestion.getBegin(),
+                                suggestion.getEnd());
+                        if (suggestion.getLabel() == null) {
+                            // If there is already an annotation, then we hide any suggestions
+                            // that would just trigger the creation of the same annotation and
+                            // not set any new feature. This applies whether stacking is allowed
+                            // or not.
+                            if (colocated) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
+                                continue;
+                            }
 
-                        // Would accepting the suggestion create a new annotation but
-                        // stacking is not enabled - then we need to hide
-                        if (!feature.getLayer().isAllowStacking()) {
-                            suggestion.hide(FLAG_OVERLAP);
-                            hiddenForOverlap.add(suggestion);
-                            continue;
+                            // If stacking is enabled, we do allow suggestions that create an
+                            // annotation with no label, but only if the offsets differ
+                            if (!(stackableSuggestions && !colocated)) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
+                                continue;
+                            }
+                        }
+                        // The suggestion would merge the suggested feature value into an
+                        // existing annotation or create a new annotation with the feature if
+                        // stacking were enabled.
+                        else {
+                            // Is the feature still unset in the current annotation - i.e. would
+                            // accepting the suggestion merge the feature into it? If yes, we do
+                            // not hide
+                            if (label == null && suggestion.getLabel() != null && colocated) {
+                                continue;
+                            }
+
+                            // Does the suggested label match the label of an existing annotation
+                            // at the same position then we hide
+                            if (label != null && label.equals(suggestion.getLabel()) && colocated) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
+                                continue;
+                            }
+
+                            // Would accepting the suggestion create a new annotation but
+                            // stacking is not enabled - then we need to hide
+                            if (!stackableSuggestions) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                hiddenForOverlap.add(suggestion);
+                                continue;
+                            }
                         }
                     }
                 }
