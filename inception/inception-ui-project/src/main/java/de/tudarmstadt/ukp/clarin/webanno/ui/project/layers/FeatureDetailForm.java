@@ -174,7 +174,7 @@ public class FeatureDetailForm
             else {
                 featureType.setEnabled(false);
                 featureType.setChoices(
-                        () -> featureSupportRegistry.getAllTypes(getModelObject().getLayer()));
+                        asList(featureSupportRegistry.getFeatureType(getModelObject())));
             }
         }));
         featureType.add(new AjaxFormComponentUpdatingBehavior("change")

@@ -96,8 +96,15 @@ public class ConceptFeatureSupport
             return Optional.empty();
         }
 
-        return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        var traits = readTraits(aFeature);
+        traits.getAllowedValueType();
+
+        var uiName = "KB: " + traits.getAllowedValueType();
+        if (!TYPE_ANY_OBJECT.equals(aFeature.getType())) {
+            uiName += " (" + aFeature.getType().substring(PREFIX.length()) + ")";
+        }
+
+        return Optional.of(new FeatureType(aFeature.getType(), uiName, featureSupportId));
     }
 
     @Override
