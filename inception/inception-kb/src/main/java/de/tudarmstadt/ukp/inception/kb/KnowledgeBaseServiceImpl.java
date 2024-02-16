@@ -666,24 +666,25 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public boolean isEmpty(KnowledgeBase kb)
+    public boolean isEmpty(KnowledgeBase aKB)
     {
-        try (var conn = getConnection(kb)) {
+        try (var conn = getConnection(aKB)) {
             return conn.isEmpty();
         }
     }
 
     @Override
-    public void createConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void createConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
         if (isNotEmpty(aConcept.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            var identifier = getReificationStrategy(aKB).generateConceptIdentifier(conn, aKB);
             aConcept.setIdentifier(identifier);
-            aConcept.write(conn, kb);
+            aConcept.setKB(aKB);
+            aConcept.write(conn, aKB);
         });
     }
 
@@ -767,16 +768,17 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void createProperty(KnowledgeBase kb, KBProperty aProperty)
+    public void createProperty(KnowledgeBase aKB, KBProperty aProperty)
     {
         if (isNotEmpty(aProperty.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            String identifier = getReificationStrategy(aKB).generatePropertyIdentifier(conn, aKB);
             aProperty.setIdentifier(identifier);
-            aProperty.write(conn, kb);
+            aProperty.setKB(aKB);
+            aProperty.write(conn, aKB);
         });
     }
 
@@ -854,16 +856,17 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void createInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void createInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
         if (isNotEmpty(aInstance.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            String identifier = getReificationStrategy(aKB).generateInstanceIdentifier(conn, aKB);
             aInstance.setIdentifier(identifier);
-            aInstance.write(conn, kb);
+            aInstance.setKB(aKB);
+            aInstance.write(conn, aKB);
         });
     }
 

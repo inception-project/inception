@@ -149,6 +149,10 @@ public interface KnowledgeBaseService
     /**
      * Creates a new concept in the given knowledge base. Does nothing if the knowledge base is read
      * only.
+     * <p>
+     * <b>Note:</b> This method binds the concept to the knowledge base by generating an new
+     * {@link KBConcept#setIdentifier(String) identifier} and setting the
+     * {@link KBConcept#setKB(KnowledgeBase) knowledge base} property.
      * 
      * @param kb
      *            The knowledge base to which the new concept will be added
@@ -195,6 +199,10 @@ public interface KnowledgeBaseService
     /**
      * Creates a new property in the given knowledge base. Does nothing if the knowledge base is
      * read only.
+     * <p>
+     * <b>Note:</b> This method binds the concept to the knowledge base by generating an new
+     * {@link KBConcept#setIdentifier(String) identifier} and setting the
+     * {@link KBConcept#setKB(KnowledgeBase) knowledge base} property.
      * 
      * @param kb
      *            The knowledge base to which the new property will be added
@@ -255,6 +263,10 @@ public interface KnowledgeBaseService
     /**
      * Creates a new instance in the given knowledge base. Does nothing if the knowledge base is
      * read only.
+     * <p>
+     * <b>Note:</b> This method binds the concept to the knowledge base by generating an new
+     * {@link KBConcept#setIdentifier(String) identifier} and setting the
+     * {@link KBConcept#setKB(KnowledgeBase) knowledge base} property.
      * 
      * @param kb
      *            The knowledge base to which the new instance will be added
