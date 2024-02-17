@@ -120,10 +120,10 @@ public class FtsAdapterVirtuoso
 
     private static String virtuosoStartsWithQuery(String sanitizedQuery)
     {
-        StringBuilder ftsQueryString = new StringBuilder();
-        String[] queryTokens = sanitizedQuery.split(" ");
+        var ftsQueryString = new StringBuilder();
+        var queryTokens = sanitizedQuery.split(" ");
 
-        for (int i = 0; i < queryTokens.length; i++) {
+        for (var i = 0; i < queryTokens.length; i++) {
             if (i > 0) {
                 ftsQueryString.append(" ");
             }

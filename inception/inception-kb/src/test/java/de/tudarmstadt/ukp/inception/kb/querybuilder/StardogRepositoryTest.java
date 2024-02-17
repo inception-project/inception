@@ -41,7 +41,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.Scenario;
 
 // The repository has to exist and Stardog has to be running for this test to run.
 // To create the repository, use the following command:
@@ -80,9 +80,9 @@ public class StardogRepositoryTest
         kb.setFullTextSearchIri(FTS_STARDOG.stringValue());
         kb.setMaxResults(100);
 
-        SPARQLQueryBuilderTest.initRdfsMapping(kb);
+        SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
 
-        repository = SPARQLQueryBuilderTest.buildSparqlRepository(
+        repository = SPARQLQueryBuilderLocalTestScenarios.buildSparqlRepository(
                 "http://admin:admin@" + STARDOG.getHost() + ":"
                         + STARDOG.getMappedPort(STARDOG_PORT) + "/test/query",
                 "http://admin:admin@" + STARDOG.getHost() + ":"
@@ -101,7 +101,7 @@ public class StardogRepositoryTest
 
     private static List<Arguments> tests() throws Exception
     {
-        return SPARQLQueryBuilderTest.tests().stream() //
+        return SPARQLQueryBuilderLocalTestScenarios.tests().stream() //
                 .map(scenario -> Arguments.of(scenario.name, scenario))
                 .collect(Collectors.toList());
     }
