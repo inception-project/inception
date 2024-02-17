@@ -20,8 +20,12 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +40,12 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -48,20 +58,36 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scena
 // Go to http://localhost:8890/conductor -> System Admin -> User Accounts -> SPARQL and add account role SPARQL_UPDATE
 // Check if FTS is enabled: `SELECT * from DB.DBA.RDF_OBJ_FT_RULES;`
 // Enable FTS: `DB.DBA.RDF_OBJ_FT_RULE_ADD (null, null, 'ALL');`
-@Disabled("Requires manually setting up a test server")
+@Disabled("not sure if this still works ok")
+@Testcontainers(disabledWithoutDocker = true)
 public class VirtuosoRepositoryTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final int VIRTUOSO_PORT = 8890;
+
+    @Container
+    private static final GenericContainer<?> VIRTUOSO = new GenericContainer<>(
+            "openlink/virtuoso-opensource-7") //
+                    .withEnv("DBA_PASSWORD", "secret") //
+                    .withExposedPorts(VIRTUOSO_PORT) //
+                    .waitingFor(Wait.forHttp("/sparql").forPort(VIRTUOSO_PORT)
+                            .withStartupTimeout(ofMinutes(2)));
+
     private Repository repository;
     private KnowledgeBase kb;
 
     @BeforeEach
-    public void setUp(TestInfo aTestInfo)
+    public void setUp(TestInfo aTestInfo) throws Exception
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s =====================\n", methodName,
                 aTestInfo.getDisplayName());
 
         suspendSslVerification();
+
+        assertThat(VIRTUOSO.isRunning()).isTrue();
+        virtuosoSqlCommand("DB.DBA.RDF_OBJ_FT_RULE_ADD (null, null, 'ALL');");
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
@@ -72,12 +98,27 @@ public class VirtuosoRepositoryTest
 
         SPARQLQueryBuilderTest.initRdfsMapping(kb);
 
-        repository = SPARQLQueryBuilderTest.buildSparqlRepository("http://localhost:8890/sparql/");
+        repository = SPARQLQueryBuilderTest
+                .buildSparqlRepository("http://dba:secret@" + VIRTUOSO.getHost() + ":"
+                        + VIRTUOSO.getMappedPort(VIRTUOSO_PORT) + "/sparql-auth/");
+
+        // repository = SPARQLQueryBuilderTest
+        // .buildSparqlRepository("http://dba:secret@localhost:8890/sparql-auth/");
 
         try (RepositoryConnection conn = repository.getConnection()) {
             var ctx = SimpleValueFactory.getInstance().createIRI(kb.getDefaultDatasetIri());
             conn.clear(ctx);
         }
+    }
+
+    private void virtuosoSqlCommand(String command) throws IOException, InterruptedException
+    {
+        LOG.info("Running virtuoso command: {}", command);
+        var result = VIRTUOSO.execInContainer("echo", command, "|", "isql", "-U", "dba", "-P",
+                "secret");
+        LOG.info("Command exit code: {}", result.getExitCode());
+        LOG.info("Command stdout: {}", result.getStdout());
+        LOG.info("Command stderr: {}", result.getStderr());
     }
 
     @AfterEach

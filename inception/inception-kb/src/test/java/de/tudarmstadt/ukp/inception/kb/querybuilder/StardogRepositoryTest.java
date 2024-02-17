@@ -20,13 +20,13 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static java.time.Duration.ofMinutes;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -34,6 +34,10 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -42,20 +46,33 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scena
 // The repository has to exist and Stardog has to be running for this test to run.
 // To create the repository, use the following command:
 // stardog-admin db create -n test -o search.enabled=true --
-@Disabled("Requires manually setting up a test server")
+@Disabled("Requires manually setting up a test server AND license key!")
+@Testcontainers(disabledWithoutDocker = true)
 public class StardogRepositoryTest
 {
+    private static final int STARDOG_PORT = 8890;
+
+    @Container
+    private static final GenericContainer<?> STARDOG = new GenericContainer<>(
+            "stardog/stardog:latest") //
+                    .withExposedPorts(STARDOG_PORT) //
+                    .waitingFor(Wait.forHttp("/").forPort(STARDOG_PORT)
+                            .withStartupTimeout(ofMinutes(2)));
+
     private Repository repository;
     private KnowledgeBase kb;
 
     @BeforeEach
-    public void setUp(TestInfo aTestInfo)
+    public void setUp(TestInfo aTestInfo) throws Exception
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s =====================\n", methodName,
                 aTestInfo.getDisplayName());
 
         suspendSslVerification();
+
+        STARDOG.execInContainer("stardog-admin", "db", "create", "-n", "test", "-o",
+                "search.enabled=true", "--");
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
@@ -66,10 +83,12 @@ public class StardogRepositoryTest
         SPARQLQueryBuilderTest.initRdfsMapping(kb);
 
         repository = SPARQLQueryBuilderTest.buildSparqlRepository(
-                "http://admin:admin@localhost:5820/test/query",
-                "http://admin:admin@localhost:5820/test/update");
+                "http://admin:admin@" + STARDOG.getHost() + ":"
+                        + STARDOG.getMappedPort(STARDOG_PORT) + "/test/query",
+                "http://admin:admin@" + STARDOG.getHost() + ":"
+                        + STARDOG.getMappedPort(STARDOG_PORT) + "/test/update");
 
-        try (RepositoryConnection conn = repository.getConnection()) {
+        try (var conn = repository.getConnection()) {
             conn.clear();
         }
     }

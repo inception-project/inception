@@ -62,7 +62,7 @@ public class BlazegraphRepositoryTest
     private KnowledgeBase kb;
 
     @Container
-    private static final GenericContainer<?> blazegraph = new GenericContainer<>(
+    private static final GenericContainer<?> BLAZEGRAPH = new GenericContainer<>(
             "islandora/blazegraph:3.1.3") //
                     .withExposedPorts(BLAZEGRAPH_PORT).withEnv("BLAZEGRAPH_HOST", "0.0.0.0")
                     .waitingFor(Wait.forHttp("/bigdata/sparql").forPort(BLAZEGRAPH_PORT)
@@ -77,7 +77,7 @@ public class BlazegraphRepositoryTest
 
         suspendSslVerification();
 
-        assertThat(blazegraph.isRunning()).isTrue();
+        assertThat(BLAZEGRAPH.isRunning()).isTrue();
 
         forceFtsCreation();
 
@@ -89,8 +89,8 @@ public class BlazegraphRepositoryTest
 
         SPARQLQueryBuilderTest.initRdfsMapping(kb);
 
-        repository = buildSparqlRepository("http://" + blazegraph.getHost() + ":"
-                + blazegraph.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/sparql");
+        repository = buildSparqlRepository("http://" + BLAZEGRAPH.getHost() + ":"
+                + BLAZEGRAPH.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/sparql");
 
         try (var conn = repository.getConnection()) {
             conn.clear();
@@ -104,8 +104,8 @@ public class BlazegraphRepositoryTest
         var namespace = "kb"; // Default namespace
 
         var request = HttpRequest.newBuilder()
-                .uri(new URI("http://" + blazegraph.getHost() + ":"
-                        + blazegraph.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/namespace/"
+                .uri(new URI("http://" + BLAZEGRAPH.getHost() + ":"
+                        + BLAZEGRAPH.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/namespace/"
                         + namespace + "/textIndex?force-index-create=true"))
                 .POST(HttpRequest.BodyPublishers.noBody()).build();
 
