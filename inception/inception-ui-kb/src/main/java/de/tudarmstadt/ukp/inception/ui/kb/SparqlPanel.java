@@ -106,6 +106,10 @@ public class SparqlPanel
     {
         private static final long serialVersionUID = -1407131006099282400L;
 
-        String query;
+        String query = """
+                SELECT ?s ?p ?o WHERE {
+                  ?s ?p ?o .
+                }
+                """;
     }
 }
