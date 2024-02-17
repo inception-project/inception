@@ -69,8 +69,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.MetaDataStringField;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.io.bioc.model.CasToBioC;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
+/**
+ * @deprecated Experimental code that was deprecated in favor of {@link CasToBioC}
+ */
+@Deprecated
 public class Cas2BioCSaxEvents
     extends Cas2SaxEvents
 {

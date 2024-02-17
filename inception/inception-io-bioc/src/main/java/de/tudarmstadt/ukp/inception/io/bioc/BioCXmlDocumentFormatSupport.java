@@ -36,7 +36,10 @@ import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
  * This class is exposed as a Spring Component via
  * {@link BioCAutoConfiguration#bioCXmlDocumentFormatSupport}.
  * </p>
+ *
+ * @deprecated Experimental code that was deprecated in favor of {@link BioCFormatSupport}
  */
+@Deprecated
 public class BioCXmlDocumentFormatSupport
     implements FormatSupport
 {
