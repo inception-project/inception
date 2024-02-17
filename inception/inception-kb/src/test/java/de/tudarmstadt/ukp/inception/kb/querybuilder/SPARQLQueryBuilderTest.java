@@ -768,7 +768,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata,
+        var results = asHandles(wikidata,
                 SPARQLQueryBuilder.forProperties(kb).withLabelStartingWith("educated"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
