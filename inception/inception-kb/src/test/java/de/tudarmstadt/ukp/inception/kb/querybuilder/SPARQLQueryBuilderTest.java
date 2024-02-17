@@ -433,7 +433,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withIdentifier("http://example.org/#green-goblin") //
                 .retrieveLabel() //
@@ -467,7 +467,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withIdentifier("http://example.org/#green-goblin") //
                 .retrieveLabel() //
@@ -487,7 +487,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
 
         for (String term : asList("specimen", "sample", "instance", "case")) {
-            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+            var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
@@ -509,7 +509,7 @@ public class SPARQLQueryBuilderTest
                 DATA_ADDITIONAL_SEARCH_PROPERTIES);
 
         for (String term : asList("specimen", "sample", "instance", "case")) {
-            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+            var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
@@ -540,7 +540,7 @@ public class SPARQLQueryBuilderTest
                         asList("Hand structure (body structure)", "Hand structure")));
 
         for (var queryPair : queriesWithMatchTerms) {
-            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+            var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(queryPair.getKey()) //
                     .retrieveLabel());
@@ -646,7 +646,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withIdentifier("http://example.org/#red-goblin") //
                 .retrieveLabel() //
@@ -666,7 +666,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forProperties(aKB) //
                 .retrieveLabel() //
                 .retrieveDescription() //
@@ -730,7 +730,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forProperties(aKB) //
                 .descendantsOf("http://example.org/#property-1"));
 
@@ -751,8 +751,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata,
-                SPARQLQueryBuilder.forProperties(kb).limit(10));
+        var results = asHandles(wikidata, SPARQLQueryBuilder.forProperties(kb).limit(10));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).hasSize(10);
@@ -783,7 +782,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(aRepository,
+        var results = asHandles(aRepository,
                 SPARQLQueryBuilder.forProperties(aKB).childrenOf("http://example.org/#property-1"));
 
         assertThat(results).isNotEmpty();
@@ -797,7 +796,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forProperties(aKB)
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forProperties(aKB)
                 .matchingDomain("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -817,7 +816,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .roots());
 
@@ -835,7 +834,7 @@ public class SPARQLQueryBuilderTest
 
         aKB.setRootConcepts(asList("http://example.org/#implicitRoot"));
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -852,7 +851,7 @@ public class SPARQLQueryBuilderTest
         aKB.setRootConcepts(
                 asList("http://example.org/#implicitRoot", "http://example.org/#subclass2"));
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -866,7 +865,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB));
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB));
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -880,7 +879,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forInstances(aKB));
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forInstances(aKB));
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -894,7 +893,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .ancestorsOf("http://example.org/#subclass1-1-1"));
 
@@ -911,7 +910,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .parentsOf("http://example.org/#subclass1-1"));
 
@@ -927,7 +926,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
@@ -958,7 +957,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forInstances(kb) //
                 .childrenOf("http://www.wikidata.org/entity/Q924827") //
                 .withLabelStartingWith("Amanda") //
@@ -976,7 +975,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
@@ -993,7 +992,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .parentsOf("http://example.org/#1-1-1-instance-4"));
 
@@ -1009,7 +1008,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .ancestorsOf("http://example.org/#1-1-1-instance-4"));
 
@@ -1027,7 +1026,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forInstances(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
@@ -1043,7 +1042,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forInstances(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
@@ -1059,7 +1058,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
@@ -1076,7 +1075,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forItems(aKB) //
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forItems(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -1101,7 +1100,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelMatchingAnyOf("Gobli"));
 
@@ -1129,7 +1128,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelContainingAnyOf("Goblin"));
 
@@ -1151,7 +1150,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelContainingAnyOf("Tower"));
 
@@ -1171,7 +1170,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelContainingAnyOf("Tower"));
 
@@ -1192,7 +1191,7 @@ public class SPARQLQueryBuilderTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
-        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
+        var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelContainingAnyOf("Schapiro-Frisch", "Stiker-Métral"));
 
@@ -1211,7 +1210,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
-        List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder //
+        var results = asHandles(hucit, SPARQLQueryBuilder //
                 .forClasses(kb) //
                 .withLabelContainingAnyOf("work"));
 
@@ -1237,7 +1236,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelMatchingExactlyAnyOf("Green Goblin"));
 
@@ -1271,7 +1270,7 @@ public class SPARQLQueryBuilderTest
 
         // The label "Green Goblin" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
-        List<KBHandle> results = asHandles(aRepository,
+        var results = asHandles(aRepository,
                 SPARQLQueryBuilder.forItems(aKB).withLabelMatchingExactlyAnyOf("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1296,7 +1295,7 @@ public class SPARQLQueryBuilderTest
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green"));
 
@@ -1317,7 +1316,7 @@ public class SPARQLQueryBuilderTest
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green Goblin"));
 
@@ -1340,7 +1339,7 @@ public class SPARQLQueryBuilderTest
 
         // Single word - actually, we add a wildcard here so anything that starts with "Green"
         // would also be matched
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green"));
 
@@ -1363,7 +1362,7 @@ public class SPARQLQueryBuilderTest
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green Go"));
 
@@ -1387,7 +1386,7 @@ public class SPARQLQueryBuilderTest
         // Two words with the second being very short and a space following - in this case we
         // assume that the user is in fact searching for "Barack Ob" and do either drop the
         // last element nor add a wildcard
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green Go "));
 
@@ -1403,7 +1402,7 @@ public class SPARQLQueryBuilderTest
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelStartingWith("Green     Go"));
 
@@ -1428,7 +1427,7 @@ public class SPARQLQueryBuilderTest
 
         // Single word - actually, we add a wildcard here so anything that starts with "Barack"
         // would also be matched
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Barack"));
 
@@ -1450,7 +1449,7 @@ public class SPARQLQueryBuilderTest
         // Two words with the second being very short - in this case, we drop the very short word
         // so that the user doesn't stop getting suggestions while writing because Virtuoso doesn't
         // do wildcards on words shorter than 4 characters
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Barack Ob"));
 
@@ -1472,7 +1471,7 @@ public class SPARQLQueryBuilderTest
         // Two words with the second being very short and a space following - in this case we
         // assmume that the user is in fact searching for "Barack Ob" and do either drop the
         // last element nor add a wildcard
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Barack Ob "));
 
@@ -1493,7 +1492,7 @@ public class SPARQLQueryBuilderTest
 
         // Two words with the second being 4+ chars - we add a wildcard here so anything
         // starting with "Barack Obam" should match
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Barack Obam"));
 
@@ -1513,7 +1512,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Barack"));
 
@@ -1534,7 +1533,7 @@ public class SPARQLQueryBuilderTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
-        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
+        var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Thom"));
 
@@ -1553,7 +1552,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
 
-        List<KBHandle> results = asHandles(zbwStw, SPARQLQueryBuilder //
+        var results = asHandles(zbwStw, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
@@ -1581,7 +1580,7 @@ public class SPARQLQueryBuilderTest
         // <https://d-nb.info/gnd/100136605> gndo:variantNameForThePerson "Gadebusch, Thomas
         // Henricus";
         // gndo:variantNameEntityForThePerson _:node1fhgbdto1x8884759 .
-        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
+        var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelMatchingExactlyAnyOf("Gadebusch, Thomas Henricus"));
 
@@ -1601,7 +1600,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(null);
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
@@ -1621,7 +1620,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(null);
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forProperties(kb) //
                 .withLabelMatchingAnyOf("academic"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -1640,7 +1639,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
@@ -1660,7 +1659,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forInstances(kb) //
                 .withLabelMatchingExactlyAnyOf("Labour", "Tory"));
 
@@ -1679,7 +1678,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
 
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
+        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelMatchingExactlyAnyOf("Green Goblin"));
 
@@ -1698,7 +1697,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
 
-        List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder //
+        var results = asHandles(hucit, SPARQLQueryBuilder //
                 .forItems(kb) //
                 .withLabelStartingWith("Achilles"));
 
@@ -1717,7 +1716,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
 
-        List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder //
+        var results = asHandles(hucit, SPARQLQueryBuilder //
                 .forInstances(kb) //
                 .descendantsOf("http://erlangen-crm.org/efrbroo/F1_Work") //
                 .withLabelStartingWith("Achilles"));
@@ -1735,7 +1734,7 @@ public class SPARQLQueryBuilderTest
 
         importDataFromFile(aRepository, aKB, "src/test/resources/data/penn.owl");
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forInstances(aKB) //
                 .withLabelStartingWith("N"));
 
@@ -1781,7 +1780,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
         initWikidataMapping();
 
-        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder //
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forClasses(kb) //
                 .ancestorsOf("http://www.wikidata.org/entity/Q5") //
                 .retrieveLabel());
@@ -1801,8 +1800,7 @@ public class SPARQLQueryBuilderTest
 
         kb.setType(REMOTE);
 
-        List<KBHandle> results = asHandles(dbpedia,
-                SPARQLQueryBuilder.forClasses(kb).roots().retrieveLabel());
+        var results = asHandles(dbpedia, SPARQLQueryBuilder.forClasses(kb).roots().retrieveLabel());
 
         assertThat(results).isNotEmpty();
 
@@ -1819,7 +1817,7 @@ public class SPARQLQueryBuilderTest
 
         kb.setType(REMOTE);
 
-        List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder //
+        var results = asHandles(dbpedia, SPARQLQueryBuilder //
                 .forClasses(kb) //
                 .ancestorsOf("http://dbpedia.org/ontology/Organisation") //
                 .retrieveLabel());
@@ -1839,7 +1837,7 @@ public class SPARQLQueryBuilderTest
 
         importDataFromFile(aRepository, aKB, "src/test/resources/data/pets.ttl");
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withLabelContainingAnyOf("Socke"));
 
@@ -1859,7 +1857,7 @@ public class SPARQLQueryBuilderTest
 
         initOwlMapping(aKB);
 
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forClasses(aKB) //
                 .roots() //
                 .retrieveLabel());

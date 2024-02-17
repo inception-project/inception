@@ -36,18 +36,14 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.bind;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.str;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
@@ -61,7 +57,6 @@ import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.bNode;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
-import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfLanguage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -522,7 +517,7 @@ public class SPARQLQueryBuilder
         }
     }
 
-    private void addPattern(Priority aPriority, GraphPattern aPattern)
+    void addPattern(Priority aPriority, GraphPattern aPattern)
     {
         switch (aPriority) {
         case PRIMARY:
@@ -631,6 +626,11 @@ public class SPARQLQueryBuilder
         projections.add(aProjectable);
     }
 
+    void setReturnEmptyResult(boolean aReturnEmptyResult)
+    {
+        returnEmptyResult = aReturnEmptyResult;
+    }
+
     /**
      * Generates a pattern which binds all sub-properties of the label property to the given
      * variable.
@@ -648,7 +648,7 @@ public class SPARQLQueryBuilder
      * Generates a pattern which binds all sub-properties of the matching properties to the given
      * variable.
      */
-    private GraphPattern bindMatchTermProperties(Variable aVariable)
+    GraphPattern bindMatchTermProperties(Variable aVariable)
     {
         Iri pLabel = mode.getLabelProperty(kb);
         Iri pSubProperty = iri(kb.getSubPropertyIri());
@@ -750,36 +750,36 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private SparqlAdapter getAdapter()
+    private FtsAdapter getAdapter()
     {
         IRI ftsMode = getFtsMode();
 
         if (FTS_LUCENE.equals(ftsMode)) {
-            return new Rdf4JAdapter(kb);
+            return new FtsAdapterRdf4J(this);
         }
 
         if (FTS_BLAZEGRAPH.equals(ftsMode)) {
-            return new BlazegraphAdapter(this);
+            return new FtsAdapterBlazegraph(this);
         }
 
         if (FTS_FUSEKI.equals(ftsMode)) {
-            return new FusekiAdapter(kb);
+            return new FtsAdapterFuseki(this);
         }
 
         if (FTS_VIRTUOSO.equals(ftsMode)) {
-            return new VirtuosoAdapter(kb);
+            return new FtsAdapterVirtuoso(this);
         }
 
         if (FTS_STARDOG.equals(ftsMode)) {
-            return new StardogAdapter(kb);
+            return new FtsAdapterStardog(this);
         }
 
         if (FTS_WIKIDATA.equals(ftsMode)) {
-            return new WikidataAdapter(kb);
+            return new FtsAdapterWikidata(this);
         }
 
         if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            return new GenericNoFTSAdapter(kb);
+            return new FtsAdapterNoFts(this);
         }
         throw new IllegalStateException("Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
     }
@@ -887,19 +887,19 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
+    Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
     {
         return matchString(STRSTARTS, aVariable, aPrefixQuery);
     }
 
-    private Expression<?> containsPattern(Variable aVariable, String aSubstring)
+    Expression<?> containsPattern(Variable aVariable, String aSubstring)
     {
         return matchString(CONTAINS, aVariable, aSubstring);
     }
 
-    private String asRegexp(String aValue)
+    private static String asRegexp(String aValue)
     {
-        String value = aValue;
+        var value = aValue;
         // Escape metacharacters
         // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
         // Replace metacharacters with a match for any single char (.+ would be too slow)
@@ -911,7 +911,7 @@ public class SPARQLQueryBuilder
         return value;
     }
 
-    private Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
+    Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
     {
         var variable = aVariable;
 
@@ -965,7 +965,7 @@ public class SPARQLQueryBuilder
         return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
-    private Expression<?> matchKbLanguage(Variable aVariable)
+    Expression<?> matchKbLanguage(Variable aVariable)
     {
         String language = kb.getDefaultLanguage();
 
@@ -1196,7 +1196,7 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private int getLimit()
+    int getLimit()
     {
         return limitOverride > 0 ? limitOverride : kb.getMaxResults();
     }
@@ -1573,7 +1573,7 @@ public class SPARQLQueryBuilder
      *            a query string
      * @return the stripped query string
      */
-    public static String trimQueryString(String aQuery)
+    static String trimQueryString(String aQuery)
     {
         if (aQuery == null || aQuery.length() == 0) {
             return aQuery;
@@ -1609,15 +1609,7 @@ public class SPARQLQueryBuilder
         return aQuery;
     }
 
-    public static String sanitizeQueryString_noFTS(String aQuery)
-    {
-        return aQuery
-                // character classes to replace with a simple space
-                .replaceAll("[\\p{Space}\\p{Cntrl}]+", " ") //
-                .trim();
-    }
-
-    public static String sanitizeQueryString_FTS(String aQuery)
+    static String sanitizeQueryString_FTS(String aQuery)
     {
         return aQuery
                 // character classes to replace with a simple space
@@ -1694,925 +1686,6 @@ public class SPARQLQueryBuilder
         public String getQueryString()
         {
             return "FILTER EXISTS { " + nested.getQueryString() + " } ";
-        }
-    }
-
-    public interface SparqlAdapter
-    {
-        void withLabelMatchingExactlyAnyOf(String[] aValues);
-
-        void withLabelContainingAnyOf(String... aValues);
-
-        void withLabelMatchingAnyOf(String... aValues);
-
-        void withLabelStartingWith(String aPrefixQuery);
-    }
-
-    public static class BlazegraphAdapter
-        implements SparqlAdapter
-    {
-        private final SPARQLQueryBuilder builder;
-
-        public BlazegraphAdapter(SPARQLQueryBuilder aBuilder)
-        {
-            builder = aBuilder;
-            builder.addPrefix(PREFIX_BLAZEGRAPH_SEARCH);
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            var kb = builder.getKnowledgeBase();
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (builder.isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                builder.addProjection(VAR_SCORE);
-
-                valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                                .withLimit(builder.getLimit()) //
-                                .filter(builder.equalsPattern(VAR_MATCH_TERM, value, kb)));
-            }
-
-            builder.addPattern(PRIMARY, and( //
-                    builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            var kb = builder.getKnowledgeBase();
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (builder.isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                builder.addProjection(VAR_SCORE);
-
-                valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                                .withLimit(builder.getLimit()) //
-                                .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
-            }
-
-            builder.addPattern(PRIMARY,
-                    and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                            union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            var kb = builder.getKnowledgeBase();
-
-            var queryString = aPrefixQuery.trim();
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (builder.isCaseInsensitive()) {
-                queryString = toLowerCase(kb, queryString);
-            }
-
-            if (queryString.isEmpty()) {
-                builder.returnEmptyResult = true;
-            }
-
-            // If the query string entered by the user does not end with a space character, then
-            // we assume that the user may not yet have finished writing the word and add a
-            // wildcard
-            if (!aPrefixQuery.endsWith(" ")) {
-                queryString += "*";
-            }
-
-            builder.addProjection(VAR_SCORE);
-
-            // Locate all entries where the label contains the prefix (using the FTS) and then
-            // filter them by those which actually start with the prefix.
-            builder.addPattern(PRIMARY, and( //
-                    builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                            VAR_MATCH_TERM_PROPERTY, queryString) //
-                                    .withLimit(builder.getLimit()) //
-                                    .filter(builder.startsWithPattern(VAR_MATCH_TERM,
-                                            aPrefixQuery))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            var kb = builder.getKnowledgeBase();
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (builder.isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                var fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "*");
-
-                if (isBlank(fuzzyQuery)) {
-                    continue;
-                }
-
-                builder.addProjection(VAR_SCORE);
-
-                valuePatterns.add(new BlazegraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(builder.getLimit()));
-            }
-
-            builder.addPattern(PRIMARY,
-                    and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                            union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-    }
-
-    public class GenericNoFTSAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public GenericNoFTSAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            var values = new ArrayList<RdfValue>();
-            var language = kb.getDefaultLanguage();
-
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_noFTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                if (language != null) {
-                    values.add(literalOfLanguage(sanitizedValue, language));
-                }
-
-                values.add(literalOf(sanitizedValue));
-            }
-
-            addPattern(PRIMARY,
-                    and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                            new ValuesPattern(VAR_MATCH_TERM, values),
-                            VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                if (isBlank(value)) {
-                    continue;
-                }
-
-                valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .filter(containsPattern(VAR_MATCH_TERM, value)));
-            }
-
-            // The WikiData search service does not support properties. So we disable the use of the
-            // WikiData search service when looking for properties. But then, searching first by
-            // the label becomes very slow because withLabelMatchingAnyOf falls back to "containing"
-            // when no FTS is used. To avoid forcing the SPARQL server to perform a full scan
-            // of its database, we demote the label matching to a secondary condition, allowing the
-            // the matching by type (e.g. PRIMARY_RESTRICTIONS is-a property) to take precedence.
-            addPattern(SECONDARY, and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            if (aPrefixQuery.isEmpty()) {
-                returnEmptyResult = true;
-            }
-
-            // Label matching without FTS is slow, so we add this with low prio and hope that some
-            // other higher-prio condition exists which limites the number of candidates to a
-            // manageable level
-            addPattern(SECONDARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                            .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            // Falling back to "contains" semantics if there is no FTS
-            withLabelContainingAnyOf(aValues);
-        }
-    }
-
-    public class FusekiAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public FusekiAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            addPrefix(PREFIX_FUSEKI_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                addProjection(VAR_SCORE);
-
-                valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                                .withLimit(getLimit()) //
-                                .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_FUSEKI_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                addProjection(VAR_SCORE);
-
-                valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                                .withLimit(getLimit()) //
-                                .filter(containsPattern(VAR_MATCH_TERM, value)));
-            }
-
-            addPattern(PRIMARY, and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            addPrefix(PREFIX_FUSEKI_SEARCH);
-
-            var queryString = aPrefixQuery.trim();
-
-            // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-            // Fuseki) can have trouble matching if they get upper-case query when they
-            // internally lower-case#
-            if (isCaseInsensitive()) {
-                var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-                queryString = queryString.toLowerCase(Locale.forLanguageTag(language));
-            }
-
-            if (queryString.isEmpty()) {
-                returnEmptyResult = true;
-            }
-
-            // If the query string entered by the user does not end with a space character, then
-            // we assume that the user may not yet have finished writing the word and add a
-            // wildcard
-            if (!aPrefixQuery.endsWith(" ")) {
-                queryString += "*";
-            }
-
-            addProjection(VAR_SCORE);
-
-            // Locate all entries where the label contains the prefix (using the FTS) and then
-            // filter them by those which actually start with the prefix.
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                            VAR_MATCH_TERM_PROPERTY, queryString) //
-                                    .withLimit(getLimit()) //
-                                    .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_FUSEKI_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                // We assume that the FTS is case insensitive and found that some FTSes (i.e.
-                // Fuseki) can have trouble matching if they get upper-case query when they
-                // internally lower-case#
-                if (isCaseInsensitive()) {
-                    sanitizedValue = toLowerCase(kb, sanitizedValue);
-                }
-
-                String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
-
-                if (isBlank(fuzzyQuery)) {
-                    continue;
-                }
-
-                addProjection(VAR_SCORE);
-
-                valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                        VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(getLimit()));
-            }
-
-            addPattern(PRIMARY, and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-    }
-
-    public class Rdf4JAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public Rdf4JAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            addPrefix(PREFIX_LUCENE_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                // Strip single quotes and asterisks because they have special semantics
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                addProjection(VAR_SCORE);
-
-                valuePatterns.add(VAR_SUBJECT
-                        .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
-                                .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
-                                .andHas(LUCENE_SCORE, VAR_SCORE))
-                        .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_LUCENE_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                addProjection(VAR_SCORE);
-
-                valuePatterns
-                        .add(VAR_SUBJECT
-                                .has(FTS_LUCENE,
-                                        bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*")) //
-                                                .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
-                                                .andHas(LUCENE_SCORE, VAR_SCORE))
-                                .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                .filter(containsPattern(VAR_MATCH_TERM, value)));
-            }
-
-            addPattern(PRIMARY, and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            addPrefix(PREFIX_LUCENE_SEARCH);
-
-            // Strip single quotes and asterisks because they have special semantics
-            var sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
-
-            if (isBlank(sanitizedValue)) {
-                returnEmptyResult = true;
-            }
-
-            var queryString = sanitizedValue.trim();
-
-            // If the query string entered by the user does not end with a space character, then
-            // we assume that the user may not yet have finished writing the word and add a
-            // wildcard
-            if (!aPrefixQuery.endsWith(" ")) {
-                queryString += "*";
-            }
-
-            addProjection(VAR_SCORE);
-
-            // Locate all entries where the label contains the prefix (using the FTS) and then
-            // filter them by those which actually start with the prefix.
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    VAR_SUBJECT.has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
-                            .andHas(LUCENE_SCORE, VAR_SCORE)
-                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
-                            .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                            .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_LUCENE_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                // Strip single quotes and asterisks because they have special semantics
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                var fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
-
-                if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
-                    continue;
-                }
-
-                var labelFilterExpressions = new ArrayList<Expression<?>>();
-                labelFilterExpressions
-                        .add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
-                labelFilterExpressions.add(matchKbLanguage(VAR_MATCH_TERM));
-
-                addProjection(VAR_SCORE);
-
-                // If a KB item has multiple labels, we want to return only the ones which actually
-                // match the query term such that the user is not confused that the results contain
-                // items that don't match the query (even though they do through a label that is not
-                // returned). RDF4J only provides access to the matched term in a "highlighed" form
-                // where "<B>" and "</B>" match the search term. So we have to strip these markers
-                // out as part of the query.
-                valuePatterns.add(VAR_SUBJECT //
-                        .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
-                                .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
-                                .andHas(LUCENE_SCORE, VAR_SCORE) //
-                                .andHas(LUCENE_SNIPPET, var("snippet")))
-                        .and(bind(
-                                function(REPLACE,
-                                        function(REPLACE, var("snippet"), literalOf("</B>"),
-                                                literalOf("")),
-                                        literalOf("<B>"), literalOf("")),
-                                var("label")))
-                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
-                        .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-    }
-
-    public class StardogAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public StardogAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            addPrefix(PREFIX_STARDOG_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue) //
-                        .withLimit(getLimit()) //
-                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_STARDOG_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
-                        .withLimit(getLimit()) //
-                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                .filter(containsPattern(VAR_MATCH_TERM, value))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            addPrefix(PREFIX_STARDOG_SEARCH);
-
-            // Strip single quotes and asterisks because they have special semantics
-            var sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
-
-            if (isBlank(sanitizedValue)) {
-                returnEmptyResult = true;
-            }
-
-            var queryString = sanitizedValue.trim();
-
-            // If the query string entered by the user does not end with a space character, then
-            // we assume that the user may not yet have finished writing the word and add a
-            // wildcard
-            if (!aPrefixQuery.endsWith(" ")) {
-                queryString += "*";
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    new StardogEntitySearchService(VAR_MATCH_TERM, queryString) //
-                            .withLimit(getLimit()) //
-                            .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                    .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            addPrefix(PREFIX_STARDOG_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-                var fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue, "~");
-
-                if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
-                    continue;
-                }
-
-                valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery) //
-                        .withLimit(getLimit()) //
-                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-    }
-
-    public class VirtuosoAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public VirtuosoAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            // addPrefix(PREFIX_VIRTUOSO_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
-                                literalOf("\"" + sanitizedValue + "\"")))
-                        .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            // addPrefix(PREFIX_VIRTUOSO_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
-                                literalOf("\"" + sanitizedValue + "\"")))
-                        .filter(containsPattern(VAR_MATCH_TERM, value)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            // addPrefix(PREFIX_VIRTUOSO_SEARCH);
-
-            // Strip single quotes and asterisks because they have special semantics
-            String sanitizedQuery = sanitizeQueryString_FTS(aPrefixQuery);
-
-            // If the query string entered by the user does not end with a space character, then
-            // we assume that the user may not yet have finished writing the word and add a
-            // wildcard
-            if (!aPrefixQuery.endsWith(" ")) {
-                sanitizedQuery = virtuosoStartsWithQuery(sanitizedQuery);
-            }
-
-            // If the query string was reduced to nothing, then the query should always return an
-            // empty
-            // result.
-            if (sanitizedQuery.length() == 2) {
-                returnEmptyResult = true;
-            }
-
-            // Locate all entries where the label contains the prefix (using the FTS) and then
-            // filter them by those which actually start with the prefix.
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                            .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
-                                    literalOf("\"" + sanitizedQuery + "\"")))
-                            .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
-        }
-
-        private static String virtuosoStartsWithQuery(String sanitizedQuery)
-        {
-            StringBuilder ftsQueryString = new StringBuilder();
-            String[] queryTokens = sanitizedQuery.split(" ");
-
-            for (int i = 0; i < queryTokens.length; i++) {
-                if (i > 0) {
-                    ftsQueryString.append(" ");
-                }
-
-                // Virtuoso requires that a token has at least 4 characters before it can be
-                // used with a wildcard. If the last token has less than 4 characters, we simply
-                // drop it to avoid the user hitting a point where the auto-suggesions suddenly
-                // are empty. If the token 4 or more, we add the wildcard.
-                if (i == (queryTokens.length - 1)) {
-                    if (queryTokens[i].length() >= 4) {
-                        ftsQueryString.append(queryTokens[i]);
-                        ftsQueryString.append("*");
-                    }
-                }
-                else {
-                    ftsQueryString.append(queryTokens[i]);
-                }
-            }
-
-            return ftsQueryString.toString();
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            // addPrefix(PREFIX_VIRTUOSO_SEARCH);
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                // If the query string entered by the user does not end with a space character, then
-                // we assume that the user may not yet have finished writing the word and add a
-                // wildcard
-                if (!value.endsWith(" ")) {
-                    sanitizedValue = VirtuosoAdapter.virtuosoStartsWithQuery(sanitizedValue);
-                }
-
-                valuePatterns.add(
-                        VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).and(VAR_MATCH_TERM
-                                .has(VIRTUOSO_QUERY, literalOf("\"" + sanitizedValue + "\""))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-    }
-
-    public class WikidataAdapter
-        implements SparqlAdapter
-    {
-        private final KnowledgeBase kb;
-
-        public WikidataAdapter(KnowledgeBase aKb)
-        {
-            kb = aKb;
-        }
-
-        @Override
-        public void withLabelMatchingExactlyAnyOf(String[] aValues)
-        {
-            // In our KB settings, the language can be unset, but the Wikidata entity search
-            // requires a preferred language. So we use English as the default.
-            var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns
-                        .add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                                .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                        .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelContainingAnyOf(String... aValues)
-        {
-            // In our KB settings, the language can be unset, but the Wikidata entity search
-            // requires a preferred language. So we use English as the default.
-            var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns
-                        .add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                                .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                        .filter(containsPattern(VAR_MATCH_TERM, value))));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
-        }
-
-        @Override
-        public void withLabelStartingWith(String aPrefixQuery)
-        {
-            // In our KB settings, the language can be unset, but the Wikidata entity search
-            // requires a preferred language. So we use English as the default.
-            var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-
-            if (aPrefixQuery.isEmpty()) {
-                returnEmptyResult = true;
-            }
-
-            var sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                            .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                    .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)))));
-        }
-
-        @Override
-        public void withLabelMatchingAnyOf(String... aValues)
-        {
-            // In our KB settings, the language can be unset, but the Wikidata entity search
-            // requires a preferred language. So we use English as the default.
-            var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
-
-            var valuePatterns = new ArrayList<GraphPattern>();
-            for (var value : aValues) {
-                var sanitizedValue = sanitizeQueryString_FTS(value);
-
-                if (isBlank(sanitizedValue)) {
-                    continue;
-                }
-
-                valuePatterns
-                        .add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
-                                .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
-            }
-
-            addPattern(PRIMARY, and( //
-                    bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                    union(valuePatterns.toArray(GraphPattern[]::new))));
         }
     }
 }
