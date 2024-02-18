@@ -17,16 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sanitizeQueryString_FTS;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.Test;
-
-public class SPARQLQueryBuilderTest
+public interface FtsAdapter
+    extends SPARQLVariables
 {
-    @Test
-    public void thatLineBreaksAreSanitized() throws Exception
-    {
-        assertThat(sanitizeQueryString_FTS("Green\n\rGoblin")).isEqualTo("Green Goblin");
-    }
+    void withLabelMatchingExactlyAnyOf(String... values);
+
+    void withLabelContainingAnyOf(String... values);
+
+    void withLabelMatchingAnyOf(String... values);
+
+    void withLabelStartingWith(String prefix);
 }

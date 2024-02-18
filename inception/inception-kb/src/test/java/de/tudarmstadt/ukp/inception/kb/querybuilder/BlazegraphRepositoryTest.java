@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.buildSparqlRepository;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.buildSparqlRepository;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +50,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.Scenario;
 
 @Testcontainers(disabledWithoutDocker = true)
 public class BlazegraphRepositoryTest
@@ -62,7 +62,7 @@ public class BlazegraphRepositoryTest
     private KnowledgeBase kb;
 
     @Container
-    private static final GenericContainer<?> blazegraph = new GenericContainer<>(
+    private static final GenericContainer<?> BLAZEGRAPH = new GenericContainer<>(
             "islandora/blazegraph:3.1.3") //
                     .withExposedPorts(BLAZEGRAPH_PORT).withEnv("BLAZEGRAPH_HOST", "0.0.0.0")
                     .waitingFor(Wait.forHttp("/bigdata/sparql").forPort(BLAZEGRAPH_PORT)
@@ -77,7 +77,7 @@ public class BlazegraphRepositoryTest
 
         suspendSslVerification();
 
-        assertThat(blazegraph.isRunning()).isTrue();
+        assertThat(BLAZEGRAPH.isRunning()).isTrue();
 
         forceFtsCreation();
 
@@ -87,10 +87,10 @@ public class BlazegraphRepositoryTest
         kb.setFullTextSearchIri(FTS_BLAZEGRAPH.stringValue());
         kb.setMaxResults(100);
 
-        SPARQLQueryBuilderTest.initRdfsMapping(kb);
+        SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
 
-        repository = buildSparqlRepository("http://" + blazegraph.getHost() + ":"
-                + blazegraph.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/sparql");
+        repository = buildSparqlRepository("http://" + BLAZEGRAPH.getHost() + ":"
+                + BLAZEGRAPH.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/sparql");
 
         try (var conn = repository.getConnection()) {
             conn.clear();
@@ -104,8 +104,8 @@ public class BlazegraphRepositoryTest
         var namespace = "kb"; // Default namespace
 
         var request = HttpRequest.newBuilder()
-                .uri(new URI("http://" + blazegraph.getHost() + ":"
-                        + blazegraph.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/namespace/"
+                .uri(new URI("http://" + BLAZEGRAPH.getHost() + ":"
+                        + BLAZEGRAPH.getMappedPort(BLAZEGRAPH_PORT) + "/bigdata/namespace/"
                         + namespace + "/textIndex?force-index-create=true"))
                 .POST(HttpRequest.BodyPublishers.noBody()).build();
 
@@ -128,7 +128,7 @@ public class BlazegraphRepositoryTest
                 // with FTS enabled
                 "testWithLabelMatchingExactlyAnyOf_subproperty_noFTS");
 
-        return SPARQLQueryBuilderTest.tests().stream() //
+        return SPARQLQueryBuilderLocalTestScenarios.tests().stream() //
                 .filter(scenario -> !exclusions.contains(scenario.name)) //
                 .map(scenario -> Arguments.of(scenario.name, scenario)) //
                 .toList();
