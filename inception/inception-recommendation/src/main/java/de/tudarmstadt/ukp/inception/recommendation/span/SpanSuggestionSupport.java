@@ -113,7 +113,8 @@ public class SpanSuggestionSupport
         }
 
         var feature = aContext.getFeature();
-        if (CAS.TYPE_NAME_STRING.equals(feature.getType())
+        if (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(feature.getType())
+                // || not all supported yet - ICasUtil.isPrimitive(feature.getType())
                 || CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getType())
                 || feature.isVirtualFeature()) {
             return true;
