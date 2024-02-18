@@ -17,17 +17,64 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import static org.apache.uima.fit.util.FSCollectionFactory.createStringArrayFS;
+import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.TOP;
 
 public class ICasUtil
 {
     public static final String UIMA_BUILTIN_JCAS_PREFIX = "org.apache.uima.jcas.";
+
+    public static boolean isPrimitive(String aTypeName)
+    {
+        if (aTypeName == null) {
+            return false;
+        }
+
+        switch (aTypeName) {
+        case CAS.TYPE_NAME_BOOLEAN, //
+                CAS.TYPE_NAME_BYTE, //
+                CAS.TYPE_NAME_DOUBLE, //
+                CAS.TYPE_NAME_FLOAT, //
+                CAS.TYPE_NAME_INTEGER, //
+                CAS.TYPE_NAME_LONG, //
+                CAS.TYPE_NAME_SHORT, //
+                CAS.TYPE_NAME_STRING:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
+     * Copied from {@link FSUtil#setFeature(FeatureStructure, Feature, String...)} but changed it to
+     * allow setting any primitive feature value from a string value.
+     */
+    public static void setFeature(FeatureStructure aFS, Feature feat, String... aValue)
+    {
+        if (feat.getRange().isPrimitive()) {
+            // requireSingleValue(feat, aValue);
+            aFS.setFeatureValueFromString(feat, aValue[0]);
+            // aFS.setStringValue(feat, aValue[0]);
+        }
+        else if (aValue == null) {
+            aFS.setFeatureValue(feat, null);
+        }
+        else if (feat.getRange().isArray()) {
+            aFS.setFeatureValue(feat, createStringArrayFS(aFS.getCAS(), aValue));
+        }
+        else {
+            aFS.setFeatureValue(feat, createStringList(aFS.getCAS(), aValue));
+        }
+    }
 
     /**
      * @param aFS
