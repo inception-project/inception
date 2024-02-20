@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-plugin-parent</artifactId>
-    <version>31.1-SNAPSHOT</version>
+    <version>31.1</version>
     <relativePath>../inception-plugin-parent</relativePath>
   </parent>
   <artifactId>inception-example-imls-data-majority</artifactId>
