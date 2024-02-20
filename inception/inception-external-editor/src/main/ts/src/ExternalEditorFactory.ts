@@ -107,17 +107,20 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       if (source !== target) {
         source.addEventListener('keydown', event => {
           console.debug(`Forwarding keydown event: ${event.key}`)
-          target.document.dispatchEvent(new KeyboardEvent('keydown', event))
+          const delegate = target.document.body || target.document
+          delegate.dispatchEvent(new KeyboardEvent('keydown', event))
         })
 
         source.addEventListener('keyup', event => {
           console.debug(`Forwarding keyup event: ${event.key}`)
-          target.document.dispatchEvent(new KeyboardEvent('keyup', event))
+          const delegate = target.document.body || target.document
+          delegate.dispatchEvent(new KeyboardEvent('keyup', event))
         })
 
         source.addEventListener('keypress', event => {
           console.debug(`Forwarding keypress event: ${event.key}`)
-          target.document.dispatchEvent(new KeyboardEvent('kekeypressyup', event))
+          const delegate = target.document.body || target.document
+          delegate.dispatchEvent(new KeyboardEvent('kekeypressyup', event))
         })
       }
 
