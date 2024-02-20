@@ -256,7 +256,12 @@ public class ActiveLearningServiceImpl
             return String.valueOf(rawLabel);
         }
 
-        throw new IllegalArgumentException("Non-primitive suggestions are not supported");
+        if (rawLabel instanceof String) {
+            return (String) rawLabel;
+        }
+
+        throw new IllegalArgumentException(
+                "Non-primitive suggestions are not supported: [" + rawLabel.getClass() + "]");
     }
 
     @Override
