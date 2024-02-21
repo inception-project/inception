@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.io.bioc;
 
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.getCollectionMetadataField;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -80,8 +83,10 @@ public class BioCWriter
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
+        var formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
         try (var docOS = getOutputStream(aJCas, filenameSuffix)) {
-            Marshaller marshaller = context.createMarshaller();
+            var marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             // Set to fragment mode to omit XML declaration
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
@@ -91,6 +96,8 @@ public class BioCWriter
             // Base-information - may be overwritten by the metadata fields below
             var dmd = DocumentMetaData.get(aJCas);
             bioCCollection.setSource(dmd.getCollectionId());
+            bioCCollection.setKey(dmd.getDocumentId());
+            bioCCollection.setDate(LocalDate.now().format(formatter));
 
             // Use BioC metadata fields if available
             getCollectionMetadataField(aJCas.getCas(), E_SOURCE)
