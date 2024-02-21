@@ -1,0 +1,24 @@
+<collection>
+  <key/>
+  <document>
+    <id>1</id>
+    <passage>
+      <offset>0</offset>
+      <text>Document 1 text.</text>
+    </passage>
+  </document>
+  <document>
+    <id>2</id>
+    <passage>
+      <offset>0</offset>
+      <text>Document 2 text.</text>
+    </passage>
+  </document>
+  <document>
+    <id>3</id>
+    <passage>
+      <offset>0</offset>
+      <text>Document 3 text.</text>
+    </passage>
+  </document>
+</collection>
