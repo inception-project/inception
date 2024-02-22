@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Annotation, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
+import { AnnotatedText, Annotation, Layer, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
 import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
 
 export function renderLabel (ann?: Annotation): string {
@@ -27,6 +27,22 @@ export function renderLabel (ann?: Annotation): string {
     label = label.substring(0, maxLength).trim() + '…'
   }
   return label
+}
+
+export function uniqueLayers (data: AnnotatedText): Layer[] {
+  if (!data) return []
+
+  const sortedLayersWithDuplicates = Array.from(data.annotations(), (ann) => ann.layer)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { usage: 'sort', sensitivity: 'variant' }))
+
+  const sortedLayers: Layer[] = []
+  for (let i = 0; i < sortedLayersWithDuplicates.length; i++) {
+    if (i === 0 || sortedLayersWithDuplicates[i - 1] !== sortedLayersWithDuplicates[i]) {
+      sortedLayers.push(sortedLayersWithDuplicates[i])
+    }
+  }
+
+  return sortedLayers
 }
 
 export function uniqueLabels (data: AnnotatedText): string[] {
