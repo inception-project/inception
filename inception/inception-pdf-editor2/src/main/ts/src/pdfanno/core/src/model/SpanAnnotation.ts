@@ -30,6 +30,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
 
     // Need to bind these event handler methods
     this.handleClickEvent = this.handleClickEvent.bind(this)
+    this.handleRightClickEvent = this.handleRightClickEvent.bind(this)
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
@@ -117,6 +118,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.element?.querySelectorAll('.anno-knob').forEach(e => {
       e.addEventListener('mousedown', this.preventFocusChange)
       e.addEventListener('click', this.handleClickEvent)
+      e.addEventListener('contextmenu', this.handleRightClickEvent)
     })
   }
 
@@ -162,6 +164,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     super.disableViewMode()
     this.element?.querySelectorAll('.anno-knob').forEach(e => {
       e.removeEventListener('click', this.handleClickEvent)
+      e.removeEventListener('contextmenu', this.handleRightClickEvent)
       e.removeEventListener('mousedown', this.preventFocusChange)
     })
   }

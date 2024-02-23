@@ -31,6 +31,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
 
     // Need to bind these event handler methods
     this.handleSingleClickEvent = this.handleSingleClickEvent.bind(this)
+    this.handleRightClickEvent = this.handleRightClickEvent.bind(this)
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
@@ -220,9 +221,10 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super.enableViewMode()
 
     if (!this.readOnly) {
-      this.element?.querySelectorAll('path').forEach(e =>
-        e.addEventListener('click', this.handleSingleClickEvent))
-    }
+      this.element?.querySelectorAll('path').forEach(e => {
+        e.addEventListener('click', this.handleSingleClickEvent)
+        e.addEventListener('contextmenu', this.handleRightClickEvent)
+    })}
   }
 
   /**
@@ -230,8 +232,10 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   disableViewMode () {
     super.disableViewMode()
-    this.element?.querySelectorAll('path').forEach(e =>
-      e.removeEventListener('click', this.handleSingleClickEvent))
+    this.element?.querySelectorAll('path').forEach(e => {
+      e.removeEventListener('click', this.handleSingleClickEvent)
+      e.removeEventListener('contextmenu', this.handleRightClickEvent)
+    })
   }
 
   /**

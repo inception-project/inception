@@ -31,20 +31,20 @@
       </div>
       <div class="flex-h-container flex-gutter flex-only-internal-gutter">
         <h5 class="flex-content m-0 align-self-center">
-          <span wicket:id="idtext" class="fas fa-info-circle"></span>
+          <span wicket:id="idtext" class="fas fa-info-circle text-muted"></span>
           <span wicket:id="typeLabel" class="label label-default pull-down"></span>
         </h5>
         <button wicket:id="createSubclass" type="button" class="btn btn-primary btn">
           <i class="fas fa-plus me-1"></i>
           <wicket:container wicket:id="subclassLabel"/>
         </button>
-        <button wicket:id="delete" type="button" class="btn btn-danger">
+        <button wicket:id="delete" type="button" class="btn btn-outline-danger">
           <i class="fas fa-trash me-1"></i>
           <wicket:container wicket:id="label"/>
         </button>
       </div>
     </div>
-    <div class="flex-content flex-v-container" wicket:id="statements"></div> 
+    <div class="flex-content flex-v-container mt-3" wicket:id="statements"></div> 
   </wicket:fragment>  
   
   <wicket:fragment wicket:id="editMode">
@@ -52,18 +52,16 @@
     
       <!-- form for creating new properties/concepts/instances -->
       <form wicket:id="form">
-        <div class="input-group input-group-lg">
-          <input wicket:id="name" class="flex-content form-control" />
-          <div class="input-group-btn">
-            <button wicket:id="create" type="submit" class="btn btn-success">
-              <i class="fas fa-plus me-1"></i>
-              <wicket:container wicket:id="label"></wicket:container>
-            </button>
-            <button wicket:id="cancel" type="button" class="btn btn-secondary">
-              <i class="fas fa-times me-1"></i>
-              <wicket:container wicket:id="label"></wicket:container>
-            </button>
-          </div>
+        <div class="input-group d-flex">
+          <input wicket:id="name" class="flex-fill form-control" />
+          <button wicket:id="create" type="submit" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>
+            <wicket:container wicket:id="label"></wicket:container>
+          </button>
+          <button wicket:id="cancel" type="button" class="btn btn-secondary">
+            <i class="fas fa-times me-1"></i>
+            <wicket:container wicket:id="label"></wicket:container>
+          </button>
         </div>
       </form>
     </div>
