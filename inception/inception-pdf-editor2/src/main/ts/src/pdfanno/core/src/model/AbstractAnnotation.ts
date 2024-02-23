@@ -100,7 +100,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   }
 
   /**
-   * Handle a click event.
+   * Handle a left-click event.
    */
   handleSingleClickEvent (e: Event) {
     if (this.element) {
@@ -110,6 +110,23 @@ export default abstract class AbstractAnnotation extends EventEmitter {
     }
   }
 
+  /**
+   * Handle a right-click event.
+   */
+  handleRightClickEvent (e: Event) {
+    if (this.element && e instanceof MouseEvent) {
+      // If the user shift-right-clicks, open the normal browser context menu. This is useful
+      // e.g. during debugging / developing
+      if (e.shiftKey) return
+
+      e.preventDefault()
+
+      const event = document.createEvent('CustomEvent')
+      event.initCustomEvent('openContextMenu', true, true, { ann: this, originalEvent: e})
+      this.element.dispatchEvent(event)
+    }
+  }
+  
   /**
    * Handle a hoverIn event.
    */
