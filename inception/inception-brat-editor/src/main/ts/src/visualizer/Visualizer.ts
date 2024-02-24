@@ -3555,14 +3555,6 @@ export class Visualizer {
       evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
     }
 
-    this.dispatcher.post('displaySpanComment', [
-      evt, target, id, span.type, span.attributeText,
-      span.text,
-      span.hovertext,
-      span.comment && span.comment.text,
-      span.comment && span.comment.type
-    ])
-
     if (span.actionButtons) {
       this.dispatcher.post('displaySpanButtons', [evt, target])
     }
@@ -3702,14 +3694,6 @@ export class Visualizer {
     }
 
     const originSpanType = this.data.spans[originSpanId].type || ''
-    const targetSpanType = this.data.spans[targetSpanId].type || ''
-
-    this.dispatcher.post('displayArcComment', [
-      evt, target, symmetric, arcId,
-      originSpanId, originSpanType, role,
-      targetSpanId, targetSpanType,
-      commentText, commentType
-    ])
 
     if (arcId) {
       if (evt.target) {
@@ -3758,8 +3742,6 @@ export class Visualizer {
           fakeSpan.layer = { id: 0, name: Util.spanDisplayForm(this.entityTypes, comment.type) }
           evt.target.dispatchEvent(new AnnotationOverEvent(fakeSpan, evt.originalEvent))
         }
-
-        this.dispatcher.post('displaySentComment', [evt, comment.text, comment.type])
       }
     }
   }
@@ -3788,7 +3770,6 @@ export class Visualizer {
 
     const target = evt.target
     target.classList.remove('badTarget')
-    this.dispatcher.post('hideComment')
 
     if (this.highlight) {
       this.highlight.map(h => h.remove())

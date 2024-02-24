@@ -21,8 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 
@@ -37,14 +35,14 @@ public class TagsetImportExportUtils
             Project project, InputStream aInputStream, boolean aOverwrite)
         throws IOException
     {
-        String text = IOUtils.toString(aInputStream, UTF_8);
-        Map<String, String> tabbedTagsetFromFile = LayerImportExportUtils.getTagSetFromFile(text);
+        var text = IOUtils.toString(aInputStream, UTF_8);
+        var tabbedTagsetFromFile = LayerImportExportUtils.getTagSetFromFile(text);
 
-        Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
-        int i = 0;
-        String tagSetName = "";
-        String tagSetDescription = "";
-        String tagsetLanguage = "";
+        var listOfTagsFromFile = tabbedTagsetFromFile.keySet();
+        var i = 0;
+        var tagSetName = "";
+        var tagSetDescription = "";
+        var tagsetLanguage = "";
         de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = null;
         for (String key : listOfTagsFromFile) {
             // the first key is the tagset name and its
