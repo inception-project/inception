@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,6 +69,7 @@ public class PubMedProviderTest
         assertThat(results).isNotEmpty();
     }
 
+    @Disabled("See issue: Unable to access PMC BioC service #4556")
     @Test
     public void thatGetDocumentTextWorks() throws Exception
     {
