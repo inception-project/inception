@@ -52,7 +52,7 @@ public class ProjectSettingsExporter
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
     {
-        Project project = aRequest.getProject();
+        var project = aRequest.getProject();
         aExProject.setDescription(project.getDescription());
         // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
         // during export but as lower-case in the database. This is compensating for this case.
