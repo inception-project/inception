@@ -59,16 +59,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -930,9 +927,21 @@ public class CasDiff
 
         public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId, AID aAid)
         {
-            for (ConfigurationSet cfgSet : getConfigurationSets()) {
-                Optional<Configuration> cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId,
-                        aAid);
+            for (var cfgSet : getConfigurationSets()) {
+                var cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId, aAid);
+                if (cfg.isPresent()) {
+                    return cfg;
+                }
+            }
+
+            return Optional.empty();
+        }
+
+        public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId,
+                FeatureStructure aFS)
+        {
+            for (var cfgSet : getConfigurationSets()) {
+                var cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId, aFS);
                 if (cfg.isPresent()) {
                     return cfg;
                 }
@@ -1139,18 +1148,18 @@ public class CasDiff
             return emptyList();
         }
 
-        Project project = aLayers.iterator().next().getProject();
+        var project = aLayers.iterator().next().getProject();
 
         var featuresByLayer = schemaService.listSupportedFeatures(project).stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
-        List<DiffAdapter> adapters = new ArrayList<>();
+        var adapters = new ArrayList<DiffAdapter>();
         nextLayer: for (AnnotationLayer layer : aLayers) {
             if (!layer.isEnabled()) {
                 continue nextLayer;
             }
 
-            Set<String> labelFeatures = new LinkedHashSet<>();
+            var labelFeatures = new LinkedHashSet<String>();
             nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled() || !f.isCuratable()) {
                     continue nextFeature;

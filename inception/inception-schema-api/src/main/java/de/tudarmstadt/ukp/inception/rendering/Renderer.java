@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -75,15 +76,15 @@ public interface Renderer
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
-        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-        Map<String, String> features = new LinkedHashMap<>();
+        var fsr = getFeatureSupportRegistry();
+        var features = new LinkedHashMap<String, String>();
 
-        for (AnnotationFeature feature : aFeatures) {
+        for (var feature : aFeatures) {
             if (!feature.isEnabled() || !feature.isVisible()) {
                 continue;
             }
 
-            String label = defaultString(fsr.findExtension(feature)
+            var label = defaultString(fsr.findExtension(feature)
                     .orElseThrow(() -> new NoSuchElementException(
                             "No feature support found for feature " + feature))
                     .renderFeatureValue(feature, aFs));
@@ -97,7 +98,7 @@ public interface Renderer
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
             FeatureStructure aFS, VDocument aResponse)
     {
-        for (AnnotationFeature f : aFeatures) {
+        for (var f : aFeatures) {
             if (!f.isEnabled()) {
                 continue;
             }
@@ -109,8 +110,7 @@ public interface Renderer
         }
     }
 
-    default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
-            int windowEndOffset)
+    default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
         var fsr = getFeatureSupportRegistry();
 
@@ -130,12 +130,13 @@ public interface Renderer
                 continue;
             }
 
-            String text = defaultString(
-                    fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs));
+            var label = fsr.findExtension(feature).orElseThrow().renderFeatureValue(feature, aFs);
 
-            var group = new VLazyDetailGroup();
-            group.addDetail(new VLazyDetail(feature.getName(), text));
-            details.add(group);
+            if (StringUtils.isNotBlank(label)) {
+                var group = new VLazyDetailGroup();
+                group.addDetail(new VLazyDetail(feature.getName(), label));
+                details.add(group);
+            }
         }
     }
 }

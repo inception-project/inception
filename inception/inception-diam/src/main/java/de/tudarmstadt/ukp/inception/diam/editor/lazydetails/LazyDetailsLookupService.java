@@ -20,12 +20,16 @@ package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.IRequestParameters;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public interface LazyDetailsLookupService
@@ -35,4 +39,12 @@ public interface LazyDetailsLookupService
             int windowEndOffset)
         throws AnnotationException, IOException;
 
+    List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
+            User aUser, AnnotationLayer aLayer, CAS aCas)
+        throws AnnotationException, IOException;
+
+    List<VLazyDetailGroup> lookupFeatureLevelDetails(VID aVid, CAS aCas,
+            AnnotationFeature aFeature);
+
+    List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas, AnnotationLayer aLayer);
 }
