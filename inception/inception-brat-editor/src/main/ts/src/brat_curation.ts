@@ -19,6 +19,7 @@ import { Ajax } from './ajax/Ajax'
 import { INSTANCE as Util } from './util/Util'
 import { CurationMod } from './curation/CurationMod'
 import { factory as diamAjaxFactory } from '@inception-project/inception-diam'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 import './style-vis.scss'
 
 declare let Wicket
@@ -27,8 +28,22 @@ function brat (markupId: string, controllerCallbackUrl: string, collCallbackUrl:
   const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl)
   Util.embedByURL(markupId, diamAjax, collCallbackUrl, docCallbackUrl,
     function (dispatcher) {
+      // eslint-disable-next-line no-new
       new Ajax(dispatcher, markupId, controllerCallbackUrl)
+      // eslint-disable-next-line no-new
       new CurationMod(dispatcher, diamAjax)
+
+      const element = Wicket.$(markupId)
+
+      // eslint-disable-next-line no-new
+      new AnnotationDetailPopOver({
+        target: document.body,
+        props: {
+          root: element,
+          ajax: diamAjax
+        }
+      })
+
       Wicket.$(markupId).dispatcher = dispatcher
     })
 }
