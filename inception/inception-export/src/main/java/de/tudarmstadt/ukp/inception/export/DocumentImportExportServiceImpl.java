@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjec
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
@@ -426,7 +427,7 @@ public class DocumentImportExportServiceImpl
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
     {
-        Project project = aDocument.getProject();
+        var project = aDocument.getProject();
         try (var logCtx = withProjectLogger(project)) {
             var bulkOperationContext = aBulkOperationContext;
             if (bulkOperationContext == null) {
@@ -483,10 +484,9 @@ public class DocumentImportExportServiceImpl
     public TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException
     {
-        var tsds = new ArrayList<TypeSystemDescription>();
-        tsds.add(schemaTypeSystem);
-        tsds.add(annotationService.getFullProjectTypeSystem(aProject, false));
-        return mergeTypeSystems(tsds);
+        return mergeTypeSystems(asList( //
+                schemaTypeSystem, //
+                annotationService.getFullProjectTypeSystem(aProject, false)));
     }
 
     /**
@@ -514,7 +514,7 @@ public class DocumentImportExportServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
-        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        var tsd = aFullProjectTypeSystem;
         if (tsd == null) {
             tsd = getTypeSystemForExport(aSourceDocument.getProject());
         }
@@ -525,10 +525,9 @@ public class DocumentImportExportServiceImpl
     private List<AnnotationFeature> listSupportedFeatures(Project aProject,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
     {
-        Pair<Project, String> exportFeaturesKey = Pair.of(aProject, "exportFeatures");
+        var exportFeaturesKey = Pair.of(aProject, "exportFeatures");
         @SuppressWarnings("unchecked")
-        List<AnnotationFeature> features = (List<AnnotationFeature>) aBulkOperationContext
-                .get(exportFeaturesKey);
+        var features = (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey);
         if (features == null) {
             features = annotationService.listSupportedFeatures(aProject).stream() //
                     .filter(AnnotationFeature::isEnabled) //
@@ -561,7 +560,7 @@ public class DocumentImportExportServiceImpl
         var featuresGroupedByLayer = allFeatures.stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
-        var layers = featuresGroupedByLayer.keySet().stream()
+        var layers = featuresGroupedByLayer.keySet().stream() //
                 .sorted(comparing(AnnotationLayer::getName)) //
                 .toList();
 
@@ -571,8 +570,9 @@ public class DocumentImportExportServiceImpl
             setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
             aCas.addFsToIndexes(layerDefFs);
 
-            var features = featuresGroupedByLayer.get(layer).stream()
-                    .sorted(comparing(AnnotationFeature::getName)).toList();
+            var features = featuresGroupedByLayer.get(layer).stream() //
+                    .sorted(comparing(AnnotationFeature::getName)) //
+                    .toList();
 
             for (var feature : features) {
                 final var featureDefFs = aCas.createFS(featureDefType);
@@ -597,7 +597,6 @@ public class DocumentImportExportServiceImpl
 
             var aLayer = feature.getLayer().getName();
             var aTagSetName = tagSet.getName();
-
             var tagsetType = getType(aCas, TagsetDescription.class);
             var layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
             var nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
