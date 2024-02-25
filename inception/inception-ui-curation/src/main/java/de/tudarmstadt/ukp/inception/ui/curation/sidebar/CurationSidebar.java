@@ -33,10 +33,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -46,7 +44,6 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -62,8 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -126,7 +121,7 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        AnnotatorState state = aModel.getObject();
+        var state = aModel.getObject();
 
         var notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
         notCuratableNotice.setOutputMarkupId(true);
@@ -176,8 +171,8 @@ public class CurationSidebar
     private boolean isViewingPotentialCurationTarget()
     {
         // Curation sidebar is not allowed when viewing another users annotations
-        String currentUsername = userRepository.getCurrentUsername();
-        AnnotatorState state = getModelObject();
+        var currentUsername = userRepository.getCurrentUsername();
+        var state = getModelObject();
         return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
     }
 
@@ -197,7 +192,7 @@ public class CurationSidebar
 
     private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
             curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
@@ -224,13 +219,13 @@ public class CurationSidebar
     private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
         throws IOException, UIMAException
     {
-        SourceDocument doc = aState.getDocument();
-        CAS aTargetCas = curationSidebarService
+        var doc = aState.getDocument();
+        var aTargetCas = curationSidebarService
                 .retrieveCurationCAS(aCurator, aState.getProject().getId(), doc)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No target CAS configured in curation state"));
 
-        Map<String, CAS> userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
+        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
 
         // FIXME: should merging not overwrite the current users annos? (can result in
         // deleting the users annotations!!!), currently fixed by warn message to user
@@ -252,7 +247,7 @@ public class CurationSidebar
 
         form.setOutputMarkupId(true);
 
-        IChoiceRenderer<String> targetChoiceRenderer = new LambdaChoiceRenderer<>(
+        var targetChoiceRenderer = new LambdaChoiceRenderer<>(
                 aUsername -> CURATION_USER.equals(aUsername) ? "curation document" : "my document");
 
         var curationTargets = new ArrayList<String>();
@@ -325,8 +320,8 @@ public class CurationSidebar
 
     private Form<Void> createUserSelection(String aId)
     {
-        String sessionOwner = userRepository.getCurrentUsername();
-        Project project = getModelObject().getProject();
+        var sessionOwner = userRepository.getCurrentUsername();
+        var project = getModelObject().getProject();
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
@@ -363,7 +358,7 @@ public class CurationSidebar
 
     private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem)
     {
-        Project project = getModelObject().getProject();
+        var project = getModelObject().getProject();
         if (project.isAnonymousCuration()
                 && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
             return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));

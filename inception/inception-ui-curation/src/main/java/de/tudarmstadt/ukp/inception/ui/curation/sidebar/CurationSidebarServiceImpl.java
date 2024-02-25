@@ -48,12 +48,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
-import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -144,15 +142,15 @@ public class CurationSidebarServiceImpl
 
     private CurationSession readSession(String aSessionOwner, long aProjectId)
     {
-        List<CurationSettings> settings = queryDBForSetting(aSessionOwner, aProjectId);
+        var settings = queryDBForSetting(aSessionOwner, aProjectId);
 
         CurationSession state;
         if (settings.isEmpty()) {
             state = new CurationSession(aSessionOwner);
         }
         else {
-            CurationSettings setting = settings.get(0);
-            Project project = projectService.getProject(aProjectId);
+            var setting = settings.get(0);
+            var project = projectService.getProject(aProjectId);
             List<User> users = new ArrayList<>();
             if (!setting.getSelectedUserNames().isEmpty()) {
                 users = setting.getSelectedUserNames().stream()
@@ -172,11 +170,11 @@ public class CurationSidebarServiceImpl
         Validate.notBlank(aSessionOwner, "User must be specified");
         Validate.notNull(aProjectId, "project must be specified");
 
-        String query = "FROM " + CurationSettings.class.getName() //
+        var query = "FROM " + CurationSettings.class.getName() //
                 + " o WHERE o.username = :username " //
                 + "AND o.projectId = :projectId";
 
-        List<CurationSettings> settings = entityManager //
+        var settings = entityManager //
                 .createQuery(query, CurationSettings.class) //
                 .setParameter("username", aSessionOwner) //
                 .setParameter("projectId", aProjectId) //
@@ -232,7 +230,7 @@ public class CurationSidebarServiceImpl
                 return new ArrayList<>();
             }
 
-            List<User> finishedUsers = listCuratableUsers(aDocument);
+            var finishedUsers = listCuratableUsers(aDocument);
             finishedUsers.retainAll(selectedUsers);
             return finishedUsers;
         }
@@ -242,7 +240,7 @@ public class CurationSidebarServiceImpl
     @Transactional
     public List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument)
     {
-        String curationTarget = getCurationTarget(aSessionOwner, aDocument.getProject().getId());
+        var curationTarget = getCurationTarget(aSessionOwner, aDocument.getProject().getId());
         return listCuratableUsers(aDocument).stream()
                 .filter(user -> !user.getUsername().equals(aSessionOwner)
                         || curationTarget.equals(CURATION_USER))
@@ -255,21 +253,19 @@ public class CurationSidebarServiceImpl
     {
         Validate.notNull(aSourceDocument, "Document must be specified");
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT u FROM User u, AnnotationDocument d", //
                 "WHERE u.username = d.user", //
                 "AND d.document   = :document", //
                 "AND (d.state = :state or d.annotatorState = :ignore)", //
                 "ORDER BY u.username ASC");
 
-        List<User> finishedUsers = new ArrayList<>(entityManager //
+        return new ArrayList<>(entityManager //
                 .createQuery(query, User.class) //
                 .setParameter("document", aSourceDocument) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList());
-
-        return finishedUsers;
     }
 
     @Transactional
@@ -278,7 +274,7 @@ public class CurationSidebarServiceImpl
             SourceDocument aDoc)
         throws IOException
     {
-        String curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
+        var curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         if (curationUser == null) {
             return Optional.empty();
         }
@@ -295,14 +291,14 @@ public class CurationSidebarServiceImpl
     {
         User curator;
         synchronized (sessions) {
-            String curatorName = getSession(aState.getUser().getUsername(), aProjectId)
+            var curatorName = getSession(aState.getUser().getUsername(), aProjectId)
                     .getCurationTarget();
 
             curator = userRegistry.getUserOrCurationUser(curatorName);
         }
 
-        SourceDocument doc = aState.getDocument();
-        AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
+        var doc = aState.getDocument();
+        var annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
         documentService.writeAnnotationCas(aTargetCas, annoDoc, true);
         casStorageService.getCasTimestamp(doc, curator.getUsername())
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
@@ -376,7 +372,7 @@ public class CurationSidebarServiceImpl
     @Transactional
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
-        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        var info = sessionRegistry.getSessionInformation(event.getId());
 
         if (info == null) {
             return;
@@ -407,14 +403,14 @@ public class CurationSidebarServiceImpl
      */
     private void storeCurationSettings(User aSessionOwner)
     {
-        String aUsername = aSessionOwner.getUsername();
+        var aUsername = aSessionOwner.getUsername();
 
-        for (Project project : projectService.listAccessibleProjects(aSessionOwner)) {
-            Long projectId = project.getId();
+        for (var project : projectService.listAccessibleProjects(aSessionOwner)) {
+            var projectId = project.getId();
             Set<String> usernames = null;
             if (sessions.containsKey(new CurationSessionKey(aUsername, projectId))) {
 
-                CurationSession state = sessions.get(new CurationSessionKey(aUsername, projectId));
+                var state = sessions.get(new CurationSessionKey(aUsername, projectId));
                 // user does not exist anymore or is anonymous authentication
                 if (state == null) {
                     continue;
@@ -428,7 +424,7 @@ public class CurationSidebarServiceImpl
 
                 // get setting from context and update values if it exists, else save new setting
                 // to db
-                CurationSettings setting = entityManager.find(CurationSettings.class,
+                var setting = entityManager.find(CurationSettings.class,
                         new CurationSettingsId(projectId, aUsername));
 
                 if (setting != null) {
@@ -510,8 +506,8 @@ public class CurationSidebarServiceImpl
     @Override
     public boolean isCurationFinished(AnnotatorState aState, String aSessionOwner)
     {
-        String username = aState.getUser().getUsername();
-        SourceDocument sourceDoc = aState.getDocument();
+        var username = aState.getUser().getUsername();
+        var sourceDoc = aState.getDocument();
         return (username.equals(aSessionOwner)
                 && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
                 || (username.equals(CURATION_USER)

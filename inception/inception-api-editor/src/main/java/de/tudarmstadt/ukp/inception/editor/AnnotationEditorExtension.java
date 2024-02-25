@@ -27,6 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -79,8 +80,8 @@ public interface AnnotationEditorExtension
         // Do nothing by default
     }
 
-    default List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
-            AnnotationFeature aFeature)
+    default List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, CAS aCas,
+            VID aVid, AnnotationLayer aLayer)
     {
         return Collections.emptyList();
     }
