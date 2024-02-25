@@ -113,10 +113,10 @@ public class SubclassCreationDialog
             }
 
             // create the new concept
-            KBConcept newConcept = newSubclassConceptModel.getObject();
+            var newConcept = newSubclassConceptModel.getObject();
             kbService.createConcept(kb, newConcept);
 
-            String parentConceptId = parentConceptHandleModel.getObject().getIdentifier();
+            var parentConceptId = parentConceptHandleModel.getObject().getIdentifier();
 
             // create the subclassof statement and add it to the knowledge base
             ValueFactory vf = SimpleValueFactory.getInstance();

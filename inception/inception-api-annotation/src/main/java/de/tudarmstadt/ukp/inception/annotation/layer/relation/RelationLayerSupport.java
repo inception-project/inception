@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -31,6 +32,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -156,5 +158,17 @@ public class RelationLayerSupport
     public RelationLayerTraits createTraits()
     {
         return new RelationLayerTraits();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        var name = aFeature.getName();
+        if (name.equals(FEAT_REL_SOURCE) || name.equals(FEAT_REL_TARGET)) {
+            return asList(new ValidationError("[" + name + "] is a reserved feature name on "
+                    + "relation layers. Please use a different name for the feature."));
+        }
+
+        return Collections.emptyList();
     }
 }

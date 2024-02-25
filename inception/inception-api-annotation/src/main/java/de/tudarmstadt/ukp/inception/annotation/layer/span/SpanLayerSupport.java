@@ -102,11 +102,9 @@ public class SpanLayerSupport
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        var adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
-                eventPublisher, aLayer, aFeatures,
+        return new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
+                aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
-
-        return adapter;
     }
 
     @Override
@@ -134,7 +132,7 @@ public class SpanLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);

@@ -50,7 +50,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
     public final void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
             List<AnnotationFeature> aFeatures)
     {
-        for (AnnotationFeature feature : aFeatures) {
+        for (var feature : aFeatures) {
             featureSupportRegistry.findExtension(feature)
                     .ifPresent(fs -> fs.generateFeature(aTSD, aTD, feature));
         }
