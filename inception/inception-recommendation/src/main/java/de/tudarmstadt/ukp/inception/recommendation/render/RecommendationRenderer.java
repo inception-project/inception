@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -74,7 +73,7 @@ public class RecommendationRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
-        AnnotatorState state = aRequest.getState();
+        var state = aRequest.getState();
 
         if (aRequest.getCas() == null) {
             return false;

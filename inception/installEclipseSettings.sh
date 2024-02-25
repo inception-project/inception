@@ -84,6 +84,7 @@ installPrefs inception-kb
 installPrefs inception-kb-fact-linking
 installPrefs inception-layer-docmetadata
 installPrefs inception-log
+installPrefs inception-log-ui
 installPrefs inception-model
 installPrefs inception-model-export
 installPrefs inception-pdf-editor

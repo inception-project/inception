@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
+import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -65,6 +66,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
 
 public class BulkPredictionTask
     extends RecommendationTask_ImplBase
+    implements ProjectTask
 {
     public static final String TYPE = "BulkPredictionTask";
 

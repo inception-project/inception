@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 
 public abstract class Task
     implements Runnable, InitializingBean
@@ -41,7 +41,7 @@ public abstract class Task
     private final static AtomicInteger nextId = new AtomicInteger(1);
 
     private @Autowired RepositoryProperties repositoryProperties;
-    private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
+    private @Autowired(required = false) SchedulerWebsocketController schedulerController;
 
     private final TaskHandle handle;
     private final User sessionOwner;
@@ -80,8 +80,8 @@ public abstract class Task
     {
         // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not report
         // such subtasks ia the SchedulerControllerImpl - they are internal.
-        if (msgTemplate != null && sessionOwner != null && parentTask == null) {
-            monitor = new NotifyingTaskMonitor(handle, this, msgTemplate);
+        if (schedulerController != null && sessionOwner != null && parentTask == null) {
+            monitor = new NotifyingTaskMonitor(handle, this, schedulerController);
         }
         else {
             monitor = new TaskMonitor(handle, this);

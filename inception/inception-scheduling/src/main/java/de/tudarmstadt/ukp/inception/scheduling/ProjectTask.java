@@ -15,22 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.scheduling;
+package de.tudarmstadt.ukp.inception.scheduling;
 
-import org.apache.wicket.Component;
-import org.springframework.core.annotation.Order;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-
-@Order(FooterItem.ORDER_LEFT)
-public class TaskMonitorFooterItem
-    implements FooterItem
+/**
+ * Marks a task as belonging to a project. That implies that all project managers can perform
+ * actions on it and that it should be shown on the processing page in the project.
+ */
+public interface ProjectTask
 {
-    @Override
-    public Component create(String aId)
-    {
-        return new TaskMonitorPanel(aId) //
-                .setShowFinishedTasks(true) //
-                .setPopupMode(true);
-    }
+    Project getProject();
 }

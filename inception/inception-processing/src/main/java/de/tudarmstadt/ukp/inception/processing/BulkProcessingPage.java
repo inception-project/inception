@@ -48,7 +48,8 @@ public class BulkProcessingPage
 
         queue(new BulkRecommenderPanel("processingPanel", getProjectModel()));
 
-        queue(new TaskMonitorPanel("runningProcesses").setPopupMode(false)
+        queue(new TaskMonitorPanel("runningProcesses", getProject()) //
+                .setPopupMode(false) //
                 .setShowFinishedTasks(true));
     }
 }

@@ -137,8 +137,7 @@ public class WebSocketIntegrationTest
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
 
-    @TempDir
-    File repositoryDir;
+    private @TempDir File repositoryDir;
 
     private User user;
     private Project testProject;
@@ -185,15 +184,15 @@ public class WebSocketIntegrationTest
     public void thatRecentMessageIsReceived()
         throws InterruptedException, ExecutionException, TimeoutException
     {
-        List<LoggedEventMessage> receivedMessages = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(1);
-        SessionHandler sessionHandler = new SessionHandler(latch, receivedMessages);
+        var receivedMessages = new ArrayList<LoggedEventMessage>();
+        var latch = new CountDownLatch(1);
+        var sessionHandler = new SessionHandler(latch, receivedMessages);
 
         session = stompClient.connect(websocketUrl, sessionHandler).get(5, SECONDS);
         latch.await(10, SECONDS);
 
         assertThat(receivedMessages.size()).isEqualTo(1);
-        LoggedEventMessage msg1 = receivedMessages.get(0);
+        var msg1 = receivedMessages.get(0);
         assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
 
         try {

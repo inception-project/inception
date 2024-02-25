@@ -170,6 +170,7 @@
     <module>inception-telemetry</module>
     <module>inception-ui-core</module>
     <module>inception-log</module>
+    <module>inception-log-ui</module>
     <module>inception-scheduling</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>

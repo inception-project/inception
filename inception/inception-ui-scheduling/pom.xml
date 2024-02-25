@@ -45,6 +45,14 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-security</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
+    </dependency>
 
     <!-- Spring -->
     <dependency>
@@ -75,19 +83,11 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-web</artifactId>
-    </dependency>
 
     <!-- Wicket -->
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-request</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>

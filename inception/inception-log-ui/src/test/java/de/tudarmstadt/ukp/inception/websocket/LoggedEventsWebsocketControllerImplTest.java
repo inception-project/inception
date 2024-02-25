@@ -97,8 +97,8 @@ public class LoggedEventsWebsocketControllerImplTest
         sut.onApplicationEvent(new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(),
                 testLayer, null));
 
-        List<Message<?>> messages = outboundChannel.getMessages();
-        LoggedEventMessage msg = (LoggedEventMessage) messages.get(0).getPayload();
+        var messages = outboundChannel.getMessages();
+        var msg = (LoggedEventMessage) messages.get(0).getPayload();
 
         assertThat(messages).hasSize(1);
         assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());
@@ -115,7 +115,6 @@ public class LoggedEventsWebsocketControllerImplTest
     public class TestChannel
         extends AbstractMessageChannel
     {
-
         private List<Message<?>> messages = new ArrayList<>();
 
         @Override

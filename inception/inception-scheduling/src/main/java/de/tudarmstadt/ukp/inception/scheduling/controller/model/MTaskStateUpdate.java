@@ -29,20 +29,27 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class MTaskStateUpdate
 {
-    private final long timestamp;
     private final int id;
+    private final String title;
+    private final long timestamp;
     private final String type;
+
+    private final String username;
+    private final long projectId;
+    private final String projectName;
+
+    private final TaskState state;
+
     private final int progress;
     private final int maxProgress;
-    private final TaskState state;
-    private final String title;
-    private final int messageCount;
 
     @JsonInclude(Include.NON_DEFAULT)
     private final boolean cancellable;
 
     @JsonInclude(Include.NON_DEFAULT)
     private final boolean removed;
+
+    private final int messageCount;
 
     @JsonInclude(Include.NON_EMPTY)
     private final LogMessage latestMessage;
@@ -54,17 +61,41 @@ public class MTaskStateUpdate
 
     public MTaskStateUpdate(TaskMonitor aMonitor, boolean aRemoved)
     {
-        timestamp = System.currentTimeMillis();
-        title = aMonitor.getTitle();
         id = aMonitor.getHandle().getId();
+        title = aMonitor.getTitle();
+        timestamp = System.currentTimeMillis();
         type = aMonitor.getType();
+
+        username = aMonitor.getUser();
+
+        projectId = aMonitor.getProject() != null ? aMonitor.getProject().getId() : -1;
+        projectName = aMonitor.getProject() != null ? aMonitor.getProject().getName() : null;
+
+        state = aMonitor.getState();
+
         progress = aMonitor.getProgress();
         maxProgress = aMonitor.getMaxProgress();
-        state = aMonitor.getState();
+        cancellable = aMonitor.isCancellable();
+
         messageCount = aMonitor.getMessages().size();
         latestMessage = aMonitor.getMessages().peekLast();
+
         removed = aRemoved;
-        cancellable = aMonitor.isCancellable();
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public long getProjectId()
+    {
+        return projectId;
+    }
+
+    public String getProjectName()
+    {
+        return projectName;
     }
 
     public String getTitle()
