@@ -142,14 +142,6 @@
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
-      <version>1.33</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <build>
@@ -160,8 +152,6 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
-              <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
-              <ignoredDependency>org.yaml:snakeyaml</ignoredDependency>
               <!-- Plugin does not get it -->
               <ignoredDependency>com.fasterxml.jackson.core:jackson-core</ignoredDependency>
             </ignoredDependencies>

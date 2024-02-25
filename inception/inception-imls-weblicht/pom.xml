@@ -27,10 +27,6 @@
   <name>INCEpTION - ML - WebLicht</name>
   <dependencies>
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>eu.clarin.weblicht</groupId>
       <artifactId>wlfxb</artifactId>
     </dependency>

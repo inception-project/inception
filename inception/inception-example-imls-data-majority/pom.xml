@@ -129,31 +129,5 @@
       <artifactId>dkpro-core-io-conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
-
-
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
-      <version>1.33</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <ignoredDependencies>
-              <!-- DKPro Core Datasets isn't compatible with SnakeYAML 2.0 atm -->
-              <ignoredDependency>org.yaml:snakeyaml</ignoredDependency>
-            </ignoredDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>

@@ -74,7 +74,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import jakarta.persistence.EntityManager;
 
 @DataJpaTest( //
         showSql = false, //

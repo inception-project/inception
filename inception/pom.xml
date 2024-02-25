@@ -85,15 +85,15 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <!-- Add json logger for Logstash -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
+    </dependency>
+    <dependency>
+      <!-- Route Java Commons Logging over SLF4J -->
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jcl</artifactId>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <!-- Avoid Commons Logging -->
@@ -422,8 +422,8 @@
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
-            <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
+            <dependency>org.springframework:spring-jcl</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->

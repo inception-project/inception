@@ -129,7 +129,7 @@
     <!-- * 7.17.x   depends on Lucene 8.11.1 -->
     <!--   8.1.x    depends on Lucene 9.0.0 -->
 
-    <opensearch.version>1.3.14</opensearch.version>
+    <opensearch.version>1.3.13</opensearch.version>
     <!-- * 1.3.5    depends on Lucene 8.10.1 -->
     <!--   2.x      depends on Lucene 9.x -->
 
@@ -151,7 +151,7 @@
     <json.version>20230227</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.16.1</jackson.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.8.0</okio.version>
 

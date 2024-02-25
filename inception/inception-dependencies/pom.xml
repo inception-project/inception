@@ -433,11 +433,23 @@
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>pdfbox</artifactId>
         <version>${pdfbox.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>fontbox</artifactId>
         <version>${pdfbox.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -462,6 +474,12 @@
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>1.9.4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -690,11 +708,6 @@
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>2.0.1.Final</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.persistence</groupId>
-        <artifactId>javax.persistence-api</artifactId>
-        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
@@ -1209,7 +1222,6 @@
       <dependency>
         <groupId>org.codelibs.opensearch</groupId>
         <artifactId>opensearch-runner</artifactId>
-        <!--    <version>${opensearch.version}.0</version>-->
         <version>${opensearch.version}.0</version>
       </dependency>
       <dependency>

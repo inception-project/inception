@@ -42,8 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.persistence.NoResultException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -75,6 +73,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOve
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOverviewItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivitySummary;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivitySummaryItem;
+import jakarta.persistence.NoResultException;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
