@@ -1113,6 +1113,10 @@
                   <classifier>standalone</classifier>
                   <excludes>
                     <exclude>
+                      <groupId>org.slf4j</groupId>
+                      <artifactId>jcl-over-slf4j</artifactId>
+                    </exclude>
+                    <exclude>
                       <groupId>commons-logging</groupId>
                       <artifactId>commons-logging</artifactId>
                     </exclude>

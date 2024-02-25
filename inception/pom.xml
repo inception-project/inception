@@ -85,6 +85,12 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
+      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <!-- Add json logger for Logstash -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
@@ -96,7 +102,7 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Avoid Commons Logging -->
+      <!-- Avoid Commons Logging (we use the spring-jcl bridge -->
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <scope>provided</scope>

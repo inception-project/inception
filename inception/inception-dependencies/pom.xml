@@ -653,7 +653,7 @@
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
         <artifactId>woodstox-core</artifactId>
-        <version>6.5.1</version>
+        <version>6.6.0</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
@@ -768,7 +768,7 @@
       <dependency>
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.3</version>
       </dependency>
       
       <!-- SPRING SECURITY -->
@@ -1336,6 +1336,11 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-jmx-gui</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
       <dependency>
