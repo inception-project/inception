@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Tr
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class StringMatchingRecommender
     extends RecommendationEngine
@@ -178,8 +179,11 @@ public class StringMatchingRecommender
 
             for (var ann : select(cas, predictedType)) {
                 if (isMultiValue) {
-                    for (var label : FSUtil.getFeature(ann, predictedFeature, String[].class)) {
-                        learn(dict, ann.getCoveredText(), label);
+                    var labels = FSUtil.getFeature(ann, predictedFeature, String[].class);
+                    if (labels != null) {
+                        for (var label : labels) {
+                            learn(dict, ann.getCoveredText(), label);
+                        }
                     }
                 }
                 else {
@@ -219,7 +223,7 @@ public class StringMatchingRecommender
                 // Not using setStringValue because we want to handle the case that the predicted
                 // feature is a multi-valued feature.
                 if (!BLANK_LABEL.equals(span.label())) {
-                    FSUtil.setFeature(annotation, predictedFeature, span.label());
+                    ICasUtil.setFeature(annotation, predictedFeature, span.label());
                 }
                 annotation.setDoubleValue(scoreFeature, span.score());
                 annotation.setBooleanValue(isPredictionFeature, true);
@@ -227,7 +231,7 @@ public class StringMatchingRecommender
             }
         }
 
-        return new Range(units);
+        return Range.rangeCoveringAnnotations(units);
     }
 
     private List<Sample> predict(CAS aCas, List<AnnotationFS> units, Trie<DictEntry> aDict)
@@ -427,9 +431,11 @@ public class StringMatchingRecommender
                     }
 
                     if (isMultiValue) {
-                        Stream.of(FSUtil.getFeature(ann, predictedFeature, String[].class))
-                                .distinct() //
-                                .forEach(l -> spans.add(new Span(ann, l)));
+                        var value = FSUtil.getFeature(ann, predictedFeature, String[].class);
+                        if (value != null) {
+                            Stream.of(value).distinct() //
+                                    .forEach(l -> spans.add(new Span(ann, l)));
+                        }
                     }
                     else {
                         spans.add(new Span(ann, ann.getFeatureValueAsString(predictedFeature)));

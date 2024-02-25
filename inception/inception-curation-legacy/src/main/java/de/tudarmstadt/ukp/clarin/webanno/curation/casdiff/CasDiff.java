@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.subtract;
-import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.PrintStream;
@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -78,7 +76,7 @@ public class CasDiff
 {
     private final static Logger LOG = LoggerFactory.getLogger(CasDiff.class);
 
-    private Map<String, List<CAS>> cases = new LinkedHashMap<>();
+    private Map<String, CAS> cases = new LinkedHashMap<>();
 
     private final Map<Position, ConfigurationSet> configSets = new TreeMap<>();
 
@@ -98,40 +96,12 @@ public class CasDiff
         begin = aBegin;
         end = aEnd;
         linkCompareBehavior = aLinkCompareBehavior;
+
         if (aAdapters != null) {
-            for (DiffAdapter adapter : aAdapters) {
+            for (var adapter : aAdapters) {
                 diffAdapters.put(adapter.getType(), adapter);
             }
         }
-    }
-
-    /**
-     * Calculate the differences between CASes. This method scopes the calculation of differences to
-     * a span instead of calculating them on the whole text.
-     * 
-     * @param aAdapters
-     *            a set of diff adapters telling how the diff algorithm should handle different
-     *            features
-     * @param aLinkCompareBehavior
-     *            the link comparison mode
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @param aBegin
-     *            begin of the span for which differences should be calculated.
-     * @param aEnd
-     *            end of the span for which differences should be calculated.
-     * @return a diff result.
-     */
-    public static CasDiff doDiffSingle(Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap, int aBegin,
-            int aEnd)
-    {
-        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
-            casMap.put(e.getKey(), asList(e.getValue()));
-        }
-
-        return doDiff(aAdapters, aLinkCompareBehavior, casMap, aBegin, aEnd);
     }
 
     /**
@@ -146,7 +116,7 @@ public class CasDiff
      * @return a diff result.
      */
     public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap)
     {
         return doDiff(aAdapters, aLinkCompareBehavior, aCasMap, -1, -1);
     }
@@ -169,32 +139,22 @@ public class CasDiff
      * @return a diff.
      */
     public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap, int aBegin,
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap, int aBegin,
             int aEnd)
     {
         if (aCasMap.isEmpty()) {
             return new CasDiff(0, 0, aAdapters, aLinkCompareBehavior);
         }
 
-        List<CAS> casList = aCasMap.values().iterator().next();
-        if (casList.isEmpty()) {
-            return new CasDiff(0, 0, aAdapters, aLinkCompareBehavior);
-        }
+        var startTime = System.currentTimeMillis();
 
-        long startTime = System.currentTimeMillis();
+        var diff = new CasDiff(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
 
-        sanityCheck(aCasMap);
-
-        CasDiff diff = new CasDiff(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
-
-        for (Entry<String, List<CAS>> e : aCasMap.entrySet()) {
-            int casId = 0;
-            for (CAS cas : e.getValue()) {
-                for (DiffAdapter adapter : aAdapters) {
-                    // null elements in the list can occur if a user has never worked on a CAS
-                    diff.addCas(e.getKey(), casId, cas != null ? cas : null, adapter.getType());
-                }
-                casId++;
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
+            var cas = e.getValue();
+            for (var adapter : aAdapters) {
+                // null elements in the list can occur if a user has never worked on a CAS
+                diff.addCas(e.getKey(), cas != null ? cas : null, adapter.getType());
             }
         }
 
@@ -203,52 +163,9 @@ public class CasDiff
         return diff;
     }
 
-    /**
-     * Sanity check - all CASes should have the same text.
-     */
-    private static void sanityCheck(Map<String, List<CAS>> aCasMap)
-    {
-        if (aCasMap.isEmpty()) {
-            return;
-        }
-
-        // little hack to check if asserts are enabled
-        boolean assertsEnabled = false;
-        assert assertsEnabled = true; // Intentional side effect!
-        if (assertsEnabled) {
-            Iterator<Entry<String, List<CAS>>> i = aCasMap.entrySet().iterator();
-
-            Entry<String, List<CAS>> ref = i.next();
-            String refUser = ref.getKey();
-            List<CAS> refCASes = ref.getValue();
-            while (i.hasNext()) {
-                Entry<String, List<CAS>> cur = i.next();
-                String curUser = cur.getKey();
-                List<CAS> curCASes = cur.getValue();
-                assert refCASes.size() == curCASes.size() : "CAS list sizes differ: "
-                        + refCASes.size() + " vs " + curCASes.size();
-                for (int n = 0; n < refCASes.size(); n++) {
-                    CAS refCas = refCASes.get(n);
-                    CAS curCas = curCASes.get(n);
-                    // null elements in the list can occur if a user has never worked on a CAS
-                    assert !(refCas != null && curCas != null) || StringUtils.equals(
-                            refCas.getDocumentText(),
-                            curCas.getDocumentText()) : "Trying to compare CASes with different document texts: ["
-                                    + curUser + "] having ["
-                                    + abbreviateMiddle(curCas.getDocumentText(), "...", 40)
-                                    + "] (length: " + curCas.getDocumentText().length() + ") vs ["
-                                    + refUser + "] having ["
-                                    + abbreviateMiddle(refCas.getDocumentText(), "...", 40)
-                                    + "] (length: " + refCas.getDocumentText().length() + ")";
-                }
-            }
-        }
-        // End sanity check
-    }
-
     private DiffAdapter getAdapter(String aType)
     {
-        DiffAdapter adapter = diffAdapters.get(aType);
+        var adapter = diffAdapters.get(aType);
         if (adapter == null) {
             LOG.warn("No diff adapter for type [" + aType + "] -- treating as without features");
             adapter = new SpanDiffAdapter(aType, emptySet());
@@ -262,7 +179,7 @@ public class CasDiff
         return diffAdapters;
     }
 
-    public Map<String, List<CAS>> getCasMap()
+    public Map<String, CAS> getCasMap()
     {
         return cases;
     }
@@ -279,35 +196,20 @@ public class CasDiff
      * @param aType
      *            the type on which to calculate the diff.
      */
-    private void addCas(String aCasGroupId, int aCasId, CAS aCas, String aType)
+    private void addCas(String aCasGroupId, CAS aCas, String aType)
     {
         // Remember that we have already seen this CAS.
-        List<CAS> casList = cases.get(aCasGroupId);
-        if (casList == null) {
-            casList = new ArrayList<>();
-            cases.put(aCasGroupId, casList);
-        }
-
-        // Avoid adding same CAS twice in cases where we add multiple types from a CAS. If the
-        // current CAS ID is greater than the size of the current CAS list, then we did not add
-        // it yet. Before, we checked whether the casList already contained the current CAS, but
-        // that failed when we had multiple "null" CASes.
-        if ((casList.size() - 1) < aCasId) {
-            casList.add(aCas);
-        }
-        assert (casList.size() - 1) == aCasId : "Expected CAS ID [" + (casList.size() - 1)
-                + "] but was [" + aCasId + "]";
+        cases.put(aCasGroupId, aCas);
 
         // null elements in the list can occur if a user has never worked on a CAS
         // We add these to the internal list above, but then we bail out here.
         if (aCas == null) {
-            LOG.debug("CAS group [" + aCasGroupId + "] does not contain a CAS at index [" + aCasId
-                    + "].");
+            LOG.debug("CAS group [" + aCasGroupId + "] does not contain a CAS");
             return;
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Processing CAS group [" + aCasGroupId + "] CAS [" + aCasId + "].");
+            LOG.debug("Processing CAS group [" + aCasGroupId + "]");
 
             String collectionId = null;
             String documentId = null;
@@ -325,8 +227,8 @@ public class CasDiff
 
         Type type = aCas.getTypeSystem().getType(aType);
         if (type == null) {
-            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
-                    + "] contains no annotations of type [" + aType + "]");
+            LOG.debug("CAS group [" + aCasGroupId + "] contains no annotations of type [" + aType
+                    + "]");
             return;
         }
 
@@ -341,27 +243,27 @@ public class CasDiff
         }
 
         if (annotations.isEmpty()) {
-            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
-                    + "] contains no annotations of type [" + aType + "]");
+            LOG.debug("CAS group [" + aCasGroupId + "] contains no annotations of type [" + aType
+                    + "]");
             return;
         }
 
-        LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
-                + annotations.size() + "] annotations of type [" + aType + "]");
+        LOG.debug("CAS group [" + aCasGroupId + "] contains [" + annotations.size()
+                + "] annotations of type [" + aType + "]");
 
         int posBefore = configSets.keySet().size();
         LOG.debug("Positions before: [{}]", posBefore);
 
-        for (AnnotationFS fs : annotations) {
-            List<Position> positions = new ArrayList<>();
+        for (var fs : annotations) {
+            var positions = new ArrayList<Position>();
 
             // Get/create configuration set at the current position
-            positions.add(adapter.getPosition(aCasId, fs));
+            positions.add(adapter.getPosition(fs));
 
             // Generate secondary positions for multi-link features
-            positions.addAll(adapter.generateSubPositions(aCasId, fs, linkCompareBehavior));
+            positions.addAll(adapter.generateSubPositions(fs, linkCompareBehavior));
 
-            for (Position pos : positions) {
+            for (var pos : positions) {
                 ConfigurationSet configSet = configSets.get(pos);
                 if (configSet == null) {
                     configSet = new ConfigurationSet(pos);
@@ -418,10 +320,10 @@ public class CasDiff
             // corresponding configuration
 
             var links = FSUtil.getFeature(aFS, feat, ArrayFS.class);
-            for (int i = 0; i < links.size(); i++) {
-                FeatureStructure link = links.get(i);
-                DiffAdapter adapter = getAdapter(aFS.getType().getName());
-                LinkFeatureDecl decl = adapter.getLinkFeature(aSet.position.getFeature());
+            for (var i = 0; i < links.size(); i++) {
+                var link = links.get(i);
+                var adapter = getAdapter(aFS.getType().getName());
+                var decl = adapter.getLinkFeature(aSet.position.getFeature());
 
                 // Check if this configuration is already present
                 Configuration configuration = null;
@@ -639,7 +541,7 @@ public class CasDiff
             return false;
         }
 
-        DiffAdapter adapter = diffAdapters.get(type1.getName());
+        var adapter = diffAdapters.get(type1.getName());
 
         if (adapter == null) {
             LOG.warn("No diff adapter for type [" + type1.getName() + "] -- ignoring!");
@@ -667,9 +569,9 @@ public class CasDiff
             sortedFeatures.removeIf(f -> adapter.getLinkFeature(f) != null);
         }
 
-        nextFeature: for (String feature : sortedFeatures) {
-            Feature f1 = type1.getFeatureByBaseName(feature);
-            Feature f2 = type2.getFeatureByBaseName(feature);
+        nextFeature: for (var feature : sortedFeatures) {
+            var f1 = type1.getFeatureByBaseName(feature);
+            var f2 = type2.getFeatureByBaseName(feature);
 
             Type range = (f1 != null) ? f1.getRange() : (f2 != null ? f2.getRange() : null);
 
@@ -820,9 +722,9 @@ public class CasDiff
         }
 
         // Position check
-        DiffAdapter adapter = getAdapter(aFS1.getType().getName());
-        Position pos1 = adapter.getPosition(0, aFS1);
-        Position pos2 = adapter.getPosition(0, aFS2);
+        var adapter = getAdapter(aFS1.getType().getName());
+        var pos1 = adapter.getPosition(aFS1);
+        var pos2 = adapter.getPosition(aFS2);
 
         return pos1.compareTo(pos2) == 0;
     }
@@ -894,15 +796,14 @@ public class CasDiff
 
         public AID getRepresentativeAID()
         {
-            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
+            var e = fsAddresses.entrySet().iterator().next();
             return e.getValue();
         }
 
-        public FeatureStructure getRepresentative(Map<String, List<CAS>> aCasMap)
+        public FeatureStructure getRepresentative(Map<String, CAS> aCasMap)
         {
-            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return ICasUtil.selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
-                    e.getValue().addr);
+            var e = fsAddresses.entrySet().iterator().next();
+            return selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
         }
 
         private Map<String, AID> getAddressByCasId()
@@ -925,20 +826,15 @@ public class CasDiff
             return aAID.equals(fsAddresses.get(aCasGroupId));
         }
 
-        public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, int aCasId,
-                Class<T> aClass, Map<String, List<CAS>> aCasMap)
+        public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId,
+                Class<T> aClass, Map<String, CAS> aCasMap)
         {
             AID aid = fsAddresses.get(aCasGroupId);
             if (aid == null) {
                 return null;
             }
 
-            List<CAS> casses = aCasMap.get(aCasGroupId);
-            if (casses == null) {
-                return null;
-            }
-
-            CAS cas = casses.get(aCasId);
+            CAS cas = aCasMap.get(aCasGroupId);
             if (cas == null) {
                 return null;
             }
@@ -946,20 +842,9 @@ public class CasDiff
             return ICasUtil.selectFsByAddr(cas, aid.addr);
         }
 
-        // FIXME aCasId parameter should not be required as we can get it from the position
-        public FeatureStructure getFs(String aCasGroupId, int aCasId,
-                Map<String, List<CAS>> aCasMap)
-        {
-            return getFs(aCasGroupId, aCasId, FeatureStructure.class, aCasMap);
-        }
-
         public FeatureStructure getFs(String aCasGroupId, Map<String, CAS> aCasMap)
         {
-            Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-            for (Entry<String, CAS> e : aCasMap.entrySet()) {
-                casMap.put(e.getKey(), asList(e.getValue()));
-            }
-            return getFs(aCasGroupId, 0, FeatureStructure.class, casMap);
+            return getFs(aCasGroupId, FeatureStructure.class, aCasMap);
         }
 
         @Override
@@ -1015,6 +900,11 @@ public class CasDiff
             return cachedHasDifferences;
         }
 
+        public boolean hasDifferencesWithExceptions(String... aCasGroupIDsToIgnore)
+        {
+            return !getDifferingConfigurationSetsWithExceptions(aCasGroupIDsToIgnore).isEmpty();
+        }
+
         public Collection<Position> getPositions()
         {
             return data.keySet();
@@ -1037,9 +927,21 @@ public class CasDiff
 
         public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId, AID aAid)
         {
-            for (ConfigurationSet cfgSet : getConfigurationSets()) {
-                Optional<Configuration> cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId,
-                        aAid);
+            for (var cfgSet : getConfigurationSets()) {
+                var cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId, aAid);
+                if (cfg.isPresent()) {
+                    return cfg;
+                }
+            }
+
+            return Optional.empty();
+        }
+
+        public Optional<Configuration> findConfiguration(String aRepresentativeCasGroupId,
+                FeatureStructure aFS)
+        {
+            for (var cfgSet : getConfigurationSets()) {
+                var cfg = cfgSet.findConfiguration(aRepresentativeCasGroupId, aFS);
                 if (cfg.isPresent()) {
                     return cfg;
                 }
@@ -1156,13 +1058,12 @@ public class CasDiff
             }
 
             // Short-cut: the common use-case is to ignore a single exception, usually the curator
-            if (aCasGroupIDsToIgnore.length == 1) {
-                return unseenGroupCasIDs.size() == 1
-                        && unseenGroupCasIDs.contains(aCasGroupIDsToIgnore[0]);
+            if (aCasGroupIDsToIgnore.length == 1 && unseenGroupCasIDs.size() == 1) {
+                return unseenGroupCasIDs.contains(aCasGroupIDsToIgnore[0]);
             }
 
             // The set is complete if the unseen CAS group IDs match exactly the exceptions.
-            return unseenGroupCasIDs.containsAll(asList(aCasGroupIDsToIgnore));
+            return subtract(unseenGroupCasIDs, asList(aCasGroupIDsToIgnore)).isEmpty();
         }
 
         public Map<Position, ConfigurationSet> getDifferingConfigurationSets()
@@ -1173,8 +1074,8 @@ public class CasDiff
         public Map<Position, ConfigurationSet> getDifferingConfigurationSetsWithExceptions(
                 String... aCasGroupIDsToIgnore)
         {
-            Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
-            for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
+            var diffs = new LinkedHashMap<Position, ConfigurationSet>();
+            for (var e : data.entrySet()) {
                 if (!isAgreementWithExceptions(e.getValue(), aCasGroupIDsToIgnore)) {
                     diffs.put(e.getKey(), e.getValue());
                 }
@@ -1196,8 +1097,8 @@ public class CasDiff
         public Map<Position, ConfigurationSet> getIncompleteConfigurationSetsWithExceptions(
                 String... aCasGroupIDsToIgnore)
         {
-            Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
-            for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
+            var diffs = new LinkedHashMap<Position, ConfigurationSet>();
+            for (var e : data.entrySet()) {
                 if (!isCompleteWithExceptions(e.getValue(), aCasGroupIDsToIgnore)) {
                     diffs.put(e.getKey(), e.getValue());
                 }
@@ -1214,7 +1115,7 @@ public class CasDiff
         public int size(String aType)
         {
             int n = 0;
-            for (Position pos : data.keySet()) {
+            for (var pos : data.keySet()) {
                 if (pos.getType().equals(aType)) {
                     n++;
                 }
@@ -1225,8 +1126,8 @@ public class CasDiff
 
         public void print(PrintStream aOut)
         {
-            for (Position p : getPositions()) {
-                ConfigurationSet configurationSet = getConfigurationSet(p);
+            for (var p : getPositions()) {
+                var configurationSet = getConfigurationSet(p);
                 aOut.printf("=== %s -> %s %s%n", p,
                         isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                         isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
@@ -1247,18 +1148,18 @@ public class CasDiff
             return emptyList();
         }
 
-        Project project = aLayers.iterator().next().getProject();
+        var project = aLayers.iterator().next().getProject();
 
         var featuresByLayer = schemaService.listSupportedFeatures(project).stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
-        List<DiffAdapter> adapters = new ArrayList<>();
+        var adapters = new ArrayList<DiffAdapter>();
         nextLayer: for (AnnotationLayer layer : aLayers) {
             if (!layer.isEnabled()) {
                 continue nextLayer;
             }
 
-            Set<String> labelFeatures = new LinkedHashSet<>();
+            var labelFeatures = new LinkedHashSet<String>();
             nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled() || !f.isCuratable()) {
                     continue nextFeature;

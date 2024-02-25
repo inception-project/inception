@@ -155,6 +155,15 @@ public interface AnnotationSchemaService
     boolean existsTagSet(Project project);
 
     /**
+     * Check if any {@link AnnotationLayer} exists with this name in the given {@link Project}.
+     * 
+     * @param project
+     *            the project.
+     * @return if a layer exists.
+     */
+    boolean existsLayer(Project project);
+
+    /**
      * Check if an {@link AnnotationLayer} exists with this name in the given {@link Project}.
      * 
      * @param name
@@ -178,7 +187,7 @@ public interface AnnotationSchemaService
      */
     boolean existsLayer(String name, String type, Project project);
 
-    boolean existsEnabledLayerOfType(Project aProject, String aType);
+    boolean existsEnabledLayerOfType(Project project, String type);
 
     /**
      * Check if this {@link AnnotationFeature} already exists

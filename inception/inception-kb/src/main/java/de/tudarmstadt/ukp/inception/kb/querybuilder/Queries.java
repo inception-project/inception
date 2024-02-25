@@ -50,6 +50,7 @@ public class Queries
                     .withIdentifier(propertyIris) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .asHandles(aConn, true) //
                     .stream() //

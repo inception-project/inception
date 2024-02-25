@@ -49,6 +49,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -61,8 +62,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -117,10 +117,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public void setUp(Reification reification) throws Exception
     {
-        RepositoryProperties repoProps = new RepositoryProperties();
+        var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
-        EntityManager entityManager = testEntityManager.getEntityManager();
+        var kbProperties = new KnowledgeBasePropertiesImpl();
+        var entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
@@ -1997,6 +1997,24 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(sut.isKnowledgeBaseEnabled(project, "NonExistingID"))
                 .as("Check that correct accessibility value is returned for non existing id ")
                 .isFalse();
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO_gzip() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo.gz");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
     }
 
     // Helper

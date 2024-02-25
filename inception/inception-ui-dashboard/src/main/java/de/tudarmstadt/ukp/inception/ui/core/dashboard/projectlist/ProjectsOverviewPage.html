@@ -64,48 +64,52 @@
         </div>
         <ul wicket:id="pagingNavigator" class="me-3"/>
       </div>
-      <div class="scrolling flex-content flex-h-container mx-3 mb-3 card">
-        <div wicket:id="emptyListLabel" class="no-data-notice flex-content"></div>
-        <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
-          <div wicket:id="project" class="list-group-item">
-            <div class="d-flex">
-              <div class="flex-grow-1 d-flex flex-column">
-                <div>
-                  <a wicket:id="projectLink" class="text-decoration-none">
-                    <wicket:container wicket:id="name"/>
-                  </a>
-                </div>
-                <div class="list-group-item-text text-muted">
-                  <small><wicket:container wicket:id="description"/></small>
-                </div>
-              </div>
-              <div class="d-flex flex-column text-end">
-                <div class="d-flex flex-nowrap flex-row-reverse">
-                  <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
-                </div>
-                <div class="text-nowrap mt-auto">
-                  <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                  <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
-                </div>
-              </div>
-              <div wicket:id="actionDropdown" class="d-flex">
-                <div class="dropdown flex-content flex-h-container">
-                  <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </button>
-                  <ul class="dropdown-menu float-end" role="menu">
-                    <li>
-                      <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
-                        <wicket:message key="leaveProject"/>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-  	        </div>
+      <div class="d-flex flex-grow-1 overflow-hidden mx-3 mb-3 card">
+        <div class="scrolling flex-content flex-h-container ">
+          <div class="no-data-notice flex-content" wicket:enclosure="emptyListLabel">
+            <div wicket:id="emptyListLabel"></div>
           </div>
+          <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
+            <div wicket:id="project" class="list-group-item">
+              <div class="d-flex">
+                <div class="flex-grow-1 d-flex flex-column">
+                  <div>
+                    <a wicket:id="projectLink" class="text-decoration-none">
+                      <wicket:container wicket:id="name"/>
+                    </a>
+                  </div>
+                  <div class="list-group-item-text text-muted">
+                    <small><wicket:container wicket:id="description"/></small>
+                  </div>
+                </div>
+                <div class="d-flex flex-column text-end">
+                  <div class="d-flex flex-nowrap flex-row-reverse">
+                    <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+                  </div>
+                  <div class="text-nowrap mt-auto">
+                    <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
+                    <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                  </div>
+                </div>
+                <div wicket:id="actionDropdown" class="d-flex">
+                  <div class="dropdown flex-content flex-h-container">
+                    <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu float-end" role="menu">
+                      <li>
+                        <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
+                          <wicket:message key="leaveProject"/>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+    	        </div>
+            </div>
+          </div>
+          <div wicket:id="dialog"></div>
         </div>
-        <div wicket:id="dialog"></div>
       </div>
     </div>
   </wicket:extend>

@@ -15,49 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview;
+package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 /**
- * An ennumeration to differentiate sentences in a document with different colors so as to easily
- * identify
- *
+ * Fired when a user clicks on a pairwise agreement score.
  */
-public enum CurationUnitState
+public class PairwiseAgreementScoreClickedEvent
+    extends AbstractAjaxAwareEvent
 {
-    /**
-     * No conflicts of annotation in this sentence, no color - null- white
-     */
-    AGREE("agree"),
+    private final String annotator1;
+    private final String annotator2;
 
-    /**
-     * Stacked annotations
-     */
-    STACKED("stacked"),
-
-    /**
-     * Incomplete annotations
-     */
-    INCOMPLETE("incomplete"),
-
-    /**
-     * Conflicts of annotation found in this sentence, mark background in red
-     */
-    DISAGREE("disagree"),
-
-    /**
-     * Confirmed annotation.
-     */
-    CURATED("curated");
-
-    private String cssClass;
-
-    CurationUnitState(String aCssClass)
+    public PairwiseAgreementScoreClickedEvent(AjaxRequestTarget aTarget, String aAnnotator1,
+            String aAnnotator2)
     {
-        cssClass = aCssClass;
+        super(aTarget);
+
+        annotator1 = aAnnotator1;
+        annotator2 = aAnnotator2;
     }
 
-    public String getCssClass()
+    public String getAnnotator1()
     {
-        return cssClass;
+        return annotator1;
+    }
+
+    public String getAnnotator2()
+    {
+        return annotator2;
     }
 }

@@ -124,11 +124,11 @@ public class XHtmlXmlDocumentViewControllerImpl
             @RequestParam("editor") Optional<String> aEditor, Principal principal)
         throws Exception
     {
-        SourceDocument doc = documentService.getSourceDocument(aProjectId, aDocumentId);
+        var doc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
-        CAS cas = documentService.createOrReadInitialCas(doc);
+        var cas = documentService.createOrReadInitialCas(doc);
 
-        try (StringWriter out = new StringWriter()) {
+        try (var out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;
             if (cas.getTypeSystem().getType(XmlDocument._TypeName) != null) {
                 maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
@@ -144,14 +144,16 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             var rawHandler = XmlCas2SaxEvents.makeSerializer(out);
             var sanitizingHandler = applySanitizers(aEditor, doc, rawHandler);
+            var resourceFilteringHandler = applyHtmlResourceUrlFilter(doc, sanitizingHandler);
+            var finalHandler = resourceFilteringHandler;
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
-                XmlDocument xml = maybeXmlDocument.get();
+                var xml = maybeXmlDocument.get();
                 startXHtmlDocument(rawHandler);
 
-                var serializer = new XmlCas2SaxEvents(xml, sanitizingHandler);
+                var serializer = new XmlCas2SaxEvents(xml, finalHandler);
                 serializer.process(xml.getRoot());
 
                 endXHtmlDocument(rawHandler);
@@ -168,21 +170,21 @@ public class XHtmlXmlDocumentViewControllerImpl
             if (maybeXmlDocument.isEmpty()) {
                 // Gracefully handle the case that the CAS does not contain any XML structure at all
                 // and show only the document text in this case.
-                renderTextContent(cas, sanitizingHandler);
+                renderTextContent(cas, finalHandler);
             }
             else {
                 var formatPolicy = formatRegistry.getFormatPolicy(doc);
                 var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
 
                 if (defaultNamespace.isPresent()) {
-                    sanitizingHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
+                    finalHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
                             defaultNamespace.get());
                 }
 
-                renderXmlContent(doc, sanitizingHandler, aEditor, maybeXmlDocument.get());
+                renderXmlContent(doc, finalHandler, aEditor, maybeXmlDocument.get());
 
                 if (defaultNamespace.isPresent()) {
-                    sanitizingHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
+                    finalHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
                 }
             }
             rawHandler.endElement(null, null, BODY);
@@ -261,7 +263,7 @@ public class XHtmlXmlDocumentViewControllerImpl
         var srcDoc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
         var maybeFormatSupport = formatRegistry.getFormatById(srcDoc.getFormat());
-        if (!maybeFormatSupport.isPresent()) {
+        if (maybeFormatSupport.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
@@ -269,17 +271,23 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         var formatSupport = maybeFormatSupport.get();
 
+        if (!formatSupport.hasResources()
+                || !formatSupport.isAccessibleResource(srcDocFile, aResourceId)) {
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+
         try {
             var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var httpHeaders = new HttpHeaders();
             return new ResponseEntity<>(new InputStreamResource(inputStream), httpHeaders, OK);
         }
         catch (FileNotFoundException e) {
-            LOG.error("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
             return ResponseEntity.notFound().build();
         }
         catch (Exception e) {
-            LOG.error("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
+            LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
         }
     }

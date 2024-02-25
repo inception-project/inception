@@ -23,9 +23,13 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -36,6 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatur
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
  * <p>
@@ -46,6 +51,9 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 public class MorphologicalFeaturesLayerInitializer
     implements LayerInitializer
 {
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "MorphologicalFeaturesLayerInitializer.svg");
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
@@ -58,6 +66,18 @@ public class MorphologicalFeaturesLayerInitializer
     public String getName()
     {
         return "Morphological analysis";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("morpholological-features-layer.description"));
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override

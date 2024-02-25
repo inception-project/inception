@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -44,6 +45,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
+import de.tudarmstadt.ukp.inception.recommendation.link.LinkSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
@@ -204,8 +206,7 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public SpanSuggestionSupport spanRecommendationSupport(
-            RecommendationService aRecommendationService,
+    public SpanSuggestionSupport spanSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
@@ -217,13 +218,23 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public RelationSuggestionSupport relationRecommendationSupport(
+    public RelationSuggestionSupport relationSuggestionSupport(
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
             AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
+                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public LinkSuggestionSupport linkSuggestionSupport(RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
+    {
+        return new LinkSuggestionSupport(aRecommendationService, aLearningRecordService,
                 aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
     }
 
@@ -236,6 +247,7 @@ public class RecommenderServiceAutoConfiguration
 
     @ConditionalOnWebApplication
     @Bean
+    @ConditionalOnExpression("${websocket.enabled:true} and ${bulk-processing.enabled:false}")
     public BulkProcessingPageMenuItem bulkProcessingPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, ServletContext aServletContext)
     {

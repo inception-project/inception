@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.buildSparqlRepository;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.buildSparqlRepository;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.Scenario;
 
 @Disabled("Tests do not seem to run with Jakarta atm - needs investigation")
 public class FusekiRepositoryTest
@@ -83,7 +83,7 @@ public class FusekiRepositoryTest
         kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
         kb.setMaxResults(100);
 
-        SPARQLQueryBuilderTest.initRdfsMapping(kb);
+        SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
 
         repository = buildSparqlRepository(
                 "http://localhost:" + fusekiServer.getPort() + "/fuseki");
@@ -111,7 +111,7 @@ public class FusekiRepositoryTest
                 // This test returns one match term less than in the RDF4J case - not clear why
                 "thatMatchingAgainstAdditionalSearchPropertiesWorks2");
 
-        return SPARQLQueryBuilderTest.tests().stream() //
+        return SPARQLQueryBuilderLocalTestScenarios.tests().stream() //
                 .filter(scenario -> !exclusions.contains(scenario.name))
                 .map(scenario -> Arguments.of(scenario.name, scenario))
                 .collect(Collectors.toList());

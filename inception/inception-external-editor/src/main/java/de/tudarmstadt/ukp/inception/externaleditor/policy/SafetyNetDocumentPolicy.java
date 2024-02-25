@@ -35,6 +35,10 @@ public class SafetyNetDocumentPolicy
 {
     static final String SAFETY_NET_POLICY_OVERRIDE_YAML = "safety-net.yaml";
 
+    private static final String[] JAVASCRIPT_ACTIVE_ATTRIBUTES = { "href", "src", "codebase",
+            "cite", "background", "action", "longdesc", "profile", "classid", "data", "usemap",
+            "formaction", "icon", "manifest", "poster", "srcset", "archive" };
+
     private static final String[] JAVASCRIPT_EVENT_ATTRIBUTES = { "onafterprint", "onbeforeprint",
             "onbeforeunload", "onerror", "onhashchange", "onload", "onmessage", "onoffline",
             "ononline", "onpagehide", "onpageshow", "onpopstate", "onresize", "onstorage",
@@ -69,39 +73,58 @@ public class SafetyNetDocumentPolicy
 
     private PolicyCollection makeDefaultPolicy()
     {
-        var builder = PolicyCollectionBuilder //
+        var policy = PolicyCollectionBuilder //
                 .caseInsensitive() //
                 .defaultAttributeAction(AttributeAction.PASS) //
                 .defaultElementAction(ElementAction.PASS);
 
-        builder.disallowElements("script", "meta", "applet", "link", "iframe");
+        policy.disallowElements("script", "meta", "applet", "link", "iframe");
 
         if (properties.isBlockStyle()) {
-            builder.disallowElements("style");
-        }
-        if (properties.isBlockAudio()) {
-            builder.disallowElements("audio");
-        }
-        if (properties.isBlockEmbed()) {
-            builder.disallowElements("embed");
-        }
-        if (properties.isBlockImg()) {
-            builder.disallowElements("img");
-        }
-        if (properties.isBlockObject()) {
-            builder.disallowElements("object");
-        }
-        if (properties.isBlockVideo()) {
-            builder.disallowElements("video");
+            policy.disallowElements("style");
         }
 
-        builder.disallowAttributes("href", "src", "codebase", "cite", "background", "action",
-                "longdesc", "profile", "classid", "data", "usemap", "formaction", "icon",
-                "manifest", "poster", "srcset", "archive").matching(compile("\\s*javascript:.*"))
+        if (properties.isBlockAudio()) {
+            policy.disallowElements("audio");
+        }
+
+        if (properties.isBlockEmbed()) {
+            policy.disallowElements("embed");
+        }
+
+        if (properties.isBlockImg()) {
+            policy.disallowElements("img");
+        }
+        else {
+            switch (properties.getAllowImgSource()) {
+            case NONE:
+                policy.disallowAttributes("src").onElements("img");
+                break;
+            case LOCAL:
+                policy.disallowAttributes("src") //
+                        .matching(compile("(?!res[?]resId=).*")) //
+                        .onElements("img");
+                break;
+            case ANY:
+                // No restriction in this case
+                break;
+            }
+        }
+
+        if (properties.isBlockObject()) {
+            policy.disallowElements("object");
+        }
+
+        if (properties.isBlockVideo()) {
+            policy.disallowElements("video");
+        }
+
+        policy.disallowAttributes(JAVASCRIPT_ACTIVE_ATTRIBUTES) //
+                .matching(compile("\\s*javascript:.*")) //
                 .globally();
 
-        builder.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();
-        return builder.build();
+        policy.disallowAttributes(JAVASCRIPT_EVENT_ATTRIBUTES).globally();
+        return policy.build();
     }
 
     public PolicyCollection getPolicy() throws IOException

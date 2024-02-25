@@ -32,10 +32,9 @@ public class NotifyingTaskMonitor
 
     private MTaskStateUpdate lastUpdate;
 
-    public NotifyingTaskMonitor(TaskHandle aHandle, String aUser, String aTitle,
-            SimpMessagingTemplate aMsgTemplate)
+    public NotifyingTaskMonitor(TaskHandle aHandle, Task aTask, SimpMessagingTemplate aMsgTemplate)
     {
-        super(aHandle, aUser, aTitle);
+        super(aHandle, aTask);
         msgTemplate = aMsgTemplate;
     }
 

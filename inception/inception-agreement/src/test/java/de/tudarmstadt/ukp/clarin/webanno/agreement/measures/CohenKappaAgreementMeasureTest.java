@@ -23,22 +23,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CohenKappaAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
     private AgreementMeasureSupport<DefaultAgreementTraits, //
-            PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy> sut;
+            FullCodingAgreementResult, ICodingAnnotationStudy> sut;
     private DefaultAgreementTraits traits;
 
     @Override
@@ -56,11 +53,9 @@ public class CohenKappaAgreementMeasureTest
     {
         when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
 
-        var agreement = multiLinkWithRoleLabelDifferenceTest(sut);
+        var result = multiLinkWithRoleLabelDifferenceTest(sut);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        DiffResult diff = result.getDiff();
+        var diff = result.getDiff();
 
         diff.print(System.out);
 
@@ -74,11 +69,9 @@ public class CohenKappaAgreementMeasureTest
     @Test
     public void twoEmptyCasTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoEmptyCasTest(sut);
+        var result = twoEmptyCasTest(sut);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        DiffResult diff = result.getDiff();
+        var diff = result.getDiff();
 
         assertEquals(0, diff.size());
         assertEquals(0, diff.getDifferingConfigurationSets().size());
@@ -89,38 +82,25 @@ public class CohenKappaAgreementMeasureTest
     }
 
     @Test
-    public void singleNoDifferencesWithAdditionalCasTest() throws Exception
+    public void threeCasesWithAnnotationOnlyInThird() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = singleNoDifferencesWithAdditionalCasTest(
-                sut);
+        var result = threeCasesWithAnnotationOnlyInThird(sut);
 
-        CodingAgreementResult result1 = agreement.getStudy("user1", "user2");
-        assertEquals(0, result1.getTotalSetCount());
-        assertEquals(0, result1.getIrrelevantSets().size());
-        assertEquals(0, result1.getRelevantSetCount());
-
-        CodingAgreementResult result2 = agreement.getStudy("user1", "user3");
-        assertEquals(1, result2.getTotalSetCount());
-        assertEquals(0, result2.getIrrelevantSets().size());
-        assertEquals(1, result2.getRelevantSetCount());
-
-        assertEquals(NaN, agreement.getStudy("user1", "user2").getAgreement(), 0.01);
-        assertEquals(NaN, agreement.getStudy("user1", "user3").getAgreement(), 0.01);
-        assertEquals(NaN, agreement.getStudy("user2", "user3").getAgreement(), 0.01);
+        assertThat(result.getTotalSetCount()).isOne();
+        assertThat(result.getIrrelevantSets()).isEmpty();
+        assertThat(result.getRelevantSetCount()).isOne();
+        assertThat(result.getAgreement()).isNaN();
     }
 
     @Test
     public void twoWithoutLabelTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoWithoutLabelTest(sut,
-                traits);
-
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
+        var result = twoWithoutLabelTest(sut, traits);
 
         result.getDiff().print(System.out);
 
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
-        ICodingAnnotationItem item2 = result.getStudy().getItem(1);
+        var item1 = result.getStudy().getItem(0);
+        var item2 = result.getStudy().getItem(1);
         assertEquals("", item1.getUnit(0).getCategory());
         assertEquals("", item1.getUnit(1).getCategory());
         assertEquals("A", item2.getUnit(0).getCategory());
@@ -137,12 +117,9 @@ public class CohenKappaAgreementMeasureTest
     @Test
     public void fullSingleCategoryAgreementWithTagsetTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = fullSingleCategoryAgreementWithTagset(
-                sut, traits);
+        var result = fullSingleCategoryAgreementWithTagset(sut, traits);
 
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        ICodingAnnotationItem item1 = result.getStudy().getItem(0);
+        var item1 = result.getStudy().getItem(0);
         assertEquals("+", item1.getUnit(0).getCategory());
 
         assertEquals(1, result.getTotalSetCount());
@@ -152,16 +129,5 @@ public class CohenKappaAgreementMeasureTest
         assertEquals(0, result.getSetsWithDifferences().size());
         assertEquals(1, result.getRelevantSetCount());
         assertEquals(1.0, result.getAgreement(), 0.01);
-    }
-
-    @Test
-    public void twoDocumentsNoOverlapTest() throws Exception
-    {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = twoDocumentsNoOverlap(sut,
-                traits);
-
-        CodingAgreementResult result = agreement.getStudy("user1", "user2");
-
-        assertThat(result.getAgreement()).isNaN();
     }
 }

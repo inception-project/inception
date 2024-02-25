@@ -26,26 +26,25 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public enum SchemaProfile
 {
     RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT, OWL.DEPRECATED),
 
     WIKIDATASCHEMA("WIKIDATA", IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
             IriConstants.WIKIDATA_TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT, RDFS.LABEL,
-            IriConstants.WIKIDATA_PROPERTY_TYPE, RDFS.LABEL, RDFS.COMMENT),
+            IriConstants.WIKIDATA_PROPERTY_TYPE, RDFS.LABEL, RDFS.COMMENT, OWL.DEPRECATED),
 
     OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT, OWL.DEPRECATED),
 
     SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-            SKOS.PREF_LABEL, RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
+            SKOS.PREF_LABEL, RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT, OWL.DEPRECATED),
 
     CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
-            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT, OWL.DEPRECATED);
 
     private final String uiLabel;
     private final String classIri;
@@ -57,10 +56,11 @@ public enum SchemaProfile
     private final String propertyTypeIri;
     private final String propertyLabelIri;
     private final String propertyDescriptionIri;
+    private final String deprecationPropertyIri;
 
     private SchemaProfile(String aUiLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
             IRI aSubPropertyIri, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
-            IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
+            IRI aPropertyLabelIri, IRI aPropertyDescriptionIri, IRI aDeprecationPropertyIri)
     {
         uiLabel = aUiLabel;
         classIri = aClassIri.stringValue();
@@ -72,11 +72,13 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri.stringValue();
         propertyLabelIri = aPropertyLabelIri.stringValue();
         propertyDescriptionIri = aPropertyDescriptionIri.stringValue();
+        deprecationPropertyIri = aDeprecationPropertyIri.stringValue();
     }
 
     private SchemaProfile(String aUiLabel, String aClassIri, String aSubclassIri, String aTypeIri,
             String aSubPropertyIri, String aDescriptionIri, String aLabelIri,
-            String aPropertyTypeIri, String aPropertyLabelIri, String aPropertyDescriptionIri)
+            String aPropertyTypeIri, String aPropertyLabelIri, String aPropertyDescriptionIri,
+            String aDeprecationPropertyIri)
     {
         uiLabel = aUiLabel;
         classIri = aClassIri;
@@ -88,6 +90,7 @@ public enum SchemaProfile
         propertyTypeIri = aPropertyTypeIri;
         propertyLabelIri = aPropertyLabelIri;
         propertyDescriptionIri = aPropertyDescriptionIri;
+        deprecationPropertyIri = aDeprecationPropertyIri;
     }
 
     public String getUiLabel()
@@ -140,6 +143,11 @@ public enum SchemaProfile
         return propertyDescriptionIri;
     }
 
+    public String getDeprecationPropertyIri()
+    {
+        return deprecationPropertyIri;
+    }
+
     /**
      * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
      * 
@@ -149,14 +157,15 @@ public enum SchemaProfile
     @SuppressWarnings("javadoc")
     public static SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
     {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        KnowledgeBaseMapping mapping = aProfile.getMapping();
-        for (int i = 0; i < profiles.length; i++) {
+        var profiles = SchemaProfile.values();
+        var mapping = aProfile.getMapping();
+        for (var i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
                     mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
                     mapping.getLabelIri(), mapping.getPropertyTypeIri(),
-                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri())) {
+                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri(),
+                    mapping.getDeprecationPropertyIri())) {
                 return profiles[i];
             }
         }
@@ -174,13 +183,13 @@ public enum SchemaProfile
     @SuppressWarnings("javadoc")
     public static SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
     {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        for (int i = 0; i < profiles.length; i++) {
+        var profiles = SchemaProfile.values();
+        for (var i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
                     aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
                     aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
-                    aKb.getPropertyDescriptionIri())) {
+                    aKb.getPropertyDescriptionIri(), aKb.getDeprecationPropertyIri())) {
                 return profiles[i];
             }
         }
@@ -195,7 +204,7 @@ public enum SchemaProfile
     private static boolean equalsSchemaProfile(SchemaProfile profile, String classIri,
             String subclassIri, String typeIri, String subPropertyIri, String descriptionIri,
             String labelIri, String propertyTypeIri, String propertyLabelIri,
-            String propertyDescriptionIri)
+            String propertyDescriptionIri, String deprecationPropertyIri)
     {
         return Objects.equals(profile.getClassIri(), classIri)
                 && Objects.equals(profile.getSubclassIri(), subclassIri)
@@ -205,6 +214,7 @@ public enum SchemaProfile
                 && Objects.equals(profile.getLabelIri(), labelIri)
                 && Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri)
                 && Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri)
-                && Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
+                && Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri)
+                && Objects.equals(profile.getDeprecationPropertyIri(), deprecationPropertyIri);
     }
 }

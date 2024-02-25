@@ -24,14 +24,12 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Order(100)
 @Component
 public class DocumentHintDashletExtension
     implements ProjectDashboardDashletExtension
 {
-    private @SpringBean WorkloadManagementService workloadService;
     private @SpringBean ProjectAccess projectAccess;
 
     @Override
@@ -43,8 +41,7 @@ public class DocumentHintDashletExtension
     @Override
     public boolean accepts(Project aContext)
     {
-        return workloadService.getWorkloadManagerExtension(aContext)
-                .isDocumentRandomAccessAllowed(aContext);
+        return projectAccess.canManageProject(String.valueOf(aContext.getId()));
     }
 
     @Override

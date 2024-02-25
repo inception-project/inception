@@ -25,6 +25,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -51,6 +51,8 @@ import jakarta.persistence.NoResultException;
 public class TrainingTask
     extends RecommendationTask_ImplBase
 {
+    public static final String TYPE = "TrainingTask";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentService documentService;
@@ -64,33 +66,12 @@ public class TrainingTask
     private boolean seenSuccessfulTraining = false;
     private boolean seenNonTrainingRecommender = false;
 
-    /**
-     * Create a new training task.
-     * 
-     * @param aUser
-     *            the user owning the training session.
-     * @param aProject
-     *            the project to perform the selection on.
-     * @param aTrigger
-     *            the trigger that caused the selection to be scheduled.
-     * @param aCurrentDocument
-     *            the document currently open in the editor.
-     * @param aDataOwner
-     *            the user owning the annotations currently shown in the editor (this can differ
-     *            from the user owning the session e.g. if a manager views another users annotations
-     *            or a curator is performing curation to the {@link WebAnnoConst#CURATION_USER})
-     */
-    public TrainingTask(User aUser, Project aProject, String aTrigger,
-            SourceDocument aCurrentDocument, String aDataOwner)
+    public TrainingTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aUser, aProject, aTrigger);
+        super(aBuilder.withType(TYPE));
 
-        if (getUser().isEmpty()) {
-            throw new IllegalArgumentException("TrainingTask requires a user");
-        }
-
-        currentDocument = aCurrentDocument;
-        dataOwner = aDataOwner;
+        currentDocument = aBuilder.currentDocument;
+        dataOwner = aBuilder.dataOwner;
     }
 
     @Override
@@ -251,8 +232,12 @@ public class TrainingTask
 
     private void schedulePredictionTask()
     {
-        var predictionTask = new PredictionTask(getSessionOwner(),
-                String.format("TrainingTask %s complete", getId()), currentDocument, dataOwner);
+        var predictionTask = PredictionTask.builder() //
+                .withSessionOwner(getSessionOwner()) //
+                .withTrigger(String.format("TrainingTask %s complete", getId())) //
+                .withCurrentDocument(currentDocument) //
+                .withDataOwner(dataOwner) //
+                .build();
 
         predictionTask.inheritLog(this);
 
@@ -417,5 +402,49 @@ public class TrainingTask
                 .builder(this, getProject(), getSessionOwner().getUsername()) //
                 .withMessage(LogMessage.error(this, "Training failed with %s", e.getMessage()))
                 .build());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends RecommendationTask_ImplBase.Builder<T>
+    {
+        private SourceDocument currentDocument;
+        private String dataOwner;
+
+        /**
+         * @param aCurrentDocuemnt
+         *            the document currently open in the editor of the user triggering the task.
+         */
+        @SuppressWarnings("unchecked")
+        public T withCurrentDocument(SourceDocument aCurrentDocuemnt)
+        {
+            currentDocument = aCurrentDocuemnt;
+            return (T) this;
+        }
+
+        /**
+         * @param aDataOwner
+         *            the user owning the annotations currently shown in the editor (this can differ
+         *            from the user owning the session e.g. if a manager views another users
+         *            annotations or a curator is performing curation to the
+         *            {@link WebAnnoConst#CURATION_USER})
+         */
+        @SuppressWarnings("unchecked")
+        public T withDataOwner(String aDataOwner)
+        {
+            dataOwner = aDataOwner;
+            return (T) this;
+        }
+
+        public TrainingTask build()
+        {
+            Validate.notNull(sessionOwner, "TrainingTask requires a user");
+
+            return new TrainingTask(this);
+        }
     }
 }

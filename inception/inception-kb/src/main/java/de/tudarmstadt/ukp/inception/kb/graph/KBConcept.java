@@ -39,6 +39,7 @@ public class KBConcept
     private String identifier;
     private String name;
     private String description;
+    private boolean deprecated;
     private KnowledgeBase kb;
     private String language;
 
@@ -164,6 +165,17 @@ public class KBConcept
     public void setDescription(String aDescription)
     {
         description = aDescription;
+    }
+
+    public void setDeprecated(boolean aDeprecated)
+    {
+        deprecated = aDeprecated;
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return deprecated;
     }
 
     @Override

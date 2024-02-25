@@ -46,6 +46,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,7 +63,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -95,6 +95,11 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import org.semanticweb.owlapi.rio.OWLAPIRDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -137,6 +142,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
@@ -338,7 +344,7 @@ public class KnowledgeBaseServiceImpl
             var readOnly = aKB.isReadOnly();
             aKB.setReadOnly(false);
             try {
-                ValueFactory vf = SimpleValueFactory.getInstance();
+                var vf = SimpleValueFactory.getInstance();
 
                 createBaseProperty(aKB, new KBProperty(aKB.getSubclassIri(),
                         vf.createIRI(aKB.getSubclassIri()).getLocalName()));
@@ -630,18 +636,64 @@ public class KnowledgeBaseServiceImpl
             LOG.debug("Stream is not compressed, continue as is.");
         }
 
-        // Detect the file format
-        var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
+        PipedStreamResource resource = null;
+        try {
+            // Detect the file format
+            var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-        // Load files into the repository
-        try (var conn = getConnection(kb)) {
-            conn.setIsolationLevel(IsolationLevels.NONE);
-            // If the RDF file contains relative URLs, then they probably start with a hash.
-            // To avoid having two hashes here, we drop the hash from the base prefix configured
-            // by the user.
-            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
-            conn.add(is, prefix, format);
+            String lowerCaseFilename = aFilename.toLowerCase(Locale.ROOT);
+            if (lowerCaseFilename.endsWith(".obo") || lowerCaseFilename.endsWith(".obo.gz")) {
+                try {
+                    resource = transduceOboToOwlFunctionalSyntax(is);
+                    is = resource.getInputStream();
+                    format = OWLAPIRDFFormat.OWL_FUNCTIONAL;
+                }
+                catch (Exception e) {
+                    throw new IOException(e);
+                }
+            }
+
+            // Load files into the repository
+            try (var conn = getConnection(kb)) {
+                conn.setIsolationLevel(IsolationLevels.NONE);
+                // If the RDF file contains relative URLs, then they probably start with a hash.
+                // To avoid having two hashes here, we drop the hash from the base prefix configured
+                // by the user.
+                String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+                conn.add(is, prefix, format);
+            }
         }
+        finally {
+            if (resource != null) {
+                resource.close();
+            }
+        }
+    }
+
+    private PipedStreamResource transduceOboToOwlFunctionalSyntax(InputStream aIs)
+        throws OWLOntologyCreationException
+    {
+        var manager = OWLManager.createOWLOntologyManager();
+
+        // // Does not seem to work for imports in OBO files....
+        // var iriMappers = manager.getIRIMappers();
+        // iriMappers.add(
+        // new AutoIRIMapper(new File(kbRepositoriesRoot, "materializedOntologies"), true));
+        // manager.getOntologyLoaderConfiguration()
+        // .setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+        // manager.getOntologyConfigurator()
+        // .setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+
+        var ontology = manager.loadOntologyFromOntologyDocument(aIs);
+
+        return new PipedStreamResource(os -> {
+            try {
+                manager.saveOntology(ontology, new FunctionalSyntaxDocumentFormat(), os);
+            }
+            catch (OWLOntologyStorageException e) {
+                LOG.error("Unable to stream OBO file to OWL Functional Syntax", e);
+            }
+        });
     }
 
     @Override
@@ -666,24 +718,25 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public boolean isEmpty(KnowledgeBase kb)
+    public boolean isEmpty(KnowledgeBase aKB)
     {
-        try (var conn = getConnection(kb)) {
+        try (var conn = getConnection(aKB)) {
             return conn.isEmpty();
         }
     }
 
     @Override
-    public void createConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void createConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
         if (isNotEmpty(aConcept.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            var identifier = getReificationStrategy(aKB).generateConceptIdentifier(conn, aKB);
             aConcept.setIdentifier(identifier);
-            aConcept.write(conn, kb);
+            aConcept.setKB(aKB);
+            aConcept.write(conn, aKB);
         });
     }
 
@@ -696,7 +749,8 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .excludeInferred() //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -750,6 +804,7 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .excludeInferred();
 
             List<KBHandle> result;
@@ -765,16 +820,17 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void createProperty(KnowledgeBase kb, KBProperty aProperty)
+    public void createProperty(KnowledgeBase aKB, KBProperty aProperty)
     {
         if (isNotEmpty(aProperty.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            String identifier = getReificationStrategy(aKB).generatePropertyIdentifier(conn, aKB);
             aProperty.setIdentifier(identifier);
-            aProperty.write(conn, kb);
+            aProperty.setKB(aKB);
+            aProperty.write(conn, aKB);
         });
     }
 
@@ -786,7 +842,7 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
-                    .retrieveDomainAndRange() //
+                    .retrieveDeprecation().retrieveDomainAndRange() //
                     .excludeInferred();
 
             Optional<KBHandle> result;
@@ -835,6 +891,7 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forProperties(aKB) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .includeInferred(aIncludeInferred);
 
@@ -851,16 +908,17 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void createInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void createInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
         if (isNotEmpty(aInstance.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        update(kb, (conn) -> {
-            String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
+        update(aKB, (conn) -> {
+            String identifier = getReificationStrategy(aKB).generateInstanceIdentifier(conn, aKB);
             aInstance.setIdentifier(identifier);
-            aInstance.write(conn, kb);
+            aInstance.setKB(aKB);
+            aInstance.write(conn, aKB);
         });
     }
 
@@ -873,7 +931,7 @@ public class KnowledgeBaseServiceImpl
                     .withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
-                    .excludeInferred();
+                    .retrieveDeprecation().excludeInferred();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -926,7 +984,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forInstances(aKB) //
                     .childrenOf(aConceptIri) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1034,6 +1093,7 @@ public class KnowledgeBaseServiceImpl
                     .matchingDomain(aDomain) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
                     .includeInferred(aIncludeInferred);
 
@@ -1056,7 +1116,8 @@ public class KnowledgeBaseServiceImpl
     {
         try (var watch = new StopWatch(LOG, "listRootConcepts()")) {
             var query = SPARQLQueryBuilder.forClasses(aKB).roots().retrieveLabel()
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1095,7 +1156,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .parentsOf(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1117,7 +1179,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forClasses(aKB) //
                     .ancestorsOf(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1141,6 +1204,7 @@ public class KnowledgeBaseServiceImpl
                     .childrenOf(aParentIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
+                    .retrieveDeprecation() //
                     .limit(aLimit);
 
             List<KBHandle> result;
@@ -1264,7 +1328,8 @@ public class KnowledgeBaseServiceImpl
             var query = SPARQLQueryBuilder.forItems(aKB) //
                     .withIdentifier(aIdentifier) //
                     .retrieveLabel() //
-                    .retrieveDescription();
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {

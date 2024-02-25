@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
@@ -47,7 +46,6 @@ import org.slf4j.Logger;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -108,24 +106,24 @@ public class ProjectTemplateSelectionDialogPanel
         return projectService.listProjectInitializers().stream()
                 .filter(initializer -> initializer instanceof QuickProjectInitializer)
                 .map(initializer -> (QuickProjectInitializer) initializer) //
-                .collect(toList());
+                .toList();
     }
 
     private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
     {
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
         aTarget.addChildren(getPage(), IFeedback.class);
-        String projectSlug = projectService.deriveSlugFromName(user.getUsername());
+        var projectSlug = projectService.deriveSlugFromName(user.getUsername());
         projectSlug = projectService.deriveUniqueSlug(projectSlug);
 
         try {
-            Project project = new Project(projectSlug);
+            var project = new Project(projectSlug);
             project.setName(user.getUsername() + " - New project");
             projectService.createProject(project);
             projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
             projectService.initializeProject(project, asList(aInitializer));
 
-            PageParameters pageParameters = new PageParameters();
+            var pageParameters = new PageParameters();
             ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }

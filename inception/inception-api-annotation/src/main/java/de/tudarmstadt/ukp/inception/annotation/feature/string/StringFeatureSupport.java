@@ -233,9 +233,9 @@ public class StringFeatureSupport
     @Override
     public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        if (aValue instanceof String) {
-            var value = (String) aValue;
+        if (aValue instanceof String value) {
             var tag = schemaService.getTag(value, aFeature.getTagset());
+
             if (isNotBlank(value) && aFeature.getTagset() != null && tag.isEmpty()) {
                 return asList(new VLazyDetailGroup(new VLazyDetail(value, "Tag not in tagset")));
             }

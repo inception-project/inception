@@ -45,6 +45,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -92,7 +93,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     @BeforeEach
     public void setUp()
     {
-        RepositoryProperties repoProps = new RepositoryProperties();
+        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();

@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
@@ -185,7 +186,7 @@ public class MtasUpgradeTest
         @Bean
         RepositoryProperties repositoryProperties()
         {
-            var props = new RepositoryProperties();
+            var props = new RepositoryPropertiesImpl();
             props.setPath(new File(WORK_DIR));
             return props;
         }

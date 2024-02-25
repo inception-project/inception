@@ -15,22 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
+package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import java.util.List;
-
-import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
-
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
-
-public class UnitizingAgreementResult
-    extends AgreementResult<IUnitizingAnnotationStudy>
+public interface FtsAdapter
+    extends SPARQLVariables
 {
-    private static final long serialVersionUID = 2092691057728349705L;
+    void withLabelMatchingExactlyAnyOf(String... values);
 
-    public UnitizingAgreementResult(String aType, String aFeature, IUnitizingAnnotationStudy aStudy,
-            List<String> aCasGroupIds, boolean aExcludeIncomplete)
-    {
-        super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
-    }
+    void withLabelContainingAnyOf(String... values);
+
+    void withLabelMatchingAnyOf(String... values);
+
+    void withLabelStartingWith(String prefix);
 }

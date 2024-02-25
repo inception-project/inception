@@ -51,6 +51,7 @@
     </div>
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="far fa-dot-circle text-muted"></i>
         <wicket:message key="kb.iri.classIri"/>
       </label>
       <div class="col-sm-9">
@@ -60,6 +61,7 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="fas fa-sitemap text-muted"></i>
         <wicket:message key="kb.iri.subclassIri"/>
       </label>
       <div class="col-sm-9">
@@ -69,6 +71,7 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="fas fa-long-arrow-alt-right text-muted"></i>
         <wicket:message key="kb.iri.typeIri"/>
       </label>
       <div class="col-sm-9">
@@ -78,19 +81,21 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
-        <wicket:message key="kb.iri.descriptionIri"/>
+        <i class="fas fa-tag text-muted"></i>
+        <wicket:message key="kb.iri.labelIri"/>
       </label>
       <div class="col-sm-9">
-        <input wicket:id="descriptionIri"/>
+        <input wicket:id="labelIri"/>
       </div>
     </div>
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
-        <wicket:message key="kb.iri.labelIri"/>
+        <i class="far fa-comment-alt text-muted"></i>
+        <wicket:message key="kb.iri.descriptionIri"/>
       </label>
       <div class="col-sm-9">
-        <input wicket:id="labelIri"/>
+        <input wicket:id="descriptionIri"/>
       </div>
     </div>
 
@@ -101,6 +106,7 @@
     </div>
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="fas fa-dot-circle text-muted"></i>
         <wicket:message key="kb.iri.propertyTypeIri"/>
       </label>
       <div class="col-sm-9">
@@ -110,6 +116,7 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="fas fa-sitemap text-muted"></i>
         <wicket:message key="kb.iri.subPropertyIri"/>
       </label>
       <div class="col-sm-9">
@@ -119,6 +126,7 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="fas fa-tag text-muted"></i>
         <wicket:message key="kb.iri.propertyLabelIri"/>
       </label>
       <div class="col-sm-9">
@@ -128,10 +136,21 @@
 
     <div class="row form-row">
       <label class="col-form-label col-sm-3">
+        <i class="far fa-comment-alt text-muted"></i>
         <wicket:message key="kb.iri.propertyDescriptionIri"/>
       </label>
       <div class="col-sm-9">
         <input wicket:id="propertyDescriptionIri"/>
+      </div>
+    </div>
+    
+    <div class="row form-row">
+      <label class="col-form-label col-sm-3">
+        <i class="fas fa-ban text-muted"></i>
+        <wicket:message key="kb.iri.deprecationPropertyIri"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="deprecationPropertyIri"/>
       </div>
     </div>
   </div>

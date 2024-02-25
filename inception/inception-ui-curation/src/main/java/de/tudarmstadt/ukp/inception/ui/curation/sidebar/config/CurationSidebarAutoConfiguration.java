@@ -26,6 +26,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -62,11 +63,12 @@ public class CurationSidebarAutoConfiguration
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
             CurationSidebarService aCurationSidebarService,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+            FeatureSupportRegistry aFeatureSupportRegistry,
+            LazyDetailsLookupService aDetailsLookupService)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
                 aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
-                aFeatureSupportRegistry);
+                aFeatureSupportRegistry, aDetailsLookupService);
     }
 
     @Bean("curationSidebar")

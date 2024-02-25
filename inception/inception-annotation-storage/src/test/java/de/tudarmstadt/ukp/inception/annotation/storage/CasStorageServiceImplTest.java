@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -105,7 +106,7 @@ public class CasStorageServiceImplTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
-        repositoryProperties = new RepositoryProperties();
+        repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());

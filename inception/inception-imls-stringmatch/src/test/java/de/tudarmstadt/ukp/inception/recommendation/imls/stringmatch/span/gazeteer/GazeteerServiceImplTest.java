@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
@@ -89,7 +90,7 @@ public class GazeteerServiceImplTest
     {
         EntityManager em = testEntityManager.getEntityManager();
 
-        RepositoryProperties repoProps = new RepositoryProperties();
+        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repoProps.getPath().toString());
 

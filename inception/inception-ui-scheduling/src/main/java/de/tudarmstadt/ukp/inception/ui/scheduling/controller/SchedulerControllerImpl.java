@@ -56,4 +56,16 @@ public class SchedulerControllerImpl
         schedulingService.stopAllTasksMatching(
                 t -> t.getId() == aTaskId && t.getUser().filter(user::equals).isPresent());
     }
+
+    @PostMapping(//
+            value = TASKS + "/{" + PARAM_TASK_ID + "}/" + ACKNOWLEDGE, //
+            consumes = { ALL_VALUE }, //
+            produces = APPLICATION_JSON_VALUE)
+    public void acknowledgeResult(@PathVariable(PARAM_TASK_ID) int aTaskId)
+    {
+        var user = userService.getCurrentUser();
+
+        schedulingService.stopAllTasksMatching(
+                t -> t.getId() == aTaskId && t.getUser().filter(user::equals).isPresent());
+    }
 }

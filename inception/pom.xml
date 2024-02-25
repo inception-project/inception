@@ -22,7 +22,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>31.0-SNAPSHOT</version>
+    <version>32.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -44,14 +44,14 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bom</artifactId>
-        <version>31.0-SNAPSHOT</version>
+        <version>32.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>31.0-SNAPSHOT</version>
+        <version>32.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -213,6 +213,7 @@
     <module>inception-schema</module>
     <!-- IO -->
     <module>inception-io-bioc</module>
+    <module>inception-io-brat</module>
     <module>inception-io-conll</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>

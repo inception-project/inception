@@ -35,13 +35,15 @@ import jakarta.persistence.PersistenceContext;
 public class UpdateProjectStateTask
     extends DebouncingTask
 {
+    public static final String TYPE = "UpdateProjectStateTask";
+
     private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
 
-    public UpdateProjectStateTask(Project aProject, String aTrigger)
+    public UpdateProjectStateTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aProject, aTrigger, ofSeconds(3));
+        super(aBuilder.withType(TYPE));
     }
 
     @Override
@@ -86,5 +88,24 @@ public class UpdateProjectStateTask
     public int hashCode()
     {
         return Objects.hash(getProject());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends DebouncingTask.Builder<T>
+    {
+        protected Builder()
+        {
+            withDebounceMillis(ofSeconds(3));
+        }
+
+        public UpdateProjectStateTask build()
+        {
+            return new UpdateProjectStateTask(this);
+        }
     }
 }

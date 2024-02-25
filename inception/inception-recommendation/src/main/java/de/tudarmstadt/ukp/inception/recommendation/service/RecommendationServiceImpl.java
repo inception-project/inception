@@ -500,8 +500,11 @@ public class RecommendationServiceImpl
         var trigger = aEvent.getClass().getSimpleName();
         if (!predictionSessionExistedOnOpen) {
             // Activate all non-trainable recommenders - execute synchronously - blocking
-            schedulingService.executeSync(
-                    new NonTrainableRecommenderActivationTask(sessionOwner, project, trigger));
+            schedulingService.executeSync(NonTrainableRecommenderActivationTask.builder() //
+                    .withSessionOwner(sessionOwner) //
+                    .withProject(project) //
+                    .withTrigger(trigger) //
+                    .build());
         }
 
         // Check if we need to wait for the initial recommender run before displaying the document
@@ -555,7 +558,12 @@ public class RecommendationServiceImpl
         }
 
         LOG.trace("Running sync prediction for non-trainable recommenders");
-        schedulingService.executeSync(new PredictionTask(aSessionOwner, trigger, doc, aDataOwner));
+        schedulingService.executeSync(PredictionTask.builder() //
+                .withSessionOwner(aSessionOwner) //
+                .withTrigger(trigger) //
+                .withCurrentDocument(doc) //
+                .withDataOwner(aDataOwner) //
+                .build());
         switchPredictions(aSessionOwner.getUsername(), doc.getProject());
 
         return true;
@@ -794,7 +802,12 @@ public class RecommendationServiceImpl
             return;
         }
 
-        schedulingService.enqueue(new PredictionTask(user, aEventName, aDocument, aDataOwner));
+        schedulingService.enqueue(PredictionTask.builder() //
+                .withSessionOwner(user) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
     }
 
     @Override
@@ -838,8 +851,13 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            schedulingService.enqueue(
-                    new SelectionTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
+            schedulingService.enqueue(SelectionTask.builder() //
+                    .withSessionOwner(user) //
+                    .withProject(aProject) //
+                    .withTrigger(aEventName) //
+                    .withCurrentDocument(aCurrentDocument) //
+                    .withDataOwner(aDataOwner) //
+                    .build());
 
             var state = getState(aSessionOwner, aProject);
             synchronized (state) {
@@ -850,8 +868,13 @@ public class RecommendationServiceImpl
             return;
         }
 
-        schedulingService.enqueue(
-                new TrainingTask(user, aProject, aEventName, aCurrentDocument, aDataOwner));
+        schedulingService.enqueue(TrainingTask.builder() //
+                .withSessionOwner(user) //
+                .withProject(aProject) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aCurrentDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
 
         var state = getState(aSessionOwner, aProject);
         synchronized (state) {
@@ -1375,9 +1398,18 @@ public class RecommendationServiceImpl
             records.add(0, aRecord);
         }
 
-        public List<LearningRecord> listLearningRecords(AnnotationLayer aLayer)
+        public List<LearningRecord> listLearningRecords(String aDataOwner, AnnotationLayer aLayer)
         {
-            return learningRecords.getOrDefault(aLayer, Collections.emptyList());
+            return learningRecords.computeIfAbsent(aLayer,
+                    $ -> RecommendationServiceImpl.this.loadLearningRecords(aDataOwner, aLayer, 0));
+        }
+
+        public void removeLearningRecords(String aDataOwner, SourceDocument aDocument)
+        {
+            for (var records : learningRecords.values()) {
+                records.removeIf(r -> Objects.equals(r.getUser(), aDataOwner) && //
+                        Objects.equals(r.getSourceDocument(), aDocument));
+            }
         }
 
         public void removeLearningRecords(LearningRecord aRecord)
@@ -1642,7 +1674,7 @@ public class RecommendationServiceImpl
     {
         var state = getState(aSessionOwner, aDocument.getProject());
         synchronized (state) {
-            return state.listLearningRecords(aFeature.getLayer()).stream()
+            return state.listLearningRecords(aDataOwner, aFeature.getLayer()).stream()
                     .filter(r -> Objects.equals(r.getAnnotationFeature(), aFeature)
                             && Objects.equals(r.getSourceDocument(), aDocument)
                             && Objects.equals(r.getUser(), aDataOwner)
@@ -1658,7 +1690,7 @@ public class RecommendationServiceImpl
     {
         var state = getState(aSessionOwner, aLayer.getProject());
         synchronized (state) {
-            var stream = state.listLearningRecords(aLayer).stream()
+            var stream = state.listLearningRecords(aDataOwner, aLayer).stream()
                     .filter(r -> Objects.equals(r.getUser(), aDataOwner)
                             && r.getUserAction() != LearningRecordUserAction.SHOWN);
             if (aLimit > 0) {
@@ -1708,22 +1740,32 @@ public class RecommendationServiceImpl
         entityManager.flush();
     }
 
-    private void deleteLearningRecords(SourceDocument document, String user)
+    private void deleteLearningRecords(SourceDocument aDocument, String aDataOwner)
     {
-        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
+        var state = getState(aDataOwner, aDocument.getProject());
+        synchronized (state) {
+            state.removeLearningRecords(aDataOwner, aDocument);
+        }
+
+        var sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
                 + "= :user";
         entityManager.createQuery(sql) //
-                .setParameter("document", document) //
-                .setParameter("user", user) //
+                .setParameter("document", aDocument) //
+                .setParameter("user", aDataOwner) //
                 .executeUpdate();
     }
 
     @Override
     @Transactional
-    public void deleteLearningRecord(LearningRecord learningRecord)
+    public void deleteLearningRecord(LearningRecord aRecord)
     {
-        entityManager.remove(entityManager.contains(learningRecord) ? learningRecord
-                : entityManager.merge(learningRecord));
+        var state = getState(aRecord.getUser(), aRecord.getLayer().getProject());
+        synchronized (state) {
+            state.removeLearningRecords(aRecord);
+        }
+
+        entityManager
+                .remove(entityManager.contains(aRecord) ? aRecord : entityManager.merge(aRecord));
     }
 
     @Override

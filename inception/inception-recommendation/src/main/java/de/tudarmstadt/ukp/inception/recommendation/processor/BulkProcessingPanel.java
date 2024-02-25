@@ -74,14 +74,18 @@ public class BulkProcessingPanel
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing));
 
         queue(new TaskMonitorPanel("runningProcesses").setPopupMode(false)
-                .setKeepRemovedTasks(true));
+                .setShowFinishedTasks(true));
     }
 
     private void actionStartProcessing(AjaxRequestTarget aTarget, Form<FormData> aForm)
     {
         var formData = aForm.getModelObject();
-        schedulingService.enqueue(new BulkPredictionTask(userService.getCurrentUser(),
-                formData.recommender, "User request", formData.user.getUsername()));
+        schedulingService.enqueue(BulkPredictionTask.builder() //
+                .withSessionOwner(userService.getCurrentUser()) //
+                .withRecommender(formData.recommender) //
+                .withTrigger("User request") //
+                .withDataOwner(formData.user.getUsername()) //
+                .build());
     }
 
     private List<User> listUsers()

@@ -96,8 +96,15 @@ public class ConceptFeatureSupport
             return Optional.empty();
         }
 
-        return Optional.of(new FeatureType(aFeature.getType(),
-                aFeature.getType().substring(PREFIX.length()), featureSupportId));
+        var traits = readTraits(aFeature);
+        traits.getAllowedValueType();
+
+        var uiName = "KB: " + traits.getAllowedValueType();
+        if (!TYPE_ANY_OBJECT.equals(aFeature.getType())) {
+            uiName += " (" + aFeature.getType().substring(PREFIX.length()) + ")";
+        }
+
+        return Optional.of(new FeatureType(aFeature.getType(), uiName, featureSupportId));
     }
 
     @Override
@@ -168,7 +175,8 @@ public class ConceptFeatureSupport
             String identifier = (String) aValue;
             ConceptFeatureTraits traits = readTraits(aFeature);
             KBHandle chbk = getConceptHandle(aFeature, identifier, traits);
-            var clone = new KBHandle(identifier, chbk.getUiLabel(), chbk.getDescription());
+            // Clone the cached original so we can override the KB
+            var clone = new KBHandle(chbk);
             clone.setKB(chbk.getKB());
             return clone;
         }

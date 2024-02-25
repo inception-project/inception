@@ -863,10 +863,7 @@ public class ActiveLearningSidebar
 
     private Form<?> createLearningHistory()
     {
-        Form<?> learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM)
-        {
-            private static final long serialVersionUID = -961690443085882064L;
-        };
+        var learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM);
         learningHistoryForm.add(LambdaBehavior.onConfigure(
                 component -> component.setVisible(alStateModel.getObject().isSessionActive())));
         learningHistoryForm.setOutputMarkupPlaceholderTag(true);
@@ -878,8 +875,7 @@ public class ActiveLearningSidebar
 
     private ListView<LearningRecord> createLearningHistoryListView()
     {
-        ListView<LearningRecord> learningHistory = new ListView<LearningRecord>(
-                CID_HISTORY_LISTVIEW)
+        var learningHistory = new ListView<LearningRecord>(CID_HISTORY_LISTVIEW)
         {
             private static final long serialVersionUID = 5594228545985423567L;
 
@@ -1385,7 +1381,7 @@ public class ActiveLearningSidebar
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
         // If active learning is not active, update the sidebar in case the session auto-terminated
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (!alState.isSessionActive()) {
             aEvent.getRequestTarget().ifPresent(target -> target.add(alMainContainer));
             return;

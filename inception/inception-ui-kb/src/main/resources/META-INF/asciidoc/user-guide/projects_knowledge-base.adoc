@@ -80,10 +80,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 [source,turtle,role="small"]
 ----
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <http://my-kb/foo> 
-  rdf:type owl:Class.
+  rdf:type owl:Class .
 ----
 ====
 
@@ -97,10 +97,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 [source,turtle,role="small"]
 ----
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:subClassOf <http://my-bb/bar>.
+  rdfs:subClassOf <http://my-bb/bar> .
 ----
 ====
 
@@ -113,10 +113,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is an instance of `http://my-bb/bar`
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
-  rdf:type <http://my-bb/bar>.
+  rdf:type <http://my-bb/bar> .
 ----
 ====
 
@@ -129,11 +129,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a name
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:label "Foo".
+  rdfs:label "Foo" .
 ----
 ====
 
@@ -146,11 +145,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a description
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:comment "This entry describes a Foo".
+  rdfs:comment "This entry describes a Foo" .
 ----
 ====
 
@@ -163,11 +161,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is marked as being a property
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
-  rdf:type rdf:Property.
+  rdf:type rdf:Property .
 ----
 ====
 
@@ -180,8 +177,7 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` is a sub-property of `http://my-bb/bar`
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <http://my-kb/foo> 
   rdf:subPropertyOf <http://my-kb/bar> .
@@ -197,11 +193,10 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a name
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <http://my-kb/foo> 
-  rdfs:label "Foo".
+  rdfs:label "Foo" .
 ----
 ====
 
@@ -214,11 +209,25 @@ user can choose one of the pre-configured mapping or provide a custom mapping.
 .`http://my-kb/foo` has a description
 [source,turtle,role="small"]
 ----
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 
 <http://my-kb/foo> 
-  rdfs:comment "This entry describes a Foo".
+  rdfs:comment "This entry describes a Foo" .
+----
+====
+| Deprecation property IRI (property)
+| Description of the property. The marked item is not deprecated if the property value is `false` or `0`.
+| 
+`http://www.w3.org/2002/07/owl#deprecated`
+[%collapsible]
+====
+.`http://my-kb/foo` is deprecated
+[source,turtle,role="small"]
+----
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<http://my-kb/foo> 
+  owl:deprecated true .
 ----
 ====
 |====
@@ -235,7 +244,7 @@ NOTE: This setting currently affects **only class tree in the knowledge base bro
       subtree, use the **Scope** setting in the <<sect_concept_features,concept feature settings>>.
 
 
-=== Additional Matching Properties
+=== Additional Matching Properties (Synonyms)
 
 When searching for a concept e.g. in the annotation editor, by default the search terms are matched only against the concept name (label). There should only be one label for each concept
 (although there can be multiple label entries for a concept in the knowledge base, but theses
@@ -254,6 +263,7 @@ Full text search in knowledge bases enables searching for entities by their text
 
 * `http://www.openrdf.org/contrib/lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
 * `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
+* `http://www.bigdata.com/rdf/search#search`: use with remote link:https://blazegraph.com[Blazegraph] endpoints.
 * `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
 * `tag:stardog:api:search:textMatch`: use with link:https://www.stardog.com[Stardog].
 * `https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
@@ -317,14 +327,20 @@ KBs can be populated by importing RDF files. Several formats are supported. The 
 |====
 | Format | Extension
 
-| RDF
+| RDF (XML)
 | `.rdf`
 
-| RDF Schema
+| RDF Schema (XML)
 | `.rdfs`
 
-| OWL
+| OBO
+| `.obo`
+
+| OWL (XML)
 | `.owl`
+
+| OWL Functional Syntax
+| `.ofn`
 
 | N-Triples
 | `.nt`

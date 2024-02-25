@@ -22,13 +22,14 @@
     import { Client, Stomp, IFrame } from "@stomp/stompjs"
 
     export let csrfToken: string
-    export let endpointUrl: string // should this be full ws://... url
+    export let endpointUrl: string // should this be full http://... url
     export let wsEndpointUrl: string // should this be full ws://... url
     export let topicChannel: string
     export let tasks: MTaskStateUpdate[] = []
     export let connected = false
     export let popupMode = true
-    export let keepRemovedTasks = false
+    export let showFinishedTasks = true
+    export let typePattern: string = null
 
     let socket: WebSocket = null
     let stompClient: Client = null
@@ -58,12 +59,22 @@
                 "/app" + topicChannel + "/tasks",
                 function (msg) {
                     tasks = JSON.parse(msg.body) || []
+                    if (!showFinishedTasks) {
+                        tasks = tasks.filter((e, i) => e.state === 'NOT_STARTED' || e.state === 'RUNNING');
+                    }
                 }
             );
             stompClient.subscribe(
                 "/user/queue" + topicChannel + "/tasks",
                 function (msg) {
-                    var msgBody = JSON.parse(msg.body);
+                    var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
+
+                    console.log(msgBody)
+
+                    if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
+                        return;
+                    }
+
                     var index = tasks.findIndex(
                         (item) => item.id === msgBody.id
                     );
@@ -74,7 +85,7 @@
                     } else {
                         if (!msgBody.removed) {
                             tasks = tasks.map((e, i) => i !== index ? e : msgBody)
-                        } else if (!keepRemovedTasks) {
+                        } else {
                             tasks = tasks.filter((e, i) => i !== index);
                         }
                     }
@@ -112,6 +123,16 @@
         })
     }
 
+    function acknowledgeResult(item) {
+        console.log("Acknowledging task result " + item.id);
+        fetch(endpointUrl + "/tasks/" + item.id + "/acknowledge", {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            },
+            method: 'POST'
+        })
+    }
+
     onMount(async () => {
         connect();
     });
@@ -127,9 +148,13 @@
         <!-- svelte-ignore a11y-missing-attribute -->
         <a role="button" tabindex="0" title="Background tasks">
             {#if tasks?.find((t) => t.state === "RUNNING")}
-                Processing...
                 <div class="spinner-border spinner-border-sm" role="status" />
+                Processing...
+            {:else if tasks?.length > 0}
+                <i class="far fa-dot-circle"></i>
+                Idle
             {:else}
+                <i class="far fa-circle"></i>
                 Idle
             {/if}
         </a>
@@ -169,6 +194,7 @@
                             class="d-flex w-100 justify-content-between"
                         >
                             {item.title}
+                            <span class="d-flex">
                             {#if item.state === 'FAILED'}
                               <i class="text-danger fas fa-exclamation-triangle" />
                             {:else if item.state === 'CANCELLED'}
@@ -178,8 +204,13 @@
                             {:else if item.state === 'COMPLETED'}
                               <i class="text-success fas fa-check-circle"></i>
                             {/if}
+                            {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <i class="fas fa-times-circle ms-2 text-secondary" style="cursor: pointer;" on:click={() => acknowledgeResult(item)} />
+                            {/if}
+                            </span>
                         </div>
-                        {#if item.state === "RUNNING"}
+                        {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
                             <div class="d-flex flex-row">
                                 {#if item.maxProgress}
                                     <progress
@@ -190,7 +221,10 @@
                                 {:else}
                                     <progress class="flex-grow-1" />
                                 {/if}
-                                <i class="fas fa-times-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {#if item.cancellable && endpointUrl}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <i class="far fa-stop-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
+                                {/if}
                             </div>
                         {/if}
                         {#if item.latestMessage}

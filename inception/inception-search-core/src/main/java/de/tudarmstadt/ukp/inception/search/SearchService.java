@@ -166,5 +166,5 @@ public interface SearchService
             int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException;
 
-    void enqueueReindexTask(Project aProject, String aUser, String aTrigger);
+    void enqueueReindexTask(Project aProject, User aUser, String aTrigger);
 }

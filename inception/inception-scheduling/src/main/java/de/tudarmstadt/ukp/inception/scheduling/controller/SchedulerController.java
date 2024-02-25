@@ -23,6 +23,7 @@ public interface SchedulerController
 {
     String BASE_URL = BASE_API_URL + "/scheduler";
     String CANCEL = "cancel";
+    String ACKNOWLEDGE = "acknowledge";
     String TASKS = "/tasks";
     String PARAM_TASK_ID = "taskId";
 }

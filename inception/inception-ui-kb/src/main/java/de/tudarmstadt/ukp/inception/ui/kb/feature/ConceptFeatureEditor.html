@@ -22,25 +22,32 @@
   <div class="row form-row" wicket:enclosure="value">
     <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
-      <span class="float-end">
-        <span wicket:id="disabledKBWarning"/>
-      </span>
-      <a wicket:id="openIri" class="float-end" target="_blank">
+      <a wicket:id="openIri" class="float-end ms-2" target="_blank">
         <i class="fas fa-external-link-alt"/>
       </a>
+      <span class="float-end">
+        <span wicket:id="deprecationMarker" class="badge rounded-pill text-secondary border border-secondary">deprecated</span>
+        <span wicket:id="disabledKBWarning"/>
+      </span>
     </label>
     <div class="feature-editor-value">
-      <div class="input-group">
-        <div class="input-group-text">
-          <span wicket:id="iriInfoBadge"/>
-        </div>
-        <button wicket:id="openBrowseDialog" class="btn btn-outline-secondary" type="button">
-          <i class="fas fa-sitemap"/>
-        </button>
-        <input class="flex-content" wicket:id="value" type="text"/>
-      </div>
-      <div wicket:id="descriptionContainer" class="scrolling border border-top-0 rounded-bottom p-1" style="max-height: 4.5rem; word-wrap: break-word;" readonly>
-        <small class="text-muted" wicket:id="description"/>
+      <div class="list-group">
+        <ul class="list-group-item p-0 m-0">
+          <div class="input-group">
+            <div class="input-group-text border-0">
+              <span wicket:id="iriInfoBadge"/>
+            </div>
+            <button wicket:id="openBrowseDialog" class="btn btn-outline-secondary border-secondary-subtle border-top-0 border-bottom-0" type="button">
+              <i class="fas fa-sitemap"/>
+            </button>
+            <input class="flex-content border-0" wicket:id="value" type="text"/>
+          </div>
+        </ul>
+        <ul wicket:id="descriptionContainer" class="list-group-item p-0 m-0 overflow-hidden" readonly>
+          <div class="scrolling p-1 text-muted small" style="max-height: 4.5rem; word-wrap: break-word;">
+            <span wicket:id="description"/>
+          </div>
+        </ul>
       </div>
       <div wicket:id="keyBindings" class="col-sm-12"/>
     </div>

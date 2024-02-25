@@ -40,6 +40,10 @@ import org.xml.sax.SAXException;
 import de.tudarmstadt.ukp.inception.io.bioc.xml.Cas2BioCSaxEvents;
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
+/**
+ * @deprecated Experimental code that was deprecated in favor of {@link BioCWriter}
+ */
+@Deprecated
 public class BioCXmlDocumentWriter
     extends JCasFileWriter_ImplBase
 {

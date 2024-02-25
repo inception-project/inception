@@ -25,9 +25,11 @@ import java.util.List;
 
 import org.dkpro.statistics.agreement.IAnnotationStudy;
 
-public abstract class AgreementResult<T extends IAnnotationStudy>
+public abstract class FullAgreementResult_ImplBase<T extends IAnnotationStudy>
     implements Serializable
 {
+    private static final long serialVersionUID = 8969153082599376637L;
+
     protected final String type;
     protected final String feature;
     protected final T study;
@@ -36,8 +38,8 @@ public abstract class AgreementResult<T extends IAnnotationStudy>
 
     protected double agreement;
 
-    public AgreementResult(String aType, String aFeature, T aStudy, List<String> aCasGroupIds,
-            boolean aExcludeIncomplete)
+    public FullAgreementResult_ImplBase(String aType, String aFeature, T aStudy,
+            List<String> aCasGroupIds, boolean aExcludeIncomplete)
     {
         type = aType;
         feature = aFeature;
@@ -79,5 +81,23 @@ public abstract class AgreementResult<T extends IAnnotationStudy>
     public boolean isExcludeIncomplete()
     {
         return excludeIncomplete;
+    }
+
+    public abstract boolean isEmpty();
+
+    public abstract long getItemCount(String aRater);
+
+    public int getCategoryCount()
+    {
+        return study.getCategoryCount();
+    }
+
+    public abstract boolean isAllNull(String aCasGroupId);
+
+    public abstract long getNonNullCount(String aCasGroupId);
+
+    public Iterable<Object> getCategories()
+    {
+        return study.getCategories();
     }
 }

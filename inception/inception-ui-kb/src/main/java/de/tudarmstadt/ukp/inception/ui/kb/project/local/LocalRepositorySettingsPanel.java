@@ -389,25 +389,28 @@ public class LocalRepositorySettingsPanel
     {
         try {
             if (selectedKnowledgeBaseProfile != null) {
-                String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
+                var accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
-                FileUploadDownloadHelper fileUploadDownloadHelper = new FileUploadDownloadHelper(
-                        getApplication());
+                var fileUploadDownloadHelper = new FileUploadDownloadHelper(getApplication());
 
-                if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                    File tmpFile = fileUploadDownloadHelper
-                            .writeFileDownloadToTemporaryFile(accessUrl, getModel());
-                    getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
+                if (accessUrl == null) {
+                    // Nothing to do
                 }
-                else {
+                else if (accessUrl.startsWith(CLASSPATH_PREFIX)) {
                     // import from classpath
-                    File kbFile = fileUploadDownloadHelper
+                    var kbFile = fileUploadDownloadHelper
                             .writeClasspathResourceToTemporaryFile(accessUrl, getModel());
                     getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
+                else {
+                    var tmpFile = fileUploadDownloadHelper
+                            .writeFileDownloadToTemporaryFile(accessUrl, getModel());
+                    getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
+                }
 
-                KnowledgeBase kb = getModel().getObject().getKb();
+                var kb = getModel().getObject().getKb();
                 kb.applyRootConcepts(selectedKnowledgeBaseProfile);
+                kb.applyAdditionalMatchingProperties(selectedKnowledgeBaseProfile);
                 kb.applyMapping(selectedKnowledgeBaseProfile.getMapping());
                 kb.setFullTextSearchIri(
                         selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
@@ -429,11 +432,14 @@ public class LocalRepositorySettingsPanel
 
     private String getAccessTypeLabel(KnowledgeBaseProfile aProfile)
     {
+        if (aProfile.getAccess().getAccessUrl() == null) {
+            return "MANUAL";
+        }
+
         if (aProfile.getAccess().getAccessUrl().startsWith(CLASSPATH_PREFIX)) {
             return "CLASSPATH";
         }
-        else {
-            return "DOWNLOAD";
-        }
+
+        return "DOWNLOAD";
     }
 }

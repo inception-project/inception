@@ -42,6 +42,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
@@ -107,6 +108,7 @@ public class TestFixtures
         // querying for properties with the class label.
         kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
         kb.setPropertyDescriptionIri(SKOS.DEFINITION.stringValue());
+        kb.setDeprecationPropertyIri(OWL.DEPRECATED.stringValue());
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);

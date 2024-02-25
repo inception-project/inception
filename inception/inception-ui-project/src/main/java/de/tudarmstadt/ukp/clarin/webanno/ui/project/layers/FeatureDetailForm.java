@@ -33,6 +33,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
+import java.io.IOException;
+
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -57,7 +59,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -173,7 +174,7 @@ public class FeatureDetailForm
             else {
                 featureType.setEnabled(false);
                 featureType.setChoices(
-                        () -> featureSupportRegistry.getAllTypes(getModelObject().getLayer()));
+                        asList(featureSupportRegistry.getFeatureType(getModelObject())));
             }
         }));
         featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -235,23 +236,25 @@ public class FeatureDetailForm
     {
         confirmationDialog.setMessageModel(new ResourceModel("DeleteFeatureDialog.text"));
         confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationFeature::getName));
+        confirmationDialog.setConfirmAction(this::actionDeleteConfirmed);
         confirmationDialog.show(aTarget);
+    }
 
-        confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeFeature(getModelObject());
+    private void actionDeleteConfirmed(AjaxRequestTarget aTarget) throws IOException
+    {
+        annotationService.removeFeature(getModelObject());
 
-            Project project = getModelObject().getProject();
+        var project = getModelObject().getProject();
 
-            setModelObject(null);
+        setModelObject(null);
 
-            documentService.upgradeAllAnnotationDocuments(project);
+        documentService.upgradeAllAnnotationDocuments(project);
 
-            // Trigger LayerConfigurationChangedEvent
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new LayerConfigurationChangedEvent(this, project));
+        // Trigger LayerConfigurationChangedEvent
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, project));
 
-            _target.add(getPage());
-        });
+        aTarget.add(getPage());
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)

@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
@@ -50,7 +51,7 @@ public class EntityLinkingProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "EntityLinkingProjectInitializer.svg");
 
     private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
@@ -66,6 +67,12 @@ public class EntityLinkingProjectInitializer
     public String getName()
     {
         return "Entity linking (Wikidata)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("entity-linking-project.description"));
     }
 
     @Override
@@ -104,11 +111,5 @@ public class EntityLinkingProjectInitializer
                 layer);
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);
-    }
-
-    @Override
-    public Optional<String> getDescription()
-    {
-        return Optional.of("Link entity mentions to WikiData.");
     }
 }

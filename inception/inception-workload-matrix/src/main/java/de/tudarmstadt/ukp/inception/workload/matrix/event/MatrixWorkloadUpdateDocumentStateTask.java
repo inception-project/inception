@@ -40,6 +40,8 @@ import jakarta.persistence.PersistenceContext;
 public class MatrixWorkloadUpdateDocumentStateTask
     extends DebouncingTask
 {
+    public static final String TYPE = "MatrixWorkloadUpdateDocumentStateTask";
+
     private @PersistenceContext EntityManager entityManager;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -48,10 +50,12 @@ public class MatrixWorkloadUpdateDocumentStateTask
 
     private final SourceDocument document;
 
-    public MatrixWorkloadUpdateDocumentStateTask(SourceDocument aDocument, String aTrigger)
+    public MatrixWorkloadUpdateDocumentStateTask(Builder<? extends Builder<?>> aBuilder)
     {
-        super(aDocument.getProject(), aTrigger, ofSeconds(2));
-        document = aDocument;
+        super(aBuilder //
+                .withProject(aBuilder.document.getProject()) //
+                .withType(TYPE));
+        document = aBuilder.document;
     }
 
     @Override
@@ -111,5 +115,33 @@ public class MatrixWorkloadUpdateDocumentStateTask
     public int hashCode()
     {
         return Objects.hash(document, getProject());
+    }
+
+    public static Builder<Builder<?>> builder()
+    {
+        return new Builder<>();
+    }
+
+    public static class Builder<T extends Builder<?>>
+        extends DebouncingTask.Builder<T>
+    {
+        private SourceDocument document;
+
+        protected Builder()
+        {
+            withDebounceMillis(ofSeconds(2));
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withDocument(SourceDocument aDocument)
+        {
+            document = aDocument;
+            return (T) this;
+        }
+
+        public MatrixWorkloadUpdateDocumentStateTask build()
+        {
+            return new MatrixWorkloadUpdateDocumentStateTask(this);
+        }
     }
 }

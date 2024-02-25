@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({ RepositoryProperties.class })
+@EnableConfigurationProperties({ RepositoryPropertiesImpl.class })
 public class RepositoryAutoConfiguration
 {
     // No Beans

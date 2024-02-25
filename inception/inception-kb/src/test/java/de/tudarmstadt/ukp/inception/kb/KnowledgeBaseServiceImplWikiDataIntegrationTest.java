@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -104,7 +105,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
         assumeEndpointIsAvailable(wikidataAccessUrl);
 
-        RepositoryProperties repoProps = new RepositoryProperties();
+        RepositoryProperties repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(tempDir);
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();

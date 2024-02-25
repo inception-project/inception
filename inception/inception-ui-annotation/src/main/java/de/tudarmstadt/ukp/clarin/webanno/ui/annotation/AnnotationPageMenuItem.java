@@ -29,7 +29,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config.AnnotationUIAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -102,8 +101,8 @@ public class AnnotationPageMenuItem
         }
 
         // Visible if the current user is an annotator
-        User user = userRepo.getCurrentUser();
-        return projectService.hasRole(user, aProject, ANNOTATOR, CURATOR);
+        var sessionOwner = userRepo.getCurrentUser();
+        return projectService.hasRole(sessionOwner, aProject, ANNOTATOR, CURATOR);
     }
 
     @Override

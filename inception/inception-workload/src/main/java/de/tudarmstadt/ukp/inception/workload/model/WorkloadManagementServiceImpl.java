@@ -130,8 +130,10 @@ public class WorkloadManagementServiceImpl
                 .setParameter("projectID", aManager.getProject()) //
                 .executeUpdate();
 
-        schedulingService.enqueue(new RecalculateProjectStateTask(aManager.getProject(),
-                "Workload configuration changed"));
+        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .withProject(aManager.getProject()) //
+                .withTrigger("Workload configuration changed") //
+                .build());
     }
 
     /**

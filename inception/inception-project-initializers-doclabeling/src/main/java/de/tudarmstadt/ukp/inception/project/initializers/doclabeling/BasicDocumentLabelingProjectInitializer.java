@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
@@ -53,7 +54,7 @@ public class BasicDocumentLabelingProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "thumbnail.svg");
+            MethodHandles.lookup().lookupClass(), "BasicDocumentLabelingProjectInitializer.svg");
 
     private final PreferencesService prefService;
     private final DocumentMetadataSidebarFactory docMetaSidebar;
@@ -75,6 +76,12 @@ public class BasicDocumentLabelingProjectInitializer
     public String getName()
     {
         return "Document classification";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of(Strings.getString("document-labeling-project.description"));
     }
 
     @Override
@@ -129,11 +136,5 @@ public class BasicDocumentLabelingProjectInitializer
         traits.setReopenableByAnnotator(true);
         matrixWorkloadExtension.writeTraits(traits, aProject);
         workloadManagementService.saveConfiguration(manager);
-    }
-
-    @Override
-    public Optional<String> getDescription()
-    {
-        return Optional.of("Create document-classification annotations.");
     }
 }

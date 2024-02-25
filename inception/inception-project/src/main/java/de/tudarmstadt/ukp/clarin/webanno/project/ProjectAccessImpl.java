@@ -51,6 +51,23 @@ public class ProjectAccessImpl
     }
 
     @Override
+    public boolean canCreateProjects()
+    {
+        var sessionOwner = userService.getCurrentUser();
+        log.trace("Permission check: canCreateProjects [user: {}]", sessionOwner);
+
+        if (userService.isProjectCreator(sessionOwner)) {
+            return true;
+        }
+
+        if (userService.isAdministrator(sessionOwner)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean canAccessProject(String aProjectId)
     {
         return canAccessProject(userService.getCurrentUsername(), aProjectId);

@@ -17,7 +17,7 @@
 [[sect_kubernetes]]
 = Running via Kubernetes
 
-NOTE: This is a **very rough** guide on how {product-name} could be deployed using
+CAUTION: This is a **very rough** guide on how {product-name} could be deployed using
       Kubernetes. If you are familiar with Kubernetes and cloud deployment, you will
       probably find a lot here that can be improved. Great! Best help us improving this
       guide by sending us your improvement suggestions through 

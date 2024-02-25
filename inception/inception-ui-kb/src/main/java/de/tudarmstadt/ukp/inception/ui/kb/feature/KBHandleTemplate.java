@@ -34,10 +34,14 @@ final class KBHandleTemplate
     @Override
     public String getText()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("<span class=\"item-title\">");
         // We cannot use && here because that causes an XML parse error in the browser - so we nest
         // the if clauses...
+        sb.append("  # if (data.deprecated != 'false') { #");
+        sb.append(
+                "    <span class=\"ms-1 float-end badge rounded-pill text-secondary border border-secondary\">deprecated</span>");
+        sb.append("  # } #");
         sb.append("  # if (data.rank) { if (data.rank != '0') { #");
         sb.append("    <span class=\"item-rank\">[${ data.rank }]</span>");
         sb.append("  # } } #");
@@ -65,10 +69,11 @@ final class KBHandleTemplate
     @Override
     public List<String> getTextProperties()
     {
-        List<String> properties = new ArrayList<>();
+        var properties = new ArrayList<String>();
         properties.add("identifier");
         properties.add("description");
         properties.add("rank");
+        properties.add("deprecated");
         properties.add("queryBestMatchTerm");
         if (DEVELOPMENT.equals(Application.get().getConfigurationType())) {
             properties.add("debugInfo");

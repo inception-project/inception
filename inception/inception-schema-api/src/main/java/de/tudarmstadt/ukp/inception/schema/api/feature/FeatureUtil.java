@@ -53,7 +53,7 @@ public class FeatureUtil
             return;
         }
 
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         if (feature == null) {
             throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] the feature ["
@@ -62,7 +62,7 @@ public class FeatureUtil
 
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
-            String effectiveType = aFeature.getType();
+            var effectiveType = aFeature.getType();
             if (effectiveType.contains(":")) {
                 effectiveType = CAS.TYPE_NAME_STRING;
             }
@@ -72,6 +72,11 @@ public class FeatureUtil
                 throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
                         + aFeature.getName() + "] actual type [" + feature.getRange().getName()
                         + "] does not match expected feature type [" + effectiveType + "].");
+            }
+
+            if (aValue instanceof String stringValue) {
+                ICasUtil.setFeature(aFS, feature, stringValue);
+                break;
             }
 
             switch (effectiveType) {

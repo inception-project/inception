@@ -397,13 +397,26 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(Project aProject)
+    {
+        return entityManager.createQuery(
+                "SELECT COUNT(*) FROM AnnotationLayer WHERE project = :project AND name NOT IN (:excluded)",
+                Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("excluded", asList(Token._TypeName, Sentence._TypeName)) //
+                .getSingleResult() > 0;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
             entityManager
                     .createQuery("FROM AnnotationLayer WHERE name = :name AND project = :project",
                             AnnotationLayer.class)
-                    .setParameter("name", aName).setParameter("project", aProject)
+                    .setParameter("name", aName) //
+                    .setParameter("project", aProject) //
                     .getSingleResult();
             return true;
         }
@@ -419,13 +432,15 @@ public class AnnotationSchemaServiceImpl
         try {
             entityManager.createQuery(
                     "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
-                    AnnotationLayer.class).setParameter("name", aName).setParameter("type", aType)
-                    .setParameter("project", aProject).getSingleResult();
+                    AnnotationLayer.class) //
+                    .setParameter("name", aName) //
+                    .setParameter("type", aType) //
+                    .setParameter("project", aProject) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
@@ -1067,17 +1082,17 @@ public class AnnotationSchemaServiceImpl
     public TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException
     {
-        List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
-        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
+        var allLayersInProject = listSupportedLayers(aProject);
+        var allFeaturesInProject = listSupportedFeatures(aProject);
 
-        List<TypeSystemDescription> allTsds = new ArrayList<>();
-        for (AnnotationLayer layer : allLayersInProject) {
+        var allTsds = new ArrayList<TypeSystemDescription>();
+        for (var layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
 
             // for built-in layers, we clone the information from the built-in type descriptors
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             if (layer.isBuiltIn()) {
-                for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
+                for (var typeName : layerSupport.getGeneratedTypeNames(layer)) {
                     exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
                 }
             }
@@ -1090,14 +1105,14 @@ public class AnnotationSchemaServiceImpl
 
         {
             // Explicitly add Token because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Token.class.getName());
             allTsds.add(tsd);
         }
 
         {
             // Explicitly add Sentence because the layer may not be declared in the project
-            TypeSystemDescription tsd = new TypeSystemDescription_impl();
+            var tsd = new TypeSystemDescription_impl();
             exportBuiltInTypeDescription(builtInTypes, tsd, Sentence.class.getName());
             allTsds.add(tsd);
         }
@@ -1110,18 +1125,18 @@ public class AnnotationSchemaServiceImpl
     private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
             TypeSystemDescription aTarget, String aType)
     {
-        TypeDescription builtInType = aSource.getType(aType);
+        var builtInType = aSource.getType(aType);
 
         if (builtInType == null) {
             throw new IllegalArgumentException(
                     "No type description found for type [" + aType + "]");
         }
 
-        TypeDescription clonedType = aTarget.addType(builtInType.getName(),
-                builtInType.getDescription(), builtInType.getSupertypeName());
+        var clonedType = aTarget.addType(builtInType.getName(), builtInType.getDescription(),
+                builtInType.getSupertypeName());
 
         if (builtInType.getFeatures() != null) {
-            for (FeatureDescription feature : builtInType.getFeatures()) {
+            for (var feature : builtInType.getFeatures()) {
                 clonedType.addFeature(feature.getName(), feature.getDescription(),
                         feature.getRangeTypeName(), feature.getElementType(),
                         feature.getMultipleReferencesAllowed());
