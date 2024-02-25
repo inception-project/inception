@@ -26,6 +26,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -403,7 +404,6 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
@@ -413,7 +413,6 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
     public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
@@ -423,12 +422,12 @@ public class SearchServiceImpl
     }
 
     @TransactionalEventListener(fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = REQUIRES_NEW)
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 
-        Project project = aEvent.getProject();
+        var project = aEvent.getProject();
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
             pooledIndex.forceRecycle();

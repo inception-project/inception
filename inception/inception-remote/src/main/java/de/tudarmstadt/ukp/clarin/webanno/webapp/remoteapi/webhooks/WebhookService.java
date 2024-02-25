@@ -150,7 +150,7 @@ public class WebhookService
     @Async
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        String topic = EVENT_TOPICS.get(aEvent.getClass());
+        var topic = EVENT_TOPICS.get(aEvent.getClass());
         if (topic == null) {
             return;
         }

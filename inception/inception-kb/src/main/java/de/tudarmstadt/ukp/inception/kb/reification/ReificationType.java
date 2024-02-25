@@ -17,42 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
-import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.db.PersistentEnumUserType;
 
-public enum Reification
-    implements PersistentEnum
+/**
+ * Implementation of {@link PersistentEnumUserType}
+ *
+ */
+public class ReificationType
+    extends PersistentEnumUserType<Reification>
 {
-    NONE("NONE", false), WIKIDATA("WIKIDATA", true);
-
-    private final boolean supportsQualifier;
-
-    private final String id;
-
-    Reification(String aId, boolean supportsQualifier)
-    {
-        this.id = aId;
-        this.supportsQualifier = supportsQualifier;
-    }
-
-    public boolean supportsQualifier()
-    {
-        return supportsQualifier;
-    }
+    private static final long serialVersionUID = -5458676818846846515L;
 
     @Override
-    public String getId()
+    public Class<Reification> returnedClass()
     {
-        return id;
-    }
-
-    public String getName()
-    {
-        return getId();
-    }
-
-    @Override
-    public String toString()
-    {
-        return getId();
+        return Reification.class;
     }
 }
