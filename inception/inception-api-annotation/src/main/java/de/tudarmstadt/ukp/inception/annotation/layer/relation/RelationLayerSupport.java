@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
@@ -56,6 +54,12 @@ public class RelationLayerSupport
     extends LayerSupport_ImplBase<RelationAdapter, RelationLayerTraits>
     implements InitializingBean
 {
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_TARGET = WebAnnoConst.FEAT_REL_TARGET;
+
+    @SuppressWarnings("deprecation")
+    public static final String FEAT_REL_SOURCE = WebAnnoConst.FEAT_REL_SOURCE;
+
     @SuppressWarnings("deprecation")
     public static final String TYPE = WebAnnoConst.RELATION_TYPE;
 

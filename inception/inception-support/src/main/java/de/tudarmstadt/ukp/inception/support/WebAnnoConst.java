@@ -34,7 +34,16 @@ public class WebAnnoConst
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
 
+    /**
+     * @deprecated Use {@code RelationLayerSupport.FEAT_REL_TARGET}
+     */
+    @Deprecated
     public static final String FEAT_REL_TARGET = "Dependent";
+
+    /**
+     * @deprecated Use {@code RelationLayerSupport.FEAT_REL_SOURCE}
+     */
+    @Deprecated
     public static final String FEAT_REL_SOURCE = "Governor";
 
     /**

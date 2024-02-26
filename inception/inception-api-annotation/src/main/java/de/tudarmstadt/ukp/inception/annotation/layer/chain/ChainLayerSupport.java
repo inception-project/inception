@@ -23,6 +23,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
@@ -56,10 +57,10 @@ public class ChainLayerSupport
     extends LayerSupport_ImplBase<ChainAdapter, ChainLayerTraits>
     implements InitializingBean
 {
-    private static final String FEATURE_NAME_FIRST = "first";
-    private static final String FEATURE_NAME_NEXT = "next";
-    private static final String FEATURE_NAME_REFERENCE_RELATION = "referenceRelation";
-    private static final String FEATURE_NAME_REFERENCE = "referenceType";
+    public static final String FEATURE_NAME_FIRST = "first";
+    public static final String FEATURE_NAME_NEXT = "next";
+    public static final String FEATURE_NAME_REFERENCE_RELATION = "referenceRelation";
+    public static final String FEATURE_NAME_REFERENCE = "referenceType";
     private static final String TYPE_SUFFIX_LINK = "Link";
     private static final String TYPE_SUFFIX_CHAIN = "Chain";
 
@@ -179,8 +180,8 @@ public class ChainLayerSupport
     {
         var name = aFeature.getName();
 
-        if (name.equals(ChainLayerSupport.FEATURE_NAME_FIRST)
-                || name.equals(ChainLayerSupport.FEATURE_NAME_NEXT)) {
+        if (Set.of(FEATURE_NAME_FIRST, FEATURE_NAME_NEXT, FEATURE_NAME_REFERENCE,
+                FEATURE_NAME_REFERENCE_RELATION).contains(name)) {
             return asList(new ValidationError("[" + name + "] is a reserved feature name on "
                     + "chain layers. Please use a different name for the feature."));
         }

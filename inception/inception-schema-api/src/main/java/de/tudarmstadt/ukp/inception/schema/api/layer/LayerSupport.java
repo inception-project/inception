@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.schema.api.layer;
 import static java.util.Arrays.asList;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -176,5 +177,8 @@ public interface LayerSupport<A extends TypeAdapter, T>
 
     LayerSupportRegistry getLayerSupportRegistry();
 
-    List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
+    default List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        return Collections.emptyList();
+    }
 }
