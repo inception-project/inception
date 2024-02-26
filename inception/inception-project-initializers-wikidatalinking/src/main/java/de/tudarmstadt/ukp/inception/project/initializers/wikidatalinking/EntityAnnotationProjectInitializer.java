@@ -36,16 +36,15 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
-import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WikiDataLinkingProjectInitializersAutoConfiguration#entityLinkingProjectInitializer}.
+ * {@link WikiDataLinkingProjectInitializersAutoConfiguration#entityAnnotationProjectInitializer}.
  * </p>
  */
 @Order(5000)
-public class EntityLinkingProjectInitializer
+public class EntityAnnotationProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
@@ -54,7 +53,7 @@ public class EntityLinkingProjectInitializer
     private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
 
-    public EntityLinkingProjectInitializer(ApplicationContext aContext,
+    public EntityAnnotationProjectInitializer(ApplicationContext aContext,
             AnnotationSchemaService aAnnotationService)
     {
         context = aContext;
@@ -64,13 +63,13 @@ public class EntityLinkingProjectInitializer
     @Override
     public String getName()
     {
-        return "Entity linking (Wikidata)";
+        return "Entity annotation";
     }
 
     @Override
     public Optional<String> getDescription()
     {
-        return Optional.of(Strings.getString("entity-linking-project.description"));
+        return Optional.of(Strings.getString("entity-annotation-project.description"));
     }
 
     @Override
@@ -90,12 +89,14 @@ public class EntityLinkingProjectInitializer
     {
         var dependencies = new ArrayList<Class<? extends ProjectInitializer>>();
         dependencies.add(NamedEntityLayerInitializer.class);
-        dependencies.add(NamedEntityIdentifierFeatureInitializer.class);
-        dependencies.add(WikiDataKnowledgeBaseInitializer.class);
+
+        if (context.getBeanNamesForType(NamedEntityStringRecommenderInitializer.class).length > 0) {
+            dependencies.add(NamedEntityStringRecommenderInitializer.class);
+        }
 
         if (context.getBeanNamesForType(
-                NamedEntityIdentifierStringRecommenderInitializer.class).length > 0) {
-            dependencies.add(NamedEntityIdentifierStringRecommenderInitializer.class);
+                NamedEntitySequenceClassifierRecommenderInitializer.class).length > 0) {
+            dependencies.add(NamedEntitySequenceClassifierRecommenderInitializer.class);
         }
 
         return dependencies;

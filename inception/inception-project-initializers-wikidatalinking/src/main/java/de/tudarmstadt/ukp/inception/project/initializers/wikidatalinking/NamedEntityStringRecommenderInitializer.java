@@ -35,18 +35,18 @@ import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeat
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WikiDataLinkingProjectInitializersAutoConfiguration#namedEntityIdentifierStringRecommenderInitializer}.
+ * {@link WikiDataLinkingProjectInitializersAutoConfiguration#namedEntityStringRecommenderInitializer}.
  * </p>
  */
-public class NamedEntityIdentifierStringRecommenderInitializer
+public class NamedEntityStringRecommenderInitializer
     implements ProjectInitializer
 {
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
     private final StringMatchingRecommenderFactory recommenderFactory;
 
-    public NamedEntityIdentifierStringRecommenderInitializer(
-            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
+    public NamedEntityStringRecommenderInitializer(RecommendationService aRecommenderService,
+            AnnotationSchemaService aAnnotationService,
             StringMatchingRecommenderFactory aRecommenderFactory)
     {
         recommendationService = aRecommenderService;
@@ -57,7 +57,7 @@ public class NamedEntityIdentifierStringRecommenderInitializer
     @Override
     public String getName()
     {
-        return "Named entity linking recommender";
+        return "Named entity string-matching recommender";
     }
 
     @Override
@@ -82,8 +82,7 @@ public class NamedEntityIdentifierStringRecommenderInitializer
     public void configure(Project aProject) throws IOException
     {
         var spanLayer = annotationService.findLayer(aProject, NamedEntity.class.getName());
-        var labelFeature = annotationService.getFeature(NamedEntity._FeatName_identifier,
-                spanLayer);
+        var labelFeature = annotationService.getFeature(NamedEntity._FeatName_value, spanLayer);
 
         var recommender = new Recommender(getName(), spanLayer);
         recommender.setFeature(labelFeature);
