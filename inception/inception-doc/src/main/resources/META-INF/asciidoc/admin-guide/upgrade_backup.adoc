@@ -14,14 +14,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= Backup your data
+= System-level backup
 
-* Make a copy of your {product-name} application home folder
-* If you are using an external database like MariaDB, make a backup of your {product-name} database,
-  e.g. using the link:https://mariadb.com/kb/en/making-backups-with-mysqldump/[mysqldump] command.
+The system-level backup procedure is directed mainly towards server administrators. Project managers can create a project-level backup from the project settings user interface.
+
+{product-name} stores some data on the file system in its <<sect_home_folder,application home folder>> and other data in a database. 
+
+It is recommended to make backups while {product-name} is not running to ensure that the data in the backup is in a consistent state.
 
 NOTE: Make sure that you can actually re-create a working installation by restoring your backup.
-      I.e. restore your database export into a fresh database and point a new {product-name} installation
-      at using your home folder copy and the restored database and then start the application and check
+      E.g. restore your database export into a fresh database and point a new {product-name} installation
+      at using your application home folder copy and the restored database and then start the application and check
       that everything is there and working. A backup which cannot be successfully restored is worthless.
-  
+
+== File system backup
+
+To create a backup your {product-name} <<sect_home_folder,application home folder>> you can just copy the folder to another location or create a ZIP archive from it.
+
+This backup will contain amongst other things the actual annotated data.
+
+To keep downtime low while you are preparing the backup, consider using a copy tool that supports incremental updates such as link:https://en.wikipedia.org/wiki/Rsync[rsync].
+
+== Database backups
+
+NOTE: If you are not using an external database, {product-name} is using an embedded database that stores its data in the <<sect_home_folder,application home folder>>. In this case, maintaining a backup of that folder is sufficient and you can skip this section. However, if you are using an external database like MariaDB, it is essential to also maintain backups of that database!
+
+If you are using an external database like MariaDB, make a backup of your {product-name} database,
+  e.g. using the link:https://mariadb.com/kb/en/backup-and-restore-overview/[mariadb-dump] command.
+
+This backup will contain infomation about projects, documents, users, and all other structured metadata maintained by {product-name}. It will **not** contain the actual annotated data which is stored on the file system!
+
+Assuming you set up the database according to the instructions in this manual, you can use `mariadb-dump` to create a backup like this: 
+
+.Creating a database backup
+[source,bash]
+----
+$ mariadb-dump inception > inception-backup.sql
+----
+
+Restoring the backup is similary. Please make sure that the database into which you restore the backup has been set up according to the instructions in this manual. This is particularly important if you restore the database to a new system.
+
+.Restoring a database backup
+[source,bash]
+----
+$ mariadb inception < inception-backup.sql
+----
