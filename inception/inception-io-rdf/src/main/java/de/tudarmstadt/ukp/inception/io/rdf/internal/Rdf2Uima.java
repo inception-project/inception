@@ -19,79 +19,80 @@ package de.tudarmstadt.ukp.inception.io.rdf.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.collections4.iterators.IteratorIterable;
+
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.ontology.OntResource;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public class Rdf2Uima
 {
-    public static void convert(Statement aContext, JCas aJCas) throws CASException
+    public static void convert(Model aModel, Statement aContext, JCas aJCas) throws CASException
     {
-        var m = aContext.getModel();
+        var vf = SimpleValueFactory.getInstance();
+        var m = aModel;
 
         // Set up names
-        var tView = m.createResource(RdfCas.TYPE_VIEW);
-        var tFeatureStructure = m.createResource(RdfCas.TYPE_FEATURE_STRUCTURE);
-        var pIndexedIn = m.createProperty(RdfCas.PROP_INDEXED_IN);
+        var tView = vf.createIRI(RdfCas.TYPE_VIEW);
+        var tFeatureStructure = vf.createIRI(RdfCas.TYPE_FEATURE_STRUCTURE);
+        var pIndexedIn = vf.createIRI(RdfCas.PROP_INDEXED_IN);
 
         var fsIndex = new HashMap<Resource, FeatureStructure>();
 
         // Convert the views/SofAs
         var viewIndex = new HashMap<Resource, JCas>();
-        var viewIter = m.listSubjectsWithProperty(RDF.type, tView);
-        for (var view : new IteratorIterable<Resource>(viewIter)) {
-            var viewJCas = convertView(view, aJCas);
+        for (var view : aModel.filter(null, RDF.TYPE, tView).subjects()) {
+            var viewJCas = convertView(aModel, view, aJCas);
             viewIndex.put(view, viewJCas);
             fsIndex.put(view, viewJCas.getSofa());
         }
 
         // Convert the FSes but without setting their feature values yet - we cannot fill
         // the feature values just set because some of them may point to FSes not yet created
-        var fses = m.listSubjectsWithProperty(RDF.type, tFeatureStructure).toList();
+        var fses = m.filter(null, RDF.TYPE, tFeatureStructure).subjects();
         for (var fs : fses) {
-            var uimaFS = initFS(fs.as(OntResource.class), aJCas);
+            var uimaFS = initFS(aModel, fs, aJCas);
             fsIndex.put(fs, uimaFS);
         }
 
         // Now fill the FSes with their feature values
         for (var fs : fses) {
-            convertFS(fs.as(OntResource.class), aJCas, fsIndex);
+            convertFS(aModel, fs, aJCas, fsIndex);
         }
 
         // Finally add the FSes to the indexes of the respective views
         for (var fs : fses) {
-            var indexedInIter = fs.listProperties(pIndexedIn);
-            for (var indexedIn : new IteratorIterable<Statement>(indexedInIter)) {
-                var viewJCas = viewIndex.get(indexedIn.getResource());
+            for (var indexedIn : aModel.filter(fs, pIndexedIn, null).objects()) {
+                var viewJCas = viewIndex.get(indexedIn);
                 viewJCas.addFsToIndexes(fsIndex.get(fs));
             }
         }
     }
 
-    public static JCas convertView(Resource aView, JCas aJCas) throws CASException
+    public static JCas convertView(Model aModel, Resource aView, JCas aJCas) throws CASException
     {
-        var m = aView.getModel();
+        var vf = SimpleValueFactory.getInstance();
 
         // Set up names
-        var pSofaID = m.createProperty(RdfCas.PROP_SOFA_ID);
-        var pSofaString = m.createProperty(RdfCas.PROP_SOFA_STRING);
-        var pSofaMimeType = m.createProperty(RdfCas.PROP_SOFA_MIME_TYPE);
+        var pSofaID = vf.createIRI(RdfCas.PROP_SOFA_ID);
+        var pSofaString = vf.createIRI(RdfCas.PROP_SOFA_STRING);
+        var pSofaMimeType = vf.createIRI(RdfCas.PROP_SOFA_MIME_TYPE);
 
         // Get the values
-        var viewName = aView.getProperty(pSofaID).getString();
-        var sofaString = aView.getProperty(pSofaString).getString();
-        var sofaMimeType = aView.getProperty(pSofaMimeType).getString();
+        var viewName = aModel.filter(aView, pSofaID, null).objects().iterator().next().stringValue();
+        var sofaString = aModel.filter(aView, pSofaString, null).objects().iterator().next().stringValue();
+        var sofaMimeType = aModel.filter(aView, pSofaMimeType, null).objects().iterator().next().stringValue();
 
         // Instantiate the view/SofA
         var view = JCasUtil.getView(aJCas, viewName, true);
@@ -100,16 +101,16 @@ public class Rdf2Uima
         return view;
     }
 
-    public static FeatureStructure initFS(OntResource aFS, JCas aJCas)
+    public static FeatureStructure initFS(Model aModel, Resource aFS, JCas aJCas)
     {
         var cas = aJCas.getCas();
 
         // Figure out the UIMA type - there can be only one type per FS
-        var types = aFS.listRDFTypes(true).toSet();
-        types.removeIf(res -> res.getURI().startsWith(RdfCas.NS_RDFCAS));
+        var types = aModel.filter(aFS, RDF.TYPE, null).objects();
+        types.removeIf(res -> res.stringValue().startsWith(RdfCas.NS_RDFCAS));
         assert types.size() == 1;
         var type = CasUtil.getType(cas,
-                types.iterator().next().getURI().substring(RdfCas.NS_UIMA.length()));
+                types.iterator().next().stringValue().substring(RdfCas.NS_UIMA.length()));
 
         FeatureStructure fs;
         if (type.getName().equals(DocumentMetaData.class.getName())) {
@@ -123,19 +124,18 @@ public class Rdf2Uima
         return fs;
     }
 
-    public static FeatureStructure convertFS(OntResource aFS, JCas aJCas,
+    public static FeatureStructure convertFS(Model aModel, Resource aFS, JCas aJCas,
             Map<Resource, FeatureStructure> aFsIndex)
     {
         var fs = aFsIndex.get(aFS);
 
-        var stmtIter = aFS.listProperties();
-        for (var stmt : new IteratorIterable<Statement>(stmtIter)) {
+        for (var stmt : aModel.filter(aFS, null, null)) {
             // Skip all non-features
-            if (!stmt.getPredicate().getURI().startsWith("uima:")) {
+            if (!stmt.getPredicate().stringValue().startsWith("uima:")) {
                 continue;
             }
 
-            var featureName = StringUtils.substringAfterLast(stmt.getPredicate().getURI(), "-");
+            var featureName = StringUtils.substringAfterLast(stmt.getPredicate().stringValue(), "-");
             var uimaFeat = fs.getType().getFeatureByBaseName(featureName);
 
             // Cannot update start/end of document annotation because that FS is already indexed, so
@@ -147,35 +147,35 @@ public class Rdf2Uima
             }
 
             if (uimaFeat.getRange().isPrimitive()) {
+                Literal literal = null;
+                if (stmt.getObject().isLiteral()) {
+                    literal = (Literal) stmt;
+                }
+                
                 switch (uimaFeat.getRange().getName()) {
                 case CAS.TYPE_NAME_BOOLEAN:
-                    fs.setBooleanValue(uimaFeat, stmt.getObject().asLiteral().getBoolean());
+                    fs.setBooleanValue(uimaFeat, literal.booleanValue());
                     break;
                 case CAS.TYPE_NAME_BYTE:
-                    fs.setByteValue(uimaFeat, stmt.getObject().asLiteral().getByte());
+                    fs.setByteValue(uimaFeat, literal.byteValue());
                     break;
                 case CAS.TYPE_NAME_DOUBLE:
-                    fs.setDoubleValue(uimaFeat, stmt.getObject().asLiteral().getDouble());
+                    fs.setDoubleValue(uimaFeat, literal.doubleValue());
                     break;
                 case CAS.TYPE_NAME_FLOAT:
-                    fs.setFloatValue(uimaFeat, stmt.getObject().asLiteral().getFloat());
+                    fs.setFloatValue(uimaFeat, literal.floatValue());
                     break;
                 case CAS.TYPE_NAME_INTEGER:
-                    fs.setIntValue(uimaFeat, stmt.getObject().asLiteral().getInt());
+                    fs.setIntValue(uimaFeat, literal.intValue());
                     break;
                 case CAS.TYPE_NAME_LONG:
-                    fs.setLongValue(uimaFeat, stmt.getObject().asLiteral().getLong());
+                    fs.setLongValue(uimaFeat, literal.longValue());
                     break;
                 case CAS.TYPE_NAME_SHORT:
-                    fs.setShortValue(uimaFeat, stmt.getObject().asLiteral().getShort());
+                    fs.setShortValue(uimaFeat, literal.shortValue());
                     break;
                 case CAS.TYPE_NAME_STRING: {
-                    if (stmt.getObject().isLiteral()) {
-                        fs.setStringValue(uimaFeat, stmt.getObject().asLiteral().getString());
-                    }
-                    else {
-                       fs.setStringValue(uimaFeat, stmt.getObject().asResource().getURI());
-                    }
+                    fs.setStringValue(uimaFeat, stmt.getObject().stringValue());
                     break;
                 }
                 default:
@@ -185,10 +185,10 @@ public class Rdf2Uima
                 }
             }
             else {
-                FeatureStructure targetUimaFS = aFsIndex.get(stmt.getObject().asResource());
+                var targetUimaFS = aFsIndex.get(stmt.getObject());
                 if (targetUimaFS == null) {
                     throw new IllegalStateException("No UIMA FS found for ["
-                            + stmt.getObject().asResource().getURI() + "]");
+                            + stmt.getObject().stringValue() + "]");
                 }
                 fs.setFeatureValue(uimaFeat, targetUimaFS);
             }

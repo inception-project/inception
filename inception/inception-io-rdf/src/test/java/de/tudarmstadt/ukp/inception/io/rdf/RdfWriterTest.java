@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.io.rdf;
 
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.sort;
-import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,15 +27,16 @@ import static org.assertj.core.api.Assertions.contentOf;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.dkpro.core.testing.IOTestRunner.testOneWay;
 import static org.dkpro.core.testing.IOTestRunner.testRoundTrip;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
-
-import org.apache.jena.rdf.model.ModelFactory;
+import java.io.FileInputStream;
+import java.util.ArrayList;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.conll.Conll2006Writer;
 import org.dkpro.core.testing.TestOptions;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -117,16 +118,23 @@ public class RdfWriterTest
 
     private void assertModelEquals(File expected, File actual)
     {
-        var mExpected = ModelFactory.createDefaultModel();
-        mExpected.read(expected.toURI().toString(), null, "TURTLE");
-        var sExpected = mExpected.listStatements().mapWith(s -> s.toString()).toList();
-        sort(sExpected);
-
-        var mActual = ModelFactory.createDefaultModel();
-        mActual.read(actual.toURI().toString(), null, "TURTLE");
-        var sActual = mActual.listStatements().mapWith(s -> s.toString()).toList();
-        sort(sActual);
-
-        assertEquals(join(sExpected, "\n"), join(sActual, "\n"));
+        try {
+            var sExpected = new ArrayList<String>();
+            try (var is = new FileInputStream(expected)) {
+                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sExpected.add(s.toString()));;
+            }
+            sort(sExpected);
+    
+            var sActual = new ArrayList<String>();
+            try (var is = new FileInputStream(actual)) {
+                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sActual.add(s.toString()));;
+            }
+            sort(sActual);
+    
+            assertThat(join("\n", sActual)).isEqualTo(join("\n", sExpected));
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

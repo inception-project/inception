@@ -18,13 +18,11 @@
 package de.tudarmstadt.ukp.inception.io.rdf;
 
 import static org.dkpro.core.api.resources.CompressionUtils.getInputStream;
+import static org.eclipse.rdf4j.rio.RDFFormat.RDFXML;
+
 import java.io.IOException;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.vocabulary.RDF;
+import java.util.Iterator;
+
 import org.apache.uima.UimaContext;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionException;
@@ -35,6 +33,13 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.parameter.MimeTypes;
 import org.dkpro.core.api.resources.CompressionUtils;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.Rio;
+
 import de.tudarmstadt.ukp.inception.io.rdf.internal.Rdf2Uima;
 import de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas;
 import eu.openminted.share.annotations.api.DocumentationResource;
@@ -50,7 +55,8 @@ public class RdfReader
 {
     private Resource res;
     private Model model;
-    private StmtIterator contextIterator;
+    private Iterator<Statement> contextIterator;
+    private final ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Override
     public void initialize(UimaContext aContext) throws ResourceInitializationException
@@ -73,7 +79,7 @@ public class RdfReader
 
         var context = contextIterator.next();
         try {
-            Rdf2Uima.convert(context, aJCas);
+            Rdf2Uima.convert(model, context, aJCas);
         }
         catch (CASException e) {
             throw new CollectionException(e);
@@ -118,12 +124,14 @@ public class RdfReader
                     res = nextFile();
                     // inFileCount = 0;
                     try (var is = getInputStream(res.getLocation(), res.getInputStream())) {
-                        model = ModelFactory.createOntologyModel();
-                        RDFDataMgr.read(model, is, RDFLanguages.filenameToLang(
-                                CompressionUtils.stripCompressionExtension(res.getLocation())));
-                    }
-                    contextIterator = model.listStatements(null, RDF.type,
-                            model.createResource(RdfCas.TYPE_VIEW));
+                        var format = Rio
+                                .getParserFormatForFileName(CompressionUtils
+                                        .stripCompressionExtension(res.getLocation()))
+                                .orElse(RDFXML);
+                        model = Rio.parse(is, res.getLocation().toString(), format);
+                    }                    
+                    
+                    contextIterator = model.filter(null, RDF.TYPE, vf.createIRI(RdfCas.TYPE_VIEW)).iterator();
                 }
                 else {
                     // No more files to read

@@ -178,6 +178,7 @@ public class LayerExporter
         exFeature.setType(feature.getType());
         exFeature.setUiName(feature.getUiName());
         exFeature.setVisible(feature.isVisible());
+        exFeature.setIncludeInHover(feature.isIncludeInHover());
         exFeature.setMultiValueMode(feature.getMultiValueMode());
         exFeature.setLinkMode(feature.getLinkMode());
         exFeature.setLinkTypeName(feature.getLinkTypeName());
@@ -305,6 +306,7 @@ public class LayerExporter
         aFeature.setDescription(aExFeature.getDescription());
         aFeature.setEnabled(aExFeature.isEnabled());
         aFeature.setVisible(aExFeature.isVisible());
+        aFeature.setIncludeInHover(aExFeature.isIncludeInHover());
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setName(aExFeature.getName());

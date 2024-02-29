@@ -17,13 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.io.rdf;
 
-import static org.apache.jena.riot.RDFLanguages.fileExtToLang;
+import static org.eclipse.rdf4j.rio.RDFFormat.RDFXML;
 
 import java.util.Set;
 
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;
@@ -35,6 +32,8 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
+import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
+import org.eclipse.rdf4j.rio.Rio;
 
 import de.tudarmstadt.ukp.inception.io.rdf.internal.Uima2Rdf;
 
@@ -74,8 +73,8 @@ public class RdfWriter
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
-        var model = ModelFactory.createOntologyModel();
-
+        var model = new DynamicModelFactory().createEmptyModel();
+        
         try {
             uima2rdf.convert(aJCas, model);
         }
@@ -84,7 +83,10 @@ public class RdfWriter
         }
 
         try (var docOS = getOutputStream(aJCas, filenameSuffix)) {
-            RDFDataMgr.write(docOS, model.getBaseModel(), fileExtToLang(filenameSuffix));
+            var format = Rio
+                    .getParserFormatForFileName(filenameSuffix)
+                    .orElse(RDFXML);
+            Rio.write(model, docOS, format);            
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);

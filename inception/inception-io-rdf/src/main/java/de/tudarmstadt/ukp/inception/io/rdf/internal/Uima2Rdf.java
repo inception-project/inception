@@ -23,16 +23,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.OntModel;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
-
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -52,13 +52,13 @@ public class Uima2Rdf
         }
     }
 
-    public void convert(JCas aJCas, OntModel aTarget) throws CASException
+    public void convert(JCas aJCas, Model aTarget) throws CASException
     {
         // Set up prefix mappings
         var ts = aJCas.getTypeSystem();
-        aTarget.setNsPrefix("cas", RdfCas.NS_UIMA + "uima.cas.");
-        aTarget.setNsPrefix("tcas", RdfCas.NS_UIMA + "uima.tcas.");
-        aTarget.setNsPrefix(RdfCas.PREFIX_RDFCAS, RdfCas.NS_RDFCAS);
+        aTarget.setNamespace("cas", RdfCas.NS_UIMA + "uima.cas.");
+        aTarget.setNamespace("tcas", RdfCas.NS_UIMA + "uima.tcas.");
+        aTarget.setNamespace(RdfCas.PREFIX_RDFCAS, RdfCas.NS_RDFCAS);
 
         // Additional prefix mappings for DKPro Core typesystems
         for (var t : ts.getProperlySubsumedTypes(ts.getTopType())) {
@@ -73,7 +73,7 @@ public class Uima2Rdf
                 if (nameMatcher.group("INMODULE") != null) {
                     prefix = prefix + "-" + nameMatcher.group("INMODULE");
                 }
-                aTarget.setNsPrefix(prefix, RdfCas.NS_UIMA + nameMatcher.group("LONG"));
+                aTarget.setNamespace(prefix, RdfCas.NS_UIMA + nameMatcher.group("LONG"));
             }
         }
 
@@ -83,15 +83,14 @@ public class Uima2Rdf
         }
     }
 
-    private void convertView(JCas aJCas, OntModel aTarget)
+    private void convertView(JCas aJCas, Model aTarget)
     {
-        // Shorten down variable name for model
-        var m = aTarget;
+        var vf = SimpleValueFactory.getInstance();
 
         // Set up names
-        var tView = m.createResource(RdfCas.TYPE_VIEW);
-        var tFeatureStructure = m.createResource(RdfCas.TYPE_FEATURE_STRUCTURE);
-        var pIndexedIn = m.createProperty(RdfCas.PROP_INDEXED_IN);
+        var tView = vf.createIRI(RdfCas.TYPE_VIEW);
+        var tFeatureStructure = vf.createIRI(RdfCas.TYPE_FEATURE_STRUCTURE);
+        var pIndexedIn = vf.createIRI(RdfCas.PROP_INDEXED_IN);
 
         // Get a URI for the document
         var dmd = DocumentMetaData.get(aJCas);
@@ -106,72 +105,66 @@ public class Uima2Rdf
 
         // Set up the view itself
         var viewUri = format("%s#%d", docuri, aJCas.getLowLevelCas().ll_getFSRef(aJCas.getSofa()));
-        var rdfView = m.createIndividual(viewUri, tView);
+        var rdfView = vf.createIRI(viewUri);
+        aTarget.add(rdfView, RDF.TYPE, tView);
 
         for (var uimaFS : reachable) {
             var uri = format("%s#%d", docuri, aJCas.getLowLevelCas().ll_getFSRef(uimaFS));
-            var rdfFS = m.createIndividual(uri, m.createResource(rdfType(uimaFS.getType())));
+            var rdfFS = vf.createIRI(uri);
+            aTarget.add(rdfFS, RDF.TYPE, vf.createIRI(rdfType(uimaFS.getType())));
 
             // The SoFa is not a regular FS - do not mark it as such
             if (uimaFS != aJCas.getSofa()) {
-                rdfFS.addOntClass(tFeatureStructure);
+                aTarget.add(rdfFS, RDF.TYPE, tFeatureStructure);
             }
 
             // Internal UIMA information
             if (indexed.contains(uimaFS)) {
-                rdfFS.addProperty(pIndexedIn, rdfView);
+                aTarget.add(rdfFS, pIndexedIn, rdfView);
             }
 
             // Convert features
-            convertFeatures(docuri, uimaFS, rdfFS);
+            convertFeatures(aTarget, docuri, uimaFS, rdfFS);
         }
     }
 
-    private void convertFeatures(String docuri, FeatureStructure uimaFS, Individual rdfFS)
+    private void convertFeatures(Model aTarget, String docuri, FeatureStructure uimaFS, IRI rdfFS)
     {
-        var m = rdfFS.getOntModel();
+        var vf = SimpleValueFactory.getInstance();
 
         for (var uimaFeat : uimaFS.getType().getFeatures()) {
-            var rdfFeat = m.createProperty(rdfFeature(uimaFeat));
+            var rdfFeat = vf.createIRI(rdfFeature(uimaFeat));
             if (uimaFeat.getRange().isPrimitive()) {
                 switch (uimaFeat.getRange().getName()) {
                 case CAS.TYPE_NAME_BOOLEAN:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getBooleanValue(uimaFeat),
-                            XSDDatatype.XSDboolean));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getBooleanValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_BYTE:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getByteValue(uimaFeat),
-                            XSDDatatype.XSDbyte));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getByteValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_DOUBLE:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getDoubleValue(uimaFeat),
-                            XSDDatatype.XSDdouble));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getDoubleValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_FLOAT:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getFloatValue(uimaFeat),
-                            XSDDatatype.XSDfloat));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getFloatValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_INTEGER:
-                    rdfFS.addLiteral(rdfFeat,
-                            m.createTypedLiteral(uimaFS.getIntValue(uimaFeat), XSDDatatype.XSDint));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getIntValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_LONG:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getLongValue(uimaFeat),
-                            XSDDatatype.XSDlong));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getLongValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_SHORT:
-                    rdfFS.addLiteral(rdfFeat, m.createTypedLiteral(uimaFS.getShortValue(uimaFeat),
-                            XSDDatatype.XSDshort));
+                    aTarget.add(rdfFS, rdfFeat, vf.createLiteral(uimaFS.getShortValue(uimaFeat)));
                     break;
                 case CAS.TYPE_NAME_STRING: {
                     var s = uimaFS.getStringValue(uimaFeat);
                     if (s != null) {
                         if (iriFeatures.contains(uimaFeat.getName())) {
-                            rdfFS.addProperty(rdfFeat, m.createResource(s));
+                            aTarget.add(rdfFS, rdfFeat, vf.createIRI(s));
                         }
                         else {
-                            rdfFS.addLiteral(rdfFeat,
-                                    m.createTypedLiteral(s, XSDDatatype.XSDstring));
+                            aTarget.add(rdfFS, rdfFeat, vf.createLiteral(s));
                         }
                     }
                     break;
@@ -185,7 +178,7 @@ public class Uima2Rdf
             else {
                 var targetUimaFS = uimaFS.getFeatureValue(uimaFeat);
                 if (targetUimaFS != null) {
-                    rdfFS.addProperty(rdfFeat, m.createResource(rdfUri(docuri, targetUimaFS)));
+                    aTarget.add(rdfFS, rdfFeat, vf.createIRI(rdfUri(docuri, targetUimaFS)));
                 }
             }
         }
