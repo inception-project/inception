@@ -42,13 +42,12 @@ import org.eclipse.rdf4j.rio.Rio;
 
 import de.tudarmstadt.ukp.inception.io.rdf.internal.Rdf2Uima;
 import de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas;
-import eu.openminted.share.annotations.api.DocumentationResource;
 
 /**
  * Reads a CAS serialized as RDF.
  */
 @ResourceMetaData(name = "UIMA CAS RDF Reader")
-@DocumentationResource("${docbase}/format-reference.html#format-${command}")
+// @DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({ MimeTypes.APPLICATION_X_UIMA_RDF })
 public class RdfReader
     extends JCasResourceCollectionReader_ImplBase
@@ -129,9 +128,9 @@ public class RdfReader
                                         .stripCompressionExtension(res.getLocation()))
                                 .orElse(RDFXML);
                         model = Rio.parse(is, res.getLocation().toString(), format);
-                    }                    
-                    
-                    contextIterator = model.filter(null, RDF.TYPE, vf.createIRI(RdfCas.TYPE_VIEW)).iterator();
+                    }
+
+                    contextIterator = model.filter(null, RDF.TYPE, RdfCas.TYPE_VIEW).iterator();
                 }
                 else {
                     // No more files to read

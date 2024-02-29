@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.rdf.internal;
 
 import org.apache.uima.cas.CAS;
+import org.eclipse.rdf4j.model.IRI;
 
 /**
  * RDF CAS vocabulary.
@@ -27,19 +28,18 @@ public class RdfCas
     public static final String PREFIX_RDFCAS = "rdfcas";
 
     public static final String NS_RDFCAS = "http://uima.apache.org/rdf/cas#";
-    public static final String NS_UIMA = "uima:";
+    public static final String SCHEME_UIMA = "uima:";
 
-    public static final String PROP_VIEW = NS_RDFCAS + "view";
-    public static final String PROP_INDEXED_IN = NS_RDFCAS + "indexedIn";
+    public static final IRI PROP_VIEW = new BasicIRI(NS_RDFCAS, "view");
+    public static final IRI PROP_INDEXED_IN = new BasicIRI(NS_RDFCAS, "indexedIn");
 
-    // public static final String TYPE_CAS = NS_RDFCAS + "CAS";
-    public static final String TYPE_VIEW = NS_RDFCAS + "View";
-    public static final String TYPE_FEATURE_STRUCTURE = NS_RDFCAS + "FeatureStructure";
+    public static final IRI TYPE_VIEW = new BasicIRI(NS_RDFCAS, "View");
+    public static final IRI TYPE_FEATURE_STRUCTURE = new BasicIRI(NS_RDFCAS, "FeatureStructure");
 
-    public static final String PROP_SOFA_ID = NS_UIMA + CAS.TYPE_NAME_SOFA + '-'
-            + CAS.FEATURE_BASE_NAME_SOFAID;
-    public static final String PROP_SOFA_STRING = NS_UIMA + CAS.TYPE_NAME_SOFA + '-'
-            + CAS.FEATURE_BASE_NAME_SOFASTRING;
-    public static final String PROP_SOFA_MIME_TYPE = NS_UIMA + CAS.TYPE_NAME_SOFA + '-'
-            + CAS.FEATURE_BASE_NAME_SOFAMIME;
+    public static final IRI PROP_SOFA_ID = new BasicIRI(SCHEME_UIMA,
+            CAS.TYPE_NAME_SOFA + '-' + CAS.FEATURE_BASE_NAME_SOFAID);
+    public static final IRI PROP_SOFA_STRING = new BasicIRI(SCHEME_UIMA,
+            CAS.TYPE_NAME_SOFA + '-' + CAS.FEATURE_BASE_NAME_SOFASTRING);
+    public static final IRI PROP_SOFA_MIME_TYPE = new BasicIRI(SCHEME_UIMA,
+            CAS.TYPE_NAME_SOFA + '-' + CAS.FEATURE_BASE_NAME_SOFAMIME);
 }

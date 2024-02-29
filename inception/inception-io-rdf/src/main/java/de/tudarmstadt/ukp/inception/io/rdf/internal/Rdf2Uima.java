@@ -17,10 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.io.rdf.internal;
 
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.NS_RDFCAS;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.PROP_INDEXED_IN;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.PROP_SOFA_ID;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.PROP_SOFA_MIME_TYPE;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.PROP_SOFA_STRING;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.SCHEME_UIMA;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.TYPE_FEATURE_STRUCTURE;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.TYPE_VIEW;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.FeatureStructure;
@@ -31,7 +40,6 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -40,19 +48,13 @@ public class Rdf2Uima
 {
     public static void convert(Model aModel, Statement aContext, JCas aJCas) throws CASException
     {
-        var vf = SimpleValueFactory.getInstance();
         var m = aModel;
-
-        // Set up names
-        var tView = vf.createIRI(RdfCas.TYPE_VIEW);
-        var tFeatureStructure = vf.createIRI(RdfCas.TYPE_FEATURE_STRUCTURE);
-        var pIndexedIn = vf.createIRI(RdfCas.PROP_INDEXED_IN);
 
         var fsIndex = new HashMap<Resource, FeatureStructure>();
 
         // Convert the views/SofAs
         var viewIndex = new HashMap<Resource, JCas>();
-        for (var view : aModel.filter(null, RDF.TYPE, tView).subjects()) {
+        for (var view : aModel.filter(null, RDF.TYPE, TYPE_VIEW).subjects()) {
             var viewJCas = convertView(aModel, view, aJCas);
             viewIndex.put(view, viewJCas);
             fsIndex.put(view, viewJCas.getSofa());
@@ -60,7 +62,8 @@ public class Rdf2Uima
 
         // Convert the FSes but without setting their feature values yet - we cannot fill
         // the feature values just set because some of them may point to FSes not yet created
-        var fses = m.filter(null, RDF.TYPE, tFeatureStructure).subjects();
+        var fses = m.filter(null, RDF.TYPE, TYPE_FEATURE_STRUCTURE).subjects()
+                .toArray(Resource[]::new);
         for (var fs : fses) {
             var uimaFS = initFS(aModel, fs, aJCas);
             fsIndex.put(fs, uimaFS);
@@ -73,7 +76,7 @@ public class Rdf2Uima
 
         // Finally add the FSes to the indexes of the respective views
         for (var fs : fses) {
-            for (var indexedIn : aModel.filter(fs, pIndexedIn, null).objects()) {
+            for (var indexedIn : aModel.filter(fs, PROP_INDEXED_IN, null).objects()) {
                 var viewJCas = viewIndex.get(indexedIn);
                 viewJCas.addFsToIndexes(fsIndex.get(fs));
             }
@@ -82,17 +85,13 @@ public class Rdf2Uima
 
     public static JCas convertView(Model aModel, Resource aView, JCas aJCas) throws CASException
     {
-        var vf = SimpleValueFactory.getInstance();
-
-        // Set up names
-        var pSofaID = vf.createIRI(RdfCas.PROP_SOFA_ID);
-        var pSofaString = vf.createIRI(RdfCas.PROP_SOFA_STRING);
-        var pSofaMimeType = vf.createIRI(RdfCas.PROP_SOFA_MIME_TYPE);
-
         // Get the values
-        var viewName = aModel.filter(aView, pSofaID, null).objects().iterator().next().stringValue();
-        var sofaString = aModel.filter(aView, pSofaString, null).objects().iterator().next().stringValue();
-        var sofaMimeType = aModel.filter(aView, pSofaMimeType, null).objects().iterator().next().stringValue();
+        var viewName = aModel.filter(aView, PROP_SOFA_ID, null).objects().iterator().next()
+                .stringValue();
+        var sofaString = aModel.filter(aView, PROP_SOFA_STRING, null).objects().iterator().next()
+                .stringValue();
+        var sofaMimeType = aModel.filter(aView, PROP_SOFA_MIME_TYPE, null).objects().iterator()
+                .next().stringValue();
 
         // Instantiate the view/SofA
         var view = JCasUtil.getView(aJCas, viewName, true);
@@ -107,10 +106,10 @@ public class Rdf2Uima
 
         // Figure out the UIMA type - there can be only one type per FS
         var types = aModel.filter(aFS, RDF.TYPE, null).objects();
-        types.removeIf(res -> res.stringValue().startsWith(RdfCas.NS_RDFCAS));
+        types.removeIf(res -> res.stringValue().startsWith(NS_RDFCAS));
         assert types.size() == 1;
         var type = CasUtil.getType(cas,
-                types.iterator().next().stringValue().substring(RdfCas.NS_UIMA.length()));
+                types.iterator().next().stringValue().substring(SCHEME_UIMA.length()));
 
         FeatureStructure fs;
         if (type.getName().equals(DocumentMetaData.class.getName())) {
@@ -135,7 +134,7 @@ public class Rdf2Uima
                 continue;
             }
 
-            var featureName = StringUtils.substringAfterLast(stmt.getPredicate().stringValue(), "-");
+            var featureName = substringAfterLast(stmt.getPredicate().stringValue(), "-");
             var uimaFeat = fs.getType().getFeatureByBaseName(featureName);
 
             // Cannot update start/end of document annotation because that FS is already indexed, so
@@ -149,9 +148,9 @@ public class Rdf2Uima
             if (uimaFeat.getRange().isPrimitive()) {
                 Literal literal = null;
                 if (stmt.getObject().isLiteral()) {
-                    literal = (Literal) stmt;
+                    literal = (Literal) stmt.getObject();
                 }
-                
+
                 switch (uimaFeat.getRange().getName()) {
                 case CAS.TYPE_NAME_BOOLEAN:
                     fs.setBooleanValue(uimaFeat, literal.booleanValue());
@@ -187,8 +186,8 @@ public class Rdf2Uima
             else {
                 var targetUimaFS = aFsIndex.get(stmt.getObject());
                 if (targetUimaFS == null) {
-                    throw new IllegalStateException("No UIMA FS found for ["
-                            + stmt.getObject().stringValue() + "]");
+                    throw new IllegalStateException(
+                            "No UIMA FS found for [" + stmt.getObject().stringValue() + "]");
                 }
                 fs.setFeatureValue(uimaFeat, targetUimaFS);
             }

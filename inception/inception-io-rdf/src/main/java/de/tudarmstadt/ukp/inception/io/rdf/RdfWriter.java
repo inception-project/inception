@@ -49,8 +49,6 @@ public class RdfWriter
     /**
      * Specify the suffix of output files. Default value <code>.ttl</code>. The file format will be
      * chosen depending on the file suffice.
-     * 
-     * @see RDFLanguages
      */
     public static final String PARAM_FILENAME_EXTENSION = ComponentParameters.PARAM_FILENAME_EXTENSION;
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".ttl")
@@ -61,20 +59,20 @@ public class RdfWriter
     private Set<String> iriFeatures;
 
     private Uima2Rdf uima2rdf;
-    
+
     @Override
     public void initialize(UimaContext aContext) throws ResourceInitializationException
     {
         super.initialize(aContext);
-        
+
         uima2rdf = new Uima2Rdf(iriFeatures);
     }
-    
+
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         var model = new DynamicModelFactory().createEmptyModel();
-        
+
         try {
             uima2rdf.convert(aJCas, model);
         }
@@ -83,10 +81,8 @@ public class RdfWriter
         }
 
         try (var docOS = getOutputStream(aJCas, filenameSuffix)) {
-            var format = Rio
-                    .getParserFormatForFileName(filenameSuffix)
-                    .orElse(RDFXML);
-            Rio.write(model, docOS, format);            
+            var format = Rio.getParserFormatForFileName(filenameSuffix).orElse(RDFXML);
+            Rio.write(model, docOS, format);
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);

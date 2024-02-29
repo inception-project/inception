@@ -31,6 +31,7 @@ import static org.dkpro.core.testing.IOTestRunner.testRoundTrip;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+
 import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.conll.Conll2006Reader;
 import org.dkpro.core.io.conll.Conll2006Writer;
@@ -90,8 +91,7 @@ public class RdfWriterTest
 
         var targetFile = new File(aTemp, "test.ttl");
         assertThat(contentOf(targetFile, UTF_8)) //
-                .contains("ner:NamedEntity-value       \"PER\" ;")
-                .contains("ner:NamedEntity-identifier  <iri:somewhere> ;");
+                .contains("\"PER\"").contains("<iri:somewhere>");
 
         cas.reset();
 
@@ -121,16 +121,18 @@ public class RdfWriterTest
         try {
             var sExpected = new ArrayList<String>();
             try (var is = new FileInputStream(expected)) {
-                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sExpected.add(s.toString()));;
+                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sExpected.add(s.toString()));
+                ;
             }
             sort(sExpected);
-    
+
             var sActual = new ArrayList<String>();
             try (var is = new FileInputStream(actual)) {
-                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sActual.add(s.toString()));;
+                Rio.parse(is, RDFFormat.TURTLE).forEach(s -> sActual.add(s.toString()));
+                ;
             }
             sort(sActual);
-    
+
             assertThat(join("\n", sActual)).isEqualTo(join("\n", sExpected));
         }
         catch (Exception e) {

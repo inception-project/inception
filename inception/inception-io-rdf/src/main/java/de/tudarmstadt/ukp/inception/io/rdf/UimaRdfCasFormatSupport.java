@@ -91,8 +91,7 @@ public class UimaRdfCasFormatSupport
     {
         var iriFeatures = schemaService.listAnnotationFeature(aProject).stream()
                 .filter(f -> f.getType().startsWith(ConceptFeatureSupport.PREFIX))
-                .map(f -> f.getLayer().getName() + ":" + f.getName())
-                .collect(toUnmodifiableSet());
+                .map(f -> f.getLayer().getName() + ":" + f.getName()).collect(toUnmodifiableSet());
 
         return createEngineDescription(RdfWriter.class, aTSD, //
                 RdfWriter.PARAM_IRI_FEATURES, iriFeatures);

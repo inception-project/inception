@@ -140,6 +140,10 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `json`
 | `format.json-cas-legacy.enabled`
 
+| <<sect_formats_rdfcas,UIMA CAS RDF>>
+| `rdfcas`
+| `format.rdf-cas.enabled`
+
 | <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.0)>>
 | `xmi`
 | `format.uima-xmi.enabled`

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.rdf.internal;
 
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.PREFIX_RDFCAS;
+import static de.tudarmstadt.ukp.inception.io.rdf.internal.RdfCas.SCHEME_UIMA;
 import static java.lang.String.format;
 
 import java.util.HashSet;
@@ -31,8 +33,10 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
@@ -56,9 +60,9 @@ public class Uima2Rdf
     {
         // Set up prefix mappings
         var ts = aJCas.getTypeSystem();
-        aTarget.setNamespace("cas", RdfCas.NS_UIMA + "uima.cas.");
-        aTarget.setNamespace("tcas", RdfCas.NS_UIMA + "uima.tcas.");
-        aTarget.setNamespace(RdfCas.PREFIX_RDFCAS, RdfCas.NS_RDFCAS);
+        aTarget.setNamespace("cas", SCHEME_UIMA + "uima.cas.");
+        aTarget.setNamespace("tcas", SCHEME_UIMA + "uima.tcas.");
+        aTarget.setNamespace(PREFIX_RDFCAS, RdfCas.NS_RDFCAS);
 
         // Additional prefix mappings for DKPro Core typesystems
         for (var t : ts.getProperlySubsumedTypes(ts.getTopType())) {
@@ -73,7 +77,7 @@ public class Uima2Rdf
                 if (nameMatcher.group("INMODULE") != null) {
                     prefix = prefix + "-" + nameMatcher.group("INMODULE");
                 }
-                aTarget.setNamespace(prefix, RdfCas.NS_UIMA + nameMatcher.group("LONG"));
+                aTarget.setNamespace(prefix, SCHEME_UIMA + nameMatcher.group("LONG"));
             }
         }
 
@@ -87,11 +91,6 @@ public class Uima2Rdf
     {
         var vf = SimpleValueFactory.getInstance();
 
-        // Set up names
-        var tView = vf.createIRI(RdfCas.TYPE_VIEW);
-        var tFeatureStructure = vf.createIRI(RdfCas.TYPE_FEATURE_STRUCTURE);
-        var pIndexedIn = vf.createIRI(RdfCas.PROP_INDEXED_IN);
-
         // Get a URI for the document
         var dmd = DocumentMetaData.get(aJCas);
         var docuri = dmd.getDocumentUri() != null ? dmd.getDocumentUri()
@@ -104,23 +103,23 @@ public class Uima2Rdf
         reachable.add(aJCas.getSofa());
 
         // Set up the view itself
-        var viewUri = format("%s#%d", docuri, aJCas.getLowLevelCas().ll_getFSRef(aJCas.getSofa()));
-        var rdfView = vf.createIRI(viewUri);
-        aTarget.add(rdfView, RDF.TYPE, tView);
+        var rdfView = vf.createIRI(
+                format("%s#%d", docuri, aJCas.getLowLevelCas().ll_getFSRef(aJCas.getSofa())));
+        aTarget.add(rdfView, RDF.TYPE, RdfCas.TYPE_VIEW);
 
         for (var uimaFS : reachable) {
             var uri = format("%s#%d", docuri, aJCas.getLowLevelCas().ll_getFSRef(uimaFS));
             var rdfFS = vf.createIRI(uri);
-            aTarget.add(rdfFS, RDF.TYPE, vf.createIRI(rdfType(uimaFS.getType())));
+            aTarget.add(rdfFS, RDF.TYPE, rdfType(aTarget, uimaFS.getType()));
 
             // The SoFa is not a regular FS - do not mark it as such
             if (uimaFS != aJCas.getSofa()) {
-                aTarget.add(rdfFS, RDF.TYPE, tFeatureStructure);
+                aTarget.add(rdfFS, RDF.TYPE, RdfCas.TYPE_FEATURE_STRUCTURE);
             }
 
             // Internal UIMA information
             if (indexed.contains(uimaFS)) {
-                aTarget.add(rdfFS, pIndexedIn, rdfView);
+                aTarget.add(rdfFS, RdfCas.PROP_INDEXED_IN, rdfView);
             }
 
             // Convert features
@@ -133,7 +132,7 @@ public class Uima2Rdf
         var vf = SimpleValueFactory.getInstance();
 
         for (var uimaFeat : uimaFS.getType().getFeatures()) {
-            var rdfFeat = vf.createIRI(rdfFeature(uimaFeat));
+            var rdfFeat = rdfFeature(aTarget, uimaFeat);
             if (uimaFeat.getRange().isPrimitive()) {
                 switch (uimaFeat.getRange().getName()) {
                 case CAS.TYPE_NAME_BOOLEAN:
@@ -189,13 +188,32 @@ public class Uima2Rdf
         return format("%s#%d", docuri, uimaFS.getCAS().getLowLevelCAS().ll_getFSRef(uimaFS));
     }
 
-    private static String rdfFeature(Feature aUimaFeature)
+    private static IRI rdfFeature(Model aModel, Feature aUimaFeature)
     {
-        return rdfType(aUimaFeature.getDomain()) + "-" + aUimaFeature.getShortName();
+        var typeIri = rdfType(aModel, aUimaFeature.getDomain());
+        return new BasicIRI(typeIri.getNamespace(),
+                typeIri.getLocalName() + "-" + aUimaFeature.getShortName());
     }
 
-    private static String rdfType(Type aUimaType)
+    private static IRI rdfType(Model aModel, Type aUimaType)
     {
-        return RdfCas.NS_UIMA + aUimaType.getName();
+        Namespace bestNs = null;
+        for (var ns : aModel.getNamespaces()) {
+            var nsName = ns.getName().substring(SCHEME_UIMA.length());
+            if (aUimaType.getName().startsWith(nsName)
+                    && (bestNs == null || nsName.length() > bestNs.getName().length())) {
+                bestNs = ns;
+            }
+        }
+
+        var vf = SimpleValueFactory.getInstance();
+        if (bestNs != null) {
+            var namespace = bestNs.getName();
+            var localName = aUimaType.getName()
+                    .substring(bestNs.getName().length() - SCHEME_UIMA.length());
+            return new BasicIRI(namespace, localName);
+        }
+
+        return vf.createIRI(SCHEME_UIMA + aUimaType.getName());
     }
 }
