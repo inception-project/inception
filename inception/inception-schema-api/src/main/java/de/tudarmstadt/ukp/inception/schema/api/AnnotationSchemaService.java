@@ -27,6 +27,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.validation.ValidationError;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
@@ -670,4 +671,8 @@ public interface AnnotationSchemaService
 
     void createMissingTag(AnnotationFeature aFeature, String aValue)
         throws IllegalFeatureValueException;
+
+    List<ValidationError> validateFeatureName(AnnotationFeature aFeature);
+
+    boolean hasValidFeatureName(AnnotationFeature aFeature);
 }

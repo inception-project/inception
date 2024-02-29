@@ -9,7 +9,7 @@ networks:
 
 services:
   db:
-    image: "mariadb:10.7"
+    image: "mariadb:10.11"
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
@@ -37,7 +37,6 @@ services:
       - INCEPTION_DB_URL=jdbc:mariadb://db:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
       - INCEPTION_DB_USERNAME=${DBUSER:-inception}
       - INCEPTION_DB_PASSWORD=${DBPASSWORD:-inception}
-      - JAVA_OPTS=-Dspring.jpa.properties.hibernate.dialect.storage_engine=innodb
     volumes:
       - ${INCEPTION_HOME:-app-data}:/export
     depends_on:

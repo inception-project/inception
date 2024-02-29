@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Directi
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RESTRICTED_FEATURE_NAMES;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isNativeUimaType;
@@ -33,6 +34,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
@@ -71,6 +75,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
+import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1655,5 +1660,54 @@ public class AnnotationSchemaServiceImpl
         selectedTag.setName(aValue);
         selectedTag.setTagSet(aFeature.getTagset());
         createTag(selectedTag);
+    }
+
+    @Override
+    public boolean hasValidFeatureName(AnnotationFeature aFeature)
+    {
+        return validateFeatureName(aFeature).isEmpty();
+    }
+
+    @Override
+    public List<ValidationError> validateFeatureName(AnnotationFeature aFeature)
+    {
+        String name = aFeature.getName();
+
+        var errors = new ArrayList<ValidationError>();
+
+        if (isBlank(name)) {
+            errors.add(new ValidationError("Feature name cannot be empty."));
+            return errors;
+        }
+
+        // Check if feature name is not from the restricted names list
+        if (RESTRICTED_FEATURE_NAMES.contains(name)) {
+            errors.add(new ValidationError("[" + name + "] is a reserved feature name. Please "
+                    + "use a different name for the feature."));
+            return errors;
+        }
+
+        var layerSupport = layerSupportRegistry.getLayerSupport(aFeature.getLayer());
+        errors.addAll(layerSupport.validateFeatureName(aFeature));
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        // Checking if feature name doesn't start with a number or underscore
+        // And only uses alphanumeric characters
+        if (isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
+                || !isAlphanumeric(name.replace("_", ""))) {
+            errors.add(new ValidationError("Feature names must start with a letter and consist "
+                    + "only of letters, digits, or underscores."));
+            return errors;
+        }
+
+        if (existsFeature(name, aFeature.getLayer())) {
+            errors.add(new ValidationError(
+                    "A feature with the name [" + name + "] already exists on this layer!"));
+            return errors;
+        }
+
+        return errors;
     }
 }
