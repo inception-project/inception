@@ -43,12 +43,12 @@ import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
  * {@link WikiDataLinkingProjectInitializersAutoConfiguration#entityAnnotationProjectInitializer}.
  * </p>
  */
-@Order(5000)
+@Order(4900)
 public class EntityAnnotationProjectInitializer
     implements QuickProjectInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "EntityLinkingProjectInitializer.svg");
+            MethodHandles.lookup().lookupClass(), "EntityAnnotationProjectInitializer.svg");
 
     private final AnnotationSchemaService annotationService;
     private final ApplicationContext context;
