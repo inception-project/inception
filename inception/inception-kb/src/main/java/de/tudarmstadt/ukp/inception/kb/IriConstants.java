@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -44,7 +43,8 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
     public static final String PREFIX_VIRTUOSO = "http://www.openlinksw.com/schemas/bif#";
-    public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
+    public static final String PREFIX_RDF4J_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
+    public static final String PREFIX_ALLEGRO_GRAPH_FTI = "http://franz.com/ns/allegrograph/2.2/textindex/";
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
     public static final String PREFIX_BLAZEGRAPH = "http://www.bigdata.com/rdf/search#";
@@ -84,7 +84,8 @@ public class IriConstants
     public static final IRI SCHEMA_DESCRIPTION;
 
     public static final IRI FTS_FUSEKI;
-    public static final IRI FTS_LUCENE;
+    public static final IRI FTS_RDF4J_LUCENE;
+    public static final IRI FTS_ALLEGRO_GRAPH;
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_WIKIDATA;
     public static final IRI FTS_STARDOG;
@@ -104,7 +105,7 @@ public class IriConstants
     public static final List<IRI> FTS_IRIS;
 
     static {
-        ValueFactory vf = SimpleValueFactory.getInstance();
+        var vf = SimpleValueFactory.getInstance();
 
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
@@ -115,7 +116,8 @@ public class IriConstants
 
         FTS_FUSEKI = vf.createIRI("text:query");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
-        FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
+        FTS_ALLEGRO_GRAPH = vf.createIRI(PREFIX_ALLEGRO_GRAPH_FTI, "match");
+        FTS_RDF4J_LUCENE = vf.createIRI(PREFIX_RDF4J_LUCENE_SEARCH, "matches");
         FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
         FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
         FTS_BLAZEGRAPH = vf.createIRI(PREFIX_BLAZEGRAPH, "search");
@@ -131,8 +133,8 @@ public class IriConstants
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         DEPRECATION_PROPERTY_IRIS = asList(OWL.DEPRECATED);
-        FTS_IRIS = asList(FTS_FUSEKI, FTS_BLAZEGRAPH, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE,
-                FTS_STARDOG);
+        FTS_IRIS = asList(FTS_FUSEKI, FTS_BLAZEGRAPH, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_RDF4J_LUCENE,
+                FTS_STARDOG, FTS_ALLEGRO_GRAPH);
     }
 
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)

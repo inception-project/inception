@@ -58,7 +58,7 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(IriConstants.FTS_RDF4J_LUCENE.stringValue());
         kb.setPropertyLabelIri(RDFS.LABEL.stringValue());
         kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());

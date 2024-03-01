@@ -17,18 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
+import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 
 public class FtsAdapterStardog
     implements FtsAdapter
 {
+    private final static Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
+
     private final SPARQLQueryBuilder builder;
 
     public FtsAdapterStardog(SPARQLQueryBuilder aBuilder)
