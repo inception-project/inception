@@ -197,6 +197,7 @@
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>
     <module>inception-preferences</module>
+    <module>inception-processing</module>
     <module>inception-guidelines</module>
     <module>inception-schema</module>
     <!-- IO -->

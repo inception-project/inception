@@ -110,6 +110,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-processing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project-initializers</artifactId>
     </dependency>
     <dependency>
@@ -942,6 +946,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-lookup</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-processing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
