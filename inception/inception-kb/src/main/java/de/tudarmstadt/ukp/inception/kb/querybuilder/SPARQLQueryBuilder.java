@@ -675,7 +675,7 @@ public class SPARQLQueryBuilder
         Iri pSubProperty = iri(kb.getSubPropertyIri());
         var primaryLabelPattern = aVariable
                 .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
-        return primaryLabelPattern;
+        return optional(primaryLabelPattern);
     }
 
     /**
