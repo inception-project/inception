@@ -26,11 +26,15 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityAnnotationProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.EntityLinkingProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntityIdentifierStringRecommenderInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntitySequenceClassifierRecommenderInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.NamedEntityStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.WikiDataKnowledgeBaseInitializer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -66,5 +70,32 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
     {
         return new EntityLinkingProjectInitializer(aContext, aAnnotationService);
+    }
+
+    @Bean
+    public EntityAnnotationProjectInitializer entityAnnotationProjectInitializer(
+            ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
+    {
+        return new EntityAnnotationProjectInitializer(aContext, aAnnotationService);
+    }
+
+    @ConditionalOnBean(RecommendationService.class)
+    @Bean
+    public NamedEntityStringRecommenderInitializer namedEntityStringRecommenderInitializer(
+            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
+            StringMatchingRecommenderFactory aRecommenderFactory)
+    {
+        return new NamedEntityStringRecommenderInitializer(aRecommenderService, aAnnotationService,
+                aRecommenderFactory);
+    }
+
+    @ConditionalOnBean(RecommendationService.class)
+    @Bean
+    public NamedEntitySequenceClassifierRecommenderInitializer namedEntitySequenceClassifierRecommenderInitializer(
+            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
+            OpenNlpNerRecommenderFactory aRecommenderFactory)
+    {
+        return new NamedEntitySequenceClassifierRecommenderInitializer(aRecommenderService,
+                aAnnotationService, aRecommenderFactory);
     }
 }

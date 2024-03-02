@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
@@ -99,11 +98,11 @@ public class NamedEntityLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet nerTagSet = annotationSchemaService
-                .getTagSet(NamedEntityTagSetInitializer.TAG_SET_NAME, aProject);
+        var nerTagSet = annotationSchemaService.getTagSet(NamedEntityTagSetInitializer.TAG_SET_NAME,
+                aProject);
 
-        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
+        var neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity", SPAN_TYPE,
+                aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",

@@ -28,26 +28,26 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommenderFactory;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WikiDataLinkingProjectInitializersAutoConfiguration#namedEntityIdentifierStringRecommenderInitializer}.
+ * {@link WikiDataLinkingProjectInitializersAutoConfiguration#namedEntitySequenceClassifierRecommenderInitializer}.
  * </p>
  */
-public class NamedEntityIdentifierStringRecommenderInitializer
+public class NamedEntitySequenceClassifierRecommenderInitializer
     implements ProjectInitializer
 {
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
-    private final StringMatchingRecommenderFactory recommenderFactory;
+    private final OpenNlpNerRecommenderFactory recommenderFactory;
 
-    public NamedEntityIdentifierStringRecommenderInitializer(
+    public NamedEntitySequenceClassifierRecommenderInitializer(
             RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
-            StringMatchingRecommenderFactory aRecommenderFactory)
+            OpenNlpNerRecommenderFactory aRecommenderFactory)
     {
         recommendationService = aRecommenderService;
         annotationService = aAnnotationService;
@@ -57,7 +57,7 @@ public class NamedEntityIdentifierStringRecommenderInitializer
     @Override
     public String getName()
     {
-        return "Named entity linking recommender";
+        return "Named entity sequence classifier recommender";
     }
 
     @Override
@@ -82,8 +82,7 @@ public class NamedEntityIdentifierStringRecommenderInitializer
     public void configure(Project aProject) throws IOException
     {
         var spanLayer = annotationService.findLayer(aProject, NamedEntity.class.getName());
-        var labelFeature = annotationService.getFeature(NamedEntity._FeatName_identifier,
-                spanLayer);
+        var labelFeature = annotationService.getFeature(NamedEntity._FeatName_value, spanLayer);
 
         var recommender = new Recommender(getName(), spanLayer);
         recommender.setFeature(labelFeature);
