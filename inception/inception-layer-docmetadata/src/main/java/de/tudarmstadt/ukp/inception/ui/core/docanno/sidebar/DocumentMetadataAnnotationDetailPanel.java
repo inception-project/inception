@@ -29,7 +29,6 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
@@ -142,8 +140,8 @@ public class DocumentMetadataAnnotationDetailPanel
                 final FeatureEditor editor;
 
                 // Look up a suitable editor and instantiate it
-                FeatureSupport<?> featureSupport = featureSupportRegistry
-                        .findExtension(featureState.feature).orElseThrow();
+                var featureSupport = featureSupportRegistry.findExtension(featureState.feature)
+                        .orElseThrow();
                 editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
                         annotationPage.getModel(), item.getModel());
@@ -158,7 +156,7 @@ public class DocumentMetadataAnnotationDetailPanel
                     }
 
                     // Add tooltip on label
-                    StringBuilder tooltipTitle = new StringBuilder();
+                    var tooltipTitle = new StringBuilder();
                     tooltipTitle.append(featureState.feature.getUiName());
                     if (featureState.feature.getTagset() != null) {
                         tooltipTitle.append(" (");
@@ -166,7 +164,7 @@ public class DocumentMetadataAnnotationDetailPanel
                         tooltipTitle.append(')');
                     }
 
-                    Component labelComponent = editor.getLabelComponent();
+                    var labelComponent = editor.getLabelComponent();
                     labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                     labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
                             featureState.feature.getDescription()));

@@ -21,10 +21,8 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -55,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
-import de.tudarmstadt.ukp.inception.recommendation.processor.BulkProcessingPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
@@ -244,14 +241,5 @@ public class RecommenderServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new SuggestionSupportRegistryImpl(aExtensions);
-    }
-
-    @ConditionalOnWebApplication
-    @Bean
-    @ConditionalOnExpression("${websocket.enabled:true} and ${bulk-processing.enabled:false}")
-    public BulkProcessingPageMenuItem bulkProcessingPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, ServletContext aServletContext)
-    {
-        return new BulkProcessingPageMenuItem(aUserRepo, aProjectService, aServletContext);
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.processor;
+package de.tudarmstadt.ukp.inception.processing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
@@ -27,6 +27,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.processing.recommender.BulkRecommenderPanel;
+import de.tudarmstadt.ukp.inception.ui.scheduling.TaskMonitorPanel;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/process")
 public class BulkProcessingPage
@@ -44,6 +46,9 @@ public class BulkProcessingPage
 
         requireProjectRole(user, MANAGER);
 
-        add(new BulkProcessingPanel("processingPanel", getProjectModel()));
+        queue(new BulkRecommenderPanel("processingPanel", getProjectModel()));
+
+        queue(new TaskMonitorPanel("runningProcesses").setPopupMode(false)
+                .setShowFinishedTasks(true));
     }
 }

@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionCon
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation.MetadataSuggestionSupport;
 
 @ExtendWith(MockitoExtension.class)
 class MetadataSuggestionExtractionTest
