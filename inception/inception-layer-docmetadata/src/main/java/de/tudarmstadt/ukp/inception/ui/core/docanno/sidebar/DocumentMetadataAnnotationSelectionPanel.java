@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
@@ -478,7 +479,16 @@ public class DocumentMetadataAnnotationSelectionPanel
         var renderer = layerSupport.createRenderer(aLayer,
                 () -> annotationService.listAnnotationFeature(aLayer));
 
-        for (var fs : cas.select(adapter.getAnnotationType(cas))) {
+        Type type;
+        try {
+            type = adapter.getAnnotationType(cas);
+        }
+        catch (IllegalArgumentException e) {
+            // CAS probably has not been upgraded to contain the type - ignore
+            return;
+        }
+
+        for (var fs : cas.select(type)) {
             var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, features);
             var labelText = TypeUtil.getUiLabelText(renderedFeatures);
             items.add(new AnnotationListItem(VID.of(fs), labelText, aLayer, singleton, 0.0d));
