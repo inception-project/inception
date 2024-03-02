@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toMap;
 
@@ -161,7 +161,7 @@ public class KnowledgeBaseCreationWizard
                 // Local KBs are writeable by default
                 kbModel.getObject().getKb().setReadOnly(false);
                 // local KBs are always RDF4J + Lucene, so we can set the FTS mode accordingly
-                kbModel.getObject().getKb().setFullTextSearchIri(FTS_LUCENE.stringValue());
+                kbModel.getObject().getKb().setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
                 break;
             case REMOTE:
                 // Local KBs are read-only

@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_BLAZEGRAPH;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_VIRTUOSO;
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
@@ -28,7 +25,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
-import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
@@ -61,20 +57,6 @@ public interface SPARQLVariables
     Variable VAR_DESCRIPTION = var(VAR_DESCRIPTION_NAME);
     Variable VAR_DESC_CANDIDATE = var(VAR_DESCRIPTION_CANDIDATE_NAME);
     Variable VAR_DEPRECATION = var(VAR_DEPRECATION_NAME);
-
-    Prefix PREFIX_LUCENE_SEARCH = prefix("search",
-            iri("http://www.openrdf.org/contrib/lucenesail#"));
-    Iri LUCENE_QUERY = PREFIX_LUCENE_SEARCH.iri("query");
-    Iri LUCENE_PROPERTY = PREFIX_LUCENE_SEARCH.iri("property");
-    Iri LUCENE_SCORE = PREFIX_LUCENE_SEARCH.iri("score");
-    Iri LUCENE_SNIPPET = PREFIX_LUCENE_SEARCH.iri("snippet");
-
-    Prefix PREFIX_FUSEKI_SEARCH = prefix("text", iri("http://jena.apache.org/text#"));
-    Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
-
-    Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
-
-    Prefix PREFIX_BLAZEGRAPH_SEARCH = prefix("bds", iri(PREFIX_BLAZEGRAPH));
 
     // Some versions of Virtuoso do not like it when we declare the bif prefix.
     // Prefix PREFIX_VIRTUOSO_SEARCH = prefix("bif", iri(PREFIX_VIRTUOSO));

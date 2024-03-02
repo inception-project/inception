@@ -47,7 +47,7 @@ public class AccessSettingsPanel
 
     private DropDownChoice<RepositoryType> createTypeSelection(String id, String property)
     {
-        DropDownChoice<RepositoryType> typeChoice = new DropDownChoice<>(id, kbModel.bind(property),
+        var typeChoice = new DropDownChoice<>(id, kbModel.bind(property),
                 asList(RepositoryType.values()), new EnumChoiceRenderer<>(this));
         typeChoice.setRequired(true);
         return typeChoice;
@@ -55,7 +55,7 @@ public class AccessSettingsPanel
 
     private CheckBox createCheckbox(String aId, String aProperty)
     {
-        CheckBox checkbox = new CheckBox(aId, kbModel.bind(aProperty));
+        var checkbox = new CheckBox(aId, kbModel.bind(aProperty));
         checkbox.setOutputMarkupId(true);
         return checkbox;
     }

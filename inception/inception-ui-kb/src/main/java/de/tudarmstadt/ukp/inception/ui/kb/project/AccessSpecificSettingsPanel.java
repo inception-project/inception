@@ -47,7 +47,7 @@ public class AccessSpecificSettingsPanel
 
         aModel.getObject().clearFiles();
 
-        boolean isHandlingLocalRepository = aModel.getObject().getKb().getType() == LOCAL;
+        var isHandlingLocalRepository = aModel.getObject().getKb().getType() == LOCAL;
 
         // container for form components related to local KBs
         local = new LocalRepositorySettingsPanel("localSpecificSettings", aModel,

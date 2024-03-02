@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
@@ -25,21 +25,34 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.bind;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.str;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.bNode;
+import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 
 import java.util.ArrayList;
 
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
+import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
+import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
+
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 
 public class FtsAdapterRdf4J
     implements FtsAdapter
 {
+    private static final Prefix PREFIX_RDF4J_LUCENE_SEARCH = prefix("search",
+            iri(IriConstants.PREFIX_RDF4J_LUCENE_SEARCH));
+    private static final Iri LUCENE_QUERY = PREFIX_RDF4J_LUCENE_SEARCH.iri("query");
+    private static final Iri LUCENE_PROPERTY = PREFIX_RDF4J_LUCENE_SEARCH.iri("property");
+    private static final Iri LUCENE_SCORE = PREFIX_RDF4J_LUCENE_SEARCH.iri("score");
+    private static final Iri LUCENE_SNIPPET = PREFIX_RDF4J_LUCENE_SEARCH.iri("snippet");
+
     private final SPARQLQueryBuilder builder;
 
     public FtsAdapterRdf4J(SPARQLQueryBuilder aBuilder)
@@ -50,7 +63,7 @@ public class FtsAdapterRdf4J
     @Override
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        builder.addPrefix(PREFIX_LUCENE_SEARCH);
+        builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -64,7 +77,7 @@ public class FtsAdapterRdf4J
             builder.addProjection(VAR_SCORE);
 
             valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
+                    .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).filter(builder
@@ -79,7 +92,7 @@ public class FtsAdapterRdf4J
     @Override
     public void withLabelContainingAnyOf(String... aValues)
     {
-        builder.addPrefix(PREFIX_LUCENE_SEARCH);
+        builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -91,12 +104,14 @@ public class FtsAdapterRdf4J
 
             builder.addProjection(VAR_SCORE);
 
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*")) //
-                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
-                            .andHas(LUCENE_SCORE, VAR_SCORE))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
+            valuePatterns
+                    .add(VAR_SUBJECT
+                            .has(FTS_RDF4J_LUCENE,
+                                    bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*")) //
+                                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
+                                            .andHas(LUCENE_SCORE, VAR_SCORE))
+                            .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
         }
 
         builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -106,7 +121,7 @@ public class FtsAdapterRdf4J
     @Override
     public void withLabelStartingWith(String aPrefixQuery)
     {
-        builder.addPrefix(PREFIX_LUCENE_SEARCH);
+        builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
         var sanitizedValue = SPARQLQueryBuilder.sanitizeQueryString_FTS(aPrefixQuery);
@@ -130,7 +145,7 @@ public class FtsAdapterRdf4J
         // filter them by those which actually start with the prefix.
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                VAR_SUBJECT.has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
+                VAR_SUBJECT.has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
                         .andHas(LUCENE_SCORE, VAR_SCORE)
                         .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
                         .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
@@ -140,7 +155,7 @@ public class FtsAdapterRdf4J
     @Override
     public void withLabelMatchingAnyOf(String... aValues)
     {
-        builder.addPrefix(PREFIX_LUCENE_SEARCH);
+        builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -166,7 +181,7 @@ public class FtsAdapterRdf4J
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
             valuePatterns.add(VAR_SUBJECT //
-                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
+                    .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
                             .andHas(LUCENE_SNIPPET, var("snippet")))

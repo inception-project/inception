@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.DATA_ADDITIONAL_SEARCH_PROPERTIES_2;
@@ -78,7 +78,7 @@ public class Rdf4JRepositoryTest
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.LOCAL);
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
         kb.setMaxResults(100);
 
         SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
