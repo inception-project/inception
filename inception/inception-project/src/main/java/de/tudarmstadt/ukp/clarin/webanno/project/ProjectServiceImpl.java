@@ -512,7 +512,7 @@ public class ProjectServiceImpl
 
                 entityManager.persist(permission);
 
-                log.info("Created permission [{}] for user {} on project {}", level, aUser,
+                log.info("Granted permission [{}] for user {} on project {}", level, aUser,
                         aProject);
             }
 

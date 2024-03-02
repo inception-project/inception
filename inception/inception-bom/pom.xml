@@ -425,17 +425,12 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-conll</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-brat</artifactId>
-        <version>32.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-json</artifactId>
-        <version>32.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-text</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -445,17 +440,12 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-webanno-tsv</artifactId>
+        <artifactId>inception-io-intertext</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-tei</artifactId>
-        <version>32.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-conll</artifactId>
+        <artifactId>inception-io-json</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -465,12 +455,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-intertext</artifactId>
-        <version>32.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-perseus</artifactId>
+        <artifactId>inception-io-lif</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -480,7 +465,12 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-lif</artifactId>
+        <artifactId>inception-io-perseus</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-rdf</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -490,9 +480,25 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-tei</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-text</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-webanno-tsv</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-xmi</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>
+
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-telemetry</artifactId>

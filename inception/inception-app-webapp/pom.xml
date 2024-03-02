@@ -359,38 +359,6 @@
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-webanno-tsv</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-text</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-tcf</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-nif</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-imscwb</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-intertext</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-perseus</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-bioc</artifactId>
     </dependency>
     <dependency>
@@ -403,16 +371,51 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-xmi</artifactId>
+      <artifactId>inception-io-imscwb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-html</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-intertext</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-nif</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-perseus</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-rdf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tcf</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-tei</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-text</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-webanno-tsv</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xmi</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -420,7 +423,6 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
-
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -538,8 +540,8 @@
       <artifactId>sentry-spring-boot-starter</artifactId>
     </dependency>
     <dependency>
-        <groupId>io.sentry</groupId>
-        <artifactId>sentry-log4j2</artifactId>
+      <groupId>io.sentry</groupId>
+      <artifactId>sentry-log4j2</artifactId>
     </dependency>
 
     <!-- DATABASE / HIBERNATE -->
@@ -652,6 +654,11 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli-spring-boot-starter</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
     
     <dependency>
@@ -942,17 +949,19 @@
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-bioc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-brat</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-html</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-rdf</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tei</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-text</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->

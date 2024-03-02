@@ -373,6 +373,16 @@ snomed-ct:
       - Download SNOMED CT RD2 data files, e.g. from the [National Library of Medicine](https://www.nlm.nih.gov/healthit/snomedct/international.html)
       - The RD2 package contains a data file in _OWL Functional Syntax_ wiht the ending `.owl` - rename the file to end in `.ofn`
       - Import the renamed file into the knowledge base created from this profile (this may take a while)
+      
+      At this point, you will be able to link against SNOMED concepts, but the tree browser will not be able to find
+      certain concepts. To fix this, an additional step has to be performed:
+      
+      - Obtain a copy for the [ELK Reasoner standalone executable](https://github.com/liveontologies/elk-reasoner/releases)
+      - Use ELK to classify the SNOMED _OWL Functional Syntax_ data: <br>
+        `java -jar elk-standalone.jar -i snomed-file.ofn -c -o snomed-classified-file.ofn`
+      - Import that converted classified file into same knowledge base that already contains the other SNOMED data
+      
+      After all imports are complete, enable the _read only_ checkbox - this enables an internal cache and improves performance.
     host-institution-name: SNOMED International
     website-url: https://www.snomed.org
     license-url: https://www.snomed.org/get-snomed

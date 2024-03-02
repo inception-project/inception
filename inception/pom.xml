@@ -228,6 +228,7 @@
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
     <module>inception-io-intertext</module>
+    <module>inception-io-rdf</module>
     <module>inception-io-tcf</module>
     <module>inception-io-tei</module>
     <module>inception-io-text</module>

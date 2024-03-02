@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -107,20 +106,17 @@ public class DocumentMetadataLayerSupport
     public DocumentMetadataLayerAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        DocumentMetadataLayerAdapter adapter = new DocumentMetadataLayerAdapter(
-                getLayerSupportRegistry(), featureSupportRegistry, eventPublisher, aLayer,
-                aFeatures);
-
-        return adapter;
+        return new DocumentMetadataLayerAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, aFeatures);
     }
 
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
+        var td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
 
-        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+        var featureForLayer = aAllFeaturesInProject.stream()
                 .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
         generateFeatures(aTsd, td, featureForLayer);
     }
@@ -136,7 +132,7 @@ public class DocumentMetadataLayerSupport
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
-        AnnotationLayer layer = aLayerModel.getObject();
+        var layer = aLayerModel.getObject();
 
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);

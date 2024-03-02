@@ -28,8 +28,6 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
@@ -90,7 +88,7 @@ public class EntityLinkingProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        List<Class<? extends ProjectInitializer>> dependencies = new ArrayList<>();
+        var dependencies = new ArrayList<Class<? extends ProjectInitializer>>();
         dependencies.add(NamedEntityLayerInitializer.class);
         dependencies.add(NamedEntityIdentifierFeatureInitializer.class);
         dependencies.add(WikiDataKnowledgeBaseInitializer.class);
@@ -106,9 +104,8 @@ public class EntityLinkingProjectInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer layer = annotationService.findLayer(aProject, NamedEntity.class.getName());
-        AnnotationFeature valueFeature = annotationService.getFeature(NamedEntity._FeatName_value,
-                layer);
+        var layer = annotationService.findLayer(aProject, NamedEntity.class.getName());
+        var valueFeature = annotationService.getFeature(NamedEntity._FeatName_value, layer);
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);
     }

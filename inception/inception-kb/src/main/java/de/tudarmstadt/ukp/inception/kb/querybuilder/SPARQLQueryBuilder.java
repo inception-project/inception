@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_ALLEGRO_GRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
@@ -97,7 +98,6 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf;
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfBlankNode.LabeledBlankNode;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue;
 import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
@@ -637,8 +637,8 @@ public class SPARQLQueryBuilder
      */
     private GraphPattern bindPrefLabelProperties(Variable aVariable)
     {
-        Iri pLabel = mode.getLabelProperty(kb);
-        Iri pSubProperty = iri(kb.getSubPropertyIri());
+        var pLabel = mode.getLabelProperty(kb);
+        var pSubProperty = iri(kb.getSubPropertyIri());
         var primaryLabelPattern = aVariable
                 .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
         return optional(primaryLabelPattern);
@@ -650,8 +650,8 @@ public class SPARQLQueryBuilder
      */
     GraphPattern bindMatchTermProperties(Variable aVariable)
     {
-        Iri pLabel = mode.getLabelProperty(kb);
-        Iri pSubProperty = iri(kb.getSubPropertyIri());
+        var pLabel = mode.getLabelProperty(kb);
+        var pSubProperty = iri(kb.getSubPropertyIri());
         var primaryLabelPattern = aVariable
                 .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
 
@@ -665,7 +665,7 @@ public class SPARQLQueryBuilder
         var patterns = new ArrayList<TriplePattern>();
         patterns.add(primaryLabelPattern);
 
-        for (Iri pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
+        for (var pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
             patterns.add(aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
                     pAddSearch));
         }
@@ -711,9 +711,9 @@ public class SPARQLQueryBuilder
         // , "}"
         // , "LIMIT " + aKB.getMaxResults());
 
-        Iri subClassProperty = iri(kb.getSubclassIri());
-        Iri subPropertyProperty = iri(kb.getSubPropertyIri());
-        LabeledBlankNode superClass = Rdf.bNode("superClass");
+        var subClassProperty = iri(kb.getSubclassIri());
+        var subPropertyProperty = iri(kb.getSubPropertyIri());
+        var superClass = Rdf.bNode("superClass");
 
         addPattern(PRIMARY, union(GraphPatterns.and(
                 // Find all super-classes of the domain type
@@ -754,7 +754,7 @@ public class SPARQLQueryBuilder
     {
         IRI ftsMode = getFtsMode();
 
-        if (FTS_LUCENE.equals(ftsMode)) {
+        if (FTS_RDF4J_LUCENE.equals(ftsMode)) {
             return new FtsAdapterRdf4J(this);
         }
 
@@ -776,6 +776,10 @@ public class SPARQLQueryBuilder
 
         if (FTS_WIKIDATA.equals(ftsMode)) {
             return new FtsAdapterWikidata(this);
+        }
+
+        if (FTS_ALLEGRO_GRAPH.equals(ftsMode)) {
+            return new FtsAdapterAllegroGraph(this);
         }
 
         if (FTS_NONE.equals(ftsMode) || ftsMode == null) {

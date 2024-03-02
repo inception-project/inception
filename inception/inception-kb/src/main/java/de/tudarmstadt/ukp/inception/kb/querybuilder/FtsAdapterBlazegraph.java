@@ -17,24 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
+import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
 
+import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 
 public class FtsAdapterBlazegraph
     implements FtsAdapter
 {
+    private static final Prefix PREFIX_BLAZEGRAPH_SEARCH = prefix("bds", iri(PREFIX_BLAZEGRAPH));
+
     private final SPARQLQueryBuilder builder;
 
     public FtsAdapterBlazegraph(SPARQLQueryBuilder aBuilder)
     {
         builder = aBuilder;
-        builder.addPrefix(SPARQLQueryBuilder.PREFIX_BLAZEGRAPH_SEARCH);
+        builder.addPrefix(PREFIX_BLAZEGRAPH_SEARCH);
     }
 
     @Override

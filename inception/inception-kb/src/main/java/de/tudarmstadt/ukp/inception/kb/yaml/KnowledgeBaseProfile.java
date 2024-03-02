@@ -96,8 +96,11 @@ public class KnowledgeBaseProfile
         mapping = aMapping;
         rootConcepts = aRootConcepts;
         info = aInfo;
-        reification = aReification;
         defaultLanguage = aDefaultLanguage;
+
+        if (aReification != null) {
+            reification = aReification;
+        }
 
         if (aDefaultDataset != null) {
             defaultDataset = aDefaultDataset;
@@ -186,6 +189,10 @@ public class KnowledgeBaseProfile
 
     public Reification getReification()
     {
+        if (reification == null) {
+            return Reification.NONE;
+        }
+
         return reification;
     }
 
