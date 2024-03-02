@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toMap;
 

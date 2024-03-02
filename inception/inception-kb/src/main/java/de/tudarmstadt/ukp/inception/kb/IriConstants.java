@@ -137,6 +137,39 @@ public class IriConstants
                 FTS_STARDOG, FTS_ALLEGRO_GRAPH);
     }
 
+    public static String getFtsBackendName(String aFTS)
+    {
+        if (FTS_FUSEKI.stringValue().equals(aFTS)) {
+            return "Apache Jena Fuseki";
+        }
+
+        if (FTS_BLAZEGRAPH.stringValue().equals(aFTS)) {
+            return "Blazegraph DB";
+        }
+
+        if (FTS_VIRTUOSO.stringValue().equals(aFTS)) {
+            return "Virtuoso";
+        }
+
+        if (FTS_WIKIDATA.stringValue().equals(aFTS)) {
+            return "Wikidata (MediaWiki API Query Service EntitySearch)";
+        }
+
+        if (FTS_RDF4J_LUCENE.stringValue().equals(aFTS)) {
+            return "RDF4J Lucene";
+        }
+
+        if (FTS_STARDOG.stringValue().equals(aFTS)) {
+            return "Stardog";
+        }
+
+        if (FTS_ALLEGRO_GRAPH.stringValue().equals(aFTS)) {
+            return "AllegroGraph";
+        }
+
+        return aFTS;
+    }
+
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)
     {
         // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not
