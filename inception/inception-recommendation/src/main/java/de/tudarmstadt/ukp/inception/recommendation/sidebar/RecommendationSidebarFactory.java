@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -39,6 +40,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * {@link RecommenderServiceAutoConfiguration#recommendationSidebarFactory}.
  * </p>
  */
+@Order(5000)
 public class RecommendationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.rendering.editorstate;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
 public interface ColoringPreferences
 {
     Map<Long, ColoringStrategyType> getColorPerLayer();
 
-    ReadonlyColoringBehaviour getReadonlyLayerColoringBehaviour();
+    ReadonlyColoringStrategy getReadonlyLayerColoringBehaviour();
 }

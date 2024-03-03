@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.coloring;
 
-public enum ReadonlyColoringBehaviour
+public enum ReadonlyColoringStrategy
 {
     LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY),
     NORMAL("normal", null),
@@ -26,7 +26,7 @@ public enum ReadonlyColoringBehaviour
     private final String descriptiveName;
     private final ColoringStrategyType strategy;
 
-    private ReadonlyColoringBehaviour(String aDescriptiveName, ColoringStrategyType aStrategy)
+    private ReadonlyColoringStrategy(String aDescriptiveName, ColoringStrategyType aStrategy)
     {
         descriptiveName = aDescriptiveName;
         strategy = aStrategy;

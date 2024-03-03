@@ -24,57 +24,54 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
 /**
  * This is a class representing the bean objects to store users preference of annotation settings
  * such as annotation layers, number of sentence to display at a time, visibility of lemma and
  * whether to allow auto page scrolling.
- *
  */
 public class AnnotationPreference
     implements Serializable, ColoringPreferences
 {
     private static final long serialVersionUID = 2202236699782758271L;
 
+    // BEGIN: Settings related to editor choice
+    private String editor;
+    // END: Settings related to editor choice
+
+    // BEGIN: Settings specific to the brat editor
     public static final int FONT_ZOOM_MIN = 10;
     public static final int FONT_ZOOM_MAX = 1000;
     public static final int FONT_ZOOM_DEFAULT = 100;
+    private int fontZoom;
+    private int windowSize;
+    private boolean scrollPage = true;
+    private boolean collapseArcs = false;
+    // END: Settings specific to the brat editor
 
+    // BEGIN: Settings specific to the AnnotationPage layout
     public static final int SIDEBAR_SIZE_MIN = 5;
     public static final int SIDEBAR_SIZE_MAX = 50;
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
-
-    // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
-    @Deprecated
-    private List<Long> annotationLayers;
-
-    // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
-    private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
-
-    private long defaultLayer = -1;
-
-    private int windowSize;
-
-    private boolean scrollPage = true;
-
-    @Deprecated
-    private boolean staticColor = true; //
-
-    private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
-
-    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = ReadonlyColoringBehaviour.LEGACY;
-
-    @Deprecated
-    private int sidebarSize;
+    private @Deprecated int sidebarSize;
     private int sidebarSizeLeft;
     private int sidebarSizeRight;
-    private int fontZoom;
+    // END: Settings specific to the AnnotationPage layout
 
-    private String editor;
+    // BEGIN: Settings specific to the AnnotationDetailPanel
+    private long defaultLayer = -1;
+    // END: Settings specific to the AnnotationDetailPanel
 
-    private boolean collapseArcs = false;
+    // BEGIN: Settings specific to layer visibility and coloring
+    private @Deprecated List<Long> annotationLayers;
+    private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
+    private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
+    private ReadonlyColoringStrategy readonlyLayerColoringBehaviour = ReadonlyColoringStrategy.LEGACY;
+    private @Deprecated boolean staticColor = true;
+    // END: Settings specific to layer visibility and coloring
 
     /**
      * @return the preferred annotation layers
@@ -97,6 +94,16 @@ public class AnnotationPreference
     public void setAnnotationLayers(List<Long> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
+    }
+
+    public void setLayerVisible(AnnotationLayer aLayer, boolean aVisible)
+    {
+        if (aVisible) {
+            hiddenAnnotationLayerIds.remove(aLayer.getId());
+        }
+        else {
+            hiddenAnnotationLayerIds.add(aLayer.getId());
+        }
     }
 
     public Set<Long> getHiddenAnnotationLayerIds()
@@ -155,13 +162,13 @@ public class AnnotationPreference
     }
 
     @Override
-    public ReadonlyColoringBehaviour getReadonlyLayerColoringBehaviour()
+    public ReadonlyColoringStrategy getReadonlyLayerColoringBehaviour()
     {
         return readonlyLayerColoringBehaviour;
     }
 
     public void setReadonlyLayerColoringBehaviour(
-            ReadonlyColoringBehaviour readonlyLayerColoringBehaviour)
+            ReadonlyColoringStrategy readonlyLayerColoringBehaviour)
     {
         this.readonlyLayerColoringBehaviour = readonlyLayerColoringBehaviour;
     }
@@ -170,6 +177,7 @@ public class AnnotationPreference
      * @deprecated this is only here to not break previous user settings, its not an option that can
      *             be set anymore and is also no longer used anywhere
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public boolean isStaticColor()
     {

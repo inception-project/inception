@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import com.networknt.schema.JsonSchema;
 
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
  * {@link AnnotationBrowserSidebarAutoConfiguration#annotationBrowserSidebarFactory}.
  * </p>
  */
+@Order(1000)
 public class DiamSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
     implements ClientSideUserPreferencesProvider
