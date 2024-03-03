@@ -146,24 +146,7 @@ public class BulkPredictionTask
                 var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
                         EXCLUSIVE_WRITE_ACCESS);
 
-                var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
-                for (var metadataEntry : processingMetadata.entrySet()) {
-                    var layer = metadataEntry.getKey().getLayer();
-                    if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                        continue;
-                    }
-
-                    var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
-
-                    var anno = metadataAnnotationCache.get(layer);
-                    if (anno == null) {
-                        anno = adapter.add(doc, dataOwner, cas);
-                        metadataAnnotationCache.put(layer, anno);
-                    }
-
-                    adapter.setFeatureValue(doc, dataOwner, anno, metadataEntry.getKey(),
-                            metadataEntry.getValue());
-                }
+                addProcessingMetadataAnnotation(doc, cas);
 
                 annotationsCount += autoAccept(doc, predictions, cas);
 
@@ -179,6 +162,28 @@ public class BulkPredictionTask
             catch (AnnotationException e) {
                 LOG.error("Error creating processing metadata annotation", e);
             }
+        }
+    }
+
+    private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas) throws AnnotationException
+    {
+        var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
+        for (var metadataEntry : processingMetadata.entrySet()) {
+            var layer = metadataEntry.getKey().getLayer();
+            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
+
+            var anno = metadataAnnotationCache.get(layer);
+            if (anno == null) {
+                anno = adapter.add(doc, dataOwner, cas);
+                metadataAnnotationCache.put(layer, anno);
+            }
+
+            adapter.setFeatureValue(doc, dataOwner, anno, metadataEntry.getKey(),
+                    metadataEntry.getValue());
         }
     }
 
