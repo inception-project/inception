@@ -24,6 +24,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
  * {@link CurationSidebarAutoConfiguration#curationSidebarFactory}.
  * </p>
  */
+@Order(3000)
 public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

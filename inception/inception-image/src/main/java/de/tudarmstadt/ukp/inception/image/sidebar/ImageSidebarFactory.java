@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport.TYP
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
  * {@link ImageSupportAutoConfiguration#imageSidebarFactory}.
  * </p>
  */
+@Order(10000)
 public class ImageSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
@@ -24,62 +24,32 @@ import org.springframework.core.annotation.Order;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
-/**
- * Sidebar to access the external search on the annotation page.
- * <p>
- * This class is exposed as a Spring Component via
- * {@link ExternalSearchUIAutoConfiguration#externalSearchAnnotationSidebarFactory}.
- * </p>
- */
-@Order(3600)
-public class ExternalSearchAnnotationSidebarFactory
+@Order(2000)
+public class LayerVisibilitySidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
-    private final ExternalSearchService externalSearchService;
-
-    public ExternalSearchAnnotationSidebarFactory(ExternalSearchService aExternalSearchService)
-    {
-        externalSearchService = aExternalSearchService;
-    }
-
     @Override
     public String getDisplayName()
     {
-        return "External Search";
+        return "Layers";
     }
 
     @Override
     public String getDescription()
     {
-        return "Allows searching document repositories and importing documents. Only available if "
-                + "there are document repositories defined in the project.";
+        return "Allows showing/hiding layers";
     }
 
     @Override
     public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return new Icon(aId, FontAwesome5IconType.database_s);
-    }
-
-    @Override
-    public boolean available(Project aProject)
-    {
-        return externalSearchService.existsEnabledDocumentRepository(aProject);
-    }
-
-    @Override
-    public boolean applies(AnnotatorState aState)
-    {
-        return available(aState.getProject());
+        return new Icon(aId, FontAwesome5IconType.layer_group_s);
     }
 
     @Override
@@ -87,7 +57,7 @@ public class ExternalSearchAnnotationSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new ExternalSearchAnnotationSidebar(aId, aModel, aActionHandler, aCasProvider,
+        return new LayerVisibilitySidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }
 }

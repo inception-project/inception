@@ -18,10 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
 
 public abstract class AnnotationSidebarFactory_ImplBase
-    implements BeanNameAware, Ordered, AnnotationSidebarFactory
+    implements BeanNameAware, AnnotationSidebarFactory
 {
     private String beanName;
 
@@ -35,11 +34,5 @@ public abstract class AnnotationSidebarFactory_ImplBase
     public String getBeanName()
     {
         return beanName;
-    }
-
-    @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
     }
 }
