@@ -74,7 +74,7 @@ public class PubMedProviderTest
         when(annotationService.getFullProjectTypeSystem(any()))
                 .thenReturn(createTypeSystemDescription());
 
-        String results = sut.getDocumentText(repo, traits, "PMC", "PMC7096989");
+        String results = sut.getDocumentText(repo, traits, "PMC", "7096989");
 
         // System.out.println(results);
 
