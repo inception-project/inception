@@ -32,7 +32,9 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
     const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
     let leftOffset = 0
 
-    if (firstPageElement.clientWidth > pageContainer.clientWidth) {
+    // If the pages are not rendered left-aligned because one is wider than the other, we need
+    // to adjust the position of the rectangle on the X-axis
+    if (firstPageElement.clientWidth != pageContainer.clientWidth) {
       const firstContainerStyle = getComputedStyle(firstPageElement)
       const firstPageLeft = parseInt(firstContainerStyle.marginLeft) + parseInt(firstContainerStyle.borderLeftWidth)
       const currentPageStyle = getComputedStyle(pageContainer)
