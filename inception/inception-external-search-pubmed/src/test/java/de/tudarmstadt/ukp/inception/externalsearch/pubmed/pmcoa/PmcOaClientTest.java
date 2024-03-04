@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +39,6 @@ class PmcOaClientTest
         sut = new PmcOaClient();
     }
 
-    @Disabled("See issue: Unable to access PMC BioC service #4556")
     @Test
     public void thatBiocWorks() throws Exception
     {

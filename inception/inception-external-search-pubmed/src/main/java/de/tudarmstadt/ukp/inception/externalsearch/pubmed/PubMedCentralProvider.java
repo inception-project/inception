@@ -35,7 +35,6 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.uima.UIMAException;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -81,10 +80,10 @@ public class PubMedCentralProvider
         var summaryResponse = entrezClient.esummary(DB_PUB_MED_CENTRAL,
                 searchResponse.getIdList().stream().mapToInt(i -> i).toArray());
 
-        List<ExternalSearchResult> results = new ArrayList<>();
+        var results = new ArrayList<ExternalSearchResult>();
         for (var summary : summaryResponse.getDocSumaries()) {
-            ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
-                    DB_PUB_MED_CENTRAL, summary.getId() + EXT_XML);
+            var result = new ExternalSearchResult(aDocumentRepository, DB_PUB_MED_CENTRAL,
+                    summary.getId() + EXT_XML);
             result.setOriginalUri(
                     "https://www.ncbi.nlm.nih.gov/pmc/articles/" + PMCID_PREFIX + summary.getId());
             result.setOriginalSource(summary.source());
@@ -110,9 +109,7 @@ public class PubMedCentralProvider
             PubMedProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                aDocumentId);
-        return result;
+        return new ExternalSearchResult(aRepository, aCollectionId, aDocumentId);
     }
 
     @Override
@@ -123,7 +120,7 @@ public class PubMedCentralProvider
         var biocXml = pmcoaClient.bioc(aTraits, PMCID_PREFIX + stripExtension(aDocumentId));
 
         try {
-            Project project = aDocumentRepository.getProject();
+            var project = aDocumentRepository.getProject();
             var cas = WebAnnoCasUtil.createCas(schemaService.getFullProjectTypeSystem(project));
             new BioCToCas().parseXml(new ByteArrayInputStream(biocXml), cas.getJCas());
             return cas.getDocumentText();
