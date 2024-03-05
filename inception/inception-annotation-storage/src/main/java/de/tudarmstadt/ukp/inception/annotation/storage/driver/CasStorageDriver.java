@@ -48,4 +48,6 @@ public interface CasStorageDriver
     Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
+
+    Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException;
 }

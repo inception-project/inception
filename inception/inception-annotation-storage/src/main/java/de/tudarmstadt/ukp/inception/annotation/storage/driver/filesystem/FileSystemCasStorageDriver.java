@@ -442,6 +442,17 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    {
+        var file = getCasFile(aDocument, aUser);
+        if (file.exists()) {
+            return Optional.of(file.length());
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
         throws IOException
     {

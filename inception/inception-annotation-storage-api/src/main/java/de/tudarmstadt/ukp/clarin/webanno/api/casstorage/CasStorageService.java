@@ -180,4 +180,6 @@ public interface CasStorageService
     void forceActionOnCas(SourceDocument aDocument, String aUser, CasStorageServiceLoader aLoader,
             CasStorageServiceAction aAction, boolean aSave)
         throws IOException;
+
+    Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException;
 }

@@ -301,4 +301,8 @@ public interface RecommendationService
     long countEnabledRecommenders();
 
     Progress getProgressTowardsNextEvaluation(User aSessionOwner, Project aProject);
+
+    boolean isSuspended(String aUser, Project aProject);
+
+    void setSuspended(String aUser, Project aProject, boolean aState);
 }
