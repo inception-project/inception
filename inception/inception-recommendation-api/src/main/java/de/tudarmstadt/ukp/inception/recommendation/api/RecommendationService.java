@@ -127,6 +127,15 @@ public interface RecommendationService
 
     void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
 
+    /**
+     * Replace the current predictions with the pending predictions if any are available.
+     * 
+     * @param aSessionOwner
+     *            the owner of the session.
+     * @param aProject
+     *            the project.
+     * @return whether the current predictions where replaced or not.
+     */
     boolean switchPredictions(String aSessionOwner, Project aProject);
 
     /**
@@ -277,7 +286,13 @@ public interface RecommendationService
             SourceDocument aDocument, CAS aCas, String aDataOwner, AnnotationLayer aLayer,
             Collection<SuggestionGroup<T>> aRecommendations, int aWindowBegin, int aWindowEnd);
 
-    void clearState(String aSessionOwner);
+    /**
+     * Discards all predictions in all states belonging to the owner. Flags are retained.
+     * 
+     * @param aSessionOwner
+     *            the user owning the session.
+     */
+    void resetState(String aSessionOwner);
 
     void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDocumentOwner);
