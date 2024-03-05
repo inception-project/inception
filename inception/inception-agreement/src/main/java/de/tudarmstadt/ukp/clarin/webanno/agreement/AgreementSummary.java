@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.DoubleStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
@@ -124,10 +125,10 @@ public class AgreementSummary
         }
 
         for (var e : aResult.allNull.entrySet()) {
-            allNull.merge(e.getKey(), e.getValue(), Boolean::logicalOr);
+            allNull.merge(e.getKey(), e.getValue(), Boolean::logicalAnd);
         }
 
-        empty |= aResult.empty;
+        empty &= aResult.empty;
 
         if (incompleteSetsByPosition >= 0 && aResult.incompleteSetsByPosition >= 0) {
             incompleteSetsByPosition += aResult.incompleteSetsByPosition;
@@ -208,9 +209,26 @@ public class AgreementSummary
         return casGroupIds;
     }
 
+    private DoubleStream usableAgreements()
+    {
+        return agreements.stream() //
+                .mapToDouble(a -> a) //
+                .filter(v -> !Double.isNaN(v)); // skip documents for which we have no agreement
+    }
+
     public double getAgreement()
     {
-        return agreements.stream().mapToDouble(a -> a).average().orElse(Double.NaN);
+        return usableAgreements().average().orElse(Double.NaN);
+    }
+
+    public long getTotalAgreementsCount()
+    {
+        return agreements.size();
+    }
+
+    public long getUsableAgreementsCount()
+    {
+        return usableAgreements().count();
     }
 
     public String getType()

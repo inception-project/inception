@@ -203,7 +203,9 @@ public class PairwiseUnitizingAgreementTable
 
         var tooltipTitle = aRater1.getUiName() + " ↔ " + aRater2.getUiName();
 
-        var tooltipContent = "Positions annotated:\n"
+        var tooltipContent = String.format("Documents counted: %d/%d%n",
+                result.getUsableAgreementsCount(), result.getTotalAgreementsCount())
+                + "Positions annotated:\n"
                 + String.format("- %s: %d/%d%n", aRater1.getUiName(),
                         result.getNonNullCount(casGroupId1), result.getItemCount(casGroupId1))
                 + String.format("- %s: %d/%d%n", aRater2.getUiName(),
