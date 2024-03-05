@@ -213,61 +213,63 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public Predictions getPredictions(User aUser, Project aProject)
+    public Predictions getPredictions(User aSessionOwner, Project aProject)
     {
-        var state = getState(aUser.getUsername(), aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         return state.getActivePredictions();
     }
 
     @Override
-    public Predictions getIncomingPredictions(User aUser, Project aProject)
+    public Predictions getIncomingPredictions(User aSessionOwner, Project aProject)
     {
-        var state = getState(aUser.getUsername(), aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         return state.getIncomingPredictions();
     }
 
     @Override
-    public void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions)
+    public void putIncomingPredictions(User aSessionOwner, Project aProject,
+            Predictions aPredictions)
     {
-        var state = getState(aUser.getUsername(), aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         synchronized (state) {
             state.setIncomingPredictions(aPredictions);
         }
     }
 
     @Override
-    public boolean hasActiveRecommenders(String aUser, Project aProject)
+    public boolean hasActiveRecommenders(String aSessionOwner, Project aProject)
     {
-        var state = getState(aUser, aProject);
+        var state = getState(aSessionOwner, aProject);
         synchronized (state) {
             return !state.getActiveRecommenders().isEmpty();
         }
     }
 
     @Override
-    public void setEvaluatedRecommenders(User aUser, AnnotationLayer aLayer,
+    public void setEvaluatedRecommenders(User aSessionOwner, AnnotationLayer aLayer,
             List<EvaluatedRecommender> aRecommenders)
     {
-        var state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aSessionOwner.getUsername(), aLayer.getProject());
         synchronized (state) {
             state.setEvaluatedRecommenders(aLayer, aRecommenders);
         }
     }
 
     @Override
-    public List<EvaluatedRecommender> getEvaluatedRecommenders(User aUser, AnnotationLayer aLayer)
+    public List<EvaluatedRecommender> getEvaluatedRecommenders(User aSessionOwner,
+            AnnotationLayer aLayer)
     {
-        var state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aSessionOwner.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getEvaluatedRecommenders().get(aLayer));
         }
     }
 
     @Override
-    public Optional<EvaluatedRecommender> getEvaluatedRecommender(User aUser,
+    public Optional<EvaluatedRecommender> getEvaluatedRecommender(User aSessionOwner,
             Recommender aRecommender)
     {
-        var state = getState(aUser.getUsername(), aRecommender.getProject());
+        var state = getState(aSessionOwner.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getEvaluatedRecommenders().get(aRecommender.getLayer()).stream()
                     .filter(r -> r.getRecommender().equals(aRecommender)).findAny();
@@ -275,18 +277,19 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
+    public List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner,
+            AnnotationLayer aLayer)
     {
-        var state = getState(aUser.getUsername(), aLayer.getProject());
+        var state = getState(aSessionOwner.getUsername(), aLayer.getProject());
         synchronized (state) {
             return new ArrayList<>(state.getActiveRecommenders().get(aLayer));
         }
     }
 
     @Override
-    public List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject)
+    public List<EvaluatedRecommender> getActiveRecommenders(User aSessionOwner, Project aProject)
     {
-        var state = getState(aUser.getUsername(), aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         synchronized (state) {
             return new ArrayList<>(state.getActiveRecommenders().values());
         }
@@ -374,14 +377,14 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public boolean existsRecommender(Project aProject, String aName)
+    public boolean existsRecommender(Project aProject, String aRecommender)
     {
         var cb = entityManager.getCriteriaBuilder();
         var query = cb.createQuery(Long.class);
         var root = query.from(Recommender.class);
 
         query.select(cb.count(root)).where(cb.and( //
-                cb.equal(root.get(Recommender_.name), aName), //
+                cb.equal(root.get(Recommender_.name), aRecommender), //
                 cb.equal(root.get(Recommender_.project), aProject)));
 
         long count = entityManager.createQuery(query).getSingleResult();
@@ -391,7 +394,7 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
-    public Optional<Recommender> getRecommender(Project aProject, String aName)
+    public Optional<Recommender> getRecommender(Project aProject, String aRecommender)
     {
         String query = String.join("\n", //
                 "FROM Recommender ", //
@@ -399,7 +402,7 @@ public class RecommendationServiceImpl
                 "AND project = :project");
 
         return entityManager.createQuery(query, Recommender.class) //
-                .setParameter("name", aName) //
+                .setParameter("name", aRecommender) //
                 .setParameter("project", aProject) //
                 .getResultStream() //
                 .findFirst();
@@ -794,17 +797,17 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument,
+    public void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDataOwner)
     {
-        var user = userRepository.get(aUsername);
+        var sessionOwner = userRepository.get(aSessionOwner);
 
-        if (user == null) {
+        if (sessionOwner == null) {
             return;
         }
 
         schedulingService.enqueue(PredictionTask.builder() //
-                .withSessionOwner(user) //
+                .withSessionOwner(sessionOwner) //
                 .withTrigger(aEventName) //
                 .withCurrentDocument(aDocument) //
                 .withDataOwner(aDataOwner) //
@@ -886,10 +889,10 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public List<LogMessageGroup> getLog(String aUser, Project aProject)
+    public List<LogMessageGroup> getLog(String aSessionOwner, Project aProject)
     {
-        var activePredictions = getState(aUser, aProject).getActivePredictions();
-        var incomingPredictions = getState(aUser, aProject).getIncomingPredictions();
+        var activePredictions = getState(aSessionOwner, aProject).getActivePredictions();
+        var incomingPredictions = getState(aSessionOwner, aProject).getIncomingPredictions();
 
         var messageSets = new ArrayList<LogMessageGroup>();
 
@@ -915,10 +918,22 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void setPredictForAllDocuments(String aUser, Project aProject,
+    public void setPredictForAllDocuments(String aSessionOwner, Project aProject,
             boolean aPredictForAllDocuments)
     {
-        getState(aUser, aProject).setPredictForAllDocuments(aPredictForAllDocuments);
+        getState(aSessionOwner, aProject).setPredictForAllDocuments(aPredictForAllDocuments);
+    }
+
+    @Override
+    public boolean isSuspended(String aSessionOwner, Project aProject)
+    {
+        return getState(aSessionOwner, aProject).isSuspended();
+    }
+
+    @Override
+    public void setSuspended(String aSessionOwner, Project aProject, boolean aState)
+    {
+        getState(aSessionOwner, aProject).setSuspended(aState);
     }
 
     @EventListener
@@ -956,9 +971,9 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public Preferences getPreferences(User aUser, Project aProject)
+    public Preferences getPreferences(User aSessionOwner, Project aProject)
     {
-        var state = getState(aUser.getUsername(), aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         return state.getPreferences();
     }
 
@@ -975,22 +990,22 @@ public class RecommendationServiceImpl
         return Optional.ofNullable(recommenderFactoryRegistry.getFactory(aRecommender.getTool()));
     }
 
-    private RecommendationState getState(String aUsername, Project aProject)
+    private RecommendationState getState(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
-            return states.computeIfAbsent(new RecommendationStateKey(aUsername, aProject),
+            return states.computeIfAbsent(new RecommendationStateKey(aSessionOwner, aProject),
                     (v) -> new RecommendationState());
         }
     }
 
     @Override
-    public void clearState(String aUsername)
+    public void clearState(String aSessionOwner)
     {
-        Validate.notNull(aUsername, "Username must be specified");
+        Validate.notNull(aSessionOwner, "Username must be specified");
 
         synchronized (states) {
-            states.keySet().removeIf(key -> aUsername.equals(key.getUser()));
-            trainingTaskCounter.keySet().removeIf(key -> aUsername.equals(key.getUser()));
+            states.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
+            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
         }
     }
 
@@ -1036,9 +1051,9 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext)
+    public void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext)
     {
-        var state = getState(aUser.getUsername(), aRecommender.getProject());
+        var state = getState(aSessionOwner.getUsername(), aRecommender.getProject());
         synchronized (state) {
             state.putContext(aRecommender, aContext);
         }
@@ -1203,6 +1218,7 @@ public class RecommendationServiceImpl
      */
     private class RecommendationState
     {
+        private boolean suspended;
         private Preferences preferences;
         private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> evaluatedRecommenders;
         private Map<Recommender, RecommenderContext> contexts;
@@ -1389,6 +1405,16 @@ public class RecommendationServiceImpl
         public void setPredictForAllDocuments(boolean aPredictForAllDocuments)
         {
             predictForAllDocuments = aPredictForAllDocuments;
+        }
+
+        public boolean isSuspended()
+        {
+            return suspended;
+        }
+
+        public void setSuspended(boolean aSuspended)
+        {
+            suspended = aSuspended;
         }
 
         public void logRecord(LearningRecord aRecord)
