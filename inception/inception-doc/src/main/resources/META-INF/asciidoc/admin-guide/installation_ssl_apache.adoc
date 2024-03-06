@@ -59,8 +59,7 @@ ProxyPreserveHost On
   RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
 </Location>
 
-ProxyPass /inception/ws ws://localhost:8080/inception/ws
-ProxyPass /inception http://localhost:8080/inception
+ProxyPass /inception http://localhost:8080/inception upgrade=websocket
 ProxyPassReverse /inception http://localhost:8080/inception
 ----
 If you use Apache 2.4 without `mod_access_compat` exchange the `<Proxy> … </Proxy>` section from the above example with this:
