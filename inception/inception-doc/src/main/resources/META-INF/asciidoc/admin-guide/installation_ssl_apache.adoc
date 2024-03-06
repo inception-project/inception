@@ -24,7 +24,7 @@ IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions
 
 This assumes that you already have the following packages installed:
 
-* Apache Web Server
+* Apache Web Server (tested with Apache/2.4.57 on Debian)
 * mod_proxy
 * mod_proxy_http
 
