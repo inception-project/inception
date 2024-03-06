@@ -27,13 +27,12 @@ This assumes that you already have the following packages installed:
 * Apache Web Server
 * mod_proxy
 * mod_proxy_http
-* mod_wstunnel
 
 You can enable the two modules with
 
 [source,bash]
 ----
-$ a2enmod proxy proxy_http wstunnel
+$ a2enmod proxy proxy_http
 ----
 
 and check that they are enabled with
