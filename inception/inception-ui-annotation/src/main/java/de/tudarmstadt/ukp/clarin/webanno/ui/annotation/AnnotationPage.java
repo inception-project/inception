@@ -403,7 +403,7 @@ public class AnnotationPage
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable();
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
         bumpAnnotationCasTimestamp(state);
