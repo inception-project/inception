@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.preferences;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoCon
 import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserPreference;
 import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
+import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference_;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
@@ -51,7 +53,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class PreferencesServiceImpl
     implements PreferencesService
 {
-    private static final Logger LOG = LoggerFactory.getLogger(PreferencesServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final @PersistenceContext EntityManager entityManager;
 
@@ -196,14 +198,18 @@ public class PreferencesServiceImpl
     @Transactional
     public List<UserProjectPreference> listUserPreferencesForProject(Project aProject)
     {
-        String query = String.join("\n", //
-                "FROM UserProjectPreference ", //
-                "WHERE project = :project");
 
-        return entityManager //
-                .createQuery(query, UserProjectPreference.class) //
-                .setParameter("project", aProject) //
-                .getResultList();
+        var builder = entityManager.getCriteriaBuilder();
+        var query = builder.createQuery(UserProjectPreference.class);
+        var root = query.from(UserProjectPreference.class);
+
+        query.select(root);
+        query.where( //
+                builder.equal(root.get(UserProjectPreference_.project), aProject), //
+                // TODO We have (had) a bug somewhere that wrote nulls to the USER column
+                builder.isNotNull(root.get(UserProjectPreference_.user)));
+
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override
