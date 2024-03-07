@@ -17,11 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -31,24 +41,28 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
-import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
@@ -66,7 +80,7 @@ public class CurationEditorExtension
 {
     public static final String EXTENSION_ID = "cur";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
@@ -74,11 +88,13 @@ public class CurationEditorExtension
     private final UserDao userRepository;
     private final CurationSidebarService curationSidebarService;
     private final FeatureSupportRegistry featureSupportRegistry;
+    private final LazyDetailsLookupService detailsLookupService;
 
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
             UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+            FeatureSupportRegistry aFeatureSupportRegistry,
+            LazyDetailsLookupService aDetailsLookupService)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
@@ -86,6 +102,7 @@ public class CurationEditorExtension
         userRepository = aUserRepository;
         curationSidebarService = aCurationSidebarService;
         featureSupportRegistry = aFeatureSupportRegistry;
+        detailsLookupService = aDetailsLookupService;
     }
 
     @Override
@@ -104,16 +121,16 @@ public class CurationEditorExtension
             return;
         }
 
-        CurationVID curationVid = CurationVID.parse(aParamId.getExtensionPayload());
+        var curationVid = CurationVID.parse(aParamId.getExtensionPayload());
         if (curationVid == null) {
             return;
         }
 
-        SourceDocument doc = aState.getDocument();
-        String srcUser = curationVid.getUsername();
+        var doc = aState.getDocument();
+        var srcUser = curationVid.getUsername();
 
         if (!documentService.existsAnnotationDocument(doc, srcUser)) {
-            log.error("Source CAS of [{}] for curation not found", srcUser);
+            LOG.error("Source CAS of [{}] for curation not found", srcUser);
             return;
         }
 
@@ -128,10 +145,10 @@ public class CurationEditorExtension
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
             // get user CAS and annotation (to be merged into curator's)
-            VID vid = VID.parse(curationVid.getExtensionPayload());
+            var vid = VID.parse(curationVid.getExtensionPayload());
 
-            CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-            AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+            var srcCas = documentService.readAnnotationCas(doc, srcUser);
+            var sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
 
             var page = (AnnotationPageBase) aTarget.getPage();
             page.getAnnotationActionHandler().actionJump(aTarget, sourceAnnotation.getBegin(),
@@ -157,7 +174,7 @@ public class CurationEditorExtension
         var srcUser = curationVid.getUsername();
 
         if (!documentService.existsAnnotationDocument(aDocument, srcUser)) {
-            log.error("Source CAS of [{}] for curation not found", srcUser);
+            LOG.error("Source CAS of [{}] for curation not found", srcUser);
             return null;
         }
 
@@ -177,22 +194,22 @@ public class CurationEditorExtension
         throws IOException, AnnotationException
     {
         // get user CAS and annotation (to be merged into curator's)
-        SourceDocument doc = aState.getDocument();
-        String srcUser = aCurationVid.getUsername();
+        var doc = aState.getDocument();
+        var srcUser = aCurationVid.getUsername();
 
-        VID vid = VID.parse(aCurationVid.getExtensionPayload());
+        var vid = VID.parse(aCurationVid.getExtensionPayload());
 
-        CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
-        AnnotationLayer layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
+        var srcCas = documentService.readAnnotationCas(doc, srcUser);
+        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+        var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
         if (vid.isSlotSet()) {
             mergeSlot(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
-        else if (RELATION_TYPE.equals(layer.getType())) {
+        else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
             mergeRelation(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
-        else if (SPAN_TYPE.equals(layer.getType())) {
+        else if (SpanLayerSupport.TYPE.equals(layer.getType())) {
             mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
@@ -204,18 +221,18 @@ public class CurationEditorExtension
             AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
-        SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        var doc = aState.getDocument();
+        var casMerge = new CasMerge(annotationService, applicationEventPublisher);
 
-        TypeAdapter adapter = annotationService.getAdapter(layer);
-        AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                .skip(aVid.getAttribute()).findFirst().get();
+        var adapter = annotationService.getAdapter(layer);
+        var feature = adapter.listFeatures().stream().sequential().skip(aVid.getAttribute())
+                .findFirst().get();
 
-        CasMergeOperationResult mergeResult = casMerge.mergeSlotFeature(doc, aSrcUser, layer,
-                aTargetCas, sourceAnnotation, feature.getName(), aVid.getSlot());
+        var mergeResult = casMerge.mergeSlotFeature(doc, aSrcUser, layer, aTargetCas,
+                sourceAnnotation, feature.getName(), aVid.getSlot());
 
-        // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+        // open created/updates FS in annotation detail editor panel
+        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
@@ -224,13 +241,13 @@ public class CurationEditorExtension
             AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
-        SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
-        CasMergeOperationResult mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer,
-                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+        var doc = aState.getDocument();
+        var casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        var mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer, aTargetCas,
+                sourceAnnotation, layer.isAllowStacking());
 
-        // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+        // open created/updates FS in annotation detail editor panel
+        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
@@ -239,14 +256,145 @@ public class CurationEditorExtension
             AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
-        SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
-        CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
-                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+        var doc = aState.getDocument();
+        var casMerge = new CasMerge(annotationService, applicationEventPublisher);
+        var mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer, aTargetCas,
+                sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editor panel
-        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
+        var mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
+    }
+
+    @Override
+    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, CAS aCas,
+            VID aVid, AnnotationLayer aLayer)
+    {
+        var detailGroups = new ArrayList<VLazyDetailGroup>();
+
+        try {
+            var curationVid = CurationVID.parse(aVid.getExtensionPayload());
+            var vid = VID.parse(curationVid.getExtensionPayload());
+            var srcUser = curationVid.getUsername();
+            var srcCas = documentService.readAnnotationCas(aDocument, srcUser);
+            var features = annotationService.listEnabledFeatures(aLayer).stream() //
+                    .filter(f -> f.isIncludeInHover()) //
+                    .filter(f -> NONE == f.getMultiValueMode()) //
+                    .toList();
+
+            // This is where we get the "show on hover" stuff...
+            detailsLookupService.lookupLayerLevelDetails(aVid, aCas, aLayer)
+                    .forEach(detailGroups::add);
+
+            // The curatable features need to be all the same across the users for the position
+            var curatableFeatures = features.stream().filter(f -> f.isCuratable()).toList();
+            for (var feature : curatableFeatures) {
+                detailsLookupService.lookupFeatureLevelDetails(aVid, aCas, feature)
+                        .forEach(detailGroups::add);
+            }
+
+            // The non-curatable features (e.g. comments) may differ, so we need to collect them
+            var nonCuratableFeatures = features.stream().filter(f -> !f.isCuratable()).toList();
+            lookupFeaturesAcrossAnnotators(aDocument, aUser, aCas, aLayer, vid, srcUser, srcCas,
+                    nonCuratableFeatures).forEach(detailGroups::add);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load lazy details", e);
+            var detailGroup = new VLazyDetailGroup();
+            detailGroup.addDetail(new VLazyDetail("Error", "Unable to load annotator details"));
+            detailGroups.add(detailGroup);
+        }
+
+        return detailGroups;
+    }
+
+    private List<VLazyDetailGroup> lookupFeaturesAcrossAnnotators(SourceDocument aDocument,
+            User aUser, CAS aCas, AnnotationLayer aLayer, VID vid, String srcUser, CAS srcCas,
+            List<AnnotationFeature> nonCuratableFeatures)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        var selectedUsers = curationSidebarService.listUsersReadyForCuration(sessionOwner,
+                aDocument.getProject(), aDocument);
+
+        if (selectedUsers.isEmpty()) {
+            return emptyList();
+        }
+
+        var casses = collectCasses(aDocument, aUser, aCas, selectedUsers);
+
+        var srcAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
+        var casDiff = createDiff(casses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
+
+        var maybeConfiguration = casDiff.toResult().findConfiguration(srcUser, srcAnnotation);
+        if (maybeConfiguration.isEmpty()) {
+            return emptyList();
+        }
+
+        var detailGroups = new ArrayList<VLazyDetailGroup>();
+
+        var configuration = maybeConfiguration.get();
+        for (var user : configuration.getCasGroupIds()) {
+            var group = new VLazyDetailGroup(user);
+            var fs = configuration.getFs(user, casses);
+            for (var f : nonCuratableFeatures) {
+                featureSupportRegistry.findExtension(f).ifPresent(support -> {
+                    var label = support.renderFeatureValue(f, fs);
+                    if (StringUtils.isNotBlank(label)) {
+                        group.addDetail(new VLazyDetail(f.getUiName(), label));
+                    }
+                });
+            }
+            if (!group.getDetails().isEmpty()) {
+                detailGroups.add(group);
+            }
+        }
+
+        return detailGroups;
+
+        // for (var group : delegateDetailGroups) {
+        // if (isNotBlank(group.getTitle())) {
+        // var detailGroup = new VLazyDetailGroup(srcUser + ": " + group.getTitle());
+        // group.getDetails().forEach(d -> detailGroup.addDetail(d));
+        // detailGroups.add(detailGroup);
+        // }
+        // else {
+        // var detailGroup = new VLazyDetailGroup();
+        // for (var detail : group.getDetails()) {
+        // detailGroup.addDetail(new VLazyDetail(srcUser + ": " + detail.getLabel(),
+        // detail.getValue()));
+        // }
+        // detailGroups.add(detailGroup);
+        // }
+        // }
+    }
+
+    private Map<String, CAS> collectCasses(SourceDocument aDocument, User aUser, CAS aCas,
+            List<User> selectedUsers)
+    {
+        var casses = new LinkedHashMap<String, CAS>();
+
+        // This is the CAS that the user can actively edit
+        casses.put(aUser.getUsername(), aCas);
+
+        for (var user : selectedUsers) {
+            try {
+                var userCas = documentService.readAnnotationCas(aDocument, user.getUsername());
+                casses.put(user.getUsername(), userCas);
+            }
+            catch (IOException e) {
+                LOG.error("Could not retrieve CAS for user [{}] and project {}", user.getUsername(),
+                        aDocument.getProject(), e);
+            }
+        }
+
+        return casses;
+    }
+
+    private CasDiff createDiff(Map<String, CAS> casses, AnnotationLayer aLayer, int aBegin,
+            int aEnd)
+    {
+        var adapters = getDiffAdapters(annotationService, asList(aLayer));
+        return doDiff(adapters, LINK_ROLE_AS_LABEL, casses, aBegin, aEnd);
     }
 }

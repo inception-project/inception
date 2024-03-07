@@ -106,14 +106,14 @@ public class PreferencesServiceImpl
 
     private <T> Optional<UserPreference> getRawUserPreference(Key<T> aKey, User aUser)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM UserPreference ", //
                 "WHERE user = :user ", //
                 "AND name = :name");
 
-        String name = aKey.getName();
+        var name = aKey.getName();
         try {
-            UserPreference pref = entityManager.createQuery(query, UserPreference.class) //
+            var pref = entityManager.createQuery(query, UserPreference.class) //
                     .setParameter("user", aUser) //
                     .setParameter("name", name) //
                     .getSingleResult();
@@ -127,12 +127,34 @@ public class PreferencesServiceImpl
 
     @Override
     @Transactional
+    public <T> Optional<T> loadOptionalTraitsForUserAndProject(Key<T> aKey, User aUser,
+            Project aProject)
+    {
+        try {
+            var pref = getUserProjectPreference(aKey, aUser, aProject);
+            if (pref.isPresent()) {
+                var json = pref.get().getTraits();
+                T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                LOG.debug("Loaded preferences for key {} and user {} and project {}: [{}]", aKey,
+                        aUser, aProject, result);
+                return Optional.of(result);
+            }
+            return Optional.empty();
+        }
+        catch (IOException e) {
+            LOG.error("Error while loading traits, returning empty", e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @Transactional
     public <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
     {
         try {
-            Optional<UserProjectPreference> pref = getUserProjectPreference(aKey, aUser, aProject);
+            var pref = getUserProjectPreference(aKey, aUser, aProject);
             if (pref.isPresent()) {
-                String json = pref.get().getTraits();
+                var json = pref.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
                 LOG.debug("Loaded preferences for key {} and user {} and project {}: [{}]", aKey,
                         aUser, aProject, result);

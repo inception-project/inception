@@ -118,7 +118,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 
     private void saveSidebarState()
     {
-        AnnotationSidebarState sidebarState = new AnnotationSidebarState();
+        var sidebarState = new AnnotationSidebarState();
         sidebarState.setSelectedTab(getTabs().get(getSelectedTab()).getFactoryId());
         sidebarState.setExpanded(expanded);
         User user = userService.getCurrentUser();
@@ -128,9 +128,9 @@ public class SidebarTabbedPanel<T extends SidebarTab>
 
     private void loadSidebarState()
     {
-        User user = userService.getCurrentUser();
-        AnnotationSidebarState sidebarState = prefService.loadTraitsForUserAndProject(
-                KEY_SIDEBAR_STATE, user, state.getObject().getProject());
+        var user = userService.getCurrentUser();
+        var sidebarState = prefService.loadTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
+                state.getObject().getProject());
         if (isNotBlank(sidebarState.getSelectedTab())) {
             var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
                     .collect(Collectors.toList());

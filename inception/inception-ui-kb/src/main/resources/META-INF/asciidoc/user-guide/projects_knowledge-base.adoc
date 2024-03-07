@@ -259,14 +259,20 @@ NOTE: Not all remote SPARQL knowledge bases may support additional matching prop
  
 === Full text search
 
-Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
+Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. 
 
-* `http://www.openrdf.org/contrib/lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
-* `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
-* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
-* `tag:stardog:api:search:textMatch`: use with link:https://www.stardog.com[Stardog].
-* `https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
-* `FTS:NONE`: use if there is no full text search support in the triple store - this will be very slow in particular for large KBs.
+Unfortunately, the SPARQL standard does not define a uniform way to perform full text searches. {product-name} offers support for full text search in a broad range of backend servers supporting the SPARQL protocol.
+
+.Supported full text search backends
+* link:https://franz.com/agraph/support/documentation/current/text-index.html[AllegroGraph]
+* link:https://jena.apache.org/documentation/query/text-query.html[Apache Jena Fuseki]
+* link:https://github.com/blazegraph/database/wiki/FullTextSearch[Blazegraph DB]
+* link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene]
+* link:https://docs.stardog.com/query-stardog/full-text-search[Stardog]
+* link:https://docs.openlinksw.com/virtuoso/rdfsparqlrulefulltext/[Virtuoso]
+* link:https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual/MWAPI[Wikidata (MediaWiki API Query Service EntitySearch)]
+
+If you select an FTS support that does not match the SPARQL server you are connecting to, you will likely get errors. If you are not sure, select **Unknown** to fall back to using standard SPARQL operations only - this will be very slow though and unviable for larger knowledge bases.
 
 ==== Apache Jena Fuseki
 
@@ -326,14 +332,20 @@ KBs can be populated by importing RDF files. Several formats are supported. The 
 |====
 | Format | Extension
 
-| RDF
+| RDF (XML)
 | `.rdf`
 
-| RDF Schema
+| RDF Schema (XML)
 | `.rdfs`
 
-| OWL
+| OBO
+| `.obo`
+
+| OWL (XML)
 | `.owl`
+
+| OWL Functional Syntax
+| `.ofn`
 
 | N-Triples
 | `.nt`

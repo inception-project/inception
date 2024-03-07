@@ -252,8 +252,7 @@ public class RelationRenderer
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
         if (!checkTypeSystem(aCas)) {
             return Collections.emptyList();
@@ -278,7 +277,7 @@ public class RelationRenderer
         renderYield(fs).ifPresent(
                 yield -> group.addDetail(new VLazyDetail("Yield", abbreviate(yield, "...", 300))));
 
-        var details = super.lookupLazyDetails(aCas, aVid, aWindowBeginOffset, aWindowEndOffset);
+        var details = super.lookupLazyDetails(aCas, aVid);
         if (!group.getDetails().isEmpty()) {
             details.add(0, group);
         }

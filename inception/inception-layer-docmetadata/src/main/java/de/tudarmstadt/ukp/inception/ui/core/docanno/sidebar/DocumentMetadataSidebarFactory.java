@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
  * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory}.
  * </p>
  */
+@Order(1500)
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

@@ -21,3 +21,9 @@ License:     https://www.w3.org/Consortium/Legal/2015/copyright-software-and-doc
 
 Source:      http://wordnet-rdf.princeton.edu/ontology
 License:     http://wordnet-rdf.princeton.edu/license
+
+
+== example1.obo
+
+Source:      https://raw.githubusercontent.com/owlcs/owlapi/version5/oboformat/src/test/resources/example1.obo
+License:     Apache License 2.0 (https://github.com/owlcs/owlapi/blob/version5/README.md)

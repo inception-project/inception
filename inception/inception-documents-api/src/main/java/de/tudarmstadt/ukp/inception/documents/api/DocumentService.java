@@ -120,13 +120,9 @@ public interface DocumentService
     SourceDocument getSourceDocument(long projectId, long documentId);
 
     /**
-     * Return the Master TCF file Directory path. For the first time, all available TCF layers will
-     * be read and converted to CAS object. subsequent accesses will be to the annotated document
-     * unless and otherwise the document is removed from the project.
-     *
      * @param document
      *            The {@link SourceDocument} to be examined
-     * @return the Directory path of the source document
+     * @return the originally imported source document file.
      */
     File getSourceDocumentFile(SourceDocument document);
 
@@ -192,15 +188,6 @@ public interface DocumentService
     void uploadSourceDocument(InputStream file, SourceDocument document,
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException, UIMAException;
-
-    /**
-     * Get the directory of this {@link SourceDocument} usually to read the content of the document
-     *
-     * @param aDocument
-     *            the source document.
-     * @return the source document folder.
-     */
-    File getSourceDocumentFolder(SourceDocument aDocument);
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
@@ -537,6 +524,14 @@ public interface DocumentService
             CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
         throws IOException;
 
+    /**
+     * @param document
+     *            The {@link SourceDocument} to be examined
+     * @return the file size of the initial CAS for the given source document.
+     * @throws IOException accessing the file.
+     */
+    Optional<Long> getInitialCasFileSize(SourceDocument document) throws IOException;
+    
     /**
      * List all the {@link AnnotationDocument annotation documents} in a given project.
      * <p>

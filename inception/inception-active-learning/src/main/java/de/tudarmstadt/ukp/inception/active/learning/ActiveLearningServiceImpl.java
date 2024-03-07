@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,18 +243,25 @@ public class ActiveLearningServiceImpl
     private String unwrapLabel(Object aValue, AnnotationFeature feature, CAS cas,
             FeatureSupport<Object> featureSupport)
     {
-        String label;
         Object rawLabel = featureSupport.unwrapFeatureValue(feature, cas, aValue);
         if (rawLabel instanceof Collection collectionValue) {
             rawLabel = collectionValue.iterator().next();
         }
+
+        if (rawLabel == null) {
+            return null;
+        }
+
+        if (ClassUtils.isPrimitiveOrWrapper(rawLabel.getClass())) {
+            return String.valueOf(rawLabel);
+        }
+
         if (rawLabel instanceof String) {
-            label = (String) rawLabel;
+            return (String) rawLabel;
         }
-        else {
-            throw new IllegalArgumentException("Non-string suggestions are not supported");
-        }
-        return label;
+
+        throw new IllegalArgumentException(
+                "Non-primitive suggestions are not supported: [" + rawLabel.getClass() + "]");
     }
 
     @Override

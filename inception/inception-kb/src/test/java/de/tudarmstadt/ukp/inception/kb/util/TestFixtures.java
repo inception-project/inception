@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
@@ -102,7 +102,7 @@ public class TestFixtures
         kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
         kb.setDescriptionIri(RDFS.COMMENT.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.

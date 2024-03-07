@@ -19,18 +19,15 @@ package de.tudarmstadt.ukp.inception.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -44,7 +41,6 @@ import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,9 +51,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -80,14 +73,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
-import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
@@ -116,7 +107,6 @@ public class DocumentImportExportServiceImpl
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final RepositoryProperties repositoryProperties;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
     private final DocumentImportExportServiceProperties properties;
@@ -130,14 +120,13 @@ public class DocumentImportExportServiceImpl
 
     private final TypeSystemDescription schemaTypeSystem;
 
-    public DocumentImportExportServiceImpl(RepositoryProperties aRepositoryProperties,
+    public DocumentImportExportServiceImpl(
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
             CasStorageService aCasStorageService, AnnotationSchemaService aAnnotationService,
             DocumentImportExportServiceProperties aServiceProperties,
             ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry,
             FormatSupport aFallbackFormat)
     {
-        repositoryProperties = aRepositoryProperties;
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         formatsProxy = aFormats;
@@ -158,10 +147,10 @@ public class DocumentImportExportServiceImpl
 
     /* package private */ void init()
     {
-        Map<String, FormatSupport> formatMap = new LinkedHashMap<>();
+        var formatMap = new LinkedHashMap<String, FormatSupport>();
 
         if (formatsProxy != null) {
-            List<FormatSupport> forms = new ArrayList<>(formatsProxy);
+            var forms = new ArrayList<>(formatsProxy);
             AnnotationAwareOrderComparator.sort(forms);
             forms.forEach(format -> {
                 formatMap.put(format.getId(), format);
@@ -181,16 +170,17 @@ public class DocumentImportExportServiceImpl
         if (aFormat.isReadable() && !aFormat.isWritable()) {
             return "read only";
         }
-        else if (!aFormat.isReadable() && aFormat.isWritable()) {
+
+        if (!aFormat.isReadable() && aFormat.isWritable()) {
             return "write only";
         }
-        else if (aFormat.isReadable() && aFormat.isWritable()) {
+
+        if (aFormat.isReadable() && aFormat.isWritable()) {
             return "read/write";
         }
-        else {
-            throw new IllegalStateException(
-                    "Format [" + aFormat.getId() + "] must be at least readable or writable.");
-        }
+
+        throw new IllegalStateException(
+                "Format [" + aFormat.getId() + "] must be at least readable or writable.");
     }
 
     @Override
@@ -243,7 +233,7 @@ public class DocumentImportExportServiceImpl
         throws IOException, UIMAException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
-            Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
+            var bulkOperationContext = aBulkOperationContext;
             if (bulkOperationContext == null) {
                 bulkOperationContext = new HashMap<>();
             }
@@ -329,7 +319,7 @@ public class DocumentImportExportServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException
     {
-        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        var tsd = aFullProjectTypeSystem;
 
         if (tsd == null) {
             tsd = annotationService.getFullProjectTypeSystem(aDocument.getProject());
@@ -367,7 +357,7 @@ public class DocumentImportExportServiceImpl
         }
 
         var messages = new ArrayList<LogMessage>();
-        CasDoctor casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
@@ -376,14 +366,14 @@ public class DocumentImportExportServiceImpl
     private void splitTokensIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
         throws IOException
     {
-        Type tokenType = getType(cas, Token.class);
+        var tokenType = getType(cas, Token.class);
 
         if (!exists(cas, tokenType)) {
             SegmentationUtils.tokenize(cas);
         }
 
         if (properties.getMaxTokens() > 0) {
-            int tokenCount = cas.getAnnotationIndex(tokenType).size();
+            var tokenCount = cas.getAnnotationIndex(tokenType).size();
             if (tokenCount > properties.getMaxTokens()) {
                 throw new IOException("Number of tokens [" + tokenCount + "] exceeds limit ["
                         + properties.getMaxTokens()
@@ -401,14 +391,14 @@ public class DocumentImportExportServiceImpl
     private void splitSenencesIfNecssaryAndCheckQuota(CAS cas, FormatSupport aFormat)
         throws IOException
     {
-        Type sentenceType = getType(cas, Sentence.class);
+        var sentenceType = getType(cas, Sentence.class);
 
         if (!exists(cas, sentenceType)) {
             SegmentationUtils.splitSentences(cas);
         }
 
         if (properties.getMaxSentences() > 0) {
-            int sentenceCount = cas.getAnnotationIndex(sentenceType).size();
+            var sentenceCount = cas.getAnnotationIndex(sentenceType).size();
             if (sentenceCount > properties.getMaxSentences()) {
                 throw new IOException("Number of sentences [" + sentenceCount + "] exceeds limit ["
                         + properties.getMaxSentences()
@@ -437,17 +427,17 @@ public class DocumentImportExportServiceImpl
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
     {
-        Project project = aDocument.getProject();
+        var project = aDocument.getProject();
         try (var logCtx = withProjectLogger(project)) {
-            Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
+            var bulkOperationContext = aBulkOperationContext;
             if (bulkOperationContext == null) {
                 bulkOperationContext = new HashMap<>();
             }
 
             // Either fetch the type system from the bulk-context or fetch it from the DB and store
             // it in the bulk-context to avoid further lookups in the same bulk operation
-            Pair<Project, String> exportTypeSystemKey = Pair.of(project, "exportTypeSystem");
-            TypeSystemDescription exportTypeSystem = (TypeSystemDescription) bulkOperationContext
+            var exportTypeSystemKey = Pair.of(project, "exportTypeSystem");
+            var exportTypeSystem = (TypeSystemDescription) bulkOperationContext
                     .get(exportTypeSystemKey);
             if (exportTypeSystem == null) {
                 exportTypeSystem = getTypeSystemForExport(project);
@@ -455,7 +445,7 @@ public class DocumentImportExportServiceImpl
             }
 
             try (var session = CasStorageSession.openNested()) {
-                CAS exportCas = WebAnnoCasUtil.createCas();
+                var exportCas = WebAnnoCasUtil.createCas();
                 session.add(EXPORT_CAS, EXCLUSIVE_WRITE_ACCESS, exportCas);
 
                 // Update type system the CAS, compact it (remove all non-reachable feature
@@ -470,7 +460,7 @@ public class DocumentImportExportServiceImpl
 
                 addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
-                File exportTempDir = Files.createTempDirectory("inception-export").toFile();
+                var exportTempDir = Files.createTempDirectory("inception-export").toFile();
                 try {
                     return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
                             aStripExtension);
@@ -494,10 +484,9 @@ public class DocumentImportExportServiceImpl
     public TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException
     {
-        List<TypeSystemDescription> tsds = new ArrayList<>();
-        tsds.add(schemaTypeSystem);
-        tsds.add(annotationService.getFullProjectTypeSystem(aProject, false));
-        return mergeTypeSystems(tsds);
+        return mergeTypeSystems(asList( //
+                schemaTypeSystem, //
+                annotationService.getFullProjectTypeSystem(aProject, false)));
     }
 
     /**
@@ -525,7 +514,7 @@ public class DocumentImportExportServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
-        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        var tsd = aFullProjectTypeSystem;
         if (tsd == null) {
             tsd = getTypeSystemForExport(aSourceDocument.getProject());
         }
@@ -536,14 +525,13 @@ public class DocumentImportExportServiceImpl
     private List<AnnotationFeature> listSupportedFeatures(Project aProject,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
     {
-        Pair<Project, String> exportFeaturesKey = Pair.of(aProject, "exportFeatures");
+        var exportFeaturesKey = Pair.of(aProject, "exportFeatures");
         @SuppressWarnings("unchecked")
-        List<AnnotationFeature> features = (List<AnnotationFeature>) aBulkOperationContext
-                .get(exportFeaturesKey);
+        var features = (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey);
         if (features == null) {
             features = annotationService.listSupportedFeatures(aProject).stream() //
                     .filter(AnnotationFeature::isEnabled) //
-                    .collect(toList());
+                    .toList();
             aBulkOperationContext.put(exportFeaturesKey, features);
         }
 
@@ -553,34 +541,28 @@ public class DocumentImportExportServiceImpl
     private void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
         throws MalformedURLException, CASException
     {
-        // Update the source file name in case it is changed for some reason. This is
-        // necessary for the writers to create the files under the correct names.
-        File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
-                + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
-        DocumentMetaData documentMetadata = DocumentMetaData.get(aCas.getJCas());
-        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(
-                new File(currentDocumentUri, aFileName).toURI().toURL().toExternalForm());
-        documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
+        var slug = aDocument.getProject().getSlug();
+        var documentMetadata = DocumentMetaData.get(aCas.getJCas());
+        documentMetadata.setDocumentBaseUri(slug);
+        documentMetadata.setDocumentUri(slug + "/" + aFileName);
+        documentMetadata.setCollectionId(slug + "/" + aFileName);
         documentMetadata.setDocumentId(aFileName);
     }
 
     private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
     {
-        List<AnnotationFeature> allFeatures = listSupportedFeatures(aProject,
-                aBulkOperationContext);
+        var allFeatures = listSupportedFeatures(aProject, aBulkOperationContext);
 
-        Type layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
-        Type featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
+        var layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
+        var featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
 
-        Map<AnnotationLayer, List<AnnotationFeature>> featuresGroupedByLayer = allFeatures.stream() //
+        var featuresGroupedByLayer = allFeatures.stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
-        List<AnnotationLayer> layers = featuresGroupedByLayer.keySet().stream()
+        var layers = featuresGroupedByLayer.keySet().stream() //
                 .sorted(comparing(AnnotationLayer::getName)) //
-                .collect(toList());
+                .toList();
 
         for (var layer : layers) {
             final var layerDefFs = aCas.createFS(layerDefType);
@@ -588,8 +570,9 @@ public class DocumentImportExportServiceImpl
             setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
             aCas.addFsToIndexes(layerDefFs);
 
-            List<AnnotationFeature> features = featuresGroupedByLayer.get(layer).stream()
-                    .sorted(Comparator.comparing(AnnotationFeature::getName)).collect(toList());
+            var features = featuresGroupedByLayer.get(layer).stream() //
+                    .sorted(comparing(AnnotationFeature::getName)) //
+                    .toList();
 
             for (var feature : features) {
                 final var featureDefFs = aCas.createFS(featureDefType);
@@ -604,25 +587,25 @@ public class DocumentImportExportServiceImpl
     private void addTagsetDefinitionAnnotations(CAS aCas, Project aProject,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
     {
-        List<AnnotationFeature> features = listSupportedFeatures(aProject, aBulkOperationContext);
+        var features = listSupportedFeatures(aProject, aBulkOperationContext);
 
-        for (AnnotationFeature feature : features) {
-            TagSet tagSet = feature.getTagset();
+        for (var feature : features) {
+            var tagSet = feature.getTagset();
             if (tagSet == null || ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
                 continue;
             }
-            String aLayer = feature.getLayer().getName();
-            String aTagSetName = tagSet.getName();
 
-            Type tagsetType = getType(aCas, TagsetDescription.class);
-            Feature layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
-            Feature nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
+            var aLayer = feature.getLayer().getName();
+            var aTagSetName = tagSet.getName();
+            var tagsetType = getType(aCas, TagsetDescription.class);
+            var layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
+            var nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
 
-            boolean tagSetModified = false;
+            var tagSetModified = false;
             // modify existing tagset Name
-            for (FeatureStructure fs : select(aCas, tagsetType)) {
-                String layer = fs.getStringValue(layerFeature);
-                String tagSetName = fs.getStringValue(nameFeature);
+            for (var fs : select(aCas, tagsetType)) {
+                var layer = fs.getStringValue(layerFeature);
+                var tagSetName = fs.getStringValue(nameFeature);
                 if (layer.equals(aLayer)) {
                     // only if the tagset name is changed
                     if (!aTagSetName.equals(tagSetName)) {
@@ -635,7 +618,7 @@ public class DocumentImportExportServiceImpl
             }
 
             if (!tagSetModified) {
-                FeatureStructure fs = aCas.createFS(tagsetType);
+                var fs = aCas.createFS(tagsetType);
                 fs.setStringValue(layerFeature, aLayer);
                 fs.setStringValue(nameFeature, aTagSetName);
                 aCas.addFsToIndexes(fs);

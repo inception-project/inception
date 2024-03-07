@@ -23,7 +23,6 @@ babel_net:
   type: REMOTE
   default-language: en
   default-dataset: http://babelnet.org/rdf/
-  reification: NONE
   access:
     access-url: http://babelnet.org/sparql/
     full-text-search: bif:contains
@@ -50,7 +49,6 @@ db_pedia:
   name: DBpedia (German)
   type: REMOTE
   default-language: de
-  reification: NONE
   access:
     access-url: http://de.dbpedia.org/sparql
     full-text-search: bif:contains
@@ -79,7 +77,6 @@ wikidata:
   name: Wikidata (direct mapping)
   type: REMOTE
   default-language: en
-  reification: NONE
   access:
     access-url: https://query.wikidata.org/sparql
     full-text-search: https://www.mediawiki.org/ontology#API/search
@@ -108,7 +105,6 @@ yago:
   name: YAGO v4
   type: REMOTE
   default-language: de
-  reification: NONE
   access:
     access-url: https://yago-knowledge.org/sparql/query
     # YAGO runs BlazeGraph these days and they seem not to have set up a full text index
@@ -136,7 +132,6 @@ zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
   default-language: en
-  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/stw/query
     full-text-search: text:query
@@ -163,7 +158,6 @@ zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
   default-language: en
-  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/gnd/query
     full-text-search: text:query
@@ -192,7 +186,6 @@ agrovoc:
   name: AGROVOC Thesaurus
   type: REMOTE
   default-language: en
-  reification: NONE
   access:
     access-url: https://agrovoc.fao.org/sparql
     full-text-search: text:query
@@ -243,7 +236,6 @@ wine_ontology:
   name: Wine Ontology
   type: LOCAL
   default-language: en
-  reification: NONE
   access:
     access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -270,7 +262,6 @@ olia_penn.owl:
   name: OLiA - Penn Treebank tagset (morphosyntax)
   type: LOCAL
   default-language: en
-  reification: NONE
   access:
     access-url: http://purl.org/olia/penn.owl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -296,7 +287,6 @@ iao:
   name: Information Artifact Ontology (IAO) (v2022-11-07)
   type: LOCAL
   default-language: en
-  reification: NONE
   access:
     access-url: https://raw.githubusercontent.com/information-artifact-ontology/IAO/v2022-11-07/iao.owl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -323,7 +313,6 @@ hpo:
   name: Human Phenotype Ontology
   type: LOCAL
   default-language: en
-  reification: NONE
   access:
     access-url: https://purl.obolibrary.org/obo/hp/hp-simple-non-classified.owl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -354,7 +343,6 @@ snomed-ct:
   name: SNOMED Clinical Terms (manual steps required!)
   type: LOCAL
   default-language: en
-  reification: NONE
   access:
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
@@ -383,18 +371,16 @@ snomed-ct:
       Here is what you need to do to obtain and load the actual SNOMED CT data:
       
       - Download SNOMED CT RD2 data files, e.g. from the [National Library of Medicine](https://www.nlm.nih.gov/healthit/snomedct/international.html)
-      - Convert the _RD2_ data to _OWL Functional Syntax_ using the [snomed-owl-toolkil](https://github.com/IHTSDO/snomed-owl-toolkit)
-      - Convert the _OWL Functional Syntax_ data to _RDF/XML_ e.g. using [Protégé](https://protege.stanford.edu)
-      - Import the _RDF/XML_ file into the knowledge base created from this profile (this may take a while)
+      - The RD2 package contains a data file in _OWL Functional Syntax_ wiht the ending `.owl` - rename the file to end in `.ofn`
+      - Import the renamed file into the knowledge base created from this profile (this may take a while)
       
       At this point, you will be able to link against SNOMED concepts, but the tree browser will not be able to find
       certain concepts. To fix this, an additional step has to be performed:
       
       - Obtain a copy for the [ELK Reasoner standalone executable](https://github.com/liveontologies/elk-reasoner/releases)
       - Use ELK to classify the SNOMED _OWL Functional Syntax_ data: <br>
-        `java -jar elk-standalone.jar -i snomed-file.owl -c -o snomed-classified-file.owl`
-      - Convert the classified file produced by ELK from _OWL Functional Syntax_ data to _RDF/XML_ e.g. using [Protégé](https://protege.stanford.edu)
-      - Import that convered classified _RDF/XML_ into same knowledge base that already contains the other SNOMED data
+        `java -jar elk-standalone.jar -i snomed-file.ofn -c -o snomed-classified-file.ofn`
+      - Import that converted classified file into same knowledge base that already contains the other SNOMED data
       
       After all imports are complete, enable the _read only_ checkbox - this enables an internal cache and improves performance.
     host-institution-name: SNOMED International

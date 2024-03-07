@@ -223,14 +223,14 @@ public class ProjectPermissionsExporterTest
 
     private ArgumentCaptor<ProjectPermission> captureCreatedPermissions()
     {
-        ArgumentCaptor<ProjectPermission> captor = ArgumentCaptor.forClass(ProjectPermission.class);
+        var captor = ArgumentCaptor.forClass(ProjectPermission.class);
         lenient().doNothing().when(projectService).createProjectPermission(captor.capture());
         return captor;
     }
 
     private ArgumentCaptor<User> captureCreatedUsers()
     {
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        var captor = ArgumentCaptor.forClass(User.class);
         lenient().when(userService.create(captor.capture()))
                 .thenAnswer(_call -> _call.getArgument(0));
         return captor;

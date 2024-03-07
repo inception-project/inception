@@ -22,7 +22,6 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
@@ -37,7 +36,7 @@ public class SegmentationUtilsTest
     @Test
     public void testSplitSentences() throws Exception
     {
-        JCas jcas = JCasFactory.createText("I am one. I am two.", "en");
+        var jcas = JCasFactory.createText("I am one. I am two.", "en");
 
         SegmentationUtils.splitSentences(jcas.getCas());
 
@@ -48,7 +47,7 @@ public class SegmentationUtilsTest
     @Test
     public void testSplitSentencesWithZones() throws Exception
     {
-        JCas jcas = JCasFactory.createText("Heading I am two.", "en");
+        var jcas = JCasFactory.createText("Heading I am two.", "en");
         new Heading(jcas, 0, 7).addToIndexes();
         new Paragraph(jcas, 8, 17).addToIndexes();
 
@@ -61,7 +60,7 @@ public class SegmentationUtilsTest
     @Test
     public void testTokenize() throws Exception
     {
-        JCas jcas = JCasFactory.createText("i am one.i am two.", "en");
+        var jcas = JCasFactory.createText("i am one.i am two.", "en");
         new Sentence(jcas, 0, 9).addToIndexes();
         new Sentence(jcas, 9, 18).addToIndexes();
 

@@ -120,7 +120,7 @@ public class KnowledgeBaseIriPanel
         iriSchemaChoice.setOutputMarkupId(true);
         // OnChange update the model with corresponding iris
         iriSchemaChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-            SchemaProfile profile = iriSchemaChoice.getModelObject();
+            var profile = iriSchemaChoice.getModelObject();
             // If the user switches to the custom profile, we retain the values from the
             // previously selected profile and just make the IRI mapping editable. If the user
             // switches to a pre-defined profile, we reset the values.
@@ -128,9 +128,11 @@ public class KnowledgeBaseIriPanel
                 classField.setModelObject(profile.getClassIri());
                 subclassField.setModelObject(profile.getSubclassIri());
                 typeField.setModelObject(profile.getTypeIri());
-                descriptionField.setModelObject(profile.getDescriptionIri());
                 labelField.setModelObject(profile.getLabelIri());
+                descriptionField.setModelObject(profile.getDescriptionIri());
+
                 propertyTypeField.setModelObject(profile.getPropertyTypeIri());
+                subPropertyField.setModelObject(profile.getSubPropertyIri());
                 propertyLabelField.setModelObject(profile.getPropertyLabelIri());
                 propertyDescriptionField.setModelObject(profile.getPropertyDescriptionIri());
                 deprecationPropertyField.setModelObject(profile.getDeprecationPropertyIri());
@@ -147,9 +149,9 @@ public class KnowledgeBaseIriPanel
             model.setObject(iris.get(0).stringValue());
         }
 
-        List<String> choices = iris.stream().map(IRI::stringValue).collect(toList());
+        var choices = iris.stream().map(IRI::stringValue).collect(toList());
 
-        ComboBox<String> comboBox = new ComboBox<>(id, model, choices);
+        var comboBox = new ComboBox<>(id, model, choices);
         comboBox.add(enabledWhen(() -> CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
@@ -161,8 +163,8 @@ public class KnowledgeBaseIriPanel
 
     private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
     {
-        DropDownChoice<Reification> reificationDropDownChoice = new DropDownChoice<>(id,
-                kbModel.bind(property), asList(Reification.values()));
+        var reificationDropDownChoice = new DropDownChoice<>(id, kbModel.bind(property),
+                asList(Reification.values()));
         reificationDropDownChoice.setRequired(true);
         reificationDropDownChoice.setOutputMarkupPlaceholderTag(true);
 

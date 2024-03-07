@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -134,7 +133,7 @@ public class ColorRenderer
 
     private Optional<AnnotationPreference> getPreferences(RenderRequest aRequest)
     {
-        AnnotatorState state = aRequest.getState();
+        var state = aRequest.getState();
         if (state != null) {
             return Optional.of(state.getPreferences());
         }

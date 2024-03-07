@@ -15,30 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.coloring;
+package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-public enum ReadonlyColoringBehaviour
+public interface FtsAdapter
+    extends SPARQLVariables
 {
-    LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY),
-    NORMAL("normal", null),
-    GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY);
+    void withLabelMatchingExactlyAnyOf(String... values);
 
-    private final String descriptiveName;
-    private final ColoringStrategyType strategy;
+    void withLabelContainingAnyOf(String... values);
 
-    private ReadonlyColoringBehaviour(String aDescriptiveName, ColoringStrategyType aStrategy)
-    {
-        descriptiveName = aDescriptiveName;
-        strategy = aStrategy;
-    }
+    void withLabelMatchingAnyOf(String... values);
 
-    public ColoringStrategyType getColoringStrategy()
-    {
-        return strategy;
-    }
-
-    public String getDescriptiveName()
-    {
-        return descriptiveName;
-    }
+    void withLabelStartingWith(String prefix);
 }

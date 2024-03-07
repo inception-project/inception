@@ -46,7 +46,7 @@ public class KnowledgeBaseProfile
     private String name;
 
     @JsonProperty("disabled")
-    private boolean disabled;
+    private boolean disabled = false;
 
     @JsonProperty("type")
     private RepositoryType type;
@@ -55,7 +55,7 @@ public class KnowledgeBaseProfile
     private KnowledgeBaseAccess access;
 
     @JsonProperty("mapping")
-    private KnowledgeBaseMapping mapping;
+    private KnowledgeBaseMapping mapping = new KnowledgeBaseMapping();
 
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
@@ -67,7 +67,7 @@ public class KnowledgeBaseProfile
     private KnowledgeBaseInfo info;
 
     @JsonProperty("reification")
-    private Reification reification;
+    private Reification reification = Reification.NONE;
 
     @JsonProperty("default-language")
     private String defaultLanguage;
@@ -96,8 +96,11 @@ public class KnowledgeBaseProfile
         mapping = aMapping;
         rootConcepts = aRootConcepts;
         info = aInfo;
-        reification = aReification;
         defaultLanguage = aDefaultLanguage;
+
+        if (aReification != null) {
+            reification = aReification;
+        }
 
         if (aDefaultDataset != null) {
             defaultDataset = aDefaultDataset;
@@ -186,6 +189,10 @@ public class KnowledgeBaseProfile
 
     public Reification getReification()
     {
+        if (reification == null) {
+            return Reification.NONE;
+        }
+
         return reification;
     }
 

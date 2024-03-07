@@ -29,7 +29,15 @@
 </head>
 <body>
   <wicket:extend>
-    <div wicket:id="processingPanel" class="d-flex flex-column flex-grow-1 overflow-hidden"/>
+    <div class="d-flex flex-row flex-grow-1 overflow-hidden">
+      <div class="d-flex flex-grow-1 flex-column scrolling">
+        <div wicket:id="processingPanel" class="d-flex flex-column flex-grow-1 overflow-hidden"/>
+      </div>
+
+      <div class="d-flex flex-sidebar flex-column border-start scrolling" style="min-width: 30rem;">
+        <div class="d-flex flex-grow-1 flex-column" wicket:id="runningProcesses"/>
+      </div>
+    </div>
   </wicket:extend>
 </body>
 </html>

@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.DATA_ADDITIONAL_SEARCH_PROPERTIES_2;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.TURTLE_PREFIX;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.importDataFromString;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.DATA_ADDITIONAL_SEARCH_PROPERTIES_2;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.TURTLE_PREFIX;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.importDataFromString;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
@@ -50,7 +50,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.Scenario;
 
 public class Rdf4JRepositoryTest
 {
@@ -78,10 +78,10 @@ public class Rdf4JRepositoryTest
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.LOCAL);
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
+        kb.setFullTextSearchIri(FTS_RDF4J_LUCENE.stringValue());
         kb.setMaxResults(100);
 
-        SPARQLQueryBuilderTest.initRdfsMapping(kb);
+        SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
 
         try (RepositoryConnection conn = repository.getConnection()) {
             conn.clear();
@@ -100,7 +100,7 @@ public class Rdf4JRepositoryTest
     {
         var exclusions = asList();
 
-        return SPARQLQueryBuilderTest.tests().stream() //
+        return SPARQLQueryBuilderLocalTestScenarios.tests().stream() //
                 .filter(scenario -> !exclusions.contains(scenario.name))
                 .map(scenario -> Arguments.of(scenario.name, scenario))
                 .collect(Collectors.toList());

@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -46,6 +49,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -57,6 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
@@ -95,6 +100,7 @@ public class KnowledgeBasePanel
     private Model<KBProperty> selectedPropertyHandle = Model.of();
     private Model<KBHandle> searchHandleModel = Model.of();
 
+    private ModalDialog dialog;
     private WebMarkupContainer detailContainer;
     private ConceptTreePanel conceptTreePanel;
     private PropertyListPanel propertyListPanel;
@@ -113,17 +119,22 @@ public class KnowledgeBasePanel
 
         setOutputMarkupId(true);
 
+        dialog = new BootstrapModalDialog("dialog");
+        add(dialog);
+
+        add(new LambdaAjaxLink("query", this::actionQuery).add(
+                visibleWhen(() -> DEVELOPMENT.equals(getApplication().getConfigurationType()))));
+
         kbModel = aKbModel;
 
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LoadableDetachableModel
-                        .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
+        var ddc = new DropDownChoice<KnowledgeBase>("knowledgebases", LoadableDetachableModel
+                .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
 
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             String kbName = aKbModel.getObject().getName();
 
-            PageParameters pageParameters = new PageParameters();
+            var pageParameters = new PageParameters();
             ProjectPageBase.setProjectPageParameter(pageParameters, aProjectModel.getObject());
             pageParameters.set(PAGE_PARAM_KB_NAME, kbName);
             setResponsePage(KnowledgeBasePage.class, pageParameters);
@@ -145,6 +156,12 @@ public class KnowledgeBasePanel
 
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
+    }
+
+    private void actionQuery(AjaxRequestTarget aTarget)
+    {
+        var content = new SparqlPanel(ModalDialog.CONTENT_ID, kbModel);
+        dialog.open(content, aTarget);
     }
 
     private KnowledgeBaseItemAutoCompleteField createSearchField(String aId,

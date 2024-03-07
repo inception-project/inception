@@ -46,6 +46,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,6 +99,11 @@ import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
+import org.semanticweb.owlapi.rio.OWLAPIRDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -140,6 +146,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 
 /**
  * <p>
@@ -630,18 +637,64 @@ public class KnowledgeBaseServiceImpl
             LOG.debug("Stream is not compressed, continue as is.");
         }
 
-        // Detect the file format
-        var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
+        PipedStreamResource resource = null;
+        try {
+            // Detect the file format
+            var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-        // Load files into the repository
-        try (var conn = getConnection(kb)) {
-            conn.setIsolationLevel(IsolationLevels.NONE);
-            // If the RDF file contains relative URLs, then they probably start with a hash.
-            // To avoid having two hashes here, we drop the hash from the base prefix configured
-            // by the user.
-            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
-            conn.add(is, prefix, format);
+            String lowerCaseFilename = aFilename.toLowerCase(Locale.ROOT);
+            if (lowerCaseFilename.endsWith(".obo") || lowerCaseFilename.endsWith(".obo.gz")) {
+                try {
+                    resource = transduceOboToOwlFunctionalSyntax(is);
+                    is = resource.getInputStream();
+                    format = OWLAPIRDFFormat.OWL_FUNCTIONAL;
+                }
+                catch (Exception e) {
+                    throw new IOException(e);
+                }
+            }
+
+            // Load files into the repository
+            try (var conn = getConnection(kb)) {
+                conn.setIsolationLevel(IsolationLevels.NONE);
+                // If the RDF file contains relative URLs, then they probably start with a hash.
+                // To avoid having two hashes here, we drop the hash from the base prefix configured
+                // by the user.
+                String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+                conn.add(is, prefix, format);
+            }
         }
+        finally {
+            if (resource != null) {
+                resource.close();
+            }
+        }
+    }
+
+    private PipedStreamResource transduceOboToOwlFunctionalSyntax(InputStream aIs)
+        throws OWLOntologyCreationException
+    {
+        var manager = OWLManager.createOWLOntologyManager();
+
+        // // Does not seem to work for imports in OBO files....
+        // var iriMappers = manager.getIRIMappers();
+        // iriMappers.add(
+        // new AutoIRIMapper(new File(kbRepositoriesRoot, "materializedOntologies"), true));
+        // manager.getOntologyLoaderConfiguration()
+        // .setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+        // manager.getOntologyConfigurator()
+        // .setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+
+        var ontology = manager.loadOntologyFromOntologyDocument(aIs);
+
+        return new PipedStreamResource(os -> {
+            try {
+                manager.saveOntology(ontology, new FunctionalSyntaxDocumentFormat(), os);
+            }
+            catch (OWLOntologyStorageException e) {
+                LOG.error("Unable to stream OBO file to OWL Functional Syntax", e);
+            }
+        });
     }
 
     @Override

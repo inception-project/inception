@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.tasks;
+package de.tudarmstadt.ukp.inception.processing.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
@@ -28,17 +28,22 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
@@ -47,12 +52,16 @@ import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class BulkPredictionTask
     extends RecommendationTask_ImplBase
@@ -63,6 +72,7 @@ public class BulkPredictionTask
 
     private final String dataOwner;
     private final Recommender recommender;
+    private final Map<AnnotationFeature, Serializable> processingMetadata;
 
     private @Autowired UserDao userService;
     private @Autowired DocumentService documentService;
@@ -76,6 +86,7 @@ public class BulkPredictionTask
 
         recommender = aBuilder.recommender;
         dataOwner = aBuilder.dataOwner;
+        processingMetadata = aBuilder.processingMetadata;
     }
 
     @Override
@@ -134,6 +145,9 @@ public class BulkPredictionTask
                         EXPLICIT_ANNOTATOR_USER_ACTION);
                 var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
                         EXCLUSIVE_WRITE_ACCESS);
+
+                addProcessingMetadataAnnotation(doc, cas);
+
                 annotationsCount += autoAccept(doc, predictions, cas);
 
                 documentService.writeAnnotationCas(cas, doc, dataOwner, true);
@@ -145,6 +159,31 @@ public class BulkPredictionTask
             catch (IOException e) {
                 LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
             }
+            catch (AnnotationException e) {
+                LOG.error("Error creating processing metadata annotation", e);
+            }
+        }
+    }
+
+    private void addProcessingMetadataAnnotation(SourceDocument doc, CAS cas) throws AnnotationException
+    {
+        var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
+        for (var metadataEntry : processingMetadata.entrySet()) {
+            var layer = metadataEntry.getKey().getLayer();
+            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
+
+            var anno = metadataAnnotationCache.get(layer);
+            if (anno == null) {
+                anno = adapter.add(doc, dataOwner, cas);
+                metadataAnnotationCache.put(layer, anno);
+            }
+
+            adapter.setFeatureValue(doc, dataOwner, anno, metadataEntry.getKey(),
+                    metadataEntry.getValue());
         }
     }
 
@@ -208,11 +247,19 @@ public class BulkPredictionTask
     {
         private Recommender recommender;
         private String dataOwner;
+        private Map<AnnotationFeature, Serializable> processingMetadata;
 
         @SuppressWarnings("unchecked")
         public T withRecommender(Recommender aRecommender)
         {
             recommender = aRecommender;
+            return (T) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public T withProcessingMetadata(Map<AnnotationFeature, Serializable> aProcessingMetadata)
+        {
+            processingMetadata = aProcessingMetadata;
             return (T) this;
         }
 

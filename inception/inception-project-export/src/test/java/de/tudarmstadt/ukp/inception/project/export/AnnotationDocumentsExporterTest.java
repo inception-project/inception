@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSys
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
@@ -89,7 +88,7 @@ public class AnnotationDocumentsExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
-        DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
+        var properties = new DocumentImportExportServicePropertiesImpl();
 
         repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(workFolder);
@@ -101,9 +100,9 @@ public class AnnotationDocumentsExporterTest
                 null, schemaService);
 
         var xmiFormatSupport = new XmiFormatSupport(new XmiFormatProperties());
-        importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
-                asList(xmiFormatSupport), casStorageService, schemaService, properties,
-                checksRegistry, repairsRegistry, xmiFormatSupport);
+        importExportSerivce = new DocumentImportExportServiceImpl(asList(xmiFormatSupport),
+                casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
+                xmiFormatSupport);
 
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);

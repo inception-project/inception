@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Re
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @ConditionalOnWebApplication
@@ -91,5 +92,11 @@ public class AnnotationUIAutoConfiguration
     public CloseSessionActionBarExtension closeSessionActionBarExtension()
     {
         return new CloseSessionActionBarExtension();
+    }
+
+    @Bean
+    public LayerVisibilitySidebarFactory layerVisibilitySidebarFactory()
+    {
+        return new LayerVisibilitySidebarFactory();
     }
 }

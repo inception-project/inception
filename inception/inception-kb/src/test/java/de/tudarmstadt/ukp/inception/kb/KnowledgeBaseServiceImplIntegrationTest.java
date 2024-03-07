@@ -49,6 +49,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -1995,6 +1996,24 @@ public class KnowledgeBaseServiceImplIntegrationTest
         assertThat(sut.isKnowledgeBaseEnabled(project, "NonExistingID"))
                 .as("Check that correct accessibility value is returned for non existing id ")
                 .isFalse();
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
+    }
+
+    @Test
+    public void importKnowledgeBase_OBO_gzip() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        importKnowledgeBase("data/example1.obo.gz");
+        assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
     }
 
     // Helper

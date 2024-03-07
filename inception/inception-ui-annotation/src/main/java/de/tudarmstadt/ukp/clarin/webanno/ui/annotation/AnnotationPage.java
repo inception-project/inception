@@ -354,7 +354,7 @@ public class AnnotationPage
 
     private WebMarkupContainer createRightSidebar()
     {
-        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        var rightSidebar = new WebMarkupContainer("rightSidebar");
         rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style",
@@ -372,7 +372,7 @@ public class AnnotationPage
     @Override
     public List<SourceDocument> getListOfDocs()
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }

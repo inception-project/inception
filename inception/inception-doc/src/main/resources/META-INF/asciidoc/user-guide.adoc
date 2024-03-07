@@ -284,6 +284,8 @@ include::{include-dir}formats-uimajson.adoc[leveloffset=+2]
 
 include::{include-dir}formats-uimajson-legacy.adoc[leveloffset=+2]
 
+include::{include-dir}formats-rdfcas.adoc.adoc[leveloffset=+2]
+
 include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
 
 include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
