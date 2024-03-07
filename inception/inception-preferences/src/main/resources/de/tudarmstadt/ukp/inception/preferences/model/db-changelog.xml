@@ -118,9 +118,7 @@
 
   <changeSet author="INCEpTION Team" id="20240307-1">
     <preConditions onFail="MARK_RAN">
-      <not>
-        <tableExists tableName="user_project_preference" />
-      </not>
+      <tableExists tableName="user_project_preference" />
     </preConditions>
     <delete tableName="user_project_preference">
       <where>user IS NULL</where>
@@ -134,9 +132,7 @@
 
   <changeSet author="INCEpTION Team" id="20240307-2">
     <preConditions onFail="MARK_RAN">
-      <not>
-        <tableExists tableName="user_preference" />
-      </not>
+      <tableExists tableName="user_preference" />
     </preConditions>
     <delete tableName="user_project_preference">
       <where>user IS NULL</where>
@@ -146,11 +142,9 @@
 
   <changeSet author="INCEpTION Team" id="20240307-3">
     <preConditions onFail="MARK_RAN">
-      <not>
-        <tableExists tableName="default_project_preference" />
-      </not>
+      <tableExists tableName="default_project_preference" />
     </preConditions>
-    <delete tableName="user_project_preference">
+    <delete tableName="default_project_preference">
       <where>project IS NULL</where>
     </delete>
     <addNotNullConstraint tableName="default_project_preference" columnName="project" columnDataType="BIGINT"/>
