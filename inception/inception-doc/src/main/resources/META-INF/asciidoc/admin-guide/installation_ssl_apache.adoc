@@ -24,16 +24,15 @@ IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions
 
 This assumes that you already have the following packages installed:
 
-* Apache Web Server
+* Apache Web Server (tested with Apache/2.4.57 on Debian)
 * mod_proxy
 * mod_proxy_http
-* mod_wstunnel
 
 You can enable the two modules with
 
 [source,bash]
 ----
-$ a2enmod proxy proxy_http wstunnel
+$ a2enmod proxy proxy_http
 ----
 
 and check that they are enabled with
@@ -49,30 +48,14 @@ $ apachectl -M
 ----
 ProxyPreserveHost On
 
-<Proxy http://localhost/inception >
-  Order Deny,Allow
-  Deny from none
-  Allow from all
-</Proxy>
-
 <Location "/inception">
   RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
   RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
 </Location>
 
-ProxyPass /inception/ws ws://localhost:8080/inception/ws
-ProxyPass /inception http://localhost:8080/inception
-ProxyPassReverse /inception https://your.public.domain.name.com/inception
+ProxyPass /inception http://localhost:8080/inception upgrade=websocket
+ProxyPassReverse /inception http://localhost:8080/inception
 ----
-If you use Apache 2.4 without `mod_access_compat` exchange the `<Proxy> … </Proxy>` section from the above example with this:
-+
-[source,xml]
-----
-<Proxy http://localhost/inception >
-  require all granted
-</Proxy>
-----
-It is important to not mix both styles in any case throughout your configuration in order to avoid unforseen errors.
 
 * Enable the configuration with
 +

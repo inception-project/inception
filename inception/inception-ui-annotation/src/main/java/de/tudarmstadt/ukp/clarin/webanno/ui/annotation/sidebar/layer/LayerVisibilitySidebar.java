@@ -99,7 +99,7 @@ public class LayerVisibilitySidebar
                 var layer = aItem.getModelObject();
                 var hiddenLayerIds = prefs.getHiddenAnnotationLayerIds();
 
-                var layerVisible = new IconToggleBox("annotationLayerActive") //
+                var layerVisible = new IconToggleBox("visibleToggle") //
                         .setCheckedIcon(FontAwesome5IconType.eye_s)
                         .setCheckedTitle(Model.of("Visible"))
                         .setUncheckedIcon(FontAwesome5IconType.eye_slash_s)
@@ -110,7 +110,7 @@ public class LayerVisibilitySidebar
                                 _target)));
                 aItem.add(layerVisible);
 
-                aItem.add(new Label("annotationLayerDesc", layer.getUiName()));
+                aItem.add(new Label("name", layer.getUiName()));
             }
         };
     }

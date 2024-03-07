@@ -34,21 +34,21 @@ public class BulkAnnotationEvent
 {
     private static final long serialVersionUID = -1187536069360130349L;
 
-    public BulkAnnotationEvent(Object aSource, Project aProject, String aDocumentOwner,
+    public BulkAnnotationEvent(Object aSource, Project aProject, String aDataOwner,
             AnnotationLayer aLayer)
     {
-        super(aSource, aProject, aDocumentOwner, aLayer);
+        super(aSource, aProject, aDataOwner, aLayer);
     }
 
-    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner,
+    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aDataOwner,
             AnnotationLayer aLayer)
     {
-        super(aSource, aDocument, aDocumentOwner, aLayer);
+        super(aSource, aDocument, aDataOwner, aLayer);
     }
 
-    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aDocumentOwner)
+    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aDataOwner)
     {
-        super(aSource, aDocument, aDocumentOwner);
+        super(aSource, aDocument, aDataOwner);
     }
 
     @Override

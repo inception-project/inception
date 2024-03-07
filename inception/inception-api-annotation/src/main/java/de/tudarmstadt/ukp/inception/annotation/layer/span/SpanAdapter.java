@@ -83,7 +83,7 @@ public class SpanAdapter
      *
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aDocumentOwner
+     * @param aDataOwner
      *            the user to which the CAS belongs
      * @param aCas
      *            the CAS.
@@ -95,12 +95,12 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationFS add(SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aBegin,
+    public AnnotationFS add(SourceDocument aDocument, String aDataOwner, CAS aCas, int aBegin,
             int aEnd)
         throws AnnotationException
     {
         return handle(
-                new CreateSpanAnnotationRequest(aDocument, aDocumentOwner, aCas, aBegin, aEnd));
+                new CreateSpanAnnotationRequest(aDocument, aDataOwner, aCas, aBegin, aEnd));
     }
 
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
