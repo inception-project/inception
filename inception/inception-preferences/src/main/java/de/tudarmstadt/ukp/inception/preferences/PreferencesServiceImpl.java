@@ -140,6 +140,10 @@ public class PreferencesServiceImpl
     public <T> Optional<T> loadOptionalTraitsForUserAndProject(Key<T> aKey, User aUser,
             Project aProject)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
         try {
             var pref = getUserProjectPreference(aKey, aUser, aProject);
             if (pref.isPresent()) {
