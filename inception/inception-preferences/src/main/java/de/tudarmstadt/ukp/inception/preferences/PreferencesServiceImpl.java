@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.preferences;
 
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -64,11 +65,14 @@ public class PreferencesServiceImpl
     @Transactional
     public <T> T loadTraitsForUser(Key<T> aKey, User aUser)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+
         try {
-            Optional<UserPreference> preference = getRawUserPreference(aKey, aUser);
+            var preference = getRawUserPreference(aKey, aUser);
             if (preference.isPresent()) {
-                String json = preference.get().getTraits();
-                T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                var json = preference.get().getTraits();
+                var result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
                 LOG.debug("Loaded preferences for key {} and user {}: [{}]", aKey, aUser, result);
                 return result;
             }
@@ -87,9 +91,12 @@ public class PreferencesServiceImpl
     @Transactional
     public <T> void saveTraitsForUser(Key<T> aKey, User aUser, T aTraits)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+        requireNonNull(aTraits, "Parameter [traits] must be specified");
+
         try {
-            UserPreference preference = getRawUserPreference(aKey, aUser)
-                    .orElseGet(UserPreference::new);
+            var preference = getRawUserPreference(aKey, aUser).orElseGet(UserPreference::new);
             preference.setUser(aUser);
             preference.setName(aKey.getName());
             preference.setTraits(toJsonString(aTraits));
@@ -104,6 +111,9 @@ public class PreferencesServiceImpl
 
     private <T> Optional<UserPreference> getRawUserPreference(Key<T> aKey, User aUser)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+
         var query = String.join("\n", //
                 "FROM UserPreference ", //
                 "WHERE user = :user ", //
@@ -149,6 +159,10 @@ public class PreferencesServiceImpl
     @Transactional
     public <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
         try {
             var pref = getUserProjectPreference(aKey, aUser, aProject);
             if (pref.isPresent()) {
@@ -173,8 +187,13 @@ public class PreferencesServiceImpl
     public <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject,
             T aTraits)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+        requireNonNull(aTraits, "Parameter [traits] must be specified");
+
         try {
-            UserProjectPreference preference = getUserProjectPreference(aKey, aUser, aProject)
+            var preference = getUserProjectPreference(aKey, aUser, aProject)
                     .orElseGet(UserProjectPreference::new);
             preference.setUser(aUser);
             preference.setProject(aProject);
@@ -193,14 +212,18 @@ public class PreferencesServiceImpl
     private <T> Optional<UserProjectPreference> getUserProjectPreference(Key<T> aKey, User aUser,
             Project aProject)
     {
-        String query = String.join("\n", //
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aUser, "Parameter [user] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
+        var query = String.join("\n", //
                 "FROM UserProjectPreference ", //
                 "WHERE user = :user", //
                 "AND project = :project", //
                 "AND name = :name");
 
         try {
-            UserProjectPreference pref = entityManager //
+            var pref = entityManager //
                     .createQuery(query, UserProjectPreference.class) //
                     .setParameter("user", aUser) //
                     .setParameter("project", aProject) //
@@ -218,6 +241,8 @@ public class PreferencesServiceImpl
     @Transactional
     public List<UserProjectPreference> listUserPreferencesForProject(Project aProject)
     {
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
         String query = String.join("\n", //
                 "FROM UserProjectPreference ", //
                 "WHERE project = :project");
@@ -232,6 +257,8 @@ public class PreferencesServiceImpl
     @Transactional
     public void saveUserProjectPreference(UserProjectPreference aPreference)
     {
+        requireNonNull(aPreference, "Parameter [preference] must be specified");
+
         entityManager.persist(aPreference);
     }
 
@@ -239,11 +266,14 @@ public class PreferencesServiceImpl
     @Transactional
     public <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
         try {
-            Optional<DefaultProjectPreference> pref = getDefaultProjectPreference(aKey, aProject);
+            var pref = getDefaultProjectPreference(aKey, aProject);
             if (pref.isPresent()) {
-                String json = pref.get().getTraits();
-                T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
+                var json = pref.get().getTraits();
+                var result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
                 LOG.debug("Loaded default preferences for key {} and project {}: [{}]", aKey,
                         aProject, result);
                 return result;
@@ -263,8 +293,11 @@ public class PreferencesServiceImpl
     @Transactional
     public <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits)
     {
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
         try {
-            DefaultProjectPreference preference = getDefaultProjectPreference(aKey, aProject)
+            var preference = getDefaultProjectPreference(aKey, aProject)
                     .orElseGet(DefaultProjectPreference::new);
             preference.setProject(aProject);
             preference.setName(aKey.getName());
@@ -282,7 +315,10 @@ public class PreferencesServiceImpl
     @Override
     public <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject)
     {
-        String query = String.join("\n", //
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
+        var query = String.join("\n", //
                 "DELETE DefaultProjectPreference ", //
                 "WHERE project = :project", //
                 "AND name = :name");
@@ -296,13 +332,16 @@ public class PreferencesServiceImpl
     private <T> Optional<DefaultProjectPreference> getDefaultProjectPreference(Key<T> aKey,
             Project aProject)
     {
-        String query = String.join("\n", //
+        requireNonNull(aKey, "Parameter [key] must be specified");
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
+        var query = String.join("\n", //
                 "FROM DefaultProjectPreference ", //
                 "WHERE project = :project", //
                 "AND name = :name");
 
         try {
-            DefaultProjectPreference pref = entityManager //
+            var pref = entityManager //
                     .createQuery(query, DefaultProjectPreference.class) //
                     .setParameter("project", aProject) //
                     .setParameter("name", aKey.getName()) //
@@ -319,7 +358,9 @@ public class PreferencesServiceImpl
     @Transactional
     public List<DefaultProjectPreference> listDefaultTraitsForProject(Project aProject)
     {
-        String query = String.join("\n", //
+        requireNonNull(aProject, "Parameter [project] must be specified");
+
+        var query = String.join("\n", //
                 "FROM DefaultProjectPreference ", //
                 "WHERE project = :project");
 
@@ -333,26 +374,31 @@ public class PreferencesServiceImpl
     @Transactional
     public void saveDefaultProjectPreference(DefaultProjectPreference aPreference)
     {
+        requireNonNull(aPreference, "Parameter [preference] must be specified");
+
         entityManager.persist(aPreference);
     }
 
     /*
      * Use default constructor of aClass to create new instance of T
      */
+    @SuppressWarnings("unchecked")
     private <T> T buildDefault(Class<T> aClass)
     {
+        requireNonNull(aClass, "Parameter [class] must be specified");
+
         try {
             return aClass.getConstructor().newInstance();
         }
         catch (NoSuchMethodException e) {
             if (Map.class.isAssignableFrom(aClass)) {
-                return (T) new LinkedHashMap();
+                return (T) new LinkedHashMap<>();
             }
 
-            return ExceptionUtils.rethrow(e);
+            return ExceptionUtils.wrapAndThrow(e);
         }
         catch (Exception e) {
-            return ExceptionUtils.rethrow(e);
+            return ExceptionUtils.wrapAndThrow(e);
         }
     }
 }
