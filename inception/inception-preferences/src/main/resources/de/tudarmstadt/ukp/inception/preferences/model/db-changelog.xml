@@ -115,4 +115,38 @@
       constraintName="UK_default_project_preference_name_project"
       tableName="default_project_preference" columnNames="project, name" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-1">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="user_project_preference" />
+    </preConditions>
+    <delete tableName="user_project_preference">
+      <where>user IS NULL</where>
+    </delete>
+    <delete tableName="user_project_preference">
+      <where>project IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="user_project_preference" columnName="user" columnDataType="VARCHAR(255)"/>
+    <addNotNullConstraint tableName="user_project_preference" columnName="project" columnDataType="BIGINT"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-2">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="user_preference" />
+    </preConditions>
+    <delete tableName="user_project_preference">
+      <where>user IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="user_preference" columnName="user" columnDataType="VARCHAR(255)"/>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20240307-3">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="default_project_preference" />
+    </preConditions>
+    <delete tableName="default_project_preference">
+      <where>project IS NULL</where>
+    </delete>
+    <addNotNullConstraint tableName="default_project_preference" columnName="project" columnDataType="BIGINT"/>
+  </changeSet>
 </databaseChangeLog>
