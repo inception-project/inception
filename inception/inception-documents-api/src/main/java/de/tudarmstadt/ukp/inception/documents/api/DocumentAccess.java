@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.documents;
+package de.tudarmstadt.ukp.inception.documents.api;
+
+import org.springframework.security.access.AccessDeniedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link DocumentServiceAutoConfiguration#documentAccess}.
- * </p>
- */
 public interface DocumentAccess
     extends AccessCheckingBean
 {
@@ -39,5 +35,10 @@ public interface DocumentAccess
     boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator);
 
+    void assertCanEditAnnotationDocument(User aSessionOwner,
+            SourceDocument aDocument, String aDataOwner)
+        throws AccessDeniedException;
+
     boolean canExportAnnotationDocument(User aUser, Project aProject);
+
 }

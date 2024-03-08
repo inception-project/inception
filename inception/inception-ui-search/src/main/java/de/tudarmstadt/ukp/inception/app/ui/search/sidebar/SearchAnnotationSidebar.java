@@ -71,6 +71,7 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
@@ -82,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
@@ -90,6 +92,7 @@ import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotati
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -144,6 +147,7 @@ public class SearchAnnotationSidebar
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean DocumentAccess documentAccess;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userRepository;
@@ -607,6 +611,7 @@ public class SearchAnnotationSidebar
             return;
         }
 
+        var sessionOwner = userRepository.getCurrentUser();
         var dataOwner = getAnnotationPage().getModelObject().getUser();
         var layer = getModelObject().getSelectedAnnotationLayer();
         try {
@@ -628,16 +633,11 @@ public class SearchAnnotationSidebar
                 var sourceDoc = documentService.getSourceDocument(state.getProject().getId(),
                         documentId);
 
-                var annoDoc = documentService.createOrGetAnnotationDocument(sourceDoc, dataOwner);
-
-                switch (annoDoc.getState()) {
-                case FINISHED: // fall-through
-                case IGNORE:
-                    // Skip processing any documents which are finished or ignored
+                if (!canAccessDocument(sessionOwner, sourceDoc, dataOwner)) {
                     continue;
-                default:
-                    // Do nothing
                 }
+
+                var annoDoc = documentService.createOrGetAnnotationDocument(sourceDoc, dataOwner);
 
                 // Holder for lazily-loaded CAS
                 Optional<CAS> cas = Optional.empty();
@@ -693,6 +693,18 @@ public class SearchAnnotationSidebar
         }
 
         getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private boolean canAccessDocument(User sessionOwner, SourceDocument sourceDoc, User dataOwner)
+    {
+        try {
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, sourceDoc,
+                    dataOwner.getUsername());
+            return true;
+        }
+        catch (AccessDeniedException e) {
+            return false;
+        }
     }
 
     private void createAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
