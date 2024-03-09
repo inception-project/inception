@@ -26,24 +26,28 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -87,7 +91,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 public class ConceptLinkingServiceImpl
     implements InitializingBean, ConceptLinkingService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final KnowledgeBaseService kbService;
     private final EntityLinkingProperties properties;
@@ -103,8 +107,8 @@ public class ConceptLinkingServiceImpl
             EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> aFeatureGenerators)
     {
-        Validate.notNull(aKbService);
-        Validate.notNull(aProperties);
+        Objects.requireNonNull(aKbService, "Parameter [kbService] has to be specified");
+        Objects.requireNonNull(aProperties, "Parameter [properties] has to be specified");
 
         kbService = aKbService;
         properties = aProperties;
@@ -115,7 +119,7 @@ public class ConceptLinkingServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        File stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
+        var stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
         stopwords = FileUtils.loadStopwordFile(stopwordsFile);
     }
 
@@ -125,16 +129,16 @@ public class ConceptLinkingServiceImpl
         init();
     }
 
-    /* package private */ void init()
+    void init()
     {
-        List<EntityRankingFeatureGenerator> generators = new ArrayList<>();
+        var generators = new ArrayList<EntityRankingFeatureGenerator>();
 
         if (featureGeneratorsProxy != null) {
             generators.addAll(featureGeneratorsProxy);
             AnnotationAwareOrderComparator.sort(generators);
 
             for (EntityRankingFeatureGenerator generator : generators) {
-                log.debug("Found entity ranking feature generator: {}",
+                LOG.debug("Found entity ranking feature generator: {}",
                         ClassUtils.getAbbreviatedName(generator.getClass(), 20));
             }
         }
@@ -165,24 +169,25 @@ public class ConceptLinkingServiceImpl
     public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
-        var startTime = currentTimeMillis();
-        var result = new HashSet<KBHandle>();
-        try {
-            // If the query of the user is smaller or equal to this threshold, then we only use it
-            // for exact matching. If it is longer, we look for concepts which start with or which
-            // contain the users input. This is meant as a performance optimization for large KBs
-            // where we want to avoid long reaction times when there is large number of candidates
-            // (which is very likely when e.g. searching for all items starting with or containing a
-            // specific letter.
-            final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
+        // If the query of the user is smaller or equal to this threshold, then we only use it
+        // for exact matching. If it is longer, we look for concepts which start with or which
+        // contain the users input. This is meant as a performance optimization for large KBs
+        // where we want to avoid long reaction times when there is large number of candidates
+        // (which is very likely when e.g. searching for all items starting with or containing a
+        // specific letter.
+        final var threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
 
+        var results = new LinkedHashSet<KBHandle>();
+
+        var startTime = currentTimeMillis();
+        try {
             if (aQuery != null) {
-                findExactIriMatches(result, aKB, aConceptScope, aValueType, aQuery);
+                var exactMatches = findExactIriMatches(aKB, aConceptScope, aValueType, aQuery);
 
                 // If there was an exact IRI match, there is probably little point in searching for
                 // matching labels... I mean, who would use an IRI as a concept label...?
-                if (!result.isEmpty()) {
-                    return result;
+                if (!exactMatches.isEmpty()) {
+                    return exactMatches;
                 }
             }
 
@@ -192,151 +197,164 @@ public class ConceptLinkingServiceImpl
             // the exact matches separately to ensure we have them.
             // Mind, we use the query and the mention text here - of course we don't only want
             // exact matches of the query but also of the mention :)
-            String[] exactLabels = asList(aQuery, aMention).stream() //
-                    .filter(StringUtils::isNotBlank) //
-                    .toArray(String[]::new);
-
-            if (exactLabels.length > 0) {
-                findExactMatches(result, aKB, aConceptScope, aValueType, exactLabels);
-            }
+            var exactMatches = supplyAsync(
+                    () -> findExactMatches(aKB, aConceptScope, aValueType, aQuery, aMention));
 
             // Next we also do a "starting with" search - but only if the user's query is longer
             // than the threshold - this is because for short queries, we'd get way too many results
             // which would be slow - and also the results would likely not be very accurate
-            if (aQuery != null && aQuery.trim().length() >= threshold) {
-                findStartingWithMatches(result, aKB, aConceptScope, aValueType, aQuery);
-            }
+            var startingWithMatches = supplyAsync(() -> findStartingWithMatches(aKB, aConceptScope,
+                    aValueType, aQuery, threshold));
 
             // Finally, we use the query and mention also for a "containing" search - but only if
             // they are longer than the threshold. Again, for very short query/mention, we'd
             // otherwise get way too many matches, being slow and not accurate.
-            var longLabels = asList(aQuery, aMention).stream() //
-                    .filter(Objects::nonNull) //
-                    .map(s -> s.trim()) //
-                    .filter(s -> s.length() >= threshold) //
-                    .toArray(String[]::new);
+            var containingMatches = supplyAsync(() -> findContainingMatches(aKB, aConceptScope,
+                    aValueType, aQuery, aMention, threshold));
 
-            if (longLabels.length > 0) {
-                findContainingMatches(result, aKB, aConceptScope, aValueType, longLabels);
-            }
+            results.addAll(exactMatches.join());
+            results.addAll(startingWithMatches.join());
+            results.addAll(containingMatches.join());
         }
         finally {
             long duration = currentTimeMillis() - startTime;
-            log.debug("Generated [{}] candidates in {}ms", result.size(), duration);
+            LOG.debug("Generated [{}] candidates from {} in {}ms", results.size(), aKB, duration);
             WicketUtil.serverTiming("generateCandidates", duration);
         }
+
+        return results;
+    }
+
+    private List<KBHandle> findExactMatches(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aQuery, String aMention)
+    {
+        var exactLabels = asList(aQuery, aMention).stream() //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
+
+        if (exactLabels.length == 0) {
+            return Collections.emptyList();
+        }
+
+        var startTime = currentTimeMillis();
+
+        var query = newQueryBuilder(aValueType, aKB);
+
+        if (aConceptScope != null) {
+            // Scope-limiting must always happen before label matching!
+            query.descendantsOf(aConceptScope);
+        }
+
+        query.withLabelMatchingExactlyAnyOf(exactLabels);
+
+        query.retrieveLabel().retrieveDescription().retrieveDeprecation();
+
+        List<KBHandle> result;
+        if (aKB.isReadOnly()) {
+            result = kbService.listHandlesCaching(aKB, query, true);
+        }
+        else {
+            result = kbService.read(aKB, conn -> query.asHandles(conn, true));
+        }
+
+        var duration = currentTimeMillis() - startTime;
+        LOG.debug("Found [{}] candidates exactly matching {} in {}ms", result.size(),
+                asList(exactLabels), duration);
+        WicketUtil.serverTiming("findExactMatches", duration);
 
         return result;
     }
 
-    private void findContainingMatches(Set<KBHandle> result, KnowledgeBase aKB,
-            String aConceptScope, ConceptFeatureValueType aValueType, String[] aLongLabels)
+    private List<KBHandle> findContainingMatches(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aQuery, String aMention, final int threshold)
     {
+        var longLabels = asList(aQuery, aMention).stream() //
+                .filter(Objects::nonNull) //
+                .map(s -> s.trim()) //
+                .filter(s -> s.length() >= threshold) //
+                .toArray(String[]::new);
+
+        if (longLabels.length == 0) {
+            LOG.debug(
+                    "Not searching for candidates containing query/mention because they are too short");
+            return Collections.emptyList();
+        }
+
         var startTime = currentTimeMillis();
 
         // Collect containing matches
-        var containingBuilder = newQueryBuilder(aValueType, aKB);
+        var query = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
-            containingBuilder.descendantsOf(aConceptScope);
+            query.descendantsOf(aConceptScope);
         }
 
         if (aKB.isUseFuzzy()) {
-            containingBuilder.withLabelMatchingAnyOf(aLongLabels);
+            query.withLabelMatchingAnyOf(longLabels);
         }
         else {
-            containingBuilder.withLabelContainingAnyOf(aLongLabels);
+            query.withLabelContainingAnyOf(longLabels);
         }
 
-        containingBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
+        query.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
-        List<KBHandle> containingMatches;
+        List<KBHandle> result;
         if (aKB.isReadOnly()) {
-            containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
+            result = kbService.listHandlesCaching(aKB, query, true);
         }
         else {
-            containingMatches = kbService.read(aKB,
-                    conn -> containingBuilder.asHandles(conn, true));
+            result = kbService.read(aKB, conn -> query.asHandles(conn, true));
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates using matching {} in {}ms", containingMatches.size(),
-                asList(aLongLabels), duration);
+        LOG.debug("Found [{}] candidates using matching {} in {}ms", result.size(),
+                asList(longLabels), duration);
         WicketUtil.serverTiming("findContainingMatches", duration);
 
-        result.addAll(containingMatches);
-
+        return result;
     }
 
-    private void findStartingWithMatches(Set<KBHandle> result, KnowledgeBase aKB,
-            String aConceptScope, ConceptFeatureValueType aValueType, String aQuery)
+    private List<KBHandle> findStartingWithMatches(KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aQuery, final int threshold)
     {
+        if (aQuery == null || aQuery.trim().length() < threshold) {
+            LOG.debug("Not searching for candidates matching query because it is too short");
+            return Collections.emptyList();
+        }
+
         var startTime = currentTimeMillis();
 
-        var startingWithBuilder = newQueryBuilder(aValueType, aKB);
+        var query = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
-            startingWithBuilder.descendantsOf(aConceptScope);
+            query.descendantsOf(aConceptScope);
         }
 
         // Collect matches starting with the query - this is the main driver for the
         // auto-complete functionality
-        startingWithBuilder.withLabelStartingWith(aQuery);
+        query.withLabelStartingWith(aQuery);
 
-        startingWithBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
+        query.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
-        List<KBHandle> startingWithMatches;
+        List<KBHandle> result;
         if (aKB.isReadOnly()) {
-            startingWithMatches = kbService.listHandlesCaching(aKB, startingWithBuilder, true);
+            result = kbService.listHandlesCaching(aKB, query, true);
         }
         else {
-            startingWithMatches = kbService.read(aKB,
-                    conn -> startingWithBuilder.asHandles(conn, true));
+            result = kbService.read(aKB, conn -> query.asHandles(conn, true));
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates starting with [{}] in {}ms", startingWithMatches.size(),
-                aQuery, duration);
+        LOG.debug("Found [{}] candidates starting with [{}] in {}ms", result.size(), aQuery,
+                duration);
         WicketUtil.serverTiming("findStartingWithMatches", duration);
 
-        result.addAll(startingWithMatches);
+        return result;
     }
 
-    private void findExactMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String[] aExactLabels)
-    {
-        var startTime = currentTimeMillis();
-
-        var exactBuilder = newQueryBuilder(aValueType, aKB);
-
-        if (aConceptScope != null) {
-            // Scope-limiting must always happen before label matching!
-            exactBuilder.descendantsOf(aConceptScope);
-        }
-
-        exactBuilder.withLabelMatchingExactlyAnyOf(aExactLabels);
-
-        exactBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
-
-        List<KBHandle> exactMatches;
-        if (aKB.isReadOnly()) {
-            exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
-        }
-        else {
-            exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
-        }
-
-        var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates exactly matching {} in {}ms", exactMatches.size(),
-                asList(aExactLabels), duration);
-        WicketUtil.serverTiming("findExactMatches", duration);
-
-        result.addAll(exactMatches);
-    }
-
-    private void findExactIriMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
+    private Set<KBHandle> findExactIriMatches(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery)
     {
         var startTime = currentTimeMillis();
@@ -350,7 +368,7 @@ public class ConceptLinkingServiceImpl
         }
 
         if (iri == null || !iri.isAbsolute()) {
-            return;
+            return emptySet();
         }
 
         var iriMatchBuilder = newQueryBuilder(aValueType, aKB).withIdentifier(aQuery);
@@ -361,20 +379,20 @@ public class ConceptLinkingServiceImpl
 
         iriMatchBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
-        List<KBHandle> iriMatches;
+        var iriMatches = new LinkedHashSet<KBHandle>();
         if (aKB.isReadOnly()) {
-            iriMatches = kbService.listHandlesCaching(aKB, iriMatchBuilder, true);
+            iriMatches.addAll(kbService.listHandlesCaching(aKB, iriMatchBuilder, true));
         }
         else {
-            iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
+            iriMatches.addAll(kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true)));
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Found [{}] candidates exactly matching IRI [{}] in {}ms", iriMatches.size(),
+        LOG.debug("Found [{}] candidates exactly matching IRI [{}] in {}ms", iriMatches.size(),
                 aQuery, duration);
         WicketUtil.serverTiming("findExactIriMatches", duration);
 
-        result.addAll(iriMatches);
+        return iriMatches;
     }
 
     @Override
@@ -421,7 +439,7 @@ public class ConceptLinkingServiceImpl
                 candidate.put(KEY_MENTION_CONTEXT, mentionContext);
             }
             else {
-                log.warn("Mention sentence could not be determined. Skipping.");
+                LOG.warn("Mention sentence could not be determined. Skipping.");
             }
         }
 
@@ -468,7 +486,7 @@ public class ConceptLinkingServiceImpl
         }
 
         var duration = currentTimeMillis() - startTime;
-        log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
+        LOG.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
                 results.size(), aMention, aQuery, duration);
 
         WicketUtil.serverTiming("rankCandidates", duration);
@@ -482,7 +500,7 @@ public class ConceptLinkingServiceImpl
             int aMentionBeginOffset, CAS aCas, Project aProject)
     {
         // Sanitize query by removing typical wildcard characters
-        String query = aQuery.replaceAll("[*?]", "").trim();
+        var query = aQuery.replaceAll("[*?]", "").trim();
 
         // Determine which knowledge bases to query
         var knowledgeBases = new ArrayList<KnowledgeBase>();
