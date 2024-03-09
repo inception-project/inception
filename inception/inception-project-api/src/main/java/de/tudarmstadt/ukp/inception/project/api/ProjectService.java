@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.MDC;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -66,7 +65,6 @@ public interface ProjectService
      * @deprecated Use {@link #assignRole(Project, User, PermissionLevel...)} instead.
      */
     @Deprecated
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission aPermission);
 
     /**
@@ -349,7 +347,6 @@ public interface ProjectService
      * @throws IOException
      *             if the project to be deleted is not available in the file system
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeProject(Project aProject) throws IOException;
 
     /**

@@ -28,7 +28,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -64,7 +63,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTag(Tag tag);
 
     /**
@@ -74,7 +72,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTags(Tag... tag);
 
     void updateTagRanks(TagSet aTagSet, List<Tag> aTags);
@@ -87,7 +84,6 @@ public interface AnnotationSchemaService
      * @param tagset
      *            the tagset.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTagSet(TagSet tagset);
 
     /**
@@ -99,7 +95,6 @@ public interface AnnotationSchemaService
      * @param type
      *            the type.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createOrUpdateLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
@@ -444,7 +439,6 @@ public interface AnnotationSchemaService
      * @param tag
      *            the tag.
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeTag(Tag tag);
 
     /**
