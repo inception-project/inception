@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,16 +43,12 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -82,21 +80,22 @@ public class RecommendationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
-        IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
-                () -> recommendationService.getPreferences(aModel.getObject().getUser(),
+        var sessionOwner = userRepository.getCurrentUser();
+        var modelPreferences = LambdaModelAdapter.of(
+                () -> recommendationService.getPreferences(sessionOwner,
                         aModel.getObject().getProject()),
-                (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
+                (v) -> recommendationService.setPreferences(sessionOwner,
                         aModel.getObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
         warning.setOutputMarkupPlaceholderTag(true);
         add(warning);
         tipModel = new StringResourceModel("mismatch", this);
-        TooltipBehavior tip = new TooltipBehavior(tipModel);
+        var tip = new TooltipBehavior(tipModel);
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
 
-        Label noRecommendersLabel = new Label("noRecommendersLabel",
+        var noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
         var recommenders = recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject());
@@ -104,10 +103,19 @@ public class RecommendationSidebar
         add(noRecommendersLabel);
 
         add(new LambdaAjaxLink("showLog", this::actionShowLog)
-                .add(visibleWhen(() -> !recommenders.isEmpty())));
+                .add(visibleWhenNot(recommenders::isEmpty)));
 
         add(new LambdaAjaxLink("retrain", this::actionRetrain)
-                .add(visibleWhen(() -> !recommenders.isEmpty())));
+                .add(visibleWhenNot(recommenders::isEmpty)));
+
+        var modelEnabled = LambdaModelAdapter.of(
+                () -> !recommendationService.isSuspended(sessionOwner.getUsername(),
+                        aModel.getObject().getProject()),
+                (v) -> recommendationService.setSuspended(sessionOwner.getUsername(),
+                        aModel.getObject().getProject(), !v));
+        add(new CheckBox("enabled", modelEnabled).setOutputMarkupId(true)
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
+        add(new EvaluationProgressPanel("progress", aModel.map(AnnotatorState::getProject)));
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
@@ -123,7 +131,7 @@ public class RecommendationSidebar
                 .add(visibleWhen(() -> !form.getModelObject().isShowAllPredictions())));
 
         form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true)
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(form))));
 
         form.add(new LambdaAjaxButton<>("save",
@@ -132,16 +140,12 @@ public class RecommendationSidebar
 
         add(form);
 
-        // add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
-        // .add(visibleWhen(() -> !recommenders.isEmpty())));
-
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         add(recommenderInfos);
 
         logDialog = new LogDialog("logDialog");
         add(logDialog);
-
     }
 
     @Override
@@ -150,21 +154,21 @@ public class RecommendationSidebar
         // using onConfigure as last state in lifecycle to configure visibility
         super.onConfigure();
         configureMismatched();
-        boolean enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
+        var enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
         form.setEnabled(enabled);
         recommenderInfos.setEnabled(enabled);
     }
 
     protected void configureMismatched()
     {
-        List<String> mismatchedRecommenders = findMismatchedRecommenders();
+        var mismatchedRecommenders = findMismatchedRecommenders();
 
         if (mismatchedRecommenders.isEmpty()) {
             warning.setVisible(false);
             return;
         }
 
-        String recommendersStr = mismatchedRecommenders.stream().collect(Collectors.joining(", "));
+        var recommendersStr = mismatchedRecommenders.stream().collect(Collectors.joining(", "));
         tipModel.setParameters(recommendersStr);
         warning.setVisible(true);
     }
@@ -185,11 +189,11 @@ public class RecommendationSidebar
 
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
         var sessionOwner = userRepository.getCurrentUsername();
         var dataOwner = state.getUser().getUsername();
 
-        recommendationService.clearState(sessionOwner);
+        recommendationService.resetState(sessionOwner);
         recommendationService.triggerSelectionTrainingAndPrediction(sessionOwner,
                 state.getProject(), "User request via sidebar", state.getDocument(), dataOwner);
 
@@ -201,15 +205,14 @@ public class RecommendationSidebar
 
     private List<String> findMismatchedRecommenders()
     {
-        List<String> mismatchedRecommenderNames = new ArrayList<>();
-        Project project = getModelObject().getProject();
-        for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
+        var mismatchedRecommenderNames = new ArrayList<String>();
+        var project = getModelObject().getProject();
+        for (var layer : annoService.listAnnotationLayer(project)) {
             if (!layer.isEnabled()) {
                 continue;
             }
-            for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
-                RecommendationEngineFactory<?> factory = recommendationService
-                        .getRecommenderFactory(recommender).orElse(null);
+            for (var recommender : recommendationService.listEnabledRecommenders(layer)) {
+                var factory = recommendationService.getRecommenderFactory(recommender).orElse(null);
 
                 // E.g. if the module providing a configured recommender has been disabled but the
                 // recommender is still configured.

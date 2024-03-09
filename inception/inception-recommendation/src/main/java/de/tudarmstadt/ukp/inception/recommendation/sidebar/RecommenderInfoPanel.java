@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
-import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -59,7 +58,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -98,17 +96,10 @@ public class RecommenderInfoPanel
                 .closeOnClick();
         add(detailsDialog);
 
-        add(new Label("progress", LoadableDetachableModel.of(() -> {
-            Progress p = recommendationService.getProgressTowardsNextEvaluation(sessionOwner,
-                    aModel.getObject().getProject());
-            return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
-                    + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
-        })).setEscapeModelStrings(false)); // SAFE - RENDERING ONLY SPECIFIC ICONS
-
         var recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
 
-        ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
+        var searchResultGroups = new ListView<Recommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
@@ -193,9 +184,8 @@ public class RecommenderInfoPanel
                                 .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
-        IModel<List<Recommender>> recommenders = LoadableDetachableModel
-                .of(() -> recommendationService
-                        .listEnabledRecommenders(aModel.getObject().getProject()));
+        var recommenders = LoadableDetachableModel.of(() -> recommendationService
+                .listEnabledRecommenders(aModel.getObject().getProject()));
         searchResultGroups.setModel(recommenders);
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));

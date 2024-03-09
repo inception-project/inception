@@ -494,7 +494,7 @@ public class RecommendationServiceImpl
             else {
                 // If the session owner has switched the data they are looking at, we need to
                 // clear and rebuild the predictions.
-                clearState(sessionOwnerName);
+                resetState(sessionOwnerName);
             }
         }
 
@@ -547,6 +547,10 @@ public class RecommendationServiceImpl
     private boolean nonTrainableRecommenderRunSync(SourceDocument doc, Predictions predictions,
             User aSessionOwner, String trigger, String aDataOwner)
     {
+        if (isSuspended(aSessionOwner.getUsername(), doc.getProject())) {
+            return false;
+        }
+
         if (predictions != null && predictions.hasRunPredictionOnDocument(doc)) {
             LOG.trace("Not running sync prediction for non-trainable recommenders as we already "
                     + "have predictions");
@@ -754,7 +758,7 @@ public class RecommendationServiceImpl
     @EventListener
     public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
     {
-        clearState(aEvent.getRecommender().getProject());
+        resetState(aEvent.getRecommender().getProject());
     }
 
     @EventListener
@@ -769,13 +773,13 @@ public class RecommendationServiceImpl
     @EventListener
     public void onDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
-        clearState(aEvent.getDocument().getProject());
+        resetState(aEvent.getDocument().getProject());
     }
 
     @EventListener
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
-        clearState(aEvent.getDocument().getProject());
+        resetState(aEvent.getDocument().getProject());
     }
 
     @EventListener
@@ -793,13 +797,17 @@ public class RecommendationServiceImpl
     @EventListener
     public void onLayerConfigurationChangedEvent(LayerConfigurationChangedEvent aEvent)
     {
-        clearState(aEvent.getProject());
+        resetState(aEvent.getProject());
     }
 
     @Override
     public void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDataOwner)
     {
+        if (isSuspended(aSessionOwner, aDocument.getProject())) {
+            return;
+        }
+
         var sessionOwner = userRepository.get(aSessionOwner);
 
         if (sessionOwner == null) {
@@ -818,6 +826,10 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
+        if (isSuspended(aSessionOwner, aProject)) {
+            return;
+        }
+
         triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false,
                 null);
     }
@@ -826,6 +838,10 @@ public class RecommendationServiceImpl
     public void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
             String aEventName, SourceDocument aCurrentDocument, String aDataOwner)
     {
+        if (isSuspended(aSessionOwner, aProject)) {
+            return;
+        }
+
         triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true,
                 null);
     }
@@ -834,6 +850,10 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument, String aDataOwner, boolean aForceSelection,
             Set<DirtySpot> aDirties)
     {
+        if (isSuspended(aSessionOwner, aProject)) {
+            return;
+        }
+
         var user = userRepository.get(aSessionOwner);
         // do not trigger training during when viewing others' work
         if (user == null || !user.equals(userRepository.getCurrentUser())) {
@@ -966,7 +986,7 @@ public class RecommendationServiceImpl
     {
         var currentDocument = aEvent.getDocument().getDocument();
         var currentUser = aEvent.getDocument().getUser();
-        clearState(currentUser);
+        resetState(currentUser);
         deleteLearningRecords(currentDocument, currentUser);
     }
 
@@ -999,13 +1019,38 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void clearState(String aSessionOwner)
+    public void resetState(String aSessionOwner)
+    {
+        Validate.notNull(aSessionOwner, "Username must be specified");
+
+        synchronized (states) {
+            states.entrySet().stream() //
+                    .filter(e -> aSessionOwner.equals(e.getKey().getUser()))
+                    .forEach(e -> e.getValue().reset());
+            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
+        }
+    }
+
+    private void clearState(String aSessionOwner)
     {
         Validate.notNull(aSessionOwner, "Username must be specified");
 
         synchronized (states) {
             states.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
             trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
+        }
+    }
+
+    private void resetState(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        synchronized (states) {
+            states.entrySet().stream() //
+                    .filter(e -> Objects.equals(aProject.getId(), e.getKey().getProjectId()))
+                    .forEach(e -> e.getValue().reset());
+            trainingTaskCounter.keySet()
+                    .removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
         }
     }
 
@@ -1051,7 +1096,8 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void putContext(User aSessionOwner, Recommender aRecommender, RecommenderContext aContext)
+    public void putContext(User aSessionOwner, Recommender aRecommender,
+            RecommenderContext aContext)
     {
         var state = getState(aSessionOwner.getUsername(), aRecommender.getProject());
         synchronized (state) {
@@ -1220,11 +1266,12 @@ public class RecommendationServiceImpl
     {
         private boolean suspended;
         private Preferences preferences;
+        private boolean predictForAllDocuments;
+
         private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> evaluatedRecommenders;
         private Map<Recommender, RecommenderContext> contexts;
         private Predictions activePredictions;
         private Predictions incomingPredictions;
-        private boolean predictForAllDocuments;
         private Map<AnnotationLayer, List<LearningRecord>> learningRecords;
         private int predictionsSinceLastEvaluation;
         private int predictionsUntilNextEvaluation;
@@ -1235,6 +1282,17 @@ public class RecommendationServiceImpl
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
             learningRecords = new ConcurrentHashMap<>();
+        }
+
+        public void reset()
+        {
+            evaluatedRecommenders = new HashSetValuedHashMap<>();
+            contexts = new ConcurrentHashMap<>();
+            activePredictions = null;
+            incomingPredictions = null;
+            learningRecords = new ConcurrentHashMap<>();
+            predictionsSinceLastEvaluation = 0;
+            predictionsUntilNextEvaluation = 0;
         }
 
         public Preferences getPreferences()
