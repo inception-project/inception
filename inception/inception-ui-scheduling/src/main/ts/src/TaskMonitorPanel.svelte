@@ -24,7 +24,8 @@
     export let csrfToken: string
     export let endpointUrl: string // should this be full http://... url
     export let wsEndpointUrl: string // should this be full ws://... url
-    export let topicChannel: string
+    export let taskStatusTopic: string
+    export let taskUpdatesTopic: string
     export let tasks: MTaskStateUpdate[] = []
     export let connected = false
     export let popupMode = true
@@ -56,7 +57,7 @@
                 );
             });
             stompClient.subscribe(
-                "/app" + topicChannel + "/tasks",
+                taskStatusTopic,
                 function (msg) {
                     tasks = JSON.parse(msg.body) || []
                     if (!showFinishedTasks) {
@@ -65,7 +66,7 @@
                 }
             );
             stompClient.subscribe(
-                "/user/queue" + topicChannel + "/tasks",
+                taskUpdatesTopic,
                 function (msg) {
                     var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
 

@@ -29,6 +29,8 @@ public class TaskMonitorFooterItem
     @Override
     public Component create(String aId)
     {
-        return new TaskMonitorPanel(aId).setShowFinishedTasks(true).setPopupMode(true);
+        return new TaskMonitorPanel(aId) //
+                .setShowFinishedTasks(true) //
+                .setPopupMode(true);
     }
 }

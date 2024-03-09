@@ -299,6 +299,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-log-ui</artifactId>
+        <version>32.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-tutorial</artifactId>
         <version>32.0-SNAPSHOT</version>
       </dependency>

@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -34,6 +35,7 @@ public class TaskMonitor
     private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
 
     private final TaskHandle handle;
+    private final Project project;
     private final String user;
     private final String title;
     private final String type;
@@ -56,6 +58,7 @@ public class TaskMonitor
         handle = aHandle;
         type = aTask.getType();
         user = aTask.getUser().map(User::getUsername).orElse(null);
+        project = aTask.getProject();
         title = aTask.getTitle();
         createTime = System.currentTimeMillis();
         cancellable = aTask.isCancellable();
@@ -74,6 +77,11 @@ public class TaskMonitor
     public String getUser()
     {
         return user;
+    }
+
+    public Project getProject()
+    {
+        return project;
     }
 
     public String getTitle()

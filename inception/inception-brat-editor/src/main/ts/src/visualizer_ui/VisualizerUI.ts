@@ -67,7 +67,6 @@ export class VisualizerUI {
       .on('resize', this, this.onResize)
       .on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded)
       .on('doneRendering', this, this.onDoneRendering)
-      .on('mousemove', this, this.onMouseMove)
       .on('displaySpanButtons', this, this.displaySpanButtons)
       .on('acceptButtonClicked', this, this.acceptAction)
       .on('rejectButtonClicked', this, this.rejectAction)

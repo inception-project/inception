@@ -34,7 +34,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.Logger;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationA
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -209,10 +207,10 @@ public class RecommendationEditorExtension
 
     private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
     {
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+        var predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> prediction = predictions //
+        var document = aState.getDocument();
+        var prediction = predictions //
                 .getPredictionByVID(document, aRecVid);
         return prediction;
     }
@@ -254,7 +252,7 @@ public class RecommendationEditorExtension
                 new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
 
         // Trigger a re-rendering of the document
-        Page page = aTarget.getPage();
+        var page = aTarget.getPage();
         page.send(page, BREADTH, new SelectionChangedEvent(aTarget));
     }
 
@@ -264,7 +262,7 @@ public class RecommendationEditorExtension
         log.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        String sessionOwner = userService.getCurrentUsername();
+        var sessionOwner = userService.getCurrentUsername();
         if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
@@ -273,8 +271,7 @@ public class RecommendationEditorExtension
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
         // expect an update when she makes some interaction, so we piggy-back on this expectation.
-        boolean switched = recommendationService.switchPredictions(sessionOwner,
-                aState.getProject());
+        var switched = recommendationService.switchPredictions(sessionOwner, aState.getProject());
         log.trace("switchPredictions() returned {}", switched);
 
         if (!switched) {
