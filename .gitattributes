@@ -1,0 +1,24 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+#   means that files that GIT determines to be text files, will be 
+#     converted from CRLF -> LF upon being added to the repo, and
+#     converted from LF -> LF or CRLF when checked out (depending on the platform, I think)
+# * text=auto
+
+# We force LF for all text files because we have Checkstyle set up in such a way
+# The "text" by itself says these files must be line-ending-conversion controlled on check-in / out
+#   The internal repo form for these is always lf, 
+#   The eol=lf means on check-out do nothing, and on check-in, if the file has crlf, convert to lf
+* text eol=lf
+# *.sh text eol=lf
+
+# Make sure that these files are treated as binary so that newlines are preserved.
+#   overrides GIT's determination if a file is text or not
+*.bin binary
+*.dump binary
+*.xcas binary
+*.xmi binary
+#  next is probably the default
+*.pdf binary
+*.ser binary
+*.png binary
+*.jpg binary
